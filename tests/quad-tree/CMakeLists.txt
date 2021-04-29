@@ -1,0 +1,2 @@
+SET(TEST_TARGET quad-tree)
+DEAL_II_PICKUP_TESTS()

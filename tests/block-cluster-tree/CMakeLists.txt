@@ -1,0 +1,2 @@
+SET(TEST_TARGET block-cluster-tree)
+DEAL_II_PICKUP_TESTS()

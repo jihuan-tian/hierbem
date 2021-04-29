@@ -1,0 +1,40 @@
+Pre-order traverse of the tree:
+10
+3
+2
+4
+8
+6
+5
+7
+9
+In-order traverse of the tree:
+2
+3
+8
+4
+6
+10
+7
+5
+9
+Post-order traverse of the tree:
+2
+8
+6
+4
+3
+7
+9
+5
+10
+Print the tree using PrintTree:
+10
+3
+2
+4
+8
+6
+5
+7
+9

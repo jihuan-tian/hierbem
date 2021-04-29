@@ -1,0 +1,2 @@
+SET(TEST_TARGET determinant4x4)
+DEAL_II_PICKUP_TESTS()
