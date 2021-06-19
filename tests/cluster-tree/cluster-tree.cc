@@ -34,8 +34,14 @@ main()
    */
   const unsigned int      dim = 3;
   Triangulation<dim, dim> triangulation;
-  GridGenerator::hyper_ball(triangulation, Point<3>(0., 0., 0.), 2.0, true);
-  // triangulation.refine_global(2);
+  /**
+   * N.B. Use type cast for triangulation to suppress Eclipse editor error
+   * prompt.
+   */
+  GridGenerator::hyper_ball((Triangulation<dim> &)triangulation,
+                            Point<3>(0., 0., 0.),
+                            2.0,
+                            true);
 
   /**
    * Save the mesh to a file for visualization.
@@ -45,7 +51,7 @@ main()
   grid_out.write_msh(triangulation, mesh_file);
 
   /**
-   * Create a high order Lagrangian finite element.
+   * Create a Lagrangian finite element.
    */
   const unsigned int fe_order = 1;
   FE_Q<dim, dim>     fe(fe_order);
@@ -54,11 +60,11 @@ main()
    * Create a DoFHandler, which is associated with the triangulation and
    * distributed with the finite element.
    */
-  DoFHandler<dim, dim> dof_handler(triangulation);
+  DoFHandler<dim> dof_handler(triangulation);
   dof_handler.distribute_dofs(fe);
 
   /**
-   * Create a 2nd order mapping, which is required in generating the map from
+   * Create a mapping object, which is required in generating the map from
    * DoF indices to support points.
    */
   const MappingQGeneric<dim, dim> mapping(fe_order);
@@ -74,6 +80,10 @@ main()
       counter++;
     }
 
+  /**
+   * Get the spatial coordinates of the support points associated with DoF
+   * indices.
+   */
   std::vector<Point<dim>> all_support_points(dof_handler.n_dofs());
   DoFTools::map_dofs_to_support_points(mapping,
                                        dof_handler,

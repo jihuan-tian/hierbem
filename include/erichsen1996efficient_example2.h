@@ -52,6 +52,7 @@
 #include <deal.II/lac/vector.h>
 
 #include <boost/progress.hpp>
+
 #include <laplace_bem.h>
 
 #include <fstream>

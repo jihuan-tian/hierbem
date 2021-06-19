@@ -20,23 +20,31 @@
 BinaryTreeNode<int> *
 MakeIntExampleTree()
 {
-  BinaryTreeNode<int> *parent, *left_child, *right_child;
+  BinaryTreeNode<int> *parent, *parent1, *parent2, *left_child, *right_child;
 
   // Create the left subtree of the root node.
-  left_child  = CreateTreeNode<int>(8);
-  right_child = CreateTreeNode<int>(6);
-  parent      = CreateTreeNode<int>(4, 0, left_child, right_child);
-  right_child = parent;
-  left_child  = CreateTreeNode<int>(2);
-  parent      = CreateTreeNode<int>(3, 0, left_child, right_child);
+  left_child  = CreateTreeNode<int>(8, 3);
+  right_child = CreateTreeNode<int>(6, 3);
+  parent      = CreateTreeNode<int>(4, 2, left_child, right_child);
+  left_child->Parent(parent);
+  right_child->Parent(parent);
 
+  right_child = parent;
+  left_child  = CreateTreeNode<int>(2, 2);
+  parent1     = CreateTreeNode<int>(3, 1, left_child, right_child);
+  left_child->Parent(parent1);
+  right_child->Parent(parent1);
 
   // Create the right subtree of the root node.
-  left_child  = CreateTreeNode<int>(7);
-  right_child = CreateTreeNode<int>(9);
-  right_child = CreateTreeNode<int>(5, 0, left_child, right_child);
-  left_child  = parent;
-  parent      = CreateTreeNode<int>(10, 0, left_child, right_child);
+  left_child  = CreateTreeNode<int>(7, 2);
+  right_child = CreateTreeNode<int>(9, 2);
+  parent2     = CreateTreeNode<int>(5, 1, left_child, right_child);
+  left_child->Parent(parent2);
+  right_child->Parent(parent2);
+
+  parent = CreateTreeNode<int>(10, 0, parent1, parent2);
+  parent1->Parent(parent);
+  parent2->Parent(parent);
 
   return parent;
 }

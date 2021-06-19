@@ -15,3 +15,8 @@
  * \brief This is my toolbox for assisting program debugging, function
  * verification and information visualization.
  */
+
+/**
+ * \defgroup linalg Linear algebra
+ * \brief Linear algebra computation.
+ */

@@ -53,8 +53,9 @@ public:
    */
   BinaryTreeNode(const T &       data,
                  unsigned int    level,
-                 BinaryTreeNode *left  = nullptr,
-                 BinaryTreeNode *right = nullptr);
+                 BinaryTreeNode *left   = nullptr,
+                 BinaryTreeNode *right  = nullptr,
+                 BinaryTreeNode *parent = nullptr);
 
   /**
    * Get the pointer to the left child node.
@@ -77,6 +78,18 @@ public:
   get_child_pointer(std::size_t index) const;
 
   /**
+   * Get the total number of nonempty children.
+   */
+  unsigned int
+  get_child_num() const;
+
+  /**
+   * Get the pointer to the parent node.
+   */
+  BinaryTreeNode *
+  Parent(void) const;
+
+  /**
    * Set the left child node pointer.
    *
    * N.B. The const pointer type in the argument will be converted to non-const
@@ -95,6 +108,21 @@ public:
   Right(const BinaryTreeNode *node_pointer);
 
   /**
+   * Set the pointer to the \p index'th child.
+   * @param index Index of the child
+   * @param node_pointer Pointer value to be assigned to the specified child.
+   */
+  void
+  set_child_pointer(std::size_t index, const BinaryTreeNode *node_pointer);
+
+  /**
+   * Set the pointer to the parent.
+   * @param node_pointer
+   */
+  void
+  Parent(const BinaryTreeNode *node_pointer);
+
+  /**
    * Get the pointer to the node data.
    */
   T *
@@ -105,6 +133,18 @@ public:
    */
   const T *
   get_data_pointer() const;
+
+  /**
+   * Get the reference to the node data.
+   */
+  T &
+  get_data_reference();
+
+  /**
+   * Get the reference to the node data (const version).
+   */
+  const T &
+  get_data_reference() const;
 
   /**
    * Get the level of the node in the tree.
@@ -118,6 +158,12 @@ private:
 
   BinaryTreeNode *left;
   BinaryTreeNode *right;
+  BinaryTreeNode *parent;
+
+  /**
+   * Total number of nonempty children.
+   */
+  unsigned int child_num;
 };
 
 template <typename T>
@@ -126,18 +172,10 @@ BinaryTreeNode<T>::BinaryTreeNode()
   , level(0)
   , left(nullptr)
   , right(nullptr)
+  , parent(nullptr)
+  , child_num(0)
 {}
 
-template <typename T>
-BinaryTreeNode<T>::BinaryTreeNode(const T &       data,
-                                  unsigned int    level,
-                                  BinaryTreeNode *left,
-                                  BinaryTreeNode *right)
-  : data(data)
-  , level(level)
-  , left(left)
-  , right(right)
-{}
 
 template <typename T>
 BinaryTreeNode<T>::BinaryTreeNode(const BinaryTreeNode &node)
@@ -145,7 +183,35 @@ BinaryTreeNode<T>::BinaryTreeNode(const BinaryTreeNode &node)
   , level(node.level)
   , left(node.left)
   , right(node.right)
+  , parent(node.parent)
+  , child_num(node.child_num)
 {}
+
+
+template <typename T>
+BinaryTreeNode<T>::BinaryTreeNode(const T &       data,
+                                  unsigned int    level,
+                                  BinaryTreeNode *left,
+                                  BinaryTreeNode *right,
+                                  BinaryTreeNode *parent)
+  : data(data)
+  , level(level)
+  , left(left)
+  , right(right)
+  , parent(parent)
+  , child_num(0)
+{
+  if (left != nullptr)
+    {
+      child_num++;
+    }
+
+  if (right != nullptr)
+    {
+      child_num++;
+    }
+}
+
 
 template <typename T>
 BinaryTreeNode<T> *
@@ -160,6 +226,7 @@ BinaryTreeNode<T>::Right() const
 {
   return right;
 }
+
 
 template <typename T>
 BinaryTreeNode<T> *
@@ -182,6 +249,51 @@ BinaryTreeNode<T>::get_child_pointer(std::size_t index) const
   return nullptr;
 }
 
+
+template <typename T>
+unsigned int
+BinaryTreeNode<T>::get_child_num() const
+{
+  return child_num;
+}
+
+template <typename T>
+void
+BinaryTreeNode<T>::set_child_pointer(std::size_t           index,
+                                     const BinaryTreeNode *node_pointer)
+{
+  Assert((index >= 0) && (index < 2), dealii::ExcIndexRange(index, 0, 2));
+
+  switch (index)
+    {
+      case 0:
+        Left(node_pointer);
+
+        break;
+      case 1:
+        Right(node_pointer);
+
+        break;
+    }
+}
+
+
+template <typename T>
+BinaryTreeNode<T> *
+BinaryTreeNode<T>::Parent() const
+{
+  return parent;
+}
+
+
+template <typename T>
+void
+BinaryTreeNode<T>::Parent(const BinaryTreeNode *node_pointer)
+{
+  parent = const_cast<BinaryTreeNode *>(node_pointer);
+}
+
+
 template <typename T>
 void
 BinaryTreeNode<T>::Left(const BinaryTreeNode *node_pointer)
@@ -202,6 +314,23 @@ BinaryTreeNode<T>::get_data_pointer()
 {
   return &data;
 }
+
+
+template <typename T>
+T &
+BinaryTreeNode<T>::get_data_reference()
+{
+  return data;
+}
+
+
+template <typename T>
+const T &
+BinaryTreeNode<T>::get_data_reference() const
+{
+  return data;
+}
+
 
 template <typename T>
 const T *
@@ -243,7 +372,8 @@ public:
    */
   TreeNode(const T &                        data,
            unsigned int                     level,
-           const std::array<TreeNode *, N> &children);
+           const std::array<TreeNode *, N> &children,
+           TreeNode *                       parent = nullptr);
 
   /**
    * Copy constructor.
@@ -270,6 +400,26 @@ public:
   set_child_pointer(std::size_t index, const TreeNode *pointer);
 
   /**
+   * Get the total number of nonempty children.
+   */
+  unsigned int
+  get_child_num() const;
+
+  /**
+   * Get the pointer to the parent tree node.
+   * @return
+   */
+  TreeNode *
+  Parent(void) const;
+
+  /**
+   * Set the pointer to the parent tree node.
+   * @param node_pointer
+   */
+  void
+  Parent(const TreeNode *node_pointer);
+
+  /**
    * Get the pointer to the node data.
    */
   T *
@@ -282,6 +432,18 @@ public:
   get_data_pointer() const;
 
   /**
+   * Get the reference to the node data.
+   */
+  T &
+  get_data_reference();
+
+  /**
+   * Get the reference to the node data (const version).
+   */
+  const T &
+  get_data_reference() const;
+
+  /**
    * Get the level of the node in the tree.
    */
   unsigned int
@@ -292,12 +454,20 @@ private:
   unsigned int level;
 
   std::array<TreeNode *, N> children;
+  TreeNode *                parent;
+
+  /**
+   * Total number of nonempty children.
+   */
+  unsigned int child_num;
 };
 
 template <typename T, std::size_t N>
 TreeNode<T, N>::TreeNode()
   : data()
   , level(0)
+  , parent(nullptr)
+  , child_num(0)
 {
   children.fill(nullptr);
 }
@@ -306,6 +476,8 @@ template <typename T, std::size_t N>
 TreeNode<T, N>::TreeNode(const T &data)
   : data(data)
   , level(0)
+  , parent(nullptr)
+  , child_num(0)
 {
   children.fill(nullptr);
 }
@@ -313,23 +485,41 @@ TreeNode<T, N>::TreeNode(const T &data)
 template <typename T, std::size_t N>
 TreeNode<T, N>::TreeNode(const T &                        data,
                          unsigned int                     level,
-                         const std::array<TreeNode *, N> &children)
+                         const std::array<TreeNode *, N> &children,
+                         TreeNode *                       parent)
   : data(data)
   , level(level)
   , children(children)
-{}
+  , parent(parent)
+  , child_num(0)
+{
+  /**
+   * Count the total number of nonempty children.
+   */
+  for (auto child : this->children)
+    {
+      if (child != nullptr)
+        {
+          child_num++;
+        }
+    }
+}
 
 template <typename T, std::size_t N>
 TreeNode<T, N>::TreeNode(const TreeNode &node)
   : data(node.data)
   , level(node.level)
   , children(node.children)
+  , parent(node.parent)
+  , child_num(node.child_num)
 {}
 
 template <typename T, std::size_t N>
 TreeNode<T, N> *
 TreeNode<T, N>::get_child_pointer(std::size_t index) const
 {
+  Assert((index >= 0) && (index < N), dealii::ExcIndexRange(index, 0, N));
+
   return children.at(index);
 }
 
@@ -338,7 +528,32 @@ void
 TreeNode<T, N>::set_child_pointer(std::size_t           index,
                                   const TreeNode<T, N> *pointer)
 {
+  Assert((index >= 0) && (index < N), dealii::ExcIndexRange(index, 0, N));
+
   children.at(index) = const_cast<TreeNode *>(pointer);
+}
+
+
+template <typename T, std::size_t N>
+unsigned int
+TreeNode<T, N>::get_child_num() const
+{
+  return child_num;
+}
+
+
+template <typename T, std::size_t N>
+TreeNode<T, N> *
+TreeNode<T, N>::Parent() const
+{
+  return parent;
+}
+
+template <typename T, std::size_t N>
+void
+TreeNode<T, N>::Parent(const TreeNode *node_pointer)
+{
+  parent = const_cast<TreeNode *>(node_pointer);
 }
 
 template <typename T, std::size_t N>
@@ -355,6 +570,23 @@ TreeNode<T, N>::get_data_pointer() const
   return &data;
 }
 
+
+template <typename T, std::size_t N>
+T &
+TreeNode<T, N>::get_data_reference()
+{
+  return data;
+}
+
+
+template <typename T, std::size_t N>
+const T &
+TreeNode<T, N>::get_data_reference() const
+{
+  return data;
+}
+
+
 template <typename T, std::size_t N>
 unsigned int
 TreeNode<T, N>::get_level() const
@@ -368,12 +600,13 @@ TreeNode<T, N>::get_level() const
 template <typename T>
 BinaryTreeNode<T> *
 CreateTreeNode(const T &          data,
-               unsigned int       level = 0,
-               BinaryTreeNode<T> *left  = nullptr,
-               BinaryTreeNode<T> *right = nullptr)
+               unsigned int       level  = 0,
+               BinaryTreeNode<T> *left   = nullptr,
+               BinaryTreeNode<T> *right  = nullptr,
+               BinaryTreeNode<T> *parent = nullptr)
 {
   BinaryTreeNode<T> *p = nullptr;
-  p                    = new BinaryTreeNode<T>(data, level, left, right);
+  p = new BinaryTreeNode<T>(data, level, left, right, parent);
 
   if (p == nullptr)
     {
@@ -392,10 +625,11 @@ template <typename T, std::size_t N>
 TreeNode<T, N> *
 CreateTreeNode(const T &                              data,
                unsigned int                           level,
-               const std::array<TreeNode<T, N> *, N> &children)
+               const std::array<TreeNode<T, N> *, N> &children,
+               TreeNode<T, N> *                       parent = nullptr)
 {
   TreeNode<T, N> *p = nullptr;
-  p                 = new TreeNode<T, N>(data, level, children);
+  p                 = new TreeNode<T, N>(data, level, children, parent);
 
   if (p == nullptr)
     {
@@ -441,7 +675,7 @@ void
 PrintTreeNode(std::ostream &out, const BinaryTreeNode<T> *p)
 {
   out << "Level " << p->get_level() << "\n";
-  out << *(p->get_data_pointer()) << "\n------------------\n" << std::endl;
+  out << *(p->get_data_pointer()) << "\n------------------" << std::endl;
 }
 
 /**
@@ -708,6 +942,57 @@ PrintTree(std::ostream &out, const TreeNode<T, N> *p)
                                std::placeholders::_1));
     }
 }
+
+
+/**
+ * Count the total number of the binary tree nodes by recursion.
+ */
+template <typename T>
+unsigned int
+CountTreeNodes(const BinaryTreeNode<T> *p)
+{
+  unsigned int node_num = 0;
+
+  if (p != nullptr)
+    {
+      node_num++;
+      node_num += CountTreeNodes(p->Left());
+      node_num += CountTreeNodes(p->Right());
+
+      return node_num;
+    }
+  else
+    {
+      return 0;
+    }
+}
+
+
+/**
+ * Count the total number of the tree nodes by recursion.
+ */
+template <typename T, std::size_t N>
+unsigned int
+CountTreeNodes(const TreeNode<T, N> *p)
+{
+  unsigned int node_num = 0;
+
+  if (p != nullptr)
+    {
+      node_num++;
+      for (unsigned int i = 0; i < N; i++)
+        {
+          node_num += CountTreeNodes(p->get_child_pointer(i));
+        }
+
+      return node_num;
+    }
+  else
+    {
+      return 0;
+    }
+}
+
 
 /**
  * Use the Delete a whole binary tree using post-order traversal.

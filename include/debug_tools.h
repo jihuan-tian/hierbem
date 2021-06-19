@@ -35,6 +35,25 @@ print_vector_values(std::ostream &        out,
     }
 }
 
+
+template <typename node_pointer_type>
+void
+print_vector_of_tree_node_pointer_values(
+  std::ostream &                        out,
+  const std::vector<node_pointer_type> &tree_node_pointers,
+  const std::string &                   sep = std::string(","))
+{
+  for (auto iter = tree_node_pointers.cbegin();
+       iter != tree_node_pointers.cend();
+       iter++)
+    {
+      if ((iter + 1) == tree_node_pointers.cend())
+        out << (*iter)->get_data_reference() << std::endl;
+      else
+        out << (*iter)->get_data_reference() << sep;
+    }
+}
+
 /**
  * \brief Generate a table of DoF indices associated with each support point.
  * \details The information in the table is defined in the given Mapping and

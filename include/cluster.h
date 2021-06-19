@@ -22,11 +22,15 @@
 #include "simple_bounding_box.h"
 
 /**
- * Calculate the average cell size associated with those DoFs handled by the
- * DoF handler object.
+ * Calculate the average cell sizes associated with those DoFs handled by the
+ * given DoF handler object.
  *
- * @param dof_average_cell_size The memory for this vector should be
- * preallocated and initialized to zero before calling this function.
+ * The value doubled is used as an estimate for the diameter of the support set
+ * of each DoF.
+ *
+ * @param dof_average_cell_size The returned list of average cell sizes. The
+ * memory for this vector should be preallocated and initialized to zero before
+ * calling this function.
  */
 template <int dim, int spacedim, typename Number = double>
 void
@@ -71,11 +75,15 @@ map_dofs_to_average_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
 }
 
 /**
- * Calculate the maximum cell size associated with those DoFs handled by the
- * DoF handler object.
+ * Calculate the maximum cell sizes associated with those DoFs handled by the
+ * given DoF handler object.
  *
- * @param dof_max_cell_size The memory for this vector should be
- * preallocated and initialized to zero before calling this function.
+ * The value doubled is used as an estimate for the diameter of the support
+ * set of each DoF.
+ *
+ * @param dof_max_cell_size The returned list of maximum cell sizes. The memory
+ * for this vector should be preallocated and initialized to zero before calling
+ * this function.
  */
 template <typename DoFHandlerType, typename Number = double>
 void
@@ -111,11 +119,15 @@ map_dofs_to_max_cell_size(const DoFHandlerType &dof_handler,
 }
 
 /**
- * Calculate the minimum cell size associated with those DoFs handled by the
- * DoF handler object.
+ * Calculate the minimum cell sizes associated with those DoFs handled by the
+ * given DoF handler object.
  *
- * @param dof_min_cell_size The memory for this vector should be
- * preallocated and initialized to zero before calling this function.
+ * The value doubled is used as an estimate for the diameter of the support set
+ * of each DoF.
+ *
+ * @param dof_min_cell_size The returned list of average cell sizes. The memory
+ * for this vector should be preallocated and initialized to zero before calling
+ * this function.
  */
 template <typename DoFHandlerType, typename Number = double>
 void

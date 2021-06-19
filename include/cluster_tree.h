@@ -2,6 +2,7 @@
 #define INCLUDE_CLUSTER_TREE_H_
 
 #include "cluster.h"
+#include "debug_tools.h"
 #include "tree.h"
 
 /**
@@ -25,18 +26,48 @@ public:
   operator<<(std::ostream &                         out,
              const ClusterTree<spacedim1, Number1> &cluster_tree);
 
-  typedef BinaryTreeNode<Cluster<spacedim, Number>>  node_value_type;
+  /**
+   * Data type for a node in the ClusterTree.
+   */
+  typedef BinaryTreeNode<Cluster<spacedim, Number>> node_value_type;
+  /**
+   * Pointer type for a node in the ClusterTree.
+   */
   typedef BinaryTreeNode<Cluster<spacedim, Number>> *node_pointer_type;
+  /**
+   * Const pointer type for a node in the ClusterTree.
+   */
   typedef const BinaryTreeNode<Cluster<spacedim, Number>>
-    *                                                node_const_pointer_type;
+    *node_const_pointer_type;
+  /**
+   * Reference type for a node in the ClusterTree.
+   */
   typedef BinaryTreeNode<Cluster<spacedim, Number>> &node_reference_type;
+  /**
+   * Const reference type for a node in the ClusterTree.
+   */
   typedef const BinaryTreeNode<Cluster<spacedim, Number>>
     &node_const_reference_type;
 
-  typedef Cluster<spacedim, Number>        data_value_type;
-  typedef Cluster<spacedim, Number> *      data_pointer_type;
+  /**
+   * Data type for the content held by a node in the ClusterTree.
+   */
+  typedef Cluster<spacedim, Number> data_value_type;
+  /**
+   * Pointer type for the content held by a node in the ClusterTree.
+   */
+  typedef Cluster<spacedim, Number> *data_pointer_type;
+  /**
+   * Const pointer type for the content held by a node in the ClusterTree.
+   */
   typedef const Cluster<spacedim, Number> *data_const_pointer_type;
-  typedef Cluster<spacedim, Number> &      data_reference_type;
+  /**
+   * Reference type for the content held by a node in the ClusterTree.
+   */
+  typedef Cluster<spacedim, Number> &data_reference_type;
+  /**
+   * Const reference type for the content held by a node in the ClusterTree.
+   */
   typedef const Cluster<spacedim, Number> &data_const_reference_type;
 
   /**
@@ -52,7 +83,7 @@ public:
   ClusterTree();
 
   /**
-   * Constructor from a full index set.
+   * Constructor from a full index set and associated support point coordinates.
    *
    * This constructor will create the root node of the cluster tree based on the
    * given data. There is no mesh cell size correction for the cluster diameter.
@@ -64,7 +95,7 @@ public:
               const unsigned int                          n_min);
 
   /**
-   * Constructor from a full index set.
+   * Constructor from a full index set and associated support point coordinates.
    *
    * This constructor will create the root node of the cluster tree based on the
    * given data. There is mesh cell size correction for the cluster diameter.
@@ -107,6 +138,18 @@ public:
   get_root() const;
 
   /**
+   * Get the reference to the block cluster list.
+   */
+  std::vector<node_pointer_type> &
+  get_leaf_set();
+
+  /**
+   * Get the reference to the block cluster list (const version).
+   */
+  const std::vector<node_pointer_type> &
+  get_leaf_set() const;
+
+  /**
    * Get the minimum cluster size.
    */
   unsigned int
@@ -118,6 +161,18 @@ public:
   unsigned int
   get_depth() const;
 
+  /**
+   * Get the maximum tree level.
+   */
+  unsigned int
+  get_max_level() const;
+
+  /**
+   * Get the total number of clusters in the tree.
+   */
+  unsigned int
+  get_node_num() const;
+
 private:
   /**
    * Perform a recursive partition by starting from a cluster node.
@@ -127,8 +182,10 @@ private:
    * @param all_support_points All the support points.
    */
   void
-  partition_from_node(node_pointer_type                   current_cluster_node,
-                      const std::vector<Point<spacedim>> &all_support_points);
+  partition_from_cluster_node(
+    node_pointer_type                   current_cluster_node,
+    const std::vector<Point<spacedim>> &all_support_points,
+    std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
   /**
    * Perform a recursive partition by starting from a cluster node.
@@ -138,11 +195,14 @@ private:
    * @param all_support_points All the support points.
    */
   void
-  partition_from_node(node_pointer_type                   current_cluster_node,
-                      const std::vector<Point<spacedim>> &all_support_points,
-                      const std::vector<Number> &         cell_size_at_dofs);
+  partition_from_cluster_node(
+    node_pointer_type                   current_cluster_node,
+    const std::vector<Point<spacedim>> &all_support_points,
+    const std::vector<Number> &         cell_size_at_dofs,
+    std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
-  node_pointer_type root_node;
+  node_pointer_type              root_node;
+  std::vector<node_pointer_type> leaf_set;
 
   /**
    * Depth of the tree, which is the maximum level plus one.
@@ -150,18 +210,40 @@ private:
   unsigned int depth;
 
   /**
+   * Maximum level of the cluster tree, which is \p depth - 1.
+   */
+  int max_level;
+
+  /**
    * Minimum cluster size, which is used as the condition for stopping box
    * division.
    */
   const unsigned int n_min;
+
+  /**
+   * Total number of clusters in the tree.
+   */
+  unsigned int node_num;
 };
 
 template <int spacedim, typename Number>
 std::ostream &
 operator<<(std::ostream &out, const ClusterTree<spacedim, Number> &cluster_tree)
 {
-  out << "* Tree depth: " << cluster_tree.depth << "\n";
+  out << "* Tree depth: " << cluster_tree.get_depth() << "\n";
+  out << "* Tree max level: " << cluster_tree.get_max_level() << "\n";
+  out << "* Total number of cluster tree nodes obtained during partition: "
+      << cluster_tree.get_node_num() << "\n";
+  out << "* Total number of cluster tree nodes by recursive tree traversal: "
+      << CountTreeNodes(cluster_tree.get_root()) << "\n";
+
+  out << "* Tree nodes:\n";
   PrintTree(out, cluster_tree.root_node);
+
+  out << "* Leaf set: " << cluster_tree.get_leaf_set().size() << " clusters\n";
+  print_vector_of_tree_node_pointer_values(out,
+                                           cluster_tree.get_leaf_set(),
+                                           "\n");
 
   return out;
 }
@@ -169,8 +251,11 @@ operator<<(std::ostream &out, const ClusterTree<spacedim, Number> &cluster_tree)
 template <int spacedim, typename Number>
 ClusterTree<spacedim, Number>::ClusterTree()
   : root_node(nullptr)
+  , leaf_set(0)
   , depth(0)
+  , max_level(-1)
   , n_min(2)
+  , node_num(0)
 {}
 
 template <int spacedim, typename Number>
@@ -179,14 +264,25 @@ ClusterTree<spacedim, Number>::ClusterTree(
   const std::vector<Point<spacedim>> &        all_support_points,
   const unsigned int                          n_min)
   : root_node(nullptr)
-  , depth(1)
+  , leaf_set(0)
+  , depth(0)
+  , max_level(-1)
   , n_min(n_min)
+  , node_num(0)
 {
   root_node = CreateTreeNode<data_value_type>(
     Cluster<spacedim, Number>(index_set, all_support_points),
     0,
     nullptr,
+    nullptr,
     nullptr);
+
+  depth     = 1;
+  max_level = 0;
+  node_num  = 1;
+
+  // Append the only root node to the leaf set.
+  leaf_set.push_back(root_node);
 }
 
 template <int spacedim, typename Number>
@@ -196,14 +292,25 @@ ClusterTree<spacedim, Number>::ClusterTree(
   const std::vector<Number> &                 cell_size_at_dofs,
   const unsigned int                          n_min)
   : root_node(nullptr)
-  , depth(1)
+  , leaf_set(0)
+  , depth(0)
+  , max_level(-1)
   , n_min(n_min)
+  , node_num(0)
 {
   root_node = CreateTreeNode<data_value_type>(
     Cluster<spacedim, Number>(index_set, all_support_points, cell_size_at_dofs),
     0,
     nullptr,
+    nullptr,
     nullptr);
+
+  depth     = 1;
+  max_level = 0;
+  node_num  = 1;
+
+  // Append the only root node to the leaf set.
+  leaf_set.push_back(root_node);
 }
 
 template <int spacedim, typename Number>
@@ -214,10 +321,13 @@ ClusterTree<spacedim, Number>::~ClusterTree()
 
 template <int spacedim, typename Number>
 void
-ClusterTree<spacedim, Number>::partition_from_node(
+ClusterTree<spacedim, Number>::partition_from_cluster_node(
   node_pointer_type                   current_cluster_node,
-  const std::vector<Point<spacedim>> &all_support_points)
+  const std::vector<Point<spacedim>> &all_support_points,
+  std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
 {
+  leaf_set_wrt_current_node.clear();
+
   /**
    * When the size/cardinality of the current cluster is large enough, continue
    * the partition.
@@ -276,17 +386,31 @@ ClusterTree<spacedim, Number>::partition_from_node(
             Cluster<spacedim, Number>(left_child_index_set, all_support_points),
             current_cluster_node->get_level() + 1,
             nullptr,
-            nullptr);
+            nullptr,
+            current_cluster_node);
 
           /**
-           * Append this node as the left child of the parent node.
+           * Append this new node as the left child of the current cluster node.
            */
           current_cluster_node->Left(child_node);
+          node_num++;
 
+          std::vector<node_pointer_type> leaf_set_wrt_child_node;
           /**
            * Continue the recursive partition by starting from this child node.
            */
-          partition_from_node(child_node, all_support_points);
+          partition_from_cluster_node(child_node,
+                                      all_support_points,
+                                      leaf_set_wrt_child_node);
+
+          /**
+           * Merge the leaf set wrt. the child cluster node into the
+           * leaf set of the current cluster node.
+           */
+          for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
+            {
+              leaf_set_wrt_current_node.push_back(cluster_node);
+            }
         }
 
       if (right_child_index_set.size() > 0)
@@ -301,28 +425,51 @@ ClusterTree<spacedim, Number>::partition_from_node(
                                       all_support_points),
             current_cluster_node->get_level() + 1,
             nullptr,
-            nullptr);
+            nullptr,
+            current_cluster_node);
 
           /**
-           * Append this node as the right child of the parent node.
+           * Append this new node as the right child of the current cluster
+           * node.
            */
           current_cluster_node->Right(child_node);
+          node_num++;
 
+          std::vector<node_pointer_type> leaf_set_wrt_child_node;
           /**
            * Continue the recursive partition by starting from this child node.
            */
-          partition_from_node(child_node, all_support_points);
+          partition_from_cluster_node(child_node,
+                                      all_support_points,
+                                      leaf_set_wrt_child_node);
+
+          /**
+           * Merge the leaf set wrt. the child cluster node into the
+           * leaf set of the current cluster node.
+           */
+          for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
+            {
+              leaf_set_wrt_current_node.push_back(cluster_node);
+            }
         }
+    }
+  else
+    {
+      leaf_set_wrt_current_node.push_back(current_cluster_node);
     }
 }
 
+
 template <int spacedim, typename Number>
 void
-ClusterTree<spacedim, Number>::partition_from_node(
+ClusterTree<spacedim, Number>::partition_from_cluster_node(
   node_pointer_type                   current_cluster_node,
   const std::vector<Point<spacedim>> &all_support_points,
-  const std::vector<Number> &         cell_size_at_dofs)
+  const std::vector<Number> &         cell_size_at_dofs,
+  std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
 {
+  leaf_set_wrt_current_node.clear();
+
   /**
    * When the size/cardinality of the current cluster is large enough, continue
    * the partition.
@@ -383,19 +530,32 @@ ClusterTree<spacedim, Number>::partition_from_node(
                                       cell_size_at_dofs),
             current_cluster_node->get_level() + 1,
             nullptr,
-            nullptr);
+            nullptr,
+            current_cluster_node);
 
           /**
-           * Append this node as the left child of the parent node.
+           * Append this new node as the left child of the current cluster node.
            */
           current_cluster_node->Left(child_node);
+          node_num++;
 
+          std::vector<node_pointer_type> leaf_set_wrt_child_node;
           /**
            * Continue the recursive partition by starting from this child node.
            */
-          partition_from_node(child_node,
-                              all_support_points,
-                              cell_size_at_dofs);
+          partition_from_cluster_node(child_node,
+                                      all_support_points,
+                                      cell_size_at_dofs,
+                                      leaf_set_wrt_child_node);
+
+          /**
+           * Merge the leaf set wrt. the child cluster node into the
+           * leaf set of the current cluster node.
+           */
+          for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
+            {
+              leaf_set_wrt_current_node.push_back(cluster_node);
+            }
         }
 
       if (right_child_index_set.size() > 0)
@@ -411,32 +571,51 @@ ClusterTree<spacedim, Number>::partition_from_node(
                                       cell_size_at_dofs),
             current_cluster_node->get_level() + 1,
             nullptr,
-            nullptr);
+            nullptr,
+            current_cluster_node);
 
           /**
-           * Append this node as the right child of the parent node.
+           * Append this new node as the right child of the current cluster
+           * node.
            */
           current_cluster_node->Right(child_node);
+          node_num++;
 
+          std::vector<node_pointer_type> leaf_set_wrt_child_node;
           /**
            * Continue the recursive partition by starting from this child node.
            */
-          partition_from_node(child_node,
-                              all_support_points,
-                              cell_size_at_dofs);
+          partition_from_cluster_node(child_node,
+                                      all_support_points,
+                                      cell_size_at_dofs,
+                                      leaf_set_wrt_child_node);
+
+          /**
+           * Merge the leaf set wrt. the child cluster node into the
+           * leaf set of the current cluster node.
+           */
+          for (node_pointer_type cluster_node : leaf_set_wrt_child_node)
+            {
+              leaf_set_wrt_current_node.push_back(cluster_node);
+            }
         }
     }
+  else
+    {
+      leaf_set_wrt_current_node.push_back(current_cluster_node);
+    }
 }
+
 
 template <int spacedim, typename Number>
 void
 ClusterTree<spacedim, Number>::partition(
   const std::vector<Point<spacedim>> &all_support_points)
 {
-  partition_from_node(root_node, all_support_points);
+  partition_from_cluster_node(root_node, all_support_points, leaf_set);
 
-  // Update the tree depth.
-  depth = calc_depth(root_node);
+  depth     = calc_depth(root_node);
+  max_level = depth - 1;
 }
 
 template <int spacedim, typename Number>
@@ -445,10 +624,13 @@ ClusterTree<spacedim, Number>::partition(
   const std::vector<Point<spacedim>> &all_support_points,
   const std::vector<Number> &         cell_size_at_dofs)
 {
-  partition_from_node(root_node, all_support_points, cell_size_at_dofs);
+  partition_from_cluster_node(root_node,
+                              all_support_points,
+                              cell_size_at_dofs,
+                              leaf_set);
 
-  // Update the tree depth.
-  depth = calc_depth(root_node);
+  depth     = calc_depth(root_node);
+  max_level = depth - 1;
 }
 
 template <int spacedim, typename Number>
@@ -457,6 +639,23 @@ ClusterTree<spacedim, Number>::get_root() const
 {
   return root_node;
 }
+
+
+template <int spacedim, typename Number>
+std::vector<typename ClusterTree<spacedim, Number>::node_pointer_type> &
+ClusterTree<spacedim, Number>::get_leaf_set()
+{
+  return leaf_set;
+}
+
+
+template <int spacedim, typename Number>
+const std::vector<typename ClusterTree<spacedim, Number>::node_pointer_type> &
+ClusterTree<spacedim, Number>::get_leaf_set() const
+{
+  return leaf_set;
+}
+
 
 template <int spacedim, typename Number>
 unsigned int
@@ -470,6 +669,21 @@ unsigned int
 ClusterTree<spacedim, Number>::get_depth() const
 {
   return depth;
+}
+
+template <int spacedim, typename Number>
+unsigned int
+ClusterTree<spacedim, Number>::get_max_level() const
+{
+  return max_level;
+}
+
+
+template <int spacedim, typename Number>
+unsigned int
+ClusterTree<spacedim, Number>::get_node_num() const
+{
+  return node_num;
 }
 
 #endif /* INCLUDE_CLUSTER_TREE_H_ */
