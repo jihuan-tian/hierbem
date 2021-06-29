@@ -61,7 +61,7 @@ public:
     typename ClusterTree<spacedim, Number>::node_pointer_type sigma_node);
 
   /**
-   * Determine if the block cluster belongs the near field set.
+   * Determine if the block cluster belongs to the near field set.
    *
    * When both contained clusters are large, the block cluster is considered as
    * large.
@@ -70,6 +70,14 @@ public:
    */
   void
   check_is_near_field(unsigned int n_min);
+
+  /**
+   * Determine if the block cluster belongs to the near field set.
+   * @param n_min
+   * @return
+   */
+  bool
+  is_small(unsigned int n_min);
 
   /**
    * Determine if the block cluster is admissible. The admissibility condition
@@ -240,6 +248,17 @@ BlockCluster<spacedim, Number>::check_is_near_field(unsigned int n_min)
       is_near_field = true;
     }
 }
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_small(unsigned int n_min)
+{
+  check_is_near_field(n_min);
+
+  return is_near_field;
+}
+
 
 template <int spacedim, typename Number>
 void

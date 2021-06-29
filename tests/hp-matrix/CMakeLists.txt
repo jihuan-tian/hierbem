@@ -1,0 +1,2 @@
+SET(TEST_TARGET hp-matrix)
+DEAL_II_PICKUP_TESTS()

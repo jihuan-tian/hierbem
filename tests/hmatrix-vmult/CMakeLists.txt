@@ -1,0 +1,2 @@
+SET(TEST_TARGET hmatrix-vmult)
+DEAL_II_PICKUP_TESTS()

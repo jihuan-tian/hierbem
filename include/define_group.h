@@ -20,3 +20,8 @@
  * \defgroup linalg Linear algebra
  * \brief Linear algebra computation.
  */
+
+/**
+ * \defgroup programming_tech Programming techniques
+ * \brief Programming techniques for C++ and software engineering.
+ */

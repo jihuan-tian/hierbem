@@ -26,12 +26,57 @@ public:
   using size_type = std::make_unsigned<types::blas_int>::type;
 
   /**
-   * Construct the class by specifying the matrix dimension.
+   * Create a zero valued matrix.
+   *
+   * @param rows
+   * @param cols
+   * @param matrix
+   */
+  static void
+  ZeroMatrix(const size_type              rows,
+             const size_type              cols,
+             LAPACKFullMatrixExt<Number> &matrix);
+
+  /**
+   * Create constant valued matrix.
+   *
+   * @param rows
+   * @param cols
+   * @param value
+   * @param matrix
+   */
+  static void
+  ConstantMatrix(const size_type              rows,
+                 const size_type              cols,
+                 Number                       value,
+                 LAPACKFullMatrixExt<Number> &matrix);
+
+  /**
+   * Create a constant valued diagonal matrix.
+   *
+   * @param dim
+   * @param value
+   * @param matrix
+   */
+  static void
+  DiagMatrix(const size_type dim, Number value, LAPACKFullMatrixExt &matrix);
+
+  /**
+   * Reshape a vector of values into a LAPACKFullMatrixExt in column major.
+   */
+  static void
+  Reshape(const size_type              rows,
+          const size_type              cols,
+          const std::vector<Number> &  values,
+          LAPACKFullMatrixExt<Number> &matrix);
+
+  /**
+   * Construct a square matrix by specifying the dimension.
    */
   LAPACKFullMatrixExt(const size_type size = 0);
 
   /**
-   * Construct the class by specifying the number of rows and columns.
+   * Construct a matrix by specifying the number of rows and columns.
    * @param rows
    * @param cols
    */
@@ -117,7 +162,7 @@ public:
    * Perform the standard singular value decomposition (SVD).
    * @param A
    * @param U
-   * @param Sigma_r
+   * @param Sigma_r the list of singular values, which has a dimension of \f$\min(m,n)\f$.
    * @param VT
    */
   void
@@ -130,14 +175,14 @@ public:
    * truncation.
    * @param A
    * @param U
-   * @param Sigma_r
+   * @param Sigma_r the list of singular values, which has a dimension of \f$\min(m,n)\f$.
    * @param VT
    */
   void
   svd(LAPACKFullMatrixExt<Number> &                                   U,
       std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
       LAPACKFullMatrixExt<Number> &                                   VT,
-      const unsigned int truncation_rank);
+      const size_type truncation_rank);
 
   /**
    * Perform the reduced singular value decomposition (SVD) with rank
@@ -146,17 +191,133 @@ public:
    * @param U
    * @param Sigma_r
    * @param VT
+   * @return Effective rank.
    */
-  void
+  size_type
   reduced_svd(
     LAPACKFullMatrixExt<Number> &                                   U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
     LAPACKFullMatrixExt<Number> &                                   VT,
-    const unsigned int truncation_rank);
+    const size_type truncation_rank);
+
+  /**
+   * Left multiply the matrix with a diagonal matrix \p V, which is stored in a
+   * std::vector.
+   *
+   * @param V
+   */
+  void
+  scale_rows(
+    const std::vector<typename numbers::NumberTraits<Number>::real_type> &V);
+
+
+  /**
+   * Right multiply the matrix with a diagonal matrix \p V, which is stored in a
+   * std::vector.
+   * @param V
+   */
+  void
+  scale_columns(
+    const std::vector<typename numbers::NumberTraits<Number>::real_type> &V);
+
+  /**
+   * Right multiply the matrix with a diagonal matrix \p V, which is stored in a
+   * Vector.
+   * @param V
+   */
+  void
+  scale_columns(
+    const Vector<typename numbers::NumberTraits<Number>::real_type> &V);
+
+  /**
+   * Perform in-place transpose of the matrix.
+   */
+  void
+  transpose();
+
+  /**
+   * Decompose the full matrix into the two components of its rank-k
+   * representation.
+   * @param k
+   * @param is_left_associative
+   * @param A
+   * @param B
+   * @return Effective rank.
+   */
+  size_type
+  rank_k_decompose(const unsigned int           k,
+                   LAPACKFullMatrixExt<Number> &A,
+                   LAPACKFullMatrixExt<Number> &B,
+                   bool                         is_left_associative = true);
 
 private:
   LAPACKSupport::State state;
 };
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::ZeroMatrix(const size_type              rows,
+                                        const size_type              cols,
+                                        LAPACKFullMatrixExt<Number> &matrix)
+{
+  matrix.reinit(rows, cols);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::ConstantMatrix(const size_type              rows,
+                                            const size_type              cols,
+                                            Number                       value,
+                                            LAPACKFullMatrixExt<Number> &matrix)
+{
+  matrix.reinit(rows, cols);
+
+  for (size_type j = 0; j < cols; j++)
+    {
+      for (size_type i = 0; i < rows; i++)
+        {
+          matrix(i, j) = value;
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::DiagMatrix(const size_type      dim,
+                                        Number               value,
+                                        LAPACKFullMatrixExt &matrix)
+{
+  matrix.reinit(dim, dim);
+
+  for (size_type i = 0; i < dim; i++)
+    {
+      matrix(i, i) = value;
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
+                                     const size_type              cols,
+                                     const std::vector<Number> &  values,
+                                     LAPACKFullMatrixExt<Number> &matrix)
+{
+  AssertDimension(rows * cols, values.size());
+
+  matrix.reinit(rows, cols);
+
+  typename std::vector<Number>::const_iterator it_values = values.begin();
+  for (typename LAPACKFullMatrixExt<Number>::iterator it = matrix.begin();
+       it != matrix.end();
+       it++, it_values++)
+    {
+      (*it) = (*it_values);
+    }
+}
 
 
 template <typename Number>
@@ -598,9 +759,6 @@ LAPACKFullMatrixExt<Number>::svd(
   const size_type nn      = this->n();
   const size_type min_dim = std::min(mm, nn);
 
-  Assert(truncation_rank > 0 && truncation_rank <= min_dim,
-         ExcLeftOpenIntervalRange(truncation_rank, 0, min_dim));
-
   /**
    * Perform the full SVD.
    */
@@ -643,7 +801,7 @@ LAPACKFullMatrixExt<Number>::svd(
 
 
 template <typename Number>
-void
+typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd(
   LAPACKFullMatrixExt<Number> &                                   U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
@@ -653,9 +811,6 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
   const size_type mm      = this->m();
   const size_type nn      = this->n();
   const size_type min_dim = std::min(mm, nn);
-
-  Assert(truncation_rank > 0 && truncation_rank <= min_dim,
-         ExcLeftOpenIntervalRange(truncation_rank, 0, min_dim));
 
   /**
    * Perform the full SVD.
@@ -682,23 +837,178 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
 
       /**
        * Keep the first \p truncation_rank columns of \p U, while deleting
-       * others to zero.
+       * others.
        */
       U.keep_first_n_columns(truncation_rank, true);
 
       /**
-       * Keep the first \p truncation_rank rows of \p VT, while deleting others
-       * to zero.
+       * Keep the first \p truncation_rank rows of \p VT, while deleting others.
        */
       VT.keep_first_n_rows(truncation_rank, true);
     }
   else
     {
-      /**
-       * Do not thing when the truncation rank is equal to or larger than \p
-       * min_dim. This means the truncation is an identity operator.
-       */
+      if (mm > nn)
+        {
+          /**
+           * Keep the first \p min_dim columns of \p U, while deleting
+           * others.
+           */
+          U.keep_first_n_columns(min_dim, true);
+        }
+      else if (mm < nn)
+        {
+          /**
+           * Keep the first \p min_dim rows of \p VT, while deleting
+           * others.
+           */
+          VT.keep_first_n_rows(min_dim, true);
+        }
+      else
+        {
+          /**
+           * When the original matrix is square, do nothing.
+           */
+        }
+    }
+
+  AssertDimension(U.n(), Sigma_r.size());
+  AssertDimension(VT.m(), Sigma_r.size());
+
+  return Sigma_r.size();
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::scale_rows(
+  const std::vector<typename numbers::NumberTraits<Number>::real_type> &V)
+{
+  Assert(state == LAPACKSupport::matrix ||
+           state == LAPACKSupport::inverse_matrix,
+         ExcState(state));
+  AssertDimension(this->m(), V.size());
+
+  size_type nrows = this->m();
+  size_type ncols = this->n();
+
+  for (size_type j = 0; j < ncols; j++)
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          (*this)(i, j) *= V.at(i);
+        }
     }
 }
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::scale_columns(
+  const std::vector<typename numbers::NumberTraits<Number>::real_type> &V)
+{
+  Assert(state == LAPACKSupport::matrix ||
+           state == LAPACKSupport::inverse_matrix,
+         ExcState(state));
+  AssertDimension(this->n(), V.size());
+
+  size_type nrows = this->m();
+  size_type ncols = this->n();
+
+  for (size_type j = 0; j < ncols; j++)
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          (*this)(i, j) *= V.at(j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::scale_columns(
+  const Vector<typename numbers::NumberTraits<Number>::real_type> &V)
+{
+  Assert(state == LAPACKSupport::matrix ||
+           state == LAPACKSupport::inverse_matrix,
+         ExcState(state));
+  AssertDimension(this->n(), V.size());
+
+  size_type nrows = this->m();
+  size_type ncols = this->n();
+
+  for (size_type j = 0; j < ncols; j++)
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          (*this)(i, j) *= V(j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::transpose()
+{
+  Assert(state == LAPACKSupport::matrix ||
+           state == LAPACKSupport::inverse_matrix,
+         ExcState(state));
+
+  const size_type nrows = this->m();
+  const size_type ncols = this->n();
+
+  // Make a shallow copy of the current matrix via rvalue reference by using
+  // std::move.
+  TransposeTable<Number> copy(std::move(*this));
+
+  // Reinitialize the current matrix with memory allocation.
+  this->TransposeTable<Number>::reinit(ncols, nrows);
+
+  for (size_type j = 0; j < ncols; j++)
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          (*this)(j, i) = copy(i, j);
+        }
+    }
+}
+
+
+template <typename Number>
+typename LAPACKFullMatrixExt<Number>::size_type
+LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
+                                              LAPACKFullMatrixExt<Number> &A,
+                                              LAPACKFullMatrixExt<Number> &B,
+                                              bool is_left_associative)
+{
+  std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
+
+  /**
+   * Perform RSVD for the matrix and return U and VT into A and B respectively.
+   */
+  const size_type effective_rank = this->reduced_svd(A, Sigma_r, B, k);
+
+  if (is_left_associative)
+    {
+      /**
+       * Let A = A*Sigma_r and B = B^T.
+       */
+      A.scale_columns(Sigma_r);
+      B.transpose();
+    }
+  else
+    {
+      /**
+       * Let A = A and B = (Sigma_r * B)^T.
+       */
+      B.scale_rows(Sigma_r);
+      B.transpose();
+    }
+
+  return effective_rank;
+}
+
 
 #endif /* INCLUDE_LAPACK_FULL_MATRIX_EXT_H_ */

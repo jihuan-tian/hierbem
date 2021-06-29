@@ -9,6 +9,20 @@ echo -e "SET(TEST_TARGET $test_target_name)\nDEAL_II_PICKUP_TESTS()" > CMakeList
 touch $test_target_name.cc
 touch $test_target_name.output
 
+# Insert template code into the file $test_target_name.cc.
+date_string=$(date -I)
+template_code=$(cat <<EOF
+/**
+ * \file $test_target_name.cc
+ * \brief 
+ * \ingroup 
+ * \author Jihuan Tian
+ * \date $date_string
+ */
+EOF
+)
+echo "$template_code" > $test_target_name.cc
+
 # Append the test project to CMakeLists.txt.
 echo "ADD_SUBDIRECTORY(tests/$test_folder_name)" >> ../../CMakeLists.txt
 

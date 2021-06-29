@@ -17,6 +17,7 @@
 
 #include <deal.II/base/exceptions.h>
 
+#include <algorithm>
 #include <array>
 #include <exception>
 #include <functional>
@@ -209,6 +210,14 @@ BinaryTreeNode<T>::BinaryTreeNode(const T &       data,
   if (right != nullptr)
     {
       child_num++;
+    }
+
+  /**
+   * Increment the \p child_num of the parent node.
+   */
+  if (parent != nullptr)
+    {
+      (parent->child_num)++;
     }
 }
 
@@ -503,6 +512,14 @@ TreeNode<T, N>::TreeNode(const T &                        data,
           child_num++;
         }
     }
+
+  /**
+   * Increment the \p child_num of the parent node.
+   */
+  if (parent != nullptr)
+    {
+      (parent->child_num)++;
+    }
 }
 
 template <typename T, std::size_t N>
@@ -675,6 +692,7 @@ void
 PrintTreeNode(std::ostream &out, const BinaryTreeNode<T> *p)
 {
   out << "Level " << p->get_level() << "\n";
+  out << "Number of children: " << p->get_child_num() << "\n";
   out << *(p->get_data_pointer()) << "\n------------------" << std::endl;
 }
 
@@ -686,6 +704,7 @@ void
 PrintTreeNode(std::ostream &out, const TreeNode<T, N> *p)
 {
   out << "Level " << p->get_level() << "\n";
+  out << "Number of children: " << p->get_child_num() << "\n";
   out << *(p->get_data_pointer()) << "\n------------------\n" << std::endl;
 }
 

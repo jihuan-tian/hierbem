@@ -17,22 +17,75 @@
 #include <deal.II/fe/mapping.h>
 
 #include <iostream>
+#include <string>
 
 using namespace dealii;
 
-template <typename T>
+template <typename VectorType>
 void
-print_vector_values(std::ostream &        out,
-                    const std::vector<T> &values,
-                    const std::string &   sep = std::string(","))
+print_vector_values(std::ostream &     out,
+                    const VectorType & values,
+                    const std::string &sep         = std::string(","),
+                    bool               has_newline = true)
 {
   for (auto iter = values.cbegin(); iter != values.cend(); iter++)
     {
       if ((iter + 1) == values.cend())
-        out << (*iter) << std::endl;
+        if (has_newline)
+          {
+            out << (*iter) << std::endl;
+          }
+        else
+          {
+            out << (*iter);
+          }
       else
         out << (*iter) << sep;
     }
+}
+
+
+template <typename VectorType>
+void
+print_vector_to_mat(std::ostream &     out,
+                    const std::string &name,
+                    const VectorType & values)
+{
+  out << "# name: " << name << "\n";
+  out << "# type: matrix\n";
+  out << "# rows: " << values.size() << "\n";
+  out << "# columns: 1\n";
+
+  for (auto iter = values.begin(); iter != values.end(); iter++)
+    {
+      out << (*iter) << "\n";
+    }
+
+  out << "\n\n";
+}
+
+
+template <typename MatrixType>
+void
+print_matrix_to_mat(std::ostream &     out,
+                    const std::string &name,
+                    const MatrixType & values,
+                    const unsigned int precision   = 8,
+                    const bool         scientific  = true,
+                    const unsigned int width       = 0,
+                    const char *       zero_string = "0",
+                    const double       denominator = 1.,
+                    const double       threshold   = 0.)
+{
+  out << "# name: " << name << "\n";
+  out << "# type: matrix\n";
+  out << "# rows: " << values.m() << "\n";
+  out << "# columns: " << values.n() << "\n";
+
+  values.print_formatted(
+    out, precision, scientific, width, zero_string, denominator, threshold);
+
+  out << "\n\n";
 }
 
 

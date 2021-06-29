@@ -224,6 +224,18 @@ public:
     const std::vector<Number1> &                  cell_size_at_dofs);
 
   /**
+   * Default constructor.
+   */
+  Cluster();
+
+  /**
+   * Constructor from an index set only without support points and associated
+   * bounding box.
+   * @param index_set
+   */
+  Cluster(const std::vector<types::global_dof_index> &index_set);
+
+  /**
    * Constructor from an index set without cluster diameter correction.
    *
    * The bounding box will be recalculated.
@@ -468,6 +480,24 @@ calc_cluster_distance(
       return uncorrected_cluster_distance;
     }
 }
+
+
+template <int spacedim, typename Number>
+Cluster<spacedim, Number>::Cluster()
+  : index_set(0)
+  , bbox()
+  , diameter(0)
+{}
+
+
+template <int spacedim, typename Number>
+Cluster<spacedim, Number>::Cluster(
+  const std::vector<types::global_dof_index> &index_set)
+  : index_set(index_set)
+  , bbox()
+  , diameter(0)
+{}
+
 
 template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster(

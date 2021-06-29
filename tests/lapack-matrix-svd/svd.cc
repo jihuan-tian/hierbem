@@ -89,6 +89,40 @@ main()
   {
     LAPACKFullMatrixExt<double> A(A_original);
 
+    std::cout << "SVD with rank truncated to 3\n";
+
+    A.svd(U, Sigma_r, VT, 3);
+
+    std::cout << "U=\n";
+    U.print_formatted(std::cout, 5, false, 10, "0");
+
+    std::cout << "VT=\n";
+    VT.print_formatted(std::cout, 5, false, 10, "0");
+
+    std::cout << "Sigma_r=\n";
+    print_vector_values(std::cout, Sigma_r);
+  }
+
+  {
+    LAPACKFullMatrixExt<double> A(A_original);
+
+    std::cout << "SVD with rank truncated to 4\n";
+
+    A.svd(U, Sigma_r, VT, 4);
+
+    std::cout << "U=\n";
+    U.print_formatted(std::cout, 5, false, 10, "0");
+
+    std::cout << "VT=\n";
+    VT.print_formatted(std::cout, 5, false, 10, "0");
+
+    std::cout << "Sigma_r=\n";
+    print_vector_values(std::cout, Sigma_r);
+  }
+
+  {
+    LAPACKFullMatrixExt<double> A(A_original);
+
     std::cout << "RSVD with rank truncated to 1\n";
 
     A.reduced_svd(U, Sigma_r, VT, 1);
@@ -109,6 +143,40 @@ main()
     std::cout << "RSVD with rank truncated to 2\n";
 
     A.reduced_svd(U, Sigma_r, VT, 2);
+
+    std::cout << "U=\n";
+    U.print_formatted(std::cout, 5, false, 10, "0");
+
+    std::cout << "VT=\n";
+    VT.print_formatted(std::cout, 5, false, 10, "0");
+
+    std::cout << "Sigma_r=\n";
+    print_vector_values(std::cout, Sigma_r);
+  }
+
+  {
+    LAPACKFullMatrixExt<double> A(A_original);
+
+    std::cout << "RSVD with rank truncated to 3\n";
+
+    A.reduced_svd(U, Sigma_r, VT, 3);
+
+    std::cout << "U=\n";
+    U.print_formatted(std::cout, 5, false, 10, "0");
+
+    std::cout << "VT=\n";
+    VT.print_formatted(std::cout, 5, false, 10, "0");
+
+    std::cout << "Sigma_r=\n";
+    print_vector_values(std::cout, Sigma_r);
+  }
+
+  {
+    LAPACKFullMatrixExt<double> A(A_original);
+
+    std::cout << "RSVD with rank truncated to 4\n";
+
+    A.reduced_svd(U, Sigma_r, VT, 4);
 
     std::cout << "U=\n";
     U.print_formatted(std::cout, 5, false, 10, "0");

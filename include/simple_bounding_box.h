@@ -162,7 +162,7 @@ operator<<(std::ostream &out, const SimpleBoundingBox<spacedim, Number> &bbox)
 
 template <int spacedim, typename Number>
 SimpleBoundingBox<spacedim, Number>::SimpleBoundingBox()
-  : boundary_points(Point<spacedim, Number>(0), Point<spacedim, Number>(0))
+  : boundary_points(Point<spacedim, Number>(), Point<spacedim, Number>())
 {}
 
 template <int spacedim, typename Number>

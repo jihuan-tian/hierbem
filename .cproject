@@ -147,6 +147,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -160,6 +162,8 @@
             <target name="release" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>release</buildTarget>
                 				
@@ -175,6 +179,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>all</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -188,6 +194,8 @@
             <target name="clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>clean</buildTarget>
                 				
@@ -203,6 +211,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>dist-clean</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -216,6 +226,8 @@
             <target name="run" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>run</buildTarget>
                 				
@@ -231,8 +243,6 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
-                <buildArguments/>
-                				
                 <buildTarget>laplace-bem</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -246,8 +256,6 @@
             <target name="cell-neighboring-type.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>cell-neighboring-type.debug</buildTarget>
                 				
@@ -263,8 +271,6 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
-                <buildArguments/>
-                				
                 <buildTarget>cell-distance.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -278,8 +284,6 @@
             <target name="surface-jacobian-det.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>surface-jacobian-det.debug</buildTarget>
                 				
@@ -295,6 +299,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>dof-forward-and-backward-permutation.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -308,8 +314,6 @@
             <target name="gauss-legendre-quad-4d.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>gauss-legendre-quad-4d.debug</buildTarget>
                 				
@@ -325,6 +329,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>sauter-quad-same-panel.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -338,6 +344,8 @@
             <target name="sauter-quad-common-edge.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>sauter-quad-common-edge.debug</buildTarget>
                 				
@@ -353,6 +361,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>sauter-quad-common-vertex.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -366,6 +376,8 @@
             <target name="sauter-quad-regular.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>sauter-quad-regular.debug</buildTarget>
                 				
@@ -381,8 +393,6 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
-                <buildArguments/>
-                				
                 <buildTarget>erichsen1996efficient-example2.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -396,6 +406,8 @@
             <target name="erichsen1996efficient-example2-analytical-solution.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>erichsen1996efficient-example2-analytical-solution.debug</buildTarget>
                 				
@@ -411,6 +423,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>erichsen1996efficient-example2-neumann-bc.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -424,6 +438,8 @@
             <target name="erichsen1996efficient-example2.release" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>erichsen1996efficient-example2.release</buildTarget>
                 				
@@ -439,8 +455,6 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
-                <buildArguments/>
-                				
                 <buildTarget>normal-vector.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -454,8 +468,6 @@
             <target name="planarity-of-gmsh-quad-cell.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>planarity-of-gmsh-quad-cell.debug</buildTarget>
                 				
@@ -471,6 +483,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>determinant4x4.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -484,8 +498,6 @@
             <target name="gmsh-and-dealii-node-ordering.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>gmsh-and-dealii-node-ordering.debug</buildTarget>
                 				
@@ -501,6 +513,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>gauss-legendre-quad-4d.release</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -514,8 +528,6 @@
             <target name="sauter-quad-same-panel.release" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>sauter-quad-same-panel.release</buildTarget>
                 				
@@ -531,8 +543,6 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
-                <buildArguments/>
-                				
                 <buildTarget>sauter-quad-common-edge.release</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -546,6 +556,8 @@
             <target name="sauter-quad-common-vertex.release" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>sauter-quad-common-vertex.release</buildTarget>
                 				
@@ -561,6 +573,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>sauter-quad-regular.release</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -574,8 +588,6 @@
             <target name="simple-bounding-box.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>simple-bounding-box.debug</buildTarget>
                 				
@@ -591,8 +603,6 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
-                <buildArguments/>
-                				
                 <buildTarget>simple-bounding-box.release</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -606,6 +616,8 @@
             <target name="binary-tree.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>binary-tree.debug</buildTarget>
                 				
@@ -621,6 +633,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>cluster-tree.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -634,8 +648,6 @@
             <target name="quad-tree.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>quad-tree.debug</buildTarget>
                 				
@@ -651,6 +663,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>cluster-diameter.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -664,8 +678,6 @@
             <target name="block-cluster-tree.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>block-cluster-tree.debug</buildTarget>
                 				
@@ -681,8 +693,6 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
-                <buildArguments/>
-                				
                 <buildTarget>block-cluster-tree.release</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -696,6 +706,8 @@
             <target name="binary-tree.release" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
                 				
                 <buildTarget>binary-tree.release</buildTarget>
                 				
@@ -711,6 +723,8 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildArguments/>
+                				
                 <buildTarget>cluster-tree.release</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
@@ -724,8 +738,6 @@
             <target name="svd.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
                 				
                 <buildTarget>svd.debug</buildTarget>
                 				
@@ -741,9 +753,203 @@
                 				
                 <buildCommand>make</buildCommand>
                 				
+                <buildTarget>delete-rows-and-columns.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="scale-rows-and-columns.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>scale-rows-and-columns.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="transpose.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>transpose.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="rank-k-decompose.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>rank-k-decompose.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="rkmatrix.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>rkmatrix.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="cluster-tree-hp.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
                 <buildArguments/>
                 				
-                <buildTarget>delete-rows-and-columns.debug</buildTarget>
+                <buildTarget>cluster-tree-hp.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="block-cluster-tree-hp.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>block-cluster-tree-hp.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="bct-hp-coarse-ntp.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>bct-hp-coarse-ntp.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="bct-hp-fine-ntp.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>bct-hp-fine-ntp.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="hp-matrix.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>hp-matrix.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="hmatrix-vmult.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>hmatrix-vmult.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="svd-degenerate-cases.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>svd-degenerate-cases.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="rkmatrix-truncate-to-rank.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>rkmatrix-truncate-to-rank.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="hmatrix-truncate-to-fixed-rank.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>hmatrix-truncate-to-fixed-rank.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
                 				

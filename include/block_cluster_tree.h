@@ -16,6 +16,7 @@
 
 #include "block_cluster.h"
 #include "cluster_tree.h"
+#include "debug_tools.h"
 #include "tree.h"
 
 /**
@@ -85,7 +86,16 @@ public:
   ~BlockClusterTree();
 
   /**
-   * Construct from two cluster trees.
+   * Construct from two cluster trees built from pure cardinality based
+   * partition, which has no admissibility condition.
+   * @param TI
+   * @param TJ
+   */
+  BlockClusterTree(const ClusterTree<spacedim, Number> &TI,
+                   const ClusterTree<spacedim, Number> &TJ);
+
+  /**
+   * Construct from two cluster trees and admissibility condition.
    *
    * The Cartesian product of the two clusters in the root nodes of \f$T(I)\f$
    * and \f$T(J)\f$ becomes the data in the root node of the block cluster tree.
@@ -93,6 +103,30 @@ public:
   BlockClusterTree(const ClusterTree<spacedim, Number> &TI,
                    const ClusterTree<spacedim, Number> &TJ,
                    Number                               eta);
+
+  /**
+   * Perform a recursive partition in tensor product form without the
+   * admissibility condition because the two comprising cluster trees are built
+   * from pure cardinality based partition.
+   */
+  void
+  partition_tensor_product();
+
+  /**
+   * Perform a recursive partition in coarse non-tensor product form without the
+   * admissibility condition because the two comprising cluster trees are built
+   * from pure cardinality based partition.
+   */
+  void
+  partition_coarse_non_tensor_product();
+
+  /**
+   * Perform a recursive partition in fine non-tensor product form without the
+   * admissibility condition because the two comprising cluster trees are built
+   * from pure cardinality based partition.
+   */
+  void
+  partition_fine_non_tensor_product();
 
   /**
    * Perform a recursive partition by starting from the root node. The
@@ -131,6 +165,22 @@ public:
    */
   const std::vector<node_pointer_type> &
   get_leaf_set() const;
+
+  /**
+   * Write formatted leaf set to the output stream.
+   *
+   * Each leaf node is written in the following format:
+   *
+   * >
+   * [list-of-indices-in-cluster-tau],[list-of-indices-in-cluster-sigma],is_near_field
+   *
+   * For example,
+   *
+   * > [1 2 3 ...],[7 8 9 ...],1
+   * @param out
+   */
+  void
+  write_leaf_set(std::ostream &out) const;
 
   /**
    * Get the reference to the block cluster list which belongs to the near
@@ -193,6 +243,95 @@ public:
     << " which is not allowed in a level preserving construction of a block cluster tree.");
 
 private:
+  /**
+   * Perform a recursive tensor product type partition by starting from a block
+   * cluster node in the tree.
+   *
+   * No admissibility condition is enabled in this situation, because the two
+   * comprising cluster trees are built from pure cardinality based partition.
+   * @param current_block_cluster_node
+   * @param leaf_set_wrt_current_node
+   */
+  void
+  partition_tensor_product_from_block_cluster_node(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node);
+
+  /**
+   * Perform a recursive non-tensor product type coarse partition by starting
+   * from a block cluster node in the tree.
+   *
+   * No admissibility condition is enabled in this situation, because the two
+   * comprising cluster trees are built from pure cardinality based partition.
+   *
+   * Reference: Section 2.2.2 in Hackbusch, W. 1999. “A Sparse Matrix Arithmetic
+   * Based on H-Matrices. Part I: Introduction to H-Matrices.” Computing 62 (2):
+   * 89–108.
+   * @param current_block_cluster_node
+   * @param leaf_set_wrt_current_node
+   */
+  void
+  partition_coarse_non_tensor_product_from_block_cluster_node(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node);
+
+  /**
+   * Perform a recursive non-tensor product type fine partition of
+   * \f$\mathcal{M_{\mathcal{H},k}\f$ type by starting from a block cluster node
+   * in the tree.
+   *
+   * No admissibility condition is enabled in this situation, because the two
+   * comprising cluster trees are built from pure cardinality based partition.
+   *
+   * Reference: Section 5 in Hackbusch, W. 1999. “A Sparse Matrix Arithmetic
+   * Based on H-Matrices. Part I: Introduction to H-Matrices.” Computing 62 (2):
+   * 89–108.
+   * @param current_block_cluster_node
+   * @param leaf_set_wrt_current_node
+   */
+  void
+  partition_fine_non_tensor_product_from_block_cluster_node(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node);
+
+  /**
+   * Perform a recursive non-tensor product type fine partition of
+   * \f$\mathcal{M_{\mathcal{N},k}\f$ type by starting from a block cluster node
+   * in the tree.
+   *
+   * No admissibility condition is enabled in this situation, because the two
+   * comprising cluster trees are built from pure cardinality based partition.
+   *
+   * Reference: Section 5 in Hackbusch, W. 1999. “A Sparse Matrix Arithmetic
+   * Based on H-Matrices. Part I: Introduction to H-Matrices.” Computing 62 (2):
+   * 89–108.
+   * @param current_block_cluster_node
+   * @param leaf_set_wrt_current_node
+   */
+  void
+  partition_fine_non_tensor_product_from_block_cluster_node_N(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node);
+
+  /**
+   * Perform a recursive non-tensor product type fine partition of
+   * \f$\mathcal{M_{\mathcal{N}^*,k}\f$ type by starting from a block cluster
+   * node in the tree.
+   *
+   * No admissibility condition is enabled in this situation, because the two
+   * comprising cluster trees are built from pure cardinality based partition.
+   *
+   * Reference: Section 5 in Hackbusch, W. 1999. “A Sparse Matrix Arithmetic
+   * Based on H-Matrices. Part I: Introduction to H-Matrices.” Computing 62 (2):
+   * 89–108.
+   * @param current_block_cluster_node
+   * @param leaf_set_wrt_current_node
+   */
+  void
+  partition_fine_non_tensor_product_from_block_cluster_node_Nstar(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node);
+
   /**
    * Perform a recursive partition by starting from a block cluster node in
    * the tree.
@@ -308,6 +447,42 @@ BlockClusterTree<spacedim, Number>::BlockClusterTree()
   , node_num(0)
 {}
 
+
+template <int spacedim, typename Number>
+BlockClusterTree<spacedim, Number>::BlockClusterTree(
+  const ClusterTree<spacedim, Number> &TI,
+  const ClusterTree<spacedim, Number> &TJ)
+  : root_node(nullptr)
+  , leaf_set(0)
+  , near_field_set(0)
+  , far_field_set(0)
+  , n_min(std::min(TI.get_n_min(), TJ.get_n_min()))
+  , eta(1.0)
+  , depth(0)
+  , max_level(-1)
+  , node_num(0)
+{
+  // Initialize the four null child pointers.
+  const std::array<node_pointer_type, child_num> empty_child_pointers{nullptr,
+                                                                      nullptr,
+                                                                      nullptr,
+                                                                      nullptr};
+  root_node =
+    CreateTreeNode<data_value_type, child_num>(data_value_type(TI.get_root(),
+                                                               TJ.get_root()),
+                                               0,
+                                               empty_child_pointers,
+                                               nullptr);
+
+  depth     = 1;
+  max_level = 0;
+  node_num  = 1;
+
+  // Append the only root node to the leaf set.
+  leaf_set.push_back(root_node);
+}
+
+
 template <int spacedim, typename Number>
 BlockClusterTree<spacedim, Number>::BlockClusterTree(
   const ClusterTree<spacedim, Number> &TI,
@@ -349,6 +524,48 @@ BlockClusterTree<spacedim, Number>::~BlockClusterTree()
   DeleteTree(root_node);
 }
 
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::partition_tensor_product()
+{
+  partition_tensor_product_from_block_cluster_node(root_node, leaf_set);
+
+  categorize_near_and_far_field_sets();
+
+  depth     = calc_depth(root_node);
+  max_level = depth - 1;
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::partition_coarse_non_tensor_product()
+{
+  partition_coarse_non_tensor_product_from_block_cluster_node(root_node,
+                                                              leaf_set);
+
+  categorize_near_and_far_field_sets();
+
+  depth     = calc_depth(root_node);
+  max_level = depth - 1;
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::partition_fine_non_tensor_product()
+{
+  partition_fine_non_tensor_product_from_block_cluster_node(root_node,
+                                                            leaf_set);
+
+  categorize_near_and_far_field_sets();
+
+  depth     = calc_depth(root_node);
+  max_level = depth - 1;
+}
+
+
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition(
@@ -361,6 +578,7 @@ BlockClusterTree<spacedim, Number>::partition(
   depth     = calc_depth(root_node);
   max_level = depth - 1;
 }
+
 
 template <int spacedim, typename Number>
 void
@@ -385,6 +603,574 @@ typename BlockClusterTree<spacedim, Number>::node_pointer_type
 BlockClusterTree<spacedim, Number>::get_root() const
 {
   return root_node;
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::
+  partition_tensor_product_from_block_cluster_node(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node)
+{
+  leaf_set_wrt_current_node.clear();
+
+  if (current_block_cluster_node->get_data_pointer()->is_small(n_min))
+    {
+      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
+    }
+  else
+    {
+      unsigned int child_counter = 0;
+
+      // Iterate over each child of the cluster \f$\tau\f$.
+      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
+           i++)
+        {
+          typename ClusterTree<spacedim, Number>::node_pointer_type
+            tau_son_node_pointer =
+              current_block_cluster_node->get_data_pointer()
+                ->get_tau_node()
+                ->get_child_pointer(i);
+
+          // Iterate over each child of the cluster \f$\sigma\f$.
+          for (unsigned int j = 0;
+               j < (ClusterTree<spacedim, Number>::child_num);
+               j++)
+            {
+              typename ClusterTree<spacedim, Number>::node_pointer_type
+                sigma_son_node_pointer =
+                  current_block_cluster_node->get_data_pointer()
+                    ->get_sigma_node()
+                    ->get_child_pointer(j);
+
+              /**
+               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+               * have the same level in their respective cluster trees, i.e.
+               * level preserving property should be satisfied.
+               */
+              Assert(
+                tau_son_node_pointer->get_level() ==
+                  sigma_son_node_pointer->get_level(),
+                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
+                                        sigma_son_node_pointer->get_level()));
+
+              /**
+               * Create a new block cluster node as child and recursively
+               * partition from it.
+               */
+              const std::array<node_pointer_type, child_num>
+                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+              node_pointer_type child_block_cluster_node =
+                CreateTreeNode<data_value_type, child_num>(
+                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
+                  current_block_cluster_node->get_level() + 1,
+                  empty_child_pointers,
+                  current_block_cluster_node);
+
+              /**
+               * Append this new node as one of the children of the current
+               * block cluster node.
+               */
+              current_block_cluster_node->set_child_pointer(
+                child_counter, child_block_cluster_node);
+
+              node_num++;
+              child_counter++;
+
+              std::vector<node_pointer_type> leaf_set_wrt_child_node;
+              partition_tensor_product_from_block_cluster_node(
+                child_block_cluster_node, leaf_set_wrt_child_node);
+
+              /**
+               * Merge the leaf set wrt. the child block cluster node into the
+               * leaf set of the current block cluster node.
+               */
+              for (node_pointer_type block_cluster_node :
+                   leaf_set_wrt_child_node)
+                {
+                  leaf_set_wrt_current_node.push_back(block_cluster_node);
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::
+  partition_coarse_non_tensor_product_from_block_cluster_node(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node)
+{
+  leaf_set_wrt_current_node.clear();
+
+  if (current_block_cluster_node->get_data_pointer()->is_small(n_min))
+    {
+      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
+    }
+  else
+    {
+      unsigned int child_counter = 0;
+
+      // Iterate over each child of the cluster \f$\tau\f$.
+      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
+           i++)
+        {
+          typename ClusterTree<spacedim, Number>::node_pointer_type
+            tau_son_node_pointer =
+              current_block_cluster_node->get_data_pointer()
+                ->get_tau_node()
+                ->get_child_pointer(i);
+
+          // Iterate over each child of the cluster \f$\sigma\f$.
+          for (unsigned int j = 0;
+               j < (ClusterTree<spacedim, Number>::child_num);
+               j++)
+            {
+              typename ClusterTree<spacedim, Number>::node_pointer_type
+                sigma_son_node_pointer =
+                  current_block_cluster_node->get_data_pointer()
+                    ->get_sigma_node()
+                    ->get_child_pointer(j);
+
+              /**
+               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+               * have the same level in their respective cluster trees, i.e.
+               * level preserving property should be satisfied.
+               */
+              Assert(
+                tau_son_node_pointer->get_level() ==
+                  sigma_son_node_pointer->get_level(),
+                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
+                                        sigma_son_node_pointer->get_level()));
+
+              /**
+               * Create a new block cluster node as child. Then append this new
+               * node as one of the children of the current block cluster node.
+               * Finally, recursively partition from this node if the two
+               * component clusters have the same indices, i.e. \f$I_1 \times
+               * I_1\f$ and \f$I_2 \times I_2\f$; otherwise, for \f$I_1 \times
+               * I_2\f$ and \f$I_2 \times I_1\f$, stop the recursion and
+               * directly add them to the leaf set.
+               */
+              const std::array<node_pointer_type, child_num>
+                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+              node_pointer_type child_block_cluster_node =
+                CreateTreeNode<data_value_type, child_num>(
+                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
+                  current_block_cluster_node->get_level() + 1,
+                  empty_child_pointers,
+                  current_block_cluster_node);
+
+              current_block_cluster_node->set_child_pointer(
+                child_counter, child_block_cluster_node);
+
+              node_num++;
+              child_counter++;
+
+              if (i == j)
+                {
+                  /**
+                   * Handle the case for \f$I_1 \times I_1\f$ and \f$I_2 \times
+                   * I_2\f$.
+                   */
+                  std::vector<node_pointer_type> leaf_set_wrt_child_node;
+                  partition_coarse_non_tensor_product_from_block_cluster_node(
+                    child_block_cluster_node, leaf_set_wrt_child_node);
+
+                  /**
+                   * Merge the leaf set wrt. the child block cluster node into
+                   * the leaf set of the current block cluster node.
+                   */
+                  for (node_pointer_type block_cluster_node :
+                       leaf_set_wrt_child_node)
+                    {
+                      leaf_set_wrt_current_node.push_back(block_cluster_node);
+                    }
+                }
+              else
+                {
+                  /**
+                   * Handle the case for \f$I_1 \times I_2\f$ and \f$I_2 \times
+                   * I_1\f$. Because the recursion stops here, we need to check
+                   * and update its near field property.
+                   */
+                  child_block_cluster_node->get_data_pointer()->is_small(n_min);
+                  leaf_set_wrt_current_node.push_back(child_block_cluster_node);
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::
+  partition_fine_non_tensor_product_from_block_cluster_node(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node)
+{
+  leaf_set_wrt_current_node.clear();
+
+  if (current_block_cluster_node->get_data_pointer()->is_small(n_min))
+    {
+      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
+    }
+  else
+    {
+      unsigned int child_counter = 0;
+
+      // Iterate over each child of the cluster \f$\tau\f$.
+      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
+           i++)
+        {
+          typename ClusterTree<spacedim, Number>::node_pointer_type
+            tau_son_node_pointer =
+              current_block_cluster_node->get_data_pointer()
+                ->get_tau_node()
+                ->get_child_pointer(i);
+
+          // Iterate over each child of the cluster \f$\sigma\f$.
+          for (unsigned int j = 0;
+               j < (ClusterTree<spacedim, Number>::child_num);
+               j++)
+            {
+              typename ClusterTree<spacedim, Number>::node_pointer_type
+                sigma_son_node_pointer =
+                  current_block_cluster_node->get_data_pointer()
+                    ->get_sigma_node()
+                    ->get_child_pointer(j);
+
+              /**
+               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+               * have the same level in their respective cluster trees, i.e.
+               * level preserving property should be satisfied.
+               */
+              Assert(
+                tau_son_node_pointer->get_level() ==
+                  sigma_son_node_pointer->get_level(),
+                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
+                                        sigma_son_node_pointer->get_level()));
+
+              /**
+               * Create a new block cluster node as child. Then append this new
+               * node as one of the children of the current block cluster node.
+               * Finally, recursively partition from this node if the two
+               * component clusters have the same indices, i.e. \f$I_1 \times
+               * I_1\f$ and \f$I_2 \times I_2\f$; otherwise, for \f$I_1 \times
+               * I_2\f$ and \f$I_2 \times I_1\f$, stop the recursion and
+               * directly add them to the leaf set.
+               */
+              const std::array<node_pointer_type, child_num>
+                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+              node_pointer_type child_block_cluster_node =
+                CreateTreeNode<data_value_type, child_num>(
+                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
+                  current_block_cluster_node->get_level() + 1,
+                  empty_child_pointers,
+                  current_block_cluster_node);
+
+              current_block_cluster_node->set_child_pointer(
+                child_counter, child_block_cluster_node);
+
+              node_num++;
+              child_counter++;
+
+              if (i == j)
+                {
+                  /**
+                   * Handle the case for \f$I_1 \times I_1\f$ and \f$I_2 \times
+                   * I_2\f$.
+                   */
+                  std::vector<node_pointer_type> leaf_set_wrt_child_node;
+                  partition_fine_non_tensor_product_from_block_cluster_node(
+                    child_block_cluster_node, leaf_set_wrt_child_node);
+
+                  /**
+                   * Merge the leaf set wrt. the child block cluster node into
+                   * the leaf set of the current block cluster node.
+                   */
+                  for (node_pointer_type block_cluster_node :
+                       leaf_set_wrt_child_node)
+                    {
+                      leaf_set_wrt_current_node.push_back(block_cluster_node);
+                    }
+                }
+              else
+                {
+                  if (i == 0)
+                    {
+                      /**
+                       * Handle the case for \f$I_1 \times I_2\f$ and perform
+                       * the \f$\mathcal{N}\f$-type partition.
+                       */
+                      std::vector<node_pointer_type> leaf_set_wrt_child_node;
+                      partition_fine_non_tensor_product_from_block_cluster_node_N(
+                        child_block_cluster_node, leaf_set_wrt_child_node);
+
+                      /**
+                       * Merge the leaf set wrt. the child block cluster node
+                       * into the leaf set of the current block cluster node.
+                       */
+                      for (node_pointer_type block_cluster_node :
+                           leaf_set_wrt_child_node)
+                        {
+                          leaf_set_wrt_current_node.push_back(
+                            block_cluster_node);
+                        }
+                    }
+                  else if (i == 1)
+                    {
+                      /**
+                       * Handle the case for \f$I_2 \times I_1\f$ and perform
+                       * the \f$\mathcal{N}^*\f$-type partition.
+                       */
+                      std::vector<node_pointer_type> leaf_set_wrt_child_node;
+                      partition_fine_non_tensor_product_from_block_cluster_node_Nstar(
+                        child_block_cluster_node, leaf_set_wrt_child_node);
+
+                      /**
+                       * Merge the leaf set wrt. the child block cluster node
+                       * into the leaf set of the current block cluster node.
+                       */
+                      for (node_pointer_type block_cluster_node :
+                           leaf_set_wrt_child_node)
+                        {
+                          leaf_set_wrt_current_node.push_back(
+                            block_cluster_node);
+                        }
+                    }
+                  else
+                    {
+                      Assert(false, ExcInternalError());
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::
+  partition_fine_non_tensor_product_from_block_cluster_node_N(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node)
+{
+  leaf_set_wrt_current_node.clear();
+
+  if (current_block_cluster_node->get_data_pointer()->is_small(n_min))
+    {
+      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
+    }
+  else
+    {
+      unsigned int child_counter = 0;
+
+      // Iterate over each child of the cluster \f$\tau\f$.
+      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
+           i++)
+        {
+          typename ClusterTree<spacedim, Number>::node_pointer_type
+            tau_son_node_pointer =
+              current_block_cluster_node->get_data_pointer()
+                ->get_tau_node()
+                ->get_child_pointer(i);
+
+          // Iterate over each child of the cluster \f$\sigma\f$.
+          for (unsigned int j = 0;
+               j < (ClusterTree<spacedim, Number>::child_num);
+               j++)
+            {
+              typename ClusterTree<spacedim, Number>::node_pointer_type
+                sigma_son_node_pointer =
+                  current_block_cluster_node->get_data_pointer()
+                    ->get_sigma_node()
+                    ->get_child_pointer(j);
+
+              /**
+               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+               * have the same level in their respective cluster trees, i.e.
+               * level preserving property should be satisfied.
+               */
+              Assert(
+                tau_son_node_pointer->get_level() ==
+                  sigma_son_node_pointer->get_level(),
+                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
+                                        sigma_son_node_pointer->get_level()));
+
+              /**
+               * Create a new block cluster node as child. Then append this new
+               * node as one of the children of the current block cluster node.
+               * Finally, recursively partition from this node if the two
+               * component clusters have the same indices, i.e. \f$I_1 \times
+               * I_1\f$ and \f$I_2 \times I_2\f$; otherwise, for \f$I_1 \times
+               * I_2\f$ and \f$I_2 \times I_1\f$, stop the recursion and
+               * directly add them to the leaf set.
+               */
+              const std::array<node_pointer_type, child_num>
+                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+              node_pointer_type child_block_cluster_node =
+                CreateTreeNode<data_value_type, child_num>(
+                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
+                  current_block_cluster_node->get_level() + 1,
+                  empty_child_pointers,
+                  current_block_cluster_node);
+
+              current_block_cluster_node->set_child_pointer(
+                child_counter, child_block_cluster_node);
+
+              node_num++;
+              child_counter++;
+
+              if (i == 1 && j == 0)
+                {
+                  /**
+                   * Handle the case for \f$I_2 \times I_1\f$ and perform the
+                   * \f$\mathcal{N}\f$-type partition.
+                   */
+                  std::vector<node_pointer_type> leaf_set_wrt_child_node;
+                  partition_fine_non_tensor_product_from_block_cluster_node_N(
+                    child_block_cluster_node, leaf_set_wrt_child_node);
+
+                  /**
+                   * Merge the leaf set wrt. the child block cluster node into
+                   * the leaf set of the current block cluster node.
+                   */
+                  for (node_pointer_type block_cluster_node :
+                       leaf_set_wrt_child_node)
+                    {
+                      leaf_set_wrt_current_node.push_back(block_cluster_node);
+                    }
+                }
+              else
+                {
+                  /**
+                   * Handle the case for \f$I_1 \times I_1\f$, \f$I_1 \times
+                   * I_2\f$ and \f$I_2 \times I_2\f$. Because the recursion
+                   * stops here, we need to check and update its near field
+                   * property.
+                   */
+                  child_block_cluster_node->get_data_pointer()->is_small(n_min);
+                  leaf_set_wrt_current_node.push_back(child_block_cluster_node);
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::
+  partition_fine_non_tensor_product_from_block_cluster_node_Nstar(
+    node_pointer_type               current_block_cluster_node,
+    std::vector<node_pointer_type> &leaf_set_wrt_current_node)
+{
+  leaf_set_wrt_current_node.clear();
+
+  if (current_block_cluster_node->get_data_pointer()->is_small(n_min))
+    {
+      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
+    }
+  else
+    {
+      unsigned int child_counter = 0;
+
+      // Iterate over each child of the cluster \f$\tau\f$.
+      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
+           i++)
+        {
+          typename ClusterTree<spacedim, Number>::node_pointer_type
+            tau_son_node_pointer =
+              current_block_cluster_node->get_data_pointer()
+                ->get_tau_node()
+                ->get_child_pointer(i);
+
+          // Iterate over each child of the cluster \f$\sigma\f$.
+          for (unsigned int j = 0;
+               j < (ClusterTree<spacedim, Number>::child_num);
+               j++)
+            {
+              typename ClusterTree<spacedim, Number>::node_pointer_type
+                sigma_son_node_pointer =
+                  current_block_cluster_node->get_data_pointer()
+                    ->get_sigma_node()
+                    ->get_child_pointer(j);
+
+              /**
+               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+               * have the same level in their respective cluster trees, i.e.
+               * level preserving property should be satisfied.
+               */
+              Assert(
+                tau_son_node_pointer->get_level() ==
+                  sigma_son_node_pointer->get_level(),
+                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
+                                        sigma_son_node_pointer->get_level()));
+
+              /**
+               * Create a new block cluster node as child. Then append this new
+               * node as one of the children of the current block cluster node.
+               * Finally, recursively partition from this node if the two
+               * component clusters have the same indices, i.e. \f$I_1 \times
+               * I_1\f$ and \f$I_2 \times I_2\f$; otherwise, for \f$I_1 \times
+               * I_2\f$ and \f$I_2 \times I_1\f$, stop the recursion and
+               * directly add them to the leaf set.
+               */
+              const std::array<node_pointer_type, child_num>
+                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+              node_pointer_type child_block_cluster_node =
+                CreateTreeNode<data_value_type, child_num>(
+                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
+                  current_block_cluster_node->get_level() + 1,
+                  empty_child_pointers,
+                  current_block_cluster_node);
+
+              current_block_cluster_node->set_child_pointer(
+                child_counter, child_block_cluster_node);
+
+              node_num++;
+              child_counter++;
+
+              if (i == 0 && j == 1)
+                {
+                  /**
+                   * Handle the case for \f$I_1 \times I_2\f$ and perform the
+                   * \f$\mathcal{N}^*\f$-type partition.
+                   */
+                  std::vector<node_pointer_type> leaf_set_wrt_child_node;
+                  partition_fine_non_tensor_product_from_block_cluster_node_Nstar(
+                    child_block_cluster_node, leaf_set_wrt_child_node);
+
+                  /**
+                   * Merge the leaf set wrt. the child block cluster node into
+                   * the leaf set of the current block cluster node.
+                   */
+                  for (node_pointer_type block_cluster_node :
+                       leaf_set_wrt_child_node)
+                    {
+                      leaf_set_wrt_current_node.push_back(block_cluster_node);
+                    }
+                }
+              else
+                {
+                  /**
+                   * Handle the case for \f$I_1 \times I_1\f$, \f$I_2 \times
+                   * I_1\f$ and \f$I_2 \times I_2\f$. Because the recursion
+                   * stops here, we need to check and update its near field
+                   * property.
+                   */
+                  child_block_cluster_node->get_data_pointer()->is_small(n_min);
+                  leaf_set_wrt_current_node.push_back(child_block_cluster_node);
+                }
+            }
+        }
+    }
 }
 
 
@@ -611,6 +1397,47 @@ const std::vector<
 BlockClusterTree<spacedim, Number>::get_leaf_set() const
 {
   return leaf_set;
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::write_leaf_set(std::ostream &out) const
+{
+  for (node_pointer_type bc_node : leaf_set)
+    {
+      /**
+       * Print index set of cluster \f$\tau\f$.
+       */
+      out << "[";
+      print_vector_values(out,
+                          bc_node->get_data_reference()
+                            .get_tau_node()
+                            ->get_data_reference()
+                            .get_index_set(),
+                          " ",
+                          false);
+      out << "],";
+
+      /**
+       * Print index set of cluster \f$\sigma\f$.
+       */
+      out << "[";
+      print_vector_values(out,
+                          bc_node->get_data_reference()
+                            .get_sigma_node()
+                            ->get_data_reference()
+                            .get_index_set(),
+                          " ",
+                          false);
+      out << "],";
+
+      /**
+       * Print the \p is_near_field flag.
+       */
+      out << (bc_node->get_data_reference().get_is_near_field() ? 1 : 0)
+          << "\n";
+    }
 }
 
 
