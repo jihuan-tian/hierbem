@@ -26,6 +26,11 @@ echo "$template_code" > $test_target_name.cc
 # Append the test project to CMakeLists.txt.
 echo "ADD_SUBDIRECTORY(tests/$test_folder_name)" >> ../../CMakeLists.txt
 
+# Add the newly created files to Git.
+git add $test_target_name.cc
+git add $test_target_name.output
+git add CMakeLists.txt
+
 # Rerun cmake.
 cd ../../
 cmake -DCMAKE_BUILD_TYPE=Debug -DDEAL_II_DIR=/home/jihuan/Projects/deal.ii/program/dealii-9.1.1 .

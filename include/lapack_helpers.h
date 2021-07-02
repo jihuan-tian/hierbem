@@ -129,6 +129,37 @@ namespace internal
                  std::vector<types::blas_int> &  integer_work,
                  const types::blas_int &         work_flag,
                  types::blas_int &               info);
+
+    /**
+     * Helper function for real valued QR decomposition.
+     */
+    template <typename T>
+    void
+    geqrf_helper(const types::blas_int n_rows,
+                 const types::blas_int n_cols,
+                 AlignedVector<T> &    matrix,
+                 std::vector<T> &      tau,
+                 std::vector<T> &      work,
+                 const types::blas_int work_flag,
+                 types::blas_int &     info)
+    {
+      Assert(static_cast<std::size_t>(n_rows * n_cols) == matrix.size(),
+             ExcInternalError());
+      Assert(tau.size() == static_cast<size_t>(std::min(n_rows, n_cols)),
+             ExcInternalError());
+      Assert(work_flag == -1 || static_cast<size_t>(work_flag) >=
+                                  static_cast<size_t>(std::max(1, n_cols)),
+             ExcInternalError());
+
+      geqrf(&n_rows,
+            &n_cols,
+            matrix.data(),
+            &n_rows,
+            tau.data(),
+            work.data(),
+            &work_flag,
+            &info);
+    }
   } // namespace LAPACKFullMatrixImplementation
 } // namespace internal
 

@@ -1,0 +1,2 @@
+SET(TEST_TARGET hstack-vstack)
+DEAL_II_PICKUP_TESTS()

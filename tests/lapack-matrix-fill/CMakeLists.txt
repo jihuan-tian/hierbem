@@ -1,0 +1,2 @@
+SET(TEST_TARGET lapack-matrix-fill)
+DEAL_II_PICKUP_TESTS()

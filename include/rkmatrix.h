@@ -118,6 +118,27 @@ public:
                   const double       threshold   = 0.) const;
 
   /**
+   * Print a RkMatrix into Octave mat format.
+   * @param out
+   * @param name
+   * @param precision
+   * @param scientific
+   * @param width
+   * @param zero_string
+   * @param denominator
+   * @param threshold
+   */
+  void
+  print_formatted_to_mat(std::ostream &     out,
+                         const std::string &name,
+                         const unsigned int precision   = 8,
+                         const bool         scientific  = true,
+                         const unsigned int width       = 0,
+                         const char *       zero_string = "0",
+                         const double       denominator = 1.,
+                         const double       threshold   = 0.) const;
+
+  /**
    * Truncate the RkMatrix to \p new_rank.
    * @param new_rank
    */
@@ -147,6 +168,24 @@ public:
   Tvmult(Vector<Number> &      y,
          const Vector<Number> &x,
          const bool            adding = false) const;
+
+  /**
+   * Perform the formatted addition of two rank-k matrices, \f$M = M_1 + M_2\f$.
+   * The resulted rank-k matrix \p M will be truncated to the fixed rank \p
+   * fixed_rank_k.
+   *
+   * Let \f$M_1 = A_1 B_1^T\f$ and \f$M_2 = A_2 B_2^T\f$. Their addition without
+   * truncation is a juxtaposition of the components of \f$M_1\f$ and \f$M_2\f$.
+   * Assume \f$M = AB^T\f$, then \f$A = [A_1 A_2]\f$ and \f$B = [B_1 B_2]\f$.
+   * Its rank \f$r \leq r_1 + r_2\f$.
+   *
+   * @param C
+   * @param B
+   */
+  void
+  add(RkMatrix<Number> &      M,
+      const RkMatrix<Number> &M2,
+      const size_type         fixed_rank_k) const;
 
 private:
   LAPACKFullMatrixExt<Number> A;
@@ -189,6 +228,10 @@ RkMatrix<Number>::RkMatrix(const size_type m,
   , m(m)
   , n(n)
 {
+  /**
+   * If the given \p fixed_rank_k is larger than \f$\min\{m, n\}\f$, simply set
+   * it as this minimum dimension value.
+   */
   const size_type min_dim        = std::min(m, n);
   const size_type effective_rank = std::min(min_dim, fixed_rank_k);
 
@@ -250,11 +293,13 @@ RkMatrix<Number>::RkMatrix(const LAPACKFullMatrixExt<Number> &A,
                            const LAPACKFullMatrixExt<Number> &B)
   : A(A)
   , B(B)
-  , rank(A.n())
+  , rank()
   , m(A.m())
   , n(B.m())
 {
   AssertDimension(A.n(), B.n());
+
+  rank = std::min(std::min(A.m(), B.m()), A.n());
 }
 
 
@@ -301,9 +346,71 @@ RkMatrix<Number>::print_formatted(std::ostream &     out,
 
 template <typename Number>
 void
+RkMatrix<Number>::print_formatted_to_mat(std::ostream &     out,
+                                         const std::string &name,
+                                         const unsigned int precision,
+                                         const bool         scientific,
+                                         const unsigned int width,
+                                         const char *       zero_string,
+                                         const double       denominator,
+                                         const double       threshold) const
+{
+  out << "# name: " << name << "\n"
+      << "# type: scalar struct\n"
+      << "# ndims: 2\n"
+      << "1 1\n"
+      << "# length: 5\n";
+
+  out << "# name: A\n"
+      << "# type: matrix\n"
+      << "# rows: " << A.m() << "\n"
+      << "# columns: " << A.n() << "\n";
+
+  A.print_formatted(
+    out, precision, scientific, width, zero_string, denominator, threshold);
+
+  out << "\n\n";
+
+  out << "# name: B\n"
+      << "# type: matrix\n"
+      << "# rows: " << B.m() << "\n"
+      << "# columns: " << B.n() << "\n";
+
+  B.print_formatted(
+    out, precision, scientific, width, zero_string, denominator, threshold);
+
+  out << "\n\n";
+
+  out << "# name: rank\n"
+      << "# type: scalar\n"
+      << rank << "\n";
+
+  out << "\n\n";
+
+  out << "# name: m\n"
+      << "# type: scalar\n"
+      << m << "\n";
+
+  out << "\n\n";
+
+  out << "# name: n\n"
+      << "# type: scalar\n"
+      << n << "\n";
+
+  out << "\n\n";
+}
+
+
+template <typename Number>
+void
 RkMatrix<Number>::truncate_to_rank(size_type new_rank)
 {
-  Assert(new_rank > 0, ExcLowerRange(new_rank, 1));
+  /**
+   * Work flow introduction: Use QR decomposition to perform the rank
+   * truncation.
+   */
+
+  Assert(new_rank >= 1, ExcLowerRangeType<size_type>(new_rank, 1));
 
   if (new_rank >= rank)
     {
@@ -313,9 +420,29 @@ RkMatrix<Number>::truncate_to_rank(size_type new_rank)
     }
   else
     {
-      A.keep_first_n_columns(new_rank, true);
-      B.keep_first_n_columns(new_rank, true);
-      rank = new_rank;
+      LAPACKFullMatrixExt<Number>                                    U, VT;
+      std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
+
+      rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
+        A, B, U, Sigma_r, VT, new_rank);
+
+      if (n < m)
+        {
+          /**
+           * Right associativity.
+           */
+          A = U;
+          VT.scale_rows(Sigma_r);
+          VT.transpose(B);
+        }
+      else
+        {
+          /**
+           * Left associativity.
+           */
+          U.scale_columns(A, Sigma_r);
+          VT.transpose(B);
+        }
     }
 }
 
@@ -352,6 +479,24 @@ RkMatrix<Number>::Tvmult(Vector<Number> &      y,
 }
 
 
+template <typename Number>
+void
+RkMatrix<Number>::add(RkMatrix<Number> &      M,
+                      const RkMatrix<Number> &M2,
+                      const size_type         fixed_rank_k) const
+{
+  /**
+   * Stack the components of \p A and \p B.
+   */
+  LAPACKFullMatrixExt<Number> A_new, B_new;
+  A.hstack(A_new, M2.A);
+  B.hstack(B_new, M2.B);
+
+  M = RkMatrix<Number>(A_new, B_new);
+  M.truncate_to_rank(fixed_rank_k);
+}
+
+
 /**
  * Print an RkMatrix in Octave text data format.
  * @param out
@@ -380,7 +525,7 @@ print_rkmatrix_to_mat(std::ostream &          out,
       << "# type: scalar struct\n"
       << "# ndims: 2\n"
       << "1 1\n"
-      << "# length: 2\n";
+      << "# length: 5\n";
 
   out << "# name: A\n"
       << "# type: matrix\n"
@@ -399,6 +544,24 @@ print_rkmatrix_to_mat(std::ostream &          out,
 
   values.B.print_formatted(
     out, precision, scientific, width, zero_string, denominator, threshold);
+
+  out << "\n\n";
+
+  out << "# name: rank\n"
+      << "# type: scalar\n"
+      << values.rank << "\n";
+
+  out << "\n\n";
+
+  out << "# name: m\n"
+      << "# type: scalar\n"
+      << values.m << "\n";
+
+  out << "\n\n";
+
+  out << "# name: n\n"
+      << "# type: scalar\n"
+      << values.n << "\n";
 
   out << "\n\n";
 }

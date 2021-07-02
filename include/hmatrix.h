@@ -195,6 +195,31 @@ public:
   void
   Tvmult(Vector<Number> &y, const Vector<Number> &x) const;
 
+  /**
+   * Add the current HMatrix \p A with another HMatrix \p B into \p C, i.e.
+   * whole matrix addition instead of addition limited to a specific block,
+   * where \p C will be truncated to a fixed rank \p fixed_rank.
+   *
+   * This algorithm is intrinsically recursive, i.e. the addition of parent
+   * HMatrices will perform the addition of each pair of child HMatrices
+   * corresponding to a same block cluster. Strictly speaking, this member
+   * function \p add is not a recursive function, because the class instance
+   * calling \p add changes from parent to child HMatrix.
+   *
+   * N.B.
+   *
+   * 1. The two operands should have the same partition.
+   * 2. The hierarchical structure of \p C should be pre-generated.
+   *
+   * @param C
+   * @param B
+   * @param fixed_rank
+   */
+  void
+  add(HMatrix<spacedim, Number> &      C,
+      const HMatrix<spacedim, Number> &B,
+      const size_type                  fixed_rank_k) const;
+
 private:
   /**
    * Convert an HMatrix to a full matrix by recursion.
@@ -880,6 +905,56 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
       case UndefinedMatrixType:
       default:
         Assert(false, ExcInvalidHMatrixType(type));
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
+                               const HMatrix<spacedim, Number> &B,
+                               const size_type fixed_rank_k) const
+{
+  /**
+   * <strong>Work flow</strong>
+   */
+
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        {
+          /**
+           * Recursively add each pair of submatrices.
+           */
+          for (size_type i = 0; i < submatrices.size(); i++)
+            {
+              submatrices.at(i)->add(C.submatrices.at(i),
+                                     B.submatrices.at(i),
+                                     fixed_rank_k);
+            }
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          /**
+           * Perform addition of full matrices.
+           */
+          this->fullmatrix->add(*(C.fullmatrix), *(B.fullmatrix));
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          /**
+           * Perform addition of rank-k matrices.
+           */
+
+          break;
+        }
+      case UndefinedMatrixType:
+        Assert(false, ExcInvalidHMatrixType(type));
+        break;
     }
 }
 

@@ -26,10 +26,6 @@
  * nodes with the type TreeNode. Because a node in the block cluster tree has
  * four children, the template argument \p T required by \p TreeNode should
  * be 4.
- *
- * At present, only a list of admissible or small block clusters at the deepest
- * level is constructed by applying partitioning from the root node, the tree
- * structure will not be generated.
  */
 template <int spacedim, typename Number = double>
 class BlockClusterTree

@@ -24,7 +24,7 @@ main()
       (*it) = counter;
       counter += 1.0;
     }
-  print_matrix_to_mat(std::cout, "M", M);
+  M.print_formatted_to_mat(std::cout, "M");
 
   /**
    * Create an HMatrix of fixed rank 2 using the fine non-tensor product
