@@ -58,5 +58,12 @@ main()
   std::cout << "HMatrix rank-1:\n";
   hmat.print_formatted(std::cout, 5, false, 10, "0");
 
+  /**
+   * Convert the HMatrix back to a full matrix.
+   */
+  LAPACKFullMatrixExt<double> M_prime;
+  hmat.convertToFullMatrix(M_prime);
+  M_prime.print_formatted_to_mat(std::cout, "M_prime");
+
   return 0;
 }
