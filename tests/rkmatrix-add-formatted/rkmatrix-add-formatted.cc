@@ -22,22 +22,25 @@ main()
   std::vector<double> values1{
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
   LAPACKFullMatrixExt<double>::Reshape(3, 5, values1, M1);
-  M1.print_formatted_to_mat(std::cout, "M1", 5, false, 10, "0");
+  M1.print_formatted_to_mat(std::cout, "M1", 8, false, 16, "0");
 
   std::vector<double> values2{3, 8, 10, 7, 1, 9, 7, 6, 12, 4, 5, 8, 8, 9, 20};
   LAPACKFullMatrixExt<double>::Reshape(3, 5, values2, M2);
-  M2.print_formatted_to_mat(std::cout, "M2", 5, false, 10, "0");
+  M2.print_formatted_to_mat(std::cout, "M2", 8, false, 16, "0");
 
   /**
    * Create two rank-k matrices converted from the two matrices.
+   * N.B. The matrix \p M1 has a dimension \f$3 \times 5\f$ but has a rank 2.
+   * Even though the rank-k matrix \p A created from \p M1 is declared to have
+   * rank 3, the final actual rank is automatically truncated to 2.
    */
   const unsigned int rank = 3;
 
   RkMatrix<double> A(rank, M1);
-  A.print_formatted_to_mat(std::cout, "A", 5, false, 10, "0");
+  A.print_formatted_to_mat(std::cout, "A", 8, false, 16, "0");
 
   RkMatrix<double> B(rank, M2);
-  B.print_formatted_to_mat(std::cout, "B", 5, false, 10, "0");
+  B.print_formatted_to_mat(std::cout, "B", 8, false, 16, "0");
 
   /**
    * Perform formatted addition.
@@ -45,19 +48,19 @@ main()
   {
     RkMatrix<double> C;
     A.add(C, B, 1);
-    C.print_formatted_to_mat(std::cout, "C_trunc_1", 5, false, 10, "0");
+    C.print_formatted_to_mat(std::cout, "C_trunc_1", 8, false, 16, "0");
   }
 
   {
     RkMatrix<double> C;
     A.add(C, B, 2);
-    C.print_formatted_to_mat(std::cout, "C_trunc_2", 5, false, 10, "0");
+    C.print_formatted_to_mat(std::cout, "C_trunc_2", 8, false, 16, "0");
   }
 
   {
     RkMatrix<double> C;
     A.add(C, B, 3);
-    C.print_formatted_to_mat(std::cout, "C_trunc_3", 5, false, 10, "0");
+    C.print_formatted_to_mat(std::cout, "C_trunc_3", 8, false, 16, "0");
   }
 
   return 0;

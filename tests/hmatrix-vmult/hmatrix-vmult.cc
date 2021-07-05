@@ -40,7 +40,7 @@ main()
       (*it) = counter;
       counter += 1.0;
     }
-  print_matrix_to_mat(std::cout, "M", M);
+  M.print_formatted_to_mat(std::cout, "M");
 
   /**
    * Create a rank-1 HMatrix.

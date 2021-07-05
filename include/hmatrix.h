@@ -147,6 +147,24 @@ public:
                   const double       threshold   = 0.) const;
 
   /**
+   * Write formatted leaf set to the output stream as well as the rank of each
+   * matrix block.
+   *
+   * Each leaf node is written in the following format:
+   *
+   * >
+   * [list-of-indices-in-cluster-tau],[list-of-indices-in-cluster-sigma],is_near_field,rank
+   *
+   * For example,
+   *
+   * > [1 2 3 ...],[7 8 9 ...],1,1
+   * @param out
+   */
+  void
+  write_leaf_set(std::ostream &out,
+                 const Number  singular_value_threshold = 1e-12) const;
+
+  /**
    * Convert or truncate all rank-k matrices in the leaf set to \p new_rank
    * matrices.
    *
@@ -204,7 +222,7 @@ public:
    * HMatrices will perform the addition of each pair of child HMatrices
    * corresponding to a same block cluster. Strictly speaking, this member
    * function \p add is not a recursive function, because the class instance
-   * calling \p add changes from parent to child HMatrix.
+   * which calls \p add changes from parent to child HMatrix.
    *
    * N.B.
    *
@@ -304,14 +322,16 @@ InitAndCreateHMatrixChildren(
    * Link row and column indices stored in the clusters \f$\tau\f$ and
    * \f$\sigma\f$ respectively.
    */
-  hmat->row_indices = &(bc_node->get_data_reference()
-                          .get_tau_node()
-                          ->get_data_reference()
-                          .get_index_set());
-  hmat->col_indices = &(bc_node->get_data_reference()
-                          .get_sigma_node()
-                          ->get_data_reference()
-                          .get_index_set());
+  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+    &(bc_node->get_data_reference()
+        .get_tau_node()
+        ->get_data_reference()
+        .get_index_set()));
+  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+    &(bc_node->get_data_reference()
+        .get_sigma_node()
+        ->get_data_reference()
+        .get_index_set()));
 
   /**
    * Update the matrix dimension of \p hmat.
@@ -722,6 +742,118 @@ HMatrix<spacedim, Number>::print_formatted(std::ostream &     out,
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::write_leaf_set(
+  std::ostream &out,
+  const Number  singular_value_threshold) const
+{
+  switch (type)
+    {
+      case FullMatrixType:
+        {
+          const std::vector<types::global_dof_index> &tau_index_set =
+            bc_node->get_data_reference()
+              .get_tau_node()
+              ->get_data_reference()
+              .get_index_set();
+          const std::vector<types::global_dof_index> &sigma_index_set =
+            bc_node->get_data_reference()
+              .get_sigma_node()
+              ->get_data_reference()
+              .get_index_set();
+
+          /**
+           * Print index set of cluster \f$\tau\f$.
+           */
+          out << "[";
+          print_vector_values(out, tau_index_set, " ", false);
+          out << "],";
+
+          /**
+           * Print index set of cluster \f$\sigma\f$.
+           */
+          out << "[";
+          print_vector_values(out, sigma_index_set, " ", false);
+          out << "],";
+
+          /**
+           * Print the \p is_near_field flag.
+           */
+          out << (bc_node->get_data_reference().get_is_near_field() ? 1 : 0)
+              << ",";
+
+          /**
+           * Make a copy of the matrix block and calculate its rank using
+           * SVD.
+           */
+          LAPACKFullMatrixExt<Number> copy(*fullmatrix);
+          const size_t rank = copy.rank(singular_value_threshold);
+
+          /**
+           * Print the \p rank flag.
+           */
+          out << rank << "\n";
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          const std::vector<types::global_dof_index> &tau_index_set =
+            bc_node->get_data_reference()
+              .get_tau_node()
+              ->get_data_reference()
+              .get_index_set();
+          const std::vector<types::global_dof_index> &sigma_index_set =
+            bc_node->get_data_reference()
+              .get_sigma_node()
+              ->get_data_reference()
+              .get_index_set();
+
+          /**
+           * Print index set of cluster \f$\tau\f$.
+           */
+          out << "[";
+          print_vector_values(out, tau_index_set, " ", false);
+          out << "],";
+
+          /**
+           * Print index set of cluster \f$\sigma\f$.
+           */
+          out << "[";
+          print_vector_values(out, sigma_index_set, " ", false);
+          out << "],";
+
+          /**
+           * Print the \p is_near_field flag.
+           */
+          out << (bc_node->get_data_reference().get_is_near_field() ? 1 : 0)
+              << ",";
+
+          /**
+           * Print the \p rank flag.
+           */
+          out << rkmatrix->get_rank() << "\n";
+
+          break;
+        }
+      case HierarchicalMatrixType:
+        {
+          for (HMatrix *submatrix : submatrices)
+            {
+              submatrix->write_leaf_set(out);
+            }
+
+          break;
+        }
+      case UndefinedMatrixType:
+      default:
+        Assert(false, ExcInvalidHMatrixType(type));
+        break;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::truncate_to_fixed_rank(size_type new_rank)
 {
   switch (type)
@@ -737,22 +869,6 @@ HMatrix<spacedim, Number>::truncate_to_fixed_rank(size_type new_rank)
         }
       case FullMatrixType:
         {
-          //          /**
-          //           * Create a new RkMatrix on the heap from the current full
-          //           matrix.
-          //           */
-          //          RkMatrix<Number> *rkmatrix_from_fullmatrix =
-          //            new RkMatrix<Number>(rank, *fullmatrix);
-          //
-          //          /**
-          //           * Link the created RkMatrix to the current HMatrix node
-          //           and delete
-          //           * the full matrix, then modify the matrix type.
-          //           */
-          //          rkmatrix = rkmatrix_from_fullmatrix;
-          //          delete fullmatrix;
-          //          fullmatrix = nullptr;
-          //          type       = RkMatrixType;
           /**
            * Do nothing.
            */
@@ -928,8 +1044,8 @@ HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
            */
           for (size_type i = 0; i < submatrices.size(); i++)
             {
-              submatrices.at(i)->add(C.submatrices.at(i),
-                                     B.submatrices.at(i),
+              submatrices.at(i)->add(*(C.submatrices.at(i)),
+                                     *(B.submatrices.at(i)),
                                      fixed_rank_k);
             }
 
@@ -949,6 +1065,7 @@ HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
           /**
            * Perform addition of rank-k matrices.
            */
+          this->rkmatrix->add(*(C.rkmatrix), *(B.rkmatrix), fixed_rank_k);
 
           break;
         }

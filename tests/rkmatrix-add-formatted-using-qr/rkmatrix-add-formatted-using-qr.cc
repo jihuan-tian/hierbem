@@ -37,7 +37,7 @@ main()
                               7,  8,  9,  10, 11, 12, 13, 14, 15, 1,  2,  3,
                               4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15};
   LAPACKFullMatrixExt<double>::Reshape(12, 10, values1, M1);
-  M1.print_formatted_to_mat(std::cout, "M1", 5, false, 10, "0");
+  M1.print_formatted_to_mat(std::cout, "M1", 8, false, 16, "0");
 
   std::vector<double> values2{3, 8, 10, 7, 1, 9, 7, 6, 12, 4, 5, 8, 8, 9, 20,
                               3, 8, 10, 7, 1, 9, 7, 6, 12, 4, 5, 8, 8, 9, 20,
@@ -48,7 +48,7 @@ main()
                               3, 8, 10, 7, 1, 9, 7, 6, 12, 4, 5, 8, 8, 9, 20,
                               3, 8, 10, 7, 1, 9, 7, 6, 12, 4, 5, 8, 8, 9, 20};
   LAPACKFullMatrixExt<double>::Reshape(12, 10, values2, M2);
-  M2.print_formatted_to_mat(std::cout, "M2", 5, false, 10, "0");
+  M2.print_formatted_to_mat(std::cout, "M2", 8, false, 16, "0");
 
   /**
    * Create two rank-k matrices converted from the two matrices.
@@ -56,10 +56,10 @@ main()
   const unsigned int rank = 4;
 
   RkMatrix<double> A(rank, M1);
-  A.print_formatted_to_mat(std::cout, "A", 5, false, 10, "0");
+  A.print_formatted_to_mat(std::cout, "A", 8, false, 16, "0");
 
   RkMatrix<double> B(rank, M2);
-  B.print_formatted_to_mat(std::cout, "B", 5, false, 10, "0");
+  B.print_formatted_to_mat(std::cout, "B", 8, false, 16, "0");
 
   /**
    * Perform formatted addition.
@@ -70,9 +70,9 @@ main()
       A.add(C, B, i);
       C.print_formatted_to_mat(std::cout,
                                std::string("C_trunc_") + std::to_string(i),
-                               5,
+                               8,
                                false,
-                               10,
+                               16,
                                "0");
     }
 

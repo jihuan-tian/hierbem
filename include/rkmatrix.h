@@ -91,6 +91,13 @@ public:
   RkMatrix(const RkMatrix<Number> &matrix);
 
   /**
+   * Get the rank of the rank-k matrix.
+   * @return
+   */
+  size_type
+  get_rank() const;
+
+  /**
    * Convert an HMatrix to a full matrix.
    * @param matrix
    */
@@ -311,6 +318,14 @@ RkMatrix<Number>::RkMatrix(const RkMatrix<Number> &matrix)
   , m(matrix.m)
   , n(matrix.n)
 {}
+
+
+template <typename Number>
+typename RkMatrix<Number>::size_type
+RkMatrix<Number>::get_rank() const
+{
+  return rank;
+}
 
 
 template <typename Number>

@@ -17,6 +17,7 @@
 #include "block_cluster.h"
 #include "cluster_tree.h"
 #include "debug_tools.h"
+#include "lapack_full_matrix_ext.h"
 #include "tree.h"
 
 /**
@@ -177,6 +178,26 @@ public:
    */
   void
   write_leaf_set(std::ostream &out) const;
+
+  /**
+   * Write formatted leaf set to the output stream as well as the rank of each
+   * matrix block.
+   *
+   * Each leaf node is written in the following format:
+   *
+   * >
+   * [list-of-indices-in-cluster-tau],[list-of-indices-in-cluster-sigma],is_near_field,rank
+   *
+   * For example,
+   *
+   * > [1 2 3 ...],[7 8 9 ...],1,1
+   * @param out
+   */
+  template <typename Number1 = double>
+  void
+  write_leaf_set(std::ostream &                      out,
+                 const LAPACKFullMatrixExt<Number1> &matrix,
+                 const Number1 singular_value_threshold = 0.) const;
 
   /**
    * Get the reference to the block cluster list which belongs to the near
@@ -1433,6 +1454,71 @@ BlockClusterTree<spacedim, Number>::write_leaf_set(std::ostream &out) const
        */
       out << (bc_node->get_data_reference().get_is_near_field() ? 1 : 0)
           << "\n";
+    }
+}
+
+
+template <int spacedim, typename Number>
+template <typename Number1>
+void
+BlockClusterTree<spacedim, Number>::write_leaf_set(
+  std::ostream &                      out,
+  const LAPACKFullMatrixExt<Number1> &matrix,
+  const Number1                       singular_value_threshold) const
+{
+  for (node_pointer_type bc_node : leaf_set)
+    {
+      const std::vector<types::global_dof_index> &tau_index_set =
+        bc_node->get_data_reference()
+          .get_tau_node()
+          ->get_data_reference()
+          .get_index_set();
+      const std::vector<types::global_dof_index> &sigma_index_set =
+        bc_node->get_data_reference()
+          .get_sigma_node()
+          ->get_data_reference()
+          .get_index_set();
+
+      /**
+       * Print index set of cluster \f$\tau\f$.
+       */
+      out << "[";
+      print_vector_values(out, tau_index_set, " ", false);
+      out << "],";
+
+      /**
+       * Print index set of cluster \f$\sigma\f$.
+       */
+      out << "[";
+      print_vector_values(out, sigma_index_set, " ", false);
+      out << "],";
+
+      /**
+       * Print the \p is_near_field flag.
+       */
+      out << (bc_node->get_data_reference().get_is_near_field() ? 1 : 0) << ",";
+
+      /**
+       * Make a local copy of the matrix block and calculate its rank using SVD.
+       */
+      const size_t                 nrows = tau_index_set.size();
+      const size_t                 ncols = sigma_index_set.size();
+      LAPACKFullMatrixExt<Number1> local_matrix(nrows, ncols);
+
+      for (size_t i = 0; i < nrows; i++)
+        {
+          for (size_t j = 0; j < ncols; j++)
+            {
+              local_matrix(i, j) = matrix(tau_index_set[i], sigma_index_set[j]);
+            }
+        }
+
+      const size_t rank = local_matrix.rank(singular_value_threshold);
+
+      /**
+       * Print the \p rank flag.
+       */
+      out << rank << "\n";
     }
 }
 

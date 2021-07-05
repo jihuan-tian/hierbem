@@ -1,10 +1,9 @@
 /**
- * \file svd-degenerate-cases.cc
- * \brief Test SVD and RSVD for degenerate cases, such as the matrix is a
- * scalar, row vector or column vector.
- * \ingroup linalg
+ * \file lapack-matrix-rsvd-degenerate-cases.cc
+ * \brief Verify degenerate cases for reduced SVD.
+ * \ingroup
  * \author Jihuan Tian
- * \date 2021-06-24
+ * \date 2021-07-05
  */
 
 #include "debug_tools.h"
@@ -15,9 +14,11 @@ using namespace dealii;
 int
 main()
 {
+  const unsigned int rank = 1;
+
   {
     /**
-     * SVD of a scalar matrix.
+     * RSVD of a scalar matrix.
      */
     LAPACKFullMatrixExt<double> A(1, 1);
     LAPACKFullMatrixExt<double> U, VT;
@@ -26,7 +27,7 @@ main()
     A(0, 0) = 5.;
     A.print_formatted_to_mat(std::cout, "A1", 8, false, 16, "0");
 
-    A.svd(U, Sigma_r, VT);
+    A.reduced_svd(U, Sigma_r, VT, rank);
 
     U.print_formatted_to_mat(std::cout, "U1", 8, false, 16, "0");
     VT.print_formatted_to_mat(std::cout, "VT1", 8, false, 16, "0");
@@ -35,7 +36,7 @@ main()
 
   {
     /**
-     * SVD of a row matrix.
+     * RSVD of a row matrix.
      */
     LAPACKFullMatrixExt<double> A(1, 3);
     LAPACKFullMatrixExt<double> U, VT;
@@ -46,7 +47,7 @@ main()
     A(0, 2) = 3.;
     A.print_formatted_to_mat(std::cout, "A2", 8, false, 16, "0");
 
-    A.svd(U, Sigma_r, VT);
+    A.reduced_svd(U, Sigma_r, VT, rank);
 
     U.print_formatted_to_mat(std::cout, "U2", 8, false, 16, "0");
     VT.print_formatted_to_mat(std::cout, "VT2", 8, false, 16, "0");
@@ -55,7 +56,7 @@ main()
 
   {
     /**
-     * SVD of a column matrix.
+     * RSVD of a column matrix.
      */
     LAPACKFullMatrixExt<double> A(3, 1);
     LAPACKFullMatrixExt<double> U, VT;
@@ -66,7 +67,7 @@ main()
     A(2, 0) = 3.;
     A.print_formatted_to_mat(std::cout, "A3", 8, false, 16, "0");
 
-    A.svd(U, Sigma_r, VT);
+    A.reduced_svd(U, Sigma_r, VT, rank);
 
     U.print_formatted_to_mat(std::cout, "U3", 8, false, 16, "0");
     VT.print_formatted_to_mat(std::cout, "VT3", 8, false, 16, "0");

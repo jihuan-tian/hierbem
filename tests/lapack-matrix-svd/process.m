@@ -1,11 +1,21 @@
-U=[
-  -0.20166    0.89032    0.40825 
-  -0.51683    0.25733   -0.81650 
-  -0.83200   -0.37565    0.40825];
-VT=[
-  -0.35456   -0.39870   -0.44284   -0.48697   -0.53111 
-  -0.68869   -0.37555   -0.06242    0.25071    0.56384 
-  0.56980   -0.33522   -0.62629   -0.02093    0.41265 ];
-Sigma_r=diag([35.1272,2.4654,1.58312e-15]);
+clear all;
+load svd.output;
 
-U*Sigma_r*VT
+m = 3;
+n = 5;
+
+## Construct the Sigma matrix from Sigma_r.
+Sigma = [diag(Sigma_r1), zeros(m, n - m)];
+norm(A - U1 * Sigma * VT1, "fro") / norm(A, "fro")
+
+Sigma = [diag(Sigma_r2), zeros(m, n - m)];
+norm(A - U2 * Sigma * VT2, "fro") / norm(A, "fro")
+
+Sigma = [diag(Sigma_r3), zeros(m, n - m)];
+norm(A - U3 * Sigma * VT3, "fro") / norm(A, "fro")
+
+Sigma = [diag(Sigma_r4), zeros(m, n - m)];
+norm(A - U4 * Sigma * VT4, "fro") / norm(A, "fro")
+
+Sigma = [diag(Sigma_r5), zeros(m, n - m)];
+norm(A - U5 * Sigma * VT5, "fro") / norm(A, "fro")

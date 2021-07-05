@@ -8,10 +8,32 @@
 #ifndef INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 #define INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 
+#include <limits>
+
 #include "general_exceptions.h"
 #include "lapack_helpers.h"
 
 using namespace dealii;
+
+/**
+ * Calculate singular value threshold value which can be used for estimating
+ * the matrix's rank and perform rank truncation.
+ *
+ * The calculation is according to <code>tol = max (size (A)) * Sigma_r(1) *
+ * epsilon;</code>, where \p epsilon is the machine's precision.
+ * @param Sigma_r list of singular values organized in decreasing order.
+ * @return
+ */
+template <typename Number = double>
+Number
+calc_singular_value_threshold(
+  const size_t                                                          m,
+  const size_t                                                          n,
+  const std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r)
+{
+  return std::max(m, n) * Sigma_r[0] * std::numeric_limits<double>::epsilon();
+}
+
 
 /**
  * Extend and expose more of the the functionality of LAPACKFullMatrix.
@@ -80,6 +102,8 @@ public:
 
   /**
    * Perform SVD on the product of two component matrices \f$A\f$ and \f$B^T\f$.
+   * If the matrix is not of full rank, truncate it to the effective rank. It
+   * returns the effective rank.
    * @param A
    * @param B
    * @param U
@@ -92,11 +116,12 @@ public:
     LAPACKFullMatrixExt<Number> &                                   B,
     LAPACKFullMatrixExt<Number> &                                   U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-    LAPACKFullMatrixExt<Number> &                                   VT);
+    LAPACKFullMatrixExt<Number> &                                   VT,
+    Number singular_value_threshold = 0.);
 
   /**
    * Perform SVD on the product of two component matrices \f$A\f$ and \f$B^T\f$
-   * with rank truncation.
+   * with truncation by a specified rank.
    * @param A
    * @param B
    * @param U
@@ -111,7 +136,8 @@ public:
     LAPACKFullMatrixExt<Number> &                                   U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
     LAPACKFullMatrixExt<Number> &                                   VT,
-    const size_type truncation_rank);
+    size_type truncation_rank,
+    Number    singular_value_threshold = 0.);
 
   /**
    * Construct a square matrix by specifying the dimension.
@@ -203,10 +229,9 @@ public:
 
   /**
    * Perform the standard singular value decomposition (SVD).
-   * @param A
-   * @param U
-   * @param Sigma_r the list of singular values, which has a dimension of \f$\min(m,n)\f$.
-   * @param VT
+   * @param U with a dimension \f$m \times m\f$.
+   * @param Sigma_r the list of singular values, with a dimension \f$\min(m,n)\f$.
+   * @param VT with a dimension \f$n \times n\f$
    */
   void
   svd(LAPACKFullMatrixExt<Number> &                                   U,
@@ -216,10 +241,15 @@ public:
   /**
    * Perform the standard singular value decomposition (SVD) with rank
    * truncation.
-   * @param A
-   * @param U
-   * @param Sigma_r the list of singular values, which has a dimension of \f$\min(m,n)\f$.
-   * @param VT
+   *
+   * When the given \p truncation_rank is less than the minimum dimension
+   * \f$\min{m, n}\f$, \p U's \p (truncation_rank+1)'th to \p m'th columns are
+   * set to zeros; \p VT's \p (truncation_rank+1)'th to \p n'th rows are set to
+   * zeros; \p Sigma_r's \p (truncation_rank+1)'th to \p n'th values are set to
+   * zeros.
+   * @param U with a dimension \f$m \times m\f$.
+   * @param Sigma_r the list of singular values, which has a dimension \f$\min(m,n)\f$.
+   * @param VT with a dimension \f$n \times n\f$.
    */
   void
   svd(LAPACKFullMatrixExt<Number> &                                   U,
@@ -241,7 +271,19 @@ public:
     LAPACKFullMatrixExt<Number> &                                   U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
     LAPACKFullMatrixExt<Number> &                                   VT,
-    const size_type truncation_rank);
+    size_type truncation_rank,
+    Number    singular_value_threshold = 0.);
+
+  /**
+   * Get the rank of the matrix using SVD.
+   *
+   * A copy will be made at first for SVD to operate on.
+   * @param threshold threshold for singular values. The number of singular
+   * values larger than this threshold is the matrix rank.
+   * @return
+   */
+  size_type
+  rank(Number threshold = 0.) const;
 
   /**
    * Perform QR decomposition of the matrix.
@@ -393,11 +435,19 @@ public:
                    bool                         is_left_associative);
 
   /**
-   * Matrix addition \f$C = A + B\f$, where \f$A\f$ is the current matrix.
+   * Add two matrix into a new matrix \f$C = A + B\f$, where \f$A\f$ is the
+   * current matrix.
    */
   void
   add(LAPACKFullMatrixExt<Number> &      C,
       const LAPACKFullMatrixExt<Number> &B) const;
+
+  /**
+   * Add the matrix \p B into the current matrix.
+   * @param B
+   */
+  void
+  add(const LAPACKFullMatrixExt<Number> &B);
 
   /**
    * Print a LAPACKFullMatrixExt to Octave mat format.
@@ -526,17 +576,37 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
   LAPACKFullMatrixExt<Number> &                                   B,
   LAPACKFullMatrixExt<Number> &                                   U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number> &                                   VT)
+  LAPACKFullMatrixExt<Number> &                                   VT,
+  Number singular_value_threshold)
 {
+  /**
+   * In a rank-k matrix, the number of columns in the component matrix \p A
+   * should match that of \p B.
+   */
   AssertDimension(A.n(), B.n());
 
+  const size_type mm      = A.m();
+  const size_type nn      = B.m();
+  const size_type min_dim = std::min(mm, nn);
+
+  bool is_qr_used;
+
+  /**
+   * N.B. The number of columns in the component matrix \p A or \p B is the
+   * representation rank of the rank-k matrix, which means the rank-k matrix may
+   * not be of full rank and the actual rank is less than this representation
+   * rank.
+   */
   const size_type representation_rank = A.n();
 
   if (A.m() > representation_rank && B.m() > representation_rank)
     {
+      is_qr_used = true;
+
       /**
-       * Perform reduced QR decomposition to component matrix \p A, which
-       * has a dimension of \f$m \times r\f$.
+       * When both \p A and \p B are long matrices, i.e. they have more rows
+       * than columns, perform reduced QR decomposition to component matrix \p
+       * A, which has a dimension of \f$m \times r\f$.
        */
       LAPACKFullMatrixExt<Number> QA, RA;
       A.reduced_qr(QA, RA);
@@ -568,6 +638,8 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
     }
   else
     {
+      is_qr_used = false;
+
       /**
        * Firstly convert the rank-k matrix to a full matrix, then perform
        * SVD on this full matrix.
@@ -577,7 +649,138 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
       fullmatrix.svd(U, Sigma_r, VT);
     }
 
-  return Sigma_r.size();
+  if (singular_value_threshold == 0.)
+    {
+      /**
+       * If the singular value threshold is perfect zero, calculate a threshold
+       * value instead.
+       */
+      singular_value_threshold = calc_singular_value_threshold(mm, nn, Sigma_r);
+    }
+
+  /**
+   * Get the actual rank of the matrix and it should always be less than or
+   * equal to \p min_dim. The matrix will be truncated to this effective rank.
+   */
+  size_type rank = 0;
+  for (size_t i = 0; i < Sigma_r.size(); i++)
+    {
+      if (Sigma_r[i] > singular_value_threshold)
+        {
+          rank++;
+        }
+    }
+  AssertIndexRange(rank, min_dim + 1);
+
+  if (rank < min_dim)
+    {
+      /**
+       * Keep the first \p rank singular values, while discarding others.
+       */
+      std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
+        std::move(Sigma_r));
+      Sigma_r.resize(rank);
+      for (size_type i = 0; i < rank; i++)
+        {
+          Sigma_r.at(i) = copy.at(i);
+        }
+
+      /**
+       * Keep the first \p rank columns of \p U, while deleting others.
+       */
+      U.keep_first_n_columns(rank, true);
+
+      /**
+       * Keep the first \p rank rows of \p VT, while deleting others.
+       */
+      VT.keep_first_n_rows(rank, true);
+    }
+  else
+    {
+      /**
+       * In this case, it could only be \p rank == \p min_dim.
+       */
+      AssertDimension(rank, min_dim);
+
+      if (is_qr_used)
+        {
+          /**
+           * In this case, the results \p U, \p Sigma_r and \p VT are obtained
+           * via QR decomposition. And if \p M has a dimension \f$m \times n\f$,
+           * the dimensions of all matrices are:
+           * * \f$U \in \mathbb{R}^{m \times {\rm representation rank}}\f$
+           * * \f$\Sigma_r \in \mathbb{R}^{{\rm representation rank} \times {\rm
+           * representation rank}}\f$
+           * * \f$V \in \mathbb{R}^{n \times {\rm representation rank}}\f$
+           */
+          if (rank < representation_rank)
+            {
+              /**
+               * Keep the first \p rank singular values, while discarding
+               * others.
+               */
+              std::vector<typename numbers::NumberTraits<Number>::real_type>
+                copy(std::move(Sigma_r));
+              Sigma_r.resize(rank);
+              for (size_type i = 0; i < rank; i++)
+                {
+                  Sigma_r.at(i) = copy.at(i);
+                }
+
+              /**
+               * Keep the first \p rank columns of \p U, while deleting others.
+               */
+              U.keep_first_n_columns(rank, true);
+
+              /**
+               * Keep the first \p rank rows of \p VT, while deleting others.
+               */
+              VT.keep_first_n_rows(rank, true);
+            }
+        }
+      else
+        {
+          /**
+           * In this case, the results \p U, \p Sigma_r and \p VT are obtained
+           * from full matrix SVD. And if \p M has a dimension \f$m \times
+           * n\f$, the dimensions of all matrices obtained from SVD are:
+           * * \f$U \in \mathbb{R}^{m \times m}\f$
+           * * \f$\Sigma_r \in \mathbb{R}^{m \times n}\f$
+           * * \f$V \in \mathbb{R}^{n \times n}\f$
+           */
+          if (mm > nn)
+            {
+              /**
+               * When the original matrix is long, \f$\Sigma_r =
+               * \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}\f$. Therefore, we
+               * keep the first \p min_dim columns of \p U, while deleting
+               * others. \p VT is kept intact.
+               */
+              U.keep_first_n_columns(min_dim, true);
+            }
+          else if (mm < nn)
+            {
+              /**
+               * When the original matrix is wide, \f$\Sigma_r = \begin{pmatrix}
+               * \Sigma_r' & 0 \end{pmatrix}\f$. Therefore, we keep the first \p
+               * min_dim rows of \p VT, while deleting others. \p U is kept
+               * intact.
+               */
+              VT.keep_first_n_rows(min_dim, true);
+            }
+          else
+            {
+              /**
+               * When the original matrix is square, do nothing.
+               */
+            }
+        }
+    }
+
+  AssertDimension(U.n(), Sigma_r.size());
+  AssertDimension(VT.m(), Sigma_r.size());
+
+  return rank;
 }
 
 
@@ -589,11 +792,111 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
   LAPACKFullMatrixExt<Number> &                                   U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
   LAPACKFullMatrixExt<Number> &                                   VT,
-  const size_type truncation_rank)
+  size_type truncation_rank,
+  Number    singular_value_threshold)
 {
-  const size_type effective_rank = reduced_svd_on_AxBT(A, B, U, Sigma_r, VT);
+  /**
+   * In a rank-k matrix, the number of columns in the component matrix \p A
+   * should match that of \p B.
+   */
+  AssertDimension(A.n(), B.n());
 
-  if (truncation_rank < effective_rank)
+  const size_type mm      = A.m();
+  const size_type nn      = B.m();
+  const size_type min_dim = std::min(mm, nn);
+
+  bool is_qr_used;
+
+  /**
+   * N.B. The number of columns in the component matrix \p A or \p B is the
+   * representation rank of the rank-k matrix, which means the rank-k matrix may
+   * not be of full rank and the actual rank is less than this representation
+   * rank.
+   */
+  const size_type representation_rank = A.n();
+
+  if (A.m() > representation_rank && B.m() > representation_rank)
+    {
+      is_qr_used = true;
+
+      /**
+       * When both \p A and \p B are long matrices, i.e. they have more rows
+       * than columns, perform reduced QR decomposition to component matrix \p
+       * A, which has a dimension of \f$m \times r\f$.
+       */
+      LAPACKFullMatrixExt<Number> QA, RA;
+      A.reduced_qr(QA, RA);
+
+      /**
+       * Perform reduced QR decomposition to component matrix \p B, which
+       * has a dimension of \f$n \times r\f$.
+       */
+      LAPACKFullMatrixExt<Number> QB, RB;
+      B.reduced_qr(QB, RB);
+
+      /**
+       * Perform SVD to the product \f$R\f$ of the two upper triangular
+       * matrices, i.e. \f$R = R_A R_B^T\f$.
+       */
+      LAPACKFullMatrixExt<Number> R, U_hat, VT_hat;
+      /**
+       * N.B. Before LAPACK matrix multiplication, the memory of the result
+       * matrix should be reinitialized.
+       */
+      R.reinit(RA.m(), RB.m());
+      RA.mTmult(R, RB);
+      R.svd(U_hat, Sigma_r, VT_hat);
+
+      U.reinit(QA.m(), representation_rank);
+      QA.mmult(U, U_hat);
+      VT.reinit(representation_rank, QB.m());
+      VT_hat.mTmult(VT, QB);
+    }
+  else
+    {
+      is_qr_used = false;
+
+      /**
+       * Firstly convert the rank-k matrix to a full matrix, then perform
+       * SVD on this full matrix.
+       */
+      LAPACKFullMatrixExt<Number> fullmatrix(A.m(), B.m());
+      A.mTmult(fullmatrix, B);
+      fullmatrix.svd(U, Sigma_r, VT);
+    }
+
+  if (singular_value_threshold == 0.)
+    {
+      /**
+       * If the singular value threshold is perfect zero, calculate a threshold
+       * value instead.
+       */
+      singular_value_threshold = calc_singular_value_threshold(mm, nn, Sigma_r);
+    }
+
+  /**
+   * Get the actual rank of the matrix and it should always be less than or
+   * equal to \p min_dim.
+   */
+  size_type rank = 0;
+  for (size_t i = 0; i < Sigma_r.size(); i++)
+    {
+      if (Sigma_r[i] > singular_value_threshold)
+        {
+          rank++;
+        }
+    }
+  AssertIndexRange(rank, min_dim + 1);
+
+  /**
+   * Limit the truncation rank wrt. the actual rank.
+   */
+  if (truncation_rank > rank)
+    {
+      truncation_rank = rank;
+    }
+
+  if (truncation_rank < min_dim)
     {
       /**
        * Keep the first \p truncation_rank singular values, while discarding
@@ -608,23 +911,104 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
         }
 
       /**
-       * Keep the first \p truncation_rank columns of U.
+       * Keep the first \p truncation_rank columns of \p U, while deleting
+       * others.
        */
-      U.keep_first_n_columns(truncation_rank);
+      U.keep_first_n_columns(truncation_rank, true);
 
       /**
-       * Keep the first \p truncation_rank rows of VT.
+       * Keep the first \p truncation_rank rows of \p VT, while deleting others.
        */
-      VT.keep_first_n_rows(truncation_rank);
+      VT.keep_first_n_rows(truncation_rank, true);
     }
   else
     {
       /**
-       * Do nothing.
+       * In this case, it could only be \p truncation_rank == \p min_dim.
        */
+      AssertDimension(truncation_rank, min_dim);
+
+      if (is_qr_used)
+        {
+          /**
+           * In this case, the results \p U, \p Sigma_r and \p VT are obtained
+           * via QR decomposition. And if \p M has a dimension \f$m \times n\f$,
+           * the dimensions of all matrices are:
+           * * \f$U \in \mathbb{R}^{m \times {\rm representation rank}}\f$
+           * * \f$\Sigma_r \in \mathbb{R}^{{\rm representation rank} \times {\rm
+           * representation rank}}\f$
+           * * \f$V \in \mathbb{R}^{n \times {\rm representation rank}}\f$
+           */
+          if (truncation_rank < representation_rank)
+            {
+              /**
+               * Keep the first \p truncation_rank singular values, while
+               * discarding others.
+               */
+              std::vector<typename numbers::NumberTraits<Number>::real_type>
+                copy(std::move(Sigma_r));
+              Sigma_r.resize(truncation_rank);
+              for (size_type i = 0; i < truncation_rank; i++)
+                {
+                  Sigma_r.at(i) = copy.at(i);
+                }
+
+              /**
+               * Keep the first \p truncation_rank columns of \p U, while
+               * deleting others.
+               */
+              U.keep_first_n_columns(truncation_rank, true);
+
+              /**
+               * Keep the first \p truncation_rank rows of \p VT, while deleting
+               * others.
+               */
+              VT.keep_first_n_rows(truncation_rank, true);
+            }
+        }
+      else
+        {
+          /**
+           * In this case, the results \p U, \p Sigma_r and \p VT are obtained
+           * from full matrix SVD. And if \p M has a dimension \f$m \times
+           * n\f$, the dimensions of all matrices obtained from SVD are:
+           * * \f$U \in \mathbb{R}^{m \times m}\f$
+           * * \f$\Sigma_r \in \mathbb{R}^{m \times n}\f$
+           * * \f$V \in \mathbb{R}^{n \times n}\f$
+           */
+          if (mm > nn)
+            {
+              /**
+               * When the original matrix is long, \f$\Sigma_r =
+               * \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}\f$. Therefore, we
+               * keep the first \p min_dim columns of \p U, while deleting
+               * others. \p VT is kept intact.
+               */
+              U.keep_first_n_columns(min_dim, true);
+            }
+          else if (mm < nn)
+            {
+              /**
+               * When the original matrix is wide, \f$\Sigma_r = \begin{pmatrix}
+               * \Sigma_r' & 0 \end{pmatrix}\f$. Therefore, we keep the first \p
+               * min_dim rows of \p VT, while deleting others. \p U is kept
+               * intact.
+               */
+              VT.keep_first_n_rows(min_dim, true);
+            }
+          else
+            {
+              /**
+               * When the original matrix is square, do nothing.
+               */
+            }
+        }
     }
 
-  return Sigma_r.size();
+  AssertDimension(U.n(), Sigma_r.size());
+  AssertDimension(VT.m(), Sigma_r.size());
+
+  return truncation_rank;
 }
 
 
@@ -1080,7 +1464,7 @@ LAPACKFullMatrixExt<Number>::svd(
   const size_type min_dim = std::min(mm, nn);
 
   /**
-   * Perform the full SVD.
+   * Perform the full SVD. After the operation,
    */
   svd(U, Sigma_r, VT);
 
@@ -1091,7 +1475,8 @@ LAPACKFullMatrixExt<Number>::svd(
   if (truncation_rank < min_dim)
     {
       /**
-       * Clear singular values.
+       * Keep the first \p truncation_rank number of singular values and clear
+       * the remaining ones.
        */
       for (size_type i = truncation_rank; i < Sigma_r.size(); i++)
         {
@@ -1099,14 +1484,14 @@ LAPACKFullMatrixExt<Number>::svd(
         }
 
       /**
-       * Keep the first \p truncation_rank columns of \p U, while setting others
-       * to zero.
+       * Keep the first \p truncation_rank columns of \p U, while setting other
+       * columns to zero.
        */
       U.keep_first_n_columns(truncation_rank, false);
 
       /**
-       * Keep the first \p truncation_rank rows of \p VT, while setting others
-       * to zero.
+       * Keep the first \p truncation_rank rows of \p VT, while setting other
+       * rows to zero.
        */
       VT.keep_first_n_rows(truncation_rank, false);
     }
@@ -1126,7 +1511,8 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
   LAPACKFullMatrixExt<Number> &                                   U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
   LAPACKFullMatrixExt<Number> &                                   VT,
-  const size_type truncation_rank)
+  size_type truncation_rank,
+  Number    singular_value_threshold)
 {
   const size_type mm      = this->m();
   const size_type nn      = this->n();
@@ -1136,6 +1522,37 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
    * Perform the full SVD.
    */
   svd(U, Sigma_r, VT);
+
+  if (singular_value_threshold == 0.)
+    {
+      /**
+       * If the singular value threshold is perfect zero, calculate a threshold
+       * value instead.
+       */
+      singular_value_threshold = calc_singular_value_threshold(mm, nn, Sigma_r);
+    }
+
+  /**
+   * Get the actual rank of the matrix and it should always be less than or
+   * equal to \p min_dim.
+   */
+  size_type rank = 0;
+  for (size_t i = 0; i < Sigma_r.size(); i++)
+    {
+      if (Sigma_r[i] > singular_value_threshold)
+        {
+          rank++;
+        }
+    }
+  AssertIndexRange(rank, min_dim + 1);
+
+  /**
+   * Limit the truncation rank wrt. the actual rank.
+   */
+  if (truncation_rank > rank)
+    {
+      truncation_rank = rank;
+    }
 
   /**
    * Perform singular value truncation when the specified rank is less than the
@@ -1168,19 +1585,34 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
     }
   else
     {
+      /**
+       * In this case, it could only be \p truncation_rank == \p min_dim.
+       */
+      AssertDimension(truncation_rank, min_dim);
+
+      /**
+       * N.B. If \p M has a dimension \f$m \times n\f$, the dimensions of all
+       * matrices obtained from SVD are:
+       * * \f$U \in \mathbb{R}^{m \times m}\f$
+       * * \f$\Sigma_r \in \mathbb{R}^{m \times n}\f$
+       * * \f$V \in \mathbb{R}^{n \times n}\f$
+       */
       if (mm > nn)
         {
           /**
-           * Keep the first \p min_dim columns of \p U, while deleting
-           * others.
+           * When the original matrix is long, \f$\Sigma_r =
+           * \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}\f$. Therefore, we keep
+           * the first \p min_dim columns of \p U, while deleting others. \p VT
+           * is kept intact.
            */
           U.keep_first_n_columns(min_dim, true);
         }
       else if (mm < nn)
         {
           /**
-           * Keep the first \p min_dim rows of \p VT, while deleting
-           * others.
+           * When the original matrix is wide, \f$\Sigma_r = \begin{pmatrix}
+           * \Sigma_r' & 0 \end{pmatrix}\f$. Therefore, we keep the first \p
+           * min_dim rows of \p VT, while deleting others. \p U is kept intact.
            */
           VT.keep_first_n_rows(min_dim, true);
         }
@@ -1195,7 +1627,42 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
   AssertDimension(U.n(), Sigma_r.size());
   AssertDimension(VT.m(), Sigma_r.size());
 
-  return Sigma_r.size();
+  /**
+   * Return the actual rank of the matrix after truncation.
+   */
+  return truncation_rank;
+}
+
+
+template <typename Number>
+typename LAPACKFullMatrixExt<Number>::size_type
+LAPACKFullMatrixExt<Number>::rank(Number threshold) const
+{
+  LAPACKFullMatrixExt<Number>                                    copy(*this);
+  LAPACKFullMatrixExt<Number>                                    U, VT;
+  std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
+
+  copy.svd(U, Sigma_r, VT);
+
+  if (threshold == 0.)
+    {
+      /**
+       * If the singular value threshold is perfect zero, calculate a threshold
+       * value instead.
+       */
+      threshold = calc_singular_value_threshold(this->m(), this->n(), Sigma_r);
+    }
+
+  size_type rank = 0;
+  for (size_t i = 0; i < Sigma_r.size(); i++)
+    {
+      if (Sigma_r[i] > threshold)
+        {
+          rank++;
+        }
+    }
+
+  return rank;
 }
 
 
@@ -1670,6 +2137,26 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
+LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B)
+{
+  AssertDimension(this->m(), B.m());
+  AssertDimension(this->n(), B.n());
+
+  const size_type nrows = this->m();
+  const size_type ncols = this->n();
+
+  for (size_type i = 0; i < nrows; i++)
+    {
+      for (size_type j = 0; j < ncols; j++)
+        {
+          (*this)(i, j) += B(i, j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
 LAPACKFullMatrixExt<Number>::print_formatted_to_mat(
   std::ostream &     out,
   const std::string &name,
@@ -1690,6 +2177,5 @@ LAPACKFullMatrixExt<Number>::print_formatted_to_mat(
 
   out << "\n\n";
 }
-
 
 #endif /* INCLUDE_LAPACK_FULL_MATRIX_EXT_H_ */

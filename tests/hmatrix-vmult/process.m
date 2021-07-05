@@ -1,5 +1,5 @@
 clear all;
-load hmatrix-vmult.output;
+load "hmatrix-vmult.output";
 y_tilde = M * x;
 norm(y_tilde - y, 2) / norm(y)
 y_trans_tilde = M' * x;

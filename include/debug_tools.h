@@ -45,6 +45,20 @@ print_vector_values(std::ostream &     out,
 }
 
 
+template <typename Number>
+void
+print_scalar_to_mat(std::ostream &     out,
+                    const std::string &name,
+                    const Number       value)
+{
+  out << "# name: " << name << "\n"
+      << "# type: scalar\n"
+      << value << "\n";
+
+  out << "\n\n";
+}
+
+
 template <typename VectorType>
 void
 print_vector_to_mat(std::ostream &     out,

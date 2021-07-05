@@ -15,4 +15,12 @@ function plot_block_cluster(bc, unit_size)
 
   fillPolygon(block_shape, shape_color);
   drawPolygon(block_shape, "k", "linewidth", 1);
+
+  if (isfield(bc, "rank"))
+    ## Label the rank of the matrix block.
+    text_x_coord = (xrange(2) + xrange(1)) / 2;
+    text_y_coord = (yrange(2) + yrange(1)) / 2;
+
+    text(text_x_coord, text_y_coord, num2str(bc.rank), "fontsize", 8);
+  endif
 endfunction

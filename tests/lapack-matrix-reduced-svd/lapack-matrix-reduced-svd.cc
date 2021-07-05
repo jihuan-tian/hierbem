@@ -1,9 +1,9 @@
 /**
- * \file svd.cc
- * \brief Test singular value decomposition (SVD) and reduced SVD.
- * \ingroup linalg
+ * \file lapack-matrix-reduced-svd.cc
+ * \brief Verify reduced SVD.
+ * \ingroup
  * \author Jihuan Tian
- * \date 2021-06-19
+ * \date 2021-07-05
  */
 
 #include "debug_tools.h"
@@ -36,8 +36,9 @@ main()
   {
     LAPACKFullMatrixExt<double> A(A_original);
 
-    std::cout << "Original SVD without rank truncation\n";
-    A.svd(U, Sigma_r, VT);
+    std::cout << "RSVD with rank truncated to 1\n";
+
+    A.reduced_svd(U, Sigma_r, VT, 1);
 
     U.print_formatted_to_mat(std::cout, "U1", 8, false, 16, "0");
     VT.print_formatted_to_mat(std::cout, "VT1", 8, false, 16, "0");
@@ -47,9 +48,9 @@ main()
   {
     LAPACKFullMatrixExt<double> A(A_original);
 
-    std::cout << "SVD with rank truncated to 1\n";
+    std::cout << "RSVD with rank truncated to 2\n";
 
-    A.svd(U, Sigma_r, VT, 1);
+    A.reduced_svd(U, Sigma_r, VT, 2);
 
     U.print_formatted_to_mat(std::cout, "U2", 8, false, 16, "0");
     VT.print_formatted_to_mat(std::cout, "VT2", 8, false, 16, "0");
@@ -59,9 +60,9 @@ main()
   {
     LAPACKFullMatrixExt<double> A(A_original);
 
-    std::cout << "SVD with rank truncated to 2\n";
+    std::cout << "RSVD with rank truncated to 3\n";
 
-    A.svd(U, Sigma_r, VT, 2);
+    A.reduced_svd(U, Sigma_r, VT, 3);
 
     U.print_formatted_to_mat(std::cout, "U3", 8, false, 16, "0");
     VT.print_formatted_to_mat(std::cout, "VT3", 8, false, 16, "0");
@@ -71,25 +72,13 @@ main()
   {
     LAPACKFullMatrixExt<double> A(A_original);
 
-    std::cout << "SVD with rank truncated to 3\n";
+    std::cout << "RSVD with rank truncated to 4\n";
 
-    A.svd(U, Sigma_r, VT, 3);
+    A.reduced_svd(U, Sigma_r, VT, 4);
 
     U.print_formatted_to_mat(std::cout, "U4", 8, false, 16, "0");
     VT.print_formatted_to_mat(std::cout, "VT4", 8, false, 16, "0");
     print_vector_to_mat(std::cout, "Sigma_r4", Sigma_r);
-  }
-
-  {
-    LAPACKFullMatrixExt<double> A(A_original);
-
-    std::cout << "SVD with rank truncated to 4\n";
-
-    A.svd(U, Sigma_r, VT, 4);
-
-    U.print_formatted_to_mat(std::cout, "U5", 8, false, 16, "0");
-    VT.print_formatted_to_mat(std::cout, "VT5", 8, false, 16, "0");
-    print_vector_to_mat(std::cout, "Sigma_r5", Sigma_r);
   }
 
   return 0;
