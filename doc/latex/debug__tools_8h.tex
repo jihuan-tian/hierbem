@@ -1,0 +1,152 @@
+\hypertarget{debug__tools_8h}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/include/debug\+\_\+tools.h File Reference}
+\label{debug__tools_8h}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/debug\+\_\+tools.\+h@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/debug\+\_\+tools.\+h}}
+
+
+This file includes a bunch of helper functions for printing out and visualizing information about grid, Do\+Fs, map, etc.  
+
+
+{\ttfamily \#include $<$deal.\+I\+I/dofs/dof\+\_\+handler.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/dofs/dof\+\_\+tools.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe\+\_\+system.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/mapping.\+h$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+Include dependency graph for debug\+\_\+tools.\+h\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{debug__tools_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{debug__tools_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{debug__tools_8h_ad253b96a1f048532dc018fd4af3ff6e0}\label{debug__tools_8h_ad253b96a1f048532dc018fd4af3ff6e0}} 
+{\footnotesize template$<$typename Vector\+Type $>$ }\\void {\bfseries print\+\_\+vector\+\_\+values} (std\+::ostream \&out, const Vector\+Type \&values, const std\+::string \&sep=std\+::string(\char`\"{},\char`\"{}), bool has\+\_\+newline=true)
+\item 
+\mbox{\Hypertarget{debug__tools_8h_a404e5fa4d0ac507edd6de3b59ff0714d}\label{debug__tools_8h_a404e5fa4d0ac507edd6de3b59ff0714d}} 
+{\footnotesize template$<$typename Vector\+Type $>$ }\\void {\bfseries print\+\_\+vector\+\_\+indices} (std\+::ostream \&out, const Vector\+Type \&values, const std\+::string \&sep, bool index\+\_\+starting\+\_\+from\+\_\+zero, bool has\+\_\+newline=true)
+\item 
+\mbox{\Hypertarget{debug__tools_8h_af92377c94d59a332517fafeb5474c9dd}\label{debug__tools_8h_af92377c94d59a332517fafeb5474c9dd}} 
+{\footnotesize template$<$typename Number $>$ }\\void {\bfseries print\+\_\+scalar\+\_\+to\+\_\+mat} (std\+::ostream \&out, const std\+::string \&name, const Number value)
+\item 
+\mbox{\Hypertarget{debug__tools_8h_a5076ec20626de3c2bffae9d8bf77e0ee}\label{debug__tools_8h_a5076ec20626de3c2bffae9d8bf77e0ee}} 
+{\footnotesize template$<$typename Vector\+Type $>$ }\\void {\bfseries print\+\_\+vector\+\_\+to\+\_\+mat} (std\+::ostream \&out, const std\+::string \&name, const Vector\+Type \&values)
+\item 
+\mbox{\Hypertarget{debug__tools_8h_a26839371749bbf1e0da9ac685f0a7dbf}\label{debug__tools_8h_a26839371749bbf1e0da9ac685f0a7dbf}} 
+{\footnotesize template$<$typename Matrix\+Type $>$ }\\void {\bfseries print\+\_\+matrix\+\_\+to\+\_\+mat} (std\+::ostream \&out, const std\+::string \&name, const Matrix\+Type \&values, const unsigned int precision=8, const bool scientific=true, const unsigned int width=0, const char $\ast$zero\+\_\+string=\char`\"{}0\char`\"{}, const double denominator=1., const double threshold=0.)
+\item 
+\mbox{\Hypertarget{debug__tools_8h_a4c409b83d9b2d5772ec0fbfb4cb61cd5}\label{debug__tools_8h_a4c409b83d9b2d5772ec0fbfb4cb61cd5}} 
+{\footnotesize template$<$typename node\+\_\+pointer\+\_\+type $>$ }\\void {\bfseries print\+\_\+vector\+\_\+of\+\_\+tree\+\_\+node\+\_\+pointer\+\_\+values} (std\+::ostream \&out, const std\+::vector$<$ node\+\_\+pointer\+\_\+type $>$ \&tree\+\_\+node\+\_\+pointers, const std\+::string \&sep=std\+::string(\char`\"{},\char`\"{}))
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\void \hyperlink{debug__tools_8h_a864e453be7ec58dd6e9ceb48e14e750c}{print\+\_\+support\+\_\+point\+\_\+info} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Mapping$<$ dim, spacedim $>$ \&mapping, const Do\+F\+Handler$<$ dim, spacedim $>$ \&dof\+\_\+handler, const std\+::string \&base\+\_\+name)
+\begin{DoxyCompactList}\small\item\em Generate a table of DoF indices associated with each support point. \end{DoxyCompactList}\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\void \hyperlink{debug__tools_8h_aed4a1a4736bce80ce849cc0dfa9a7616}{print\+\_\+support\+\_\+point\+\_\+info} (const F\+E\+System$<$ dim, spacedim $>$ \&fe\+\_\+system, const Mapping$<$ dim, spacedim $>$ \&mapping, const Do\+F\+Handler$<$ dim, spacedim $>$ \&dof\+\_\+handler, const std\+::string \&base\+\_\+name)
+\begin{DoxyCompactList}\small\item\em Generate a table of DoF indices associated with each support point. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This file includes a bunch of helper functions for printing out and visualizing information about grid, Do\+Fs, map, etc. 
+
+\begin{DoxyDate}{Date}
+2021-\/04-\/25 
+\end{DoxyDate}
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{debug__tools_8h_a864e453be7ec58dd6e9ceb48e14e750c}\label{debug__tools_8h_a864e453be7ec58dd6e9ceb48e14e750c}} 
+\index{debug\+\_\+tools.\+h@{debug\+\_\+tools.\+h}!print\+\_\+support\+\_\+point\+\_\+info@{print\+\_\+support\+\_\+point\+\_\+info}}
+\index{print\+\_\+support\+\_\+point\+\_\+info@{print\+\_\+support\+\_\+point\+\_\+info}!debug\+\_\+tools.\+h@{debug\+\_\+tools.\+h}}
+\subsubsection{\texorpdfstring{print\+\_\+support\+\_\+point\+\_\+info()}{print\_support\_point\_info()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+void print\+\_\+support\+\_\+point\+\_\+info (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{const Mapping$<$ dim, spacedim $>$ \&}]{mapping,  }\item[{const Do\+F\+Handler$<$ dim, spacedim $>$ \&}]{dof\+\_\+handler,  }\item[{const std\+::string \&}]{base\+\_\+name }\end{DoxyParamCaption})}
+
+
+
+Generate a table of DoF indices associated with each support point. 
+
+The information in the table is defined in the given Mapping and Do\+F\+Handler objects, which can be then visualized in Gnuplot by executing the following command.
+\begin{DoxyEnumerate}
+\item For spacedim=2\+: 
+\begin{DoxyCode}
+plot \textcolor{stringliteral}{"./data\_file.gpl"} \textcolor{keyword}{using} 1:2:3 with labels offset 1,1 point pt 1 lc rgb \(\backslash\)
+\textcolor{stringliteral}{"red"} notitle
+\end{DoxyCode}
+
+\item For spacedim=3\+: 
+\begin{DoxyCode}
+splot \textcolor{stringliteral}{"./data\_file.gpl"} \textcolor{keyword}{using} 1:2:3:4 with labels offset 1,1 point pt 1 lc \(\backslash\)
+rgb \textcolor{stringliteral}{"red"}
+\end{DoxyCode}
+ 
+\begin{DoxyParams}{Parameters}
+{\em fe\+\_\+system} & The given Finite\+Element object will be checked if it has support points. \\
+\hline
+{\em mapping} & \\
+\hline
+{\em dof\+\_\+handler} & \\
+\hline
+{\em base\+\_\+name} & \\
+\hline
+\end{DoxyParams}
+
+\end{DoxyEnumerate}Allocate memory for the vector storing support points.
+
+Get the list of support point coordinates for all Do\+Fs. The Do\+Fs are in the default numbering starting from 0.
+
+Write the table of DoF indices for each support point into file.
+
+Referenced by main().
+
+\mbox{\Hypertarget{debug__tools_8h_aed4a1a4736bce80ce849cc0dfa9a7616}\label{debug__tools_8h_aed4a1a4736bce80ce849cc0dfa9a7616}} 
+\index{debug\+\_\+tools.\+h@{debug\+\_\+tools.\+h}!print\+\_\+support\+\_\+point\+\_\+info@{print\+\_\+support\+\_\+point\+\_\+info}}
+\index{print\+\_\+support\+\_\+point\+\_\+info@{print\+\_\+support\+\_\+point\+\_\+info}!debug\+\_\+tools.\+h@{debug\+\_\+tools.\+h}}
+\subsubsection{\texorpdfstring{print\+\_\+support\+\_\+point\+\_\+info()}{print\_support\_point\_info()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+void print\+\_\+support\+\_\+point\+\_\+info (\begin{DoxyParamCaption}\item[{const F\+E\+System$<$ dim, spacedim $>$ \&}]{fe\+\_\+system,  }\item[{const Mapping$<$ dim, spacedim $>$ \&}]{mapping,  }\item[{const Do\+F\+Handler$<$ dim, spacedim $>$ \&}]{dof\+\_\+handler,  }\item[{const std\+::string \&}]{base\+\_\+name }\end{DoxyParamCaption})}
+
+
+
+Generate a table of DoF indices associated with each support point. 
+
+The information in the table is defined in the given Mapping and Do\+F\+Handler objects, which can be then visualized in Gnuplot by executing the following command.
+\begin{DoxyEnumerate}
+\item For spacedim=2\+: 
+\begin{DoxyCode}
+plot \textcolor{stringliteral}{"./data\_file.gpl"} \textcolor{keyword}{using} 1:2:3 with labels offset 1,1 point pt 1 lc rgb \(\backslash\)
+\textcolor{stringliteral}{"red"} notitle
+\end{DoxyCode}
+
+\item For spacedim=3\+: 
+\begin{DoxyCode}
+splot \textcolor{stringliteral}{"./data\_file.gpl"} \textcolor{keyword}{using} 1:2:3:4 with labels offset 1,1 point pt 1 lc \(\backslash\)
+rgb \textcolor{stringliteral}{"red"}
+\end{DoxyCode}
+ 
+\begin{DoxyParams}{Parameters}
+{\em fe\+\_\+system} & The given F\+E\+System object will be checked if it has support points. \\
+\hline
+{\em mapping} & \\
+\hline
+{\em dof\+\_\+handler} & \\
+\hline
+{\em base\+\_\+name} & \\
+\hline
+\end{DoxyParams}
+
+\end{DoxyEnumerate}Allocate memory for the vector storing support points.
+
+Get the list of support point coordinates for all Do\+Fs. The Do\+Fs are in the default numbering starting from 0.
+
+Write the table of DoF indices for each support point into file.

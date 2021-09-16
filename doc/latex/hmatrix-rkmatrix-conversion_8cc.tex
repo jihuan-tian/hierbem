@@ -1,0 +1,55 @@
+\hypertarget{hmatrix-rkmatrix-conversion_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/hmatrix-\/rkmatrix-\/conversion/hmatrix-\/rkmatrix-\/conversion.cc File Reference}
+\label{hmatrix-rkmatrix-conversion_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/rkmatrix-\/conversion/hmatrix-\/rkmatrix-\/conversion.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/rkmatrix-\/conversion/hmatrix-\/rkmatrix-\/conversion.\+cc}}
+
+
+Verify the conversion from an H-\/matrix to a rank-\/k matrix.  
+
+
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rkmatrix.\+h\char`\"{}}\newline
+Include dependency graph for hmatrix-\/rkmatrix-\/conversion.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hmatrix-rkmatrix-conversion_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{hmatrix-rkmatrix-conversion_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the conversion from an H-\/matrix to a rank-\/k matrix. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/09 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hmatrix-rkmatrix-conversion_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{hmatrix-rkmatrix-conversion_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{hmatrix-\/rkmatrix-\/conversion.\+cc@{hmatrix-\/rkmatrix-\/conversion.\+cc}!main@{main}}
+\index{main@{main}!hmatrix-\/rkmatrix-\/conversion.\+cc@{hmatrix-\/rkmatrix-\/conversion.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Create a full matrix as the data source.
+
+Create an \hyperlink{classHMatrix}{H\+Matrix} of fixed rank 2 using the fine non-\/tensor product partition. In practice, the rank may not be a constant but a block dependent distribution or map.
+
+Print the initial partition structure.
+
+Convert the H-\/matrix to a rank-\/2 matrix.
+
+Extract the resulted matrix, which is either a rank-\/k matrix or a full matrix.
+
+References convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), Full\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+fullmatrix(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+rkmatrix(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+type(), Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), Rk\+Matrix\+Type, and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set().
+

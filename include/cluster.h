@@ -17,6 +17,7 @@
 #include <deal.II/base/types.h>
 
 #include <algorithm>
+#include <iterator>
 #include <vector>
 
 #include "simple_bounding_box.h"
@@ -173,28 +174,10 @@ template <int spacedim, typename Number = double>
 class Cluster
 {
 public:
-  /**
-   * Print out the cluster data.
-   * @param out
-   * @param cluster
-   * @return
-   */
   template <int spacedim1, typename Number1>
   friend std::ostream &
   operator<<(std::ostream &out, const Cluster<spacedim1, Number1> &cluster);
 
-  /**
-   * Calculate the minimum distance between two clusters. This calculation has
-   * no mesh size correction.
-   *
-   * The calculation is based on measuring the distance between each pair of
-   * support points contained in the clusters, which prevents the distance
-   * calculation between two support sets.
-   * @param cluster1
-   * @param cluster2
-   * @param all_support_points A list of support point coordinates which are ordered by DoF indices.
-   * @return
-   */
   template <int spacedim1, typename Number1>
   friend Number1
   calc_cluster_distance(
@@ -202,19 +185,6 @@ public:
     const Cluster<spacedim1, Number1> &           cluster2,
     const std::vector<Point<spacedim1, Number1>> &all_support_points);
 
-  /**
-   * Calculate the minimum distance between two clusters. This calculation has
-   * the mesh size correction.
-   *
-   * The calculation is based on measuring the distance between each pair of
-   * support points contained in the clusters, which prevents the distance
-   * calculation between two support sets.
-   * @param cluster1
-   * @param cluster2
-   * @param all_support_points A list of support point coordinates which are ordered by DoF indices.
-   * @param cell_size_at_dofs The list of estimated cell size values at DoF support points.
-   * @return
-   */
   template <int spacedim1, typename Number1>
   friend Number1
   calc_cluster_distance(
@@ -222,6 +192,22 @@ public:
     const Cluster<spacedim1, Number1> &           cluster2,
     const std::vector<Point<spacedim1, Number1>> &all_support_points,
     const std::vector<Number1> &                  cell_size_at_dofs);
+
+  /**
+   * Check the equality of two clusters by comparing their index sets.
+   *
+   * This function firstly check the equality of the sizes/cardinalities of the
+   * index sets in the two clusters. If their sizes are equal, then check the
+   * contents.
+   *
+   * @param cluster1
+   * @param cluster2
+   * @return
+   */
+  template <int spacedim1, typename Number1>
+  friend bool
+  operator==(const Cluster<spacedim1, Number1> &cluster1,
+             const Cluster<spacedim1, Number1> &cluster2);
 
   /**
    * Default constructor.
@@ -361,6 +347,103 @@ public:
     const std::vector<Number> &                 cell_size_at_dofs) const;
 
   /**
+   * Check if the index set of the current cluster is a subset of that of the
+   * given cluster.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>The index sets associated with clusters should be sorted before
+   * calling this function. In the current implementation of cluster tree
+   * construction, all the index sets have already been sorted.</dd>
+   * </dl>
+   * @param cluster
+   * @return
+   */
+  bool
+  is_subset(const Cluster &cluster) const;
+
+  /**
+   * Check if the index set of the current cluster is a proper subset of that of
+   * the given cluster.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>The index sets associated with clusters should be sorted before
+   * calling this function. In the current implementation of cluster tree
+   * construction, all the index sets have already been sorted.</dd>
+   * </dl>
+   * @param cluster
+   * @return
+   */
+  bool
+  is_proper_subset(const Cluster &cluster) const;
+
+  /**
+   * Check if the index set of the current cluster is a superset of that of the
+   * given cluster.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>The index sets associated with clusters should be sorted before
+   * calling this function. In the current implementation of cluster tree
+   * construction, all the index sets have already been sorted.</dd>
+   * </dl>
+   * @param cluster
+   * @return
+   */
+  bool
+  is_superset(const Cluster &cluster) const;
+
+  /**
+   * Check if the index set of the current cluster is a proper superset of that
+   * of the given cluster.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>The index sets associated with clusters should be sorted before
+   * calling this function. In the current implementation of cluster tree
+   * construction, all the index sets have already been sorted.</dd>
+   * </dl>
+   * @param cluster
+   * @return
+   */
+  bool
+  is_proper_superset(const Cluster &cluster) const;
+
+  /**
+   * Calculate the intersection of the index sets of the current and the given
+   * clusters.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>The index sets associated with clusters should be sorted before
+   * calling this function. In the current implementation of cluster tree
+   * construction, all the index sets have already been sorted.</dd>
+   * </dl>
+   * @param cluster
+   * @param index_set_intersection
+   */
+  void
+  intersect(const Cluster &                       cluster,
+            std::vector<types::global_dof_index> &index_set_intersection) const;
+
+  /**
+   * Determine if the index set of the current cluster has a nonempty
+   * intersection with the index set of the given cluster.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>The index sets associated with clusters should be sorted before
+   * calling this function. In the current implementation of cluster tree
+   * construction, all the index sets have already been sorted.</dd>
+   * </dl>
+   * @param cluster
+   * @return
+   */
+  bool
+  has_intersection(const Cluster &cluster) const;
+
+  /**
    * Get the cardinality of the index set.
    * @return
    */
@@ -382,6 +465,13 @@ private:
   Number                               diameter;
 };
 
+
+/**
+ * Print out the cluster data.
+ * @param out
+ * @param cluster
+ * @return
+ */
 template <int spacedim, typename Number>
 std::ostream &
 operator<<(std::ostream &out, const Cluster<spacedim, Number> &cluster)
@@ -399,6 +489,19 @@ operator<<(std::ostream &out, const Cluster<spacedim, Number> &cluster)
   return out;
 }
 
+
+/**
+ * Calculate the minimum distance between two clusters. This calculation has
+ * no mesh size correction.
+ *
+ * The calculation is based on measuring the distance between each pair of
+ * support points contained in the clusters, which prevents the distance
+ * calculation between two support sets.
+ * @param cluster1
+ * @param cluster2
+ * @param all_support_points A list of support point coordinates which are ordered by DoF indices.
+ * @return
+ */
 template <int spacedim, typename Number = double>
 Number
 calc_cluster_distance(
@@ -430,6 +533,20 @@ calc_cluster_distance(
                             point_pair_distance.cend()));
 }
 
+
+/**
+ * Calculate the minimum distance between two clusters. This calculation has
+ * the mesh size correction.
+ *
+ * The calculation is based on measuring the distance between each pair of
+ * support points contained in the clusters, which prevents the distance
+ * calculation between two support sets.
+ * @param cluster1
+ * @param cluster2
+ * @param all_support_points A list of support point coordinates which are ordered by DoF indices.
+ * @param cell_size_at_dofs The list of estimated cell size values at DoF support points.
+ * @return
+ */
 template <int spacedim, typename Number = double>
 Number
 calc_cluster_distance(
@@ -679,6 +796,113 @@ Cluster<spacedim, Number>::distance_to_cluster(
                                cell_size_at_dofs);
 }
 
+
+template <int spacedim, typename Number>
+bool
+Cluster<spacedim, Number>::is_subset(const Cluster &cluster) const
+{
+  return (std::includes(cluster.index_set.begin(),
+                        cluster.index_set.end(),
+                        this->index_set.begin(),
+                        this->index_set.end()));
+}
+
+
+template <int spacedim, typename Number>
+bool
+Cluster<spacedim, Number>::is_proper_subset(const Cluster &cluster) const
+{
+  if (std::includes(cluster.index_set.begin(),
+                    cluster.index_set.end(),
+                    this->index_set.begin(),
+                    this->index_set.end()))
+    {
+      if (cluster.index_set.size() == this->index_set.size())
+        {
+          return false;
+        }
+      else
+        {
+          return true;
+        }
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+bool
+Cluster<spacedim, Number>::is_superset(const Cluster &cluster) const
+{
+  return (std::includes(this->index_set.begin(),
+                        this->index_set.end(),
+                        cluster.index_set.begin(),
+                        cluster.index_set.end()));
+}
+
+
+template <int spacedim, typename Number>
+bool
+Cluster<spacedim, Number>::is_proper_superset(const Cluster &cluster) const
+{
+  if (std::includes(this->index_set.begin(),
+                    this->index_set.end(),
+                    cluster.index_set.begin(),
+                    cluster.index_set.end()))
+    {
+      if (cluster.index_set.size() == this->index_set.size())
+        {
+          return false;
+        }
+      else
+        {
+          return true;
+        }
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+Cluster<spacedim, Number>::intersect(
+  const Cluster &                       cluster,
+  std::vector<types::global_dof_index> &index_set_intersection) const
+{
+  index_set_intersection.clear();
+
+  std::set_intersection(this->index_set.begin(),
+                        this->index_set.end(),
+                        cluster.index_set.begin(),
+                        cluster.index_set.end(),
+                        std::back_inserter(index_set_intersection));
+}
+
+
+template <int spacedim, typename Number>
+bool
+Cluster<spacedim, Number>::has_intersection(const Cluster &cluster) const
+{
+  std::vector<types::global_dof_index> index_set_intersection;
+  this->intersect(cluster, index_set_intersection);
+
+  if (index_set_intersection.size() > 0)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
 template <int spacedim, typename Number>
 std::size_t
 Cluster<spacedim, Number>::get_cardinality() const
@@ -693,6 +917,22 @@ Cluster<spacedim, Number>::is_large(unsigned int n_min) const
   if (index_set.size() > n_min)
     {
       return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+bool
+operator==(const Cluster<spacedim, Number> &cluster1,
+           const Cluster<spacedim, Number> &cluster2)
+{
+  if (cluster1.index_set.size() == cluster2.index_set.size())
+    {
+      return (cluster1.index_set == cluster2.index_set);
     }
   else
     {

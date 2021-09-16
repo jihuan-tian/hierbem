@@ -1,0 +1,62 @@
+\hypertarget{hmatrix-add-formatted_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/hmatrix-\/add-\/formatted/hmatrix-\/add-\/formatted.cc File Reference}
+\label{hmatrix-add-formatted_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/add-\/formatted/hmatrix-\/add-\/formatted.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/add-\/formatted/hmatrix-\/add-\/formatted.\+cc}}
+
+
+Verify formatted addition of two h-\/matrices.  
+
+
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+Include dependency graph for hmatrix-\/add-\/formatted.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hmatrix-add-formatted_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{hmatrix-add-formatted_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify formatted addition of two h-\/matrices. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/03 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hmatrix-add-formatted_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{hmatrix-add-formatted_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{hmatrix-\/add-\/formatted.\+cc@{hmatrix-\/add-\/formatted.\+cc}!main@{main}}
+\index{main@{main}!hmatrix-\/add-\/formatted.\+cc@{hmatrix-\/add-\/formatted.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Generate index set.
+
+Generate cluster tree.
+
+Generate block cluster tree via fine structured non-\/tensor product partition.
+
+Create two full matrices as the source data.
+
+Create the two H-\/matrices {\ttfamily H1} and {\ttfamily H2} from {\ttfamily M1} and {\ttfamily M2}.
+
+Get the full matrix representation of {\ttfamily H1} and {\ttfamily H2}.
+
+Add the full matrix versions of {\ttfamily H1} and {\ttfamily H2}.
+
+Add the two H-\/matrices {\ttfamily H1} and {\ttfamily H2}.
+
+Convert the result matrix into a full matrix.
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::add(), H\+Matrix$<$ spacedim, Number $>$\+::add(), H\+Matrix$<$ spacedim, Number $>$\+::convert\+To\+Full\+Matrix(), Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat().
+

@@ -1,0 +1,141 @@
+\hypertarget{lapack__helpers_8h}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/include/lapack\+\_\+helpers.h File Reference}
+\label{lapack__helpers_8h}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/lapack\+\_\+helpers.\+h@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/lapack\+\_\+helpers.\+h}}
+
+
+Exposes L\+A\+P\+A\+CK helper functions defined in lapack\+\_\+full\+\_\+matrix.\+cc and define new ones by following them as examples.  
+
+
+{\ttfamily \#include $<$deal.\+I\+I/base/numbers.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/blas\+\_\+extension\+\_\+templates.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/block\+\_\+vector.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/full\+\_\+matrix.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/lapack\+\_\+full\+\_\+matrix.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/lapack\+\_\+support.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/lapack\+\_\+templates.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/sparse\+\_\+matrix.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/utilities.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/vector.\+h$>$}\newline
+Include dependency graph for lapack\+\_\+helpers.\+h\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{lapack__helpers_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{lapack__helpers_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{lapack__helpers_8h_a78a67be91c5ff03487771fc91ff993c9}\label{lapack__helpers_8h_a78a67be91c5ff03487771fc91ff993c9}} 
+{\footnotesize template$<$typename T $>$ }\\void {\bfseries internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::geev\+\_\+helper} (const char vl, const char vr, Aligned\+Vector$<$ T $>$ \&matrix, const types\+::blas\+\_\+int n\+\_\+rows, std\+::vector$<$ T $>$ \&real\+\_\+part\+\_\+eigenvalues, std\+::vector$<$ T $>$ \&imag\+\_\+part\+\_\+eigenvalues, std\+::vector$<$ T $>$ \&left\+\_\+eigenvectors, std\+::vector$<$ T $>$ \&right\+\_\+eigenvectors, std\+::vector$<$ T $>$ \&real\+\_\+work, std\+::vector$<$ T $>$ \&, const types\+::blas\+\_\+int work\+\_\+flag, types\+::blas\+\_\+int \&info)
+\item 
+\mbox{\Hypertarget{lapack__helpers_8h_af9995c5d24db599b337f23ae883605fd}\label{lapack__helpers_8h_af9995c5d24db599b337f23ae883605fd}} 
+{\footnotesize template$<$typename T $>$ }\\void {\bfseries internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::geev\+\_\+helper} (const char vl, const char vr, Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&matrix, const types\+::blas\+\_\+int n\+\_\+rows, std\+::vector$<$ T $>$ \&, std\+::vector$<$ std\+::complex$<$ T $>$$>$ \&eigenvalues, std\+::vector$<$ std\+::complex$<$ T $>$$>$ \&left\+\_\+eigenvectors, std\+::vector$<$ std\+::complex$<$ T $>$$>$ \&right\+\_\+eigenvectors, std\+::vector$<$ std\+::complex$<$ T $>$$>$ \&complex\+\_\+work, std\+::vector$<$ T $>$ \&real\+\_\+work, const types\+::blas\+\_\+int work\+\_\+flag, types\+::blas\+\_\+int \&info)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \hyperlink{lapack__helpers_8h_a27452f857e42a0e12844b309f920877a}{internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::gesdd\+\_\+helper} (const char job, const types\+::blas\+\_\+int n\+\_\+rows, const types\+::blas\+\_\+int n\+\_\+cols, Aligned\+Vector$<$ T $>$ \&matrix, std\+::vector$<$ T $>$ \&singular\+\_\+values, Aligned\+Vector$<$ T $>$ \&left\+\_\+vectors, Aligned\+Vector$<$ T $>$ \&right\+\_\+vectors, std\+::vector$<$ T $>$ \&real\+\_\+work, std\+::vector$<$ T $>$ \&, std\+::vector$<$ types\+::blas\+\_\+int $>$ \&integer\+\_\+work, const types\+::blas\+\_\+int work\+\_\+flag, types\+::blas\+\_\+int \&info)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \hyperlink{lapack__helpers_8h_a3611798f42eeae8f9bbacdbd91cb21d3}{internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::gesdd\+\_\+helper} (const char job, const types\+::blas\+\_\+int n\+\_\+rows, const types\+::blas\+\_\+int n\+\_\+cols, Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&matrix, std\+::vector$<$ T $>$ \&singular\+\_\+values, Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&left\+\_\+vectors, Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&right\+\_\+vectors, std\+::vector$<$ std\+::complex$<$ T $>$$>$ \&work, std\+::vector$<$ T $>$ \&real\+\_\+work, std\+::vector$<$ types\+::blas\+\_\+int $>$ \&integer\+\_\+work, const types\+::blas\+\_\+int \&work\+\_\+flag, types\+::blas\+\_\+int \&info)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \hyperlink{lapack__helpers_8h_a34e4760e961fb844c588891d4b92f501}{internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::geqrf\+\_\+helper} (const types\+::blas\+\_\+int n\+\_\+rows, const types\+::blas\+\_\+int n\+\_\+cols, Aligned\+Vector$<$ T $>$ \&matrix, std\+::vector$<$ T $>$ \&tau, std\+::vector$<$ T $>$ \&work, const types\+::blas\+\_\+int work\+\_\+flag, types\+::blas\+\_\+int \&info)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Exposes L\+A\+P\+A\+CK helper functions defined in lapack\+\_\+full\+\_\+matrix.\+cc and define new ones by following them as examples. 
+
+\begin{DoxyDate}{Date}
+2021-\/06-\/09 
+\end{DoxyDate}
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{lapack__helpers_8h_file_a34e4760e961fb844c588891d4b92f501}\label{lapack__helpers_8h_file_a34e4760e961fb844c588891d4b92f501}} 
+\index{lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}!geqrf\+\_\+helper@{geqrf\+\_\+helper}}
+\index{geqrf\+\_\+helper@{geqrf\+\_\+helper}!lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}}
+\subsubsection{\texorpdfstring{geqrf\+\_\+helper()}{geqrf\_helper()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::geqrf\+\_\+helper (\begin{DoxyParamCaption}\item[{const types\+::blas\+\_\+int}]{n\+\_\+rows,  }\item[{const types\+::blas\+\_\+int}]{n\+\_\+cols,  }\item[{Aligned\+Vector$<$ T $>$ \&}]{matrix,  }\item[{std\+::vector$<$ T $>$ \&}]{tau,  }\item[{std\+::vector$<$ T $>$ \&}]{work,  }\item[{const types\+::blas\+\_\+int}]{work\+\_\+flag,  }\item[{types\+::blas\+\_\+int \&}]{info }\end{DoxyParamCaption})}
+
+Helper function for real valued QR decomposition. 
+
+References internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::geqrf\+\_\+helper().
+
+
+
+Referenced by internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::geqrf\+\_\+helper().
+
+\mbox{\Hypertarget{lapack__helpers_8h_file_a27452f857e42a0e12844b309f920877a}\label{lapack__helpers_8h_file_a27452f857e42a0e12844b309f920877a}} 
+\index{lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}!gesdd\+\_\+helper@{gesdd\+\_\+helper}}
+\index{gesdd\+\_\+helper@{gesdd\+\_\+helper}!lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}}
+\subsubsection{\texorpdfstring{gesdd\+\_\+helper()}{gesdd\_helper()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::gesdd\+\_\+helper (\begin{DoxyParamCaption}\item[{const char}]{job,  }\item[{const types\+::blas\+\_\+int}]{n\+\_\+rows,  }\item[{const types\+::blas\+\_\+int}]{n\+\_\+cols,  }\item[{Aligned\+Vector$<$ T $>$ \&}]{matrix,  }\item[{std\+::vector$<$ T $>$ \&}]{singular\+\_\+values,  }\item[{Aligned\+Vector$<$ T $>$ \&}]{left\+\_\+vectors,  }\item[{Aligned\+Vector$<$ T $>$ \&}]{right\+\_\+vectors,  }\item[{std\+::vector$<$ T $>$ \&}]{real\+\_\+work,  }\item[{std\+::vector$<$ T $>$ \&}]{,  }\item[{std\+::vector$<$ types\+::blas\+\_\+int $>$ \&}]{integer\+\_\+work,  }\item[{const types\+::blas\+\_\+int}]{work\+\_\+flag,  }\item[{types\+::blas\+\_\+int \&}]{info }\end{DoxyParamCaption})}
+
+Helper function for real valued S\+VD.
+
+Its implementation has already existed in the deal.\+ii library. 
+\begin{DoxyParams}{Parameters}
+{\em job} & \\
+\hline
+{\em n\+\_\+rows} & \\
+\hline
+{\em n\+\_\+cols} & \\
+\hline
+{\em matrix} & \\
+\hline
+{\em singular\+\_\+values} & \\
+\hline
+{\em left\+\_\+vectors} & \\
+\hline
+{\em right\+\_\+vectors} & \\
+\hline
+{\em real\+\_\+work} & \\
+\hline
+{\em } & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{lapack__helpers_8h_file_a3611798f42eeae8f9bbacdbd91cb21d3}\label{lapack__helpers_8h_file_a3611798f42eeae8f9bbacdbd91cb21d3}} 
+\index{lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}!gesdd\+\_\+helper@{gesdd\+\_\+helper}}
+\index{gesdd\+\_\+helper@{gesdd\+\_\+helper}!lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}}
+\subsubsection{\texorpdfstring{gesdd\+\_\+helper()}{gesdd\_helper()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::gesdd\+\_\+helper (\begin{DoxyParamCaption}\item[{const char}]{job,  }\item[{const types\+::blas\+\_\+int}]{n\+\_\+rows,  }\item[{const types\+::blas\+\_\+int}]{n\+\_\+cols,  }\item[{Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&}]{matrix,  }\item[{std\+::vector$<$ T $>$ \&}]{singular\+\_\+values,  }\item[{Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&}]{left\+\_\+vectors,  }\item[{Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&}]{right\+\_\+vectors,  }\item[{std\+::vector$<$ std\+::complex$<$ T $>$$>$ \&}]{work,  }\item[{std\+::vector$<$ T $>$ \&}]{real\+\_\+work,  }\item[{std\+::vector$<$ types\+::blas\+\_\+int $>$ \&}]{integer\+\_\+work,  }\item[{const types\+::blas\+\_\+int \&}]{work\+\_\+flag,  }\item[{types\+::blas\+\_\+int \&}]{info }\end{DoxyParamCaption})}
+
+Helper function for complex valued S\+VD.
+
+Its implementation has already existed in the deal.\+ii library. 
+\begin{DoxyParams}{Parameters}
+{\em job} & \\
+\hline
+{\em n\+\_\+rows} & \\
+\hline
+{\em n\+\_\+cols} & \\
+\hline
+{\em matrix} & \\
+\hline
+{\em singular\+\_\+values} & \\
+\hline
+{\em left\+\_\+vectors} & \\
+\hline
+{\em right\+\_\+vectors} & \\
+\hline
+{\em work} & \\
+\hline
+{\em real\+\_\+work} & \\
+\hline
+{\em integer\+\_\+work} & \\
+\hline
+{\em work\+\_\+flag} & \\
+\hline
+{\em info} & \\
+\hline
+\end{DoxyParams}

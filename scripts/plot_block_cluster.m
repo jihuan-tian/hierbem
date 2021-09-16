@@ -1,4 +1,8 @@
-function plot_block_cluster(bc, unit_size)
+function plot_block_cluster(bc, unit_size, enable_display_rank)
+  if (!exist("enable_display_rank", "var"))
+    enable_display_rank = true;
+  endif
+
   yrange = [(bc.tau(1) - 0.5) * unit_size, (bc.tau(end) + 0.5) * unit_size];
   xrange = [(bc.sigma(1) - 0.5) * unit_size, (bc.sigma(end) + 0.5) * unit_size];
 
@@ -16,11 +20,11 @@ function plot_block_cluster(bc, unit_size)
   fillPolygon(block_shape, shape_color);
   drawPolygon(block_shape, "k", "linewidth", 1);
 
-  if (isfield(bc, "rank"))
+  if (isfield(bc, "rank") && enable_display_rank)
     ## Label the rank of the matrix block.
     text_x_coord = (xrange(2) + xrange(1)) / 2;
     text_y_coord = (yrange(2) + yrange(1)) / 2;
 
-    text(text_x_coord, text_y_coord, num2str(bc.rank), "fontsize", 8);
+    text(text_x_coord, text_y_coord, num2str(bc.rank), "fontsize", 3, "horizontalalignment", "center", "verticalalignment", "middle");
   endif
 endfunction

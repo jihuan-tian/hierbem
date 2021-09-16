@@ -23,6 +23,7 @@
 #include <functional>
 #include <iostream>
 #include <new>
+#include <vector>
 
 /**
  * \brief Class for binary tree node.
@@ -83,6 +84,26 @@ public:
    */
   unsigned int
   get_child_num() const;
+
+  /**
+   * Set the total number of nonempty children.
+   * @param child_num
+   */
+  void
+  set_child_num(const unsigned int child_num);
+
+  /**
+   * Increase the total number of children.
+   */
+  void
+  increase_child_num(const unsigned int incr_num = 1);
+
+  /**
+   * Decrease the total number of children.
+   * @return
+   */
+  void
+  decrease_child_num(const unsigned int decr_num = 1);
 
   /**
    * Get the pointer to the parent node.
@@ -152,6 +173,36 @@ public:
    */
   unsigned int
   get_level() const;
+
+  /**
+   * Set the level of the node.
+   * @param level
+   */
+  void
+  set_level(const unsigned int level);
+
+  /**
+   * Return whether the current binary tree node is a leaf.
+   * @return
+   */
+  bool
+  is_leaf() const;
+
+  /**
+   * Return whether the current binary tree node is the root.
+   * @return
+   */
+  bool
+  is_root() const;
+
+  /**
+   * Check the equality of two binary tree nodes by comparing the contained
+   * data.
+   * @param node
+   * @return
+   */
+  bool
+  operator==(const BinaryTreeNode<T> &node) const;
 
 private:
   T            data;
@@ -266,6 +317,38 @@ BinaryTreeNode<T>::get_child_num() const
   return child_num;
 }
 
+
+template <typename T>
+void
+BinaryTreeNode<T>::set_child_num(const unsigned int child_num)
+{
+  this->child_num = child_num;
+}
+
+
+template <typename T>
+void
+BinaryTreeNode<T>::increase_child_num(const unsigned int incr_num)
+{
+  child_num += incr_num;
+}
+
+
+template <typename T>
+void
+BinaryTreeNode<T>::decrease_child_num(const unsigned int decr_num)
+{
+  if (child_num < decr_num)
+    {
+      child_num = 0;
+    }
+  else
+    {
+      child_num -= decr_num;
+    }
+}
+
+
 template <typename T>
 void
 BinaryTreeNode<T>::set_child_pointer(std::size_t           index,
@@ -355,6 +438,84 @@ BinaryTreeNode<T>::get_level() const
   return level;
 }
 
+
+template <typename T>
+void
+BinaryTreeNode<T>::set_level(const unsigned int level)
+{
+  this->level = level;
+}
+
+
+template <typename T>
+bool
+BinaryTreeNode<T>::is_leaf() const
+{
+  if (child_num == 0)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <typename T>
+bool
+BinaryTreeNode<T>::is_root() const
+{
+  if (parent == nullptr)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <typename T>
+bool
+BinaryTreeNode<T>::operator==(const BinaryTreeNode<T> &node) const
+{
+  return (this->data == node.data);
+}
+
+/**
+ * The splitting mode for a tree node, which can be cross split (\p
+ * CrossSplitMode), horizontal split (\p HorizontalSplitMode), vertical split
+ * (\p VerticalSplitMode) and unsplit (\p UnsplitMode).
+ *
+ * <dl class="section note">
+ *   <dt>Note</dt>
+ *   <dd>
+ * 1. When a tree node has four children, which are constructed via a
+ * tensor product of the children of the \f$\tau\f$ cluster and the children of
+ * the \f$\sigma\f$ cluster, it must be cross split.
+ *
+ * 2. When a tree node has two children, which are constructed via a tensor
+ * product of the children of the \f$\tau\f$ cluster and the \f$\sigma\f$
+ * cluster, i.e. only the rows of the associated \f$\mathcal{H}\f$-matrix node
+ * will be split, then it should be horizontal split.
+ *
+ * 3. When a tree node has two children, which are constructed via a tensor
+ * product of the \f$\tau\f$ cluster and the children of the \f$\sigma\f$
+ * cluster, i.e. only the columns of the associated \f$\mathcal{H}\f$-matrix
+ * node will be split, then it should be vertical split.
+ *   </dd>
+ * </dl>
+ */
+enum TreeNodeSplitMode
+{
+  HorizontalSplitMode,
+  VerticalSplitMode,
+  CrossSplitMode,
+  UnsplitMode
+};
+
 /**
  * \brief Class for general tree node.
  *
@@ -378,11 +539,15 @@ public:
 
   /**
    * Constructor from the given data.
+   *
+   * N.B. The number of children of the parent node will automatically be
+   * incremented, because the current node is associated with this parent.
    */
   TreeNode(const T &                        data,
            unsigned int                     level,
            const std::array<TreeNode *, N> &children,
-           TreeNode *                       parent = nullptr);
+           TreeNode *                       parent     = nullptr,
+           TreeNodeSplitMode                split_mode = UnsplitMode);
 
   /**
    * Copy constructor.
@@ -413,6 +578,26 @@ public:
    */
   unsigned int
   get_child_num() const;
+
+  /**
+   * Set the total number of nonempty children.
+   * @param child_num
+   */
+  void
+  set_child_num(const unsigned int child_num);
+
+  /**
+   * Increase the total number of children.
+   */
+  void
+  increase_child_num(const unsigned int incr_num = 1);
+
+  /**
+   * Decrease the total number of children.
+   * @return
+   */
+  void
+  decrease_child_num(const unsigned int decr_num = 1);
 
   /**
    * Get the pointer to the parent tree node.
@@ -458,6 +643,50 @@ public:
   unsigned int
   get_level() const;
 
+  /**
+   * Set the level of the node.
+   * @param level
+   */
+  void
+  set_level(const unsigned int level);
+
+  /**
+   * Return whether the current tree node is a leaf.
+   * @return
+   */
+  bool
+  is_leaf() const;
+
+  /**
+   * Return whether the current tree node is the root.
+   * @return
+   */
+  bool
+  is_root() const;
+
+  /**
+   * Return the split mode of the tree node.
+   * @return
+   */
+  TreeNodeSplitMode
+  get_split_mode() const;
+
+  /**
+   * Set the split mode of the tree node.
+   * @param split_mode
+   */
+  void
+  set_split_mode(TreeNodeSplitMode split_mode);
+
+  /**
+   * Check the equality of two tree nodes by comparing the contained
+   * data.
+   * @param node
+   * @return
+   */
+  bool
+  operator==(const TreeNode<T, N> &node) const;
+
 private:
   T            data;
   unsigned int level;
@@ -469,6 +698,8 @@ private:
    * Total number of nonempty children.
    */
   unsigned int child_num;
+
+  TreeNodeSplitMode split_mode;
 };
 
 template <typename T, std::size_t N>
@@ -477,6 +708,7 @@ TreeNode<T, N>::TreeNode()
   , level(0)
   , parent(nullptr)
   , child_num(0)
+  , split_mode(UnsplitMode)
 {
   children.fill(nullptr);
 }
@@ -487,6 +719,7 @@ TreeNode<T, N>::TreeNode(const T &data)
   , level(0)
   , parent(nullptr)
   , child_num(0)
+  , split_mode(UnsplitMode)
 {
   children.fill(nullptr);
 }
@@ -495,12 +728,14 @@ template <typename T, std::size_t N>
 TreeNode<T, N>::TreeNode(const T &                        data,
                          unsigned int                     level,
                          const std::array<TreeNode *, N> &children,
-                         TreeNode *                       parent)
+                         TreeNode *                       parent,
+                         TreeNodeSplitMode                split_mode)
   : data(data)
   , level(level)
   , children(children)
   , parent(parent)
   , child_num(0)
+  , split_mode(split_mode)
 {
   /**
    * Count the total number of nonempty children.
@@ -511,6 +746,16 @@ TreeNode<T, N>::TreeNode(const T &                        data,
         {
           child_num++;
         }
+    }
+
+  if (child_num == 4)
+    {
+      /**
+       * When the tree node is split into four children, this is a cross
+       * splitting mode. Otherwise, \p split_mode is temporarily kept at \p
+       * UnsplitMode, which will further be set from outside.
+       */
+      split_mode = CrossSplitMode;
     }
 
   /**
@@ -529,6 +774,7 @@ TreeNode<T, N>::TreeNode(const TreeNode &node)
   , children(node.children)
   , parent(node.parent)
   , child_num(node.child_num)
+  , split_mode(node.split_mode)
 {}
 
 template <typename T, std::size_t N>
@@ -556,6 +802,37 @@ unsigned int
 TreeNode<T, N>::get_child_num() const
 {
   return child_num;
+}
+
+
+template <typename T, std::size_t N>
+void
+TreeNode<T, N>::set_child_num(const unsigned int child_num)
+{
+  this->child_num = child_num;
+}
+
+
+template <typename T, std::size_t N>
+void
+TreeNode<T, N>::increase_child_num(const unsigned int incr_num)
+{
+  child_num += incr_num;
+}
+
+
+template <typename T, std::size_t N>
+void
+TreeNode<T, N>::decrease_child_num(const unsigned int decr_num)
+{
+  if (child_num < decr_num)
+    {
+      child_num = 0;
+    }
+  else
+    {
+      child_num -= decr_num;
+    }
 }
 
 
@@ -611,6 +888,69 @@ TreeNode<T, N>::get_level() const
   return level;
 }
 
+
+template <typename T, std::size_t N>
+void
+TreeNode<T, N>::set_level(const unsigned int level)
+{
+  this->level = level;
+}
+
+
+template <typename T, std::size_t N>
+bool
+TreeNode<T, N>::is_leaf() const
+{
+  if (child_num == 0)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <typename T, std::size_t N>
+bool
+TreeNode<T, N>::is_root() const
+{
+  if (parent == nullptr)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <typename T, std::size_t N>
+TreeNodeSplitMode
+TreeNode<T, N>::get_split_mode() const
+{
+  return split_mode;
+}
+
+
+template <typename T, std::size_t N>
+void
+TreeNode<T, N>::set_split_mode(TreeNodeSplitMode split_mode)
+{
+  this->split_mode = split_mode;
+}
+
+
+template <typename T, std::size_t N>
+bool
+TreeNode<T, N>::operator==(const TreeNode<T, N> &node) const
+{
+  return (this->data == node.data);
+}
+
+
 /**
  * Create a new binary tree node from the provided data.
  */
@@ -643,10 +983,11 @@ TreeNode<T, N> *
 CreateTreeNode(const T &                              data,
                unsigned int                           level,
                const std::array<TreeNode<T, N> *, N> &children,
-               TreeNode<T, N> *                       parent = nullptr)
+               TreeNode<T, N> *                       parent     = nullptr,
+               TreeNodeSplitMode                      split_mode = UnsplitMode)
 {
   TreeNode<T, N> *p = nullptr;
-  p                 = new TreeNode<T, N>(data, level, children, parent);
+  p = new TreeNode<T, N>(data, level, children, parent, split_mode);
 
   if (p == nullptr)
     {
@@ -693,7 +1034,19 @@ PrintTreeNode(std::ostream &out, const BinaryTreeNode<T> *p)
 {
   out << "Level " << p->get_level() << "\n";
   out << "Number of children: " << p->get_child_num() << "\n";
-  out << *(p->get_data_pointer()) << "\n------------------" << std::endl;
+
+  out << "Node data:\n" << p->get_data_reference() << "\n";
+
+  if (p->Parent() != nullptr)
+    {
+      out << "Parent node data: " << p->Parent()->get_data_reference() << "\n";
+    }
+  else
+    {
+      out << "Parent node data: none\n";
+    }
+
+  out << "------------------" << std::endl;
 }
 
 /**
@@ -705,7 +1058,20 @@ PrintTreeNode(std::ostream &out, const TreeNode<T, N> *p)
 {
   out << "Level " << p->get_level() << "\n";
   out << "Number of children: " << p->get_child_num() << "\n";
-  out << *(p->get_data_pointer()) << "\n------------------\n" << std::endl;
+
+  out << "Node data:\n" << p->get_data_reference();
+  out << "Split mode: " << p->get_split_mode() << "\n";
+
+  if (p->Parent() != nullptr)
+    {
+      out << "Parent node data: " << p->Parent()->get_data_reference() << "\n";
+    }
+  else
+    {
+      out << "Parent node data: none\n";
+    }
+
+  out << "------------------" << std::endl;
 }
 
 /**
@@ -931,6 +1297,202 @@ Postorder(const TreeNode<T, N> *                      p,
       operate(p);
     }
 }
+
+
+template <typename T>
+BinaryTreeNode<T> *
+CopyTree(const BinaryTreeNode<T> *p)
+{
+  BinaryTreeNode<T> *current_node = nullptr;
+
+  if (p != nullptr)
+    {
+      /**
+       * Copy the current node to a new node without setting children, parent
+       * and child_num at the moment.
+       */
+      current_node = CreateTreeNode(p->get_data_reference(), p->get_level());
+
+      BinaryTreeNode<T> *left_child_node  = CopyTree(p->Left());
+      BinaryTreeNode<T> *right_child_node = CopyTree(p->Right());
+
+      if (left_child_node != nullptr)
+        {
+          /**
+           * Associate the newly created left child node with the current node.
+           */
+          left_child_node->Parent(current_node);
+          current_node->Left(left_child_node);
+
+          current_node->increase_child_num();
+        }
+
+      if (right_child_node != nullptr)
+        {
+          /**
+           * Associate the newly created right child node with the current node.
+           */
+          right_child_node->Parent(current_node);
+          current_node->Right(right_child_node);
+
+          current_node->increase_child_num();
+        }
+
+      return current_node;
+    }
+  else
+    {
+      return current_node;
+    }
+}
+
+
+/**
+ * Perform deep copy of a tree.
+ * @param p
+ * @return
+ */
+template <typename T, std::size_t N>
+TreeNode<T, N> *
+CopyTree(const TreeNode<T, N> *p)
+{
+  TreeNode<T, N> *current_node = nullptr;
+
+  if (p != nullptr)
+    {
+      // Initialize the four null child pointers.
+      std::array<TreeNode<T, N> *, N> empty_child_pointers;
+      for (unsigned int i = 0; i < N; i++)
+        {
+          empty_child_pointers[i] = nullptr;
+        }
+
+      /**
+       * Create and copy the current node.
+       */
+      current_node = CreateTreeNode(p->get_data_reference(),
+                                    p->get_level(),
+                                    empty_child_pointers,
+                                    static_cast<TreeNode<T, N> *>(nullptr),
+                                    p->get_split_mode());
+
+      for (unsigned int i = 0; i < N; i++)
+        {
+          TreeNode<T, N> *child_node = CopyTree(p->get_child_pointer(i));
+
+          if (child_node != nullptr)
+            {
+              child_node->Parent(current_node);
+              current_node->set_child_pointer(current_node->get_child_num(),
+                                              child_node);
+
+              current_node->increase_child_num();
+            }
+        }
+
+      return current_node;
+    }
+  else
+    {
+      return current_node;
+    }
+}
+
+
+/**
+ * Construct the leaf set of a binary tree.
+ *
+ * <dl class="section note">
+ *   <dt>Note</dt>
+ *   <dd>The leaf set should be cleared before calling this function.</dd>
+ * </dl>
+ *
+ * @param p
+ * @param leaf_set
+ */
+template <typename T>
+void
+GetTreeLeaves(const BinaryTreeNode<T> *         p,
+              std::vector<BinaryTreeNode<T> *> &leaf_set)
+{
+  if (p->get_child_num() == 0)
+    {
+      /**
+       * If the current node has no children, append it to the leaf set.
+       */
+      if (p != nullptr)
+        {
+          leaf_set.push_back(const_cast<BinaryTreeNode<T> *>(p));
+        }
+      else
+        {
+          Assert(false, dealii::ExcInternalError());
+        }
+    }
+  else
+    {
+      /**
+       * If the current node has children, recursively collect leaves from its
+       * left and right children.
+       */
+      if (p->Left() != nullptr)
+        {
+          GetTreeLeaves(p->Left(), leaf_set);
+        }
+
+      if (p->Right() != nullptr)
+        {
+          GetTreeLeaves(p->Right(), leaf_set);
+        }
+    }
+}
+
+
+/**
+ * Construct the leaf set of a general tree.
+ *
+ * <dl class="section note">
+ *   <dt>Note</dt>
+ *   <dd>The leaf set should be cleared before calling this function.</dd>
+ * </dl>
+ *
+ * @param p
+ * @param leaf_set
+ */
+template <typename T, std::size_t N>
+void
+GetTreeLeaves(const TreeNode<T, N> *p, std::vector<TreeNode<T, N> *> &leaf_set)
+{
+  if (p->get_child_num() == 0)
+    {
+      /**
+       * If the current node has no children, append it to the leaf set.
+       */
+      if (p != nullptr)
+        {
+          leaf_set.push_back(const_cast<TreeNode<T, N> *>(p));
+        }
+      else
+        {
+          Assert(false, dealii::ExcInternalError());
+        }
+    }
+  else
+    {
+      /**
+       * If the current node has children, recursively collect leaves from each
+       * of its children.
+       */
+      for (std::size_t i = 0; i < N; i++)
+        {
+          if (p->get_child_pointer(i) != nullptr)
+            {
+              GetTreeLeaves(p->get_child_pointer(i), leaf_set);
+            }
+        }
+    }
+}
+
 
 /**
  * Print a binary tree recursively by starting from a node.

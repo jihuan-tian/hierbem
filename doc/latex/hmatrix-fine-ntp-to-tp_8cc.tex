@@ -1,0 +1,62 @@
+\hypertarget{hmatrix-fine-ntp-to-tp_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/hmatrix-\/fine-\/ntp-\/to-\/tp/hmatrix-\/fine-\/ntp-\/to-\/tp.cc File Reference}
+\label{hmatrix-fine-ntp-to-tp_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/fine-\/ntp-\/to-\/tp/hmatrix-\/fine-\/ntp-\/to-\/tp.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/fine-\/ntp-\/to-\/tp/hmatrix-\/fine-\/ntp-\/to-\/tp.\+cc}}
+
+
+Verify the conversion of an $\mathcal{H}$-\/matrix from fine non-\/tensor product structure to tensor product structure.  
+
+
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+Include dependency graph for hmatrix-\/fine-\/ntp-\/to-\/tp.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hmatrix-fine-ntp-to-tp_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{hmatrix-fine-ntp-to-tp_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the conversion of an $\mathcal{H}$-\/matrix from fine non-\/tensor product structure to tensor product structure. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/30 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hmatrix-fine-ntp-to-tp_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{hmatrix-fine-ntp-to-tp_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{hmatrix-\/fine-\/ntp-\/to-\/tp.\+cc@{hmatrix-\/fine-\/ntp-\/to-\/tp.\+cc}!main@{main}}
+\index{main@{main}!hmatrix-\/fine-\/ntp-\/to-\/tp.\+cc@{hmatrix-\/fine-\/ntp-\/to-\/tp.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Generate the DoF index set.
+
+Construct the cluster tree.
+
+Construct the block cluster tree using fine non-\/tensor product partition.
+
+Construct the block cluster tree using tensor product partition.
+
+Create a full matrix for initializing $\mathcal{H}$-\/matrices.
+
+Create an $\mathcal{H}$-\/matrix based on the first block cluster tree.
+
+Convert $\mathcal{H}$-\/matrix back to full matrix for verification.
+
+Convert the $\mathcal{H}$-\/matrix to the second block cluster tree.
+
+Convert $\mathcal{H}$-\/matrix back to full matrix for verification.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees(), H\+Matrix$<$ spacedim, Number $>$\+::convert\+To\+Full\+Matrix(), Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration().
+

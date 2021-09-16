@@ -43,7 +43,16 @@ main()
   B.print_formatted_to_mat(std::cout, "B", 8, false, 16, "0");
 
   /**
-   * Perform formatted addition.
+   * Perform raw addition of rank-k matrices via juxtaposition.
+   */
+  {
+    RkMatrix<double> C;
+    A.add(C, B);
+    C.print_formatted_to_mat(std::cout, "C", 8, false, 16, "0");
+  }
+
+  /**
+   * Perform formatted addition with different truncation ranks.
    */
   {
     RkMatrix<double> C;
@@ -61,6 +70,14 @@ main()
     RkMatrix<double> C;
     A.add(C, B, 3);
     C.print_formatted_to_mat(std::cout, "C_trunc_3", 8, false, 16, "0");
+  }
+
+  /**
+   * Calculate \f$A = A + B\f$.
+   */
+  {
+    A.add(B);
+    A.print_formatted_to_mat(std::cout, "A_plus_B", 8, false, 16, "0");
   }
 
   return 0;

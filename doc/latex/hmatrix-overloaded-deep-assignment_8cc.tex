@@ -1,0 +1,59 @@
+\hypertarget{hmatrix-overloaded-deep-assignment_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/hmatrix-\/overloaded-\/deep-\/assignment/hmatrix-\/overloaded-\/deep-\/assignment.cc File Reference}
+\label{hmatrix-overloaded-deep-assignment_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/overloaded-\/deep-\/assignment/hmatrix-\/overloaded-\/deep-\/assignment.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/overloaded-\/deep-\/assignment/hmatrix-\/overloaded-\/deep-\/assignment.\+cc}}
+
+
+Verify the overloaded deep assignment operator of $\mathcal{H}$-\/matrix.  
+
+
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+Include dependency graph for hmatrix-\/overloaded-\/deep-\/assignment.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hmatrix-overloaded-deep-assignment_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{hmatrix-overloaded-deep-assignment_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the overloaded deep assignment operator of $\mathcal{H}$-\/matrix. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/08-\/24 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hmatrix-overloaded-deep-assignment_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{hmatrix-overloaded-deep-assignment_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{hmatrix-\/overloaded-\/deep-\/assignment.\+cc@{hmatrix-\/overloaded-\/deep-\/assignment.\+cc}!main@{main}}
+\index{main@{main}!hmatrix-\/overloaded-\/deep-\/assignment.\+cc@{hmatrix-\/overloaded-\/deep-\/assignment.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Generate index set.
+
+Generate cluster tree.
+
+Generate block cluster tree via fine structured non-\/tensor product partition.
+
+Create a full matrix as the source data.
+
+Create an H-\/matrix from the block cluster tree.
+
+Create an H-\/matrix using deep assignment.
+
+Try to print H1. Because the data of H1 have been migrated to H2, an exception will be thrown from this function call.
+
+References Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+formatted(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration().
+

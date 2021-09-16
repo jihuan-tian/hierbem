@@ -1,0 +1,226 @@
+\hypertarget{group__hierarchical__matrices}{}\section{Hierarchical matrices}
+\label{group__hierarchical__matrices}\index{Hierarchical matrices@{Hierarchical matrices}}
+
+
+Implementation of hierarchical matrix data structure and algebraic operations.  
+
+
+Collaboration diagram for Hierarchical matrices\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{group__hierarchical__matrices}
+\end{center}
+\end{figure}
+\subsection*{Files}
+\begin{DoxyCompactItemize}
+\item 
+file \hyperlink{block__cluster_8h}{block\+\_\+cluster.\+h}
+\begin{DoxyCompactList}\small\item\em Implementation of the class \hyperlink{classBlockCluster}{Block\+Cluster}. \end{DoxyCompactList}\item 
+file \hyperlink{block__cluster__tree_8h}{block\+\_\+cluster\+\_\+tree.\+h}
+\begin{DoxyCompactList}\small\item\em Implementation of the class \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}. \end{DoxyCompactList}\item 
+file \hyperlink{cluster_8h}{cluster.\+h}
+\begin{DoxyCompactList}\small\item\em Implementation of the class \hyperlink{classCluster}{Cluster}. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix_8h}{hmatrix.\+h}
+\begin{DoxyCompactList}\small\item\em Definition of hierarchical matrix. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix_8h}{rkmatrix.\+h}
+\begin{DoxyCompactList}\small\item\em Definition of rank-\/k matrix. \end{DoxyCompactList}\item 
+file \hyperlink{tree_8h}{tree.\+h}
+\begin{DoxyCompactList}\small\item\em Implementation of the classes for binary tree node, general tree node and functions for manipulating the trees constructed from these nodes. \end{DoxyCompactList}\item 
+file \hyperlink{block-cluster-tree_8cc}{block-\/cluster-\/tree.\+cc}
+\begin{DoxyCompactList}\small\item\em This files verifies the admissible block cluster partition. \end{DoxyCompactList}\item 
+file \hyperlink{cluster-diameter_8cc}{cluster-\/diameter.\+cc}
+\begin{DoxyCompactList}\small\item\em This files verifies the cluster diameter and pair-\/wise distance calculation using a 3x3 grid in a square. \end{DoxyCompactList}\item 
+file \hyperlink{cluster-tree-hp_8cc}{cluster-\/tree-\/hp.\+cc}
+\begin{DoxyCompactList}\small\item\em Test the construction of a $\mathcal{H}^p$ cluster tree. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-add-formatted_8cc}{hmatrix-\/add-\/formatted.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify formatted addition of two h-\/matrices. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-bct-struct-with-rank_8cc}{hmatrix-\/bct-\/struct-\/with-\/rank.\+cc}
+\begin{DoxyCompactList}\small\item\em Visualize the block cluster tree structure of an H-\/matrix with displayed rank. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-coarsening_8cc}{hmatrix-\/coarsening.\+cc}
+\begin{DoxyCompactList}\small\item\em Coarsen a H-\/matrix to its subtree. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-fine-ntp-to-tp_8cc}{hmatrix-\/fine-\/ntp-\/to-\/tp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the conversion of an $\mathcal{H}$-\/matrix from fine non-\/tensor product structure to tensor product structure. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-rkmatrix-conversion_8cc}{hmatrix-\/rkmatrix-\/conversion.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the conversion from an H-\/matrix to a rank-\/k matrix. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-truncate-to-fixed-rank_8cc}{hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the truncation of an \hyperlink{classHMatrix}{H\+Matrix} to an \hyperlink{classRkMatrix}{Rk\+Matrix}. \end{DoxyCompactList}\item 
+file \hyperlink{hp-matrix_8cc}{hp-\/matrix.\+cc}
+\begin{DoxyCompactList}\small\item\em Test the $H^p$ matrix. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration_8cc}{rkmatrix-\/agglomeration.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classBlockCluster}{Block\+Cluster$<$ spacedim, Number $>$}
+\begin{DoxyCompactList}\small\item\em Class for block cluster. \end{DoxyCompactList}\item 
+class \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree$<$ spacedim, Number $>$}
+\begin{DoxyCompactList}\small\item\em Class for block cluster tree. \end{DoxyCompactList}\item 
+class \hyperlink{classBinaryTreeNode}{Binary\+Tree\+Node$<$ T $>$}
+\begin{DoxyCompactList}\small\item\em Class for binary tree node. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Number  = double$>$ }\\void \hyperlink{group__hierarchical__matrices_gaeba0b2d80f64d0bb5c1ad86ac31bbcda}{map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size} (const Do\+F\+Handler$<$ dim, spacedim $>$ \&dof\+\_\+handler, std\+::vector$<$ Number $>$ \&dof\+\_\+average\+\_\+cell\+\_\+size)
+\item 
+{\footnotesize template$<$typename Do\+F\+Handler\+Type , typename Number  = double$>$ }\\void \hyperlink{group__hierarchical__matrices_ga1eee708f9eb5b9e9a2d8031c60c5d315}{map\+\_\+dofs\+\_\+to\+\_\+max\+\_\+cell\+\_\+size} (const Do\+F\+Handler\+Type \&dof\+\_\+handler, std\+::vector$<$ Number $>$ \&dof\+\_\+max\+\_\+cell\+\_\+size)
+\item 
+{\footnotesize template$<$typename Do\+F\+Handler\+Type , typename Number  = double$>$ }\\void \hyperlink{group__hierarchical__matrices_ga0a1c7de8480c4e9b4a002818f8c19b52}{map\+\_\+dofs\+\_\+to\+\_\+min\+\_\+cell\+\_\+size} (const Do\+F\+Handler\+Type \&dof\+\_\+handler, std\+::vector$<$ Number $>$ \&dof\+\_\+min\+\_\+cell\+\_\+size)
+\item 
+{\footnotesize template$<$int spacedim, typename Number $>$ }\\std\+::ostream \& \hyperlink{group__hierarchical__matrices_ga79f6d9af30209ae20bdf81906360664a}{operator$<$$<$} (std\+::ostream \&out, const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster)
+\item 
+{\footnotesize template$<$int spacedim, typename Number  = double$>$ }\\Number \hyperlink{group__hierarchical__matrices_gab6b0a51fb1b117f29902d220df72420a}{calc\+\_\+cluster\+\_\+distance} (const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster2, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points)
+\item 
+{\footnotesize template$<$int spacedim, typename Number  = double$>$ }\\Number \hyperlink{group__hierarchical__matrices_ga76ef8db7b1a8500eac8d807bf104cacb}{calc\+\_\+cluster\+\_\+distance} (const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster2, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs)
+\item 
+\mbox{\Hypertarget{group__hierarchical__matrices_gacb7726d12648a539547a7520c6b699e9}\label{group__hierarchical__matrices_gacb7726d12648a539547a7520c6b699e9}} 
+{\footnotesize template$<$int spacedim, typename Number $>$ }\\bool {\bfseries operator==} (const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster2)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Implementation of hierarchical matrix data structure and algebraic operations. 
+
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{group__hierarchical__matrices_gab6b0a51fb1b117f29902d220df72420a}\label{group__hierarchical__matrices_gab6b0a51fb1b117f29902d220df72420a}} 
+\index{Hierarchical matrices@{Hierarchical matrices}!calc\+\_\+cluster\+\_\+distance@{calc\+\_\+cluster\+\_\+distance}}
+\index{calc\+\_\+cluster\+\_\+distance@{calc\+\_\+cluster\+\_\+distance}!Hierarchical matrices@{Hierarchical matrices}}
+\subsubsection{\texorpdfstring{calc\+\_\+cluster\+\_\+distance()}{calc\_cluster\_distance()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number  = double$>$ \\
+Number calc\+\_\+cluster\+\_\+distance (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster1,  }\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster2,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points }\end{DoxyParamCaption})}
+
+Calculate the minimum distance between two clusters. This calculation has no mesh size correction.
+
+The calculation is based on measuring the distance between each pair of support points contained in the clusters, which prevents the distance calculation between two support sets. 
+\begin{DoxyParams}{Parameters}
+{\em cluster1} & \\
+\hline
+{\em cluster2} & \\
+\hline
+{\em all\+\_\+support\+\_\+points} & A list of support point coordinates which are ordered by DoF indices. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References Cluster$<$ spacedim, Number $>$\+::get\+\_\+index\+\_\+set().
+
+\mbox{\Hypertarget{group__hierarchical__matrices_ga76ef8db7b1a8500eac8d807bf104cacb}\label{group__hierarchical__matrices_ga76ef8db7b1a8500eac8d807bf104cacb}} 
+\index{Hierarchical matrices@{Hierarchical matrices}!calc\+\_\+cluster\+\_\+distance@{calc\+\_\+cluster\+\_\+distance}}
+\index{calc\+\_\+cluster\+\_\+distance@{calc\+\_\+cluster\+\_\+distance}!Hierarchical matrices@{Hierarchical matrices}}
+\subsubsection{\texorpdfstring{calc\+\_\+cluster\+\_\+distance()}{calc\_cluster\_distance()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number  = double$>$ \\
+Number calc\+\_\+cluster\+\_\+distance (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster1,  }\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster2,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs }\end{DoxyParamCaption})}
+
+Calculate the minimum distance between two clusters. This calculation has the mesh size correction.
+
+The calculation is based on measuring the distance between each pair of support points contained in the clusters, which prevents the distance calculation between two support sets. 
+\begin{DoxyParams}{Parameters}
+{\em cluster1} & \\
+\hline
+{\em cluster2} & \\
+\hline
+{\em all\+\_\+support\+\_\+points} & A list of support point coordinates which are ordered by DoF indices. \\
+\hline
+{\em cell\+\_\+size\+\_\+at\+\_\+dofs} & The list of estimated cell size values at DoF support points. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+Calculate the uncorrected cluster distance.
+
+Get the maximum diameter of the support sets for different Do\+Fs, which is 2 times of the cell size associated with the corresponding DoF.
+
+Ensure the positivity of the returned cluster distance.
+
+References Cluster$<$ spacedim, Number $>$\+::get\+\_\+index\+\_\+set().
+
+\mbox{\Hypertarget{group__hierarchical__matrices_gaeba0b2d80f64d0bb5c1ad86ac31bbcda}\label{group__hierarchical__matrices_gaeba0b2d80f64d0bb5c1ad86ac31bbcda}} 
+\index{Hierarchical matrices@{Hierarchical matrices}!map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size@{map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size}}
+\index{map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size@{map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size}!Hierarchical matrices@{Hierarchical matrices}}
+\subsubsection{\texorpdfstring{map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size()}{map\_dofs\_to\_average\_cell\_size()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Number  = double$>$ \\
+void map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size (\begin{DoxyParamCaption}\item[{const Do\+F\+Handler$<$ dim, spacedim $>$ \&}]{dof\+\_\+handler,  }\item[{std\+::vector$<$ Number $>$ \&}]{dof\+\_\+average\+\_\+cell\+\_\+size }\end{DoxyParamCaption})}
+
+Calculate the average cell sizes associated with those Do\+Fs handled by the given DoF handler object.
+
+The value doubled is used as an estimate for the diameter of the support set of each DoF.
+
+
+\begin{DoxyParams}{Parameters}
+{\em dof\+\_\+average\+\_\+cell\+\_\+size} & The returned list of average cell sizes. The memory for this vector should be preallocated and initialized to zero before calling this function. \\
+\hline
+\end{DoxyParams}
+Create the vector which stores the number of cells that share a common DoF for each DoF.
+
+Get the diameter of the current cell.
+
+Get DoF indices local to this cell.
+
+Referenced by main().
+
+\mbox{\Hypertarget{group__hierarchical__matrices_ga1eee708f9eb5b9e9a2d8031c60c5d315}\label{group__hierarchical__matrices_ga1eee708f9eb5b9e9a2d8031c60c5d315}} 
+\index{Hierarchical matrices@{Hierarchical matrices}!map\+\_\+dofs\+\_\+to\+\_\+max\+\_\+cell\+\_\+size@{map\+\_\+dofs\+\_\+to\+\_\+max\+\_\+cell\+\_\+size}}
+\index{map\+\_\+dofs\+\_\+to\+\_\+max\+\_\+cell\+\_\+size@{map\+\_\+dofs\+\_\+to\+\_\+max\+\_\+cell\+\_\+size}!Hierarchical matrices@{Hierarchical matrices}}
+\subsubsection{\texorpdfstring{map\+\_\+dofs\+\_\+to\+\_\+max\+\_\+cell\+\_\+size()}{map\_dofs\_to\_max\_cell\_size()}}
+{\footnotesize\ttfamily template$<$typename Do\+F\+Handler\+Type , typename Number  = double$>$ \\
+void map\+\_\+dofs\+\_\+to\+\_\+max\+\_\+cell\+\_\+size (\begin{DoxyParamCaption}\item[{const Do\+F\+Handler\+Type \&}]{dof\+\_\+handler,  }\item[{std\+::vector$<$ Number $>$ \&}]{dof\+\_\+max\+\_\+cell\+\_\+size }\end{DoxyParamCaption})}
+
+Calculate the maximum cell sizes associated with those Do\+Fs handled by the given DoF handler object.
+
+The value doubled is used as an estimate for the diameter of the support set of each DoF.
+
+
+\begin{DoxyParams}{Parameters}
+{\em dof\+\_\+max\+\_\+cell\+\_\+size} & The returned list of maximum cell sizes. The memory for this vector should be preallocated and initialized to zero before calling this function. \\
+\hline
+\end{DoxyParams}
+Get the diameter of the current cell.
+
+Get DoF indices local to this cell.
+
+Referenced by main().
+
+\mbox{\Hypertarget{group__hierarchical__matrices_ga0a1c7de8480c4e9b4a002818f8c19b52}\label{group__hierarchical__matrices_ga0a1c7de8480c4e9b4a002818f8c19b52}} 
+\index{Hierarchical matrices@{Hierarchical matrices}!map\+\_\+dofs\+\_\+to\+\_\+min\+\_\+cell\+\_\+size@{map\+\_\+dofs\+\_\+to\+\_\+min\+\_\+cell\+\_\+size}}
+\index{map\+\_\+dofs\+\_\+to\+\_\+min\+\_\+cell\+\_\+size@{map\+\_\+dofs\+\_\+to\+\_\+min\+\_\+cell\+\_\+size}!Hierarchical matrices@{Hierarchical matrices}}
+\subsubsection{\texorpdfstring{map\+\_\+dofs\+\_\+to\+\_\+min\+\_\+cell\+\_\+size()}{map\_dofs\_to\_min\_cell\_size()}}
+{\footnotesize\ttfamily template$<$typename Do\+F\+Handler\+Type , typename Number  = double$>$ \\
+void map\+\_\+dofs\+\_\+to\+\_\+min\+\_\+cell\+\_\+size (\begin{DoxyParamCaption}\item[{const Do\+F\+Handler\+Type \&}]{dof\+\_\+handler,  }\item[{std\+::vector$<$ Number $>$ \&}]{dof\+\_\+min\+\_\+cell\+\_\+size }\end{DoxyParamCaption})}
+
+Calculate the minimum cell sizes associated with those Do\+Fs handled by the given DoF handler object.
+
+The value doubled is used as an estimate for the diameter of the support set of each DoF.
+
+
+\begin{DoxyParams}{Parameters}
+{\em dof\+\_\+min\+\_\+cell\+\_\+size} & The returned list of average cell sizes. The memory for this vector should be preallocated and initialized to zero before calling this function. \\
+\hline
+\end{DoxyParams}
+Get the diameter of the current cell.
+
+Get DoF indices local to this cell.
+
+Referenced by main().
+
+\mbox{\Hypertarget{group__hierarchical__matrices_ga79f6d9af30209ae20bdf81906360664a}\label{group__hierarchical__matrices_ga79f6d9af30209ae20bdf81906360664a}} 
+\index{Hierarchical matrices@{Hierarchical matrices}!operator$<$$<$@{operator$<$$<$}}
+\index{operator$<$$<$@{operator$<$$<$}!Hierarchical matrices@{Hierarchical matrices}}
+\subsubsection{\texorpdfstring{operator$<$$<$()}{operator<<()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+std\+::ostream\& operator$<$$<$ (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out,  }\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster }\end{DoxyParamCaption})}
+
+Print out the cluster data. 
+\begin{DoxyParams}{Parameters}
+{\em out} & \\
+\hline
+{\em cluster} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}

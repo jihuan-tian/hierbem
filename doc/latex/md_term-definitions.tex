@@ -1,0 +1,10 @@
+
+\begin{DoxyItemize}
+\item $\mathcal{H}$-\/matrix node\+: In the current C++ implementation of $\mathcal{H}$-\/matrix, it is represented as a hierarchy of linked {\ttfamily \hyperlink{classHMatrix}{H\+Matrix}} objects, which are organized in a tree structure being the same as the associated block cluster tree ({\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}}). Then an $\mathcal{H}$-\/matrix node is one of these {\ttfamily \hyperlink{classHMatrix}{H\+Matrix}} objects, which is a node in the tree.
+\item Minimum matrix dimension\+: Let $M \in \mathbb{R}^{m \times n}$, then the minimum matrix dimension is $\min\{m, n\}$. Then ${\rm rank}(M) \leq \min\{m, n\}$. This term is frequently used in the implementation of {\ttfamily \hyperlink{classRkMatrix}{Rk\+Matrix}} and singular value decomposition ({\ttfamily \hyperlink{classLAPACKFullMatrixExt_a5be14a4d7f9c615f940e870b85d09ecd}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext\+::svd}} and {\ttfamily \hyperlink{classLAPACKFullMatrixExt_a0a6e1d0e88bc84b372b1d0a0f4b79f86}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext\+::reduced\+\_\+svd}}) of a full matrix {\ttfamily \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}.
+\item Global matrix\+: the matrix defined on the complete index set $I \times J$.
+\item Local matrix\+: the matrix defined on a block cluster $\tau \times \sigma$, which is a subset of the complete index set $I \times J$.
+\item Formal rank of a rank-\/k matrix\+: it is the number of columns in $A$ or $B$.
+\item Long matrix\+: the matrix has more number of rows than columns.
+\item Wide matrix\+: the matrix has more number of columns than rows. 
+\end{DoxyItemize}

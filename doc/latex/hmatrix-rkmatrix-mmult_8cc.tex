@@ -1,0 +1,59 @@
+\hypertarget{hmatrix-rkmatrix-mmult_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/hmatrix-\/rkmatrix-\/mmult/hmatrix-\/rkmatrix-\/mmult.cc File Reference}
+\label{hmatrix-rkmatrix-mmult_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/rkmatrix-\/mmult/hmatrix-\/rkmatrix-\/mmult.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/rkmatrix-\/mmult/hmatrix-\/rkmatrix-\/mmult.\+cc}}
+
+
+Verify the H-\/matrix/rank-\/k matrix multiplication.  
+
+
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+Include dependency graph for hmatrix-\/rkmatrix-\/mmult.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hmatrix-rkmatrix-mmult_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{hmatrix-rkmatrix-mmult_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the H-\/matrix/rank-\/k matrix multiplication. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/08-\/14 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hmatrix-rkmatrix-mmult_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{hmatrix-rkmatrix-mmult_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{hmatrix-\/rkmatrix-\/mmult.\+cc@{hmatrix-\/rkmatrix-\/mmult.\+cc}!main@{main}}
+\index{main@{main}!hmatrix-\/rkmatrix-\/mmult.\+cc@{hmatrix-\/rkmatrix-\/mmult.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Generate the DoF index set.
+
+Construct the cluster tree.
+
+Construct the block cluster tree using fine non-\/tensor product partition.
+
+Create a full matrix for initializing the $\mathcal{H}$-\/matrix.
+
+Create an $\mathcal{H}$-\/matrix based on the block cluster tree.
+
+Create the second full matrix for initializing the rank-\/k matrix.
+
+Create a rank-\/k matrix from {\ttfamily M2}.
+
+Perform matrix-\/matrix multiplication.
+
+References h\+\_\+rk\+\_\+mmult(), Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat().
+

@@ -12,7 +12,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 4
@@ -35,6 +35,11 @@
 
 
 # name: rank
+# type: scalar
+2
+
+
+# name: formal_rank
 # type: scalar
 2
 
@@ -53,7 +58,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 4
@@ -76,6 +81,11 @@
 
 
 # name: rank
+# type: scalar
+2
+
+
+# name: formal_rank
 # type: scalar
 2
 
@@ -94,7 +104,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 4
@@ -121,6 +131,11 @@
 2
 
 
+# name: formal_rank
+# type: scalar
+2
+
+
 # name: m
 # type: scalar
 4
@@ -135,7 +150,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 4
@@ -158,6 +173,11 @@
 
 
 # name: rank
+# type: scalar
+1
+
+
+# name: formal_rank
 # type: scalar
 1
 

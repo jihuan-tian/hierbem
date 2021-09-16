@@ -5,6 +5,7 @@ M=
 Rank-1 matrix:
 RkMatrix.dim=(2,3)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
  -12.83311 
  -16.14941 
@@ -18,6 +19,7 @@ A converted back to full matrix:
 Rank-2 matrix:
 RkMatrix.dim=(2,3)
 RkMatrix.rank=2
+RkMatrix.formal_rank=2
 RkMatrix.A=
  -12.83311   -0.55782 
  -16.14941    0.44327 
@@ -32,7 +34,7 @@ A converted back to full matrix:
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 2
+# length: 6
 # name: A
 # type: matrix
 # rows: 2
@@ -48,5 +50,25 @@ A converted back to full matrix:
 -3.48370380e-01  8.43783984e-01 
 -5.52716195e-01  1.66847659e-01 
 -7.57062009e-01 -5.10088666e-01 
+
+
+# name: rank
+# type: scalar
+2
+
+
+# name: formal_rank
+# type: scalar
+2
+
+
+# name: m
+# type: scalar
+2
+
+
+# name: n
+# type: scalar
+3
 
 

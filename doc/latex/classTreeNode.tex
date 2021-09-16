@@ -1,0 +1,404 @@
+\hypertarget{classTreeNode}{}\section{Tree\+Node$<$ T, N $>$ Class Template Reference}
+\label{classTreeNode}\index{Tree\+Node$<$ T, N $>$@{Tree\+Node$<$ T, N $>$}}
+
+
+Class for general tree node.  
+
+
+
+
+{\ttfamily \#include $<$tree.\+h$>$}
+
+
+
+Inheritance diagram for Tree\+Node$<$ T, N $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classTreeNode__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Tree\+Node$<$ T, N $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classTreeNode__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\textbf{ }\par
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classTreeNode_a0cd82abd44bd197539bbd045aeef30d1}{Tree\+Node} ()
+\item 
+\hyperlink{classTreeNode_a6549fc1c54bafa84fb41c850f1d4586e}{Tree\+Node} (const T \&data)
+\item 
+\hyperlink{classTreeNode_ad5a724100f06f73f002007a2e433932c}{Tree\+Node} (const T \&data, unsigned int level, const std\+::array$<$ \hyperlink{classTreeNode}{Tree\+Node} $\ast$, N $>$ \&children, \hyperlink{classTreeNode}{Tree\+Node} $\ast$parent=nullptr, \hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode} split\+\_\+mode=Unsplit\+Mode)
+\item 
+\hyperlink{classTreeNode_af05018d87f64710f41df36bfedd562f3}{Tree\+Node} (const \hyperlink{classTreeNode}{Tree\+Node} \&node)
+\item 
+\hyperlink{classTreeNode}{Tree\+Node} $\ast$ \hyperlink{classTreeNode_ad3b1833452c787d2146a4beb3587c531}{get\+\_\+child\+\_\+pointer} (std\+::size\+\_\+t index) const
+\item 
+void \hyperlink{classTreeNode_a3d2f374424a723cb72409857ee5237bc}{set\+\_\+child\+\_\+pointer} (std\+::size\+\_\+t index, const \hyperlink{classTreeNode}{Tree\+Node} $\ast$pointer)
+\item 
+unsigned int \hyperlink{classTreeNode_a077cb5cc974f94ff431c69cc2ca5957f}{get\+\_\+child\+\_\+num} () const
+\item 
+void \hyperlink{classTreeNode_a68c80783a2900d01a37fc33f14951e66}{set\+\_\+child\+\_\+num} (const unsigned int \hyperlink{classTreeNode_a9fc9333a3e4e05ae878a844370c17888}{child\+\_\+num})
+\item 
+void \hyperlink{classTreeNode_a1d471684d9c06b5721217fb55182bdeb}{increase\+\_\+child\+\_\+num} (const unsigned int incr\+\_\+num=1)
+\item 
+void \hyperlink{classTreeNode_a25426ded0c574843912b36216b30dc5e}{decrease\+\_\+child\+\_\+num} (const unsigned int decr\+\_\+num=1)
+\item 
+\hyperlink{classTreeNode}{Tree\+Node} $\ast$ \hyperlink{classTreeNode_a66c83bfefdb235d5cb4a299eb5044465}{Parent} (void) const
+\item 
+void \hyperlink{classTreeNode_a412b1980ecabb954901391b73332e657}{Parent} (const \hyperlink{classTreeNode}{Tree\+Node} $\ast$node\+\_\+pointer)
+\item 
+T $\ast$ \hyperlink{classTreeNode_aaa2ba047902c4e2fccffe3424a0c665b}{get\+\_\+data\+\_\+pointer} ()
+\item 
+const T $\ast$ \hyperlink{classTreeNode_ac6894ba6488ee38978ef2476366f6318}{get\+\_\+data\+\_\+pointer} () const
+\item 
+T \& \hyperlink{classTreeNode_a7bf414928c965e707e0246f7a90a747d}{get\+\_\+data\+\_\+reference} ()
+\item 
+const T \& \hyperlink{classTreeNode_ab051909179e64f75d4588b4618049193}{get\+\_\+data\+\_\+reference} () const
+\item 
+unsigned int \hyperlink{classTreeNode_acdf29b3bf8f5f9c5e04baaa9fd71fb4c}{get\+\_\+level} () const
+\item 
+void \hyperlink{classTreeNode_a67e5762f796247c38f4a2560c1250b11}{set\+\_\+level} (const unsigned int level)
+\item 
+bool \hyperlink{classTreeNode_a64bf0bc987b1abe5ba10cdf32f093b58}{is\+\_\+leaf} () const
+\item 
+bool \hyperlink{classTreeNode_ad2eb3a4d2a8d9dad252ee721bab24655}{is\+\_\+root} () const
+\item 
+\hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode} \hyperlink{classTreeNode_a219944254f78755b181cad0ee621835f}{get\+\_\+split\+\_\+mode} () const
+\item 
+void \hyperlink{classTreeNode_a0aec2b9142e931aaaa15d1c451ed9b46}{set\+\_\+split\+\_\+mode} (\hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode} split\+\_\+mode)
+\item 
+bool \hyperlink{classTreeNode_a9446085d81c4266ca30a384001f55b12}{operator==} (const \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ \&node) const
+\end{DoxyCompactItemize}
+
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classTreeNode_af44009d5463e65cc0e2d33223b849372}\label{classTreeNode_af44009d5463e65cc0e2d33223b849372}} 
+T {\bfseries data}
+\item 
+\mbox{\Hypertarget{classTreeNode_a14271b0c2f081e59bb268a9989b3b1af}\label{classTreeNode_a14271b0c2f081e59bb268a9989b3b1af}} 
+unsigned int {\bfseries level}
+\item 
+\mbox{\Hypertarget{classTreeNode_a27778d09f91e69ac9847d7910b1c2da7}\label{classTreeNode_a27778d09f91e69ac9847d7910b1c2da7}} 
+std\+::array$<$ \hyperlink{classTreeNode}{Tree\+Node} $\ast$, N $>$ {\bfseries children}
+\item 
+\mbox{\Hypertarget{classTreeNode_aa3771a67ab22185807e8d7a1643ac1c4}\label{classTreeNode_aa3771a67ab22185807e8d7a1643ac1c4}} 
+\hyperlink{classTreeNode}{Tree\+Node} $\ast$ {\bfseries parent}
+\item 
+unsigned int \hyperlink{classTreeNode_a9fc9333a3e4e05ae878a844370c17888}{child\+\_\+num}
+\item 
+\mbox{\Hypertarget{classTreeNode_ad4c2701845efda6aedd8433cfc0ce363}\label{classTreeNode_ad4c2701845efda6aedd8433cfc0ce363}} 
+\hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode} {\bfseries split\+\_\+mode}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$typename T, std\+::size\+\_\+t N$>$\newline
+class Tree\+Node$<$ T, N $>$}
+
+Class for general tree node. 
+
+This general tree node can contains any but {\itshape fixed} number of children. {\ttfamily T} is the type of the data held by the node. {\ttfamily N} is the number of children belong to the node. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classTreeNode_a0cd82abd44bd197539bbd045aeef30d1}\label{classTreeNode_a0cd82abd44bd197539bbd045aeef30d1}} 
+\index{Tree\+Node@{Tree\+Node}!Tree\+Node@{Tree\+Node}}
+\index{Tree\+Node@{Tree\+Node}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{Tree\+Node()}{TreeNode()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+\hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::\hyperlink{classTreeNode}{Tree\+Node} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Default constructor \mbox{\Hypertarget{classTreeNode_a6549fc1c54bafa84fb41c850f1d4586e}\label{classTreeNode_a6549fc1c54bafa84fb41c850f1d4586e}} 
+\index{Tree\+Node@{Tree\+Node}!Tree\+Node@{Tree\+Node}}
+\index{Tree\+Node@{Tree\+Node}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{Tree\+Node()}{TreeNode()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily template$<$typename T, std\+::size\+\_\+t N$>$ \\
+\hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::\hyperlink{classTreeNode}{Tree\+Node} (\begin{DoxyParamCaption}\item[{const T \&}]{data }\end{DoxyParamCaption})}
+
+Constructor from the given data without children. \mbox{\Hypertarget{classTreeNode_ad5a724100f06f73f002007a2e433932c}\label{classTreeNode_ad5a724100f06f73f002007a2e433932c}} 
+\index{Tree\+Node@{Tree\+Node}!Tree\+Node@{Tree\+Node}}
+\index{Tree\+Node@{Tree\+Node}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{Tree\+Node()}{TreeNode()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily template$<$typename T, std\+::size\+\_\+t N$>$ \\
+\hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::\hyperlink{classTreeNode}{Tree\+Node} (\begin{DoxyParamCaption}\item[{const T \&}]{data,  }\item[{unsigned int}]{level,  }\item[{const std\+::array$<$ \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ $\ast$, N $>$ \&}]{children,  }\item[{\hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ $\ast$}]{parent = {\ttfamily nullptr},  }\item[{\hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode}}]{split\+\_\+mode = {\ttfamily UnsplitMode} }\end{DoxyParamCaption})}
+
+Constructor from the given data.
+
+N.\+B. The number of children of the parent node will automatically be incremented, because the current node is associated with this parent. Count the total number of nonempty children.
+
+When the tree node is split into four children, this is a cross splitting mode. Otherwise, {\ttfamily split\+\_\+mode} is temporarily kept at {\ttfamily Unsplit\+Mode}, which will further be set from outside.
+
+Increment the {\ttfamily child\+\_\+num} of the parent node.\mbox{\Hypertarget{classTreeNode_af05018d87f64710f41df36bfedd562f3}\label{classTreeNode_af05018d87f64710f41df36bfedd562f3}} 
+\index{Tree\+Node@{Tree\+Node}!Tree\+Node@{Tree\+Node}}
+\index{Tree\+Node@{Tree\+Node}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{Tree\+Node()}{TreeNode()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily template$<$typename T, std\+::size\+\_\+t N$>$ \\
+\hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::\hyperlink{classTreeNode}{Tree\+Node} (\begin{DoxyParamCaption}\item[{const \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ \&}]{node }\end{DoxyParamCaption})}
+
+Copy constructor. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classTreeNode_a25426ded0c574843912b36216b30dc5e}\label{classTreeNode_a25426ded0c574843912b36216b30dc5e}} 
+\index{Tree\+Node@{Tree\+Node}!decrease\+\_\+child\+\_\+num@{decrease\+\_\+child\+\_\+num}}
+\index{decrease\+\_\+child\+\_\+num@{decrease\+\_\+child\+\_\+num}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{decrease\+\_\+child\+\_\+num()}{decrease\_child\_num()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+void \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::decrease\+\_\+child\+\_\+num (\begin{DoxyParamCaption}\item[{const unsigned int}]{decr\+\_\+num = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Decrease the total number of children. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classTreeNode_a077cb5cc974f94ff431c69cc2ca5957f}\label{classTreeNode_a077cb5cc974f94ff431c69cc2ca5957f}} 
+\index{Tree\+Node@{Tree\+Node}!get\+\_\+child\+\_\+num@{get\+\_\+child\+\_\+num}}
+\index{get\+\_\+child\+\_\+num@{get\+\_\+child\+\_\+num}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{get\+\_\+child\+\_\+num()}{get\_child\_num()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+unsigned int \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::get\+\_\+child\+\_\+num (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the total number of nonempty children. 
+
+Referenced by Copy\+Tree(), Get\+Tree\+Leaves(), Init\+And\+Create\+H\+Matrix\+Children(), Print\+Tree\+Node(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+descendants\+\_\+from\+\_\+node().
+
+\mbox{\Hypertarget{classTreeNode_ad3b1833452c787d2146a4beb3587c531}\label{classTreeNode_ad3b1833452c787d2146a4beb3587c531}} 
+\index{Tree\+Node@{Tree\+Node}!get\+\_\+child\+\_\+pointer@{get\+\_\+child\+\_\+pointer}}
+\index{get\+\_\+child\+\_\+pointer@{get\+\_\+child\+\_\+pointer}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{get\+\_\+child\+\_\+pointer()}{get\_child\_pointer()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+\hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ $\ast$ \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::get\+\_\+child\+\_\+pointer (\begin{DoxyParamCaption}\item[{std\+::size\+\_\+t}]{index }\end{DoxyParamCaption}) const}
+
+Get the pointer to the {\ttfamily index\textquotesingle{}th} child. 
+\begin{DoxyParams}{Parameters}
+{\em index} & Index of the child \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Referenced by calc\+\_\+depth(), Copy\+Tree(), Count\+Tree\+Nodes(), Get\+Tree\+Leaves(), Init\+And\+Create\+H\+Matrix\+Children(), Postorder(), Preorder(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+descendants\+\_\+from\+\_\+node().
+
+\mbox{\Hypertarget{classTreeNode_aaa2ba047902c4e2fccffe3424a0c665b}\label{classTreeNode_aaa2ba047902c4e2fccffe3424a0c665b}} 
+\index{Tree\+Node@{Tree\+Node}!get\+\_\+data\+\_\+pointer@{get\+\_\+data\+\_\+pointer}}
+\index{get\+\_\+data\+\_\+pointer@{get\+\_\+data\+\_\+pointer}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{get\+\_\+data\+\_\+pointer()}{get\_data\_pointer()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+T $\ast$ \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the pointer to the node data. 
+
+Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+N(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+Nstar(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
+
+\mbox{\Hypertarget{classTreeNode_ac6894ba6488ee38978ef2476366f6318}\label{classTreeNode_ac6894ba6488ee38978ef2476366f6318}} 
+\index{Tree\+Node@{Tree\+Node}!get\+\_\+data\+\_\+pointer@{get\+\_\+data\+\_\+pointer}}
+\index{get\+\_\+data\+\_\+pointer@{get\+\_\+data\+\_\+pointer}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{get\+\_\+data\+\_\+pointer()}{get\_data\_pointer()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+const T $\ast$ \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the pointer to the node data (const version). \mbox{\Hypertarget{classTreeNode_a7bf414928c965e707e0246f7a90a747d}\label{classTreeNode_a7bf414928c965e707e0246f7a90a747d}} 
+\index{Tree\+Node@{Tree\+Node}!get\+\_\+data\+\_\+reference@{get\+\_\+data\+\_\+reference}}
+\index{get\+\_\+data\+\_\+reference@{get\+\_\+data\+\_\+reference}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{get\+\_\+data\+\_\+reference()}{get\_data\_reference()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+T \& \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::get\+\_\+data\+\_\+reference (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the reference to the node data. 
+
+Referenced by Copy\+Tree(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::extend\+\_\+finer\+\_\+than\+\_\+partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::extend\+\_\+to\+\_\+finer\+\_\+partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::find\+\_\+leaf\+\_\+bc\+\_\+node\+\_\+not\+\_\+in\+\_\+partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::find\+\_\+leaf\+\_\+bc\+\_\+node\+\_\+not\+\_\+subset\+\_\+of\+\_\+bc\+\_\+nodes\+\_\+in\+\_\+partition(), Init\+And\+Create\+H\+Matrix\+Children(), H\+Matrix$<$ spacedim, Number $>$\+::mmult(), and Print\+Tree\+Node().
+
+\mbox{\Hypertarget{classTreeNode_ab051909179e64f75d4588b4618049193}\label{classTreeNode_ab051909179e64f75d4588b4618049193}} 
+\index{Tree\+Node@{Tree\+Node}!get\+\_\+data\+\_\+reference@{get\+\_\+data\+\_\+reference}}
+\index{get\+\_\+data\+\_\+reference@{get\+\_\+data\+\_\+reference}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{get\+\_\+data\+\_\+reference()}{get\_data\_reference()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+const T \& \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::get\+\_\+data\+\_\+reference (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the reference to the node data (const version). \mbox{\Hypertarget{classTreeNode_acdf29b3bf8f5f9c5e04baaa9fd71fb4c}\label{classTreeNode_acdf29b3bf8f5f9c5e04baaa9fd71fb4c}} 
+\index{Tree\+Node@{Tree\+Node}!get\+\_\+level@{get\+\_\+level}}
+\index{get\+\_\+level@{get\+\_\+level}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{get\+\_\+level()}{get\_level()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+unsigned int \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::get\+\_\+level (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the level of the node in the tree. 
+
+Referenced by Copy\+Tree(), and Print\+Tree\+Node().
+
+\mbox{\Hypertarget{classTreeNode_a219944254f78755b181cad0ee621835f}\label{classTreeNode_a219944254f78755b181cad0ee621835f}} 
+\index{Tree\+Node@{Tree\+Node}!get\+\_\+split\+\_\+mode@{get\+\_\+split\+\_\+mode}}
+\index{get\+\_\+split\+\_\+mode@{get\+\_\+split\+\_\+mode}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{get\+\_\+split\+\_\+mode()}{get\_split\_mode()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+\hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode} \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::get\+\_\+split\+\_\+mode (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Return the split mode of the tree node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Referenced by Copy\+Tree(), and Print\+Tree\+Node().
+
+\mbox{\Hypertarget{classTreeNode_a1d471684d9c06b5721217fb55182bdeb}\label{classTreeNode_a1d471684d9c06b5721217fb55182bdeb}} 
+\index{Tree\+Node@{Tree\+Node}!increase\+\_\+child\+\_\+num@{increase\+\_\+child\+\_\+num}}
+\index{increase\+\_\+child\+\_\+num@{increase\+\_\+child\+\_\+num}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{increase\+\_\+child\+\_\+num()}{increase\_child\_num()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+void \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::increase\+\_\+child\+\_\+num (\begin{DoxyParamCaption}\item[{const unsigned int}]{incr\+\_\+num = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Increase the total number of children. 
+
+Referenced by Copy\+Tree().
+
+\mbox{\Hypertarget{classTreeNode_a64bf0bc987b1abe5ba10cdf32f093b58}\label{classTreeNode_a64bf0bc987b1abe5ba10cdf32f093b58}} 
+\index{Tree\+Node@{Tree\+Node}!is\+\_\+leaf@{is\+\_\+leaf}}
+\index{is\+\_\+leaf@{is\+\_\+leaf}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{is\+\_\+leaf()}{is\_leaf()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+bool \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::is\+\_\+leaf (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Return whether the current tree node is a leaf. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classTreeNode_ad2eb3a4d2a8d9dad252ee721bab24655}\label{classTreeNode_ad2eb3a4d2a8d9dad252ee721bab24655}} 
+\index{Tree\+Node@{Tree\+Node}!is\+\_\+root@{is\+\_\+root}}
+\index{is\+\_\+root@{is\+\_\+root}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{is\+\_\+root()}{is\_root()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+bool \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::is\+\_\+root (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Return whether the current tree node is the root. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classTreeNode_a9446085d81c4266ca30a384001f55b12}\label{classTreeNode_a9446085d81c4266ca30a384001f55b12}} 
+\index{Tree\+Node@{Tree\+Node}!operator==@{operator==}}
+\index{operator==@{operator==}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{operator==()}{operator==()}}
+{\footnotesize\ttfamily template$<$typename T, std\+::size\+\_\+t N$>$ \\
+bool \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::operator== (\begin{DoxyParamCaption}\item[{const \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ \&}]{node }\end{DoxyParamCaption}) const}
+
+Check the equality of two tree nodes by comparing the contained data. 
+\begin{DoxyParams}{Parameters}
+{\em node} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classTreeNode_a66c83bfefdb235d5cb4a299eb5044465}\label{classTreeNode_a66c83bfefdb235d5cb4a299eb5044465}} 
+\index{Tree\+Node@{Tree\+Node}!Parent@{Parent}}
+\index{Parent@{Parent}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{Parent()}{Parent()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+\hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ $\ast$ \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::Parent (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption}) const}
+
+Get the pointer to the parent tree node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Referenced by Copy\+Tree(), and Print\+Tree\+Node().
+
+\mbox{\Hypertarget{classTreeNode_a412b1980ecabb954901391b73332e657}\label{classTreeNode_a412b1980ecabb954901391b73332e657}} 
+\index{Tree\+Node@{Tree\+Node}!Parent@{Parent}}
+\index{Parent@{Parent}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{Parent()}{Parent()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+void \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::Parent (\begin{DoxyParamCaption}\item[{const \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ $\ast$}]{node\+\_\+pointer }\end{DoxyParamCaption})}
+
+Set the pointer to the parent tree node. 
+\begin{DoxyParams}{Parameters}
+{\em node\+\_\+pointer} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classTreeNode_a68c80783a2900d01a37fc33f14951e66}\label{classTreeNode_a68c80783a2900d01a37fc33f14951e66}} 
+\index{Tree\+Node@{Tree\+Node}!set\+\_\+child\+\_\+num@{set\+\_\+child\+\_\+num}}
+\index{set\+\_\+child\+\_\+num@{set\+\_\+child\+\_\+num}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{set\+\_\+child\+\_\+num()}{set\_child\_num()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+void \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::set\+\_\+child\+\_\+num (\begin{DoxyParamCaption}\item[{const unsigned int}]{child\+\_\+num }\end{DoxyParamCaption})}
+
+Set the total number of nonempty children. 
+\begin{DoxyParams}{Parameters}
+{\em child\+\_\+num} & \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+descendants\+\_\+from\+\_\+node().
+
+\mbox{\Hypertarget{classTreeNode_a3d2f374424a723cb72409857ee5237bc}\label{classTreeNode_a3d2f374424a723cb72409857ee5237bc}} 
+\index{Tree\+Node@{Tree\+Node}!set\+\_\+child\+\_\+pointer@{set\+\_\+child\+\_\+pointer}}
+\index{set\+\_\+child\+\_\+pointer@{set\+\_\+child\+\_\+pointer}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{set\+\_\+child\+\_\+pointer()}{set\_child\_pointer()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+void \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::set\+\_\+child\+\_\+pointer (\begin{DoxyParamCaption}\item[{std\+::size\+\_\+t}]{index,  }\item[{const \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$ $\ast$}]{pointer }\end{DoxyParamCaption})}
+
+Set the pointer to the {\ttfamily index\textquotesingle{}th} child.
+
+N.\+B. The const pointer type in the argument will be converted to non-\/const pointer type. In this way, even a const node can be added to the tree. 
+\begin{DoxyParams}{Parameters}
+{\em index} & Index of the child \\
+\hline
+{\em pointer} & New pointer value \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by Copy\+Tree(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+descendants\+\_\+from\+\_\+node().
+
+\mbox{\Hypertarget{classTreeNode_a67e5762f796247c38f4a2560c1250b11}\label{classTreeNode_a67e5762f796247c38f4a2560c1250b11}} 
+\index{Tree\+Node@{Tree\+Node}!set\+\_\+level@{set\+\_\+level}}
+\index{set\+\_\+level@{set\+\_\+level}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{set\+\_\+level()}{set\_level()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+void \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::set\+\_\+level (\begin{DoxyParamCaption}\item[{const unsigned int}]{level }\end{DoxyParamCaption})}
+
+Set the level of the node. 
+\begin{DoxyParams}{Parameters}
+{\em level} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classTreeNode_a0aec2b9142e931aaaa15d1c451ed9b46}\label{classTreeNode_a0aec2b9142e931aaaa15d1c451ed9b46}} 
+\index{Tree\+Node@{Tree\+Node}!set\+\_\+split\+\_\+mode@{set\+\_\+split\+\_\+mode}}
+\index{set\+\_\+split\+\_\+mode@{set\+\_\+split\+\_\+mode}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{set\+\_\+split\+\_\+mode()}{set\_split\_mode()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t N$>$ \\
+void \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::set\+\_\+split\+\_\+mode (\begin{DoxyParamCaption}\item[{\hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode}}]{split\+\_\+mode }\end{DoxyParamCaption})}
+
+Set the split mode of the tree node. 
+\begin{DoxyParams}{Parameters}
+{\em split\+\_\+mode} & \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by Make\+Int\+Example\+Tree(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+N(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+Nstar(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+descendants\+\_\+from\+\_\+node().
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classTreeNode_a9fc9333a3e4e05ae878a844370c17888}\label{classTreeNode_a9fc9333a3e4e05ae878a844370c17888}} 
+\index{Tree\+Node@{Tree\+Node}!child\+\_\+num@{child\+\_\+num}}
+\index{child\+\_\+num@{child\+\_\+num}!Tree\+Node@{Tree\+Node}}
+\subsubsection{\texorpdfstring{child\+\_\+num}{child\_num}}
+{\footnotesize\ttfamily template$<$typename T, std\+::size\+\_\+t N$>$ \\
+unsigned int \hyperlink{classTreeNode}{Tree\+Node}$<$ T, N $>$\+::child\+\_\+num\hspace{0.3cm}{\ttfamily [private]}}
+
+Total number of nonempty children. 
+
+Referenced by Tree\+Node$<$ Block\+Cluster$<$ spacedim, Number $>$, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::child\+\_\+num $>$\+::decrease\+\_\+child\+\_\+num(), Tree\+Node$<$ Block\+Cluster$<$ spacedim, Number $>$, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::child\+\_\+num $>$\+::get\+\_\+child\+\_\+num(), Tree\+Node$<$ Block\+Cluster$<$ spacedim, Number $>$, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::child\+\_\+num $>$\+::increase\+\_\+child\+\_\+num(), Tree\+Node$<$ Block\+Cluster$<$ spacedim, Number $>$, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::child\+\_\+num $>$\+::is\+\_\+leaf(), Tree\+Node$<$ Block\+Cluster$<$ spacedim, Number $>$, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::child\+\_\+num $>$\+::set\+\_\+child\+\_\+num(), and Tree\+Node$<$ Block\+Cluster$<$ spacedim, Number $>$, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::child\+\_\+num $>$\+::\+Tree\+Node().
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/\hyperlink{tree_8h}{tree.\+h}\end{DoxyCompactItemize}

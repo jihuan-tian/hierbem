@@ -1,0 +1,54 @@
+\hypertarget{rkmatrix-add-formatted_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/rkmatrix-\/add-\/formatted/rkmatrix-\/add-\/formatted.cc File Reference}
+\label{rkmatrix-add-formatted_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/rkmatrix-\/add-\/formatted/rkmatrix-\/add-\/formatted.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/rkmatrix-\/add-\/formatted/rkmatrix-\/add-\/formatted.\+cc}}
+
+
+Verify the formatted addition of two rank-\/k matrices.  
+
+
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}debug\+\_\+tools.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rkmatrix.\+h\char`\"{}}\newline
+Include dependency graph for rkmatrix-\/add-\/formatted.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rkmatrix-add-formatted_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{rkmatrix-add-formatted_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the formatted addition of two rank-\/k matrices. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/06-\/30 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{rkmatrix-add-formatted_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{rkmatrix-add-formatted_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{rkmatrix-\/add-\/formatted.\+cc@{rkmatrix-\/add-\/formatted.\+cc}!main@{main}}
+\index{main@{main}!rkmatrix-\/add-\/formatted.\+cc@{rkmatrix-\/add-\/formatted.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Create two full matrices as the data source.
+
+Create two rank-\/k matrices converted from the two matrices. N.\+B. The matrix {\ttfamily M1} has a dimension $3 \times 5$ but has a rank 2. Even though the rank-\/k matrix {\ttfamily A} created from {\ttfamily M1} is declared to have rank 3, the final actual rank is automatically truncated to 2.
+
+Perform raw addition of rank-\/k matrices via juxtaposition.
+
+Perform formatted addition with different truncation ranks.
+
+Calculate $A = A + B$.
+
+References Rk\+Matrix$<$ Number $>$\+::add(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::\+Reshape().
+

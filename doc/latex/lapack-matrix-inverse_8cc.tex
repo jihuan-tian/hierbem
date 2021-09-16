@@ -1,0 +1,51 @@
+\hypertarget{lapack-matrix-inverse_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/lapack-\/matrix-\/inverse/lapack-\/matrix-\/inverse.cc File Reference}
+\label{lapack-matrix-inverse_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/lapack-\/matrix-\/inverse/lapack-\/matrix-\/inverse.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/lapack-\/matrix-\/inverse/lapack-\/matrix-\/inverse.\+cc}}
+
+
+Verify matrix inverse computed by Gauss elimination, which is compared with the standard function in deal.\+ii.  
+
+
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}lapack\+\_\+full\+\_\+matrix\+\_\+ext.\+h\char`\"{}}\newline
+Include dependency graph for lapack-\/matrix-\/inverse.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{lapack-matrix-inverse_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{lapack-matrix-inverse_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify matrix inverse computed by Gauss elimination, which is compared with the standard function in deal.\+ii. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/08-\/30 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{lapack-matrix-inverse_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{lapack-matrix-inverse_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{lapack-\/matrix-\/inverse.\+cc@{lapack-\/matrix-\/inverse.\+cc}!main@{main}}
+\index{main@{main}!lapack-\/matrix-\/inverse.\+cc@{lapack-\/matrix-\/inverse.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Make a copy of the matrix for manual calculation of its inverse.
+
+Calculate the matrix inverse using deal.\+ii {\ttfamily invert} function.
+
+Calculate the matrix inverse using Gauss elimination.
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::\+Reshape().
+

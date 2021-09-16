@@ -1,0 +1,62 @@
+\hypertarget{hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding/hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding.cc File Reference}
+\label{hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding/hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding/hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding.\+cc}}
+
+
+Verify the multiplication of two $\mathcal{H}$-\/matrices. Both operands and the result matrices have the fine non-\/tensor product partitions. The calculation results will be added to the first operand.  
+
+
+{\ttfamily \#include $<$deal.\+I\+I/base/logstream.\+h$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+Include dependency graph for hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the multiplication of two $\mathcal{H}$-\/matrices. Both operands and the result matrices have the fine non-\/tensor product partitions. The calculation results will be added to the first operand. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/08-\/30 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding.\+cc@{hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding.\+cc}!main@{main}}
+\index{main@{main}!hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding.\+cc@{hmatrix-\/hmatrix-\/mmult-\/all-\/fine-\/ntp-\/with-\/adding.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Generate index set.
+
+Generate cluster tree.
+
+Generate block cluster tree via fine structured non-\/tensor product partition.
+
+Create two full matrices as the source data.
+
+Create the two H-\/matrices {\ttfamily H1} and {\ttfamily H2} from {\ttfamily M1} and {\ttfamily M2}.
+
+Before perform the multiplication, we make a copy from {\ttfamily H1} as the initial value of the result matrix {\ttfamily H}.
+
+Multiply the two H-\/matrices {\ttfamily H1} and {\ttfamily H2}.
+
+Convert the result matrix into a full matrix for verification.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::mmult(), Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration().
+

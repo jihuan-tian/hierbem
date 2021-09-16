@@ -1,0 +1,1934 @@
+\hypertarget{classHMatrix}{}\section{H\+Matrix$<$ spacedim, Number $>$ Class Template Reference}
+\label{classHMatrix}\index{H\+Matrix$<$ spacedim, Number $>$@{H\+Matrix$<$ spacedim, Number $>$}}
+
+
+Collaboration diagram for H\+Matrix$<$ spacedim, Number $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classHMatrix__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+using \hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} = std\+::make\+\_\+unsigned$<$ types\+::blas\+\_\+int $>$\+::\hyperlink{classHMatrix_a89ef60f3ba737c04708195ca0bb13620}{type}
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classHMatrix_ae3dc35e1aefee2580d27ad2d65c906de}{H\+Matrix} ()
+\item 
+\hyperlink{classHMatrix_a6a4dead0321e8df38865bf6fbd0f6e81}{H\+Matrix} (const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct, const unsigned int fixed\+\_\+rank\+\_\+k=1)
+\item 
+\hyperlink{classHMatrix_a4fe44a3aa2b813f593b787f24be56a1c}{H\+Matrix} (typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, const unsigned int fixed\+\_\+rank\+\_\+k=1)
+\item 
+\hyperlink{classHMatrix_a8e7d103ec4f093870f9e792e26d6b915}{H\+Matrix} (const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M, const unsigned int fixed\+\_\+rank\+\_\+k=1)
+\item 
+\hyperlink{classHMatrix_abb59b3981e9f32f319479088d786989d}{H\+Matrix} (typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M, const unsigned int fixed\+\_\+rank\+\_\+k=1)
+\item 
+\hyperlink{classHMatrix_abeb8d0add9bffecafc12f4c6b1dcab8e}{H\+Matrix} (typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&\&H)
+\item 
+\hyperlink{classHMatrix_a78aa967d7a99e27cc172f0db3791306b}{H\+Matrix} (const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&\&H)
+\item 
+\hyperlink{classHMatrix_a0b5227e35290f6c9fba1e8948e9a29c3}{H\+Matrix} (const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&H)
+\item 
+\hyperlink{classHMatrix_a556325d4cdaee699f17aa1be63bb58ee}{H\+Matrix} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&\&H)
+\item 
+void \hyperlink{classHMatrix_a83f804163e1695cfb952ddb6b0df2503}{reinit} (const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct, const unsigned int fixed\+\_\+rank\+\_\+k=1)
+\item 
+void \hyperlink{classHMatrix_a41d20c1839f3d7a756107b8e4defea0b}{reinit} (typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, const unsigned int fixed\+\_\+rank\+\_\+k=1)
+\item 
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \& \hyperlink{classHMatrix_a2c72ede65323af5b57a6b16f5774de50}{operator=} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&\&H)
+\item 
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \& \hyperlink{classHMatrix_a83958971f40409b3b2a192b71eae1513}{operator=} (const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&H)
+\item 
+{\footnotesize template$<$typename Matrix\+Type $>$ }\\void \hyperlink{classHMatrix_a00bdd40f7fcf5c912c34c427df518300}{convert\+To\+Full\+Matrix} (Matrix\+Type \&M) const
+\item 
+void \hyperlink{classHMatrix_a812e8276888b2ad866edf7ce9b286839}{release} ()
+\item 
+void \hyperlink{classHMatrix_ae55bd45587b895bfdb977e7cbea46519}{clear} ()
+\item 
+void \hyperlink{classHMatrix_aec0815bc9c3654391bb2b3095383e6cb}{clear\+\_\+hmat\+\_\+node} ()
+\item 
+\hyperlink{classHMatrix_ae16c956c1b22eb307e9f360a83f4fa75}{$\sim$\+H\+Matrix} ()
+\item 
+\hyperlink{hmatrix_8h_ac04719e202c88f36e4533fe1d326a494}{H\+Matrix\+Type} \hyperlink{classHMatrix_aadea9fa59f420d22b3b1c939f6b573cc}{get\+\_\+type} () const
+\item 
+\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} \hyperlink{classHMatrix_aabe735f7712a10ba5325ff116f8ca1c7}{get\+\_\+m} () const
+\item 
+\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} \hyperlink{classHMatrix_abff89130116d62ea4159bc69ca11f8d5}{get\+\_\+n} () const
+\item 
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix_a0189de6e276fbd3425c4a7ef132f5e16}{get\+\_\+rkmatrix} ()
+\item 
+const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix_a64c81db6357d0e00b82fd523af001ae5}{get\+\_\+rkmatrix} () const
+\item 
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix_a9d914c27d4e990d476a4529b2daa64cd}{get\+\_\+fullmatrix} ()
+\item 
+const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix_aed550b5b41a64c6f1bbcde4f8f7eca91}{get\+\_\+fullmatrix} () const
+\item 
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \& \hyperlink{classHMatrix_a0572b2c0484ce618db0034e3bc7988ed}{get\+\_\+submatrices} ()
+\item 
+const std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \& \hyperlink{classHMatrix_a8f8e9bc437ab86296d78950081ea34cd}{get\+\_\+submatrices} () const
+\item 
+void \hyperlink{classHMatrix_a7e849f7e8f35e3ebdfcb2dbb7ad4ad01}{print\+\_\+formatted} (std\+::ostream \&out, const unsigned int precision=3, const bool scientific=true, const unsigned int width=0, const char $\ast$zero\+\_\+string=\char`\"{} \char`\"{}, const double denominator=1., const double threshold=0.) const
+\item 
+void \hyperlink{classHMatrix_ad8f87883cf49080706233441c0e09171}{print\+\_\+matrix\+\_\+info} (std\+::ostream \&out) const
+\item 
+void \hyperlink{classHMatrix_a42f958a13c56d64564d59487e67bc8a2}{write\+\_\+fullmatrix\+\_\+leaf\+\_\+node} (std\+::ostream \&out, const Number singular\+\_\+value\+\_\+threshold=0.) const
+\item 
+void \hyperlink{classHMatrix_ac2c8ccd5763d3952505741c657b6468c}{write\+\_\+rkmatrix\+\_\+leaf\+\_\+node} (std\+::ostream \&out) const
+\item 
+void \hyperlink{classHMatrix_aaf0ae0960a40ad78a941aee823e80315}{write\+\_\+leaf\+\_\+set} (std\+::ostream \&out, const Number singular\+\_\+value\+\_\+threshold=0.) const
+\item 
+void \hyperlink{classHMatrix_aac1e1ddbfeb133520dcd50c0174aab8d}{write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration} (std\+::ostream \&out, const Number singular\+\_\+value\+\_\+threshold=0.) const
+\item 
+void \hyperlink{classHMatrix_a64be687cacd167efc12b892aa154dcd3}{truncate\+\_\+to\+\_\+rank} (\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} new\+\_\+rank)
+\item 
+void \hyperlink{classHMatrix_aa11b5761aba86606effd14b4bdf31912}{vmult} (Vector$<$ Number $>$ \&y, const Vector$<$ Number $>$ \&x) const
+\item 
+void \hyperlink{classHMatrix_a2afddab534366617b6be203b3c5238a6}{vmult\+\_\+local\+\_\+vector} (Vector$<$ Number $>$ \&y, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&y\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const Vector$<$ Number $>$ \&x, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&x\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map) const
+\item 
+void \hyperlink{classHMatrix_a72e5255eb5ce46136d0e2b195c82f016}{Tvmult} (Vector$<$ Number $>$ \&y, const Vector$<$ Number $>$ \&x) const
+\item 
+void \hyperlink{classHMatrix_a166893f3f371d4542cb57aaa33e533d1}{Tvmult\+\_\+local\+\_\+vector} (Vector$<$ Number $>$ \&y, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&y\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const Vector$<$ Number $>$ \&x, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&x\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map) const
+\item 
+void \hyperlink{classHMatrix_a168b6eea2e5b27528497850bf5ee2bbe}{h\+\_\+h\+\_\+mmult\+\_\+reduction} ()
+\item 
+void \hyperlink{classHMatrix_a38c88893c6ca784d4e56653d8b0e3e67}{h\+\_\+h\+\_\+mmult\+\_\+horizontal\+\_\+split} (\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bc\+\_\+tree)
+\item 
+void \hyperlink{classHMatrix_a253c23d09e89a9a37a7d808374b5ae4e}{h\+\_\+h\+\_\+mmult\+\_\+vertical\+\_\+split} (\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bc\+\_\+tree)
+\item 
+void \hyperlink{classHMatrix_ab315324e3ece178943f406823f792746}{h\+\_\+h\+\_\+mmult\+\_\+cross\+\_\+split} (\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bc\+\_\+tree)
+\item 
+void \hyperlink{classHMatrix_af40d53aabc8bec86fa543638d48ba64e}{mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&C, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&B, const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct\+\_\+a, const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct\+\_\+b, \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct\+\_\+c, const unsigned int fixed\+\_\+rank=1)
+\item 
+\mbox{\Hypertarget{classHMatrix_a4139e9069e3b18d4719c527ce2e0414c}\label{classHMatrix_a4139e9069e3b18d4719c527ce2e0414c}} 
+void {\bfseries mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&C, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&B, const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct\+\_\+a, const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct\+\_\+b, \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct\+\_\+c, const unsigned int fixed\+\_\+rank, const bool adding)
+\item 
+void \hyperlink{classHMatrix_a8f96186426cd3147d5af32ca84ad25ea}{add} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&C, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&B, const \hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} fixed\+\_\+rank\+\_\+k) const
+\item 
+void \hyperlink{classHMatrix_a9bd48ada567962ab0dc75c31986bd1a6}{add} (const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&B, const \hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} fixed\+\_\+rank\+\_\+k) const
+\item 
+void \hyperlink{classHMatrix_ab100d1469f662efdbf894a0345b702b8}{invert\+\_\+by\+\_\+gauss\+\_\+elim} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&M\+\_\+inv, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&M\+\_\+root, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&M\+\_\+inv\+\_\+root, const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&M\+\_\+root\+\_\+bct, const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&M\+\_\+inv\+\_\+root\+\_\+bct, const \hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} fixed\+\_\+rank\+\_\+k)
+\item 
+void \hyperlink{classHMatrix_a27c7390b792e6e47ab2861616a997d99}{coarsen\+\_\+to\+\_\+subtree} (const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&subtree, const unsigned int fixed\+\_\+rank\+\_\+k)
+\item 
+void \hyperlink{classHMatrix_a525ad4d453f4f496b98cccb341c8b60b}{coarsen\+\_\+to\+\_\+partition} (const std\+::vector$<$ typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+pointer\+\_\+type $>$ \&partition, const unsigned int fixed\+\_\+rank\+\_\+k)
+\item 
+void \hyperlink{classHMatrix_a139f32982527ba981e0211b5663e3b43}{build\+\_\+leaf\+\_\+set} ()
+\item 
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \& \hyperlink{classHMatrix_ac5c9102fc04997c1ae3627185379d9bb}{get\+\_\+leaf\+\_\+set} ()
+\item 
+const std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \& \hyperlink{classHMatrix_a851d7bb3632bc1d18538d4d1dd5f6393}{get\+\_\+leaf\+\_\+set} () const
+\item 
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$\+::iterator \hyperlink{classHMatrix_ab0f83de878e6079330ec3c374f587a04}{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set} (const \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$ \&block\+\_\+cluster)
+\item 
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$\+::const\+\_\+iterator \hyperlink{classHMatrix_a723cc200afe31148fcc28f0120c5ec54}{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set} (const \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$ \&block\+\_\+cluster) const
+\item 
+void \hyperlink{classHMatrix_ad2b353962226c78910d6ddb6b5b8e460}{refine\+\_\+to\+\_\+supertree} ()
+\item 
+void \hyperlink{classHMatrix_af6fd60090b0de7bdea52fc84ddeb22c3}{convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees} (\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct1, \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&bct2, const unsigned int fixed\+\_\+rank\+\_\+k2=1)
+\item 
+void \hyperlink{classHMatrix_a9e023f39b1f8916117a63557895a91b4}{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list} (const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$M1, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$M2)
+\item 
+void \hyperlink{classHMatrix_ae0ab9b3be4ea0ef959da40e81313b2e3}{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list} (const std\+::pair$<$ const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$$>$ \&hmat\+\_\+pair)
+\item 
+\hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode} \hyperlink{classHMatrix_a6f24998c7de1d0e336577be41c6281e3}{determine\+\_\+mm\+\_\+split\+\_\+mode\+\_\+from\+\_\+\+Sigma\+\_\+P} ()
+\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$typename Matrix\+Type $>$ }\\void \hyperlink{classHMatrix_ab55b568236ffdd71b5378ac6c6ace50a}{\+\_\+convert\+To\+Full\+Matrix} (Matrix\+Type \&M) const
+\item 
+void \hyperlink{classHMatrix_a60934e84cc3c9f6c75d011a2005f512a}{\+\_\+build\+\_\+leaf\+\_\+set} (std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix} $\ast$$>$ \&total\+\_\+leaf\+\_\+set) const
+\item 
+void \hyperlink{classHMatrix_a01360c3d9a93154f2e629b6c413aa991}{distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves} ()
+\item 
+\mbox{\Hypertarget{classHMatrix_a963ad3e2c76ba7034b5057fef03254e1}\label{classHMatrix_a963ad3e2c76ba7034b5057fef03254e1}} 
+void {\bfseries distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves} ()
+\item 
+void \hyperlink{classHMatrix_a2229caab9b862f9c54b7f3a806125fba}{\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&starting\+\_\+hmat)
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{hmatrix_8h_ac04719e202c88f36e4533fe1d326a494}{H\+Matrix\+Type} \hyperlink{classHMatrix_a89ef60f3ba737c04708195ca0bb13620}{type}
+\item 
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \hyperlink{classHMatrix_a4bd1b9a32f2c7693e603a7c6ea916e4f}{submatrices}
+\item 
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \hyperlink{classHMatrix_a61dbd471077be0ad8325d0f2afe3d43f}{leaf\+\_\+set}
+\item 
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix_aa97a8f5e42aba0f1d5faf41f35a27819}{rkmatrix}
+\item 
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix_a328134c9e9cb2c4b05d5431c0ca8a533}{fullmatrix}
+\item 
+\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}
+\item 
+std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ $\ast$ \hyperlink{classHMatrix_a33b3a936f1b40e320e96d47471da07ae}{row\+\_\+indices}
+\item 
+std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ $\ast$ \hyperlink{classHMatrix_ac30ae65e37ec5e4ccc7de2f6b9ea91e6}{col\+\_\+indices}
+\item 
+std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \hyperlink{classHMatrix_a4d64145335fc0521603b206a22a67578}{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}
+\item 
+std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \hyperlink{classHMatrix_ab337c7b4f2f40699b9b7f3ab17a1e056}{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}
+\item 
+\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} \hyperlink{classHMatrix_aa5523463043e4d542eae17d262bd22ad}{m}
+\item 
+\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} \hyperlink{classHMatrix_ab5ae2eb472f81f80653ed4411629c2d1}{n}
+\item 
+\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \hyperlink{classHMatrix_a12da9454687e5ca15837d63e2bf0b595}{Tind}
+\item 
+std\+::vector$<$ std\+::pair$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ $>$ \hyperlink{classHMatrix_a3d96d0252ef8c873ae06cf87874acaf3}{Sigma\+\_\+P}
+\item 
+std\+::vector$<$ \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ $\ast$ $>$ \hyperlink{classHMatrix_a04d341b4e606d1be2d71b8ea636efe7b}{Sigma\+\_\+R}
+\item 
+std\+::vector$<$ \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ $\ast$ $>$ \hyperlink{classHMatrix_aa659b6df63d533432ec1a24435cd9c40}{Sigma\+\_\+F}
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classHMatrix_aa949159fde08b9c728ce2cd4c6b99de6}\label{classHMatrix_aa949159fde08b9c728ce2cd4c6b99de6}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&hmat, typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node})
+\item 
+\mbox{\Hypertarget{classHMatrix_ab5b4274a06c4ec21a0c1ee4ed870d3a3}\label{classHMatrix_ab5b4274a06c4ec21a0c1ee4ed870d3a3}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&hmat, typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, const std\+::vector$<$ std\+::pair$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$$>$$>$ \&\hyperlink{classHMatrix_a3d96d0252ef8c873ae06cf87874acaf3}{Sigma\+\_\+P})
+\item 
+\mbox{\Hypertarget{classHMatrix_abe123e0f8daa856e4b85e00829398b79}\label{classHMatrix_abe123e0f8daa856e4b85e00829398b79}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&hmat, typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, const std\+::pair$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$$>$ \&hmat\+\_\+pair)
+\item 
+\mbox{\Hypertarget{classHMatrix_ac9dff162efb21e08ab5d6fc3bc2219fa}\label{classHMatrix_ac9dff162efb21e08ab5d6fc3bc2219fa}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries Init\+And\+Create\+H\+Matrix\+Children} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$hmat, typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, const unsigned int fixed\+\_\+rank\+\_\+k, bool is\+\_\+build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map)
+\item 
+\mbox{\Hypertarget{classHMatrix_a97abbebc640c23d742408edfa3526572}\label{classHMatrix_a97abbebc640c23d742408edfa3526572}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries Init\+And\+Create\+H\+Matrix\+Children} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$hmat, typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, const unsigned int fixed\+\_\+rank\+\_\+k, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M, bool is\+\_\+build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map)
+\item 
+\mbox{\Hypertarget{classHMatrix_aac490314e7c775bf5bbaef5562aad650}\label{classHMatrix_aac490314e7c775bf5bbaef5562aad650}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries Init\+And\+Create\+H\+Matrix\+Children} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$hmat, typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, const unsigned int fixed\+\_\+rank\+\_\+k, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, bool is\+\_\+build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map)
+\item 
+\mbox{\Hypertarget{classHMatrix_ab0d91a693388f0f14c515f7c97c14aed}\label{classHMatrix_ab0d91a693388f0f14c515f7c97c14aed}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries Init\+And\+Create\+H\+Matrix\+Children} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$hmat, typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type \hyperlink{classHMatrix_a4a304494c970b5b267be1d8459d51586}{bc\+\_\+node}, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&\&H)
+\item 
+\mbox{\Hypertarget{classHMatrix_ac511284701f9f527c0480608242d0619}\label{classHMatrix_ac511284701f9f527c0480608242d0619}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$starting\+\_\+hmat, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$current\+\_\+hmat)
+\item 
+\mbox{\Hypertarget{classHMatrix_a47825229983c7fa5755b3be8d5ac03f7}\label{classHMatrix_a47825229983c7fa5755b3be8d5ac03f7}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries convert\+H\+Mat\+Block\+To\+Rk\+Matrix} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$hmat\+\_\+block, const unsigned int fixed\+\_\+rank\+\_\+k, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$hmat\+\_\+root\+\_\+block, size\+\_\+t $\ast$calling\+\_\+counter, const std\+::string \&output\+\_\+file\+\_\+base\+\_\+name)
+\item 
+\mbox{\Hypertarget{classHMatrix_aaa7e9489e842016dd9815a0490c7667d}\label{classHMatrix_aaa7e9489e842016dd9815a0490c7667d}} 
+void {\bfseries build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set\+\_\+as\+\_\+local\+\_\+to\+\_\+global\+\_\+map, std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&global\+\_\+to\+\_\+local\+\_\+map)
+\item 
+\mbox{\Hypertarget{classHMatrix_a1b5b4592067610eec18b830482897243}\label{classHMatrix_a1b5b4592067610eec18b830482897243}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+rk\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M1, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M2, \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classHMatrix_a614ba3b92b97d95cb3146db181611a34}\label{classHMatrix_a614ba3b92b97d95cb3146db181611a34}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M1, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M2, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, bool is\+\_\+\+M1\+M2\+\_\+last\+\_\+in\+\_\+\+M\+\_\+\+Sigma\+\_\+P)
+\item 
+\mbox{\Hypertarget{classHMatrix_afa94f9688a9443024a2631d2bfae06c8}\label{classHMatrix_afa94f9688a9443024a2631d2bfae06c8}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries rk\+\_\+h\+\_\+mmult} (const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M2, \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classHMatrix_a9b12cf1aa7504c436b84394f2116f6a9}\label{classHMatrix_a9b12cf1aa7504c436b84394f2116f6a9}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult} (const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M2, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, bool is\+\_\+\+M1\+M2\+\_\+last\+\_\+in\+\_\+\+M\+\_\+\+Sigma\+\_\+P)
+\item 
+\mbox{\Hypertarget{classHMatrix_a85ccef980f81f9fb3c63675f3f9c014f}\label{classHMatrix_a85ccef980f81f9fb3c63675f3f9c014f}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+f\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M1, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M2, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classHMatrix_aea3866052a5345742ad9f44f11f33989}\label{classHMatrix_aea3866052a5345742ad9f44f11f33989}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+f\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M1, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M2, \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classHMatrix_a897365f6716975f71b528f610498c69b}\label{classHMatrix_a897365f6716975f71b528f610498c69b}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M1, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M2, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, bool is\+\_\+\+M1\+M2\+\_\+last\+\_\+in\+\_\+\+M\+\_\+\+Sigma\+\_\+P)
+\item 
+\mbox{\Hypertarget{classHMatrix_a67b0f45b3a6734fef74d90f28fcefbc1}\label{classHMatrix_a67b0f45b3a6734fef74d90f28fcefbc1}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries f\+\_\+h\+\_\+mmult} (const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M2, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classHMatrix_a66d1ce72cb294b2c4da6536250905a32}\label{classHMatrix_a66d1ce72cb294b2c4da6536250905a32}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries f\+\_\+h\+\_\+mmult} (const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M2, \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classHMatrix_a311938523b49a053a8cf16bc96576cdf}\label{classHMatrix_a311938523b49a053a8cf16bc96576cdf}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult} (const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M2, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, bool is\+\_\+\+M1\+M2\+\_\+last\+\_\+in\+\_\+\+M\+\_\+\+Sigma\+\_\+P)
+\item 
+\mbox{\Hypertarget{classHMatrix_ad755e8e3b11e19f553e77bae172ce849}\label{classHMatrix_ad755e8e3b11e19f553e77bae172ce849}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+h\+\_\+mmult\+\_\+phase1\+\_\+recursion} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$ \&\hyperlink{classHMatrix_a12da9454687e5ca15837d63e2bf0b595}{Tind})
+\item 
+\mbox{\Hypertarget{classHMatrix_ac58016ed0bee33836c69eb23970c24df}\label{classHMatrix_ac58016ed0bee33836c69eb23970c24df}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+h\+\_\+mmult\+\_\+phase2} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M, \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim1, Number1 $>$ \&target\+\_\+bc\+\_\+tree, const unsigned int fixed\+\_\+rank)
+\item 
+\mbox{\Hypertarget{classHMatrix_a4ec67bee413b9db0bedfe58ddc0d91c1}\label{classHMatrix_a4ec67bee413b9db0bedfe58ddc0d91c1}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries copy\+\_\+hmatrix\+\_\+node} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&hmat\+\_\+dst, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&hmat\+\_\+src)
+\item 
+\mbox{\Hypertarget{classHMatrix_a10e52ecf1ea024322e4318243e922a1c}\label{classHMatrix_a10e52ecf1ea024322e4318243e922a1c}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries copy\+\_\+hmatrix\+\_\+node} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&hmat\+\_\+dst, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&\&hmat\+\_\+src)
+\item 
+\mbox{\Hypertarget{classHMatrix_a29ce56e1013c5060804023841e3ac93b}\label{classHMatrix_a29ce56e1013c5060804023841e3ac93b}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries copy\+\_\+hmatrix} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&hmat\+\_\+dst, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&hmat\+\_\+src)
+\item 
+\mbox{\Hypertarget{classHMatrix_a9eefa50a413f628f9b74c4b7ca7fd118}\label{classHMatrix_a9eefa50a413f628f9b74c4b7ca7fd118}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries print\+\_\+h\+\_\+submatrix\+\_\+accessor} (std\+::ostream \&out, const std\+::string \&name, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classHMatrix_adee7e6e1599718531085769438a918a7}\label{classHMatrix_adee7e6e1599718531085769438a918a7}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries print\+\_\+h\+\_\+h\+\_\+submatrix\+\_\+mmult\+\_\+accessor} (std\+::ostream \&out, const std\+::string \&name1, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M1, const std\+::string \&name2, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M2)
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}\label{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}} 
+\index{H\+Matrix@{H\+Matrix}!size\+\_\+type@{size\+\_\+type}}
+\index{size\+\_\+type@{size\+\_\+type}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{size\+\_\+type}{size\_type}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+using \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} =  std\+::make\+\_\+unsigned$<$types\+::blas\+\_\+int$>$\+::\hyperlink{classHMatrix_a89ef60f3ba737c04708195ca0bb13620}{type}}
+
+Declare the type for container size. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classHMatrix_ae3dc35e1aefee2580d27ad2d65c906de}\label{classHMatrix_ae3dc35e1aefee2580d27ad2d65c906de}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [1/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Default constructor. \mbox{\Hypertarget{classHMatrix_a6a4dead0321e8df38865bf6fbd0f6e81}\label{classHMatrix_a6a4dead0321e8df38865bf6fbd0f6e81}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [2/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Construct the hierarchical structure without data from the root node of a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root().
+
+\mbox{\Hypertarget{classHMatrix_a4fe44a3aa2b813f593b787f24be56a1c}\label{classHMatrix_a4fe44a3aa2b813f593b787f24be56a1c}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [3/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}\item[{typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type}]{bc\+\_\+node,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Construct the hierarchical structure without data from a \hyperlink{classTreeNode}{Tree\+Node} in a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set().
+
+\mbox{\Hypertarget{classHMatrix_a8e7d103ec4f093870f9e792e26d6b915}\label{classHMatrix_a8e7d103ec4f093870f9e792e26d6b915}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [4/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Construct from the root node of a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} while copying the data of a global full matrix, which is created on the complete block cluster $I \times J$. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root().
+
+\mbox{\Hypertarget{classHMatrix_abb59b3981e9f32f319479088d786989d}\label{classHMatrix_abb59b3981e9f32f319479088d786989d}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [5/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}\item[{typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type}]{bc\+\_\+node,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Construct from a \hyperlink{classTreeNode}{Tree\+Node} in a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} while copying the data of a global full matrix, which is created on the complete block cluster $I \times J$. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set().
+
+\mbox{\Hypertarget{classHMatrix_abeb8d0add9bffecafc12f4c6b1dcab8e}\label{classHMatrix_abeb8d0add9bffecafc12f4c6b1dcab8e}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [6/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}\item[{typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type}]{bc\+\_\+node,  }\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&\&}]{H }\end{DoxyParamCaption})}
+
+Construct from a {\ttfamily \hyperlink{classTreeNode}{Tree\+Node}} in a {\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}} while moving the data from the leaf set of the $\mathcal{H}$-\/matrix {\ttfamily H}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em bc\+\_\+node} & \\
+\hline
+{\em H} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set().
+
+\mbox{\Hypertarget{classHMatrix_a78aa967d7a99e27cc172f0db3791306b}\label{classHMatrix_a78aa967d7a99e27cc172f0db3791306b}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [7/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct,  }\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&\&}]{H }\end{DoxyParamCaption})}
+
+Construct from the root node of a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} while moving the data from the leaf set of the $\mathcal{H}$-\/matrix {\ttfamily H}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em bct} & \\
+\hline
+{\em H} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root().
+
+\mbox{\Hypertarget{classHMatrix_a0b5227e35290f6c9fba1e8948e9a29c3}\label{classHMatrix_a0b5227e35290f6c9fba1e8948e9a29c3}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [8/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{H }\end{DoxyParamCaption})}
+
+Deep copy constructor. 
+\begin{DoxyParams}{Parameters}
+{\em H} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set().
+
+\mbox{\Hypertarget{classHMatrix_a556325d4cdaee699f17aa1be63bb58ee}\label{classHMatrix_a556325d4cdaee699f17aa1be63bb58ee}} 
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\index{H\+Matrix@{H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{H\+Matrix()}{HMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [9/9]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&\&}]{H }\end{DoxyParamCaption})}
+
+Shallow copy constructor.
+
+After the copy operation, the data in the source matrix {\ttfamily H} are transferred to the current $\mathcal{H}$-\/matrix node and {\ttfamily H} is cleared.
+
+
+\begin{DoxyParams}{Parameters}
+{\em H} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classHMatrix_ae16c956c1b22eb307e9f360a83f4fa75}\label{classHMatrix_ae16c956c1b22eb307e9f360a83f4fa75}} 
+\index{H\+Matrix@{H\+Matrix}!````~H\+Matrix@{$\sim$\+H\+Matrix}}
+\index{````~H\+Matrix@{$\sim$\+H\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{$\sim$\+H\+Matrix()}{~HMatrix()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::$\sim$\hyperlink{classHMatrix}{H\+Matrix} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Destructor which releases the memory by recursion. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::release().
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classHMatrix_a60934e84cc3c9f6c75d011a2005f512a}\label{classHMatrix_a60934e84cc3c9f6c75d011a2005f512a}} 
+\index{H\+Matrix@{H\+Matrix}!\+\_\+build\+\_\+leaf\+\_\+set@{\+\_\+build\+\_\+leaf\+\_\+set}}
+\index{\+\_\+build\+\_\+leaf\+\_\+set@{\+\_\+build\+\_\+leaf\+\_\+set}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{\+\_\+build\+\_\+leaf\+\_\+set()}{\_build\_leaf\_set()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\+\_\+build\+\_\+leaf\+\_\+set (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$$>$ \&}]{total\+\_\+leaf\+\_\+set }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [private]}}
+
+Collect $\mathcal{H}$-\/matrix nodes in the leaf set into a vector. 
+\begin{DoxyParams}{Parameters}
+{\em total\+\_\+leaf\+\_\+set} & \\
+\hline
+\end{DoxyParams}
+
+
+References Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set().
+
+\mbox{\Hypertarget{classHMatrix_ab55b568236ffdd71b5378ac6c6ace50a}\label{classHMatrix_ab55b568236ffdd71b5378ac6c6ace50a}} 
+\index{H\+Matrix@{H\+Matrix}!\+\_\+convert\+To\+Full\+Matrix@{\+\_\+convert\+To\+Full\+Matrix}}
+\index{\+\_\+convert\+To\+Full\+Matrix@{\+\_\+convert\+To\+Full\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{\+\_\+convert\+To\+Full\+Matrix()}{\_convertToFullMatrix()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+template$<$typename Matrix\+Type $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix (\begin{DoxyParamCaption}\item[{Matrix\+Type \&}]{M }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [private]}}
+
+Convert an \hyperlink{classHMatrix}{H\+Matrix} to a full matrix by recursion. 
+\begin{DoxyParams}{Parameters}
+{\em matrix} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::m, H\+Matrix$<$ spacedim, Number $>$\+::n, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::convert\+To\+Full\+Matrix().
+
+\mbox{\Hypertarget{classHMatrix_a2229caab9b862f9c54b7f3a806125fba}\label{classHMatrix_a2229caab9b862f9c54b7f3a806125fba}} 
+\index{H\+Matrix@{H\+Matrix}!\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves@{\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves}}
+\index{\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves@{\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves()}{\_distribute\_sigma\_r\_and\_f\_to\_leaves()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves (\begin{DoxyParamCaption}\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{starting\+\_\+hmat }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+Restrict each rank-\/k matrix in the list {\ttfamily Sigma\+\_\+R} of {\ttfamily starting\+\_\+hmat} to the block as a full matrix.
+
+Restrict each full matrix in the list {\ttfamily Sigma\+\_\+F} of {\ttfamily starting\+\_\+hmat} to the block as a full matrix.
+
+Restrict each rank-\/k matrix in the list {\ttfamily Sigma\+\_\+R} of {\ttfamily starting\+\_\+hmat} to the block as a rank-\/k matrix.
+
+Restrict each full matrix in the list {\ttfamily Sigma\+\_\+F} of {\ttfamily starting\+\_\+hmat} to the block as a rank-\/k matrix.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Rk\+Matrix$<$ Number $>$\+::restrict\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+F, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+R, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves().
+
+\mbox{\Hypertarget{classHMatrix_a8f96186426cd3147d5af32ca84ad25ea}\label{classHMatrix_a8f96186426cd3147d5af32ca84ad25ea}} 
+\index{H\+Matrix@{H\+Matrix}!add@{add}}
+\index{add@{add}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::add (\begin{DoxyParamCaption}\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{C,  }\item[{const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{B,  }\item[{const \hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption}) const}
+
+Add the current \hyperlink{classHMatrix}{H\+Matrix} {\ttfamily A} with another \hyperlink{classHMatrix}{H\+Matrix} {\ttfamily B} into {\ttfamily C}, i.\+e. whole matrix addition instead of addition limited to a specific block, where {\ttfamily C} will be truncated to a fixed rank {\ttfamily fixed\+\_\+rank}.
+
+This algorithm is intrinsically recursive, i.\+e. the addition of parent H\+Matrices will perform the addition of each pair of child H\+Matrices corresponding to a same block cluster. Strictly speaking, this member function {\ttfamily add} is not a recursive function, because the class instance which calls {\ttfamily add} changes from parent to child \hyperlink{classHMatrix}{H\+Matrix}.
+
+N.\+B.
+
+
+\begin{DoxyEnumerate}
+\item The two operands should have the same partition.
+\item The hierarchical structure of {\ttfamily C} should be pre-\/generated.
+\end{DoxyEnumerate}
+
+
+\begin{DoxyParams}{Parameters}
+{\em C} & \\
+\hline
+{\em B} & \\
+\hline
+{\em fixed\+\_\+rank} & \\
+\hline
+\end{DoxyParams}
+{\bfseries Work flow}
+
+Recursively add each pair of submatrices.
+
+Perform addition of full matrices.
+
+Perform addition of rank-\/k matrices.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+
+
+Referenced by main(), and H\+Matrix$<$ spacedim, Number $>$\+::mmult().
+
+\mbox{\Hypertarget{classHMatrix_a9bd48ada567962ab0dc75c31986bd1a6}\label{classHMatrix_a9bd48ada567962ab0dc75c31986bd1a6}} 
+\index{H\+Matrix@{H\+Matrix}!add@{add}}
+\index{add@{add}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::add (\begin{DoxyParamCaption}\item[{const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{B,  }\item[{const \hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption}) const}
+
+Add the \hyperlink{classHMatrix}{H\+Matrix} {\ttfamily B} into the current \hyperlink{classHMatrix}{H\+Matrix} {\ttfamily A}, i.\+e. whole matrix addition instead of addition limited to a specific block, where {\ttfamily C} will be truncated to a fixed rank {\ttfamily fixed\+\_\+rank}.
+
+This algorithm is intrinsically recursive, i.\+e. the addition of parent H\+Matrices will perform the addition of each pair of child H\+Matrices corresponding to a same block cluster. Strictly speaking, this member function {\ttfamily add} is not a recursive function, because the class instance which calls {\ttfamily add} changes from parent to child \hyperlink{classHMatrix}{H\+Matrix}.
+
+N.\+B. The two operands should have the same partition.
+
+
+\begin{DoxyParams}{Parameters}
+{\em B} & \\
+\hline
+{\em fixed\+\_\+rank} & \\
+\hline
+\end{DoxyParams}
+{\bfseries Work flow}
+
+Recursively add each pair of submatrices.
+
+Perform addition of full matrices.
+
+Perform addition of rank-\/k matrices.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+\mbox{\Hypertarget{classHMatrix_a139f32982527ba981e0211b5663e3b43}\label{classHMatrix_a139f32982527ba981e0211b5663e3b43}} 
+\index{H\+Matrix@{H\+Matrix}!build\+\_\+leaf\+\_\+set@{build\+\_\+leaf\+\_\+set}}
+\index{build\+\_\+leaf\+\_\+set@{build\+\_\+leaf\+\_\+set}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{build\+\_\+leaf\+\_\+set()}{build\_leaf\_set()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Build the leaf set of the current $\mathcal{H}$-\/matrix node. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+build\+\_\+leaf\+\_\+set(), and H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+subtree(), H\+Matrix$<$ spacedim, Number $>$\+::convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees(), H\+Matrix$<$ spacedim, Number $>$\+::\+H\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::mmult(), H\+Matrix$<$ spacedim, Number $>$\+::operator=(), H\+Matrix$<$ spacedim, Number $>$\+::refine\+\_\+to\+\_\+supertree(), and H\+Matrix$<$ spacedim, Number $>$\+::reinit().
+
+\mbox{\Hypertarget{classHMatrix_ae55bd45587b895bfdb977e7cbea46519}\label{classHMatrix_ae55bd45587b895bfdb977e7cbea46519}} 
+\index{H\+Matrix@{H\+Matrix}!clear@{clear}}
+\index{clear@{clear}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Clear the whole $\mathcal{H}$-\/matrix hierarchy. Recursively clear submatrices.
+
+Clear the current matrix node.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+\mbox{\Hypertarget{classHMatrix_aec0815bc9c3654391bb2b3095383e6cb}\label{classHMatrix_aec0815bc9c3654391bb2b3095383e6cb}} 
+\index{H\+Matrix@{H\+Matrix}!clear\+\_\+hmat\+\_\+node@{clear\+\_\+hmat\+\_\+node}}
+\index{clear\+\_\+hmat\+\_\+node@{clear\+\_\+hmat\+\_\+node}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{clear\+\_\+hmat\+\_\+node()}{clear\_hmat\_node()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Clear the current $\mathcal{H}$-\/matrix node. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set, H\+Matrix$<$ spacedim, Number $>$\+::m, H\+Matrix$<$ spacedim, Number $>$\+::n, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+F, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+P, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+R, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::\+Tind, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::clear().
+
+\mbox{\Hypertarget{classHMatrix_a525ad4d453f4f496b98cccb341c8b60b}\label{classHMatrix_a525ad4d453f4f496b98cccb341c8b60b}} 
+\index{H\+Matrix@{H\+Matrix}!coarsen\+\_\+to\+\_\+partition@{coarsen\+\_\+to\+\_\+partition}}
+\index{coarsen\+\_\+to\+\_\+partition@{coarsen\+\_\+to\+\_\+partition}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{coarsen\+\_\+to\+\_\+partition()}{coarsen\_to\_partition()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+partition (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+pointer\+\_\+type $>$ \&}]{partition,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption})}
+
+Coarsen the current $\mathcal{H}$-\/matrix via recursive call so that its leaf set complies with the given partition. Each rank-\/k matrix in the $\mathcal{H}$-\/matrix structure will be truncated to {\ttfamily fixed\+\_\+rank\+\_\+k}.
+
+Since this is a recursive member function, it does not execute leaf set rebuilding, which is an operation on the overall $\mathcal{H}$-\/matrix hierarchy.
+
+This member function implements the operator $\mathcal{T}_{P' \leftarrow P}^{\mathcal{H} \leftarrow \mathcal{H}}$ for the case $T(I \times J, P') \subset T(I \times J, P)$ in (7.\+9) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. Because there is no internal check about this, users should ensure this set inclusion relationship.
+
+
+\begin{DoxyParams}{Parameters}
+{\em partition} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+\end{DoxyParams}
+N.\+B. The function call {\ttfamily find\+\_\+pointer\+\_\+data} here involves the comparison of two block cluster nodes, which internally compares the contained two block clusters, which further compares the contained tau node and sigma node pointers. Therefore, at the moment, the inner most comparison is shallow comparison.
+
+The block cluster node associated with the current $\mathcal{H}$-\/matrix node belongs to the given {\ttfamily partition}. Then $\mathcal{T}_r^{\mathcal{R} \leftarrow \mathcal{H}}$ will be applied to this $\mathcal{H}$-\/matrix node.
+
+When the block cluster node associated with the current $\mathcal{H}$-\/matrix node does not belong to the {\ttfamily partition}, recursively call this same member function of its each child.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, find\+\_\+pointer\+\_\+data(), and H\+Matrix$<$ spacedim, Number $>$\+::submatrices.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+subtree(), and H\+Matrix$<$ spacedim, Number $>$\+::convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees().
+
+\mbox{\Hypertarget{classHMatrix_a27c7390b792e6e47ab2861616a997d99}\label{classHMatrix_a27c7390b792e6e47ab2861616a997d99}} 
+\index{H\+Matrix@{H\+Matrix}!coarsen\+\_\+to\+\_\+subtree@{coarsen\+\_\+to\+\_\+subtree}}
+\index{coarsen\+\_\+to\+\_\+subtree@{coarsen\+\_\+to\+\_\+subtree}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{coarsen\+\_\+to\+\_\+subtree()}{coarsen\_to\_subtree()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+subtree (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{subtree,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption})}
+
+Coarsen the current $\mathcal{H}$-\/matrix so that it corresponds to the partition determined by the {\ttfamily subtree}. Each rank-\/k matrix in the hierarchical matrix structure will be truncated to {\ttfamily fixed\+\_\+rank\+\_\+k}.
+
+This function calls {\ttfamily \hyperlink{classHMatrix_a525ad4d453f4f496b98cccb341c8b60b}{H\+Matrix$<$spacedim, Number$>$\+::coarsen\+\_\+to\+\_\+partition}} internally. After that, the leaf set is rebuilt.
+
+This member function implements the operator $\mathcal{T}_{P' \leftarrow P}^{\mathcal{H} \leftarrow \mathcal{H}}$ for the case $T(I \times J, P') \subset T(I \times J, P)$ in (7.\+9) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. Because there is no internal check about this, users should ensure that the given {\ttfamily subtree} is really a subtree of the block cluster tree associated with this $\mathcal{H}$-\/matrix hierarchy.
+
+
+\begin{DoxyParams}{Parameters}
+{\em subtree} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), H\+Matrix$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+partition(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+leaf\+\_\+set().
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_af6fd60090b0de7bdea52fc84ddeb22c3}\label{classHMatrix_af6fd60090b0de7bdea52fc84ddeb22c3}} 
+\index{H\+Matrix@{H\+Matrix}!convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees@{convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees}}
+\index{convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees@{convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees()}{convert\_between\_different\_block\_cluster\_trees()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees (\begin{DoxyParamCaption}\item[{\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct1,  }\item[{\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct2,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k2 = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Convert an $\mathcal{H}$-\/matrix between two different block cluster trees $T$ and $T'$, where $T := T(I \times J, P)$ and $T' := T'(I \times J, P')$. The two trees have incompatible partitions and do not contain each other. However, they are constructed on the same cluster trees $T(I)$ and $T(J)$. This enables us to make a {\bfseries shallow} comparison of two block cluster nodes based on the pointer addresses related to the comprising clusters, which is useful for verify the equality of two block cluster nodes.
+
+The procedures of this algorithm are as below. Assume the current $\mathcal{H}$-\/matrix to be converted is associated with the block cluster tree $T$.
+
+
+\begin{DoxyEnumerate}
+\item Extend $T$ to be finer than $T'$, from which we get the new block cluster tree $T''$.
+\item Refine the original $\mathcal{H}$-\/matrix with respect to the extended tree $T''$.
+\item Get and keep a record of the leaf set of the block cluster tree $T'$, which will be used for matrix coarsening in the last step.
+\item Extend $T'$ to the finer block cluster tree $T''$, from which we get $\tilde{T}'$.
+\item Build a new $\mathcal{H}$-\/matrix with respect to $\tilde{T}'$ with the actual data migrated from the leaf nodes of the original $\mathcal{H}$-\/matrix.
+\item Coarsen the new $\mathcal{H}$-\/matrix to the original partition of $T'$.
+\item Delete the hierarchy of the original $\mathcal{H}$-\/matrix.
+\item Assign the new $\mathcal{H}$-\/matrix object to the original $\mathcal{H}$-\/matrix object.
+\end{DoxyEnumerate}
+
+
+\begin{DoxyParams}{Parameters}
+{\em bct1} & The block cluster tree which is associated with the current $\mathcal{H}$-\/matrix. \\
+\hline
+{\em bct2} & The block cluster tree to which the current $\mathcal{H}$-\/matrix is to be converted. \\
+\hline
+\end{DoxyParams}
+Make a copy of the leaf set of the target block cluster tree, which will be used for the final coarsening.
+
+Extend the block cluster tree associated with the current $\mathcal{H}$-\/matrix to the coarsest tree which is finer than the target block cluster tree. If the block cluster tree has really been extended, refine the $\mathcal{H}$-\/matrix to its extended block cluster tree.
+
+Extend {\ttfamily bct2} to the finer partition obtained from {\ttfamily bct1} as above. N.\+B. Now the leaf set of {\ttfamily bct1} after refinement is the same as that of {\ttfamily bct2} after this extension.
+
+Create a new $\mathcal{H}$-\/matrix with respect to the extended {\ttfamily bct2}, which accepts the data migrated from the leaf set of the current $\mathcal{H}$-\/matrix.
+
+
+\begin{DoxyDescription}
+\item[Note ]
+\begin{DoxyItemize}
+\item This hierarchical structure of the new $\mathcal{H}$-\/matrix is built with respect to the extended block cluster tree {\ttfamily bct2}. 
+\item The shallow copy constructor cannot be used here because the new $\mathcal{H}$-\/matrix has a different block cluster tree structure from the current $\mathcal{H}$-\/matrix, even though they have the same partition after tree extension. 
+\end{DoxyItemize}
+\end{DoxyDescription}
+
+Coarsen the new $\mathcal{H}$-\/matrix to the original leaf set of {\ttfamily bct2}. Then rebuild its leaf set.
+
+
+\begin{DoxyDescription}
+\item[Note ]The structure of the block cluster tree associated with the $\mathcal{H}$-\/matrix is still same as before, which has more levels than the $\mathcal{H}$-\/matrix. Therefore, we should prune the block cluster tree to make it consistent with the $\mathcal{H}$-\/matrix. 
+\end{DoxyDescription}
+
+Move the new $\mathcal{H}$-\/matrix to the current $\mathcal{H}$-\/matrix by shallow assignment.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), H\+Matrix$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::extend\+\_\+finer\+\_\+than\+\_\+partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::extend\+\_\+to\+\_\+finer\+\_\+partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+leaf\+\_\+set(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+to\+\_\+partition(), and H\+Matrix$<$ spacedim, Number $>$\+::refine\+\_\+to\+\_\+supertree().
+
+
+
+Referenced by h\+\_\+h\+\_\+mmult\+\_\+phase2(), and main().
+
+\mbox{\Hypertarget{classHMatrix_a00bdd40f7fcf5c912c34c427df518300}\label{classHMatrix_a00bdd40f7fcf5c912c34c427df518300}} 
+\index{H\+Matrix@{H\+Matrix}!convert\+To\+Full\+Matrix@{convert\+To\+Full\+Matrix}}
+\index{convert\+To\+Full\+Matrix@{convert\+To\+Full\+Matrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{convert\+To\+Full\+Matrix()}{convertToFullMatrix()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+template$<$typename Matrix\+Type $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::convert\+To\+Full\+Matrix (\begin{DoxyParamCaption}\item[{Matrix\+Type \&}]{M }\end{DoxyParamCaption}) const}
+
+Convert an \hyperlink{classHMatrix}{H\+Matrix} to a full matrix by calling the internal recursive function.
+
+
+\begin{DoxyDescription}
+\item[Note ]This function only has the verification purpose. In reality, a large dense matrix cannot be saved as a full matrix. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em matrix} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::m, and H\+Matrix$<$ spacedim, Number $>$\+::n.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_a6f24998c7de1d0e336577be41c6281e3}\label{classHMatrix_a6f24998c7de1d0e336577be41c6281e3}} 
+\index{H\+Matrix@{H\+Matrix}!determine\+\_\+mm\+\_\+split\+\_\+mode\+\_\+from\+\_\+\+Sigma\+\_\+P@{determine\+\_\+mm\+\_\+split\+\_\+mode\+\_\+from\+\_\+\+Sigma\+\_\+P}}
+\index{determine\+\_\+mm\+\_\+split\+\_\+mode\+\_\+from\+\_\+\+Sigma\+\_\+P@{determine\+\_\+mm\+\_\+split\+\_\+mode\+\_\+from\+\_\+\+Sigma\+\_\+P}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{determine\+\_\+mm\+\_\+split\+\_\+mode\+\_\+from\+\_\+\+Sigma\+\_\+\+P()}{determine\_mm\_split\_mode\_from\_Sigma\_P()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{tree_8h_a922ca07db9633957939f697a65aff11d}{Tree\+Node\+Split\+Mode} \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::determine\+\_\+mm\+\_\+split\+\_\+mode\+\_\+from\+\_\+\+Sigma\+\_\+P (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Check the consistency of the tree node split modes which are associated with the $\mathcal{H}$-\/matrix node pairs stored in the list $\Sigma_P$ of the current $\mathcal{H}$-\/matrix node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+P.
+
+
+
+Referenced by h\+\_\+h\+\_\+mmult\+\_\+phase1\+\_\+recursion().
+
+\mbox{\Hypertarget{classHMatrix_a01360c3d9a93154f2e629b6c413aa991}\label{classHMatrix_a01360c3d9a93154f2e629b6c413aa991}} 
+\index{H\+Matrix@{H\+Matrix}!distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves@{distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves}}
+\index{distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves@{distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves()}{distribute\_all\_non\_leaf\_nodes\_sigma\_r\_and\_f\_to\_leaves()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+Only non-\/leaf $\mathcal{H}$-\/matrix nodes need to be processed.
+
+Since the current $\mathcal{H}$-\/matrix node has children, its type should be {\ttfamily Hierarchical\+Matrix\+Type}.
+
+Distribute matrices in $\Sigma_b^R$ and $\Sigma_b^F$ of the current $\mathcal{H}$-\/matrix node to its leaves, which is also a recursive function call.
+
+Distribute matrices in $\Sigma_b^R$ and $\Sigma_b^F$ of each child matrix of the current $\mathcal{H}$-\/matrix node to its leaves
+
+References H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+F, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+R, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by h\+\_\+h\+\_\+mmult\+\_\+phase2().
+
+\mbox{\Hypertarget{classHMatrix_ab0f83de878e6079330ec3c374f587a04}\label{classHMatrix_ab0f83de878e6079330ec3c374f587a04}} 
+\index{H\+Matrix@{H\+Matrix}!find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set@{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set}}
+\index{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set@{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set()}{find\_block\_cluster\_in\_leaf\_set()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$\+::iterator \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$ \&}]{block\+\_\+cluster }\end{DoxyParamCaption})}
+
+Find a block cluster in the leaf set of the current $\mathcal{H}$-\/matrix and returns the iterator of the corresponding $\mathcal{H}$-\/matrix node in the leaf set.
+
+
+\begin{DoxyParams}{Parameters}
+{\em block\+\_\+cluster} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+Perform a shallow comparison, i.\+e. compare by pointer address, of the block clusters.
+
+
+\begin{DoxyDescription}
+\item[Note ]The data held by those previously found leaf nodes of the source $\mathcal{H}$-\/matrix have already been migrated to the leaf nodes of the new $\mathcal{H}$-\/matrix, which will make the data fields in these leaf nodes being empty. Hence, we will bypass them. 
+\end{DoxyDescription}
+
+References H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim().
+
+\mbox{\Hypertarget{classHMatrix_a723cc200afe31148fcc28f0120c5ec54}\label{classHMatrix_a723cc200afe31148fcc28f0120c5ec54}} 
+\index{H\+Matrix@{H\+Matrix}!find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set@{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set}}
+\index{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set@{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set()}{find\_block\_cluster\_in\_leaf\_set()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$\+::const\+\_\+iterator \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$ \&}]{block\+\_\+cluster }\end{DoxyParamCaption}) const}
+
+Find a block cluster in the leaf set of the current $\mathcal{H}$-\/matrix and returns the iterator of the corresponding $\mathcal{H}$-\/matrix node in the leaf set (const version).
+
+
+\begin{DoxyParams}{Parameters}
+{\em block\+\_\+cluster} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+Perform a shallow comparison, i.\+e. compare by pointer address, of the block clusters.
+
+
+\begin{DoxyDescription}
+\item[Note ]The data held by those previously found leaf nodes of the source $\mathcal{H}$-\/matrix have already been migrated to the leaf nodes of the new $\mathcal{H}$-\/matrix, which will make the data fields in these leaf nodes being empty. Hence, we will bypass them. 
+\end{DoxyDescription}
+
+References H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set.
+
+\mbox{\Hypertarget{classHMatrix_a9d914c27d4e990d476a4529b2daa64cd}\label{classHMatrix_a9d914c27d4e990d476a4529b2daa64cd}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+fullmatrix@{get\+\_\+fullmatrix}}
+\index{get\+\_\+fullmatrix@{get\+\_\+fullmatrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+fullmatrix()}{get\_fullmatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+fullmatrix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the pointer to the full matrix of the current $\mathcal{H}$-\/matrix node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_aed550b5b41a64c6f1bbcde4f8f7eca91}\label{classHMatrix_aed550b5b41a64c6f1bbcde4f8f7eca91}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+fullmatrix@{get\+\_\+fullmatrix}}
+\index{get\+\_\+fullmatrix@{get\+\_\+fullmatrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+fullmatrix()}{get\_fullmatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+fullmatrix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the pointer to the full matrix of the current $\mathcal{H}$-\/matrix node (const version). \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix.
+
+\mbox{\Hypertarget{classHMatrix_ac5c9102fc04997c1ae3627185379d9bb}\label{classHMatrix_ac5c9102fc04997c1ae3627185379d9bb}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+leaf\+\_\+set@{get\+\_\+leaf\+\_\+set}}
+\index{get\+\_\+leaf\+\_\+set@{get\+\_\+leaf\+\_\+set}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+leaf\+\_\+set()}{get\_leaf\_set()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \& \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+leaf\+\_\+set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the reference to the leaf set of the current $\mathcal{H}$-\/matrix node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim().
+
+\mbox{\Hypertarget{classHMatrix_a851d7bb3632bc1d18538d4d1dd5f6393}\label{classHMatrix_a851d7bb3632bc1d18538d4d1dd5f6393}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+leaf\+\_\+set@{get\+\_\+leaf\+\_\+set}}
+\index{get\+\_\+leaf\+\_\+set@{get\+\_\+leaf\+\_\+set}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+leaf\+\_\+set()}{get\_leaf\_set()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+const std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \& \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+leaf\+\_\+set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the reference to the leaf set of the current $\mathcal{H}$-\/matrix node (const version). \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set.
+
+\mbox{\Hypertarget{classHMatrix_aabe735f7712a10ba5325ff116f8ca1c7}\label{classHMatrix_aabe735f7712a10ba5325ff116f8ca1c7}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+m@{get\+\_\+m}}
+\index{get\+\_\+m@{get\+\_\+m}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+m()}{get\_m()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+m (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the number of rows of the current $\mathcal{H}$-\/matrix node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::m.
+
+\mbox{\Hypertarget{classHMatrix_abff89130116d62ea4159bc69ca11f8d5}\label{classHMatrix_abff89130116d62ea4159bc69ca11f8d5}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+n@{get\+\_\+n}}
+\index{get\+\_\+n@{get\+\_\+n}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+n()}{get\_n()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+n (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the number of columns of the current $\mathcal{H}$-\/matrix node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::n.
+
+\mbox{\Hypertarget{classHMatrix_a0189de6e276fbd3425c4a7ef132f5e16}\label{classHMatrix_a0189de6e276fbd3425c4a7ef132f5e16}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+rkmatrix@{get\+\_\+rkmatrix}}
+\index{get\+\_\+rkmatrix@{get\+\_\+rkmatrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+rkmatrix()}{get\_rkmatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+rkmatrix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the pointer to the rank-\/k matrix of the current $\mathcal{H}$-\/matrix node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_a64c81db6357d0e00b82fd523af001ae5}\label{classHMatrix_a64c81db6357d0e00b82fd523af001ae5}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+rkmatrix@{get\+\_\+rkmatrix}}
+\index{get\+\_\+rkmatrix@{get\+\_\+rkmatrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+rkmatrix()}{get\_rkmatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ $\ast$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+rkmatrix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the pointer to the rank-\/k matrix of the current $\mathcal{H}$-\/matrix node (const version). \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix.
+
+\mbox{\Hypertarget{classHMatrix_a0572b2c0484ce618db0034e3bc7988ed}\label{classHMatrix_a0572b2c0484ce618db0034e3bc7988ed}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+submatrices@{get\+\_\+submatrices}}
+\index{get\+\_\+submatrices@{get\+\_\+submatrices}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+submatrices()}{get\_submatrices()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \& \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+submatrices (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the reference to the vector of submatrices of the current $\mathcal{H}$-\/matrix node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::submatrices.
+
+\mbox{\Hypertarget{classHMatrix_a8f8e9bc437ab86296d78950081ea34cd}\label{classHMatrix_a8f8e9bc437ab86296d78950081ea34cd}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+submatrices@{get\+\_\+submatrices}}
+\index{get\+\_\+submatrices@{get\+\_\+submatrices}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+submatrices()}{get\_submatrices()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+const std\+::vector$<$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$ $>$ \& \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+submatrices (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the reference to the vector of submatrices of the current $\mathcal{H}$-\/matrix node (const version). \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::submatrices.
+
+\mbox{\Hypertarget{classHMatrix_aadea9fa59f420d22b3b1c939f6b573cc}\label{classHMatrix_aadea9fa59f420d22b3b1c939f6b573cc}} 
+\index{H\+Matrix@{H\+Matrix}!get\+\_\+type@{get\+\_\+type}}
+\index{get\+\_\+type@{get\+\_\+type}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+type()}{get\_type()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{hmatrix_8h_ac04719e202c88f36e4533fe1d326a494}{H\+Matrix\+Type} \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::get\+\_\+type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the matrix type of the current $\mathcal{H}$-\/matrix node. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_ab315324e3ece178943f406823f792746}\label{classHMatrix_ab315324e3ece178943f406823f792746}} 
+\index{H\+Matrix@{H\+Matrix}!h\+\_\+h\+\_\+mmult\+\_\+cross\+\_\+split@{h\+\_\+h\+\_\+mmult\+\_\+cross\+\_\+split}}
+\index{h\+\_\+h\+\_\+mmult\+\_\+cross\+\_\+split@{h\+\_\+h\+\_\+mmult\+\_\+cross\+\_\+split}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{h\+\_\+h\+\_\+mmult\+\_\+cross\+\_\+split()}{h\_h\_mmult\_cross\_split()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+cross\+\_\+split (\begin{DoxyParamCaption}\item[{\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bc\+\_\+tree }\end{DoxyParamCaption})}
+
+This function implements {\ttfamily M\+M\+\_\+C} in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. Split the block cluster $b$ in $T_{\rm ind}$.
+
+Append the initialized child to the list of submatrices of {\ttfamily M}.
+
+Append the initialized child to the list of submatrices of {\ttfamily hmat}.
+
+Append the initialized child to the list of submatrices of {\ttfamily M}.
+
+Append the initialized child to the list of submatrices of {\ttfamily hmat}.
+
+Iterate over each multiplication subtask.
+
+Create $\mathcal{H}$-\/matrices corresponding to the child block clusters after splitting.
+
+$\Sigma_{b_s(1)}^P := \Sigma_{b_s(1)}^P \cup \{[\tilde{M}_1(1), \tilde{M}_2(1)], [\tilde{M}_1(2), \tilde{M}_2(3)]\}$
+
+$\Sigma_{b_s(2)}^P := \Sigma_{b_s(2)}^P \cup \{[\tilde{M}_1(1), \tilde{M}_2(2)], [\tilde{M}_1(2), \tilde{M}_2(4)]\}$
+
+$\Sigma_{b_s(3)}^P := \Sigma_{b_s(3)}^P \cup \{[\tilde{M}_1(3), \tilde{M}_2(1)], [\tilde{M}_1(4), \tilde{M}_2(3)]\}$
+
+$\Sigma_{b_s(4)}^P := \Sigma_{b_s(4)}^P \cup \{[\tilde{M}_1(3), \tilde{M}_2(2)], [\tilde{M}_1(4), \tilde{M}_2(4)]\}$
+
+Remove the current $\mathcal{H}$-\/matrix pair from the list {\ttfamily Sigma\+\_\+P} of the current matrix node.
+
+Remove the current $\mathcal{H}$-\/matrix pair from the list {\ttfamily Sigma\+\_\+P} of the current matrix node.
+
+Update the matrix type of the current $\mathcal{H}$-\/matrix.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, and split\+\_\+block\+\_\+cluster\+\_\+node().
+
+\mbox{\Hypertarget{classHMatrix_a38c88893c6ca784d4e56653d8b0e3e67}\label{classHMatrix_a38c88893c6ca784d4e56653d8b0e3e67}} 
+\index{H\+Matrix@{H\+Matrix}!h\+\_\+h\+\_\+mmult\+\_\+horizontal\+\_\+split@{h\+\_\+h\+\_\+mmult\+\_\+horizontal\+\_\+split}}
+\index{h\+\_\+h\+\_\+mmult\+\_\+horizontal\+\_\+split@{h\+\_\+h\+\_\+mmult\+\_\+horizontal\+\_\+split}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{h\+\_\+h\+\_\+mmult\+\_\+horizontal\+\_\+split()}{h\_h\_mmult\_horizontal\_split()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+horizontal\+\_\+split (\begin{DoxyParamCaption}\item[{\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bc\+\_\+tree }\end{DoxyParamCaption})}
+
+This function implements {\ttfamily M\+M\+\_\+H} in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. Split the block cluster $b$ in $T_{\rm ind}$.
+
+Append the initialized child to the list of submatrices of {\ttfamily M}.
+
+Append the initialized child to the list of submatrices of {\ttfamily hmat}.
+
+Iterate over each multiplication subtask.
+
+Create $\mathcal{H}$-\/matrices corresponding to the child block clusters after splitting.
+
+Remove the current $\mathcal{H}$-\/matrix pair from the list {\ttfamily Sigma\+\_\+P} of the current matrix node.
+
+Remove the current $\mathcal{H}$-\/matrix pair from the list {\ttfamily Sigma\+\_\+P} of the current matrix node.
+
+Update the matrix type of the current $\mathcal{H}$-\/matrix.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, and split\+\_\+block\+\_\+cluster\+\_\+node().
+
+\mbox{\Hypertarget{classHMatrix_a168b6eea2e5b27528497850bf5ee2bbe}\label{classHMatrix_a168b6eea2e5b27528497850bf5ee2bbe}} 
+\index{H\+Matrix@{H\+Matrix}!h\+\_\+h\+\_\+mmult\+\_\+reduction@{h\+\_\+h\+\_\+mmult\+\_\+reduction}}
+\index{h\+\_\+h\+\_\+mmult\+\_\+reduction@{h\+\_\+h\+\_\+mmult\+\_\+reduction}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{h\+\_\+h\+\_\+mmult\+\_\+reduction()}{h\_h\_mmult\_reduction()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+reduction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Perform $\mathcal{H}$-\/matrix MM multiplication reduction. This is (7.\+21) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. When one of the operands is either full matrix or rank-\/k matrix, perform direct multiplication.
+
+Migrate the current H-\/matrix node pair to the list {\ttfamily Sigma\+\_\+\+P\+\_\+cannot\+\_\+reduced}.
+
+Remove the current H-\/matrix node pair from the original list in {\ttfamily M}.
+
+Merge the elements in {\ttfamily Sigma\+\_\+\+P\+\_\+cannot\+\_\+reduced} back to {\ttfamily Sigma\+\_\+P} in {\ttfamily M} for further processing.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, Full\+Matrix\+Type, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+P, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by h\+\_\+h\+\_\+mmult\+\_\+phase1\+\_\+recursion().
+
+\mbox{\Hypertarget{classHMatrix_a253c23d09e89a9a37a7d808374b5ae4e}\label{classHMatrix_a253c23d09e89a9a37a7d808374b5ae4e}} 
+\index{H\+Matrix@{H\+Matrix}!h\+\_\+h\+\_\+mmult\+\_\+vertical\+\_\+split@{h\+\_\+h\+\_\+mmult\+\_\+vertical\+\_\+split}}
+\index{h\+\_\+h\+\_\+mmult\+\_\+vertical\+\_\+split@{h\+\_\+h\+\_\+mmult\+\_\+vertical\+\_\+split}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{h\+\_\+h\+\_\+mmult\+\_\+vertical\+\_\+split()}{h\_h\_mmult\_vertical\_split()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+vertical\+\_\+split (\begin{DoxyParamCaption}\item[{\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bc\+\_\+tree }\end{DoxyParamCaption})}
+
+This function implements {\ttfamily M\+M\+\_\+V} in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. Split the block cluster $b$ in $T_{\rm ind}$.
+
+Append the initialized child to the list of submatrices of {\ttfamily M}.
+
+Append the initialized child to the list of submatrices of {\ttfamily hmat}.
+
+Iterate over each multiplication subtask.
+
+Create $\mathcal{H}$-\/matrices corresponding to the child block clusters after splitting.
+
+Remove the current $\mathcal{H}$-\/matrix pair from the list {\ttfamily Sigma\+\_\+P} of the current matrix node.
+
+Remove the current $\mathcal{H}$-\/matrix pair from the list {\ttfamily Sigma\+\_\+P} of the current matrix node.
+
+Update the matrix type of the current $\mathcal{H}$-\/matrix.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, and split\+\_\+block\+\_\+cluster\+\_\+node().
+
+\mbox{\Hypertarget{classHMatrix_ab100d1469f662efdbf894a0345b702b8}\label{classHMatrix_ab100d1469f662efdbf894a0345b702b8}} 
+\index{H\+Matrix@{H\+Matrix}!invert\+\_\+by\+\_\+gauss\+\_\+elim@{invert\+\_\+by\+\_\+gauss\+\_\+elim}}
+\index{invert\+\_\+by\+\_\+gauss\+\_\+elim@{invert\+\_\+by\+\_\+gauss\+\_\+elim}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{invert\+\_\+by\+\_\+gauss\+\_\+elim()}{invert\_by\_gauss\_elim()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim (\begin{DoxyParamCaption}\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{M\+\_\+inv,  }\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{M\+\_\+root,  }\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{M\+\_\+inv\+\_\+root,  }\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{M\+\_\+root\+\_\+bct,  }\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{M\+\_\+inv\+\_\+root\+\_\+bct,  }\item[{const \hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption})}
+
+Calculate the inverse of the $\mathcal{H}$-\/matrix node via Gauss elimination.
+
+
+\begin{DoxyParams}{Parameters}
+{\em M\+\_\+inv} & \\
+\hline
+{\em M\+\_\+root} & The $\mathcal{H}$-\/matrix node from which this recursive function is called for the first time. \\
+\hline
+{\em M\+\_\+inv\+\_\+root} & The $\mathcal{H}$-\/matrix node storing the inverse matrix of {\ttfamily M\+\_\+root}. \\
+\hline
+{\em M\+\_\+root\+\_\+bct} & The block cluster tree associated with {\ttfamily M\+\_\+root}. \\
+\hline
+{\em M\+\_\+inv\+\_\+root\+\_\+bct} & The block cluster tree associated with {\ttfamily M\+\_\+inv\+\_\+root}. \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+\end{DoxyParams}
+If the current matrix block to be handled has a same $\tau$ cluster and $\sigma$ cluster and belongs to the leaf set of {\ttfamily M\+\_\+root}, directly calculate its inverse as full matrix.
+
+Number of matrix block in a row.
+
+Stage 1\+: eliminate the lower triangular part of the matrix.
+
+Calculate the inverse of the diagonal block $M \vert_{\tau[l]\times\tau[l]}$. The formula $l + l \cdot k$ calculates the 1D index of the diagonal block in {\ttfamily submatrices}. This is because the submatrices of the current $\mathcal{H}$-\/matrix node is stored in the following order\+:
+
+{\ttfamily  submatrices = \{tau\mbox{[}0\mbox{]}$\ast$sigma\mbox{[}0\mbox{]}, tau\mbox{[}0\mbox{]}$\ast$sigma\mbox{[}1\mbox{]}, tau\mbox{[}1\mbox{]}$\ast$sigma\mbox{[}0\mbox{]}, tau\mbox{[}1\mbox{]}$\ast$sigma\mbox{[}1\mbox{]}\} }
+
+Since $\tau$ is the same as $\sigma$, we have
+
+{\ttfamily  submatrices = \{tau\mbox{[}0\mbox{]}$\ast$tau\mbox{[}0\mbox{]}, tau\mbox{[}0\mbox{]}$\ast$tau\mbox{[}1\mbox{]}, tau\mbox{[}1\mbox{]}$\ast$tau\mbox{[}0\mbox{]}, tau\mbox{[}1\mbox{]}$\ast$tau\mbox{[}1\mbox{]}\} }
+
+Hence, the index of {\ttfamily tau}\mbox{[}0\mbox{]}$\ast$tau\mbox{[}0\mbox{]} in {\ttfamily submatrices} is 0 and the index of {\ttfamily tau}\mbox{[}1\mbox{]}$\ast$tau\mbox{[}1\mbox{]} in {\ttfamily submatrices} is 3. The former index is calculated as {\ttfamily 0 + 0 $\ast$ 2 = 0}, while the latter index is calculated as {\ttfamily 1 + 1 $\ast$ 2 = 3}.
+
+Create subtrees used for matrix multiplication.
+
+Stage 2\+: eliminate the upper triangular part of the matrix.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, H\+Matrix$<$ spacedim, Number $>$\+::find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set(), H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+eta(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+leaf\+\_\+set(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+n\+\_\+min(), H\+Matrix$<$ spacedim, Number $>$\+::m, H\+Matrix$<$ spacedim, Number $>$\+::n, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+\mbox{\Hypertarget{classHMatrix_af40d53aabc8bec86fa543638d48ba64e}\label{classHMatrix_af40d53aabc8bec86fa543638d48ba64e}} 
+\index{H\+Matrix@{H\+Matrix}!mmult@{mmult}}
+\index{mmult@{mmult}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{mmult()}{mmult()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::mmult (\begin{DoxyParamCaption}\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{C,  }\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{B,  }\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct\+\_\+a,  }\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct\+\_\+b,  }\item[{\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct\+\_\+c,  }\item[{const unsigned int}]{fixed\+\_\+rank = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Multiplication of two $\mathcal{H}$-\/matrices $C = A \cdot B$. 
+\begin{DoxyParams}{Parameters}
+{\em C} & \\
+\hline
+{\em B} & \\
+\hline
+{\em bct\+\_\+a} & \\
+\hline
+{\em bct\+\_\+b} & \\
+\hline
+{\em bct\+\_\+c} & \\
+\hline
+{\em fixed\+\_\+rank} & \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyDescription}
+\item[Work flow ]
+
+
+\begin{DoxyItemize}
+\item Release the resource of the result matrix.
+
+
+\item Initialize the induced block cluster tree $T_{\rm ind}$ for the result matrix with a single root node.
+
+
+\item Associate with the root node of the induced block cluster tree $T_{\rm ind}$.
+
+
+\item Perform recursive multiplication while constructing the induced block cluster tree $T_{\rm ind}$.
+
+
+\item After the construction of the induced block cluster tree $T_{\rm ind}$, rebuild its leaf set as well as near field and far field sets, and update the tree depth and maximum level.
+
+D\+E\+B\+UG\+: Print the structure of the $T_{\rm ind}$ block cluster tree.
+
+
+\item Build the leaf set of the result matrix.
+
+D\+E\+B\+UG\+: Print the structure of the $T_{\rm ind}$ block cluster tree.
+
+
+\end{DoxyItemize}
+\end{DoxyDescription}
+
+References H\+Matrix$<$ spacedim, Number $>$\+::add(), H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+reference(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+n\+\_\+min(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root(), H\+Matrix$<$ spacedim, Number $>$\+::release(), and H\+Matrix$<$ spacedim, Number $>$\+::\+Tind.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_a2c72ede65323af5b57a6b16f5774de50}\label{classHMatrix_a2c72ede65323af5b57a6b16f5774de50}} 
+\index{H\+Matrix@{H\+Matrix}!operator=@{operator=}}
+\index{operator=@{operator=}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \& \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::operator= (\begin{DoxyParamCaption}\item[{\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&\&}]{H }\end{DoxyParamCaption})}
+
+Assignment via shallow copy.
+
+
+\begin{DoxyParams}{Parameters}
+{\em H} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::release().
+
+\mbox{\Hypertarget{classHMatrix_a83958971f40409b3b2a192b71eae1513}\label{classHMatrix_a83958971f40409b3b2a192b71eae1513}} 
+\index{H\+Matrix@{H\+Matrix}!operator=@{operator=}}
+\index{operator=@{operator=}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \& \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::operator= (\begin{DoxyParamCaption}\item[{const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ \&}]{H }\end{DoxyParamCaption})}
+
+Assignment via deep copy.
+
+
+\begin{DoxyParams}{Parameters}
+{\em H} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), and H\+Matrix$<$ spacedim, Number $>$\+::release().
+
+\mbox{\Hypertarget{classHMatrix_a7e849f7e8f35e3ebdfcb2dbb7ad4ad01}\label{classHMatrix_a7e849f7e8f35e3ebdfcb2dbb7ad4ad01}} 
+\index{H\+Matrix@{H\+Matrix}!print\+\_\+formatted@{print\+\_\+formatted}}
+\index{print\+\_\+formatted@{print\+\_\+formatted}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{print\+\_\+formatted()}{print\_formatted()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::print\+\_\+formatted (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out,  }\item[{const unsigned int}]{precision = {\ttfamily 3},  }\item[{const bool}]{scientific = {\ttfamily true},  }\item[{const unsigned int}]{width = {\ttfamily 0},  }\item[{const char $\ast$}]{zero\+\_\+string = {\ttfamily \char`\"{}~\char`\"{}},  }\item[{const double}]{denominator = {\ttfamily 1.},  }\item[{const double}]{threshold = {\ttfamily 0.} }\end{DoxyParamCaption}) const}
+
+Print the \hyperlink{classHMatrix}{H\+Matrix}. 
+\begin{DoxyParams}{Parameters}
+{\em out} & \\
+\hline
+{\em precision} & \\
+\hline
+{\em scientific} & \\
+\hline
+{\em width} & \\
+\hline
+{\em zero\+\_\+string} & \\
+\hline
+{\em denominator} & \\
+\hline
+{\em threshold} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_ad8f87883cf49080706233441c0e09171}\label{classHMatrix_ad8f87883cf49080706233441c0e09171}} 
+\index{H\+Matrix@{H\+Matrix}!print\+\_\+matrix\+\_\+info@{print\+\_\+matrix\+\_\+info}}
+\index{print\+\_\+matrix\+\_\+info@{print\+\_\+matrix\+\_\+info}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{print\+\_\+matrix\+\_\+info()}{print\_matrix\_info()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::print\+\_\+matrix\+\_\+info (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out }\end{DoxyParamCaption}) const}
+
+Print the size of $\Sigma_b^P$, $\Sigma_b^R$ and $\Sigma_b^F$.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+F, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+P, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+R, and H\+Matrix$<$ spacedim, Number $>$\+::submatrices.
+
+\mbox{\Hypertarget{classHMatrix_ad2b353962226c78910d6ddb6b5b8e460}\label{classHMatrix_ad2b353962226c78910d6ddb6b5b8e460}} 
+\index{H\+Matrix@{H\+Matrix}!refine\+\_\+to\+\_\+supertree@{refine\+\_\+to\+\_\+supertree}}
+\index{refine\+\_\+to\+\_\+supertree@{refine\+\_\+to\+\_\+supertree}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{refine\+\_\+to\+\_\+supertree()}{refine\_to\_supertree()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::refine\+\_\+to\+\_\+supertree (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Refine the current $\mathcal{H}$-\/matrix, whose associated block cluster tree has been extended. The operation has no accuracy loss.
+
+This member function implements the operator $\mathcal{T}_{P' \leftarrow P}^{\mathcal{H} \leftarrow \mathcal{H}}$ for the case $T(I \times J, P') \supset T(I \times J, P)$ in (7.\+9) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. Because there is no internal check about this, users should ensure that the original block cluster tree associated with this $\mathcal{H}$-\/matrix hierarchy has really been extended. 
+\begin{DoxyDescription}
+\item[Work flow ]
+
+Iterate over the leaf set of the $\mathcal{H}$-\/matrix hierarchy.
+
+Refine from the current $\mathcal{H}$-\/matrix leaf node.
+
+After the refinement operation, we check the number of child matrices of the current $\mathcal{H}$-\/matrix leaf node.
+
+If the current $\mathcal{H}$-\/matrix leaf node has a non-\/empty collection of submatrices, it has really been refined. Then delete its originally associated matrix data, either a full matrix or a rank-\/k matrix, and modify its matrix type as {\ttfamily Hierarchical\+Matrix\+Type}.
+
+After the refinement operation for all the leaf nodes of the original $\mathcal{H}$-\/matrix hierarchy finishes, rebuild the leaf set of the new $\mathcal{H}$-\/matrix hierarchy.
+
+
+\end{DoxyDescription}
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set, and Rk\+Matrix\+Type.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees(), and main().
+
+\mbox{\Hypertarget{classHMatrix_a83f804163e1695cfb952ddb6b0df2503}\label{classHMatrix_a83f804163e1695cfb952ddb6b0df2503}} 
+\index{H\+Matrix@{H\+Matrix}!reinit@{reinit}}
+\index{reinit@{reinit}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{reinit()}{reinit()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::reinit (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Reinitialize the hierarchical structure without data from the root node of a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}. 
+\begin{DoxyParams}{Parameters}
+{\em bct} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root(), and H\+Matrix$<$ spacedim, Number $>$\+::release().
+
+\mbox{\Hypertarget{classHMatrix_a41d20c1839f3d7a756107b8e4defea0b}\label{classHMatrix_a41d20c1839f3d7a756107b8e4defea0b}} 
+\index{H\+Matrix@{H\+Matrix}!reinit@{reinit}}
+\index{reinit@{reinit}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{reinit()}{reinit()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::reinit (\begin{DoxyParamCaption}\item[{typename \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+const\+\_\+pointer\+\_\+type}]{bc\+\_\+node,  }\item[{const unsigned int}]{fixed\+\_\+rank\+\_\+k = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Reinitialize the hierarchical structure without data from a \hyperlink{classTreeNode}{Tree\+Node} in a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}. 
+\begin{DoxyParams}{Parameters}
+{\em bc\+\_\+node} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+\end{DoxyParams}
+
+
+References H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), and H\+Matrix$<$ spacedim, Number $>$\+::release().
+
+\mbox{\Hypertarget{classHMatrix_a812e8276888b2ad866edf7ce9b286839}\label{classHMatrix_a812e8276888b2ad866edf7ce9b286839}} 
+\index{H\+Matrix@{H\+Matrix}!release@{release}}
+\index{release@{release}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{release()}{release()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::release (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+T\+O\+DO\+: Construct from a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} and a Sauter quadrature object/functor. Release the memory and status of the $\mathcal{H}$-\/matrix hierarchy. The deletion of {\ttfamily submatrix} will call the destructor of this sub-\/\+H\+Matrix, which will further recursively call the destructor of the submatrices of this sub-\/\+H\+Matrix. Hence, this destructor is intrinsically recursive.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set, H\+Matrix$<$ spacedim, Number $>$\+::m, H\+Matrix$<$ spacedim, Number $>$\+::n, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+F, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+P, H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+R, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::\+Tind, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::mmult(), H\+Matrix$<$ spacedim, Number $>$\+::operator=(), H\+Matrix$<$ spacedim, Number $>$\+::reinit(), and H\+Matrix$<$ spacedim, Number $>$\+::$\sim$\+H\+Matrix().
+
+\mbox{\Hypertarget{classHMatrix_a9e023f39b1f8916117a63557895a91b4}\label{classHMatrix_a9e023f39b1f8916117a63557895a91b4}} 
+\index{H\+Matrix@{H\+Matrix}!remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list@{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list}}
+\index{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list@{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list()}{remove\_hmat\_pair\_from\_mm\_product\_list()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list (\begin{DoxyParamCaption}\item[{const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$}]{M1,  }\item[{const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$}]{M2 }\end{DoxyParamCaption})}
+
+Remove a pair of $\mathcal{H}$-\/matrix nodes from the list of matrix-\/matrix product subtasks to be performed, i.\+e. from the list {\ttfamily \hyperlink{classHMatrix_a3d96d0252ef8c873ae06cf87874acaf3}{H\+Matrix\+::\+Sigma\+\_\+P}}. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+P.
+
+
+
+Referenced by f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), and rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult().
+
+\mbox{\Hypertarget{classHMatrix_ae0ab9b3be4ea0ef959da40e81313b2e3}\label{classHMatrix_ae0ab9b3be4ea0ef959da40e81313b2e3}} 
+\index{H\+Matrix@{H\+Matrix}!remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list@{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list}}
+\index{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list@{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list()}{remove\_hmat\_pair\_from\_mm\_product\_list()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list (\begin{DoxyParamCaption}\item[{const std\+::pair$<$ const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$ $\ast$$>$ \&}]{hmat\+\_\+pair }\end{DoxyParamCaption})}
+
+Remove a pair of $\mathcal{H}$-\/matrix nodes from the list of matrix-\/matrix product subtasks to be performed, i.\+e. from the list {\ttfamily \hyperlink{classHMatrix_a3d96d0252ef8c873ae06cf87874acaf3}{H\+Matrix\+::\+Sigma\+\_\+P}}. 
+
+References H\+Matrix$<$ spacedim, Number $>$\+::\+Sigma\+\_\+P.
+
+\mbox{\Hypertarget{classHMatrix_a64be687cacd167efc12b892aa154dcd3}\label{classHMatrix_a64be687cacd167efc12b892aa154dcd3}} 
+\index{H\+Matrix@{H\+Matrix}!truncate\+\_\+to\+\_\+rank@{truncate\+\_\+to\+\_\+rank}}
+\index{truncate\+\_\+to\+\_\+rank@{truncate\+\_\+to\+\_\+rank}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{truncate\+\_\+to\+\_\+rank()}{truncate\_to\_rank()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::truncate\+\_\+to\+\_\+rank (\begin{DoxyParamCaption}\item[{\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type}}]{new\+\_\+rank }\end{DoxyParamCaption})}
+
+Truncate all rank-\/k matrices in the leaf set of the $\mathcal{H}$-\/matrix to rank-\/k matrices with the given {\ttfamily new\+\_\+rank}, while the full matrices in the leaf set, i.\+e. those near-\/field matrices, are kept intact.
+
+
+\begin{DoxyDescription}
+\item[Note ]This method implements the operator $\mathcal{T}_{r \leftarrow s}^{\mathcal{H}}$ in (7.\+5) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em new\+\_\+rank} & \\
+\hline
+\end{DoxyParams}
+Do nothing.
+
+Truncate the \hyperlink{classRkMatrix}{Rk\+Matrix} in-\/place.
+
+References Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_a72e5255eb5ce46136d0e2b195c82f016}\label{classHMatrix_a72e5255eb5ce46136d0e2b195c82f016}} 
+\index{H\+Matrix@{H\+Matrix}!Tvmult@{Tvmult}}
+\index{Tvmult@{Tvmult}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{Tvmult()}{Tvmult()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::Tvmult (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{y,  }\item[{const Vector$<$ Number $>$ \&}]{x }\end{DoxyParamCaption}) const}
+
+Calculate matrix-\/vector multiplication as $y = y + M^T \cdot x$, i.\+e. the matrix $M$ is transposed.
+
+Because the matrix $M$ is transposed, the roles for {\ttfamily row\+\_\+indices} and {\ttfamily col\+\_\+indices} should be swapped. Also refer to \hyperlink{classHMatrix_aa11b5761aba86606effd14b4bdf31912}{H\+Matrix\+::vmult}. 
+\begin{DoxyParams}{Parameters}
+{\em y} & \\
+\hline
+{\em x} & \\
+\hline
+\end{DoxyParams}
+Restrict vector x to the current matrix block.
+
+Merge back the result vector {\ttfamily local\+\_\+y} to {\ttfamily y}.
+
+Restrict vector x to the current matrix block.
+
+Merge back the result vector {\ttfamily local\+\_\+y} to {\ttfamily y}.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::m, H\+Matrix$<$ spacedim, Number $>$\+::n, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+\mbox{\Hypertarget{classHMatrix_a166893f3f371d4542cb57aaa33e533d1}\label{classHMatrix_a166893f3f371d4542cb57aaa33e533d1}} 
+\index{H\+Matrix@{H\+Matrix}!Tvmult\+\_\+local\+\_\+vector@{Tvmult\+\_\+local\+\_\+vector}}
+\index{Tvmult\+\_\+local\+\_\+vector@{Tvmult\+\_\+local\+\_\+vector}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{Tvmult\+\_\+local\+\_\+vector()}{Tvmult\_local\_vector()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::Tvmult\+\_\+local\+\_\+vector (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{y,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{y\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const Vector$<$ Number $>$ \&}]{x,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{x\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map }\end{DoxyParamCaption}) const}
+
+Calculate matrix-\/vector multiplication as $y = y + M^T \cdot x$, i.\+e. the matrix $M$ is transposed.
+
+Because the matrix $M$ is transposed, the roles for {\ttfamily row\+\_\+indices} and {\ttfamily col\+\_\+indices} should be swapped.
+
+
+\begin{DoxyDescription}
+\item[Note ]The input vectors {\ttfamily x} and {\ttfamily y} are to be accessed via local indices with the assistance of {\ttfamily row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map} and {\ttfamily col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}. 
+\end{DoxyDescription}
+
+Also refer to \hyperlink{classHMatrix_a2afddab534366617b6be203b3c5238a6}{H\+Matrix\+::vmult\+\_\+local\+\_\+vector}. 
+\begin{DoxyParams}{Parameters}
+{\em y} & \\
+\hline
+{\em x} & \\
+\hline
+\end{DoxyParams}
+Restrict vector x to the current matrix block.
+
+Merge back the result vector {\ttfamily local\+\_\+y} to {\ttfamily y}.
+
+Restrict vector x to the current matrix block.
+
+Merge back the result vector {\ttfamily local\+\_\+y} to {\ttfamily y}.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::m, H\+Matrix$<$ spacedim, Number $>$\+::n, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+
+
+Referenced by f\+\_\+h\+\_\+mmult(), and rk\+\_\+h\+\_\+mmult().
+
+\mbox{\Hypertarget{classHMatrix_aa11b5761aba86606effd14b4bdf31912}\label{classHMatrix_aa11b5761aba86606effd14b4bdf31912}} 
+\index{H\+Matrix@{H\+Matrix}!vmult@{vmult}}
+\index{vmult@{vmult}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{vmult()}{vmult()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::vmult (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{y,  }\item[{const Vector$<$ Number $>$ \&}]{x }\end{DoxyParamCaption}) const}
+
+Calculate matrix-\/vector multiplication as $y = y + M \cdot x$.
+
+
+\begin{DoxyDescription}
+\item[Note ]1. The recursive algorithm for $\mathcal{H}$-\/matrix-\/vector multiplication needs to collect the results from different components in the leaf set and corresponding vector block in $x$. More importantly, there will be a series of such results contributing to a same block in the result vector $y$. Therefore, if the interface of this function is designed with the parameter {\ttfamily add} as that in the {\ttfamily vmult} function of {\ttfamily L\+A\+P\+A\+C\+K\+Full\+Matrix} in deal.\+ii, in all recursive calls of {\ttfamily vmult} except the first one, this {\ttfamily add} flag should be set to {\ttfamily true}, irrespective of the original flag value passed into the first call of {\ttfamily vmult}. Hence, we do not include the {\ttfamily add} flag in the {\ttfamily vmult} function.
+\begin{DoxyEnumerate}
+\item The input vectors {\ttfamily x} and {\ttfamily y} are to be accessed via global DoF indices. 
+\end{DoxyEnumerate}
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em y} & \\
+\hline
+{\em x} & \\
+\hline
+\end{DoxyParams}
+Restrict vector x to the current matrix block.
+
+Merge back the result vector {\ttfamily local\+\_\+y} to {\ttfamily y}.
+
+Restrict vector x to the current matrix block.
+
+Merge back the result vector {\ttfamily local\+\_\+y} to {\ttfamily y}.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::m, H\+Matrix$<$ spacedim, Number $>$\+::n, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+\mbox{\Hypertarget{classHMatrix_a2afddab534366617b6be203b3c5238a6}\label{classHMatrix_a2afddab534366617b6be203b3c5238a6}} 
+\index{H\+Matrix@{H\+Matrix}!vmult\+\_\+local\+\_\+vector@{vmult\+\_\+local\+\_\+vector}}
+\index{vmult\+\_\+local\+\_\+vector@{vmult\+\_\+local\+\_\+vector}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{vmult\+\_\+local\+\_\+vector()}{vmult\_local\_vector()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{y,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{y\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const Vector$<$ Number $>$ \&}]{x,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{x\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map }\end{DoxyParamCaption}) const}
+
+Calculate matrix-\/vector multiplication as $y = y + M \cdot x$.
+
+
+\begin{DoxyDescription}
+\item[Note ]1. The recursive algorithm for $\mathcal{H}$-\/matrix-\/vector multiplication needs to collect the results from different components in the leaf set and corresponding vector block in $x$. More importantly, there will be a series of such results contributing to a same block in the result vector $y$. Therefore, if the interface of this function is designed with the parameter {\ttfamily add} as that in the {\ttfamily vmult} function of {\ttfamily L\+A\+P\+A\+C\+K\+Full\+Matrix} in deal.\+ii, in all recursive calls of {\ttfamily vmult} except the first one, this {\ttfamily add} flag should be set to {\ttfamily true}, irrespective of the original flag value passed into the first call of {\ttfamily vmult}. Hence, we do not include the {\ttfamily add} flag in the {\ttfamily vmult} function.
+\begin{DoxyEnumerate}
+\item The input vectors {\ttfamily x} and {\ttfamily y} are to be accessed via local indices with the assistance of {\ttfamily row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map} and {\ttfamily col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}. 
+\end{DoxyEnumerate}
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em y} & \\
+\hline
+{\em x} & \\
+\hline
+\end{DoxyParams}
+Restrict vector x to the current matrix block.
+
+Merge back the result vector {\ttfamily local\+\_\+y} to {\ttfamily y}.
+
+Restrict vector x to the current matrix block.
+
+Merge back the result vector {\ttfamily local\+\_\+y} to {\ttfamily y}.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::col\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::fullmatrix, Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::m, H\+Matrix$<$ spacedim, Number $>$\+::n, H\+Matrix$<$ spacedim, Number $>$\+::rkmatrix, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::row\+\_\+indices, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, and Undefined\+Matrix\+Type.
+
+
+
+Referenced by h\+\_\+f\+\_\+mmult(), and h\+\_\+rk\+\_\+mmult().
+
+\mbox{\Hypertarget{classHMatrix_a42f958a13c56d64564d59487e67bc8a2}\label{classHMatrix_a42f958a13c56d64564d59487e67bc8a2}} 
+\index{H\+Matrix@{H\+Matrix}!write\+\_\+fullmatrix\+\_\+leaf\+\_\+node@{write\+\_\+fullmatrix\+\_\+leaf\+\_\+node}}
+\index{write\+\_\+fullmatrix\+\_\+leaf\+\_\+node@{write\+\_\+fullmatrix\+\_\+leaf\+\_\+node}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{write\+\_\+fullmatrix\+\_\+leaf\+\_\+node()}{write\_fullmatrix\_leaf\_node()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::write\+\_\+fullmatrix\+\_\+leaf\+\_\+node (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out,  }\item[{const Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption}) const}
+
+Write formatted full matrix leaf node to the output stream.
+
+The leaf node is written in the following format\+:
+
+\begin{quote}
+
+
+\end{quote}
+\mbox{[}list-\/of-\/indices-\/in-\/cluster-\/tau\mbox{]},\mbox{[}list-\/of-\/indices-\/in-\/cluster-\/sigma\mbox{]},is\+\_\+near\+\_\+field,rank
+
+For example,
+
+\begin{quote}
+\mbox{[}1 2 3 ...\mbox{]},\mbox{[}7 8 9 ...\mbox{]},1,1 \end{quote}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em out} & \\
+\hline
+{\em singular\+\_\+value\+\_\+threshold} & \\
+\hline
+\end{DoxyParams}
+Print index set of cluster $\tau$.
+
+Print index set of cluster $\sigma$.
+
+Print the {\ttfamily is\+\_\+near\+\_\+field} flag.
+
+Make a copy of the matrix block and calculate its rank using S\+VD.
+
+Print the {\ttfamily rank} flag.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, Full\+Matrix\+Type, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set().
+
+\mbox{\Hypertarget{classHMatrix_aaf0ae0960a40ad78a941aee823e80315}\label{classHMatrix_aaf0ae0960a40ad78a941aee823e80315}} 
+\index{H\+Matrix@{H\+Matrix}!write\+\_\+leaf\+\_\+set@{write\+\_\+leaf\+\_\+set}}
+\index{write\+\_\+leaf\+\_\+set@{write\+\_\+leaf\+\_\+set}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{write\+\_\+leaf\+\_\+set()}{write\_leaf\_set()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out,  }\item[{const Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption}) const}
+
+Write formatted leaf set to the output stream as well as the rank of each matrix block by recursion.
+
+Each leaf node is written in the following format\+:
+
+\begin{quote}
+
+
+\end{quote}
+\mbox{[}list-\/of-\/indices-\/in-\/cluster-\/tau\mbox{]},\mbox{[}list-\/of-\/indices-\/in-\/cluster-\/sigma\mbox{]},is\+\_\+near\+\_\+field,rank
+
+For example,
+
+\begin{quote}
+\mbox{[}1 2 3 ...\mbox{]},\mbox{[}7 8 9 ...\mbox{]},1,1 \end{quote}
+
+\begin{DoxyParams}{Parameters}
+{\em out} & \\
+\hline
+{\em singular\+\_\+value\+\_\+threshold} & \\
+\hline
+\end{DoxyParams}
+
+
+References Full\+Matrix\+Type, Hierarchical\+Matrix\+Type, Rk\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::submatrices, H\+Matrix$<$ spacedim, Number $>$\+::type, H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+fullmatrix\+\_\+leaf\+\_\+node(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+rkmatrix\+\_\+leaf\+\_\+node().
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_aac1e1ddbfeb133520dcd50c0174aab8d}\label{classHMatrix_aac1e1ddbfeb133520dcd50c0174aab8d}} 
+\index{H\+Matrix@{H\+Matrix}!write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration@{write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration}}
+\index{write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration@{write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration()}{write\_leaf\_set\_by\_iteration()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out,  }\item[{const Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption}) const}
+
+Write formatted leaf set to the output stream as well as the rank of each matrix block by iteration.
+
+Each leaf node is written in the following format\+:
+
+\begin{quote}
+
+
+\end{quote}
+\mbox{[}list-\/of-\/indices-\/in-\/cluster-\/tau\mbox{]},\mbox{[}list-\/of-\/indices-\/in-\/cluster-\/sigma\mbox{]},is\+\_\+near\+\_\+field,rank
+
+For example,
+
+\begin{quote}
+\mbox{[}1 2 3 ...\mbox{]},\mbox{[}7 8 9 ...\mbox{]},1,1 \end{quote}
+
+\begin{DoxyParams}{Parameters}
+{\em out} & \\
+\hline
+{\em singular\+\_\+value\+\_\+threshold} & \\
+\hline
+\end{DoxyParams}
+
+
+References Full\+Matrix\+Type, H\+Matrix$<$ spacedim, Number $>$\+::leaf\+\_\+set, Rk\+Matrix\+Type, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classHMatrix_ac2c8ccd5763d3952505741c657b6468c}\label{classHMatrix_ac2c8ccd5763d3952505741c657b6468c}} 
+\index{H\+Matrix@{H\+Matrix}!write\+\_\+rkmatrix\+\_\+leaf\+\_\+node@{write\+\_\+rkmatrix\+\_\+leaf\+\_\+node}}
+\index{write\+\_\+rkmatrix\+\_\+leaf\+\_\+node@{write\+\_\+rkmatrix\+\_\+leaf\+\_\+node}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{write\+\_\+rkmatrix\+\_\+leaf\+\_\+node()}{write\_rkmatrix\_leaf\_node()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::write\+\_\+rkmatrix\+\_\+leaf\+\_\+node (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out }\end{DoxyParamCaption}) const}
+
+Write formatted rank-\/k matrix leaf node to the output stream.
+
+The leaf node is written in the following format\+:
+
+\begin{quote}
+
+
+\end{quote}
+\mbox{[}list-\/of-\/indices-\/in-\/cluster-\/tau\mbox{]},\mbox{[}list-\/of-\/indices-\/in-\/cluster-\/sigma\mbox{]},is\+\_\+near\+\_\+field,rank
+
+For example,
+
+\begin{quote}
+\mbox{[}1 2 3 ...\mbox{]},\mbox{[}7 8 9 ...\mbox{]},1,1 \end{quote}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em out} & \\
+\hline
+\end{DoxyParams}
+Print index set of cluster $\tau$.
+
+Print index set of cluster $\sigma$.
+
+Print the {\ttfamily is\+\_\+near\+\_\+field} flag.
+
+Print the {\ttfamily rank} flag.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::bc\+\_\+node, Rk\+Matrix\+Type, and H\+Matrix$<$ spacedim, Number $>$\+::type.
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set().
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classHMatrix_a4a304494c970b5b267be1d8459d51586}\label{classHMatrix_a4a304494c970b5b267be1d8459d51586}} 
+\index{H\+Matrix@{H\+Matrix}!bc\+\_\+node@{bc\+\_\+node}}
+\index{bc\+\_\+node@{bc\+\_\+node}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{bc\+\_\+node}{bc\_node}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$spacedim, Number$>$\+::node\+\_\+pointer\+\_\+type \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::bc\+\_\+node\hspace{0.3cm}{\ttfamily [private]}}
+
+Pointer to the corresponding block cluster node in a \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+partition(), convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+cross\+\_\+split(), H\+Matrix$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+horizontal\+\_\+split(), H\+Matrix$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+reduction(), H\+Matrix$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+vertical\+\_\+split(), Init\+And\+Create\+H\+Matrix\+Children(), Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node(), H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+matrix\+\_\+info(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+fullmatrix\+\_\+leaf\+\_\+node(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+rkmatrix\+\_\+leaf\+\_\+node().
+
+\mbox{\Hypertarget{classHMatrix_ab337c7b4f2f40699b9b7f3ab17a1e056}\label{classHMatrix_ab337c7b4f2f40699b9b7f3ab17a1e056}} 
+\index{H\+Matrix@{H\+Matrix}!col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map@{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}}
+\index{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map@{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}{col\_index\_global\_to\_local\_map}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::map$<$types\+::global\+\_\+dof\+\_\+index, size\+\_\+t$>$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\hspace{0.3cm}{\ttfamily [private]}}
+
+Map from local column indices to global column indices for the cluster $\sigma$. The set of local column indices is the range $[0, \#\sigma - 1]$. The corresponding set of global column indices is a subset of $J$.
+
+
+\begin{DoxyDescription}
+\item[Note ]This mapping is only constructed for H-\/matrices in the leaf set. 
+\end{DoxyDescription}
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), f\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult(), h\+\_\+rk\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), and rk\+\_\+h\+\_\+mmult().
+
+\mbox{\Hypertarget{classHMatrix_ac30ae65e37ec5e4ccc7de2f6b9ea91e6}\label{classHMatrix_ac30ae65e37ec5e4ccc7de2f6b9ea91e6}} 
+\index{H\+Matrix@{H\+Matrix}!col\+\_\+indices@{col\+\_\+indices}}
+\index{col\+\_\+indices@{col\+\_\+indices}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{col\+\_\+indices}{col\_indices}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::vector$<$types\+::global\+\_\+dof\+\_\+index$>$$\ast$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::col\+\_\+indices\hspace{0.3cm}{\ttfamily [private]}}
+
+Pointer to the vector of global column indices, which is stored as the index set in the cluster $\sigma$. It is a subset of $J$. By accessing this vector using indices starting from 0, we actually obtain the mapping from the current matrix\textquotesingle{}s local column indices to the global column indices. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), f\+\_\+h\+\_\+mmult(), f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+rk\+\_\+mmult(), h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), rk\+\_\+h\+\_\+mmult(), rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::vmult(), and H\+Matrix$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector().
+
+\mbox{\Hypertarget{classHMatrix_a328134c9e9cb2c4b05d5431c0ca8a533}\label{classHMatrix_a328134c9e9cb2c4b05d5431c0ca8a533}} 
+\index{H\+Matrix@{H\+Matrix}!fullmatrix@{fullmatrix}}
+\index{fullmatrix@{fullmatrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{fullmatrix}{fullmatrix}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$Number$>$$\ast$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::fullmatrix\hspace{0.3cm}{\ttfamily [private]}}
+
+Pointer to the full matrix. It is not null when the current \hyperlink{classHMatrix}{H\+Matrix} object belongs to the near field. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::add(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), copy\+\_\+hmatrix\+\_\+node(), f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+fullmatrix(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+h\+\_\+mmult\+\_\+phase2(), Init\+And\+Create\+H\+Matrix\+Children(), H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+formatted(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::vmult(), and H\+Matrix$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector().
+
+\mbox{\Hypertarget{classHMatrix_a61dbd471077be0ad8325d0f2afe3d43f}\label{classHMatrix_a61dbd471077be0ad8325d0f2afe3d43f}} 
+\index{H\+Matrix@{H\+Matrix}!leaf\+\_\+set@{leaf\+\_\+set}}
+\index{leaf\+\_\+set@{leaf\+\_\+set}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{leaf\+\_\+set}{leaf\_set}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::vector$<$\hyperlink{classHMatrix}{H\+Matrix}$<$spacedim, Number$>$ $\ast$$>$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::leaf\+\_\+set\hspace{0.3cm}{\ttfamily [private]}}
+
+A list of submatrices in the leaf set. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::find\+\_\+block\+\_\+cluster\+\_\+in\+\_\+leaf\+\_\+set(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+leaf\+\_\+set(), h\+\_\+h\+\_\+mmult\+\_\+phase2(), H\+Matrix$<$ spacedim, Number $>$\+::refine\+\_\+to\+\_\+supertree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration().
+
+\mbox{\Hypertarget{classHMatrix_aa5523463043e4d542eae17d262bd22ad}\label{classHMatrix_aa5523463043e4d542eae17d262bd22ad}} 
+\index{H\+Matrix@{H\+Matrix}!m@{m}}
+\index{m@{m}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{m}{m}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::m\hspace{0.3cm}{\ttfamily [private]}}
+
+Total number of rows in the matrix. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::convert\+To\+Full\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), f\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+m(), h\+\_\+f\+\_\+mmult(), h\+\_\+rk\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node(), H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), rk\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::vmult(), and H\+Matrix$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector().
+
+\mbox{\Hypertarget{classHMatrix_ab5ae2eb472f81f80653ed4411629c2d1}\label{classHMatrix_ab5ae2eb472f81f80653ed4411629c2d1}} 
+\index{H\+Matrix@{H\+Matrix}!n@{n}}
+\index{n@{n}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{n}{n}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+\hyperlink{classHMatrix_a5ca8dc549783d38371a01ecd621ecb34}{size\+\_\+type} \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::n\hspace{0.3cm}{\ttfamily [private]}}
+
+Total number of columns in the matrix. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::convert\+To\+Full\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), f\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+n(), h\+\_\+f\+\_\+mmult(), h\+\_\+rk\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node(), H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), rk\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::vmult(), and H\+Matrix$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector().
+
+\mbox{\Hypertarget{classHMatrix_aa97a8f5e42aba0f1d5faf41f35a27819}\label{classHMatrix_aa97a8f5e42aba0f1d5faf41f35a27819}} 
+\index{H\+Matrix@{H\+Matrix}!rkmatrix@{rkmatrix}}
+\index{rkmatrix@{rkmatrix}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{rkmatrix}{rkmatrix}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$Number$>$$\ast$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::rkmatrix\hspace{0.3cm}{\ttfamily [private]}}
+
+Pointer to the rank-\/k matrix. It is not null when the current \hyperlink{classHMatrix}{H\+Matrix} object belongs to the far field. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::add(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+rkmatrix(), h\+\_\+h\+\_\+mmult\+\_\+phase2(), h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+formatted(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::truncate\+\_\+to\+\_\+rank(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::vmult(), and H\+Matrix$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector().
+
+\mbox{\Hypertarget{classHMatrix_a4d64145335fc0521603b206a22a67578}\label{classHMatrix_a4d64145335fc0521603b206a22a67578}} 
+\index{H\+Matrix@{H\+Matrix}!row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map@{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}}
+\index{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map@{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map}{row\_index\_global\_to\_local\_map}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::map$<$types\+::global\+\_\+dof\+\_\+index, size\+\_\+t$>$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\hspace{0.3cm}{\ttfamily [private]}}
+
+Map from local row indices to global row indices for the cluster $\tau$. The set of local row indices is the range $[0, \#\tau - 1]$. The corresponding set of global row indices is a subset of $I$.
+
+
+\begin{DoxyDescription}
+\item[Note ]This mapping is only constructed for H-\/matrices in the leaf set. 
+\end{DoxyDescription}
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), f\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult(), h\+\_\+rk\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), and rk\+\_\+h\+\_\+mmult().
+
+\mbox{\Hypertarget{classHMatrix_a33b3a936f1b40e320e96d47471da07ae}\label{classHMatrix_a33b3a936f1b40e320e96d47471da07ae}} 
+\index{H\+Matrix@{H\+Matrix}!row\+\_\+indices@{row\+\_\+indices}}
+\index{row\+\_\+indices@{row\+\_\+indices}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{row\+\_\+indices}{row\_indices}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::vector$<$types\+::global\+\_\+dof\+\_\+index$>$$\ast$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::row\+\_\+indices\hspace{0.3cm}{\ttfamily [private]}}
+
+Pointer to the vector of global row indices, which is stored as the index in the cluster $\tau$. It is a subset of $I$. By accessing this vector using indices starting from 0, we actually obtain the mapping from the current matrix\textquotesingle{}s local row indices to the global row indices. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), f\+\_\+h\+\_\+mmult(), f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+rk\+\_\+mmult(), h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), rk\+\_\+h\+\_\+mmult(), rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::vmult(), and H\+Matrix$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector().
+
+\mbox{\Hypertarget{classHMatrix_aa659b6df63d533432ec1a24435cd9c40}\label{classHMatrix_aa659b6df63d533432ec1a24435cd9c40}} 
+\index{H\+Matrix@{H\+Matrix}!Sigma\+\_\+F@{Sigma\+\_\+F}}
+\index{Sigma\+\_\+F@{Sigma\+\_\+F}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{Sigma\+\_\+F}{Sigma\_F}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::vector$<$\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$Number$>$ $\ast$$>$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::Sigma\+\_\+F\hspace{0.3cm}{\ttfamily [private]}}
+
+List of full matrix pointers used in $\mathcal{H}$-\/matrix multiplication. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+h\+\_\+mmult\+\_\+phase2(), h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+matrix\+\_\+info(), H\+Matrix$<$ spacedim, Number $>$\+::release(), and rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult().
+
+\mbox{\Hypertarget{classHMatrix_a3d96d0252ef8c873ae06cf87874acaf3}\label{classHMatrix_a3d96d0252ef8c873ae06cf87874acaf3}} 
+\index{H\+Matrix@{H\+Matrix}!Sigma\+\_\+P@{Sigma\+\_\+P}}
+\index{Sigma\+\_\+P@{Sigma\+\_\+P}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{Sigma\+\_\+P}{Sigma\_P}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::vector$<$ std\+::pair$<$\hyperlink{classHMatrix}{H\+Matrix}$<$spacedim, Number$>$ $\ast$, \hyperlink{classHMatrix}{H\+Matrix}$<$spacedim, Number$>$ $\ast$$>$ $>$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::Sigma\+\_\+P\hspace{0.3cm}{\ttfamily [private]}}
+
+List of pairs of pointers to $\mathcal{H}$-\/matrix nodes for multiplication. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::determine\+\_\+mm\+\_\+split\+\_\+mode\+\_\+from\+\_\+\+Sigma\+\_\+\+P(), f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+h\+\_\+mmult\+\_\+phase1\+\_\+recursion(), h\+\_\+h\+\_\+mmult\+\_\+phase2(), H\+Matrix$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+reduction(), h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+matrix\+\_\+info(), H\+Matrix$<$ spacedim, Number $>$\+::release(), H\+Matrix$<$ spacedim, Number $>$\+::remove\+\_\+hmat\+\_\+pair\+\_\+from\+\_\+mm\+\_\+product\+\_\+list(), and rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult().
+
+\mbox{\Hypertarget{classHMatrix_a04d341b4e606d1be2d71b8ea636efe7b}\label{classHMatrix_a04d341b4e606d1be2d71b8ea636efe7b}} 
+\index{H\+Matrix@{H\+Matrix}!Sigma\+\_\+R@{Sigma\+\_\+R}}
+\index{Sigma\+\_\+R@{Sigma\+\_\+R}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{Sigma\+\_\+R}{Sigma\_R}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::vector$<$\hyperlink{classRkMatrix}{Rk\+Matrix}$<$Number$>$ $\ast$$>$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::Sigma\+\_\+R\hspace{0.3cm}{\ttfamily [private]}}
+
+List of rank-\/k matrix pointers used in $\mathcal{H}$-\/matrix multiplication. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+h\+\_\+mmult\+\_\+phase2(), h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), Init\+H\+Matrix\+Wrt\+Block\+Cluster\+Node(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+matrix\+\_\+info(), H\+Matrix$<$ spacedim, Number $>$\+::release(), and rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult().
+
+\mbox{\Hypertarget{classHMatrix_a4bd1b9a32f2c7693e603a7c6ea916e4f}\label{classHMatrix_a4bd1b9a32f2c7693e603a7c6ea916e4f}} 
+\index{H\+Matrix@{H\+Matrix}!submatrices@{submatrices}}
+\index{submatrices@{submatrices}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{submatrices}{submatrices}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+std\+::vector$<$\hyperlink{classHMatrix}{H\+Matrix}$<$spacedim, Number$>$ $\ast$$>$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::submatrices\hspace{0.3cm}{\ttfamily [private]}}
+
+A list of submatrices of type \hyperlink{classHMatrix}{H\+Matrix}. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+build\+\_\+leaf\+\_\+set(), H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::add(), H\+Matrix$<$ spacedim, Number $>$\+::clear(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+partition(), convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), copy\+\_\+hmatrix(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+submatrices(), Init\+And\+Create\+H\+Matrix\+Children(), H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+formatted(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+matrix\+\_\+info(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), H\+Matrix$<$ spacedim, Number $>$\+::truncate\+\_\+to\+\_\+rank(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::vmult(), H\+Matrix$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set().
+
+\mbox{\Hypertarget{classHMatrix_a12da9454687e5ca15837d63e2bf0b595}\label{classHMatrix_a12da9454687e5ca15837d63e2bf0b595}} 
+\index{H\+Matrix@{H\+Matrix}!Tind@{Tind}}
+\index{Tind@{Tind}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{Tind}{Tind}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$spacedim, Number$>$ \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::Tind\hspace{0.3cm}{\ttfamily [private]}}
+
+Block cluster tree when this matrix is the product of two $\mathcal{H}$-\/matrices. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), copy\+\_\+hmatrix\+\_\+node(), h\+\_\+h\+\_\+mmult\+\_\+phase2(), H\+Matrix$<$ spacedim, Number $>$\+::mmult(), and H\+Matrix$<$ spacedim, Number $>$\+::release().
+
+\mbox{\Hypertarget{classHMatrix_a89ef60f3ba737c04708195ca0bb13620}\label{classHMatrix_a89ef60f3ba737c04708195ca0bb13620}} 
+\index{H\+Matrix@{H\+Matrix}!type@{type}}
+\index{type@{type}!H\+Matrix@{H\+Matrix}}
+\subsubsection{\texorpdfstring{type}{type}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+\hyperlink{hmatrix_8h_ac04719e202c88f36e4533fe1d326a494}{H\+Matrix\+Type} \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim, Number $>$\+::type\hspace{0.3cm}{\ttfamily [private]}}
+
+Matrix type. 
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+build\+\_\+leaf\+\_\+set(), H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+convert\+To\+Full\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), H\+Matrix$<$ spacedim, Number $>$\+::add(), H\+Matrix$<$ spacedim, Number $>$\+::clear(), H\+Matrix$<$ spacedim, Number $>$\+::clear\+\_\+hmat\+\_\+node(), convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), copy\+\_\+hmatrix\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::distribute\+\_\+all\+\_\+non\+\_\+leaf\+\_\+nodes\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::get\+\_\+type(), h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), h\+\_\+h\+\_\+mmult\+\_\+phase2(), H\+Matrix$<$ spacedim, Number $>$\+::h\+\_\+h\+\_\+mmult\+\_\+reduction(), h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+formatted(), Refine\+H\+Matrix\+Wrt\+Extended\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::release(), rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult(), H\+Matrix$<$ spacedim, Number $>$\+::truncate\+\_\+to\+\_\+rank(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult(), H\+Matrix$<$ spacedim, Number $>$\+::\+Tvmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::vmult(), H\+Matrix$<$ spacedim, Number $>$\+::vmult\+\_\+local\+\_\+vector(), H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+fullmatrix\+\_\+leaf\+\_\+node(), H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set(), H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set\+\_\+by\+\_\+iteration(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+rkmatrix\+\_\+leaf\+\_\+node().
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/\hyperlink{hmatrix_8h}{hmatrix.\+h}\end{DoxyCompactItemize}

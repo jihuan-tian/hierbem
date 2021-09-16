@@ -1,0 +1,55 @@
+\hypertarget{hmatrix-bct-struct-with-rank_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/hmatrix-\/bct-\/struct-\/with-\/rank/hmatrix-\/bct-\/struct-\/with-\/rank.cc File Reference}
+\label{hmatrix-bct-struct-with-rank_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/bct-\/struct-\/with-\/rank/hmatrix-\/bct-\/struct-\/with-\/rank.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/bct-\/struct-\/with-\/rank/hmatrix-\/bct-\/struct-\/with-\/rank.\+cc}}
+
+
+Visualize the block cluster tree structure of an H-\/matrix with displayed rank.  
+
+
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+Include dependency graph for hmatrix-\/bct-\/struct-\/with-\/rank.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hmatrix-bct-struct-with-rank_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{hmatrix-bct-struct-with-rank_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Visualize the block cluster tree structure of an H-\/matrix with displayed rank. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/04 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hmatrix-bct-struct-with-rank_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{hmatrix-bct-struct-with-rank_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{hmatrix-\/bct-\/struct-\/with-\/rank.\+cc@{hmatrix-\/bct-\/struct-\/with-\/rank.\+cc}!main@{main}}
+\index{main@{main}!hmatrix-\/bct-\/struct-\/with-\/rank.\+cc@{hmatrix-\/bct-\/struct-\/with-\/rank.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Generate index set.
+
+Generate cluster tree.
+
+Generate block cluster tree via fine structured non-\/tensor product partition.
+
+Create the full matrix.
+
+Convert the full matrix to H-\/matrix with specified rank. Then we convert it back to a full matrix for comparison with the original matrix.
+
+References Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), and H\+Matrix$<$ spacedim, Number $>$\+::write\+\_\+leaf\+\_\+set().
+

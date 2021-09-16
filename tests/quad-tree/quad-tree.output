@@ -1,9 +1,54 @@
-10
-3
-2
-8
-7
-9
-4
-5
-6
+Level 0
+Number of children: 0
+Node data: 10
+Split mode: 2
+Parent node data: none
+------------------
+Level 0
+Number of children: 0
+Node data: 3
+Split mode: 2
+Parent node data: none
+------------------
+Level 0
+Number of children: 0
+Node data: 2
+Split mode: 3
+Parent node data: none
+------------------
+Level 0
+Number of children: 0
+Node data: 8
+Split mode: 3
+Parent node data: none
+------------------
+Level 0
+Number of children: 0
+Node data: 7
+Split mode: 3
+Parent node data: none
+------------------
+Level 0
+Number of children: 0
+Node data: 9
+Split mode: 3
+Parent node data: none
+------------------
+Level 0
+Number of children: 0
+Node data: 4
+Split mode: 3
+Parent node data: none
+------------------
+Level 0
+Number of children: 0
+Node data: 5
+Split mode: 3
+Parent node data: none
+------------------
+Level 0
+Number of children: 0
+Node data: 6
+Split mode: 3
+Parent node data: none
+------------------

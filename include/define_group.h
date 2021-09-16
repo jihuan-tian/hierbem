@@ -25,3 +25,8 @@
  * \defgroup programming_tech Programming techniques
  * \brief Programming techniques for C++ and software engineering.
  */
+
+/**
+ * \defgroup testers Test cases
+ * \brief Test cases for verifying code design and algorithms.
+ */

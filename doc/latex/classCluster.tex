@@ -1,0 +1,496 @@
+\hypertarget{classCluster}{}\section{Cluster$<$ spacedim, Number $>$ Class Template Reference}
+\label{classCluster}\index{Cluster$<$ spacedim, Number $>$@{Cluster$<$ spacedim, Number $>$}}
+
+
+Class for an index cluster.  
+
+
+
+
+{\ttfamily \#include $<$cluster.\+h$>$}
+
+
+
+Collaboration diagram for Cluster$<$ spacedim, Number $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classCluster__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\textbf{ }\par
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classCluster_a214163f431f0bd9840d14bbebcc087e7}{Cluster} ()
+\item 
+\hyperlink{classCluster_aa87c73e27c410b04415e5ff1b026ae74}{Cluster} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set)
+\item 
+\hyperlink{classCluster_a157b06089b0f866a754a8e3a3aa49fd9}{Cluster} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points)
+\item 
+\hyperlink{classCluster_a07a5837c2f6c0b676ca45b826e51b460}{Cluster} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs)
+\item 
+\hyperlink{classCluster_aaa9ac4c5b6df1633980e45c3076e17e0}{Cluster} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \&bbox, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points)
+\item 
+\hyperlink{classCluster_adf806cf8bccb891707d8e7d4c345518b}{Cluster} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \&bbox, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs)
+\item 
+\hyperlink{classCluster_a27a372b05916f136ff9fe3e5a92a4362}{Cluster} (const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster)
+\item 
+std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \& \hyperlink{classCluster_ada8786f2258b9fbeed2ed04bc1007c89}{get\+\_\+index\+\_\+set} ()
+\item 
+const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \& \hyperlink{classCluster_acd4c3a1c712aca32cffefb64f88a1b08}{get\+\_\+index\+\_\+set} () const
+\item 
+\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \& \hyperlink{classCluster_a062a81f89fcb644c98f94fdf20ebcced}{get\+\_\+bounding\+\_\+box} ()
+\item 
+const \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \& \hyperlink{classCluster_ad720b2126e07c5698c1fc39ac3f1e6a4}{get\+\_\+bounding\+\_\+box} () const
+\item 
+Number \hyperlink{classCluster_aab3f02640b57812eb697c39e8c4cc2e3}{get\+\_\+diameter} () const
+\item 
+Number \hyperlink{classCluster_a2204e6b5cf593d9e93a56f9269d74b4c}{calc\+\_\+diameter} (const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points) const
+\item 
+Number \hyperlink{classCluster_ab9900a870bdd05d4638b820716e03293}{calc\+\_\+diameter} (const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs) const
+\item 
+Number \hyperlink{classCluster_aba84e3743344f360ccdb855037e1b45e}{distance\+\_\+to\+\_\+cluster} (const \hyperlink{classCluster}{Cluster} \&cluster, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points) const
+\item 
+Number \hyperlink{classCluster_a1eeffaea84b84d0288544dd4ff007d7b}{distance\+\_\+to\+\_\+cluster} (const \hyperlink{classCluster}{Cluster} \&cluster, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs) const
+\item 
+bool \hyperlink{classCluster_a8cbdd8366b60c14f44a951ebfe024bb5}{is\+\_\+subset} (const \hyperlink{classCluster}{Cluster} \&cluster) const
+\item 
+bool \hyperlink{classCluster_aaf45b6f7d9e629dd2fe648dd0231a559}{is\+\_\+proper\+\_\+subset} (const \hyperlink{classCluster}{Cluster} \&cluster) const
+\item 
+bool \hyperlink{classCluster_abdc3b12ac53ba6fba8479a9bbd9b6aa2}{is\+\_\+superset} (const \hyperlink{classCluster}{Cluster} \&cluster) const
+\item 
+bool \hyperlink{classCluster_adfabc1eae12e962bae4af0a1854c3795}{is\+\_\+proper\+\_\+superset} (const \hyperlink{classCluster}{Cluster} \&cluster) const
+\item 
+void \hyperlink{classCluster_a47961c1b0a34b58266aa3bd87fd36b32}{intersect} (const \hyperlink{classCluster}{Cluster} \&cluster, std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set\+\_\+intersection) const
+\item 
+bool \hyperlink{classCluster_ad70ce1f046bb3b47fff585eaf6ec4856}{has\+\_\+intersection} (const \hyperlink{classCluster}{Cluster} \&cluster) const
+\item 
+std\+::size\+\_\+t \hyperlink{classCluster_a7fd600d238aa703f40407e609c08fec6}{get\+\_\+cardinality} () const
+\item 
+bool \hyperlink{classCluster_a55c608dd38d185c394e516d106fea02a}{is\+\_\+large} (unsigned int n\+\_\+min) const
+\end{DoxyCompactItemize}
+
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classCluster_a93791a440f03b43cdfa89e48be33cddb}\label{classCluster_a93791a440f03b43cdfa89e48be33cddb}} 
+std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ {\bfseries index\+\_\+set}
+\item 
+\mbox{\Hypertarget{classCluster_ac0332366e2e144f5a97cb19a8bbdec71}\label{classCluster_ac0332366e2e144f5a97cb19a8bbdec71}} 
+\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ {\bfseries bbox}
+\item 
+\mbox{\Hypertarget{classCluster_aa3689e19cea2145941c6ba116fbb295c}\label{classCluster_aa3689e19cea2145941c6ba116fbb295c}} 
+Number {\bfseries diameter}
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classCluster_ad6f759d8c7460a9c5366f195df4dc57f}\label{classCluster_ad6f759d8c7460a9c5366f195df4dc57f}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\std\+::ostream \& {\bfseries operator$<$$<$} (std\+::ostream \&out, const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&cluster)
+\item 
+\mbox{\Hypertarget{classCluster_af29091d511d3fa4e0118e39db2e36f21}\label{classCluster_af29091d511d3fa4e0118e39db2e36f21}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\Number1 {\bfseries calc\+\_\+cluster\+\_\+distance} (const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&cluster2, const std\+::vector$<$ Point$<$ spacedim1, Number1 $>$$>$ \&all\+\_\+support\+\_\+points)
+\item 
+\mbox{\Hypertarget{classCluster_aeb29e01c4bc5a919856849fae7c53b21}\label{classCluster_aeb29e01c4bc5a919856849fae7c53b21}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\Number1 {\bfseries calc\+\_\+cluster\+\_\+distance} (const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&cluster2, const std\+::vector$<$ Point$<$ spacedim1, Number1 $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number1 $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs)
+\item 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\bool \hyperlink{classCluster_a930aea4a53249004429d28f9631e495f}{operator==} (const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&cluster2)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$int spacedim, typename Number = double$>$\newline
+class Cluster$<$ spacedim, Number $>$}
+
+Class for an index cluster. 
+
+The {\ttfamily \hyperlink{classCluster}{Cluster}} class contains both the DoF index set {\ttfamily index\+\_\+set} and the corresponding bounding box {\ttfamily bbox}. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classCluster_a214163f431f0bd9840d14bbebcc087e7}\label{classCluster_a214163f431f0bd9840d14bbebcc087e7}} 
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{Cluster()}{Cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [1/7]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::\hyperlink{classCluster}{Cluster} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Default constructor. \mbox{\Hypertarget{classCluster_aa87c73e27c410b04415e5ff1b026ae74}\label{classCluster_aa87c73e27c410b04415e5ff1b026ae74}} 
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{Cluster()}{Cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [2/7]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::\hyperlink{classCluster}{Cluster} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{index\+\_\+set }\end{DoxyParamCaption})}
+
+Constructor from an index set only without support points and associated bounding box. 
+\begin{DoxyParams}{Parameters}
+{\em index\+\_\+set} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classCluster_a157b06089b0f866a754a8e3a3aa49fd9}\label{classCluster_a157b06089b0f866a754a8e3a3aa49fd9}} 
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{Cluster()}{Cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [3/7]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::\hyperlink{classCluster}{Cluster} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{index\+\_\+set,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points }\end{DoxyParamCaption})}
+
+Constructor from an index set without cluster diameter correction.
+
+The bounding box will be recalculated. 
+\begin{DoxyParams}{Parameters}
+{\em index\+\_\+set} & \\
+\hline
+{\em all\+\_\+support\+\_\+points} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classCluster_a07a5837c2f6c0b676ca45b826e51b460}\label{classCluster_a07a5837c2f6c0b676ca45b826e51b460}} 
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{Cluster()}{Cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [4/7]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::\hyperlink{classCluster}{Cluster} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{index\+\_\+set,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs }\end{DoxyParamCaption})}
+
+Constructor from an index set with cluster diameter correction.
+
+The bounding box will be recalculated. 
+\begin{DoxyParams}{Parameters}
+{\em index\+\_\+set} & \\
+\hline
+{\em all\+\_\+support\+\_\+points} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classCluster_aaa9ac4c5b6df1633980e45c3076e17e0}\label{classCluster_aaa9ac4c5b6df1633980e45c3076e17e0}} 
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{Cluster()}{Cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [5/7]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::\hyperlink{classCluster}{Cluster} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{index\+\_\+set,  }\item[{const \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \&}]{bbox,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points }\end{DoxyParamCaption})}
+
+Constructor from an index set and a bounding box without cluster diameter correction.
+
+The input bounding box will be copied into the cluster without recalculation. However, the diameter of the cluster is recalculated. 
+\begin{DoxyParams}{Parameters}
+{\em index\+\_\+set} & \\
+\hline
+{\em bbox} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classCluster_adf806cf8bccb891707d8e7d4c345518b}\label{classCluster_adf806cf8bccb891707d8e7d4c345518b}} 
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{Cluster()}{Cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [6/7]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::\hyperlink{classCluster}{Cluster} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{index\+\_\+set,  }\item[{const \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \&}]{bbox,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs }\end{DoxyParamCaption})}
+
+Constructor from an index set and a bounding box with cluster diameter correction.
+
+The input bounding box will be copied into the cluster without recalculation. However, the diameter of the cluster is recalculated. 
+\begin{DoxyParams}{Parameters}
+{\em index\+\_\+set} & \\
+\hline
+{\em bbox} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classCluster_a27a372b05916f136ff9fe3e5a92a4362}\label{classCluster_a27a372b05916f136ff9fe3e5a92a4362}} 
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\index{Cluster@{Cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{Cluster()}{Cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [7/7]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::\hyperlink{classCluster}{Cluster} (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster }\end{DoxyParamCaption})}
+
+Copy constructor. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classCluster_a2204e6b5cf593d9e93a56f9269d74b4c}\label{classCluster_a2204e6b5cf593d9e93a56f9269d74b4c}} 
+\index{Cluster@{Cluster}!calc\+\_\+diameter@{calc\+\_\+diameter}}
+\index{calc\+\_\+diameter@{calc\+\_\+diameter}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{calc\+\_\+diameter()}{calc\_diameter()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+Number \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::calc\+\_\+diameter (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points }\end{DoxyParamCaption}) const}
+
+Calculate the diameter of the cluster. There is no cell size correction. Calculate the number of point pairs in the cluster. Let $[0, 1, 2, 3, 4, 5]$ be the indices of support points in the cluster, whose pairwise inter-\/distance will be calculated. The calculation is only needed for the marked pairs of points as shown below.
+
+
+\begin{DoxyCode}
+  0 1 2 3 4 5
+0   - - - - -
+1     - - - -
+2       - - -
+3         - -
+4           -
+5
+\end{DoxyCode}
+
+
+Therefore, the total number of effective point pairs is $\frac{n^2 - n}{2}$.
+
+Referenced by Cluster$<$ spacedim, Number $>$\+::calc\+\_\+diameter().
+
+\mbox{\Hypertarget{classCluster_ab9900a870bdd05d4638b820716e03293}\label{classCluster_ab9900a870bdd05d4638b820716e03293}} 
+\index{Cluster@{Cluster}!calc\+\_\+diameter@{calc\+\_\+diameter}}
+\index{calc\+\_\+diameter@{calc\+\_\+diameter}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{calc\+\_\+diameter()}{calc\_diameter()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+Number \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::calc\+\_\+diameter (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs }\end{DoxyParamCaption}) const}
+
+Calculate the diameter of the cluster. Cell size correction is applied.
+
+N.\+B. Doubled estimated cell size is adopted as an approximation of the support set diameter ${\rm diam}(Q_j)$. The correction is calculated according to the following formula. \[ \widetilde{\rm diam}(\tau) := {\rm diam}(\hat{Q}_{\tau}) + \max_{j \in \tau} {\rm diam}(Q_j) \] 
+\begin{DoxyParams}{Parameters}
+{\em all\+\_\+support\+\_\+points} & \\
+\hline
+{\em cell\+\_\+size\+\_\+at\+\_\+dofs} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References Cluster$<$ spacedim, Number $>$\+::calc\+\_\+diameter().
+
+\mbox{\Hypertarget{classCluster_aba84e3743344f360ccdb855037e1b45e}\label{classCluster_aba84e3743344f360ccdb855037e1b45e}} 
+\index{Cluster@{Cluster}!distance\+\_\+to\+\_\+cluster@{distance\+\_\+to\+\_\+cluster}}
+\index{distance\+\_\+to\+\_\+cluster@{distance\+\_\+to\+\_\+cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{distance\+\_\+to\+\_\+cluster()}{distance\_to\_cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+Number \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::distance\+\_\+to\+\_\+cluster (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points }\end{DoxyParamCaption}) const}
+
+Calculate the minimum distance of the current cluster to the given cluster. There is no cell size correction. \mbox{\Hypertarget{classCluster_a1eeffaea84b84d0288544dd4ff007d7b}\label{classCluster_a1eeffaea84b84d0288544dd4ff007d7b}} 
+\index{Cluster@{Cluster}!distance\+\_\+to\+\_\+cluster@{distance\+\_\+to\+\_\+cluster}}
+\index{distance\+\_\+to\+\_\+cluster@{distance\+\_\+to\+\_\+cluster}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{distance\+\_\+to\+\_\+cluster()}{distance\_to\_cluster()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+Number \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::distance\+\_\+to\+\_\+cluster (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs }\end{DoxyParamCaption}) const}
+
+Calculate the minimum distance of the current cluster to the given cluster. Cell size correction is applied. \mbox{\Hypertarget{classCluster_a062a81f89fcb644c98f94fdf20ebcced}\label{classCluster_a062a81f89fcb644c98f94fdf20ebcced}} 
+\index{Cluster@{Cluster}!get\+\_\+bounding\+\_\+box@{get\+\_\+bounding\+\_\+box}}
+\index{get\+\_\+bounding\+\_\+box@{get\+\_\+bounding\+\_\+box}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{get\+\_\+bounding\+\_\+box()}{get\_bounding\_box()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \& \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::get\+\_\+bounding\+\_\+box (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the reference to the bounding box. \mbox{\Hypertarget{classCluster_ad720b2126e07c5698c1fc39ac3f1e6a4}\label{classCluster_ad720b2126e07c5698c1fc39ac3f1e6a4}} 
+\index{Cluster@{Cluster}!get\+\_\+bounding\+\_\+box@{get\+\_\+bounding\+\_\+box}}
+\index{get\+\_\+bounding\+\_\+box@{get\+\_\+bounding\+\_\+box}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{get\+\_\+bounding\+\_\+box()}{get\_bounding\_box()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+const \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \& \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::get\+\_\+bounding\+\_\+box (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the reference to the bounding box (const version). \mbox{\Hypertarget{classCluster_a7fd600d238aa703f40407e609c08fec6}\label{classCluster_a7fd600d238aa703f40407e609c08fec6}} 
+\index{Cluster@{Cluster}!get\+\_\+cardinality@{get\+\_\+cardinality}}
+\index{get\+\_\+cardinality@{get\+\_\+cardinality}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{get\+\_\+cardinality()}{get\_cardinality()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+std\+::size\+\_\+t \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::get\+\_\+cardinality (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the cardinality of the index set. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classCluster_aab3f02640b57812eb697c39e8c4cc2e3}\label{classCluster_aab3f02640b57812eb697c39e8c4cc2e3}} 
+\index{Cluster@{Cluster}!get\+\_\+diameter@{get\+\_\+diameter}}
+\index{get\+\_\+diameter@{get\+\_\+diameter}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{get\+\_\+diameter()}{get\_diameter()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+Number \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::get\+\_\+diameter (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the diameter of the cluster. \mbox{\Hypertarget{classCluster_ada8786f2258b9fbeed2ed04bc1007c89}\label{classCluster_ada8786f2258b9fbeed2ed04bc1007c89}} 
+\index{Cluster@{Cluster}!get\+\_\+index\+\_\+set@{get\+\_\+index\+\_\+set}}
+\index{get\+\_\+index\+\_\+set@{get\+\_\+index\+\_\+set}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{get\+\_\+index\+\_\+set()}{get\_index\_set()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \& \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::get\+\_\+index\+\_\+set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the reference to the index set. 
+
+Referenced by calc\+\_\+cluster\+\_\+distance().
+
+\mbox{\Hypertarget{classCluster_acd4c3a1c712aca32cffefb64f88a1b08}\label{classCluster_acd4c3a1c712aca32cffefb64f88a1b08}} 
+\index{Cluster@{Cluster}!get\+\_\+index\+\_\+set@{get\+\_\+index\+\_\+set}}
+\index{get\+\_\+index\+\_\+set@{get\+\_\+index\+\_\+set}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{get\+\_\+index\+\_\+set()}{get\_index\_set()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \& \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::get\+\_\+index\+\_\+set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the reference to the index set (const version). \mbox{\Hypertarget{classCluster_ad70ce1f046bb3b47fff585eaf6ec4856}\label{classCluster_ad70ce1f046bb3b47fff585eaf6ec4856}} 
+\index{Cluster@{Cluster}!has\+\_\+intersection@{has\+\_\+intersection}}
+\index{has\+\_\+intersection@{has\+\_\+intersection}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{has\+\_\+intersection()}{has\_intersection()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+bool \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::has\+\_\+intersection (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster }\end{DoxyParamCaption}) const}
+
+Determine if the index set of the current cluster has a nonempty intersection with the index set of the given cluster.
+
+
+\begin{DoxyDescription}
+\item[Note ]The index sets associated with clusters should be sorted before calling this function. In the current implementation of cluster tree construction, all the index sets have already been sorted. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em cluster} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References Cluster$<$ spacedim, Number $>$\+::intersect().
+
+\mbox{\Hypertarget{classCluster_a47961c1b0a34b58266aa3bd87fd36b32}\label{classCluster_a47961c1b0a34b58266aa3bd87fd36b32}} 
+\index{Cluster@{Cluster}!intersect@{intersect}}
+\index{intersect@{intersect}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{intersect()}{intersect()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::intersect (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster,  }\item[{std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{index\+\_\+set\+\_\+intersection }\end{DoxyParamCaption}) const}
+
+Calculate the intersection of the index sets of the current and the given clusters.
+
+
+\begin{DoxyDescription}
+\item[Note ]The index sets associated with clusters should be sorted before calling this function. In the current implementation of cluster tree construction, all the index sets have already been sorted. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em cluster} & \\
+\hline
+{\em index\+\_\+set\+\_\+intersection} & \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by Cluster$<$ spacedim, Number $>$\+::has\+\_\+intersection().
+
+\mbox{\Hypertarget{classCluster_a55c608dd38d185c394e516d106fea02a}\label{classCluster_a55c608dd38d185c394e516d106fea02a}} 
+\index{Cluster@{Cluster}!is\+\_\+large@{is\+\_\+large}}
+\index{is\+\_\+large@{is\+\_\+large}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{is\+\_\+large()}{is\_large()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+bool \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::is\+\_\+large (\begin{DoxyParamCaption}\item[{unsigned int}]{n\+\_\+min }\end{DoxyParamCaption}) const}
+
+Determine if the cluster is large enough.
+
+
+\begin{DoxyParams}{Parameters}
+{\em n\+\_\+min} & The size threshold value for determining if a cluster is large. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References Cluster$<$ spacedim, Number $>$\+::operator==.
+
+\mbox{\Hypertarget{classCluster_aaf45b6f7d9e629dd2fe648dd0231a559}\label{classCluster_aaf45b6f7d9e629dd2fe648dd0231a559}} 
+\index{Cluster@{Cluster}!is\+\_\+proper\+\_\+subset@{is\+\_\+proper\+\_\+subset}}
+\index{is\+\_\+proper\+\_\+subset@{is\+\_\+proper\+\_\+subset}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{is\+\_\+proper\+\_\+subset()}{is\_proper\_subset()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+bool \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+subset (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster }\end{DoxyParamCaption}) const}
+
+Check if the index set of the current cluster is a proper subset of that of the given cluster.
+
+
+\begin{DoxyDescription}
+\item[Note ]The index sets associated with clusters should be sorted before calling this function. In the current implementation of cluster tree construction, all the index sets have already been sorted. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em cluster} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classCluster_adfabc1eae12e962bae4af0a1854c3795}\label{classCluster_adfabc1eae12e962bae4af0a1854c3795}} 
+\index{Cluster@{Cluster}!is\+\_\+proper\+\_\+superset@{is\+\_\+proper\+\_\+superset}}
+\index{is\+\_\+proper\+\_\+superset@{is\+\_\+proper\+\_\+superset}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{is\+\_\+proper\+\_\+superset()}{is\_proper\_superset()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+bool \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+superset (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster }\end{DoxyParamCaption}) const}
+
+Check if the index set of the current cluster is a proper superset of that of the given cluster.
+
+
+\begin{DoxyDescription}
+\item[Note ]The index sets associated with clusters should be sorted before calling this function. In the current implementation of cluster tree construction, all the index sets have already been sorted. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em cluster} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classCluster_a8cbdd8366b60c14f44a951ebfe024bb5}\label{classCluster_a8cbdd8366b60c14f44a951ebfe024bb5}} 
+\index{Cluster@{Cluster}!is\+\_\+subset@{is\+\_\+subset}}
+\index{is\+\_\+subset@{is\+\_\+subset}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{is\+\_\+subset()}{is\_subset()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+bool \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::is\+\_\+subset (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster }\end{DoxyParamCaption}) const}
+
+Check if the index set of the current cluster is a subset of that of the given cluster.
+
+
+\begin{DoxyDescription}
+\item[Note ]The index sets associated with clusters should be sorted before calling this function. In the current implementation of cluster tree construction, all the index sets have already been sorted. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em cluster} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classCluster_abdc3b12ac53ba6fba8479a9bbd9b6aa2}\label{classCluster_abdc3b12ac53ba6fba8479a9bbd9b6aa2}} 
+\index{Cluster@{Cluster}!is\+\_\+superset@{is\+\_\+superset}}
+\index{is\+\_\+superset@{is\+\_\+superset}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{is\+\_\+superset()}{is\_superset()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+bool \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$\+::is\+\_\+superset (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&}]{cluster }\end{DoxyParamCaption}) const}
+
+Check if the index set of the current cluster is a superset of that of the given cluster.
+
+
+\begin{DoxyDescription}
+\item[Note ]The index sets associated with clusters should be sorted before calling this function. In the current implementation of cluster tree construction, all the index sets have already been sorted. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em cluster} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+\subsection{Friends And Related Function Documentation}
+\mbox{\Hypertarget{classCluster_a930aea4a53249004429d28f9631e495f}\label{classCluster_a930aea4a53249004429d28f9631e495f}} 
+\index{Cluster@{Cluster}!operator==@{operator==}}
+\index{operator==@{operator==}!Cluster@{Cluster}}
+\subsubsection{\texorpdfstring{operator==}{operator==}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
+template$<$int spacedim1, typename Number1 $>$ \\
+bool operator== (\begin{DoxyParamCaption}\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&}]{cluster1,  }\item[{const \hyperlink{classCluster}{Cluster}$<$ spacedim1, Number1 $>$ \&}]{cluster2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [friend]}}
+
+Check the equality of two clusters by comparing their index sets.
+
+This function firstly check the equality of the sizes/cardinalities of the index sets in the two clusters. If their sizes are equal, then check the contents.
+
+
+\begin{DoxyParams}{Parameters}
+{\em cluster1} & \\
+\hline
+{\em cluster2} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Referenced by Cluster$<$ spacedim, Number $>$\+::is\+\_\+large().
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/\hyperlink{cluster_8h}{cluster.\+h}\end{DoxyCompactItemize}

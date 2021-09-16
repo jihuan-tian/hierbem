@@ -1,0 +1,50 @@
+\hypertarget{hmatrix-truncate-to-fixed-rank_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/hmatrix-\/truncate-\/to-\/fixed-\/rank/hmatrix-\/truncate-\/to-\/fixed-\/rank.cc File Reference}
+\label{hmatrix-truncate-to-fixed-rank_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/truncate-\/to-\/fixed-\/rank/hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/hmatrix-\/truncate-\/to-\/fixed-\/rank/hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc}}
+
+
+Verify the truncation of an \hyperlink{classHMatrix}{H\+Matrix} to an \hyperlink{classRkMatrix}{Rk\+Matrix}.  
+
+
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+Include dependency graph for hmatrix-\/truncate-\/to-\/fixed-\/rank.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hmatrix-truncate-to-fixed-rank_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{hmatrix-truncate-to-fixed-rank_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the truncation of an \hyperlink{classHMatrix}{H\+Matrix} to an \hyperlink{classRkMatrix}{Rk\+Matrix}. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/06-\/24 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{hmatrix-truncate-to-fixed-rank_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{hmatrix-truncate-to-fixed-rank_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc@{hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc}!main@{main}}
+\index{main@{main}!hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc@{hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Create a full matrix as the data source.
+
+Create an \hyperlink{classHMatrix}{H\+Matrix} of fixed rank 2 using the fine non-\/tensor product partition. In practice, the rank may not be a constant but a block dependent distribution or map.
+
+Truncate the \hyperlink{classHMatrix}{H\+Matrix} to fixed rank 1.
+
+Convert the \hyperlink{classHMatrix}{H\+Matrix} back to a full matrix.
+
+References H\+Matrix$<$ spacedim, Number $>$\+::convert\+To\+Full\+Matrix(), Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), H\+Matrix$<$ spacedim, Number $>$\+::print\+\_\+formatted(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), and H\+Matrix$<$ spacedim, Number $>$\+::truncate\+\_\+to\+\_\+rank().
+

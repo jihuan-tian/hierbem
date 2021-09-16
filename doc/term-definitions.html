@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>term-definitions.html</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+
+</head>
+
+<body>
+
+[WARNING] Could not convert TeX math '\\mathcal{H}', rendering as TeX:
+  \\mathcal{H}
+    ^
+  unexpected "m"
+  expecting "%", "\\label", "\\nonumber" or whitespace
+[WARNING] Could not convert TeX math '\\mathcal{H}', rendering as TeX:
+  \\mathcal{H}
+    ^
+  unexpected "m"
+  expecting "%", "\\label", "\\nonumber" or whitespace
+[WARNING] Could not convert TeX math '\\mathcal{H}', rendering as TeX:
+  \\mathcal{H}
+    ^
+  unexpected "m"
+  expecting "%", "\\label", "\\nonumber" or whitespace
+[WARNING] Could not convert TeX math 'M \\in \\mathbb{R}^{m \\times n}', rendering as TeX:
+  M \\in \\mathbb{R}^{m \\times n}
+      ^
+  unexpected "i"
+  expecting "%", "\\label", "\\nonumber" or whitespace
+[WARNING] Could not convert TeX math '\\min\\{m, n\\}', rendering as TeX:
+  \\min\\{m, n\\}
+    ^
+  unexpected "m"
+  expecting "%", "\\label", "\\nonumber" or whitespace
+[WARNING] Could not convert TeX math '{\\rm rank}(M) \\leq \\min\\{m, n\\}', rendering as TeX:
+  {\\rm rank}(M) \\leq \\min\\{m, n\\}
+     ^
+  unexpected "r"
+  expecting "%", "\\label", "\\nonumber" or whitespace
+[WARNING] Could not convert TeX math 'I \\times J', rendering as TeX:
+  I \\times J
+      ^
+  unexpected "t"
+  expecting "%", "\\label", "\\nonumber" or whitespace
+<h1 id="definition-of-terms">Definition of terms</h1>
+<ul>
+<li><span class="math inline">$\\mathcal{H}$</span>-matrix node: In the current C++ implementation of <span class="math inline">$\\mathcal{H}$</span>-matrix, it is represented as a hierarchy of linked <code>HMatrix</code> objects, which are organized in a tree structure being the same as the associated block cluster tree (<code>BlockClusterTree</code>). Then an <span class="math inline">$\\mathcal{H}$</span>-matrix node is one of these <code>HMatrix</code> objects, which is a node in the tree.</li>
+<li>Minimum matrix dimension: Let <span class="math inline">$M \\in \\mathbb{R}^{m \\times n}$</span>, then the minimum matrix dimension is <span class="math inline">$\\min\\{m, n\\}$</span>. Then <span class="math inline">${\\rm rank}(M) \\leq \\min\\{m, n\\}$</span>. This term is frequently used in the implementation of <code>RkMatrix</code> and singular value decomposition (<code>LAPACKFullMatrixExt::svd</code> and <code>LAPACKFullMatrixExt::reduced_svd</code>) of a full matrix <code>LAPACKFullMatrixExt</code>.</li>
+<li>Global matrix: the matrix defined on the complete index set <span class="math inline">$I \\times J$</span>.</li>
+<li>Local matrix: the matrix defined on a block cluster <span class="math inline"><em>τ</em> × <em>σ</em></span></li>
+<li>Formal rank of a rank-k matrix: it is the number of columns in <span class="math inline"><em>A</em></span> or <span class="math inline"><em>B</em></span>.</li>
+<li>Long matrix: the matrix has more number of rows than columns.</li>
+<li>Wide matrix: the matrix has more number of columns than rows.</li>
+</ul>
+
+</body>
+</html>

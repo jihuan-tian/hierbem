@@ -1,0 +1,59 @@
+\hypertarget{bct-copy-constructor_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/block-\/cluster-\/tree-\/copy-\/constructor/bct-\/copy-\/constructor.cc File Reference}
+\label{bct-copy-constructor_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/block-\/cluster-\/tree-\/copy-\/constructor/bct-\/copy-\/constructor.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/block-\/cluster-\/tree-\/copy-\/constructor/bct-\/copy-\/constructor.\+cc}}
+
+
+Verify the copy constructor of block cluster tree.  
+
+
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}block\+\_\+cluster\+\_\+tree.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}debug\+\_\+tools.\+h\char`\"{}}\newline
+Include dependency graph for bct-\/copy-\/constructor.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{bct-copy-constructor_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{bct-copy-constructor_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the copy constructor of block cluster tree. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/21 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{bct-copy-constructor_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{bct-copy-constructor_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{bct-\/copy-\/constructor.\+cc@{bct-\/copy-\/constructor.\+cc}!main@{main}}
+\index{main@{main}!bct-\/copy-\/constructor.\+cc@{bct-\/copy-\/constructor.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Set the dimension of the H$^\wedge$p-\/matrix to be built.
+
+Set the minimum cluster size.
+
+Generate the cluster tree using cardinality based partition.
+
+Generate the block cluster tree.
+
+Deep copy
+
+Shallow copy
+
+After shallow copy, try to print B\+C\+T1.
+
+References Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product().
+

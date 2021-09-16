@@ -1,0 +1,69 @@
+\hypertarget{simple-bounding-box_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/simple-\/bounding-\/box/simple-\/bounding-\/box.cc File Reference}
+\label{simple-bounding-box_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/simple-\/bounding-\/box/simple-\/bounding-\/box.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/simple-\/bounding-\/box/simple-\/bounding-\/box.\+cc}}
+{\ttfamily \#include $<$deal.\+I\+I/base/logstream.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/base/point.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe\+\_\+q.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/mapping\+\_\+q\+\_\+generic.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+generator.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+in.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+out.\+h$>$}\newline
+{\ttfamily \#include $<$simple\+\_\+bounding\+\_\+box.\+h$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+Include dependency graph for simple-\/bounding-\/box.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{simple-bounding-box_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{simple-bounding-box_8cc_aa1e1544709b9f7c30979d4da5e625057}\label{simple-bounding-box_8cc_aa1e1544709b9f7c30979d4da5e625057}} 
+{\footnotesize template$<$int dim$>$ }\\void {\bfseries print\+\_\+bbox\+\_\+info} (const \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ dim $>$ \&bbox)
+\item 
+int \hyperlink{simple-bounding-box_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This file verifies the \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box} class. 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{simple-bounding-box_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{simple-bounding-box_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{simple-\/bounding-\/box.\+cc@{simple-\/bounding-\/box.\+cc}!main@{main}}
+\index{main@{main}!simple-\/bounding-\/box.\+cc@{simple-\/bounding-\/box.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Initialize deal.\+ii log stream.
+
+Generate the grid for a 3D sphere.
+
+Save the mesh to a file for visualization.
+
+Generate a bounding box for the triangulation using the vertex coordinates of the triangulation.
+
+Print geometric information of the bounding box.
+
+Divide the bounding box into halves.
+
+Print geometric information of the two children boxes.
+
+Create a high order Lagrangian finite element.
+
+Create a Do\+F\+Handler, which is associated with the triangulation and distributed with the finite element.
+
+Create a 2nd order mapping, which is required in generating the map from DoF indices to support points.
+
+Create bounding box based on the high order mapping.
+
+Print geometric information of the bounding box.
+
+Create a DoF index set.
+
+Get the vector of support points.
+
+Create a bounding box for the DoF index set.
+
+Print geometric information of the bounding box.

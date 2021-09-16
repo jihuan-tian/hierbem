@@ -1,0 +1,249 @@
+\hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{}\section{Laplace\+B\+EM\+:\+:Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$ Class Template Reference}
+\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell}\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$}}
+
+
+{\ttfamily \#include $<$laplace\+\_\+bem.\+h$>$}
+
+
+
+Inheritance diagram for Laplace\+B\+EM\+:\+:Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{classLaplaceBEM_1_1KernelPulledbackToUnitCell__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Laplace\+B\+EM\+:\+:Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classLaplaceBEM_1_1KernelPulledbackToUnitCell__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a344ad653c5e57498cc005b5b683e8db6}{Kernel\+Pulledback\+To\+Unit\+Cell} (const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&kernel\+\_\+function, const Cell\+Neighboring\+Type \&cell\+\_\+neighboring\+\_\+type, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&kx\+\_\+support\+\_\+points, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&ky\+\_\+support\+\_\+points, const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a66ba57ad86025978e5e5580c822aef89}{kx\+\_\+dof\+\_\+index}=0, const unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ae6f3e4bc6cf09546bf11d01812f9b692}{ky\+\_\+dof\+\_\+index}=0)
+\item 
+\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a3ef9d5f4401cc8d6bd7c11955fadb770}{Kernel\+Pulledback\+To\+Unit\+Cell} (const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&kernel\+\_\+function, const Cell\+Neighboring\+Type \&cell\+\_\+neighboring\+\_\+type, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&kx\+\_\+support\+\_\+points, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&ky\+\_\+support\+\_\+points, const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ $\ast$bem\+\_\+values, const unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a66ba57ad86025978e5e5580c822aef89}{kx\+\_\+dof\+\_\+index}=0, const unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ae6f3e4bc6cf09546bf11d01812f9b692}{ky\+\_\+dof\+\_\+index}=0)
+\item 
+\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_afd01d1f6655a678124f2d0e3684b419d}{Kernel\+Pulledback\+To\+Unit\+Cell} (const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&kernel\+\_\+function, const Cell\+Neighboring\+Type \&cell\+\_\+neighboring\+\_\+type, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&kx\+\_\+support\+\_\+points, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&ky\+\_\+support\+\_\+points, const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ $\ast$bem\+\_\+values, const \hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData}{Pair\+Cell\+Wise\+Scratch\+Data} $\ast$scratch, const unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a66ba57ad86025978e5e5580c822aef89}{kx\+\_\+dof\+\_\+index}=0, const unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ae6f3e4bc6cf09546bf11d01812f9b692}{ky\+\_\+dof\+\_\+index}=0)
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a1fd71ef63d7bd116cef37b5fe9189c40}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a1fd71ef63d7bd116cef37b5fe9189c40}} 
+\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell} \& {\bfseries operator=} (const \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell} \&f)
+\item 
+void \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a6c4063a68f9981ed1f2327670c512f59}{reinit} (const Cell\+Neighboring\+Type \&cell\+\_\+neighboring\+\_\+type, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&kx\+\_\+support\+\_\+points, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&ky\+\_\+support\+\_\+points, const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe)
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a1067e884c01a2f6d4648f9fc08fc2bc2}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a1067e884c01a2f6d4648f9fc08fc2bc2}} 
+void {\bfseries set\+\_\+kx\+\_\+dof\+\_\+index} (const unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a66ba57ad86025978e5e5580c822aef89}{kx\+\_\+dof\+\_\+index})
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a39ea676a505803290a647c99699b5504}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a39ea676a505803290a647c99699b5504}} 
+void {\bfseries set\+\_\+ky\+\_\+dof\+\_\+index} (const unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ae6f3e4bc6cf09546bf11d01812f9b692}{ky\+\_\+dof\+\_\+index})
+\item 
+virtual Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ac55bd556acba999c6d71c322eff33cd9}{value} (const Point$<$ dim $>$ \&x\+\_\+hat, const Point$<$ dim $>$ \&y\+\_\+hat, const unsigned int component=0) const
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a72955834d5c6542c1f3216f408afe9f3}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a72955834d5c6542c1f3216f408afe9f3}} 
+virtual Range\+Number\+Type {\bfseries value} (const unsigned int k3\+\_\+index, const unsigned int quad\+\_\+no, const unsigned int component=0) const
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_aaea7ab071bb5a2fc03e7f613b0dabb57}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_aaea7ab071bb5a2fc03e7f613b0dabb57}} 
+virtual void {\bfseries vector\+\_\+value} (const Point$<$ dim $>$ \&x\+\_\+hat, const Point$<$ dim $>$ \&y\+\_\+hat, Vector$<$ Range\+Number\+Type $>$ \&values) const
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a73ddab1e4b36915991549a5476b8a803}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a73ddab1e4b36915991549a5476b8a803}} 
+virtual void {\bfseries value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $>$$>$ \&x\+\_\+hat\+\_\+list, const std\+::vector$<$ Point$<$ dim $>$$>$ \&y\+\_\+hat\+\_\+list, std\+::vector$<$ Range\+Number\+Type $>$ \&values, const unsigned int component=0) const
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a9aa5a715991470a7e8a69f40426d6cd9}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a9aa5a715991470a7e8a69f40426d6cd9}} 
+virtual void {\bfseries vector\+\_\+value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $>$$>$ \&x\+\_\+hat\+\_\+list, const std\+::vector$<$ Point$<$ dim $>$$>$ \&y\+\_\+hat\+\_\+list, std\+::vector$<$ Vector$<$ Range\+Number\+Type $>$$>$ \&values) const
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ad351c9674e4bd484e5d5396210abe282}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ad351c9674e4bd484e5d5396210abe282}} 
+const unsigned int {\bfseries n\+\_\+components}
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a03ac8378093fac9ad01272ef619aa26e}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a03ac8378093fac9ad01272ef619aa26e}} 
+static const unsigned int {\bfseries dimension} = dim
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_acf7e47b2ed819a2c6f320a306a2689fe}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_acf7e47b2ed819a2c6f320a306a2689fe}} 
+const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \& {\bfseries kernel\+\_\+function}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a82662fdd33ceb50cd40aaf7b2bd1b32a}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a82662fdd33ceb50cd40aaf7b2bd1b32a}} 
+Cell\+Neighboring\+Type {\bfseries cell\+\_\+neighboring\+\_\+type}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ac7667f6cacebaed1a6ba39d67211db04}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ac7667f6cacebaed1a6ba39d67211db04}} 
+const std\+::vector$<$ Point$<$ spacedim $>$ $>$ \& {\bfseries kx\+\_\+support\+\_\+points}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a92971044a5f8ce2f61688858a3deac8e}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a92971044a5f8ce2f61688858a3deac8e}} 
+const std\+::vector$<$ Point$<$ spacedim $>$ $>$ \& {\bfseries ky\+\_\+support\+\_\+points}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a0455971a463de57f21930bb134461a17}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a0455971a463de57f21930bb134461a17}} 
+const Finite\+Element$<$ dim, spacedim $>$ \& {\bfseries kx\+\_\+fe}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a664dab9bbbf454f7636c61f43b4829eb}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a664dab9bbbf454f7636c61f43b4829eb}} 
+const Finite\+Element$<$ dim, spacedim $>$ \& {\bfseries ky\+\_\+fe}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a00b7c35e8a15b73113921af1eb3a3539}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a00b7c35e8a15b73113921af1eb3a3539}} 
+const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ $\ast$ {\bfseries bem\+\_\+values}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a39328e6d06348a2a4841f91077ea2a6c}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a39328e6d06348a2a4841f91077ea2a6c}} 
+const \hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData}{Pair\+Cell\+Wise\+Scratch\+Data} $\ast$ {\bfseries scratch}
+\item 
+unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a66ba57ad86025978e5e5580c822aef89}{kx\+\_\+dof\+\_\+index}
+\item 
+unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ae6f3e4bc6cf09546bf11d01812f9b692}{ky\+\_\+dof\+\_\+index}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$int dim, int spacedim, typename Range\+Number\+Type = double$>$\newline
+class Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$}
+
+Kernel function pulled back to unit cell. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a344ad653c5e57498cc005b5b683e8db6}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a344ad653c5e57498cc005b5b683e8db6}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}!Kernel\+Pulledback\+To\+Unit\+Cell@{Kernel\+Pulledback\+To\+Unit\+Cell}}
+\index{Kernel\+Pulledback\+To\+Unit\+Cell@{Kernel\+Pulledback\+To\+Unit\+Cell}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}}
+\subsubsection{\texorpdfstring{Kernel\+Pulledback\+To\+Unit\+Cell()}{KernelPulledbackToUnitCell()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type $>$ \\
+\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$\+::\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell} (\begin{DoxyParamCaption}\item[{const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&}]{kernel\+\_\+function,  }\item[{const Cell\+Neighboring\+Type \&}]{cell\+\_\+neighboring\+\_\+type,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{kx\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{ky\+\_\+support\+\_\+points,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const unsigned int}]{kx\+\_\+dof\+\_\+index = {\ttfamily 0},  }\item[{const unsigned int}]{ky\+\_\+dof\+\_\+index = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+Constructor for \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+support\+\_\+points} & Permuted list of support points in \$\+K\+\_\+x\$. \\
+\hline
+{\em ky\+\_\+support\+\_\+points} & Permuted list of support points in \$\+K\+\_\+y\$. \\
+\hline
+{\em kx\+\_\+dof\+\_\+index} & Index for accessing the list of Do\+Fs in tensor product order in \$\+K\+\_\+x\$. \\
+\hline
+{\em ky\+\_\+dof\+\_\+index} & Index for accessing the list of Do\+Fs in tensor product order in \$\+K\+\_\+y\$. \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+Kernel\+Pulledback\+To\+Unit\+Cell().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a3ef9d5f4401cc8d6bd7c11955fadb770}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a3ef9d5f4401cc8d6bd7c11955fadb770}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}!Kernel\+Pulledback\+To\+Unit\+Cell@{Kernel\+Pulledback\+To\+Unit\+Cell}}
+\index{Kernel\+Pulledback\+To\+Unit\+Cell@{Kernel\+Pulledback\+To\+Unit\+Cell}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}}
+\subsubsection{\texorpdfstring{Kernel\+Pulledback\+To\+Unit\+Cell()}{KernelPulledbackToUnitCell()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type $>$ \\
+\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$\+::\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell} (\begin{DoxyParamCaption}\item[{const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&}]{kernel\+\_\+function,  }\item[{const Cell\+Neighboring\+Type \&}]{cell\+\_\+neighboring\+\_\+type,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{kx\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{ky\+\_\+support\+\_\+points,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ $\ast$}]{bem\+\_\+values,  }\item[{const unsigned int}]{kx\+\_\+dof\+\_\+index = {\ttfamily 0},  }\item[{const unsigned int}]{ky\+\_\+dof\+\_\+index = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em kernel\+\_\+function} & \\
+\hline
+{\em cell\+\_\+neighboring\+\_\+type} & \\
+\hline
+{\em kx\+\_\+support\+\_\+points} & \\
+\hline
+{\em ky\+\_\+support\+\_\+points} & \\
+\hline
+{\em kx\+\_\+fe} & \\
+\hline
+{\em ky\+\_\+fe} & \\
+\hline
+{\em bem\+\_\+values} & \\
+\hline
+{\em kx\+\_\+dof\+\_\+index} & \\
+\hline
+{\em ky\+\_\+dof\+\_\+index} & \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+Kernel\+Pulledback\+To\+Unit\+Cell().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_afd01d1f6655a678124f2d0e3684b419d}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_afd01d1f6655a678124f2d0e3684b419d}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}!Kernel\+Pulledback\+To\+Unit\+Cell@{Kernel\+Pulledback\+To\+Unit\+Cell}}
+\index{Kernel\+Pulledback\+To\+Unit\+Cell@{Kernel\+Pulledback\+To\+Unit\+Cell}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}}
+\subsubsection{\texorpdfstring{Kernel\+Pulledback\+To\+Unit\+Cell()}{KernelPulledbackToUnitCell()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type $>$ \\
+\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$\+::\hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell} (\begin{DoxyParamCaption}\item[{const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&}]{kernel\+\_\+function,  }\item[{const Cell\+Neighboring\+Type \&}]{cell\+\_\+neighboring\+\_\+type,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{kx\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{ky\+\_\+support\+\_\+points,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ $\ast$}]{bem\+\_\+values,  }\item[{const \hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData}{Pair\+Cell\+Wise\+Scratch\+Data} $\ast$}]{scratch,  }\item[{const unsigned int}]{kx\+\_\+dof\+\_\+index = {\ttfamily 0},  }\item[{const unsigned int}]{ky\+\_\+dof\+\_\+index = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em kernel\+\_\+function} & \\
+\hline
+{\em cell\+\_\+neighboring\+\_\+type} & \\
+\hline
+{\em kx\+\_\+support\+\_\+points} & \\
+\hline
+{\em ky\+\_\+support\+\_\+points} & \\
+\hline
+{\em kx\+\_\+fe} & \\
+\hline
+{\em ky\+\_\+fe} & \\
+\hline
+{\em bem\+\_\+values} & \\
+\hline
+{\em kx\+\_\+dof\+\_\+index} & \\
+\hline
+{\em ky\+\_\+dof\+\_\+index} & \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a6c4063a68f9981ed1f2327670c512f59}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a6c4063a68f9981ed1f2327670c512f59}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}!reinit@{reinit}}
+\index{reinit@{reinit}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}}
+\subsubsection{\texorpdfstring{reinit()}{reinit()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type $>$ \\
+void \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$\+::reinit (\begin{DoxyParamCaption}\item[{const Cell\+Neighboring\+Type \&}]{cell\+\_\+neighboring\+\_\+type,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{kx\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{ky\+\_\+support\+\_\+points,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe }\end{DoxyParamCaption})}
+
+Associate the \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell} with new support point and finite element data. 
+
+References Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+::kx\+\_\+dof\+\_\+index, and Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+::ky\+\_\+dof\+\_\+index.
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ac55bd556acba999c6d71c322eff33cd9}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ac55bd556acba999c6d71c322eff33cd9}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}!value@{value}}
+\index{value@{value}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}}
+\subsubsection{\texorpdfstring{value()}{value()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type $>$ \\
+Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$\+::value (\begin{DoxyParamCaption}\item[{const Point$<$ dim $>$ \&}]{x\+\_\+hat,  }\item[{const Point$<$ dim $>$ \&}]{y\+\_\+hat,  }\item[{const unsigned int}]{component = {\ttfamily 0} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Evaluation of the function which depends on the kernel type. Different types of kernel function require different normal vector data. 
+
+References Laplace\+B\+E\+M\+::transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell().
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a66ba57ad86025978e5e5580c822aef89}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_a66ba57ad86025978e5e5580c822aef89}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}!kx\+\_\+dof\+\_\+index@{kx\+\_\+dof\+\_\+index}}
+\index{kx\+\_\+dof\+\_\+index@{kx\+\_\+dof\+\_\+index}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}}
+\subsubsection{\texorpdfstring{kx\+\_\+dof\+\_\+index}{kx\_dof\_index}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type = double$>$ \\
+unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$\+::kx\+\_\+dof\+\_\+index\hspace{0.3cm}{\ttfamily [private]}}
+
+Index for accessing the list of Do\+Fs in tensor product order in \$\+K\+\_\+x\$. 
+
+Referenced by Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+::reinit().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ae6f3e4bc6cf09546bf11d01812f9b692}\label{classLaplaceBEM_1_1KernelPulledbackToUnitCell_ae6f3e4bc6cf09546bf11d01812f9b692}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}!ky\+\_\+dof\+\_\+index@{ky\+\_\+dof\+\_\+index}}
+\index{ky\+\_\+dof\+\_\+index@{ky\+\_\+dof\+\_\+index}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}}
+\subsubsection{\texorpdfstring{ky\+\_\+dof\+\_\+index}{ky\_dof\_index}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type = double$>$ \\
+unsigned int \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$\+::ky\+\_\+dof\+\_\+index\hspace{0.3cm}{\ttfamily [private]}}
+
+Index for accessing the list of Do\+Fs in tensor product order in \$\+K\+\_\+y\$. 
+
+Referenced by Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+::reinit().
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/\hyperlink{laplace__bem_8h}{laplace\+\_\+bem.\+h}\end{DoxyCompactItemize}

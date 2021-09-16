@@ -1,0 +1,51 @@
+\hypertarget{generic__functors_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/src/generic\+\_\+functors.cc File Reference}
+\label{generic__functors_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/src/generic\+\_\+functors.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/src/generic\+\_\+functors.\+cc}}
+
+
+Introduction of \hyperlink{generic__functors_8cc}{generic\+\_\+functors.\+cc}.  
+
+
+{\ttfamily \#include \char`\"{}generic\+\_\+functors.\+h\char`\"{}}\newline
+Include dependency graph for generic\+\_\+functors.\+cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=299pt]{generic__functors_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{generic__functors_8cc_a45ed12a09686ebca5400b5161a186c09}{build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map} (const std\+::vector$<$ dealii\+::types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set\+\_\+as\+\_\+local\+\_\+to\+\_\+global\+\_\+map, std\+::map$<$ dealii\+::types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&global\+\_\+to\+\_\+local\+\_\+map)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Introduction of \hyperlink{generic__functors_8cc}{generic\+\_\+functors.\+cc}. 
+
+\begin{DoxyDate}{Date}
+2021-\/07-\/31 
+\end{DoxyDate}
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{generic__functors_8cc_a45ed12a09686ebca5400b5161a186c09}\label{generic__functors_8cc_a45ed12a09686ebca5400b5161a186c09}} 
+\index{generic\+\_\+functors.\+cc@{generic\+\_\+functors.\+cc}!build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map@{build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map}}
+\index{build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map@{build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map}!generic\+\_\+functors.\+cc@{generic\+\_\+functors.\+cc}}
+\subsubsection{\texorpdfstring{build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map()}{build\_index\_set\_global\_to\_local\_map()}}
+{\footnotesize\ttfamily void build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ dealii\+::types\+::global\+\_\+dof\+\_\+index $>$ \&}]{index\+\_\+set\+\_\+as\+\_\+local\+\_\+to\+\_\+global\+\_\+map,  }\item[{std\+::map$<$ dealii\+::types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{global\+\_\+to\+\_\+local\+\_\+map }\end{DoxyParamCaption})}
+
+Build a map from global indices to local indices based on the given index set, which is actually a map from local indices to global indices. 
+\begin{DoxyParams}{Parameters}
+{\em index\+\_\+set\+\_\+as\+\_\+local\+\_\+to\+\_\+global\+\_\+map} & \\
+\hline
+{\em global\+\_\+to\+\_\+local\+\_\+map} & \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), f\+\_\+h\+\_\+mmult(), find\+\_\+pointer\+\_\+data(), h\+\_\+f\+\_\+mmult(), h\+\_\+rk\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), main(), and rk\+\_\+h\+\_\+mmult().
+

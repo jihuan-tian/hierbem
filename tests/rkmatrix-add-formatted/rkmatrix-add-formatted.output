@@ -20,7 +20,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 3
@@ -46,6 +46,11 @@
 2
 
 
+# name: formal_rank
+# type: scalar
+2
+
+
 # name: m
 # type: scalar
 3
@@ -60,7 +65,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 3
@@ -86,6 +91,56 @@
 3
 
 
+# name: formal_rank
+# type: scalar
+3
+
+
+# name: m
+# type: scalar
+3
+
+
+# name: n
+# type: scalar
+5
+
+
+# name: C
+# type: scalar struct
+# ndims: 2
+1 1
+# length: 6
+# name: A
+# type: matrix
+# rows: 3
+# columns: 5
+    -18.26938557       1.10885114     -13.13443675       3.60253693      -1.22812827 
+    -20.24834312       0.06782904     -13.67680152      -4.37264747      -0.90832497 
+    -22.22730067      -0.97319306     -28.06718920       0.44488025       1.01733569 
+
+
+# name: B
+# type: matrix
+# rows: 5
+# columns: 5
+     -0.10134600      -0.76793814      -0.37433657      -0.61074504      -0.23086477 
+     -0.24856875      -0.48807128      -0.31222130       0.76940956      -0.10367218 
+     -0.39579151      -0.20820442      -0.44521255       0.13377524      -0.54591504 
+     -0.54301427       0.07166244      -0.30109701      -0.12057280      -0.39053604 
+     -0.69023702       0.35152930      -0.68812526      -0.05065379       0.69671509 
+
+
+# name: rank
+# type: scalar
+3
+
+
+# name: formal_rank
+# type: scalar
+5
+
+
 # name: m
 # type: scalar
 3
@@ -100,7 +155,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 3
@@ -126,6 +181,11 @@
 1
 
 
+# name: formal_rank
+# type: scalar
+1
+
+
 # name: m
 # type: scalar
 3
@@ -140,7 +200,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 3
@@ -166,6 +226,11 @@
 2
 
 
+# name: formal_rank
+# type: scalar
+2
+
+
 # name: m
 # type: scalar
 3
@@ -180,7 +245,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 3
@@ -204,6 +269,56 @@
 # name: rank
 # type: scalar
 3
+
+
+# name: formal_rank
+# type: scalar
+5
+
+
+# name: m
+# type: scalar
+3
+
+
+# name: n
+# type: scalar
+5
+
+
+# name: A_plus_B
+# type: scalar struct
+# ndims: 2
+1 1
+# length: 6
+# name: A
+# type: matrix
+# rows: 3
+# columns: 5
+    -18.26938557       1.10885114     -13.13443675       3.60253693      -1.22812827 
+    -20.24834312       0.06782904     -13.67680152      -4.37264747      -0.90832497 
+    -22.22730067      -0.97319306     -28.06718920       0.44488025       1.01733569 
+
+
+# name: B
+# type: matrix
+# rows: 5
+# columns: 5
+     -0.10134600      -0.76793814      -0.37433657      -0.61074504      -0.23086477 
+     -0.24856875      -0.48807128      -0.31222130       0.76940956      -0.10367218 
+     -0.39579151      -0.20820442      -0.44521255       0.13377524      -0.54591504 
+     -0.54301427       0.07166244      -0.30109701      -0.12057280      -0.39053604 
+     -0.69023702       0.35152930      -0.68812526      -0.05065379       0.69671509 
+
+
+# name: rank
+# type: scalar
+3
+
+
+# name: formal_rank
+# type: scalar
+5
 
 
 # name: m

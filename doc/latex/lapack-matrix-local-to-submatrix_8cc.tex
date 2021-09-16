@@ -1,0 +1,53 @@
+\hypertarget{lapack-matrix-local-to-submatrix_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/lapack-\/matrix-\/local-\/to-\/submatrix/lapack-\/matrix-\/local-\/to-\/submatrix.cc File Reference}
+\label{lapack-matrix-local-to-submatrix_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/lapack-\/matrix-\/local-\/to-\/submatrix/lapack-\/matrix-\/local-\/to-\/submatrix.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/lapack-\/matrix-\/local-\/to-\/submatrix/lapack-\/matrix-\/local-\/to-\/submatrix.\+cc}}
+
+
+Verify the restriction of a local full matrix to sub full matrix.  
+
+
+{\ttfamily \#include $<$deal.\+I\+I/base/types.\+h$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}hmatrix.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lapack\+\_\+full\+\_\+matrix\+\_\+ext.\+h\char`\"{}}\newline
+Include dependency graph for lapack-\/matrix-\/local-\/to-\/submatrix.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{lapack-matrix-local-to-submatrix_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{lapack-matrix-local-to-submatrix_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the restriction of a local full matrix to sub full matrix. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/28 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{lapack-matrix-local-to-submatrix_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{lapack-matrix-local-to-submatrix_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{lapack-\/matrix-\/local-\/to-\/submatrix.\+cc@{lapack-\/matrix-\/local-\/to-\/submatrix.\+cc}!main@{main}}
+\index{main@{main}!lapack-\/matrix-\/local-\/to-\/submatrix.\+cc@{lapack-\/matrix-\/local-\/to-\/submatrix.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Create a full matrix with data.
+
+Create a local matrix as a sub matrix of the original matrix.
+
+Build the maps from global row and column indices respectively to local indices wrt. M\+\_\+b.
+
+Create a sub full matrix of {\ttfamily M\+\_\+b} by specifying its block cluster as a subset of the block cluster $\tau \times \sigma$ for {\ttfamily M\+\_\+b}.
+
+References build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat().
+

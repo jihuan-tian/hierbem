@@ -1,0 +1,61 @@
+\hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{}\section{Laplace\+B\+EM\+:\+:Laplace\+Kernel\+:\+:Kernel\+Function$<$ dim, Range\+Number\+Type $>$ Class Template Reference}
+\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function$<$ dim, Range\+Number\+Type $>$@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function$<$ dim, Range\+Number\+Type $>$}}
+
+
+Inheritance diagram for Laplace\+B\+EM\+:\+:Laplace\+Kernel\+:\+:Kernel\+Function$<$ dim, Range\+Number\+Type $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Laplace\+B\+EM\+:\+:Laplace\+Kernel\+:\+:Kernel\+Function$<$ dim, Range\+Number\+Type $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=220pt]{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a1f10a1886e4b9aed7d60c036ccc81ee6}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a1f10a1886e4b9aed7d60c036ccc81ee6}} 
+{\bfseries Kernel\+Function} (const Kernel\+Type kernel\+\_\+type=None\+Type, const unsigned int n\+\_\+components=1)
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2a9a7e11aca4e52ece2d721e60a4bf56}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2a9a7e11aca4e52ece2d721e60a4bf56}} 
+\hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function} \& {\bfseries operator=} (const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function} \&f)
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}} 
+virtual Range\+Number\+Type {\bfseries value} (const Point$<$ dim $>$ \&x, const Point$<$ dim $>$ \&y, const Tensor$<$ 1, dim $>$ \&nx, const Tensor$<$ 1, dim $>$ \&ny, const unsigned int component=0) const
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aa8110379ffcda0d7aabeb1b9229fa8db}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aa8110379ffcda0d7aabeb1b9229fa8db}} 
+virtual void {\bfseries vector\+\_\+value} (const Point$<$ dim $>$ \&x, const Point$<$ dim $>$ \&y, const Tensor$<$ 1, dim $>$ \&nx, const Tensor$<$ 1, dim $>$ \&ny, Vector$<$ Range\+Number\+Type $>$ \&values) const
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a8ba5755bf65478154209736c001f2f2a}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a8ba5755bf65478154209736c001f2f2a}} 
+virtual void {\bfseries value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $>$$>$ \&x\+\_\+points, const std\+::vector$<$ Point$<$ dim $>$$>$ \&y\+\_\+points, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&nx\+\_\+list, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&ny\+\_\+list, std\+::vector$<$ Range\+Number\+Type $>$ \&values, const unsigned int component=0) const
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ae906434f76ac27668ab4ddf91e3cd7fb}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ae906434f76ac27668ab4ddf91e3cd7fb}} 
+virtual void {\bfseries vector\+\_\+value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $>$$>$ \&x\+\_\+points, const std\+::vector$<$ Point$<$ dim $>$$>$ \&y\+\_\+points, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&nx\+\_\+list, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&ny\+\_\+list, std\+::vector$<$ Vector$<$ Range\+Number\+Type $>$$>$ \&values) const
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a4e4f538fccd38abfa5619c10cedeae00}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a4e4f538fccd38abfa5619c10cedeae00}} 
+const Kernel\+Type {\bfseries kernel\+\_\+type}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a21908b76243d0b7b3b61ef67871ed790}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a21908b76243d0b7b3b61ef67871ed790}} 
+const unsigned int {\bfseries n\+\_\+components}
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ad4cf29ad18c345f5d6d781a1b4aad15a}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ad4cf29ad18c345f5d6d781a1b4aad15a}} 
+static const unsigned int {\bfseries dimension} = dim
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/\hyperlink{laplace__bem_8h}{laplace\+\_\+bem.\+h}\end{DoxyCompactItemize}

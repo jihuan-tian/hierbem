@@ -60,12 +60,14 @@ main()
                 std::bind(&PrintTreeNode<int>,
                           std::ref(std::cout),
                           std::placeholders::_1));
+
   // The answer should be: [2, 3, 8, 4, 6, 10, 7, 5, 9].
   std::cout << "In-order traverse of the tree:\n";
   Inorder<int>(root,
                std::bind(&PrintTreeNode<int>,
                          std::ref(std::cout),
                          std::placeholders::_1));
+
   // The answer should be: [2, 8, 6, 4, 3, 7, 9, 5, 10].
   std::cout << "Post-order traverse of the tree:\n";
   Postorder<int>(root,

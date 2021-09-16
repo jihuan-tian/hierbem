@@ -13,7 +13,7 @@ int
 main()
 {
   /**
-   * Create a full matrix.
+   * Create a full matrix with rank=2, which is not of full rank.
    */
   LAPACKFullMatrixExt<double> M;
   std::vector<double>         values{1,  2,  3,  4,  5,  6,  7,  8,  9,  10,
@@ -22,15 +22,19 @@ main()
   M.print_formatted_to_mat(std::cout, "M");
 
   /**
-   * Convert the full matrix into a rank-3 matrix.
+   * Convert the full matrix into a rank-3 matrix. Even though rank 3 is
+   * required, because it is larger than the effective rank of the full matrix,
+   * the rank-k matrix will actually have rank 2, both the formal rank and its
+   * actual rank.
    */
   RkMatrix<double> A(3, M);
   A.print_formatted_to_mat(std::cout, "A");
 
   {
     /**
-     * Truncate the RkMatrix \p A to rank-3. Because the original rank of \p A
-     * is 3, no actual work will be done here.
+     * Truncate the RkMatrix \p A to rank-3. Because the original rank of \p M
+     * is 2 and the created rank-k matrix \p A has a rank 2, no actual rank
+     * truncation will be performed here.
      */
     RkMatrix<double> A_trunc(A);
     A_trunc.truncate_to_rank(3);
@@ -39,7 +43,9 @@ main()
 
   {
     /**
-     * Truncate the RkMatrix \p A to rank-2.
+     * Truncate the RkMatrix \p A to rank-2. Because the original rank of \p M
+     * is 2 and the created rank-k matrix \p A has a rank 2, no actual rank
+     * truncation will be performed here.
      */
     RkMatrix<double> A_trunc(A);
     A_trunc.truncate_to_rank(2);
@@ -48,7 +54,9 @@ main()
 
   {
     /**
-     * Truncate the RkMatrix \p A to rank-1.
+     * Truncate the RkMatrix \p A to rank-1. Because the original rank of \p M
+     * is 2 and the created rank-k matrix \p A has a rank 2, rank truncation
+     * will be performed.
      */
     RkMatrix<double> A_trunc(A);
     A_trunc.truncate_to_rank(1);

@@ -1,7 +1,7 @@
 /**
  * \file hmatrix-truncate-to-fixed-rank.cc
  * \brief Verify the truncation of an HMatrix to an RkMatrix.
- * \ingroup
+ * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-06-24
  */
@@ -54,7 +54,7 @@ main()
   /**
    * Truncate the HMatrix to fixed rank 1.
    */
-  hmat.truncate_to_fixed_rank(1);
+  hmat.truncate_to_rank(1);
   std::cout << "HMatrix rank-1:\n";
   hmat.print_formatted(std::cout, 5, false, 10, "0");
 

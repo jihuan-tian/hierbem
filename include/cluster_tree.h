@@ -117,31 +117,79 @@ public:
               const unsigned int                          n_min);
 
   /**
+   * Copy constructor.
+   * @param cluster_tree
+   */
+  ClusterTree(const ClusterTree<spacedim, Number> &cluster_tree);
+
+  /**
    * Destructor which recursively destroys every node in the cluster tree.
    */
   ~ClusterTree();
 
   /**
    * Perform a pure cardinality based recursive partition, which will ultimately
-   * be used in constructing an \f$\mathcal{H}^p\f$ matrix.
+   * be used in constructing an \f$\mathcal{H}^p\f$ matrix for example.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>
+   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
+   * usually \f$[0, 1, \cdots, N]\f$, the cardinality based cluster partition
+   * produces cluster index sets following the same order, i.e. the cardinality
+   * based partition is order preserving.
+   * 2. If the initial complete cluster index set \f$I\f$ is also continuous,
+   * i.e. it is a continuous integer array, the cardinality based cluster
+   * partition also produces continuous cluster index sets. Hence, the
+   * cardinality based partition is continuity preserving.
+   *   </dd>
+   * </dl>
    */
   void
   partition();
 
   /**
-   * Perform a recursive partition by starting from the root node.
+   * Perform a recursive partition dependent on the coordinates of DoF support
+   * points by starting from the root node.
    *
-   * There is no mesh cell size correction to the cluster diameter and cluster
-   * pair distance.
+   * In this version, there is no mesh cell size correction to the cluster
+   * diameter and cluster pair distance.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>
+   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
+   * usually \f$[0, 1, \cdots, N]\f$, the support point coordinates based
+   * partition is also order preserving. This is because the two child clusters
+   * of the current cluster are built by scanning the index set of the current
+   * cluster from beginning to end.
+   * 2. The support point coordinates based partition is not continuity
+   * preserving.
+   *   </dd>
+   * </dl>
    */
   void
   partition(const std::vector<Point<spacedim>> &all_support_points);
 
   /**
-   * Perform a recursive partition by starting from the root node.
+   * Perform a recursive partition dependent on the coordinates of DoF support
+   * points by starting from the root node.
    *
-   * There is mesh cell size correction to the cluster diameter and cluster
-   * pair distance.
+   * In this version, there is mesh cell size correction to the cluster diameter
+   * and cluster pair distance.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>
+   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
+   * usually \f$[0, 1, \cdots, N]\f$, the support point coordinates based
+   * partition is also order preserving. This is because the two child clusters
+   * of the current cluster are built by scanning the index set of the current
+   * cluster from beginning to end.
+   * 2. The support point coordinates based partition is not continuity
+   * preserving.
+   *   </dd>
+   * </dl>
    */
   void
   partition(const std::vector<Point<spacedim>> &all_support_points,
@@ -164,6 +212,12 @@ public:
    */
   const std::vector<node_pointer_type> &
   get_leaf_set() const;
+
+  /**
+   * Build the leaf set by tree recursion.
+   */
+  void
+  build_leaf_set();
 
   /**
    * Get the minimum cluster size.
@@ -193,6 +247,21 @@ private:
   /**
    * Perform a pure cardinality based recursive partition by starting from a
    * cluster node.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>
+   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
+   * usually \f$[0, 1, \cdots, N]\f$, the cardinality based cluster partition
+   * produces cluster index sets following the same order, i.e. the cardinality
+   * based partition is order preserving.
+   * 2. If the initial complete cluster index set \f$I\f$ is also continuous,
+   * i.e. it is a continuous integer array, the cardinality based cluster
+   * partition also produces continuous cluster index sets. Hence, the
+   * cardinality based partition is continuity preserving.
+   *   </dd>
+   * </dl>
+   *
    * @param current_cluster_node
    * @param leaf_set_wrt_current_node
    */
@@ -202,10 +271,25 @@ private:
     std::vector<node_pointer_type> &leaf_set_wrt_current_node);
 
   /**
-   * Perform a recursive partition by starting from a cluster node.
+   * Perform a recursive partition dependent on the coordinates of DoF support
+   * points by starting from a cluster node.
    *
-   * There is no mesh cell size correction to the cluster diameter and cluster
-   * pair distance.
+   * In this version, there is no mesh cell size correction to the cluster
+   * diameter and cluster pair distance.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>
+   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
+   * usually \f$[0, 1, \cdots, N]\f$, the support point coordinates based
+   * partition is also order preserving. This is because the two child clusters
+   * of the current cluster are built by scanning the index set of the current
+   * cluster from beginning to end.
+   * 2. The support point coordinates based partition is not continuity
+   * preserving.
+   *   </dd>
+   * </dl>
+   *
    * @param all_support_points All the support points.
    */
   void
@@ -215,10 +299,25 @@ private:
     std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
   /**
-   * Perform a recursive partition by starting from a cluster node.
+   * Perform a recursive partition dependent on the coordinates of DoF support
+   * points by starting from a cluster node.
    *
-   * There is mesh cell size correction to the cluster diameter and cluster
-   * pair distance.
+   * In this version, there is mesh cell size correction to the cluster diameter
+   * and cluster pair distance.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>
+   * 1. If the initial complete cluster index set \f$I\f$ is sorted, which is
+   * usually \f$[0, 1, \cdots, N]\f$, the support point coordinates based
+   * partition is also order preserving. This is because the two child clusters
+   * of the current cluster are built by scanning the index set of the current
+   * cluster from beginning to end.
+   * 2. The support point coordinates based partition is not continuity
+   * preserving.
+   *   </dd>
+   * </dl>
+   *
    * @param all_support_points All the support points.
    */
   void
@@ -363,6 +462,22 @@ ClusterTree<spacedim, Number>::ClusterTree(
   // Append the only root node to the leaf set.
   leaf_set.push_back(root_node);
 }
+
+
+template <int spacedim, typename Number>
+ClusterTree<spacedim, Number>::ClusterTree(
+  const ClusterTree<spacedim, Number> &cluster_tree)
+  : root_node(nullptr)
+  , leaf_set(0)
+  , depth(cluster_tree.depth)
+  , max_level(cluster_tree.max_level)
+  , n_min(cluster_tree.n_min)
+  , node_num(cluster_tree.node_num)
+{
+  root_node = CopyTree(cluster_tree.get_root());
+  build_leaf_set();
+}
+
 
 template <int spacedim, typename Number>
 ClusterTree<spacedim, Number>::~ClusterTree()
@@ -841,6 +956,16 @@ const std::vector<typename ClusterTree<spacedim, Number>::node_pointer_type> &
 ClusterTree<spacedim, Number>::get_leaf_set() const
 {
   return leaf_set;
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::build_leaf_set()
+{
+  leaf_set.clear();
+
+  GetTreeLeaves(root_node, leaf_set);
 }
 
 

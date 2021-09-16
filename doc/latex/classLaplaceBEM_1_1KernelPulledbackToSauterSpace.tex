@@ -1,0 +1,106 @@
+\hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace}{}\section{Laplace\+B\+EM\+:\+:Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$ Class Template Reference}
+\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace}\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$}}
+
+
+{\ttfamily \#include $<$laplace\+\_\+bem.\+h$>$}
+
+
+
+Inheritance diagram for Laplace\+B\+EM\+:\+:Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{classLaplaceBEM_1_1KernelPulledbackToSauterSpace__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Laplace\+B\+EM\+:\+:Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{classLaplaceBEM_1_1KernelPulledbackToSauterSpace__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a84d8a1b230bab697000f16e021c671a4}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a84d8a1b230bab697000f16e021c671a4}} 
+{\bfseries Kernel\+Pulledback\+To\+Sauter\+Space} (const \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$ \&kernel, const Cell\+Neighboring\+Type cell\+\_\+neighboring\+\_\+type)
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_ae5d75fcb617d831107a8cd2151e6cb3a}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_ae5d75fcb617d831107a8cd2151e6cb3a}} 
+{\bfseries Kernel\+Pulledback\+To\+Sauter\+Space} (const \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$ \&kernel, const Cell\+Neighboring\+Type cell\+\_\+neighboring\+\_\+type, const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ $\ast$bem\+\_\+values)
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a6c0754fea80b064e1b8b7246634d0cb9}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a6c0754fea80b064e1b8b7246634d0cb9}} 
+\hyperlink{classLaplaceBEM_1_1KernelPulledbackToSauterSpace}{Kernel\+Pulledback\+To\+Sauter\+Space} \& {\bfseries operator=} (const \hyperlink{classLaplaceBEM_1_1KernelPulledbackToSauterSpace}{Kernel\+Pulledback\+To\+Sauter\+Space} \&f)
+\item 
+Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a27d5e8b248c5060198b9137162d77c0c}{value} (const Point$<$ dim $\ast$2 $>$ p, const unsigned int component=0) const
+\item 
+Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a3f811601a201e4c68cd1a9392866706b}{value} (const unsigned int quad\+\_\+no, const unsigned int component=0) const
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_aed5c1c302117781dd5c0460cfc8a9392}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_aed5c1c302117781dd5c0460cfc8a9392}} 
+void {\bfseries value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $\ast$2 $>$$>$ \&points, std\+::vector$<$ Range\+Number\+Type $>$ \&values, const unsigned int component=0) const
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a8e401c7c6e032c8cd25f45f404179319}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a8e401c7c6e032c8cd25f45f404179319}} 
+const unsigned int {\bfseries n\+\_\+components}
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_af9313eea69535eb0e01ead937e9028c0}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_af9313eea69535eb0e01ead937e9028c0}} 
+const \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Kernel\+Pulledback\+To\+Unit\+Cell}$<$ dim, spacedim, Range\+Number\+Type $>$ \& {\bfseries kernel\+\_\+on\+\_\+unit\+\_\+cell}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_aa9e897f0e63f3c7ee5009c07e66cbd56}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_aa9e897f0e63f3c7ee5009c07e66cbd56}} 
+Cell\+Neighboring\+Type {\bfseries cell\+\_\+neighboring\+\_\+type}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a5bcaf6a268588034723b37b4bd858476}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a5bcaf6a268588034723b37b4bd858476}} 
+const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ $\ast$ {\bfseries bem\+\_\+values}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$int dim, int spacedim, typename Range\+Number\+Type = double$>$\newline
+class Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$}
+
+Class for pullback the kernel function on the product of two unit cells to Sauter\textquotesingle{}s parametric space. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a27d5e8b248c5060198b9137162d77c0c}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a27d5e8b248c5060198b9137162d77c0c}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space}!value@{value}}
+\index{value@{value}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space}}
+\subsubsection{\texorpdfstring{value()}{value()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type $>$ \\
+Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1KernelPulledbackToSauterSpace}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space}$<$ dim, spacedim, Range\+Number\+Type $>$\+::value (\begin{DoxyParamCaption}\item[{const Point$<$ dim $\ast$2 $>$}]{p,  }\item[{const unsigned int}]{component = {\ttfamily 0} }\end{DoxyParamCaption}) const}
+
+Evaluate the pullback of kernel function on Sauter\textquotesingle{}s parametric space.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & The coordinates at which the kernel function is to be evaluated. It should be noted that this point has a dimension of dim$\ast$2. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a3f811601a201e4c68cd1a9392866706b}\label{classLaplaceBEM_1_1KernelPulledbackToSauterSpace_a3f811601a201e4c68cd1a9392866706b}} 
+\index{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space}!value@{value}}
+\index{value@{value}!Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space@{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space}}
+\subsubsection{\texorpdfstring{value()}{value()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type $>$ \\
+Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1KernelPulledbackToSauterSpace}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space}$<$ dim, spacedim, Range\+Number\+Type $>$\+::value (\begin{DoxyParamCaption}\item[{const unsigned int}]{quad\+\_\+no,  }\item[{const unsigned int}]{component = {\ttfamily 0} }\end{DoxyParamCaption}) const}
+
+Evaluate the pullback of kernel function on Sauter\textquotesingle{}s parametric space at the quad\+\_\+no\textquotesingle{}th quadrature point under the given 4D quadrature rule. 
+\begin{DoxyParams}{Parameters}
+{\em quad\+\_\+no} & quadrature point index \\
+\hline
+{\em component} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/\hyperlink{laplace__bem_8h}{laplace\+\_\+bem.\+h}\end{DoxyCompactItemize}

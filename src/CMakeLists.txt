@@ -1,7 +1,3 @@
-##
-#  CMake script for the step-6 tutorial program:
-##
-
 # Set the name of the project and target:
 SET(TARGET "laplace-bem")
 
@@ -19,7 +15,25 @@ SET(TARGET_SRC
   ${TARGET}.cc
   )
 
+# This macro will further call the following macros:
+
+# DEAL_II_SETUP_TARGET: it appends necessary include directories,
+# linker flags, compile flags and compile definitions and the deal.II
+# library link interface to the given target, which is stored in the
+# variable TARGET, TARGET_SRC.
 DEAL_II_INVOKE_AUTOPILOT()
+
+# Add my own library which includes a series of generic tools.
+ADD_LIBRARY(generic_tools generic_functors.cc)
+# Because my library generic_tools has included deal.ii header files,
+# dependent inlucde paths and library paths need to be imported by
+# calling this macro DEAL_II_SETUP_TARGET.
+DEAL_II_SETUP_TARGET(generic_tools)
+
+# Link TARGET to my generic_tools library.
+LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/src)
+TARGET_LINK_LIBRARIES(${TARGET} generic_tools)
 
 # Link to external libraries.
 LINK_DIRECTORIES("/usr/lib/x86_64-linux-gnu")
+TARGET_LINK_LIBRARIES(${TARGET} boost_program_options)

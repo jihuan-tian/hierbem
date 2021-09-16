@@ -1,0 +1,852 @@
+\hypertarget{laplace__bem_8h}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/include/laplace\+\_\+bem.h File Reference}
+\label{laplace__bem_8h}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/laplace\+\_\+bem.\+h@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/laplace\+\_\+bem.\+h}}
+
+
+Implementation of B\+EM involving kernel functions and singular numerical quadratures.  
+
+
+{\ttfamily \#include $<$deal.\+I\+I/base/point.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/base/subscriptor.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/base/table.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/base/table\+\_\+indices.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/dofs/dof\+\_\+accessor.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/dofs/dof\+\_\+handler.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe\+\_\+base.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe\+\_\+q.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe\+\_\+values.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/mapping\+\_\+q\+\_\+generic.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/full\+\_\+matrix.\+templates.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/tria.\+h$>$}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}quadrature.\+templates.\+h\char`\"{}}\newline
+Include dependency graph for laplace\+\_\+bem.\+h\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{laplace__bem_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=247pt]{laplace__bem_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classLaplaceBEM_1_1BEMValues}{Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$}
+\item 
+class \hyperlink{classLaplaceBEM_1_1BEMValues}{Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$}
+\item 
+struct \hyperlink{structLaplaceBEM_1_1CellWisePerTaskData}{Laplace\+B\+E\+M\+::\+Cell\+Wise\+Per\+Task\+Data}
+\item 
+struct \hyperlink{structLaplaceBEM_1_1CellWiseScratchData}{Laplace\+B\+E\+M\+::\+Cell\+Wise\+Scratch\+Data}
+\item 
+struct \hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData}{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Scratch\+Data}
+\item 
+struct \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData}{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}
+\item 
+class \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function$<$ dim, Range\+Number\+Type $>$}
+\item 
+class \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1SingleLayerKernel}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Single\+Layer\+Kernel$<$ dim, Range\+Number\+Type $>$}
+\item 
+class \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel$<$ dim, Range\+Number\+Type $>$}
+\item 
+class \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1AdjointDoubleLayerKernel}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Adjoint\+Double\+Layer\+Kernel$<$ dim, Range\+Number\+Type $>$}
+\item 
+class \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1HyperSingularKernel}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Hyper\+Singular\+Kernel$<$ dim, Range\+Number\+Type $>$}
+\item 
+class \hyperlink{classLaplaceBEM_1_1KernelPulledbackToUnitCell}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$}
+\item 
+class \hyperlink{classLaplaceBEM_1_1KernelPulledbackToSauterSpace}{Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a635299753d9b1b8df8804c6c1c00e3f9}\label{laplace__bem_8h_a635299753d9b1b8df8804c6c1c00e3f9}} 
+enum {\bfseries Cell\+Neighboring\+Type} \{ \newline
+{\bfseries Same\+Panel}, 
+{\bfseries Common\+Edge}, 
+{\bfseries Common\+Vertex}, 
+{\bfseries Regular}, 
+\newline
+{\bfseries None}
+ \}
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a2794241a96ac484e0857eb0b7c915664}\label{laplace__bem_8h_a2794241a96ac484e0857eb0b7c915664}} 
+enum {\bfseries Kernel\+Type} \{ \newline
+{\bfseries Single\+Layer}, 
+{\bfseries Double\+Layer}, 
+{\bfseries Adjoint\+Double\+Layer}, 
+{\bfseries Hyper\+Singular}, 
+\newline
+{\bfseries None\+Type}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_a5497786c0b39fdb049b9c8fc5988bdcb}{Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&sauter\+\_\+quad\+\_\+rule, Table$<$ 3, Range\+Number\+Type $>$ \&kx\+\_\+shape\+\_\+value\+\_\+table, Table$<$ 3, Range\+Number\+Type $>$ \&ky\+\_\+shape\+\_\+value\+\_\+table)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_adacab8988c77e9127210826684684cd7}{Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&sauter\+\_\+quad\+\_\+rule, Table$<$ 3, Range\+Number\+Type $>$ \&kx\+\_\+shape\+\_\+value\+\_\+table, Table$<$ 3, Range\+Number\+Type $>$ \&ky\+\_\+shape\+\_\+value\+\_\+table)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_ad1b3205a29e5aef857857b6e1a533f36}{Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&sauter\+\_\+quad\+\_\+rule, Table$<$ 3, Range\+Number\+Type $>$ \&kx\+\_\+shape\+\_\+value\+\_\+table, Table$<$ 3, Range\+Number\+Type $>$ \&ky\+\_\+shape\+\_\+value\+\_\+table)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_a9ba750c1de1ccb7c7f091efdd2a720fe}{Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+regular} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&sauter\+\_\+quad\+\_\+rule, Table$<$ 3, Range\+Number\+Type $>$ \&kx\+\_\+shape\+\_\+value\+\_\+table, Table$<$ 3, Range\+Number\+Type $>$ \&ky\+\_\+shape\+\_\+value\+\_\+table)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_a1ce86dd0bd3b5c4bf591ae0128205416}{Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&sauter\+\_\+quad\+\_\+rule, Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table, Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_a4df239900849c6aa0875c8bdeaab0aa0}{Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&sauter\+\_\+quad\+\_\+rule, Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table, Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_abaca697a3eb40d422b9f26c63ff47670}{Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&sauter\+\_\+quad\+\_\+rule, Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table, Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_abe59b85b94a356ba18b578090d708090}{Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&sauter\+\_\+quad\+\_\+rule, Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table, Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe}\label{laplace__bem_8h_ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ {\bfseries Laplace\+B\+E\+M\+::get\+\_\+conflict\+\_\+indices} (const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::active\+\_\+cell\+\_\+iterator \&cell)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_ac077b7401dee40cdf3d7bd38e1e8ad2c}\label{laplace__bem_8h_ac077b7401dee40cdf3d7bd38e1e8ad2c}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::array$<$ types\+::global\+\_\+vertex\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ {\bfseries Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+indices} (const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&cell)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_af2ba8d6b088c9eba188839b91ecb0d49}\label{laplace__bem_8h_af2ba8d6b088c9eba188839b91ecb0d49}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::array$<$ types\+::global\+\_\+dof\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ {\bfseries Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+dof\+\_\+indices} (const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&cell)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_ac8aa43c53ab43532df0868cd98f87b92}\label{laplace__bem_8h_ac8aa43c53ab43532df0868cd98f87b92}} 
+{\footnotesize template$<$int dim$>$ }\\Cell\+Neighboring\+Type {\bfseries Laplace\+B\+E\+M\+::detect\+\_\+cell\+\_\+neighboring\+\_\+type} (const std\+::array$<$ types\+::global\+\_\+vertex\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ \&first\+\_\+cell\+\_\+vertex\+\_\+indices, const std\+::array$<$ types\+::global\+\_\+vertex\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ \&second\+\_\+cell\+\_\+vertex\+\_\+indices, std\+::vector$<$ types\+::global\+\_\+vertex\+\_\+index $>$ \&vertex\+\_\+index\+\_\+intersection)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a9a15e76c006e919b90b11b630701890b}\label{laplace__bem_8h_a9a15e76c006e919b90b11b630701890b}} 
+{\footnotesize template$<$int dim$>$ }\\Cell\+Neighboring\+Type {\bfseries Laplace\+B\+E\+M\+::detect\+\_\+cell\+\_\+neighboring\+\_\+type} (const std\+::array$<$ types\+::global\+\_\+dof\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ \&first\+\_\+cell\+\_\+vertex\+\_\+dof\+\_\+indices, const std\+::array$<$ types\+::global\+\_\+dof\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ \&second\+\_\+cell\+\_\+vertex\+\_\+dof\+\_\+indices, std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&vertex\+\_\+dof\+\_\+index\+\_\+intersection)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_ac0b332116e96aadcbd90ea160741d51a}\label{laplace__bem_8h_ac0b332116e96aadcbd90ea160741d51a}} 
+{\footnotesize template$<$int dim, int spacedim, typename Number  = double$>$ }\\Number {\bfseries Laplace\+B\+E\+M\+::cell\+\_\+distance} (const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator first\+\_\+cell, const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator second\+\_\+cell)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a4e5d06792ddf349f07ab29bdbbf05c4c}\label{laplace__bem_8h_a4e5d06792ddf349f07ab29bdbbf05c4c}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\Full\+Matrix$<$ double $>$ {\bfseries Laplace\+B\+E\+M\+::shape\+\_\+grad\+\_\+matrix} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const std\+::vector$<$ unsigned int $>$ \&dof\+\_\+permutation, const Point$<$ dim $>$ \&p)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a41bd6ffd4c524471ef881ff97a5ad9e4}\label{laplace__bem_8h_a41bd6ffd4c524471ef881ff97a5ad9e4}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\Full\+Matrix$<$ double $>$ {\bfseries Laplace\+B\+E\+M\+::shape\+\_\+grad\+\_\+matrix\+\_\+in\+\_\+hierarchical\+\_\+order} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Point$<$ dim $>$ \&p)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a5db325a3f5dcfaa491ddab6a220eea92}\label{laplace__bem_8h_a5db325a3f5dcfaa491ddab6a220eea92}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\Full\+Matrix$<$ double $>$ {\bfseries Laplace\+B\+E\+M\+::shape\+\_\+grad\+\_\+matrix\+\_\+in\+\_\+tensor\+\_\+product\+\_\+order} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Point$<$ dim $>$ \&p)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_ac9c78b15a41037e7779f59b92c889fb5}\label{laplace__bem_8h_ac9c78b15a41037e7779f59b92c889fb5}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\Vector$<$ double $>$ {\bfseries Laplace\+B\+E\+M\+::shape\+\_\+values} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const std\+::vector$<$ unsigned int $>$ \&dof\+\_\+permutation, const Point$<$ dim $>$ \&p)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_ae304b08c855fbdb02aee8d431618494a}\label{laplace__bem_8h_ae304b08c855fbdb02aee8d431618494a}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\Vector$<$ double $>$ {\bfseries Laplace\+B\+E\+M\+::shape\+\_\+values\+\_\+in\+\_\+hierarchical\+\_\+order} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Point$<$ dim $>$ \&p)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_ae5bb6ba468d7700fa95b2c4a542d71c9}\label{laplace__bem_8h_ae5bb6ba468d7700fa95b2c4a542d71c9}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\Vector$<$ double $>$ {\bfseries Laplace\+B\+E\+M\+::shape\+\_\+values\+\_\+in\+\_\+tensor\+\_\+product\+\_\+order} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Point$<$ dim $>$ \&p)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a140b1d9466900efd8477068336ae23ec}\label{laplace__bem_8h_a140b1d9466900efd8477068336ae23ec}} 
+Full\+Matrix$<$ double $>$ {\bfseries Laplace\+B\+E\+M\+::collect\+\_\+two\+\_\+components\+\_\+from\+\_\+point3} (const std\+::vector$<$ Point$<$ 3 $>$$>$ \&points, const unsigned int first\+\_\+component, const unsigned int second\+\_\+component)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a690f744925b6d3ec84bddf1aa6e00c43}\label{laplace__bem_8h_a690f744925b6d3ec84bddf1aa6e00c43}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::vector$<$ Point$<$ spacedim $>$ $>$ {\bfseries Laplace\+B\+E\+M\+::support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell} (const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&cell, const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&mapping, const std\+::vector$<$ unsigned int $>$ \&dof\+\_\+permutation)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::vector$<$ Point$<$ spacedim $>$ $>$ \hyperlink{laplace__bem_8h_a58ca7458aac9f0ea79fd8a44d1eec5c7}{Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell} (const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&cell, const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&mapping)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\void \hyperlink{laplace__bem_8h_a44908e3e85a467a7e49f8393dec6d36f}{Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell} (const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&cell, const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&mapping, std\+::vector$<$ Point$<$ spacedim $>$$>$ \&real\+\_\+support\+\_\+points)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a0f878fc1994275b708f9bc453b577a9b}\label{laplace__bem_8h_a0f878fc1994275b708f9bc453b577a9b}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::vector$<$ Point$<$ spacedim $>$ $>$ {\bfseries Laplace\+B\+E\+M\+::tensor\+\_\+product\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell} (const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&cell, const Finite\+Element$<$ dim, spacedim $>$ \&fe, const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&mapping)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\double \hyperlink{laplace__bem_8h_a4cb672f44c56d77166719e4cda5905f8}{Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell, const Point$<$ dim $>$ \&p)
+\item 
+{\footnotesize template$<$int spacedim$>$ }\\double \hyperlink{laplace__bem_8h_aabebdaea9005cf7ab54a54a0aaf356ae}{Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det} (const unsigned int k3\+\_\+index, const unsigned int quad\+\_\+no, const Table$<$ 2, Full\+Matrix$<$ double $>$$>$ \&shape\+\_\+grad\+\_\+matrix\+\_\+table, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a2052f990d3acafd1b2ffb9f82b483c3e}\label{laplace__bem_8h_a2052f990d3acafd1b2ffb9f82b483c3e}} 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\double {\bfseries Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det\+\_\+and\+\_\+normal\+\_\+vector} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell, const Point$<$ dim $>$ \&p, Tensor$<$ 1, spacedim $>$ \&normal\+\_\+vector)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a742573bbe50d9acfd17fc6cbbed90aef}\label{laplace__bem_8h_a742573bbe50d9acfd17fc6cbbed90aef}} 
+{\footnotesize template$<$int spacedim$>$ }\\double {\bfseries Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det\+\_\+and\+\_\+normal\+\_\+vector} (const unsigned int k3\+\_\+index, const unsigned int quad\+\_\+no, const Table$<$ 2, Full\+Matrix$<$ double $>$$>$ \&shape\+\_\+grad\+\_\+matrix\+\_\+table, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell, Tensor$<$ 1, spacedim $>$ \&normal\+\_\+vector)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\Point$<$ spacedim $>$ \hyperlink{laplace__bem_8h_acfc06d01b90d55585ff2f84662e51993}{Laplace\+B\+E\+M\+::transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell, const Point$<$ dim $>$ \&area\+\_\+coords)
+\item 
+{\footnotesize template$<$int spacedim$>$ }\\Point$<$ spacedim $>$ \hyperlink{laplace__bem_8h_a98b19d342c23bad1a3a7382f57b394c8}{Laplace\+B\+E\+M\+::transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell} (const unsigned int k3\+\_\+index, const unsigned int quad\+\_\+no, const Table$<$ 3, double $>$ \&shape\+\_\+value\+\_\+table, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::vector$<$ unsigned int $>$ \hyperlink{laplace__bem_8h_a62077b076db4179e8be8f6d56d08afb7}{Laplace\+B\+E\+M\+::generate\+\_\+forward\+\_\+dof\+\_\+permutation} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, unsigned int starting\+\_\+corner)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\void \hyperlink{laplace__bem_8h_ad08c33bae2a7a16f65f47ce408be8261}{Laplace\+B\+E\+M\+::generate\+\_\+forward\+\_\+dof\+\_\+permutation} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, unsigned int starting\+\_\+corner, std\+::vector$<$ unsigned int $>$ \&dof\+\_\+permutation)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::vector$<$ unsigned int $>$ \hyperlink{laplace__bem_8h_a0a9a48d24bdb3beab608ccc3c0599603}{Laplace\+B\+E\+M\+::generate\+\_\+backward\+\_\+dof\+\_\+permutation} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, unsigned int starting\+\_\+corner)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\void \hyperlink{laplace__bem_8h_ad30d62ea43231cc3bebc2fc9eb2bad2f}{Laplace\+B\+E\+M\+::generate\+\_\+backward\+\_\+dof\+\_\+permutation} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, unsigned int starting\+\_\+corner, std\+::vector$<$ unsigned int $>$ \&dof\+\_\+permutation)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_aaa9719659576d52ba03a26e8b1af26b7}\label{laplace__bem_8h_aaa9719659576d52ba03a26e8b1af26b7}} 
+{\footnotesize template$<$typename T $>$ }\\std\+::vector$<$ T $>$ {\bfseries Laplace\+B\+E\+M\+::permute\+\_\+vector} (const std\+::vector$<$ T $>$ \&input\+\_\+vector, const std\+::vector$<$ unsigned int $>$ \&permutation\+\_\+indices)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \hyperlink{laplace__bem_8h_a5eb8039d9a9632adb5601a1af8e3b7ea}{Laplace\+B\+E\+M\+::permute\+\_\+vector} (const std\+::vector$<$ T $>$ \&input\+\_\+vector, const std\+::vector$<$ unsigned int $>$ \&permutation\+\_\+indices, std\+::vector$<$ T $>$ \&permuted\+\_\+vector)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a47b799bf69bc9deffe4765212e27a403}\label{laplace__bem_8h_a47b799bf69bc9deffe4765212e27a403}} 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\Range\+Number\+Type {\bfseries Laplace\+B\+E\+M\+::\+Apply\+Quadrature} (const Quadrature$<$ dim $\ast$2 $>$ \&quad\+\_\+rule, const Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$ \&f, unsigned int component=0)
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_afb2e37992a98384b0aa558e0808db2c5}\label{laplace__bem_8h_afb2e37992a98384b0aa558e0808db2c5}} 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\Range\+Number\+Type {\bfseries Laplace\+B\+E\+M\+::\+Apply\+Quadrature\+Using\+B\+E\+M\+Values} (const Quadrature$<$ dim $\ast$2 $>$ \&quad\+\_\+rule, const Kernel\+Pulledback\+To\+Sauter\+Space$<$ dim, spacedim, Range\+Number\+Type $>$ \&f, unsigned int component=0)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\std\+::array$<$ types\+::global\+\_\+dof\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ \hyperlink{laplace__bem_8h_a72b6938c9d185beb1a59d7540590b26c}{Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&dof\+\_\+indices)
+\item 
+{\footnotesize template$<$int dim, int spacedim$>$ }\\void \hyperlink{laplace__bem_8h_ad532d0415e3bf57d950f84eeb81f9186}{Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped} (const Finite\+Element$<$ dim, spacedim $>$ \&fe, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&dof\+\_\+indices, std\+::array$<$ types\+::global\+\_\+dof\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ \&vertex\+\_\+dof\+\_\+indices)
+\item 
+{\footnotesize template$<$int vertices\+\_\+per\+\_\+cell$>$ }\\unsigned int \hyperlink{laplace__bem_8h_a64395996e0f4c36f7bf3be3088c24aa3}{Laplace\+B\+E\+M\+::get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&vertex\+\_\+dof\+\_\+index\+\_\+intersection, const std\+::array$<$ types\+::global\+\_\+dof\+\_\+index, vertices\+\_\+per\+\_\+cell $>$ \&local\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\Full\+Matrix$<$ Range\+Number\+Type $>$ \hyperlink{laplace__bem_8h_a57e551241347af592ddedca98e85feba}{Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule} (const Laplace\+Kernel\+::\+Kernel\+Function$<$ spacedim, Range\+Number\+Type $>$ \&kernel\+\_\+function, const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&kx\+\_\+cell\+\_\+iter, const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&ky\+\_\+cell\+\_\+iter, const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&kx\+\_\+mapping=Mapping\+Q\+Generic$<$ dim, spacedim $>$(1), const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&ky\+\_\+mapping=Mapping\+Q\+Generic$<$ dim, spacedim $>$(1))
+\item 
+\mbox{\Hypertarget{laplace__bem_8h_a0b409a66c9385085d6566e29b27f86dc}\label{laplace__bem_8h_a0b409a66c9385085d6566e29b27f86dc}} 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\Full\+Matrix$<$ Range\+Number\+Type $>$ {\bfseries Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule} (const Laplace\+Kernel\+::\+Kernel\+Function$<$ spacedim, Range\+Number\+Type $>$ \&kernel\+\_\+function, const B\+E\+M\+Values$<$ dim, spacedim $>$ \&bem\+\_\+values, const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&kx\+\_\+cell\+\_\+iter, const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&ky\+\_\+cell\+\_\+iter, const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&kx\+\_\+mapping=Mapping\+Q\+Generic$<$ dim, spacedim $>$(1), const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&ky\+\_\+mapping=Mapping\+Q\+Generic$<$ dim, spacedim $>$(1))
+\item 
+{\footnotesize template$<$int dim$>$ }\\void \hyperlink{laplace__bem_8h_a4b2f253b060b009aac6b9692d7984ff9}{Laplace\+B\+E\+M\+::sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells} (const Point$<$ dim $\ast$2 $>$ \&parametric\+\_\+coords, const unsigned int k3\+\_\+index, Point$<$ dim $>$ \&kx\+\_\+unit\+\_\+cell\+\_\+coords, Point$<$ dim $>$ \&ky\+\_\+unit\+\_\+cell\+\_\+coords)
+\item 
+{\footnotesize template$<$int dim$>$ }\\void \hyperlink{laplace__bem_8h_a4454a50d4f28d8995e20489110cf6eb1}{Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells} (const Point$<$ dim $\ast$2 $>$ \&parametric\+\_\+coords, const unsigned int k3\+\_\+index, Point$<$ dim $>$ \&kx\+\_\+unit\+\_\+cell\+\_\+coords, Point$<$ dim $>$ \&ky\+\_\+unit\+\_\+cell\+\_\+coords)
+\item 
+{\footnotesize template$<$int dim$>$ }\\void \hyperlink{laplace__bem_8h_aa4fa27663bc3ea1525bb2535d003580c}{Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells} (const Point$<$ dim $\ast$2 $>$ \&parametric\+\_\+coords, const unsigned int k3\+\_\+index, Point$<$ dim $>$ \&kx\+\_\+unit\+\_\+cell\+\_\+coords, Point$<$ dim $>$ \&ky\+\_\+unit\+\_\+cell\+\_\+coords)
+\item 
+{\footnotesize template$<$int dim$>$ }\\void \hyperlink{laplace__bem_8h_a5bbec4d9bc5055de16e293c2ef7cfab2}{Laplace\+B\+E\+M\+::sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells} (const Point$<$ dim $\ast$2 $>$ \&parametric\+\_\+coords, Point$<$ dim $>$ \&kx\+\_\+unit\+\_\+cell\+\_\+coords, Point$<$ dim $>$ \&ky\+\_\+unit\+\_\+cell\+\_\+coords)
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_a1cb24336d96c36bd50973a35b3e42b6a}{Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule} (Full\+Matrix$<$ Range\+Number\+Type $>$ \&system\+\_\+matrix, const Laplace\+Kernel\+::\+Kernel\+Function$<$ spacedim, Range\+Number\+Type $>$ \&kernel\+\_\+function, const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&kx\+\_\+cell\+\_\+iter, const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&ky\+\_\+cell\+\_\+iter, const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&kx\+\_\+mapping=Mapping\+Q\+Generic$<$ dim, spacedim $>$(1), const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&ky\+\_\+mapping=Mapping\+Q\+Generic$<$ dim, spacedim $>$(1))
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ }\\void \hyperlink{laplace__bem_8h_a27c3f20fa27d5afdba1ad53ab47f9ed9}{Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule} (Full\+Matrix$<$ Range\+Number\+Type $>$ \&system\+\_\+matrix, const Laplace\+Kernel\+::\+Kernel\+Function$<$ spacedim, Range\+Number\+Type $>$ \&kernel\+\_\+function, const B\+E\+M\+Values$<$ dim, spacedim $>$ \&bem\+\_\+values, const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&kx\+\_\+cell\+\_\+iter, const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&ky\+\_\+cell\+\_\+iter, const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&kx\+\_\+mapping=Mapping\+Q\+Generic$<$ dim, spacedim $>$(1), const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&ky\+\_\+mapping=Mapping\+Q\+Generic$<$ dim, spacedim $>$(1))
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Implementation of B\+EM involving kernel functions and singular numerical quadratures. 
+
+\begin{DoxyDate}{Date}
+2020-\/11-\/02 
+\end{DoxyDate}
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{laplace__bem_8h_file_a4df239900849c6aa0875c8bdeaab0aa0}\label{laplace__bem_8h_file_a4df239900849c6aa0875c8bdeaab0aa0}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge@{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge}}
+\index{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge@{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge()}{bem\_shape\_grad\_matrices\_common\_edge()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const Q\+Gauss$<$ 4 $>$ \&}]{sauter\+\_\+quad\+\_\+rule,  }\item[{Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&}]{kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table,  }\item[{Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&}]{ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table }\end{DoxyParamCaption})}
+
+Calculate the table storing shape function gradient matrices at Sauter quadrature points for the common edge case. N.\+B. The shape functions are in the tensor product order and each row of the gradient matrix corresponds to a shape function. 
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+fe} & finite element for \$\+K\+\_\+x\$ \\
+\hline
+{\em ky\+\_\+fe} & finite element for \$\+K\+\_\+y\$ \\
+\hline
+{\em sauter\+\_\+quad\+\_\+rule} & \\
+\hline
+{\em kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table} & the 1st dimension is the index for \$k\+\_\+3\$ terms; the 2nd dimension is the quadrature point number. \\
+\hline
+{\em ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table} & the 1st dimension is the index for \$k\+\_\+3\$ terms; the 2nd dimension is the quadrature point number. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge(), and Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge(), and Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+B\+E\+M\+Values().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_abaca697a3eb40d422b9f26c63ff47670}\label{laplace__bem_8h_file_abaca697a3eb40d422b9f26c63ff47670}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex@{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex}}
+\index{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex@{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex()}{bem\_shape\_grad\_matrices\_common\_vertex()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const Q\+Gauss$<$ 4 $>$ \&}]{sauter\+\_\+quad\+\_\+rule,  }\item[{Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&}]{kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table,  }\item[{Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&}]{ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table }\end{DoxyParamCaption})}
+
+Calculate the table storing shape function gradient matrices at Sauter quadrature points for the common vertex case. N.\+B. The shape functions are in the tensor product order and each row of the gradient matrix corresponds to a shape function. 
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+fe} & finite element for \$\+K\+\_\+x\$ \\
+\hline
+{\em ky\+\_\+fe} & finite element for \$\+K\+\_\+y\$ \\
+\hline
+{\em sauter\+\_\+quad\+\_\+rule} & \\
+\hline
+{\em kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table} & the 1st dimension is the index for \$k\+\_\+3\$ terms; the 2nd dimension is the quadrature point number. \\
+\hline
+{\em ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table} & the 1st dimension is the index for \$k\+\_\+3\$ terms; the 2nd dimension is the quadrature point number. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex(), and Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex(), and Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+B\+E\+M\+Values().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_abe59b85b94a356ba18b578090d708090}\label{laplace__bem_8h_file_abe59b85b94a356ba18b578090d708090}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular@{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular}}
+\index{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular@{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular()}{bem\_shape\_grad\_matrices\_regular()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const Q\+Gauss$<$ 4 $>$ \&}]{sauter\+\_\+quad\+\_\+rule,  }\item[{Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&}]{kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table,  }\item[{Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&}]{ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table }\end{DoxyParamCaption})}
+
+Calculate the table storing shape function gradient matrices at Sauter quadrature points for the regular case. N.\+B. The shape functions are in the tensor product order and each row of the gradient matrix corresponds to a shape function. 
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+fe} & finite element for \$\+K\+\_\+x\$ \\
+\hline
+{\em ky\+\_\+fe} & finite element for \$\+K\+\_\+y\$ \\
+\hline
+{\em sauter\+\_\+quad\+\_\+rule} & \\
+\hline
+{\em kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table} & the 1st dimension is the quadrature point number. \\
+\hline
+{\em ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table} & the 1st dimension is the quadrature point number. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular(), and Laplace\+B\+E\+M\+::sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular(), and Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+B\+E\+M\+Values().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a1ce86dd0bd3b5c4bf591ae0128205416}\label{laplace__bem_8h_file_a1ce86dd0bd3b5c4bf591ae0128205416}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel@{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel}}
+\index{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel@{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel()}{bem\_shape\_grad\_matrices\_same\_panel()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const Q\+Gauss$<$ 4 $>$ \&}]{sauter\+\_\+quad\+\_\+rule,  }\item[{Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&}]{kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table,  }\item[{Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$$>$ \&}]{ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table }\end{DoxyParamCaption})}
+
+Calculate the table storing shape function gradient matrices at Sauter quadrature points for the same panel case. N.\+B. The shape functions are in the tensor product order and each row of the gradient matrix corresponds to a shape function. 
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+fe} & finite element for \$\+K\+\_\+x\$ \\
+\hline
+{\em ky\+\_\+fe} & finite element for \$\+K\+\_\+y\$ \\
+\hline
+{\em sauter\+\_\+quad\+\_\+rule} & \\
+\hline
+{\em kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table} & the 1st dimension is the index for \$k\+\_\+3\$ terms; the 2nd dimension is the quadrature point number. \\
+\hline
+{\em ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table} & the 1st dimension is the index for \$k\+\_\+3\$ terms; the 2nd dimension is the quadrature point number. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel(), and Laplace\+B\+E\+M\+::sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel(), and Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+B\+E\+M\+Values().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_adacab8988c77e9127210826684684cd7}\label{laplace__bem_8h_file_adacab8988c77e9127210826684684cd7}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge@{bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge}}
+\index{bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge@{bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge()}{bem\_shape\_values\_common\_edge()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const Q\+Gauss$<$ 4 $>$ \&}]{sauter\+\_\+quad\+\_\+rule,  }\item[{Table$<$ 3, Range\+Number\+Type $>$ \&}]{kx\+\_\+shape\+\_\+value\+\_\+table,  }\item[{Table$<$ 3, Range\+Number\+Type $>$ \&}]{ky\+\_\+shape\+\_\+value\+\_\+table }\end{DoxyParamCaption})}
+
+Calculate the table storing shape function values at Sauter quadrature points for the common edge case. 
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+fe} & finite element for \$\+K\+\_\+x\$ \\
+\hline
+{\em ky\+\_\+fe} & finite element for \$\+K\+\_\+y\$ \\
+\hline
+{\em sauter\+\_\+quad\+\_\+rule} & \\
+\hline
+{\em kx\+\_\+shape\+\_\+value\+\_\+table} & the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for \$k\+\_\+3\$ terms; the 3rd dimension is the quadrature point number. \\
+\hline
+{\em ky\+\_\+shape\+\_\+value\+\_\+table} & the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for \$k\+\_\+3\$ terms; the 3rd dimension is the quadrature point number. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge(), and Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge(), and Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+B\+E\+M\+Values().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_ad1b3205a29e5aef857857b6e1a533f36}\label{laplace__bem_8h_file_ad1b3205a29e5aef857857b6e1a533f36}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex@{bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex}}
+\index{bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex@{bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex()}{bem\_shape\_values\_common\_vertex()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const Q\+Gauss$<$ 4 $>$ \&}]{sauter\+\_\+quad\+\_\+rule,  }\item[{Table$<$ 3, Range\+Number\+Type $>$ \&}]{kx\+\_\+shape\+\_\+value\+\_\+table,  }\item[{Table$<$ 3, Range\+Number\+Type $>$ \&}]{ky\+\_\+shape\+\_\+value\+\_\+table }\end{DoxyParamCaption})}
+
+Calculate the table storing shape function values at Sauter quadrature points for the common vertex case. 
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+fe} & finite element for \$\+K\+\_\+x\$ \\
+\hline
+{\em ky\+\_\+fe} & finite element for \$\+K\+\_\+y\$ \\
+\hline
+{\em sauter\+\_\+quad\+\_\+rule} & \\
+\hline
+{\em kx\+\_\+shape\+\_\+value\+\_\+table} & the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for \$k\+\_\+3\$ terms; the 3rd dimension is the quadrature point number. \\
+\hline
+{\em ky\+\_\+shape\+\_\+value\+\_\+table} & the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for \$k\+\_\+3\$ terms; the 3rd dimension is the quadrature point number. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex(), and Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex(), and Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+B\+E\+M\+Values().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a9ba750c1de1ccb7c7f091efdd2a720fe}\label{laplace__bem_8h_file_a9ba750c1de1ccb7c7f091efdd2a720fe}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!bem\+\_\+shape\+\_\+values\+\_\+regular@{bem\+\_\+shape\+\_\+values\+\_\+regular}}
+\index{bem\+\_\+shape\+\_\+values\+\_\+regular@{bem\+\_\+shape\+\_\+values\+\_\+regular}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{bem\+\_\+shape\+\_\+values\+\_\+regular()}{bem\_shape\_values\_regular()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+regular (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const Q\+Gauss$<$ 4 $>$ \&}]{sauter\+\_\+quad\+\_\+rule,  }\item[{Table$<$ 3, Range\+Number\+Type $>$ \&}]{kx\+\_\+shape\+\_\+value\+\_\+table,  }\item[{Table$<$ 3, Range\+Number\+Type $>$ \&}]{ky\+\_\+shape\+\_\+value\+\_\+table }\end{DoxyParamCaption})}
+
+Calculate the table storing shape function values at Sauter quadrature points for the regular case. 
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+fe} & finite element for \$\+K\+\_\+x\$ \\
+\hline
+{\em ky\+\_\+fe} & finite element for \$\+K\+\_\+y\$ \\
+\hline
+{\em sauter\+\_\+quad\+\_\+rule} & \\
+\hline
+{\em kx\+\_\+shape\+\_\+value\+\_\+table} & the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for \$k\+\_\+3\$ terms; the 3rd dimension is the quadrature point number. \\
+\hline
+{\em ky\+\_\+shape\+\_\+value\+\_\+table} & the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for \$k\+\_\+3\$ terms; the 3rd dimension is the quadrature point number. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+regular(), and Laplace\+B\+E\+M\+::sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+regular(), and Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+B\+E\+M\+Values().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a5497786c0b39fdb049b9c8fc5988bdcb}\label{laplace__bem_8h_file_a5497786c0b39fdb049b9c8fc5988bdcb}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel@{bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel}}
+\index{bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel@{bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel()}{bem\_shape\_values\_same\_panel()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{kx\+\_\+fe,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{ky\+\_\+fe,  }\item[{const Q\+Gauss$<$ 4 $>$ \&}]{sauter\+\_\+quad\+\_\+rule,  }\item[{Table$<$ 3, Range\+Number\+Type $>$ \&}]{kx\+\_\+shape\+\_\+value\+\_\+table,  }\item[{Table$<$ 3, Range\+Number\+Type $>$ \&}]{ky\+\_\+shape\+\_\+value\+\_\+table }\end{DoxyParamCaption})}
+
+Calculate the table storing shape function values at Sauter quadrature points for the same panel case. 
+\begin{DoxyParams}{Parameters}
+{\em kx\+\_\+fe} & finite element for \$\+K\+\_\+x\$ \\
+\hline
+{\em ky\+\_\+fe} & finite element for \$\+K\+\_\+y\$ \\
+\hline
+{\em sauter\+\_\+quad\+\_\+rule} & \\
+\hline
+{\em kx\+\_\+shape\+\_\+value\+\_\+table} & the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for \$k\+\_\+3\$ terms; the 3rd dimension is the quadrature point number. \\
+\hline
+{\em ky\+\_\+shape\+\_\+value\+\_\+table} & the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for \$k\+\_\+3\$ terms; the 3rd dimension is the quadrature point number. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel(), and Laplace\+B\+E\+M\+::sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel(), and Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::\+B\+E\+M\+Values().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a0a9a48d24bdb3beab608ccc3c0599603}\label{laplace__bem_8h_file_a0a9a48d24bdb3beab608ccc3c0599603}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!generate\+\_\+backward\+\_\+dof\+\_\+permutation@{generate\+\_\+backward\+\_\+dof\+\_\+permutation}}
+\index{generate\+\_\+backward\+\_\+dof\+\_\+permutation@{generate\+\_\+backward\+\_\+dof\+\_\+permutation}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{generate\+\_\+backward\+\_\+dof\+\_\+permutation()}{generate\_backward\_dof\_permutation()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+std\+::vector$<$unsigned int$>$ Laplace\+B\+E\+M\+::generate\+\_\+backward\+\_\+dof\+\_\+permutation (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{unsigned int}]{starting\+\_\+corner }\end{DoxyParamCaption})}
+
+Generate the permutation of polynomial space inverse numbering by starting from the specified corner in the backward direction. The index for starting\+\_\+corner starts from zero. 
+
+References Laplace\+B\+E\+M\+::generate\+\_\+backward\+\_\+dof\+\_\+permutation().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::generate\+\_\+backward\+\_\+dof\+\_\+permutation().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_ad30d62ea43231cc3bebc2fc9eb2bad2f}\label{laplace__bem_8h_file_ad30d62ea43231cc3bebc2fc9eb2bad2f}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!generate\+\_\+backward\+\_\+dof\+\_\+permutation@{generate\+\_\+backward\+\_\+dof\+\_\+permutation}}
+\index{generate\+\_\+backward\+\_\+dof\+\_\+permutation@{generate\+\_\+backward\+\_\+dof\+\_\+permutation}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{generate\+\_\+backward\+\_\+dof\+\_\+permutation()}{generate\_backward\_dof\_permutation()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+void Laplace\+B\+E\+M\+::generate\+\_\+backward\+\_\+dof\+\_\+permutation (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{unsigned int}]{starting\+\_\+corner,  }\item[{std\+::vector$<$ unsigned int $>$ \&}]{dof\+\_\+permutation }\end{DoxyParamCaption})}
+
+Generate the permutation of polynomial space inverse numbering by starting from the specified corner in the backward direction. The index for starting\+\_\+corner starts from zero. This overloaded version has the returned vector as its argument. 
+
+References Laplace\+B\+E\+M\+::generate\+\_\+backward\+\_\+dof\+\_\+permutation().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a62077b076db4179e8be8f6d56d08afb7}\label{laplace__bem_8h_file_a62077b076db4179e8be8f6d56d08afb7}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!generate\+\_\+forward\+\_\+dof\+\_\+permutation@{generate\+\_\+forward\+\_\+dof\+\_\+permutation}}
+\index{generate\+\_\+forward\+\_\+dof\+\_\+permutation@{generate\+\_\+forward\+\_\+dof\+\_\+permutation}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{generate\+\_\+forward\+\_\+dof\+\_\+permutation()}{generate\_forward\_dof\_permutation()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+std\+::vector$<$unsigned int$>$ Laplace\+B\+E\+M\+::generate\+\_\+forward\+\_\+dof\+\_\+permutation (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{unsigned int}]{starting\+\_\+corner }\end{DoxyParamCaption})}
+
+Generate the permutation of polynomial space inverse numbering by starting from the specified corner in the forward direction. 
+
+References Laplace\+B\+E\+M\+::generate\+\_\+forward\+\_\+dof\+\_\+permutation().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::generate\+\_\+forward\+\_\+dof\+\_\+permutation().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_ad08c33bae2a7a16f65f47ce408be8261}\label{laplace__bem_8h_file_ad08c33bae2a7a16f65f47ce408be8261}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!generate\+\_\+forward\+\_\+dof\+\_\+permutation@{generate\+\_\+forward\+\_\+dof\+\_\+permutation}}
+\index{generate\+\_\+forward\+\_\+dof\+\_\+permutation@{generate\+\_\+forward\+\_\+dof\+\_\+permutation}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{generate\+\_\+forward\+\_\+dof\+\_\+permutation()}{generate\_forward\_dof\_permutation()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+void Laplace\+B\+E\+M\+::generate\+\_\+forward\+\_\+dof\+\_\+permutation (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{unsigned int}]{starting\+\_\+corner,  }\item[{std\+::vector$<$ unsigned int $>$ \&}]{dof\+\_\+permutation }\end{DoxyParamCaption})}
+
+Generate the permutation of polynomial space inverse numbering by starting from the specified corner in the forward direction. This overloaded version has the returned vector as its argument. 
+
+References Laplace\+B\+E\+M\+::generate\+\_\+forward\+\_\+dof\+\_\+permutation().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a64395996e0f4c36f7bf3be3088c24aa3}\label{laplace__bem_8h_file_a64395996e0f4c36f7bf3be3088c24aa3}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index@{get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index}}
+\index{get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index@{get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index()}{get\_start\_vertex\_dof\_index()}}
+{\footnotesize\ttfamily template$<$int vertices\+\_\+per\+\_\+cell$>$ \\
+unsigned int Laplace\+B\+E\+M\+::get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{vertex\+\_\+dof\+\_\+index\+\_\+intersection,  }\item[{const std\+::array$<$ types\+::global\+\_\+dof\+\_\+index, vertices\+\_\+per\+\_\+cell $>$ \&}]{local\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped }\end{DoxyParamCaption})}
+
+Get the starting vertex DoF index. 
+
+References Laplace\+B\+E\+M\+::get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::get\+\_\+start\+\_\+vertex\+\_\+dof\+\_\+index().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a72b6938c9d185beb1a59d7540590b26c}\label{laplace__bem_8h_file_a72b6938c9d185beb1a59d7540590b26c}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped@{get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped}}
+\index{get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped@{get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped()}{get\_vertex\_dof\_indices\_swapped()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+std\+::array$<$types\+::global\+\_\+dof\+\_\+index, Geometry\+Info$<$dim$>$\+::vertices\+\_\+per\+\_\+cell$>$ Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{dof\+\_\+indices }\end{DoxyParamCaption})}
+
+Get the DoF vertex indices from a list of DoF indices which have been arranged in forward or backward tensor product ordering. N.\+B. There are {\ttfamily Geometry\+Info$<$dim$>$\+::vertices\+\_\+per\+\_\+cell} vertices in the returned array, among which the last two DoF vertex indices have been swapped so that the vertex Do\+Fs are arranged in clockwise or counter clockwise order instead of the zigzag order. 
+
+References Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_ad532d0415e3bf57d950f84eeb81f9186}\label{laplace__bem_8h_file_ad532d0415e3bf57d950f84eeb81f9186}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped@{get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped}}
+\index{get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped@{get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped()}{get\_vertex\_dof\_indices\_swapped()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+void Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{dof\+\_\+indices,  }\item[{std\+::array$<$ types\+::global\+\_\+dof\+\_\+index, Geometry\+Info$<$ dim $>$\+::vertices\+\_\+per\+\_\+cell $>$ \&}]{vertex\+\_\+dof\+\_\+indices }\end{DoxyParamCaption})}
+
+Get the DoF vertex indices from a list of DoF indices which have been arranged in forward or backward tensor product ordering. N.\+B. There are {\ttfamily Geometry\+Info$<$dim$>$\+::vertices\+\_\+per\+\_\+cell} vertices in the returned array, among which the last two DoF vertex indices have been swapped so that the vertex Do\+Fs are arranged in clockwise or counter clockwise order instead of the zigzag order. 
+
+References Laplace\+B\+E\+M\+::get\+\_\+vertex\+\_\+dof\+\_\+indices\+\_\+swapped().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a58ca7458aac9f0ea79fd8a44d1eec5c7}\label{laplace__bem_8h_file_a58ca7458aac9f0ea79fd8a44d1eec5c7}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell@{hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell}}
+\index{hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell@{hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell()}{hierarchical\_support\_points\_in\_real\_cell()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+std\+::vector$<$Point$<$spacedim$>$ $>$ Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell (\begin{DoxyParamCaption}\item[{const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&}]{cell,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&}]{mapping }\end{DoxyParamCaption})}
+
+Calculate support points in real cell in the default hierarchical ordering. 
+
+References Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells(), Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell(), and Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a44908e3e85a467a7e49f8393dec6d36f}\label{laplace__bem_8h_file_a44908e3e85a467a7e49f8393dec6d36f}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell@{hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell}}
+\index{hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell@{hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell()}{hierarchical\_support\_points\_in\_real\_cell()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+void Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell (\begin{DoxyParamCaption}\item[{const typename Triangulation$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&}]{cell,  }\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&}]{mapping,  }\item[{std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{real\+\_\+support\+\_\+points }\end{DoxyParamCaption})}
+
+Calculate support points in real cell in the default hierarchical ordering. The memory for storing these support points is pre-\/allocated. 
+
+References Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a5eb8039d9a9632adb5601a1af8e3b7ea}\label{laplace__bem_8h_file_a5eb8039d9a9632adb5601a1af8e3b7ea}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!permute\+\_\+vector@{permute\+\_\+vector}}
+\index{permute\+\_\+vector@{permute\+\_\+vector}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{permute\+\_\+vector()}{permute\_vector()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void Laplace\+B\+E\+M\+::permute\+\_\+vector (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ T $>$ \&}]{input\+\_\+vector,  }\item[{const std\+::vector$<$ unsigned int $>$ \&}]{permutation\+\_\+indices,  }\item[{std\+::vector$<$ T $>$ \&}]{permuted\+\_\+vector }\end{DoxyParamCaption})}
+
+Permute a vector according to the specified permutation indices. The memory for the output vector should be pre-\/allocated. 
+\begin{DoxyParams}{Parameters}
+{\em input\+\_\+vector} & \\
+\hline
+{\em permutation\+\_\+indices} & \\
+\hline
+{\em permuted\+\_\+vector} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{laplace__bem_8h_file_a4454a50d4f28d8995e20489110cf6eb1}\label{laplace__bem_8h_file_a4454a50d4f28d8995e20489110cf6eb1}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells@{sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells}}
+\index{sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells@{sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells()}{sauter\_common\_edge\_parametric\_coords\_to\_unit\_cells()}}
+{\footnotesize\ttfamily template$<$int dim$>$ \\
+void Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells (\begin{DoxyParamCaption}\item[{const Point$<$ dim $\ast$2 $>$ \&}]{parametric\+\_\+coords,  }\item[{const unsigned int}]{k3\+\_\+index,  }\item[{Point$<$ dim $>$ \&}]{kx\+\_\+unit\+\_\+cell\+\_\+coords,  }\item[{Point$<$ dim $>$ \&}]{ky\+\_\+unit\+\_\+cell\+\_\+coords }\end{DoxyParamCaption})}
+
+Transform parametric coordinates in Sauter\textquotesingle{}s quadrature rule for the common edge case to unit cell coordinates for \$\+K\+\_\+x\$ and \$\+K\+\_\+y\$ respectively. 
+\begin{DoxyParams}{Parameters}
+{\em parametric\+\_\+coords} & \\
+\hline
+{\em k3\+\_\+index} & \\
+\hline
+{\em kx\+\_\+unit\+\_\+cell\+\_\+coords} & \\
+\hline
+{\em ky\+\_\+unit\+\_\+cell\+\_\+coords} & \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge(), and Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+edge\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_aa4fa27663bc3ea1525bb2535d003580c}\label{laplace__bem_8h_file_aa4fa27663bc3ea1525bb2535d003580c}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells@{sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells}}
+\index{sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells@{sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells()}{sauter\_common\_vertex\_parametric\_coords\_to\_unit\_cells()}}
+{\footnotesize\ttfamily template$<$int dim$>$ \\
+void Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells (\begin{DoxyParamCaption}\item[{const Point$<$ dim $\ast$2 $>$ \&}]{parametric\+\_\+coords,  }\item[{const unsigned int}]{k3\+\_\+index,  }\item[{Point$<$ dim $>$ \&}]{kx\+\_\+unit\+\_\+cell\+\_\+coords,  }\item[{Point$<$ dim $>$ \&}]{ky\+\_\+unit\+\_\+cell\+\_\+coords }\end{DoxyParamCaption})}
+
+Transform parametric coordinates in Sauter\textquotesingle{}s quadrature rule for the common vertex case to unit cell coordinates for \$\+K\+\_\+x\$ and \$\+K\+\_\+y\$ respectively. 
+\begin{DoxyParams}{Parameters}
+{\em parametric\+\_\+coords} & \\
+\hline
+{\em k3\+\_\+index} & \\
+\hline
+{\em kx\+\_\+unit\+\_\+cell\+\_\+coords} & \\
+\hline
+{\em ky\+\_\+unit\+\_\+cell\+\_\+coords} & \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex(), and Laplace\+B\+E\+M\+::sauter\+\_\+common\+\_\+vertex\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a5bbec4d9bc5055de16e293c2ef7cfab2}\label{laplace__bem_8h_file_a5bbec4d9bc5055de16e293c2ef7cfab2}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells@{sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells}}
+\index{sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells@{sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells()}{sauter\_regular\_parametric\_coords\_to\_unit\_cells()}}
+{\footnotesize\ttfamily template$<$int dim$>$ \\
+void Laplace\+B\+E\+M\+::sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells (\begin{DoxyParamCaption}\item[{const Point$<$ dim $\ast$2 $>$ \&}]{parametric\+\_\+coords,  }\item[{Point$<$ dim $>$ \&}]{kx\+\_\+unit\+\_\+cell\+\_\+coords,  }\item[{Point$<$ dim $>$ \&}]{ky\+\_\+unit\+\_\+cell\+\_\+coords }\end{DoxyParamCaption})}
+
+Transform parametric coordinates in Sauter\textquotesingle{}s quadrature rule for the regular case to unit cell coordinates for \$\+K\+\_\+x\$ and \$\+K\+\_\+y\$ respectively. 
+\begin{DoxyParams}{Parameters}
+{\em parametric\+\_\+coords} & \\
+\hline
+{\em k3\+\_\+index} & \\
+\hline
+{\em kx\+\_\+unit\+\_\+cell\+\_\+coords} & \\
+\hline
+{\em ky\+\_\+unit\+\_\+cell\+\_\+coords} & \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+regular(), and Laplace\+B\+E\+M\+::sauter\+\_\+regular\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a4b2f253b060b009aac6b9692d7984ff9}\label{laplace__bem_8h_file_a4b2f253b060b009aac6b9692d7984ff9}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells@{sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells}}
+\index{sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells@{sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells()}{sauter\_same\_panel\_parametric\_coords\_to\_unit\_cells()}}
+{\footnotesize\ttfamily template$<$int dim$>$ \\
+void Laplace\+B\+E\+M\+::sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells (\begin{DoxyParamCaption}\item[{const Point$<$ dim $\ast$2 $>$ \&}]{parametric\+\_\+coords,  }\item[{const unsigned int}]{k3\+\_\+index,  }\item[{Point$<$ dim $>$ \&}]{kx\+\_\+unit\+\_\+cell\+\_\+coords,  }\item[{Point$<$ dim $>$ \&}]{ky\+\_\+unit\+\_\+cell\+\_\+coords }\end{DoxyParamCaption})}
+
+Transform parametric coordinates in Sauter\textquotesingle{}s quadrature rule for the same panel case to unit cell coordinates for \$\+K\+\_\+x\$ and \$\+K\+\_\+y\$ respectively. 
+\begin{DoxyParams}{Parameters}
+{\em parametric\+\_\+coords} & \\
+\hline
+{\em k3\+\_\+index} & \\
+\hline
+{\em kx\+\_\+unit\+\_\+cell\+\_\+coords} & \\
+\hline
+{\em ky\+\_\+unit\+\_\+cell\+\_\+coords} & \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel(), and Laplace\+B\+E\+M\+::sauter\+\_\+same\+\_\+panel\+\_\+parametric\+\_\+coords\+\_\+to\+\_\+unit\+\_\+cells().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a57e551241347af592ddedca98e85feba}\label{laplace__bem_8h_file_a57e551241347af592ddedca98e85feba}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!Sauter\+Quad\+Rule@{Sauter\+Quad\+Rule}}
+\index{Sauter\+Quad\+Rule@{Sauter\+Quad\+Rule}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{Sauter\+Quad\+Rule()}{SauterQuadRule()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+Full\+Matrix$<$Range\+Number\+Type$>$ Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule (\begin{DoxyParamCaption}\item[{const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&}]{kernel\+\_\+function,  }\item[{const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&}]{kx\+\_\+cell\+\_\+iter,  }\item[{const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&}]{ky\+\_\+cell\+\_\+iter,  }\item[{const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&}]{kx\+\_\+mapping = {\ttfamily MappingQGeneric$<$dim,~spacedim$>$(1)},  }\item[{const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&}]{ky\+\_\+mapping = {\ttfamily MappingQGeneric$<$dim,~spacedim$>$(1)} }\end{DoxyParamCaption})}
+
+This function implements Sauter\textquotesingle{}s quadrature rule on quadrangular mesh. It handles various cases including same panel, common edge, common vertex and regular cell neighboring types.
+
+
+\begin{DoxyParams}{Parameters}
+{\em kernel\+\_\+function} & Laplace kernel function. \\
+\hline
+{\em kx\+\_\+cell\+\_\+iter} & Iterator pointing to \$\+K\+\_\+x\$. \\
+\hline
+{\em kx\+\_\+cell\+\_\+iter} & Iterator pointing to \$\+K\+\_\+y\$. \\
+\hline
+{\em kx\+\_\+mapping} & Mapping used for \$\+K\+\_\+x\$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. \\
+\hline
+{\em kx\+\_\+mapping} & Mapping used for \$\+K\+\_\+y\$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell(), and Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a1cb24336d96c36bd50973a35b3e42b6a}\label{laplace__bem_8h_file_a1cb24336d96c36bd50973a35b3e42b6a}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!Sauter\+Quad\+Rule@{Sauter\+Quad\+Rule}}
+\index{Sauter\+Quad\+Rule@{Sauter\+Quad\+Rule}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{Sauter\+Quad\+Rule()}{SauterQuadRule()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule (\begin{DoxyParamCaption}\item[{Full\+Matrix$<$ Range\+Number\+Type $>$ \&}]{system\+\_\+matrix,  }\item[{const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&}]{kernel\+\_\+function,  }\item[{const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&}]{kx\+\_\+cell\+\_\+iter,  }\item[{const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&}]{ky\+\_\+cell\+\_\+iter,  }\item[{const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&}]{kx\+\_\+mapping = {\ttfamily MappingQGeneric$<$dim,~spacedim$>$(1)},  }\item[{const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&}]{ky\+\_\+mapping = {\ttfamily MappingQGeneric$<$dim,~spacedim$>$(1)} }\end{DoxyParamCaption})}
+
+This function implements Sauter\textquotesingle{}s quadrature rule on quadrangular mesh. It handles various cases including same panel, common edge, common vertex and regular cell neighboring types.
+
+
+\begin{DoxyParams}{Parameters}
+{\em kernel\+\_\+function} & Laplace kernel function. \\
+\hline
+{\em kx\+\_\+cell\+\_\+iter} & Iterator pointing to \$\+K\+\_\+x\$. \\
+\hline
+{\em kx\+\_\+cell\+\_\+iter} & Iterator pointing to \$\+K\+\_\+y\$. \\
+\hline
+{\em kx\+\_\+mapping} & Mapping used for \$\+K\+\_\+x\$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. \\
+\hline
+{\em kx\+\_\+mapping} & Mapping used for \$\+K\+\_\+y\$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell(), and Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a27c3f20fa27d5afdba1ad53ab47f9ed9}\label{laplace__bem_8h_file_a27c3f20fa27d5afdba1ad53ab47f9ed9}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!Sauter\+Quad\+Rule@{Sauter\+Quad\+Rule}}
+\index{Sauter\+Quad\+Rule@{Sauter\+Quad\+Rule}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{Sauter\+Quad\+Rule()}{SauterQuadRule()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type  = double$>$ \\
+void Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule (\begin{DoxyParamCaption}\item[{Full\+Matrix$<$ Range\+Number\+Type $>$ \&}]{system\+\_\+matrix,  }\item[{const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+Kernel\+::\+Kernel\+Function}$<$ spacedim, Range\+Number\+Type $>$ \&}]{kernel\+\_\+function,  }\item[{const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim $>$ \&}]{bem\+\_\+values,  }\item[{const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&}]{kx\+\_\+cell\+\_\+iter,  }\item[{const typename Do\+F\+Handler$<$ dim, spacedim $>$\+::cell\+\_\+iterator \&}]{ky\+\_\+cell\+\_\+iter,  }\item[{const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&}]{kx\+\_\+mapping = {\ttfamily MappingQGeneric$<$dim,~spacedim$>$(1)},  }\item[{const Mapping\+Q\+Generic$<$ dim, spacedim $>$ \&}]{ky\+\_\+mapping = {\ttfamily MappingQGeneric$<$dim,~spacedim$>$(1)} }\end{DoxyParamCaption})}
+
+This function implements Sauter\textquotesingle{}s quadrature rule on quadrangular mesh. It handles various cases including same panel, common edge, common vertex and regular cell neighboring types.
+
+
+\begin{DoxyParams}{Parameters}
+{\em kernel\+\_\+function} & Laplace kernel function. \\
+\hline
+{\em kx\+\_\+cell\+\_\+iter} & Iterator pointing to \$\+K\+\_\+x\$. \\
+\hline
+{\em kx\+\_\+cell\+\_\+iter} & Iterator pointing to \$\+K\+\_\+y\$. \\
+\hline
+{\em kx\+\_\+mapping} & Mapping used for \$\+K\+\_\+x\$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. \\
+\hline
+{\em kx\+\_\+mapping} & Mapping used for \$\+K\+\_\+y\$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell(), and Laplace\+B\+E\+M\+::\+Sauter\+Quad\+Rule().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a4cb672f44c56d77166719e4cda5905f8}\label{laplace__bem_8h_file_a4cb672f44c56d77166719e4cda5905f8}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!surface\+\_\+jacobian\+\_\+det@{surface\+\_\+jacobian\+\_\+det}}
+\index{surface\+\_\+jacobian\+\_\+det@{surface\+\_\+jacobian\+\_\+det}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{surface\+\_\+jacobian\+\_\+det()}{surface\_jacobian\_det()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+double Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell,  }\item[{const Point$<$ dim $>$ \&}]{p }\end{DoxyParamCaption})}
+
+Calculate the surface Jacobian determinant at specified area coordinates. Shape functions and support points in the real cell have been reordered to the tensor product ordering before the calculation. 
+
+References Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_aabebdaea9005cf7ab54a54a0aaf356ae}\label{laplace__bem_8h_file_aabebdaea9005cf7ab54a54a0aaf356ae}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!surface\+\_\+jacobian\+\_\+det@{surface\+\_\+jacobian\+\_\+det}}
+\index{surface\+\_\+jacobian\+\_\+det@{surface\+\_\+jacobian\+\_\+det}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{surface\+\_\+jacobian\+\_\+det()}{surface\_jacobian\_det()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim$>$ \\
+double Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det (\begin{DoxyParamCaption}\item[{const unsigned int}]{k3\+\_\+index,  }\item[{const unsigned int}]{quad\+\_\+no,  }\item[{const Table$<$ 2, Full\+Matrix$<$ double $>$$>$ \&}]{shape\+\_\+grad\+\_\+matrix\+\_\+table,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell }\end{DoxyParamCaption})}
+
+Calculate the surface Jacobian determinant at specified area coordinates. Shape functions and support points in the real cell have been reordered to the tensor product ordering before the calculation. 
+
+References Laplace\+B\+E\+M\+::surface\+\_\+jacobian\+\_\+det().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_acfc06d01b90d55585ff2f84662e51993}\label{laplace__bem_8h_file_acfc06d01b90d55585ff2f84662e51993}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell@{transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell}}
+\index{transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell@{transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell()}{transform\_unit\_to\_permuted\_real\_cell()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim$>$ \\
+Point$<$spacedim$>$ Laplace\+B\+E\+M\+::transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell (\begin{DoxyParamCaption}\item[{const Finite\+Element$<$ dim, spacedim $>$ \&}]{fe,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell,  }\item[{const Point$<$ dim $>$ \&}]{area\+\_\+coords }\end{DoxyParamCaption})}
+
+Calculate the coordinate transformation from a unit cell to real cell for Qp element. 
+\begin{DoxyParams}{Parameters}
+{\em fe} & \\
+\hline
+{\em support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell} & coordinates of the support points in the real cell, which are in the tensor product order. \\
+\hline
+{\em area\+\_\+coords} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References Laplace\+B\+E\+M\+::transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell().
+
+
+
+Referenced by Laplace\+B\+E\+M\+::transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell(), and Laplace\+B\+E\+M\+::\+Kernel\+Pulledback\+To\+Unit\+Cell$<$ dim, spacedim, Range\+Number\+Type $>$\+::value().
+
+\mbox{\Hypertarget{laplace__bem_8h_file_a98b19d342c23bad1a3a7382f57b394c8}\label{laplace__bem_8h_file_a98b19d342c23bad1a3a7382f57b394c8}} 
+\index{laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}!transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell@{transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell}}
+\index{transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell@{transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell}!laplace\+\_\+bem.\+h@{laplace\+\_\+bem.\+h}}
+\subsubsection{\texorpdfstring{transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell()}{transform\_unit\_to\_permuted\_real\_cell()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim$>$ \\
+Point$<$spacedim$>$ Laplace\+B\+E\+M\+::transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell (\begin{DoxyParamCaption}\item[{const unsigned int}]{k3\+\_\+index,  }\item[{const unsigned int}]{quad\+\_\+no,  }\item[{const Table$<$ 3, double $>$ \&}]{shape\+\_\+value\+\_\+table,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell }\end{DoxyParamCaption})}
+
+Calculate the coordinate transformation from a unit cell to real cell for Qp element. 
+\begin{DoxyParams}{Parameters}
+{\em k3\+\_\+index} & \\
+\hline
+{\em quad\+\_\+no} & \\
+\hline
+{\em shape\+\_\+value\+\_\+table} & \\
+\hline
+{\em support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell} & coordinates of the support points in the real cell, which are in the tensor product order. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References Laplace\+B\+E\+M\+::transform\+\_\+unit\+\_\+to\+\_\+permuted\+\_\+real\+\_\+cell().
+

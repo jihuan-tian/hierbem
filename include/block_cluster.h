@@ -42,6 +42,16 @@ public:
   operator<<(std::ostream &                          out,
              const BlockCluster<spacedim1, Number1> &block_cluster);
 
+  template <int spacedim1, typename Number1>
+  friend bool
+  operator==(const BlockCluster<spacedim1, Number1> &block_cluster1,
+             const BlockCluster<spacedim1, Number1> &block_cluster2);
+
+  template <int spacedim1, typename Number1>
+  friend bool
+  is_equal(const BlockCluster<spacedim, Number> &block_cluster1,
+           const BlockCluster<spacedim, Number> &block_cluster2);
+
   /**
    * Default constructor.
    */
@@ -59,6 +69,60 @@ public:
   BlockCluster(
     typename ClusterTree<spacedim, Number>::node_pointer_type tau_node,
     typename ClusterTree<spacedim, Number>::node_pointer_type sigma_node);
+
+  /**
+   * Check if the index set of the current block cluster is a subset of that of
+   * the given block cluster.
+   * @param block_cluster
+   * @return
+   */
+  bool
+  is_subset(const BlockCluster &block_cluster) const;
+
+  /**
+   * Check if the index set of the current block cluster is a proper subset of
+   * that of the given block cluster.
+   * @param block_cluster
+   * @return
+   */
+  bool
+  is_proper_subset(const BlockCluster &block_cluster) const;
+
+  /**
+   * Check if the index set of the current block cluster is a superset of that
+   * of the given block cluster.
+   * @param block_cluster
+   * @return
+   */
+  bool
+  is_superset(const BlockCluster &block_cluster) const;
+
+  /**
+   * Check if the index set of the current block cluster is a proper superset of
+   * that of the given block cluster.
+   * @param block_cluster
+   * @return
+   */
+  bool
+  is_proper_superset(const BlockCluster &block_cluster) const;
+
+  /**
+   * Calculate the intersection of the index sets of the current and the given
+   * block clusters.
+   */
+  void
+  intersect(
+    const BlockCluster &                  block_cluster,
+    std::vector<types::global_dof_index> &tau_index_set_intersection,
+    std::vector<types::global_dof_index> &sigma_index_set_intersection) const;
+
+  /**
+   * Determine if the index set of the current block cluster has a nonempty
+   * intersection with the index set of the given block cluster.
+   * @return
+   */
+  bool
+  has_intersection(const BlockCluster &block_cluster) const;
 
   /**
    * Determine if the block cluster belongs to the near field set.
@@ -140,7 +204,7 @@ public:
   get_is_near_field() const;
 
   /**
-   * Get the bollean value whether the block cluster is admissible.
+   * Get the boolean value whether the block cluster is admissible.
    */
   bool
   get_is_admissible() const;
@@ -169,7 +233,8 @@ private:
   typename ClusterTree<spacedim, Number>::node_pointer_type sigma_node;
 
   /**
-   * The distance between cluster \f$\tau\f$ and cluster \f$\sigma\f$.
+   * The distance between cluster \f$\tau\f$ and cluster \f$\sigma\f$. Its value
+   * is computed when evaluating the admissibility condition.
    */
   Number cluster_distance;
 
@@ -233,6 +298,128 @@ BlockCluster<spacedim, Number>::BlockCluster(
   , is_near_field(true)
   , is_admissible(false)
 {}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_subset(
+  const BlockCluster &block_cluster) const
+{
+  return (this->tau_node->get_data_reference().is_subset(
+            block_cluster.tau_node->get_data_reference()) &&
+          this->sigma_node->get_data_reference().is_subset(
+            block_cluster.sigma_node->get_data_reference()));
+}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_proper_subset(
+  const BlockCluster &block_cluster) const
+{
+  if (this->tau_node->get_data_reference().is_subset(
+        block_cluster.tau_node->get_data_reference()) &&
+      this->sigma_node->get_data_reference().is_subset(
+        block_cluster.sigma_node->get_data_reference()))
+    {
+      if ((this->tau_node->get_data_reference().get_cardinality() ==
+           block_cluster.tau_node->get_data_reference().get_cardinality()) &&
+          (this->sigma_node->get_data_reference().get_cardinality() ==
+           block_cluster.sigma_node->get_data_reference().get_cardinality()))
+        {
+          return false;
+        }
+      else
+        {
+          return true;
+        }
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_superset(
+  const BlockCluster &block_cluster) const
+{
+  return (this->tau_node->get_data_reference().is_superset(
+            block_cluster.tau_node->get_data_reference()) &&
+          this->sigma_node->get_data_reference().is_superset(
+            block_cluster.sigma_node->get_data_reference()));
+}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_proper_superset(
+  const BlockCluster &block_cluster) const
+{
+  if (this->tau_node->get_data_reference().is_superset(
+        block_cluster.tau_node->get_data_reference()) &&
+      this->sigma_node->get_data_reference().is_superset(
+        block_cluster.sigma_node->get_data_reference()))
+    {
+      if ((this->tau_node->get_data_reference().get_cardinality() ==
+           block_cluster.tau_node->get_data_reference().get_cardinality()) &&
+          (this->sigma_node->get_data_reference().get_cardinality() ==
+           block_cluster.sigma_node->get_data_reference().get_cardinality()))
+        {
+          return false;
+        }
+      else
+        {
+          return true;
+        }
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::intersect(
+  const BlockCluster &                  block_cluster,
+  std::vector<types::global_dof_index> &tau_index_set_intersection,
+  std::vector<types::global_dof_index> &sigma_index_set_intersection) const
+{
+  this->tau_node->get_data_reference().intersect(
+    block_cluster.tau_node->get_data_reference(), tau_index_set_intersection);
+  this->sigma_node->get_data_reference().intersect(
+    block_cluster.sigma_node->get_data_reference(),
+    sigma_index_set_intersection);
+}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::has_intersection(
+  const BlockCluster &block_cluster) const
+{
+  std::vector<types::global_dof_index> tau_index_set_intersection;
+  std::vector<types::global_dof_index> sigma_index_set_intersection;
+
+  this->intersect(block_cluster,
+                  tau_index_set_intersection,
+                  sigma_index_set_intersection);
+
+  if (tau_index_set_intersection.size() > 0 &&
+      sigma_index_set_intersection.size() > 0)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
 
 template <int spacedim, typename Number>
 void
@@ -392,6 +579,83 @@ typename ClusterTree<spacedim, Number>::node_const_pointer_type
 BlockCluster<spacedim, Number>::get_sigma_node() const
 {
   return sigma_node;
+}
+
+
+/**
+ * Check the equality of two block clusters by shallow comparison.
+ *
+ * The comparison is based on the pointer addresses to the tau cluster node
+ * and the sigma cluster node. Therefore, this is a "shallow" comparison for
+ * performance issue.
+ *
+ * <dl class="section note">
+ *   <dt>Note</dt>
+ *   <dd>This method is valid in the following two cases.
+ *
+ * 1. The two block clusters to be compared belong a same block cluster
+ * tree. In this scenario, because in either cluster tree, \f$T(I)\f$ or
+ * \f$T(J)\f$, comprising the block cluster tree, the cluster nodes contained
+ * are created on the heap, hence each of them has an address in the memory
+ * different from all the others. Therefore, the equality of two block
+ * clusters, i.e. the equality of the index sets in the \f$\tau\f$ cluster
+ * nodes and the equality of the index sets in the \f$\sigma\f$ cluster nodes,
+ * is equivalent to the equality of the pointer addresses of \f$\tau\f$
+ * cluster nodes and the equality of the pointer addresses of \f$\sigma\f$
+ * cluster nodes.
+ *
+ * 2. The two block clusters to be compared belong to two different block
+ * cluster tress, each of which is built from the two cluster trees \f$T(I)\f$
+ * and \f$T(J)\f$.
+ * </dd>
+ * </dl>
+ *
+ * @param block_cluster1
+ * @param block_cluster2
+ * @return
+ */
+template <int spacedim, typename Number>
+bool
+operator==(const BlockCluster<spacedim, Number> &block_cluster1,
+           const BlockCluster<spacedim, Number> &block_cluster2)
+{
+  if ((block_cluster1.tau_node == block_cluster2.tau_node) &&
+      (block_cluster1.sigma_node == block_cluster2.sigma_node))
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+/**
+ * Check the equality of two block cluster by comparing the contents of block
+ * cluster's index sets. Compared to \p BlockCluster<spacedim,
+ * Number>::operator==, this can be considered as deep comparison.
+ *
+ * @param block_cluster1
+ * @param block_cluster2
+ * @return
+ */
+template <int spacedim, typename Number>
+bool
+is_equal(const BlockCluster<spacedim, Number> &block_cluster1,
+         const BlockCluster<spacedim, Number> &block_cluster2)
+{
+  if ((block_cluster1.get_tau_node()->get_data_reference() ==
+       block_cluster2.get_tau_node()->get_data_reference()) &&
+      (block_cluster1.get_sigma_node()->get_data_reference() ==
+       block_cluster2.get_sigma_node()->get_data_reference()))
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
 }
 
 /**

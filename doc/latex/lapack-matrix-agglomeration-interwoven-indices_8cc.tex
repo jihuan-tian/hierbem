@@ -1,0 +1,55 @@
+\hypertarget{lapack-matrix-agglomeration-interwoven-indices_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/lapack-\/matrix-\/agglomeration-\/interwoven-\/indices/lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.cc File Reference}
+\label{lapack-matrix-agglomeration-interwoven-indices_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/lapack-\/matrix-\/agglomeration-\/interwoven-\/indices/lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/lapack-\/matrix-\/agglomeration-\/interwoven-\/indices/lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.\+cc}}
+
+
+Verify the agglomeration of four full submatrices into a larger full matrix when the index sets of several child clusters are interwoven together into the index set of the parent cluster.  
+
+
+{\ttfamily \#include $<$deal.\+I\+I/base/types.\+h$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}generic\+\_\+functors.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lapack\+\_\+full\+\_\+matrix\+\_\+ext.\+h\char`\"{}}\newline
+Include dependency graph for lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{lapack-matrix-agglomeration-interwoven-indices_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{lapack-matrix-agglomeration-interwoven-indices_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the agglomeration of four full submatrices into a larger full matrix when the index sets of several child clusters are interwoven together into the index set of the parent cluster. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/31 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{lapack-matrix-agglomeration-interwoven-indices_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{lapack-matrix-agglomeration-interwoven-indices_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.\+cc@{lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.\+cc}!main@{main}}
+\index{main@{main}!lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.\+cc@{lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Generate submatrices {\ttfamily M11}, {\ttfamily M12}, {\ttfamily M21}, {\ttfamily M22} with their row and column index sets for agglomeration.
+
+Output the four submatrices.
+
+Define the row and column index sets of the large matrix {\ttfamily M}, which has a dimension $5 \times 5$.
+
+Build the global to local indices map for the matrix {\ttfamily M}.
+
+Output the agglomerated matrix {\ttfamily M}.
+
+References build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::\+Reshape().
+

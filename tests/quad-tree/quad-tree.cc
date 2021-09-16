@@ -25,14 +25,16 @@ TreeNode<int, 4> *
 MakeIntExampleTree()
 {
   auto *parent = new TreeNode<int, 4>(10);
-  auto *node2  = new TreeNode<int, 4>(2);
-  auto *node3  = new TreeNode<int, 4>(3);
-  auto *node4  = new TreeNode<int, 4>(4);
-  auto *node5  = new TreeNode<int, 4>(5);
-  auto *node6  = new TreeNode<int, 4>(6);
-  auto *node7  = new TreeNode<int, 4>(7);
-  auto *node8  = new TreeNode<int, 4>(8);
-  auto *node9  = new TreeNode<int, 4>(9);
+  parent->set_split_mode(CrossSplitMode);
+  auto *node2 = new TreeNode<int, 4>(2);
+  auto *node3 = new TreeNode<int, 4>(3);
+  node3->set_split_mode(CrossSplitMode);
+  auto *node4 = new TreeNode<int, 4>(4);
+  auto *node5 = new TreeNode<int, 4>(5);
+  auto *node6 = new TreeNode<int, 4>(6);
+  auto *node7 = new TreeNode<int, 4>(7);
+  auto *node8 = new TreeNode<int, 4>(8);
+  auto *node9 = new TreeNode<int, 4>(9);
 
   std::array<TreeNode<int, 4> *, 4> children_for_10{
     {node3, node4, node5, node6}};

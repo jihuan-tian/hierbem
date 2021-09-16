@@ -1,0 +1,972 @@
+\hypertarget{classRkMatrix}{}\section{Rk\+Matrix$<$ Number $>$ Class Template Reference}
+\label{classRkMatrix}\index{Rk\+Matrix$<$ Number $>$@{Rk\+Matrix$<$ Number $>$}}
+
+
+Collaboration diagram for Rk\+Matrix$<$ Number $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=212pt]{classRkMatrix__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+using \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} = std\+::make\+\_\+unsigned$<$ types\+::blas\+\_\+int $>$\+::type
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classRkMatrix_aa2753ce8e37595824ac275e6b26255cf}{Rk\+Matrix} ()
+\item 
+\hyperlink{classRkMatrix_a2ed616a9c4e1b12688a903b427260241}{Rk\+Matrix} (const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_a8ca8898bcfedeee135437833f83b144c}{m}, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_a06d3b6636bb423c391c66e4ccc722687}{n}, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k)
+\item 
+\hyperlink{classRkMatrix_a6078a6d21d37f140ff8774b8310a19eb}{Rk\+Matrix} (const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M)
+\item 
+\hyperlink{classRkMatrix_a08ab45361d9e3cca139727dca31f9bfa}{Rk\+Matrix} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M)
+\item 
+\hyperlink{classRkMatrix_acdd046caab506cd04e09b65bb3ffc1f9}{Rk\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M)
+\item 
+\hyperlink{classRkMatrix_a4cfccf769e03141b5221c1356bd718a1}{Rk\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M)
+\item 
+\hyperlink{classRkMatrix_adf204b7ad92834e63c7f63f6b9ca59a9}{Rk\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M)
+\item 
+\hyperlink{classRkMatrix_aee16f709a7a73d022add2f044cdcb26a}{Rk\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M)
+\item 
+\hyperlink{classRkMatrix_aa5aff0d31115d7a67ef2f11db0b4ea24}{Rk\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M)
+\item 
+\hyperlink{classRkMatrix_a311b3ac28f647cb191eeb97a0b9d5815}{Rk\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M)
+\item 
+\hyperlink{classRkMatrix_a5a2841fc6a697007fafcab2619fc5390}{Rk\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M)
+\item 
+\hyperlink{classRkMatrix_a89ad98e45e6ae6c23a6ffc478c7ebb9f}{Rk\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M)
+\item 
+\hyperlink{classRkMatrix_a22cbf825bdbff58434ab3d4a6c478b96}{Rk\+Matrix} (const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B)
+\item 
+\hyperlink{classRkMatrix_ae15a15d55d04dd677a8dc90dbf789674}{Rk\+Matrix} (const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M1, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M2, bool is\+\_\+horizontal\+\_\+split)
+\item 
+\hyperlink{classRkMatrix_a0ef50f2d8d07bcbffa0a6d015dc0d1a4}{Rk\+Matrix} (const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M1, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M1\+\_\+tau\+\_\+index\+\_\+set, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M1\+\_\+sigma\+\_\+index\+\_\+set, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M2, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M2\+\_\+tau\+\_\+index\+\_\+set, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M2\+\_\+sigma\+\_\+index\+\_\+set, bool is\+\_\+horizontal\+\_\+split)
+\item 
+\hyperlink{classRkMatrix_acefd088fc714d99b701a553713c405ce}{Rk\+Matrix} (const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M11, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M12, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M21, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M22)
+\item 
+\hyperlink{classRkMatrix_a08f64aa2d91226f2d4e4f84911be5079}{Rk\+Matrix} (const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M11, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M11\+\_\+tau\+\_\+index\+\_\+set, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M11\+\_\+sigma\+\_\+index\+\_\+set, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M12, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M12\+\_\+tau\+\_\+index\+\_\+set, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M12\+\_\+sigma\+\_\+index\+\_\+set, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M21, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M21\+\_\+tau\+\_\+index\+\_\+set, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M21\+\_\+sigma\+\_\+index\+\_\+set, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M22, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M22\+\_\+tau\+\_\+index\+\_\+set, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M22\+\_\+sigma\+\_\+index\+\_\+set)
+\item 
+\hyperlink{classRkMatrix_a5f886128ba604cc85f99e3c9c9a07e7c}{Rk\+Matrix} (const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&matrix)
+\item 
+void \hyperlink{classRkMatrix_a5457372194e8009bffc7b88f11b95d03}{reinit} (const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_a8ca8898bcfedeee135437833f83b144c}{m}, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_a06d3b6636bb423c391c66e4ccc722687}{n}, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k)
+\item 
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_a1b2231c1e02862c91f4451e2b0a5fab4}{get\+\_\+rank} () const
+\item 
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_ae69122e3ee1c49a4fbe48cf3d7a20581}{get\+\_\+formal\+\_\+rank} () const
+\item 
+void \hyperlink{classRkMatrix_a384cdf3033d98f90b80d373add20b556}{convert\+To\+Full\+Matrix} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&matrix) const
+\item 
+void \hyperlink{classRkMatrix_a5305306386e47bcded819ce8d7f7935c}{restrict\+To\+Full\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&matrix) const
+\item 
+void \hyperlink{classRkMatrix_a0c529b22a8a38c4046a93c4a16ad39ca}{restrict\+To\+Full\+Matrix} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&tau, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&sigma, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+rk, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+rk, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&matrix) const
+\item 
+void \hyperlink{classRkMatrix_aeccb86734649be94a64d76cb613eea79}{print\+\_\+formatted} (std\+::ostream \&out, const unsigned int precision=3, const bool scientific=true, const unsigned int width=0, const char $\ast$zero\+\_\+string=\char`\"{}0\char`\"{}, const double denominator=1., const double threshold=0.) const
+\item 
+void \hyperlink{classRkMatrix_ada4d32bb08cce5d5e41ee4673bc88e00}{print\+\_\+formatted\+\_\+to\+\_\+mat} (std\+::ostream \&out, const std\+::string \&name, const unsigned int precision=8, const bool scientific=true, const unsigned int width=0, const char $\ast$zero\+\_\+string=\char`\"{}0\char`\"{}, const double denominator=1., const double threshold=0.) const
+\item 
+void \hyperlink{classRkMatrix_a555e0c3184b8411db1350c8fe1e875a0}{truncate\+\_\+to\+\_\+rank} (\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} new\+\_\+rank)
+\item 
+void \hyperlink{classRkMatrix_a25753b7f6d82dca931992cd975165972}{vmult} (Vector$<$ Number $>$ \&y, const Vector$<$ Number $>$ \&x, const bool adding=false) const
+\item 
+void \hyperlink{classRkMatrix_a7162dd0c4580dbb5e98715d9b8dd56c1}{Tvmult} (Vector$<$ Number $>$ \&y, const Vector$<$ Number $>$ \&x, const bool adding=false) const
+\item 
+void \hyperlink{classRkMatrix_a260584004c862292b4ae401cff236588}{add} (\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M2) const
+\item 
+void \hyperlink{classRkMatrix_a8793188eb93def0030ae90e8f5898813}{add} (const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M1)
+\item 
+void \hyperlink{classRkMatrix_ad8668d42978011b3e65d0381bfb068d5}{add} (\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M2, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k) const
+\item 
+void \hyperlink{classRkMatrix_a1f51eac54ddb43c0670a72da62bc1e55}{add} (const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&M1, const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} fixed\+\_\+rank\+\_\+k)
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classRkMatrix_a7bad017da4b56bfe703ac9086fd97d99}\label{classRkMatrix_a7bad017da4b56bfe703ac9086fd97d99}} 
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ {\bfseries A}
+\item 
+\mbox{\Hypertarget{classRkMatrix_a04f480fcd16ab9918271c7ba199df523}\label{classRkMatrix_a04f480fcd16ab9918271c7ba199df523}} 
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ {\bfseries B}
+\item 
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_aa9e60bb24bbe3ab1750f970f296d8256}{rank}
+\item 
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_a7e4a8f0500daba627665c6a5ed8888d9}{formal\+\_\+rank}
+\item 
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_a8ca8898bcfedeee135437833f83b144c}{m}
+\item 
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix_a06d3b6636bb423c391c66e4ccc722687}{n}
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classRkMatrix_a1b5b4592067610eec18b830482897243}\label{classRkMatrix_a1b5b4592067610eec18b830482897243}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+rk\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M1, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M2, \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classRkMatrix_a614ba3b92b97d95cb3146db181611a34}\label{classRkMatrix_a614ba3b92b97d95cb3146db181611a34}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+rk\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M1, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M2, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, bool is\+\_\+\+M1\+M2\+\_\+last\+\_\+in\+\_\+\+M\+\_\+\+Sigma\+\_\+P)
+\item 
+\mbox{\Hypertarget{classRkMatrix_afa94f9688a9443024a2631d2bfae06c8}\label{classRkMatrix_afa94f9688a9443024a2631d2bfae06c8}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries rk\+\_\+h\+\_\+mmult} (const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M2, \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classRkMatrix_a9b12cf1aa7504c436b84394f2116f6a9}\label{classRkMatrix_a9b12cf1aa7504c436b84394f2116f6a9}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries rk\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult} (const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M2, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, bool is\+\_\+\+M1\+M2\+\_\+last\+\_\+in\+\_\+\+M\+\_\+\+Sigma\+\_\+P)
+\item 
+\mbox{\Hypertarget{classRkMatrix_a85ccef980f81f9fb3c63675f3f9c014f}\label{classRkMatrix_a85ccef980f81f9fb3c63675f3f9c014f}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+f\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M1, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M2, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classRkMatrix_aea3866052a5345742ad9f44f11f33989}\label{classRkMatrix_aea3866052a5345742ad9f44f11f33989}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+f\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M1, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M2, \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classRkMatrix_a897365f6716975f71b528f610498c69b}\label{classRkMatrix_a897365f6716975f71b528f610498c69b}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries h\+\_\+f\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult} (\hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M1, const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M2, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, bool is\+\_\+\+M1\+M2\+\_\+last\+\_\+in\+\_\+\+M\+\_\+\+Sigma\+\_\+P)
+\item 
+\mbox{\Hypertarget{classRkMatrix_a67b0f45b3a6734fef74d90f28fcefbc1}\label{classRkMatrix_a67b0f45b3a6734fef74d90f28fcefbc1}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries f\+\_\+h\+\_\+mmult} (const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M2, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classRkMatrix_a66d1ce72cb294b2c4da6536250905a32}\label{classRkMatrix_a66d1ce72cb294b2c4da6536250905a32}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries f\+\_\+h\+\_\+mmult} (const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ \&M2, \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&M)
+\item 
+\mbox{\Hypertarget{classRkMatrix_a311938523b49a053a8cf16bc96576cdf}\label{classRkMatrix_a311938523b49a053a8cf16bc96576cdf}} 
+{\footnotesize template$<$int spacedim1, typename Number1 $>$ }\\void {\bfseries f\+\_\+h\+\_\+mmult\+\_\+for\+\_\+h\+\_\+h\+\_\+mmult} (const \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M1, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M2, \hyperlink{classHMatrix}{H\+Matrix}$<$ spacedim1, Number1 $>$ $\ast$M, bool is\+\_\+\+M1\+M2\+\_\+last\+\_\+in\+\_\+\+M\+\_\+\+Sigma\+\_\+P)
+\item 
+\mbox{\Hypertarget{classRkMatrix_a13b3be6d580847d1907db18253e37f05}\label{classRkMatrix_a13b3be6d580847d1907db18253e37f05}} 
+{\footnotesize template$<$typename Number1 $>$ }\\void {\bfseries print\+\_\+rkmatrix\+\_\+to\+\_\+mat} (std\+::ostream \&out, const std\+::string \&name, const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number1 $>$ \&values, const unsigned int precision, const bool scientific, const unsigned int width, const char $\ast$zero\+\_\+string, const double denominator, const double threshold)
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}\label{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!size\+\_\+type@{size\+\_\+type}}
+\index{size\+\_\+type@{size\+\_\+type}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{size\+\_\+type}{size\_type}}
+{\footnotesize\ttfamily template$<$typename Number = double$>$ \\
+using \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} =  std\+::make\+\_\+unsigned$<$types\+::blas\+\_\+int$>$\+::type}
+
+Declare the type for container size. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classRkMatrix_aa2753ce8e37595824ac275e6b26255cf}\label{classRkMatrix_aa2753ce8e37595824ac275e6b26255cf}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [1/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Default constructor. \mbox{\Hypertarget{classRkMatrix_a2ed616a9c4e1b12688a903b427260241}\label{classRkMatrix_a2ed616a9c4e1b12688a903b427260241}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [2/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{m,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{n,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption})}
+
+Construct a zero-\/valued rank-\/k matrix with the specified matrix dimension and rank. 
+\begin{DoxyParams}{Parameters}
+{\em m} & \\
+\hline
+{\em n} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+\end{DoxyParams}
+If the given {\ttfamily fixed\+\_\+rank\+\_\+k} is larger than the minimum matrix dimension $\min\{m, n\}$, simply set it as this value.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, and Rk\+Matrix$<$ Number $>$\+::rank.
+
+\mbox{\Hypertarget{classRkMatrix_a6078a6d21d37f140ff8774b8310a19eb}\label{classRkMatrix_a6078a6d21d37f140ff8774b8310a19eb}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [3/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix by conversion from a full matrix {\ttfamily M} with rank truncation.
+
+
+\begin{DoxyDescription}
+\item[Note ]This method converts a full matrix to a rank-\/k matrix, which implements the operator $\mathcal{T}_{r}^{\mathcal{R} \leftarrow \mathcal{F}}$ in (7.\+2) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. The original full matrix {\ttfamily will} be modified since S\+VD will be applied to it. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+{\em M} & \\
+\hline
+\end{DoxyParams}
+
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::rank, and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose().
+
+\mbox{\Hypertarget{classRkMatrix_a08ab45361d9e3cca139727dca31f9bfa}\label{classRkMatrix_a08ab45361d9e3cca139727dca31f9bfa}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [4/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix by conversion from a full matrix {\ttfamily M} without rank truncation.
+
+
+\begin{DoxyDescription}
+\item[Note ]The original full matrix {\ttfamily will} be modified since S\+VD will be applied to it. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em M} & \\
+\hline
+\end{DoxyParams}
+
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::rank, and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose().
+
+\mbox{\Hypertarget{classRkMatrix_acdd046caab506cd04e09b65bb3ffc1f9}\label{classRkMatrix_acdd046caab506cd04e09b65bb3ffc1f9}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [5/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix by restriction to the block cluster $\tau \times \sigma$ with rank truncation from the full global matrix {\ttfamily M} defined on the complete block cluster $I \times J$.
+
+
+\begin{DoxyDescription}
+\item[Note ]This operation will not modify the full global matrix {\ttfamily M}. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+{\em M} & \\
+\hline
+\end{DoxyParams}
+Extract the data for the submatrix defined on the block cluster $\tau \times \sigma$ from the full global matrix {\ttfamily M}.
+
+Convert the matrix block {\ttfamily M\+\_\+b} in full matrix format to rank-\/k matrix format.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::rank, and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose().
+
+\mbox{\Hypertarget{classRkMatrix_a4cfccf769e03141b5221c1356bd718a1}\label{classRkMatrix_a4cfccf769e03141b5221c1356bd718a1}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [6/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix by restriction to the block cluster $\tau \times \sigma$ without rank truncation from the full global matrix {\ttfamily M} defined on the complete block cluster $I \times J$.
+
+
+\begin{DoxyDescription}
+\item[Note ]This operation will not modify the full global matrix {\ttfamily M}. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em M} & \\
+\hline
+\end{DoxyParams}
+Extract the data for the submatrix defined on the block cluster $\tau \times \sigma$ from the full global matrix {\ttfamily M}.
+
+Convert the matrix block {\ttfamily M\+\_\+b} in full matrix format to rank-\/k matrix format.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::rank, and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose().
+
+\mbox{\Hypertarget{classRkMatrix_adf204b7ad92834e63c7f63f6b9ca59a9}\label{classRkMatrix_adf204b7ad92834e63c7f63f6b9ca59a9}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [7/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix from by restriction to the block cluster $\tau \times \sigma$ with rank truncation from the full local matrix {\ttfamily M}.
+
+
+\begin{DoxyDescription}
+\item[Note ]The original full local matrix {\ttfamily M} will not be modified. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+{\em M} & \\
+\hline
+{\em row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & The map from the global row indices to the local indices of the matrix associated the H-\/matrix when first calling this recursive function. \\
+\hline
+{\em col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & The map from the global column indices to the local indices of the matrix associated the H-\/matrix when first calling this recursive function. \\
+\hline
+\end{DoxyParams}
+Extract the data for the submatrix block $b = \tau \times \sigma$ in the original matrix {\ttfamily M}.
+
+Convert the matrix block {\ttfamily M\+\_\+b} in full matrix format to rank-\/k format.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::rank, and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose().
+
+\mbox{\Hypertarget{classRkMatrix_aee16f709a7a73d022add2f044cdcb26a}\label{classRkMatrix_aee16f709a7a73d022add2f044cdcb26a}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [8/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix from by restriction to the block cluster $\tau \times \sigma$ without rank truncation from the full local matrix {\ttfamily M}.
+
+
+\begin{DoxyDescription}
+\item[Note ]The original full local matrix {\ttfamily M} will not be modified. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em M} & \\
+\hline
+{\em row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & The map from the global row indices to the local indices of the matrix associated the H-\/matrix when first calling this recursive function. \\
+\hline
+{\em col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & The map from the global column indices to the local indices of the matrix associated the H-\/matrix when first calling this recursive function. \\
+\hline
+\end{DoxyParams}
+Extract the data for the submatrix block $b = \tau \times \sigma$ in the original matrix {\ttfamily M}.
+
+Convert the matrix block {\ttfamily M\+\_\+b} in full matrix format to rank-\/k format.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::rank, and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose().
+
+\mbox{\Hypertarget{classRkMatrix_aa5aff0d31115d7a67ef2f11db0b4ea24}\label{classRkMatrix_aa5aff0d31115d7a67ef2f11db0b4ea24}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [9/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix by restriction to the block cluster $\tau \times \sigma$ with rank truncation from the global rank-\/k matrix {\ttfamily M}.
+
+
+\begin{DoxyDescription}
+\item[Note ]The original rank-\/k global matrix {\ttfamily M} will not be modified. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+{\em M} & \\
+\hline
+\end{DoxyParams}
+Restrict the component matrix {\ttfamily A} of the original global rank-\/k matrix {\ttfamily M} to the cluster $\tau$.
+
+Restrict the component matrix {\ttfamily B} of the original global rank-\/k matrix {\ttfamily M} to the cluster $\sigma$.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+\mbox{\Hypertarget{classRkMatrix_a311b3ac28f647cb191eeb97a0b9d5815}\label{classRkMatrix_a311b3ac28f647cb191eeb97a0b9d5815}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [10/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix by restriction to the block cluster $\tau \times \sigma$ without rank truncation from the global rank-\/k matrix {\ttfamily M}.
+
+
+\begin{DoxyDescription}
+\item[Note ]The original rank-\/k global matrix {\ttfamily M} will not be modified. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em M} & \\
+\hline
+\end{DoxyParams}
+Restrict the component matrix {\ttfamily A} of the original global rank-\/k matrix {\ttfamily M} to the cluster $\tau$.
+
+Restrict the component matrix {\ttfamily B} of the original global rank-\/k matrix {\ttfamily M} to the cluster $\sigma$.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, Rk\+Matrix$<$ Number $>$\+::rank, and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+\mbox{\Hypertarget{classRkMatrix_a5a2841fc6a697007fafcab2619fc5390}\label{classRkMatrix_a5a2841fc6a697007fafcab2619fc5390}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [11/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix by restriction to the block cluster $\tau \times \sigma$ with rank truncation from the local rank-\/k matrix {\ttfamily M}.
+
+
+\begin{DoxyDescription}
+\item[Note ]The original rank-\/k local matrix {\ttfamily M} will not be modified. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+{\em M} & \\
+\hline
+{\em row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & The map from the global row indices to the local indices of the matrix associated the H-\/matrix when first calling this recursive function. \\
+\hline
+{\em col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & The map from the global column indices to the local indices of the matrix associated the H-\/matrix when first calling this recursive function. \\
+\hline
+\end{DoxyParams}
+Restrict the component matrix {\ttfamily A} of the original local rank-\/k matrix {\ttfamily M} to the cluster $\tau$.
+
+Restrict the component matrix {\ttfamily B} of the original local rank-\/k matrix {\ttfamily M} to the cluster $\sigma$.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+\mbox{\Hypertarget{classRkMatrix_a89ad98e45e6ae6c23a6ffc478c7ebb9f}\label{classRkMatrix_a89ad98e45e6ae6c23a6ffc478c7ebb9f}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [12/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix by restriction to the block cluster $\tau \times \sigma$ without rank truncation from the local rank-\/k matrix {\ttfamily M}. The rank of the rank-\/k matrix to be constructed is initialized to be the minimum of its minimum matrix dimension and the rank of M.
+
+
+\begin{DoxyDescription}
+\item[Note ]The original rank-\/k matrix {\ttfamily M} will not be modified. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em M} & \\
+\hline
+{\em row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & The map from the global row indices to the local indices of the matrix associated the H-\/matrix when first calling this recursive function. \\
+\hline
+{\em col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & The map from the global column indices to the local indices of the matrix associated the H-\/matrix when first calling this recursive function. \\
+\hline
+\end{DoxyParams}
+Restrict the component {\ttfamily A} of the original local rank-\/k matrix {\ttfamily M} to the cluster $\tau$.
+
+Restrict the component {\ttfamily B} of the original local rank-\/k matrix {\ttfamily M} to the cluster $\sigma$.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, Rk\+Matrix$<$ Number $>$\+::rank, and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+\mbox{\Hypertarget{classRkMatrix_a22cbf825bdbff58434ab3d4a6c478b96}\label{classRkMatrix_a22cbf825bdbff58434ab3d4a6c478b96}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [13/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix from two component matrices.
+
+
+\begin{DoxyDescription}
+\item[Note ]The formal rank of the rank-\/k matrix is set to the number of columns of matrix {\ttfamily A} or {\ttfamily B}. The rank of the rank-\/k matrix will not be calculated but temporarily set to the minimum dimension of the matrix. Hence we have $\text{actual rank} \leq \text{rank} \leq \text{formal rank}$. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em A} & \\
+\hline
+{\em B} & \\
+\hline
+\end{DoxyParams}
+The formal rank of the rank-\/k matrix is equal to the number of columns of {\ttfamily A} or {\ttfamily B}. Hence, we make an assertion about their equality.\mbox{\Hypertarget{classRkMatrix_ae15a15d55d04dd677a8dc90dbf789674}\label{classRkMatrix_ae15a15d55d04dd677a8dc90dbf789674}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [14/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M1,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M2,  }\item[{bool}]{is\+\_\+horizontal\+\_\+split }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix $M$ from an agglomeration of two rank-\/k submatrices, $M_1$ and $M_2$, which have been obtained from either horizontal splitting or vertical splitting. 
+\begin{DoxyParams}{Parameters}
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+{\em M1} & \\
+\hline
+{\em M2} & \\
+\hline
+\end{DoxyParams}
+Perform formatted addition of the two embedded matrices.
+
+Perform formatted addition of the two embedded matrices.
+
+References Rk\+Matrix$<$ Number $>$\+::add(), Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::rank.
+
+\mbox{\Hypertarget{classRkMatrix_a0ef50f2d8d07bcbffa0a6d015dc0d1a4}\label{classRkMatrix_a0ef50f2d8d07bcbffa0a6d015dc0d1a4}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [15/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M1,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M1\+\_\+tau\+\_\+index\+\_\+set,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M1\+\_\+sigma\+\_\+index\+\_\+set,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M2,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M2\+\_\+tau\+\_\+index\+\_\+set,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M2\+\_\+sigma\+\_\+index\+\_\+set,  }\item[{bool}]{is\+\_\+horizontal\+\_\+split }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix $M$ from an agglomeration of two rank-\/k submatrices, $M_1$ and $M_2$, which have been obtained from either horizontal splitting or vertical splitting.
+
+This method handles the case when the index sets of several child clusters are interwoven together into the index set of the parent cluster. This is based on the fact that during DoF support point coordinates based cluster tree partition, the continuity of the index set is not preserved.
+
+
+\begin{DoxyParams}{Parameters}
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+{\em row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & \\
+\hline
+{\em col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & \\
+\hline
+{\em M1} & \\
+\hline
+{\em M1\+\_\+tau\+\_\+index\+\_\+set} & \\
+\hline
+{\em M1\+\_\+sigma\+\_\+index\+\_\+set} & \\
+\hline
+{\em M2} & \\
+\hline
+{\em M2\+\_\+tau\+\_\+index\+\_\+set} & \\
+\hline
+{\em M2\+\_\+sigma\+\_\+index\+\_\+set} & \\
+\hline
+{\em is\+\_\+horizontal\+\_\+split} & \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyDescription}
+\item[Note ]Because the assembly of the two submatrices into the larger matrix depends on the global DoF indices, there is no need for a manual control of the assembly location and the procedures for both horizontal and vertical stacking cases are the same. 
+\end{DoxyDescription}
+
+Make assertions about the sizes of row and column index global to local maps for {\ttfamily M}.
+
+Perform formatted addition of the two embedded matrices.
+
+References Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::rank.
+
+\mbox{\Hypertarget{classRkMatrix_acefd088fc714d99b701a553713c405ce}\label{classRkMatrix_acefd088fc714d99b701a553713c405ce}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [16/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M11,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M12,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M21,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M22 }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix $M$ from an agglomeration of four rank-\/k submatrices, $M_{11}, M_{12}, M_{21}, M_{22}$.
+
+\[ M = \begin{pmatrix} M_{11} & M_{12} \\ M_{21} & M_{22} \end{pmatrix} \]
+
+
+\begin{DoxyDescription}
+\item[Note ]This method implements the operator $\mathcal{T}_{r, {\rm pairw}}^{\mathcal{R}}$ in (2.\+13) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. 
+\end{DoxyDescription}Create a rank-\/k matrix which is an embedding of the submatrix. N.\+B. The embedding of a matrix does not change its rank.
+
+At first, each matrix block is embedded into the large matrix by padding zeros to the component matrices {\ttfamily A} and {\ttfamily B} in a rank-\/k matrix.
+
+Next, pairwise formatted addition will be applied successively to the four embedded matrices to achieve agglomeration.
+
+References Rk\+Matrix$<$ Number $>$\+::add(), Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::rank.
+
+\mbox{\Hypertarget{classRkMatrix_a08f64aa2d91226f2d4e4f84911be5079}\label{classRkMatrix_a08f64aa2d91226f2d4e4f84911be5079}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [17/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M11,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M11\+\_\+tau\+\_\+index\+\_\+set,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M11\+\_\+sigma\+\_\+index\+\_\+set,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M12,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M12\+\_\+tau\+\_\+index\+\_\+set,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M12\+\_\+sigma\+\_\+index\+\_\+set,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M21,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M21\+\_\+tau\+\_\+index\+\_\+set,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M21\+\_\+sigma\+\_\+index\+\_\+set,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M22,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M22\+\_\+tau\+\_\+index\+\_\+set,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M22\+\_\+sigma\+\_\+index\+\_\+set }\end{DoxyParamCaption})}
+
+Construct a rank-\/k matrix $M$ from an agglomeration of four rank-\/k submatrices, $M_{11}, M_{12}, M_{21}, M_{22}$.
+
+\[ M = \begin{pmatrix} M_{11} & M_{12} \\ M_{21} & M_{22} \end{pmatrix} \]
+
+
+\begin{DoxyDescription}
+\item[Note ]
+\begin{DoxyEnumerate}
+\item This method implements the operator $\mathcal{T}_{r, {\rm pairw}}^{\mathcal{R}}$ in (2.\+13) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book.
+\item This method handles the case when the index sets of several child clusters are interwoven together into the index set of the parent cluster. This is based on the fact that during DoF support point coordinates based cluster tree partition, the continuity of the index set is not preserved.  
+\end{DoxyEnumerate}
+\end{DoxyDescription}Make assertions about the compatibility of number of rows and columns of the submatrices.
+
+Make assertions about the equality of cluster index sets of submatrices.
+
+Make assertions about the sizes of row and column index global to local maps for {\ttfamily M}.
+
+Make assertions about the submatrix sizes and associated index sets.
+
+Create a rank-\/k matrix which is an embedding of the submatrix. N.\+B. The embedding of a matrix does not change its rank.
+
+At first, each matrix block is embedded into the large matrix by padding zeros to the component matrices {\ttfamily A} and {\ttfamily B} in a rank-\/k matrix.
+
+Next, pairwise formatted addition will be applied successively to the four embedded matrices to achieve agglomeration.
+
+References Rk\+Matrix$<$ Number $>$\+::add(), Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::rank.
+
+\mbox{\Hypertarget{classRkMatrix_a5f886128ba604cc85f99e3c9c9a07e7c}\label{classRkMatrix_a5f886128ba604cc85f99e3c9c9a07e7c}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\index{Rk\+Matrix@{Rk\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Rk\+Matrix()}{RkMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [18/18]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix}{Rk\+Matrix} (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{matrix }\end{DoxyParamCaption})}
+
+Copy constructor. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classRkMatrix_a260584004c862292b4ae401cff236588}\label{classRkMatrix_a260584004c862292b4ae401cff236588}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!add@{add}}
+\index{add@{add}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::add (\begin{DoxyParamCaption}\item[{\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M2 }\end{DoxyParamCaption}) const}
+
+Perform the addition of two rank-\/k matrices $M = M_1 + M_2$ by juxtaposition without rank truncation, where $M_1$ is the current matrix.
+
+Let $M_1 = A_1 B_1^T$ and $M_2 = A_2 B_2^T$. Their addition without truncation is a juxtaposition of the components of $M_1$ and $M_2$. Assume $M = AB^T$, then $A = [A_1 A_2]$ and $B = [B_1 B_2]$. Its rank $r \leq r_1 + r_2$. Also note that the value of the class member {\ttfamily M} may be just formal, i.\+e. the actual matrix rank is smaller than it. 
+\begin{DoxyParams}{Parameters}
+{\em M} & \\
+\hline
+{\em M2} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+\end{DoxyParams}
+Stack the components of {\ttfamily A} and {\ttfamily B}.
+
+Referenced by Rk\+Matrix$<$ Number $>$\+::add(), main(), and Rk\+Matrix$<$ Number $>$\+::\+Rk\+Matrix().
+
+\mbox{\Hypertarget{classRkMatrix_a8793188eb93def0030ae90e8f5898813}\label{classRkMatrix_a8793188eb93def0030ae90e8f5898813}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!add@{add}}
+\index{add@{add}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::add (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M1 }\end{DoxyParamCaption})}
+
+Perform the addition of two rank-\/k matrices $M = M + M_1$ by juxtaposition without rank truncation, where $M$ is the current matrix. 
+\begin{DoxyParams}{Parameters}
+{\em M1} & \\
+\hline
+\end{DoxyParams}
+Stack the components of {\ttfamily A} and {\ttfamily B}.\mbox{\Hypertarget{classRkMatrix_ad8668d42978011b3e65d0381bfb068d5}\label{classRkMatrix_ad8668d42978011b3e65d0381bfb068d5}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!add@{add}}
+\index{add@{add}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::add (\begin{DoxyParamCaption}\item[{\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M,  }\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M2,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption}) const}
+
+Perform the formatted addition of two rank-\/k matrices, $M = M_1 + M_2$. The resulted rank-\/k matrix {\ttfamily M} will be truncated to the fixed rank {\ttfamily fixed\+\_\+rank\+\_\+k}. Perform the addition via a simple juxtaposition of matrix components. Then rank truncation is carried out.
+
+References Rk\+Matrix$<$ Number $>$\+::add(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+\mbox{\Hypertarget{classRkMatrix_a1f51eac54ddb43c0670a72da62bc1e55}\label{classRkMatrix_a1f51eac54ddb43c0670a72da62bc1e55}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!add@{add}}
+\index{add@{add}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::add (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$ \&}]{M1,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption})}
+
+Perform the formatted addition of two rank-\/k matrices, $M = M + M_1$. {\ttfamily M\+\_\+1} is added to the current matrix itself. The resulted rank-\/k matrix {\ttfamily M} will be truncated to the fixed rank {\ttfamily fixed\+\_\+rank\+\_\+k}. Perform the addition via a simple juxtaposition of matrix components. Then rank truncation is carried out.
+
+References Rk\+Matrix$<$ Number $>$\+::add(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+\mbox{\Hypertarget{classRkMatrix_a384cdf3033d98f90b80d373add20b556}\label{classRkMatrix_a384cdf3033d98f90b80d373add20b556}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!convert\+To\+Full\+Matrix@{convert\+To\+Full\+Matrix}}
+\index{convert\+To\+Full\+Matrix@{convert\+To\+Full\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{convert\+To\+Full\+Matrix()}{convertToFullMatrix()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::convert\+To\+Full\+Matrix (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{matrix }\end{DoxyParamCaption}) const}
+
+Convert an rank-\/k matrix to a full matrix. 
+\begin{DoxyParams}{Parameters}
+{\em matrix} & \\
+\hline
+\end{DoxyParams}
+
+
+References Rk\+Matrix$<$ Number $>$\+::m, and Rk\+Matrix$<$ Number $>$\+::n.
+
+
+
+Referenced by main(), and Rk\+Matrix$<$ Number $>$\+::restrict\+To\+Full\+Matrix().
+
+\mbox{\Hypertarget{classRkMatrix_ae69122e3ee1c49a4fbe48cf3d7a20581}\label{classRkMatrix_ae69122e3ee1c49a4fbe48cf3d7a20581}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!get\+\_\+formal\+\_\+rank@{get\+\_\+formal\+\_\+rank}}
+\index{get\+\_\+formal\+\_\+rank@{get\+\_\+formal\+\_\+rank}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+formal\+\_\+rank()}{get\_formal\_rank()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::get\+\_\+formal\+\_\+rank (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the formal rank of the rank-\/k matrix. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank.
+
+\mbox{\Hypertarget{classRkMatrix_a1b2231c1e02862c91f4451e2b0a5fab4}\label{classRkMatrix_a1b2231c1e02862c91f4451e2b0a5fab4}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!get\+\_\+rank@{get\+\_\+rank}}
+\index{get\+\_\+rank@{get\+\_\+rank}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{get\+\_\+rank()}{get\_rank()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::get\+\_\+rank (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the rank of the rank-\/k matrix. \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+References Rk\+Matrix$<$ Number $>$\+::rank.
+
+\mbox{\Hypertarget{classRkMatrix_aeccb86734649be94a64d76cb613eea79}\label{classRkMatrix_aeccb86734649be94a64d76cb613eea79}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!print\+\_\+formatted@{print\+\_\+formatted}}
+\index{print\+\_\+formatted@{print\+\_\+formatted}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{print\+\_\+formatted()}{print\_formatted()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::print\+\_\+formatted (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out,  }\item[{const unsigned int}]{precision = {\ttfamily 3},  }\item[{const bool}]{scientific = {\ttfamily true},  }\item[{const unsigned int}]{width = {\ttfamily 0},  }\item[{const char $\ast$}]{zero\+\_\+string = {\ttfamily \char`\"{}0\char`\"{}},  }\item[{const double}]{denominator = {\ttfamily 1.},  }\item[{const double}]{threshold = {\ttfamily 0.} }\end{DoxyParamCaption}) const}
+
+Print a \hyperlink{classRkMatrix}{Rk\+Matrix}. 
+\begin{DoxyParams}{Parameters}
+{\em out} & \\
+\hline
+{\em precision} & \\
+\hline
+{\em scientific} & \\
+\hline
+{\em width} & \\
+\hline
+{\em zero\+\_\+string} & \\
+\hline
+{\em denominator} & \\
+\hline
+{\em threshold} & \\
+\hline
+\end{DoxyParams}
+
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::rank.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classRkMatrix_ada4d32bb08cce5d5e41ee4673bc88e00}\label{classRkMatrix_ada4d32bb08cce5d5e41ee4673bc88e00}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!print\+\_\+formatted\+\_\+to\+\_\+mat@{print\+\_\+formatted\+\_\+to\+\_\+mat}}
+\index{print\+\_\+formatted\+\_\+to\+\_\+mat@{print\+\_\+formatted\+\_\+to\+\_\+mat}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{print\+\_\+formatted\+\_\+to\+\_\+mat()}{print\_formatted\_to\_mat()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{out,  }\item[{const std\+::string \&}]{name,  }\item[{const unsigned int}]{precision = {\ttfamily 8},  }\item[{const bool}]{scientific = {\ttfamily true},  }\item[{const unsigned int}]{width = {\ttfamily 0},  }\item[{const char $\ast$}]{zero\+\_\+string = {\ttfamily \char`\"{}0\char`\"{}},  }\item[{const double}]{denominator = {\ttfamily 1.},  }\item[{const double}]{threshold = {\ttfamily 0.} }\end{DoxyParamCaption}) const}
+
+Print a \hyperlink{classRkMatrix}{Rk\+Matrix} into Octave mat format. 
+\begin{DoxyParams}{Parameters}
+{\em out} & \\
+\hline
+{\em name} & \\
+\hline
+{\em precision} & \\
+\hline
+{\em scientific} & \\
+\hline
+{\em width} & \\
+\hline
+{\em zero\+\_\+string} & \\
+\hline
+{\em denominator} & \\
+\hline
+{\em threshold} & \\
+\hline
+\end{DoxyParams}
+
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::rank.
+
+
+
+Referenced by main().
+
+\mbox{\Hypertarget{classRkMatrix_a5457372194e8009bffc7b88f11b95d03}\label{classRkMatrix_a5457372194e8009bffc7b88f11b95d03}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!reinit@{reinit}}
+\index{reinit@{reinit}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{reinit()}{reinit()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::reinit (\begin{DoxyParamCaption}\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{m,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{n,  }\item[{const \hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{fixed\+\_\+rank\+\_\+k }\end{DoxyParamCaption})}
+
+Reinitialize a rank-\/k matrix with specified dimension and rank. By default, all matrix entries are initialized to zero. 
+\begin{DoxyParams}{Parameters}
+{\em m} & \\
+\hline
+{\em n} & \\
+\hline
+{\em fixed\+\_\+rank\+\_\+k} & \\
+\hline
+{\em omit\+\_\+zeroing\+\_\+entries} & \\
+\hline
+\end{DoxyParams}
+
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, and Rk\+Matrix$<$ Number $>$\+::rank.
+
+
+
+Referenced by h\+\_\+rk\+\_\+mmult(), and rk\+\_\+h\+\_\+mmult().
+
+\mbox{\Hypertarget{classRkMatrix_a5305306386e47bcded819ce8d7f7935c}\label{classRkMatrix_a5305306386e47bcded819ce8d7f7935c}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!restrict\+To\+Full\+Matrix@{restrict\+To\+Full\+Matrix}}
+\index{restrict\+To\+Full\+Matrix@{restrict\+To\+Full\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{restrict\+To\+Full\+Matrix()}{restrictToFullMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::restrict\+To\+Full\+Matrix (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{matrix }\end{DoxyParamCaption}) const}
+
+Restrict a global rank-\/k matrix to a full matrix defined on the block cluster $\tau \times \sigma$. 
+
+References Rk\+Matrix$<$ Number $>$\+::convert\+To\+Full\+Matrix().
+
+
+
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::\+\_\+distribute\+\_\+sigma\+\_\+r\+\_\+and\+\_\+f\+\_\+to\+\_\+leaves(), and main().
+
+\mbox{\Hypertarget{classRkMatrix_a0c529b22a8a38c4046a93c4a16ad39ca}\label{classRkMatrix_a0c529b22a8a38c4046a93c4a16ad39ca}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!restrict\+To\+Full\+Matrix@{restrict\+To\+Full\+Matrix}}
+\index{restrict\+To\+Full\+Matrix@{restrict\+To\+Full\+Matrix}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{restrict\+To\+Full\+Matrix()}{restrictToFullMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::restrict\+To\+Full\+Matrix (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{tau,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{sigma,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+rk,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+rk,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{matrix }\end{DoxyParamCaption}) const}
+
+Restrict a local rank-\/k matrix to a full matrix defined on the block cluster $\tau \times \sigma$. 
+\begin{DoxyParams}{Parameters}
+{\em tau} & \\
+\hline
+{\em sigma} & \\
+\hline
+{\em row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+rk} & \\
+\hline
+{\em col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+rk} & \\
+\hline
+{\em matrix} & \\
+\hline
+\end{DoxyParams}
+
+
+References Rk\+Matrix$<$ Number $>$\+::convert\+To\+Full\+Matrix().
+
+\mbox{\Hypertarget{classRkMatrix_a555e0c3184b8411db1350c8fe1e875a0}\label{classRkMatrix_a555e0c3184b8411db1350c8fe1e875a0}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!truncate\+\_\+to\+\_\+rank@{truncate\+\_\+to\+\_\+rank}}
+\index{truncate\+\_\+to\+\_\+rank@{truncate\+\_\+to\+\_\+rank}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{truncate\+\_\+to\+\_\+rank()}{truncate\_to\_rank()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank (\begin{DoxyParamCaption}\item[{\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type}}]{new\+\_\+rank }\end{DoxyParamCaption})}
+
+Truncate the \hyperlink{classRkMatrix}{Rk\+Matrix} to {\ttfamily new\+\_\+rank}.
+
+
+\begin{DoxyDescription}
+\item[Note ]This method implements the operator $\mathcal{T}_{r \leftarrow s}^{\mathcal{R}}$ in (7.\+4) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em new\+\_\+rank} & \\
+\hline
+\end{DoxyParams}
+Work flow introduction\+: Use QR decomposition to perform the rank truncation.
+
+Adopt right associativity when the matrix is long.
+
+Adopt left associativity when the matrix is wide.
+
+Update the formal rank.
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank, Rk\+Matrix$<$ Number $>$\+::m, Rk\+Matrix$<$ Number $>$\+::n, Rk\+Matrix$<$ Number $>$\+::rank, L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+rows(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::transpose().
+
+
+
+Referenced by Rk\+Matrix$<$ Number $>$\+::add(), main(), and Rk\+Matrix$<$ Number $>$\+::\+Rk\+Matrix().
+
+\mbox{\Hypertarget{classRkMatrix_a7162dd0c4580dbb5e98715d9b8dd56c1}\label{classRkMatrix_a7162dd0c4580dbb5e98715d9b8dd56c1}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!Tvmult@{Tvmult}}
+\index{Tvmult@{Tvmult}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{Tvmult()}{Tvmult()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::Tvmult (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{y,  }\item[{const Vector$<$ Number $>$ \&}]{x,  }\item[{const bool}]{adding = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+Calculate matrix-\/vector multiplication as $y = B A^T x$ or $y = y + B A^T x$. 
+\begin{DoxyParams}{Parameters}
+{\em y} & \\
+\hline
+{\em x} & \\
+\hline
+{\em adding} & \\
+\hline
+\end{DoxyParams}
+The vector storing $B^T x$
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank.
+
+\mbox{\Hypertarget{classRkMatrix_a25753b7f6d82dca931992cd975165972}\label{classRkMatrix_a25753b7f6d82dca931992cd975165972}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!vmult@{vmult}}
+\index{vmult@{vmult}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{vmult()}{vmult()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::vmult (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{y,  }\item[{const Vector$<$ Number $>$ \&}]{x,  }\item[{const bool}]{adding = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+Calculate matrix-\/vector multiplication as $y = A B^T x$ or $y = y + A B^T x$. 
+\begin{DoxyParams}{Parameters}
+{\em y} & \\
+\hline
+{\em x} & \\
+\hline
+{\em adding} & \\
+\hline
+\end{DoxyParams}
+The vector storing $B^T x$
+
+References Rk\+Matrix$<$ Number $>$\+::formal\+\_\+rank.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classRkMatrix_a7e4a8f0500daba627665c6a5ed8888d9}\label{classRkMatrix_a7e4a8f0500daba627665c6a5ed8888d9}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!formal\+\_\+rank@{formal\+\_\+rank}}
+\index{formal\+\_\+rank@{formal\+\_\+rank}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{formal\+\_\+rank}{formal\_rank}}
+{\footnotesize\ttfamily template$<$typename Number = double$>$ \\
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::formal\+\_\+rank\hspace{0.3cm}{\ttfamily [private]}}
+
+Formal matrix rank, which is equal to the number of columns of {\ttfamily A} or {\ttfamily B}, i.\+e. {\ttfamily A.\+n} or {\ttfamily B.\+n}. 
+
+Referenced by Rk\+Matrix$<$ Number $>$\+::get\+\_\+formal\+\_\+rank(), h\+\_\+rk\+\_\+mmult(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), print\+\_\+rkmatrix\+\_\+to\+\_\+mat(), Rk\+Matrix$<$ Number $>$\+::reinit(), rk\+\_\+h\+\_\+mmult(), Rk\+Matrix$<$ Number $>$\+::\+Rk\+Matrix(), Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank(), Rk\+Matrix$<$ Number $>$\+::\+Tvmult(), and Rk\+Matrix$<$ Number $>$\+::vmult().
+
+\mbox{\Hypertarget{classRkMatrix_a8ca8898bcfedeee135437833f83b144c}\label{classRkMatrix_a8ca8898bcfedeee135437833f83b144c}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!m@{m}}
+\index{m@{m}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{m}{m}}
+{\footnotesize\ttfamily template$<$typename Number = double$>$ \\
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::m\hspace{0.3cm}{\ttfamily [private]}}
+
+Total number of rows. 
+
+Referenced by Rk\+Matrix$<$ Number $>$\+::convert\+To\+Full\+Matrix(), h\+\_\+rk\+\_\+mmult(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), print\+\_\+rkmatrix\+\_\+to\+\_\+mat(), Rk\+Matrix$<$ Number $>$\+::reinit(), rk\+\_\+h\+\_\+mmult(), Rk\+Matrix$<$ Number $>$\+::\+Rk\+Matrix(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+\mbox{\Hypertarget{classRkMatrix_a06d3b6636bb423c391c66e4ccc722687}\label{classRkMatrix_a06d3b6636bb423c391c66e4ccc722687}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!n@{n}}
+\index{n@{n}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{n}{n}}
+{\footnotesize\ttfamily template$<$typename Number = double$>$ \\
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::n\hspace{0.3cm}{\ttfamily [private]}}
+
+Total number of columns 
+
+Referenced by Rk\+Matrix$<$ Number $>$\+::convert\+To\+Full\+Matrix(), h\+\_\+rk\+\_\+mmult(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), print\+\_\+rkmatrix\+\_\+to\+\_\+mat(), Rk\+Matrix$<$ Number $>$\+::reinit(), rk\+\_\+h\+\_\+mmult(), Rk\+Matrix$<$ Number $>$\+::\+Rk\+Matrix(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+\mbox{\Hypertarget{classRkMatrix_aa9e60bb24bbe3ab1750f970f296d8256}\label{classRkMatrix_aa9e60bb24bbe3ab1750f970f296d8256}} 
+\index{Rk\+Matrix@{Rk\+Matrix}!rank@{rank}}
+\index{rank@{rank}!Rk\+Matrix@{Rk\+Matrix}}
+\subsubsection{\texorpdfstring{rank}{rank}}
+{\footnotesize\ttfamily template$<$typename Number = double$>$ \\
+\hyperlink{classRkMatrix_add060bfc3a4cc77f858c3d6dd58cadd5}{size\+\_\+type} \hyperlink{classRkMatrix}{Rk\+Matrix}$<$ Number $>$\+::rank\hspace{0.3cm}{\ttfamily [private]}}
+
+Matrix rank, which is either the actual matrix rank or the minimum of {\ttfamily m}, {\ttfamily n} and {\ttfamily A.\+n} (or {\ttfamily B.\+n}). Actually, this is an upper bound of the actual matrix rank. 
+
+Referenced by Rk\+Matrix$<$ Number $>$\+::get\+\_\+rank(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted(), Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), print\+\_\+rkmatrix\+\_\+to\+\_\+mat(), Rk\+Matrix$<$ Number $>$\+::reinit(), Rk\+Matrix$<$ Number $>$\+::\+Rk\+Matrix(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/\hyperlink{rkmatrix_8h}{rkmatrix.\+h}\end{DoxyCompactItemize}

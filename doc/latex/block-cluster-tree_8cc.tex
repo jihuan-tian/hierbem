@@ -1,0 +1,98 @@
+\hypertarget{block-cluster-tree_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/block-\/cluster-\/tree/block-\/cluster-\/tree.cc File Reference}
+\label{block-cluster-tree_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/block-\/cluster-\/tree/block-\/cluster-\/tree.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/block-\/cluster-\/tree/block-\/cluster-\/tree.\+cc}}
+
+
+This files verifies the admissible block cluster partition.  
+
+
+{\ttfamily \#include $<$deal.\+I\+I/base/logstream.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/base/point.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe\+\_\+q.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/mapping\+\_\+q\+\_\+generic.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+generator.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+in.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+out.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/full\+\_\+matrix.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/vector.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/numerics/data\+\_\+out.\+h$>$}\newline
+{\ttfamily \#include $<$simple\+\_\+bounding\+\_\+box.\+h$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include \char`\"{}block\+\_\+cluster\+\_\+tree.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}cluster\+\_\+tree.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}debug\+\_\+tools.\+h\char`\"{}}\newline
+Include dependency graph for block-\/cluster-\/tree.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{block-cluster-tree_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{block-cluster-tree_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This files verifies the admissible block cluster partition. 
+
+\begin{DoxyDate}{Date}
+2021-\/04-\/28 
+\end{DoxyDate}
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{block-cluster-tree_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{block-cluster-tree_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{block-\/cluster-\/tree.\+cc@{block-\/cluster-\/tree.\+cc}!main@{main}}
+\index{main@{main}!block-\/cluster-\/tree.\+cc@{block-\/cluster-\/tree.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Initialize deal.\+ii log stream.
+
+Generate the 3x3 grid in a 2D square.
+
+Save the mesh to a file for visualization.
+
+Read the mesh from a file.
+
+Create the Lagrangian finite element.
+
+Create a Do\+F\+Handler, which is associated with the triangulation and distributed with the finite element.
+
+Create the mapping object, which is required in generating the map from DoF indices to support points.
+
+Generate a list of all DoF indices.
+
+Get the spatial coordinates of the support points associated with DoF indices.
+
+Calculate the average mesh cell size at each support point.
+
+Initialize the cluster tree $T(I)$ and $T(J)$ for all the DoF indices.
+
+Partition the cluster tree.
+
+Print the cluster tree.
+
+Create the block cluster tree.
+
+Perform admissible partition on the block cluster tree.
+
+Print the block cluster tree, even though there is only a root node.
+
+Create a deal.\+ii vector storing the block cluster levels for all Do\+Fs.
+
+\begin{DoxyVerb}     Iterate through the \form#0 component of each block cluster and get
+\end{DoxyVerb}
+ the level of each DoF in $\tau$. Then assign the level value to all Do\+Fs contained in the cluster $\tau$.
+
+\hyperlink{classCluster}{Cluster} indices in a cluster tree\+: on level 2.
+
+Save the block cluster data matrices.
+
+References Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+leaf\+\_\+set(), map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size(), Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition().
+

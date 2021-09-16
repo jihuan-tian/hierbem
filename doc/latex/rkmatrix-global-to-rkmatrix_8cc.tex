@@ -1,0 +1,49 @@
+\hypertarget{rkmatrix-global-to-rkmatrix_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/rkmatrix-\/global-\/to-\/rkmatrix/rkmatrix-\/global-\/to-\/rkmatrix.cc File Reference}
+\label{rkmatrix-global-to-rkmatrix_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/rkmatrix-\/global-\/to-\/rkmatrix/rkmatrix-\/global-\/to-\/rkmatrix.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/rkmatrix-\/global-\/to-\/rkmatrix/rkmatrix-\/global-\/to-\/rkmatrix.\+cc}}
+
+
+Verify the restriction of a global rank-\/k matrix to a rank-\/k submatrix.  
+
+
+{\ttfamily \#include \char`\"{}rkmatrix.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+Include dependency graph for rkmatrix-\/global-\/to-\/rkmatrix.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rkmatrix-global-to-rkmatrix_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{rkmatrix-global-to-rkmatrix_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify the restriction of a global rank-\/k matrix to a rank-\/k submatrix. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/28 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{rkmatrix-global-to-rkmatrix_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{rkmatrix-global-to-rkmatrix_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{rkmatrix-\/global-\/to-\/rkmatrix.\+cc@{rkmatrix-\/global-\/to-\/rkmatrix.\+cc}!main@{main}}
+\index{main@{main}!rkmatrix-\/global-\/to-\/rkmatrix.\+cc@{rkmatrix-\/global-\/to-\/rkmatrix.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Create a full matrix with data.
+
+Create a rank-\/k matrix from the full matrix.
+
+Create a rank-\/k matrix by restriction from the large rank-\/k matrix on the block cluster $\tau \times \sigma$.
+
+References Rk\+Matrix$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::print\+\_\+formatted\+\_\+to\+\_\+mat().
+

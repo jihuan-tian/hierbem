@@ -45,6 +45,54 @@ print_vector_values(std::ostream &     out,
 }
 
 
+template <typename VectorType>
+void
+print_vector_indices(std::ostream &     out,
+                     const VectorType & values,
+                     const std::string &sep,
+                     bool               index_starting_from_zero,
+                     bool               has_newline = true)
+{
+  for (auto iter = values.cbegin(); iter != values.cend(); iter++)
+    {
+      if ((iter + 1) == values.cend())
+        if (has_newline)
+          {
+            if (index_starting_from_zero)
+              {
+                out << (*iter) << std::endl;
+              }
+            else
+              {
+                out << (*iter) + 1 << std::endl;
+              }
+          }
+        else
+          {
+            if (index_starting_from_zero)
+              {
+                out << (*iter);
+              }
+            else
+              {
+                out << (*iter) + 1;
+              }
+          }
+      else
+        {
+          if (index_starting_from_zero)
+            {
+              out << (*iter) << sep;
+            }
+          else
+            {
+              out << (*iter) + 1 << sep;
+            }
+        }
+    }
+}
+
+
 template <typename Number>
 void
 print_scalar_to_mat(std::ostream &     out,

@@ -1,0 +1,54 @@
+\hypertarget{quad-tree-copy_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/quad-\/tree-\/copy/quad-\/tree-\/copy.cc File Reference}
+\label{quad-tree-copy_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/quad-\/tree-\/copy/quad-\/tree-\/copy.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/quad-\/tree-\/copy/quad-\/tree-\/copy.\+cc}}
+
+
+Verify.  
+
+
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include \char`\"{}tree.\+h\char`\"{}}\newline
+Include dependency graph for quad-\/tree-\/copy.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{quad-tree-copy_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classTreeNode}{Tree\+Node}$<$ int, 4 $>$ $\ast$ \hyperlink{quad-tree-copy_8cc_a403caebc7e08d6f14b584539580851d5}{Make\+Int\+Example\+Tree} ()
+\item 
+\mbox{\Hypertarget{quad-tree-copy_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{quad-tree-copy_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+int {\bfseries main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Verify. 
+
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2021-\/07-\/20 
+\end{DoxyDate}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{quad-tree-copy_8cc_a403caebc7e08d6f14b584539580851d5}\label{quad-tree-copy_8cc_a403caebc7e08d6f14b584539580851d5}} 
+\index{quad-\/tree-\/copy.\+cc@{quad-\/tree-\/copy.\+cc}!Make\+Int\+Example\+Tree@{Make\+Int\+Example\+Tree}}
+\index{Make\+Int\+Example\+Tree@{Make\+Int\+Example\+Tree}!quad-\/tree-\/copy.\+cc@{quad-\/tree-\/copy.\+cc}}
+\subsubsection{\texorpdfstring{Make\+Int\+Example\+Tree()}{MakeIntExampleTree()}}
+{\footnotesize\ttfamily \hyperlink{classTreeNode}{Tree\+Node}$<$int, 4$>$$\ast$ Make\+Int\+Example\+Tree (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Create an example tree containing integers as below. The tree will be constructed in a bottom-\/up approach. \begin{DoxyVerb}      10
+  /  |  |  \
+ 3   4  5   6
+\end{DoxyVerb}
+ / $\vert$ $\vert$ \textbackslash{} 2 8 7 9
+
+The function returns the pointer to the root node of the tree. 
+
+References Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
+

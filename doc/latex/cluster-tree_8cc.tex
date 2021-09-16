@@ -1,0 +1,64 @@
+\hypertarget{cluster-tree_8cc}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/tests/cluster-\/tree/cluster-\/tree.cc File Reference}
+\label{cluster-tree_8cc}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/cluster-\/tree/cluster-\/tree.\+cc@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/tests/cluster-\/tree/cluster-\/tree.\+cc}}
+{\ttfamily \#include $<$deal.\+I\+I/base/logstream.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/base/point.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/fe\+\_\+q.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/fe/mapping\+\_\+q\+\_\+generic.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+generator.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+in.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/grid/grid\+\_\+out.\+h$>$}\newline
+{\ttfamily \#include $<$simple\+\_\+bounding\+\_\+box.\+h$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include \char`\"{}cluster\+\_\+tree.\+h\char`\"{}}\newline
+Include dependency graph for cluster-\/tree.cc\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cluster-tree_8cc__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{cluster-tree_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}{main} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This file verifies the \hyperlink{classClusterTree}{Cluster\+Tree} class. 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{cluster-tree_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{cluster-tree_8cc_ae66f6b31b5ad750f1fe042a706a4e3d4}} 
+\index{cluster-\/tree.\+cc@{cluster-\/tree.\+cc}!main@{main}}
+\index{main@{main}!cluster-\/tree.\+cc@{cluster-\/tree.\+cc}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Initialize deal.\+ii log stream.
+
+Generate the grid for a 3D sphere.
+
+N.\+B. Use type cast for triangulation to suppress Eclipse editor error prompt.
+
+Save the mesh to a file for visualization.
+
+Create a Lagrangian finite element.
+
+Create a Do\+F\+Handler, which is associated with the triangulation and distributed with the finite element.
+
+Create a mapping object, which is required in generating the map from DoF indices to support points.
+
+Generate a list of all DoF indices.
+
+Get the spatial coordinates of the support points associated with DoF indices.
+
+Initialize a cluster tree for all the DoF indices.
+
+Partition the cluster tree.
+
+Print the coordinates of all support points.
+
+Print the whole cluster tree.
+
+References Cluster\+Tree$<$ spacedim, Number $>$\+::partition().
+

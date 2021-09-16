@@ -9,6 +9,8 @@
 #define INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 
 #include <limits>
+#include <map>
+#include <vector>
 
 #include "general_exceptions.h"
 #include "lapack_helpers.h"
@@ -101,9 +103,9 @@ public:
           LAPACKFullMatrixExt<Number> &matrix);
 
   /**
-   * Perform SVD on the product of two component matrices \f$A\f$ and \f$B^T\f$.
-   * If the matrix is not of full rank, truncate it to the effective rank. It
-   * returns the effective rank.
+   * Perform SVD on the product of two component matrices \f$A\f$ and \f$B^T\f$
+   * without rank truncation. If the matrix is not of full rank, truncate it to
+   * the effective rank. It returns the effective rank.
    * @param A
    * @param B
    * @param U
@@ -164,6 +166,185 @@ public:
   LAPACKFullMatrixExt(const LAPACKFullMatrix<Number> &mat);
 
   /**
+   * Construct a full matrix by restriction to the block cluster \f$\tau
+   * \times \sigma\f$ from the global full matrix \p M.
+   * @param tau
+   * @param sigma
+   * @param M
+   */
+  LAPACKFullMatrixExt(
+    const std::vector<types::global_dof_index> &tau_index_set,
+    const std::vector<types::global_dof_index> &sigma_index_set,
+    const LAPACKFullMatrixExt<Number> &         M);
+
+  /**
+   * Construct a full matrix by restriction to the block cluster \f$\tau
+   * \times \sigma\f$ from the local full matrix \p M.
+   * @param tau
+   * @param sigma
+   * @param M
+   * @param row_index_global_to_local_map_for_M
+   * @param col_index_global_to_local_map_for_M
+   */
+  LAPACKFullMatrixExt(
+    const std::vector<types::global_dof_index> &tau_index_set,
+    const std::vector<types::global_dof_index> &sigma_index_set,
+    const LAPACKFullMatrixExt<Number> &         M,
+    const std::map<types::global_dof_index, size_t>
+      &row_index_global_to_local_map_for_M,
+    const std::map<types::global_dof_index, size_t>
+      &col_index_global_to_local_map_for_M);
+
+  /**
+   * Construct a full matrix \f$M\f$ from an agglomeration of two full
+   * submatrices \f$M_1\f$ and \f$M_2\f$, which have been obtained from either
+   * horizontal splitting or vertical splitting.
+   *
+   * When the two submatrices have been obtained from horizontal splitting, \p
+   * vstack will be used for the agglomeration. When the two submatrices have
+   * been obtained from vertical splitting, \p hstack will be used for the
+   * agglomeration.
+   *
+   * @param M1
+   * @param M2
+   * @param is_horizontal_split
+   */
+  LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M1,
+                      const LAPACKFullMatrixExt &M2,
+                      bool                       is_horizontal_split);
+
+  /**
+   * Construct a full matrix \f$M\f$ from an agglomeration of two full
+   * submatrices \f$M_1\f$ and \f$M_2\f$, which have been obtained from either
+   * horizontal splitting or vertical splitting.
+   *
+   * When the two submatrices have been obtained from horizontal splitting, \p
+   * vstack will be used for the agglomeration. When the two submatrices have
+   * been obtained from vertical splitting, \p hstack will be used for the
+   * agglomeration.
+   *
+   * This method handles the case when the index sets of child clusters are
+   * interwoven together into the index set of the parent cluster. This is based
+   * on the fact that during DoF support point coordinates based cluster tree
+   * partition, the continuity of the index set is not preserved.
+   */
+  LAPACKFullMatrixExt(
+    const std::map<types::global_dof_index, size_t>
+      &row_index_global_to_local_map_for_M,
+    const std::map<types::global_dof_index, size_t>
+      &                        col_index_global_to_local_map_for_M,
+    const LAPACKFullMatrixExt &M1,
+    const std::vector<types::global_dof_index> &M1_tau_index_set,
+    const std::vector<types::global_dof_index> &M1_sigma_index_set,
+    const LAPACKFullMatrixExt &                 M2,
+    const std::vector<types::global_dof_index> &M2_tau_index_set,
+    const std::vector<types::global_dof_index> &M2_sigma_index_set,
+    bool                                        is_horizontal_split);
+
+  /**
+   * Construct a full matrix \f$M\f$ from an agglomeration of four
+   * full submatrices, \f$M_{11}, M_{12}, M_{21}, M_{22}\f$.
+   *
+   * \f[
+   * M =
+   * \begin{pmatrix}
+   * M_{11} & M_{12} \\
+   * M_{21} & M_{22}
+   * \end{pmatrix}
+   * \f]
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>
+   * 1. This method implements (7.7) for full matrices in Hackbusch's
+   * \f$\mathcal{H}\f$-matrix book.
+   * 2. This method is only applicable in the case when the cardinality based
+   * cluster tree partition is used.
+   *   </dd>
+   * </dl>
+   */
+  LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M11,
+                      const LAPACKFullMatrixExt &M12,
+                      const LAPACKFullMatrixExt &M21,
+                      const LAPACKFullMatrixExt &M22);
+
+  /**
+   * Construct a full matrix \f$M\f$ from an agglomeration of four
+   * full submatrices, \f$M_{11}, M_{12}, M_{21}, M_{22}\f$.
+   *
+   * \f[
+   * M =
+   * \begin{pmatrix}
+   * M_{11} & M_{12} \\
+   * M_{21} & M_{22}
+   * \end{pmatrix}
+   * \f]
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>
+   * 1. This method implements (7.7) for full matrices in Hackbusch's
+   * \f$\mathcal{H}\f$-matrix book.
+   * 2. This method handles the case when the index sets of several child
+   * clusters are interwoven together into the index set of the parent cluster.
+   * This is based on the fact that during DoF support point coordinates based
+   * cluster tree partition, the continuity of the index set is not preserved.
+   *   </dd>
+   * </dl>
+   *
+   * @param row_index_global_to_local_map_for_M
+   * @param col_index_global_to_local_map_for_M
+   * @param M11
+   * @param M11_tau_index_set
+   * @param M11_sigma_index_set
+   * @param M12
+   * @param M12_tau_index_set
+   * @param M12_sigma_index_set
+   * @param M21
+   * @param M21_tau_index_set
+   * @param M21_sigma_index_set
+   * @param M22
+   * @param M22_tau_index_set
+   * @param M22_sigma_index_set
+   */
+  LAPACKFullMatrixExt(
+    const std::map<types::global_dof_index, size_t>
+      &row_index_global_to_local_map_for_M,
+    const std::map<types::global_dof_index, size_t>
+      &                        col_index_global_to_local_map_for_M,
+    const LAPACKFullMatrixExt &M11,
+    const std::vector<types::global_dof_index> &M11_tau_index_set,
+    const std::vector<types::global_dof_index> &M11_sigma_index_set,
+    const LAPACKFullMatrixExt &                 M12,
+    const std::vector<types::global_dof_index> &M12_tau_index_set,
+    const std::vector<types::global_dof_index> &M12_sigma_index_set,
+    const LAPACKFullMatrixExt &                 M21,
+    const std::vector<types::global_dof_index> &M21_tau_index_set,
+    const std::vector<types::global_dof_index> &M21_sigma_index_set,
+    const LAPACKFullMatrixExt &                 M22,
+    const std::vector<types::global_dof_index> &M22_tau_index_set,
+    const std::vector<types::global_dof_index> &M22_sigma_index_set);
+
+  /**
+   * Overloaded assignment operator.
+   * @param matrix
+   * @return
+   */
+  LAPACKFullMatrixExt<Number> &
+  operator=(const LAPACKFullMatrixExt<Number> &matrix);
+
+  /**
+   * Overloaded assignment operator.
+   * @param matrix
+   * @return
+   */
+  LAPACKFullMatrixExt<Number> &
+  operator=(const LAPACKFullMatrix<Number> &matrix);
+
+  void
+  reinit(const size_type nrows, const size_type ncols);
+
+  /**
    * Set a matrix column as zeros.
    */
   void
@@ -174,6 +355,22 @@ public:
    */
   void
   set_row_zeros(const size_type row_index);
+
+  /**
+   * Get the values of the row \p row_index into a \p Vector.
+   * @param row_index
+   * @param row_values
+   */
+  void
+  get_row(const size_type row_index, Vector<Number> &row_values) const;
+
+  /**
+   * Get the values of the column \p col_index into a \p Vector.
+   * @param col_index
+   * @param col_values
+   */
+  void
+  get_column(const size_type col_index, Vector<Number> &col_values) const;
 
   /**
    * Remove row \p row_index from the matrix.
@@ -260,10 +457,20 @@ public:
   /**
    * Perform the reduced singular value decomposition (SVD) with rank
    * truncation.
-   * @param A
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>Even though an explicit truncation rank is specified, inside this
+   * function, after SVD, the effective rank of the matrix is obtained. Because
+   * any given truncation rank value larger than the effective matrix rank is
+   * meaningless, it will be limited to be the effective rank.</dd>
+   * </dl>
+   *
    * @param U
    * @param Sigma_r
    * @param VT
+   * @param truncation_rank Truncation rank specified by the user.
+   * @param singular_value_threshold
    * @return Effective rank.
    */
   size_type
@@ -360,7 +567,7 @@ public:
   transpose();
 
   /**
-   * Get the tranpose of the current matrix into a new matrix \p AT.
+   * Get the transpose of the current matrix into a new matrix \p AT.
    * @param AT
    */
   void
@@ -388,7 +595,73 @@ public:
        const bool        transpose    = false);
 
   /**
-   * Horizontally stack two matrices.
+   * Fill the matrix \p M into the current matrix based on the global block
+   * cluster indices.
+   * @param row_index_global_to_local_map
+   * @param col_index_global_to_local_map
+   * @param M
+   * @param M_tau_index_set
+   * @param M_sigma_index_set
+   */
+  void
+  fill(const std::map<types::global_dof_index, size_t>
+         &row_index_global_to_local_map,
+       const std::map<types::global_dof_index, size_t>
+         &                        col_index_global_to_local_map,
+       const LAPACKFullMatrixExt &M,
+       const std::vector<types::global_dof_index> &M_tau_index_set,
+       const std::vector<types::global_dof_index> &M_sigma_index_set);
+
+  /**
+   * Fill the data in \p M by rows into the current matrix based on the global
+   * cluster indices.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>This function will be used in the RkMatrix constructor via an
+   * agglomeration from submatrices.</dd>
+   * </dl>
+   * @param row_index_global_to_local_map
+   * @param M
+   * @param M_row_global_index_set
+   */
+  void
+  fill_rows(const std::map<types::global_dof_index, size_t>
+              &                        row_index_global_to_local_map,
+            const LAPACKFullMatrixExt &M,
+            const std::vector<types::global_dof_index> &M_row_global_index_set);
+
+  /**
+   * Fill the \p values to the \p row_index'th row of the current matrix.
+   * @param row_index
+   * @param values
+   */
+  void
+  fill_row(const size_type row_index, const Vector<Number> &values);
+
+  /**
+   * Fill the data in \p M by columns into the current matrix based on the
+   * global cluster indices.
+   * @param col_index_global_to_local_map
+   * @param M
+   * @param M_col_global_index_set
+   */
+  void
+  fill_cols(const std::map<types::global_dof_index, size_t>
+              &                        col_index_global_to_local_map,
+            const LAPACKFullMatrixExt &M,
+            const std::vector<types::global_dof_index> &M_col_global_index_set);
+
+  /**
+   * Fill the \p values to the \p col_index'th column of the current matrix.
+   * @param col_index
+   * @param values
+   */
+  void
+  fill_col(const size_type col_index, const Vector<Number> &values);
+
+  /**
+   * Horizontally stack two matrices, \f$C = [A, B]\f$.
    * @param C
    * @param B
    */
@@ -397,7 +670,7 @@ public:
          const LAPACKFullMatrixExt<Number> &B) const;
 
   /**
-   * Vertically stack two matrices.
+   * Vertically stack two matrices, \f$C = [A; B]\f$.
    * @param C
    * @param B
    */
@@ -409,6 +682,14 @@ public:
    * Decompose the full matrix into the two components of its rank-k
    * representation, the associativity of triple-matrix multiplication is
    * automatically detected.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>This method will be used for converting a full matrix to a rank-k
+   * matrix, which underlies the operator \f$\mathcal{T}_{r}^{\mathcal{R}
+   * \leftarrow \mathcal{F}}\f$ in (7.2) in Hackbusch's \f$\mathcal{H}\f$-matrix
+   * book.</dd>
+   * </dl>
    * @param k
    * @param A
    * @param B
@@ -421,8 +702,38 @@ public:
 
   /**
    * Decompose the full matrix into the two components of its rank-k
+   * representation, the associativity of triple-matrix multiplication is
+   * automatically detected. This version does not have an actual rank
+   * truncation but sets the truncation rank to be the minimum matrix dimension
+   * \f$\min\{m, n\}\f$.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>This method will be used for converting a full matrix to a rank-k
+   * matrix, which implements the operator \f$\mathcal{T}_{r}^{\mathcal{R}
+   * \leftarrow \mathcal{F}}\f$ in (7.2) in Hackbusch's \f$\mathcal{H}\f$-matrix
+   * book.</dd>
+   * </dl>
+   * @param A
+   * @param B
+   * @return Effective rank of the matrix.
+   */
+  size_type
+  rank_k_decompose(LAPACKFullMatrixExt<Number> &A,
+                   LAPACKFullMatrixExt<Number> &B);
+
+  /**
+   * Decompose the full matrix into the two components of its rank-k
    * representation.
-   * @param k
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>Because the \p reduced_svd member function is called by \p
+   * rank_k_decompose, the effective rank of the matrix will be returned, which
+   * can be smaller than the specified fixed rank \p k.</dd>
+   * </dl>
+   *
+   * @param k User specified truncation rank.
    * @param is_left_associative
    * @param A
    * @param B
@@ -448,6 +759,23 @@ public:
    */
   void
   add(const LAPACKFullMatrixExt<Number> &B);
+
+  /**
+   * Multiply two matrices: \f$C = A \cdot B\f$
+   * @param C
+   * @param B
+   */
+  void
+  mmult(LAPACKFullMatrixExt<Number> &      C,
+        const LAPACKFullMatrixExt<Number> &B,
+        const bool                         adding = false) const;
+
+  /**
+   * Calculate the inverse of the matrix using Gauss elimination.
+   * @param M_inv
+   */
+  void
+  invert_by_gauss_elim(LAPACKFullMatrixExt<Number> &M_inv);
 
   /**
    * Print a LAPACKFullMatrixExt to Octave mat format.
@@ -580,8 +908,15 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
   Number singular_value_threshold)
 {
   /**
-   * In a rank-k matrix, the number of columns in the component matrix \p A
-   * should match that of \p B.
+   * <dl class="section">
+   *   <dt>Work flow</dt>
+   *   <dd>
+   */
+
+  /**
+   * In a rank-k matrix, the number of columns in the component matrix \p A,
+   * which is the formal rank, should match that of \p B. So we make an
+   * assertion here.
    */
   AssertDimension(A.n(), B.n());
 
@@ -593,26 +928,25 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
 
   /**
    * N.B. The number of columns in the component matrix \p A or \p B is the
-   * representation rank of the rank-k matrix, which means the rank-k matrix may
-   * not be of full rank and the actual rank is less than this representation
-   * rank.
+   * formal rank of the rank-k matrix, which means the actual rank of the rank-k
+   * matrix is less than this formal rank.
    */
-  const size_type representation_rank = A.n();
+  const size_type formal_rank = A.n();
 
-  if (A.m() > representation_rank && B.m() > representation_rank)
+  if (A.m() > formal_rank && B.m() > formal_rank)
     {
       is_qr_used = true;
 
       /**
        * When both \p A and \p B are long matrices, i.e. they have more rows
-       * than columns, perform reduced QR decomposition to component matrix \p
-       * A, which has a dimension of \f$m \times r\f$.
+       * than columns, perform the reduced QR decomposition to component matrix
+       * \p A, which has a dimension of \f$m \times r\f$.
        */
       LAPACKFullMatrixExt<Number> QA, RA;
       A.reduced_qr(QA, RA);
 
       /**
-       * Perform reduced QR decomposition to component matrix \p B, which
+       * Perform the reduced QR decomposition to component matrix \p B, which
        * has a dimension of \f$n \times r\f$.
        */
       LAPACKFullMatrixExt<Number> QB, RB;
@@ -631,9 +965,9 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
       RA.mTmult(R, RB);
       R.svd(U_hat, Sigma_r, VT_hat);
 
-      U.reinit(QA.m(), representation_rank);
+      U.reinit(QA.m(), formal_rank);
       QA.mmult(U, U_hat);
-      VT.reinit(representation_rank, QB.m());
+      VT.reinit(formal_rank, QB.m());
       VT_hat.mTmult(VT, QB);
     }
   else
@@ -641,8 +975,8 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
       is_qr_used = false;
 
       /**
-       * Firstly convert the rank-k matrix to a full matrix, then perform
-       * SVD on this full matrix.
+       * When \p A or \p B is not a long matrix, firstly convert the rank-k
+       * matrix to a full matrix, then perform SVD on this full matrix.
        */
       LAPACKFullMatrixExt<Number> fullmatrix(A.m(), B.m());
       A.mTmult(fullmatrix, B);
@@ -659,7 +993,9 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
     }
 
   /**
-   * Get the actual rank of the matrix and it should always be less than or
+   * Get the actual rank of the matrix by counting the total number of singular
+   * values which are larger than the given threshold \p
+   * singular_value_threshold. The actual rank should always be less than or
    * equal to \p min_dim. The matrix will be truncated to this effective rank.
    */
   size_type rank = 0;
@@ -675,7 +1011,8 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
   if (rank < min_dim)
     {
       /**
-       * Keep the first \p rank singular values, while discarding others.
+       * When the matrix is not of full rank, keep the first \p rank singular
+       * values, while discarding the others.
        */
       std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
         std::move(Sigma_r));
@@ -686,38 +1023,37 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
         }
 
       /**
-       * Keep the first \p rank columns of \p U, while deleting others.
+       * Keep the first \p rank columns of \p U, while deleting the others.
        */
       U.keep_first_n_columns(rank, true);
 
       /**
-       * Keep the first \p rank rows of \p VT, while deleting others.
+       * Keep the first \p rank rows of \p VT, while deleting the others.
        */
       VT.keep_first_n_rows(rank, true);
     }
   else
     {
       /**
-       * In this case, it could only be \p rank == \p min_dim.
+       * When the matrix is of full rank, i.e. \p rank == \p min_dim.
        */
       AssertDimension(rank, min_dim);
 
       if (is_qr_used)
         {
           /**
-           * In this case, the results \p U, \p Sigma_r and \p VT are obtained
-           * via QR decomposition. And if \p M has a dimension \f$m \times n\f$,
-           * the dimensions of all matrices are:
+           * When QR decomposition has been used, if \p M has a dimension \f$m
+           * \times n\f$, the dimensions of all matrices are:
            * * \f$U \in \mathbb{R}^{m \times {\rm representation rank}}\f$
            * * \f$\Sigma_r \in \mathbb{R}^{{\rm representation rank} \times {\rm
            * representation rank}}\f$
            * * \f$V \in \mathbb{R}^{n \times {\rm representation rank}}\f$
            */
-          if (rank < representation_rank)
+          if (rank < formal_rank)
             {
               /**
-               * Keep the first \p rank singular values, while discarding
-               * others.
+               * When the matrix rank is less than the formal rank, keep the
+               * first \p rank singular values, while discarding the others.
                */
               std::vector<typename numbers::NumberTraits<Number>::real_type>
                 copy(std::move(Sigma_r));
@@ -728,12 +1064,14 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
                 }
 
               /**
-               * Keep the first \p rank columns of \p U, while deleting others.
+               * Keep the first \p rank columns of \p U, while deleting the
+               * others.
                */
               U.keep_first_n_columns(rank, true);
 
               /**
-               * Keep the first \p rank rows of \p VT, while deleting others.
+               * Keep the first \p rank rows of \p VT, while deleting the
+               * others.
                */
               VT.keep_first_n_rows(rank, true);
             }
@@ -741,9 +1079,10 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
       else
         {
           /**
-           * In this case, the results \p U, \p Sigma_r and \p VT are obtained
-           * from full matrix SVD. And if \p M has a dimension \f$m \times
-           * n\f$, the dimensions of all matrices obtained from SVD are:
+           * When QR decomposition has not been used, the results \p U, \p
+           * Sigma_r and \p VT are obtained from full matrix SVD. And if \p M
+           * has a dimension \f$m \times n\f$, the dimensions of all matrices
+           * obtained from SVD are:
            * * \f$U \in \mathbb{R}^{m \times m}\f$
            * * \f$\Sigma_r \in \mathbb{R}^{m \times n}\f$
            * * \f$V \in \mathbb{R}^{n \times n}\f$
@@ -751,9 +1090,9 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
           if (mm > nn)
             {
               /**
-               * When the original matrix is long, \f$\Sigma_r =
+               * When \p M is a long matrix, \f$\Sigma_r =
                * \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}\f$. Therefore, we
-               * keep the first \p min_dim columns of \p U, while deleting
+               * keep the first \p min_dim columns of \p U, while deleting the
                * others. \p VT is kept intact.
                */
               U.keep_first_n_columns(min_dim, true);
@@ -761,9 +1100,9 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
           else if (mm < nn)
             {
               /**
-               * When the original matrix is wide, \f$\Sigma_r = \begin{pmatrix}
+               * When \p M is a wide matrix, \f$\Sigma_r = \begin{pmatrix}
                * \Sigma_r' & 0 \end{pmatrix}\f$. Therefore, we keep the first \p
-               * min_dim rows of \p VT, while deleting others. \p U is kept
+               * min_dim rows of \p VT, while deleting the others. \p U is kept
                * intact.
                */
               VT.keep_first_n_rows(min_dim, true);
@@ -771,7 +1110,7 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
           else
             {
               /**
-               * When the original matrix is square, do nothing.
+               * When \p M is square, do nothing.
                */
             }
         }
@@ -780,7 +1119,15 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
   AssertDimension(U.n(), Sigma_r.size());
   AssertDimension(VT.m(), Sigma_r.size());
 
+  /**
+   * Return the actual rank of the matrix.
+   */
   return rank;
+
+  /**
+   *   </dd>
+   * </dl>
+   */
 }
 
 
@@ -1055,6 +1402,297 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
 
 
 template <typename Number>
+LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
+  const std::vector<types::global_dof_index> &tau_index_set,
+  const std::vector<types::global_dof_index> &sigma_index_set,
+  const LAPACKFullMatrixExt<Number> &         M)
+  : LAPACKFullMatrix<Number>(tau_index_set.size(), sigma_index_set.size())
+  , state(LAPACKSupport::matrix)
+  , tau(0)
+  , work()
+  , iwork()
+{
+  /**
+   * Extract the data for the submatrix defined on the block cluster \f$\tau
+   * \times \sigma\f$ from the full global matrix \p M.
+   */
+  for (size_type i = 0; i < tau_index_set.size(); i++)
+    {
+      for (size_type j = 0; j < sigma_index_set.size(); j++)
+        {
+          /**
+           * Because \p M is global, the indices in \f$\tau\f$ and \f$\sigma\f$
+           * can be directly used for accessing the elements of \p M.
+           */
+          (*this)(i, j) = M(tau_index_set.at(i), sigma_index_set.at(j));
+        }
+    }
+}
+
+
+template <typename Number>
+LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
+  const std::vector<types::global_dof_index> &tau_index_set,
+  const std::vector<types::global_dof_index> &sigma_index_set,
+  const LAPACKFullMatrixExt<Number> &         M,
+  const std::map<types::global_dof_index, size_t>
+    &row_index_global_to_local_map_for_M,
+  const std::map<types::global_dof_index, size_t>
+    &col_index_global_to_local_map_for_M)
+  : LAPACKFullMatrix<Number>(tau_index_set.size(), sigma_index_set.size())
+  , state(LAPACKSupport::matrix)
+  , tau(0)
+  , work()
+  , iwork()
+{
+  /**
+   * Extract the data for the submatrix block \f$b = \tau \times \sigma\f$ in
+   * the original matrix \p M.
+   */
+  for (size_type i = 0; i < tau_index_set.size(); i++)
+    {
+      for (size_type j = 0; j < sigma_index_set.size(); j++)
+        {
+          (*this)(i, j) =
+            M(row_index_global_to_local_map_for_M.at(tau_index_set.at(i)),
+              col_index_global_to_local_map_for_M.at(sigma_index_set.at(j)));
+        }
+    }
+}
+
+
+template <typename Number>
+LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M1,
+                                                 const LAPACKFullMatrixExt &M2,
+                                                 bool is_horizontal_split)
+  : LAPACKFullMatrix<Number>()
+  , state(LAPACKSupport::matrix)
+  , tau(0)
+  , work()
+  , iwork()
+{
+  if (is_horizontal_split)
+    {
+      M1.vstack((*this), M2);
+    }
+  else
+    {
+      M1.hstack((*this), M2);
+    }
+}
+
+
+template <typename Number>
+LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
+  const std::map<types::global_dof_index, size_t>
+    &row_index_global_to_local_map_for_M,
+  const std::map<types::global_dof_index, size_t>
+    &                        col_index_global_to_local_map_for_M,
+  const LAPACKFullMatrixExt &M1,
+  const std::vector<types::global_dof_index> &M1_tau_index_set,
+  const std::vector<types::global_dof_index> &M1_sigma_index_set,
+  const LAPACKFullMatrixExt &                 M2,
+  const std::vector<types::global_dof_index> &M2_tau_index_set,
+  const std::vector<types::global_dof_index> &M2_sigma_index_set,
+  bool                                        is_horizontal_split)
+  : LAPACKFullMatrix<Number>()
+  , state(LAPACKSupport::matrix)
+  , tau(0)
+  , work()
+  , iwork()
+{
+  /**
+   * Make assertions about the submatrix sizes and corresponding index sets.
+   */
+  AssertDimension(M1.m(), M1_tau_index_set.size());
+  AssertDimension(M1.n(), M1_sigma_index_set.size());
+  AssertDimension(M2.m(), M2_tau_index_set.size());
+  AssertDimension(M2.n(), M2_sigma_index_set.size());
+
+  if (is_horizontal_split)
+    {
+      /**
+       * Perform vertical stacking of the two submatrices.
+       */
+      AssertDimension(M1.n(), M2.n());
+      Assert(M1_sigma_index_set == M2_sigma_index_set, ExcInternalError());
+      AssertDimension(row_index_global_to_local_map_for_M.size(),
+                      M1.m() + M2.m());
+      AssertDimension(col_index_global_to_local_map_for_M.size(), M1.n());
+
+      this->reinit(M1.m() + M2.m(), M1.n());
+    }
+  else
+    {
+      /**
+       * Perform horizontal stacking of the two submatrices.
+       */
+      AssertDimension(M1.m(), M2.m());
+      Assert(M1_tau_index_set == M2_tau_index_set, ExcInternalError());
+      AssertDimension(row_index_global_to_local_map_for_M.size(), M1.m());
+      AssertDimension(col_index_global_to_local_map_for_M.size(),
+                      M1.n() + M2.n());
+
+      this->reinit(M1.m(), M1.n() + M2.n());
+    }
+
+  this->fill(row_index_global_to_local_map_for_M,
+             col_index_global_to_local_map_for_M,
+             M1,
+             M1_tau_index_set,
+             M1_sigma_index_set);
+
+  this->fill(row_index_global_to_local_map_for_M,
+             col_index_global_to_local_map_for_M,
+             M2,
+             M2_tau_index_set,
+             M2_sigma_index_set);
+}
+
+
+template <typename Number>
+LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M11,
+                                                 const LAPACKFullMatrixExt &M12,
+                                                 const LAPACKFullMatrixExt &M21,
+                                                 const LAPACKFullMatrixExt &M22)
+  : LAPACKFullMatrix<Number>(M11.m() + M21.m(), M11.n() + M12.n())
+  , state(LAPACKSupport::matrix)
+  , tau(0)
+  , work()
+  , iwork()
+{
+  AssertDimension(M11.m(), M12.m());
+  AssertDimension(M21.m(), M22.m());
+  AssertDimension(M11.n(), M21.n());
+  AssertDimension(M12.n(), M22.n());
+
+  this->fill(M11, 0, 0);
+  this->fill(M12, 0, M11.n());
+  this->fill(M21, M11.m(), 0);
+  this->fill(M22, M11.m(), M11.n());
+}
+
+
+template <typename Number>
+LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
+  const std::map<types::global_dof_index, size_t>
+    &row_index_global_to_local_map_for_M,
+  const std::map<types::global_dof_index, size_t>
+    &                        col_index_global_to_local_map_for_M,
+  const LAPACKFullMatrixExt &M11,
+  const std::vector<types::global_dof_index> &M11_tau_index_set,
+  const std::vector<types::global_dof_index> &M11_sigma_index_set,
+  const LAPACKFullMatrixExt &                 M12,
+  const std::vector<types::global_dof_index> &M12_tau_index_set,
+  const std::vector<types::global_dof_index> &M12_sigma_index_set,
+  const LAPACKFullMatrixExt &                 M21,
+  const std::vector<types::global_dof_index> &M21_tau_index_set,
+  const std::vector<types::global_dof_index> &M21_sigma_index_set,
+  const LAPACKFullMatrixExt &                 M22,
+  const std::vector<types::global_dof_index> &M22_tau_index_set,
+  const std::vector<types::global_dof_index> &M22_sigma_index_set)
+  : LAPACKFullMatrix<Number>(M11.m() + M21.m(), M11.n() + M12.n())
+  , state(LAPACKSupport::matrix)
+  , tau(0)
+  , work()
+  , iwork()
+{
+  /**
+   * Make assertions about the compatibility of row and column numbers of
+   * submatrices.
+   */
+  AssertDimension(M11.m(), M12.m());
+  AssertDimension(M21.m(), M22.m());
+  AssertDimension(M11.n(), M21.n());
+  AssertDimension(M12.n(), M22.n());
+
+  /**
+   * Make further detailed assertions about the cluster index sets of
+   * submatrices.
+   */
+  Assert(M11_tau_index_set == M12_tau_index_set, ExcInternalError());
+  Assert(M21_tau_index_set == M22_tau_index_set, ExcInternalError());
+  Assert(M11_sigma_index_set == M21_sigma_index_set, ExcInternalError());
+  Assert(M12_sigma_index_set == M22_sigma_index_set, ExcInternalError());
+
+  /**
+   * Make assertions about the sizes of row and column index global to local
+   * maps for \p M.
+   */
+  AssertDimension(row_index_global_to_local_map_for_M.size(), this->m());
+  AssertDimension(col_index_global_to_local_map_for_M.size(), this->n());
+
+  /**
+   * Make assertions about the submatrix sizes and corresponding index sets.
+   */
+  AssertDimension(M11.m(), M11_tau_index_set.size());
+  AssertDimension(M11.n(), M11_sigma_index_set.size());
+  AssertDimension(M12.m(), M12_tau_index_set.size());
+  AssertDimension(M12.n(), M12_sigma_index_set.size());
+  AssertDimension(M21.m(), M21_tau_index_set.size());
+  AssertDimension(M21.n(), M21_sigma_index_set.size());
+  AssertDimension(M22.m(), M22_tau_index_set.size());
+  AssertDimension(M22.n(), M22_sigma_index_set.size());
+
+  this->fill(row_index_global_to_local_map_for_M,
+             col_index_global_to_local_map_for_M,
+             M11,
+             M11_tau_index_set,
+             M11_sigma_index_set);
+
+  this->fill(row_index_global_to_local_map_for_M,
+             col_index_global_to_local_map_for_M,
+             M12,
+             M12_tau_index_set,
+             M12_sigma_index_set);
+
+  this->fill(row_index_global_to_local_map_for_M,
+             col_index_global_to_local_map_for_M,
+             M21,
+             M21_tau_index_set,
+             M21_sigma_index_set);
+
+  this->fill(row_index_global_to_local_map_for_M,
+             col_index_global_to_local_map_for_M,
+             M22,
+             M22_tau_index_set,
+             M22_sigma_index_set);
+}
+
+
+template <typename Number>
+LAPACKFullMatrixExt<Number> &
+LAPACKFullMatrixExt<Number>::
+operator=(const LAPACKFullMatrixExt<Number> &matrix)
+{
+  LAPACKFullMatrix<Number>::operator=(matrix);
+  state                             = matrix.state;
+
+  return (*this);
+}
+
+
+template <typename Number>
+LAPACKFullMatrixExt<Number> &
+LAPACKFullMatrixExt<Number>::operator=(const LAPACKFullMatrix<Number> &matrix)
+{
+  LAPACKFullMatrix<Number>::operator=(matrix);
+  state                             = LAPACKSupport::matrix;
+
+  return (*this);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::reinit(const size_type nrows,
+                                    const size_type ncols)
+{
+  LAPACKFullMatrix<Number>::reinit(nrows, ncols);
+}
+
+
+template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::set_column_zeros(const size_type col_index)
 {
@@ -1084,6 +1722,44 @@ LAPACKFullMatrixExt<Number>::set_row_zeros(const size_type row_index)
   for (size_type j = 0; j < nn; j++)
     {
       this->set(row_index, j, Number());
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::get_row(const size_type row_index,
+                                     Vector<Number> &row_values) const
+{
+  const size_type n_rows = this->m();
+  const size_type n_cols = this->n();
+
+  AssertIndexRange(row_index, n_rows);
+
+  row_values.reinit(n_cols);
+
+  for (size_type j = 0; j < n_cols; j++)
+    {
+      row_values(j) = (*this)(row_index, j);
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::get_column(const size_type col_index,
+                                        Vector<Number> &col_values) const
+{
+  const size_type n_rows = this->m();
+  const size_type n_cols = this->n();
+
+  AssertIndexRange(col_index, n_cols);
+
+  col_values.reinit(n_rows);
+
+  for (size_type i = 0; i < n_rows; i++)
+    {
+      col_values(i) = (*this)(i, col_index);
     }
 }
 
@@ -1519,6 +2195,12 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
   const size_type min_dim = std::min(mm, nn);
 
   /**
+   * <dl class="section">
+   *   <dt>Work flow</dt>
+   *   <dd>
+   */
+
+  /**
    * Perform the full SVD.
    */
   svd(U, Sigma_r, VT);
@@ -1533,7 +2215,9 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
     }
 
   /**
-   * Get the actual rank of the matrix and it should always be less than or
+   * Get the actual rank of the matrix by counting the total number of singular
+   * values which are larger than the given threshold \p
+   * singular_value_threshold. The actual rank should always be less than or
    * equal to \p min_dim.
    */
   size_type rank = 0;
@@ -1547,22 +2231,23 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
   AssertIndexRange(rank, min_dim + 1);
 
   /**
-   * Limit the truncation rank wrt. the actual rank.
+   * Limit the value of \p truncation_rank not larger than the actual
+   * rank just obtained by counting effective singular values.
    */
   if (truncation_rank > rank)
     {
       truncation_rank = rank;
     }
 
-  /**
-   * Perform singular value truncation when the specified rank is less than the
-   * minimum dimension.
-   */
   if (truncation_rank < min_dim)
     {
       /**
-       * Keep the first \p truncation_rank singular values, while discarding
-       * others.
+       * Perform singular value truncation when the given \p truncation_rank
+       * (after value limiting wrt. the actual rank) is less than the minimum
+       * matrix dimension. The procedures are as below.
+       *
+       * 1. Keep the first \p truncation_rank singular values, while discarding
+       * the others.
        */
       std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
         std::move(Sigma_r));
@@ -1573,26 +2258,30 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
         }
 
       /**
-       * Keep the first \p truncation_rank columns of \p U, while deleting
-       * others.
+       * 2. Keep the first \p truncation_rank columns of \p U, while discarding
+       * the others.
        */
       U.keep_first_n_columns(truncation_rank, true);
 
       /**
-       * Keep the first \p truncation_rank rows of \p VT, while deleting others.
+       * 3. Keep the first \p truncation_rank rows of \p VT, while discarding
+       * the others.
        */
       VT.keep_first_n_rows(truncation_rank, true);
     }
   else
     {
       /**
-       * In this case, it could only be \p truncation_rank == \p min_dim.
+       * When \p truncation_rank (after value limiting wrt. the actual rank) is
+       * equal to the minimum matrix dimension, we only need to adjust the
+       * columns of \f$U\f$ or the rows of \f$V^T\f$ depending on the shape of
+       * the matrix \f$M\f$.
        */
       AssertDimension(truncation_rank, min_dim);
 
       /**
-       * N.B. If \p M has a dimension \f$m \times n\f$, the dimensions of all
-       * matrices obtained from SVD are:
+       * For details, if \f$M\f$ has a dimension \f$m \times n\f$, the
+       * dimensions of all matrices obtained from SVD are:
        * * \f$U \in \mathbb{R}^{m \times m}\f$
        * * \f$\Sigma_r \in \mathbb{R}^{m \times n}\f$
        * * \f$V \in \mathbb{R}^{n \times n}\f$
@@ -1600,26 +2289,27 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
       if (mm > nn)
         {
           /**
-           * When the original matrix is long, \f$\Sigma_r =
+           * When \f$M\f$ is long, \f$\Sigma_r =
            * \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}\f$. Therefore, we keep
-           * the first \p min_dim columns of \p U, while deleting others. \p VT
-           * is kept intact.
+           * the first \p min_dim columns of \f$U\f$, while deleting others.
+           * \f$V^T\f$ is kept intact.
            */
           U.keep_first_n_columns(min_dim, true);
         }
       else if (mm < nn)
         {
           /**
-           * When the original matrix is wide, \f$\Sigma_r = \begin{pmatrix}
+           * When \f$M\f$ is wide, \f$\Sigma_r = \begin{pmatrix}
            * \Sigma_r' & 0 \end{pmatrix}\f$. Therefore, we keep the first \p
-           * min_dim rows of \p VT, while deleting others. \p U is kept intact.
+           * min_dim rows of \f$V^T\f$, while deleting others. \f$U\f$ is kept
+           * intact.
            */
           VT.keep_first_n_rows(min_dim, true);
         }
       else
         {
           /**
-           * When the original matrix is square, do nothing.
+           * When \f$M\f$ is square, do nothing.
            */
         }
     }
@@ -1628,9 +2318,15 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
   AssertDimension(VT.m(), Sigma_r.size());
 
   /**
-   * Return the actual rank of the matrix after truncation.
+   * Return the value of \p truncation_rank. Instead of its original specified
+   * value, it now contains the actual rank of the matrix after truncation.
    */
   return truncation_rank;
+
+  /**
+   *   </dd>
+   * </dl>
+   */
 }
 
 
@@ -2027,6 +2723,119 @@ LAPACKFullMatrixExt<Number>::fill(const MatrixType &src,
 
 template <typename Number>
 void
+LAPACKFullMatrixExt<Number>::fill(
+  const std::map<types::global_dof_index, size_t>
+    &row_index_global_to_local_map,
+  const std::map<types::global_dof_index, size_t>
+    &                                         col_index_global_to_local_map,
+  const LAPACKFullMatrixExt &                 M,
+  const std::vector<types::global_dof_index> &M_tau_index_set,
+  const std::vector<types::global_dof_index> &M_sigma_index_set)
+{
+  /**
+   * Make assertions about the sizes of row and column index global to local
+   * maps for the current matrix.
+   */
+  AssertDimension(row_index_global_to_local_map.size(), this->m());
+  AssertDimension(col_index_global_to_local_map.size(), this->n());
+
+  for (size_type i = 0; i < M.m(); i++)
+    {
+      for (size_type j = 0; j < M.n(); j++)
+        {
+          (*this)(row_index_global_to_local_map.at(M_tau_index_set[i]),
+                  col_index_global_to_local_map.at(M_sigma_index_set[j])) =
+            M(i, j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::fill_rows(
+  const std::map<types::global_dof_index, size_t>
+    &                                         row_index_global_to_local_map,
+  const LAPACKFullMatrixExt &                 M,
+  const std::vector<types::global_dof_index> &M_row_global_index_set)
+{
+  AssertDimension(this->m(), row_index_global_to_local_map.size());
+  AssertDimension(this->n(), M.n());
+  AssertDimension(M.m(), M_row_global_index_set.size());
+
+  for (size_type i = 0; i < M.m(); i++)
+    {
+      for (size_type j = 0; j < M.n(); j++)
+        {
+          (*this)(row_index_global_to_local_map.at(M_row_global_index_set[i]),
+                  j) = M(i, j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::fill_row(const size_type       row_index,
+                                      const Vector<Number> &values)
+{
+  const size_type n_rows = this->m();
+  const size_type n_cols = this->n();
+
+  AssertIndexRange(row_index, n_rows);
+  AssertDimension(values.size(), n_cols);
+
+  for (size_type j = 0; j < n_cols; j++)
+    {
+      (*this)(row_index, j) = values(j);
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::fill_cols(
+  const std::map<types::global_dof_index, size_t>
+    &                                         col_index_global_to_local_map,
+  const LAPACKFullMatrixExt &                 M,
+  const std::vector<types::global_dof_index> &M_col_global_index_set)
+{
+  AssertDimension(this->n(), col_index_global_to_local_map.size());
+  AssertDimension(this->m(), M.m());
+  AssertDimension(M.n(), M_col_global_index_set.size());
+
+  for (size_type i = 0; i < M.m(); i++)
+    {
+      for (size_type j = 0; j < M.n(); j++)
+        {
+          (*this)(i,
+                  col_index_global_to_local_map.at(M_col_global_index_set[j])) =
+            M(i, j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::fill_col(const size_type       col_index,
+                                      const Vector<Number> &values)
+{
+  const size_type n_rows = this->m();
+  const size_type n_cols = this->n();
+
+  AssertIndexRange(col_index, n_cols);
+  AssertDimension(values.size(), n_rows);
+
+  for (size_type i = 0; i < n_rows; i++)
+    {
+      (*this)(i, col_index) = values(i);
+    }
+}
+
+
+template <typename Number>
+void
 LAPACKFullMatrixExt<Number>::hstack(LAPACKFullMatrixExt<Number> &      C,
                                     const LAPACKFullMatrixExt<Number> &B) const
 {
@@ -2067,6 +2876,33 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
 {
   if (this->n() < this->m())
     {
+      /**
+       * When the matrix is long, apply right associativity.
+       */
+      return rank_k_decompose(k, A, B, false);
+    }
+  else
+    {
+      /**
+       * When the matrix is wide, apply left associativity.
+       */
+      return rank_k_decompose(k, A, B, true);
+    }
+}
+
+
+template <typename Number>
+typename LAPACKFullMatrixExt<Number>::size_type
+LAPACKFullMatrixExt<Number>::rank_k_decompose(LAPACKFullMatrixExt<Number> &A,
+                                              LAPACKFullMatrixExt<Number> &B)
+{
+  /**
+   * Use the minimum matrix dimension as the default truncation rank.
+   */
+  const unsigned int k = std::min(this->m(), this->n());
+
+  if (this->n() < this->m())
+    {
       return rank_k_decompose(k, A, B, false);
     }
   else
@@ -2087,7 +2923,8 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
 
   /**
    * Perform RSVD for the matrix and return U and VT into A and B respectively.
-   * N.B. After running this function, B actually holdes the tranpose of itself.
+   * N.B. After running this function, B actually holds the transposition of
+   * itself at the moment.
    */
   const size_type effective_rank = this->reduced_svd(A, Sigma_r, B, k);
 
@@ -2150,6 +2987,152 @@ LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B)
       for (size_type j = 0; j < ncols; j++)
         {
           (*this)(i, j) += B(i, j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number> &      C,
+                                   const LAPACKFullMatrixExt<Number> &B,
+                                   const bool adding) const
+{
+  AssertDimension(this->n(), B.m());
+
+  const size_type nrows = this->m();
+  const size_type ncols = B.n();
+
+  if (C.m() != nrows || C.n() != ncols)
+    {
+      C.reinit(nrows, ncols);
+    }
+
+  // Call the \p mmult function in the parent class which operates on \p
+  // LAPACKFullMatrix<Number>.
+  LAPACKFullMatrix<Number>::mmult(C, (LAPACKFullMatrix<Number>)B, adding);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::invert_by_gauss_elim(
+  LAPACKFullMatrixExt<Number> &M_inv)
+{
+  AssertDimension(this->m(), this->n());
+
+  const size_type n = this->m();
+
+  M_inv.reinit(n, n);
+
+  /**
+   * Eliminate the lower triangular part of the matrix.
+   */
+  for (size_type l = 0; l < n; l++)
+    {
+      /**
+       * Scale the current row by the factor \f$\frac{1}{a_{ll}}\f$ and this
+       * value is directly filled into the result matrix.
+       */
+      M_inv(l, l) = 1.0 / (*this)(l, l);
+
+      /**
+       * For the matrix \f$M\f$, after this scaling, the element \f$M_{ll}\f$
+       * will become 1, there is no need to compute the scaling of this element.
+       * Meanwhile, the elements \f$M_{l1}, \cdots, M_{l,l-1}\f$ are already
+       * zeros after previous eliminations, neither need we compute the scaling
+       * of these elements. Therefore, the actual computation to be performed is
+       * for columns \f$j = l + 1, \cdots, n\f$.
+       */
+      for (size_type j = l + 1; j < n; j++)
+        {
+          (*this)(l, j) = M_inv(l, l) * (*this)(l, j);
+        }
+
+      /**
+       * For the matrix \f$M^{-1}\f$, after this scaling, the element at \f$(l,
+       * l)\f$ will be \f$\frac{1}{M_{ll}}\f$, so there is no need to compute
+       * this scaling. Meanwhile, only those elements \f$M^{-1}_{l,1}, \cdots,
+       * M^{-1}_{l-1}\f$ may be non-zeros, we only loop over \f$j = 1, \cdots, l
+       * - 1\f$.
+       */
+      for (size_type j = 0; j < l; j++)
+        {
+          M_inv(l, j) = M_inv(l, l) * M_inv(l, j);
+        }
+
+      /**
+       * Then we eliminate the elements \f$M_{l+1,l}, \cdots, M_{n,l}\f$ by
+       * iterating over the rows \f$l + 1, \cdots, n\f$.
+       */
+      for (size_type i = l + 1; i < n; i++)
+        {
+          /**
+           * This transformation will only influence the columns \f$1, \cdots,
+           * l\f$ in \f$M^{-1}\f$.
+           */
+          for (size_type j = 0; j <= l; j++)
+            {
+              M_inv(i, j) = M_inv(i, j) - (*this)(i, l) * M_inv(l, j);
+            }
+
+          /**
+           * This transformation will only influence the columns \f$l+1, \cdots,
+           * n\f$ in \f$M\f$.
+           */
+          for (size_type j = l + 1; j < n; j++)
+            {
+              (*this)(i, j) = (*this)(i, j) - (*this)(i, l) * (*this)(l, j);
+            }
+        }
+    }
+
+  /**
+   * Eliminate the upper triangular part. Now the row transformation is only
+   * related to the result matrix \f$M^{-1}\f$.
+   */
+  for (size_type l = n - 1; l > 0; l--)
+    {
+      /**
+       * Eliminate the elements \f$M_{l-1,l}, \cdots, M_{1,l}\f$.
+       */
+      size_type i = l - 1;
+      /**
+       * N.B. When the loop counter \p i of \p unsigned type decreased to be
+       * zero, further decrement will not produce a value smaller than zero but
+       * a very large integer. Hence, we do not use a typical \p for loop here
+       * as below.
+       *
+       * <code> for (size_type i = l - 1; i >= 0; i--)
+       * {
+       *   ...
+       * }
+       * </code>
+       *
+       * Instead, we use a \p while loop with the \p true condition. Inside this
+       * loop, when we detect the counter is zero after loop execution, we jump
+       * out the loop.
+       */
+      while (true)
+        {
+          /**
+           * Because the elements in the current l'th row of \f$M^{-1}\f$ are
+           * generally non-zeros, the computation involves columns \f$1, \cdots,
+           * n\f$.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              M_inv(i, j) = M_inv(i, j) - (*this)(i, l) * M_inv(l, j);
+            }
+
+          if (i == 0)
+            {
+              break;
+            }
+          else
+            {
+              i--;
+            }
         }
     }
 }

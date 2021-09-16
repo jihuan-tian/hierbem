@@ -1,0 +1,61 @@
+\hypertarget{cluster_8h}{}\section{/home/jihuan/\+Projects/deal.ii/program/dealii-\/9.1.1/examples/laplace-\/bem/include/cluster.h File Reference}
+\label{cluster_8h}\index{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/cluster.\+h@{/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/cluster.\+h}}
+
+
+Implementation of the class \hyperlink{classCluster}{Cluster}.  
+
+
+{\ttfamily \#include $<$deal.\+I\+I/base/types.\+h$>$}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$iterator$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}simple\+\_\+bounding\+\_\+box.\+h\char`\"{}}\newline
+Include dependency graph for cluster.\+h\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cluster_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cluster_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classCluster}{Cluster$<$ spacedim, Number $>$}
+\begin{DoxyCompactList}\small\item\em Class for an index cluster. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\textbf{ }\par
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$int dim, int spacedim, typename Number  = double$>$ }\\void \hyperlink{group__hierarchical__matrices_gaeba0b2d80f64d0bb5c1ad86ac31bbcda}{map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size} (const Do\+F\+Handler$<$ dim, spacedim $>$ \&dof\+\_\+handler, std\+::vector$<$ Number $>$ \&dof\+\_\+average\+\_\+cell\+\_\+size)
+\item 
+{\footnotesize template$<$typename Do\+F\+Handler\+Type , typename Number  = double$>$ }\\void \hyperlink{group__hierarchical__matrices_ga1eee708f9eb5b9e9a2d8031c60c5d315}{map\+\_\+dofs\+\_\+to\+\_\+max\+\_\+cell\+\_\+size} (const Do\+F\+Handler\+Type \&dof\+\_\+handler, std\+::vector$<$ Number $>$ \&dof\+\_\+max\+\_\+cell\+\_\+size)
+\item 
+{\footnotesize template$<$typename Do\+F\+Handler\+Type , typename Number  = double$>$ }\\void \hyperlink{group__hierarchical__matrices_ga0a1c7de8480c4e9b4a002818f8c19b52}{map\+\_\+dofs\+\_\+to\+\_\+min\+\_\+cell\+\_\+size} (const Do\+F\+Handler\+Type \&dof\+\_\+handler, std\+::vector$<$ Number $>$ \&dof\+\_\+min\+\_\+cell\+\_\+size)
+\item 
+{\footnotesize template$<$int spacedim, typename Number $>$ }\\std\+::ostream \& \hyperlink{group__hierarchical__matrices_ga79f6d9af30209ae20bdf81906360664a}{operator$<$$<$} (std\+::ostream \&out, const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster)
+\item 
+{\footnotesize template$<$int spacedim, typename Number  = double$>$ }\\Number \hyperlink{group__hierarchical__matrices_gab6b0a51fb1b117f29902d220df72420a}{calc\+\_\+cluster\+\_\+distance} (const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster2, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points)
+\item 
+{\footnotesize template$<$int spacedim, typename Number  = double$>$ }\\Number \hyperlink{group__hierarchical__matrices_ga76ef8db7b1a8500eac8d807bf104cacb}{calc\+\_\+cluster\+\_\+distance} (const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster2, const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs)
+\item 
+{\footnotesize template$<$int spacedim, typename Number $>$ }\\bool {\bfseries operator==} (const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster1, const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \&cluster2)
+\end{DoxyCompactItemize}
+
+
+
+\subsection{Detailed Description}
+Implementation of the class \hyperlink{classCluster}{Cluster}. 
+
+\begin{DoxyDate}{Date}
+2021-\/04-\/18 
+\end{DoxyDate}
+\begin{DoxyAuthor}{Author}
+Jihuan Tian 
+\end{DoxyAuthor}

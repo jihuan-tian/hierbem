@@ -1,0 +1,127 @@
+\hypertarget{classLaplaceBEM_1_1BEMValues}{}\section{Laplace\+B\+EM\+:\+:B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$ Class Template Reference}
+\label{classLaplaceBEM_1_1BEMValues}\index{Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$@{Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$}}
+
+
+Collaboration diagram for Laplace\+B\+EM\+:\+:B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classLaplaceBEM_1_1BEMValues__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a7095a2e5448fa5478cc2d9affe319abf}\label{classLaplaceBEM_1_1BEMValues_a7095a2e5448fa5478cc2d9affe319abf}} 
+{\bfseries B\+E\+M\+Values} (const Finite\+Element$<$ dim, spacedim $>$ \&kx\+\_\+fe, const Finite\+Element$<$ dim, spacedim $>$ \&ky\+\_\+fe, const Q\+Gauss$<$ 4 $>$ \&quad\+\_\+rule\+\_\+for\+\_\+same\+\_\+panel, const Q\+Gauss$<$ 4 $>$ \&quad\+\_\+rule\+\_\+for\+\_\+common\+\_\+edge, const Q\+Gauss$<$ 4 $>$ \&quad\+\_\+rule\+\_\+for\+\_\+common\+\_\+vertex, const Q\+Gauss$<$ 4 $>$ \&quad\+\_\+rule\+\_\+for\+\_\+regular)
+\item 
+\hyperlink{classLaplaceBEM_1_1BEMValues_ac40a849631e782f840a927e68bc2f9f6}{B\+E\+M\+Values} (const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ \&bem\+\_\+values)
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a3fd86680a51e688d003d5a0bfe09629f}\label{classLaplaceBEM_1_1BEMValues_a3fd86680a51e688d003d5a0bfe09629f}} 
+void {\bfseries fill\+\_\+shape\+\_\+value\+\_\+tables} ()
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a5383d5eb891f8cd742584e95aad976c8}\label{classLaplaceBEM_1_1BEMValues_a5383d5eb891f8cd742584e95aad976c8}} 
+void {\bfseries fill\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+tables} ()
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_aac76dabf40c054fb5a2608cf1a70d0df}\label{classLaplaceBEM_1_1BEMValues_aac76dabf40c054fb5a2608cf1a70d0df}} 
+const Finite\+Element$<$ dim, spacedim $>$ \& {\bfseries kx\+\_\+fe}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a3b43f60bbc1d59238f201fa0e43325b4}\label{classLaplaceBEM_1_1BEMValues_a3b43f60bbc1d59238f201fa0e43325b4}} 
+const Finite\+Element$<$ dim, spacedim $>$ \& {\bfseries ky\+\_\+fe}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_aa6335f94192596e5512eee34aec37425}\label{classLaplaceBEM_1_1BEMValues_aa6335f94192596e5512eee34aec37425}} 
+const Q\+Gauss$<$ 4 $>$ \& {\bfseries quad\+\_\+rule\+\_\+for\+\_\+same\+\_\+panel}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_ab60f71cb70c2e1f437026e705ba81c45}\label{classLaplaceBEM_1_1BEMValues_ab60f71cb70c2e1f437026e705ba81c45}} 
+const Q\+Gauss$<$ 4 $>$ \& {\bfseries quad\+\_\+rule\+\_\+for\+\_\+common\+\_\+edge}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_afa138022ebdf7eac374f4f3da75d667b}\label{classLaplaceBEM_1_1BEMValues_afa138022ebdf7eac374f4f3da75d667b}} 
+const Q\+Gauss$<$ 4 $>$ \& {\bfseries quad\+\_\+rule\+\_\+for\+\_\+common\+\_\+vertex}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a9639fb8cd2877d40d3142b4e43de00ce}\label{classLaplaceBEM_1_1BEMValues_a9639fb8cd2877d40d3142b4e43de00ce}} 
+const Q\+Gauss$<$ 4 $>$ \& {\bfseries quad\+\_\+rule\+\_\+for\+\_\+regular}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a8e9a1d06a301dd95d70860159ecd990f}\label{classLaplaceBEM_1_1BEMValues_a8e9a1d06a301dd95d70860159ecd990f}} 
+Table$<$ 3, Range\+Number\+Type $>$ {\bfseries kx\+\_\+shape\+\_\+value\+\_\+table\+\_\+for\+\_\+same\+\_\+panel}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a87347e8cacd41bf1ef0d83a2cf921889}\label{classLaplaceBEM_1_1BEMValues_a87347e8cacd41bf1ef0d83a2cf921889}} 
+Table$<$ 3, Range\+Number\+Type $>$ {\bfseries ky\+\_\+shape\+\_\+value\+\_\+table\+\_\+for\+\_\+same\+\_\+panel}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a8a1e35a97b8b4868d16098f9997a9148}\label{classLaplaceBEM_1_1BEMValues_a8a1e35a97b8b4868d16098f9997a9148}} 
+Table$<$ 3, Range\+Number\+Type $>$ {\bfseries kx\+\_\+shape\+\_\+value\+\_\+table\+\_\+for\+\_\+common\+\_\+edge}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a26a0c28bae67e71bcd8e5b58c22096d3}\label{classLaplaceBEM_1_1BEMValues_a26a0c28bae67e71bcd8e5b58c22096d3}} 
+Table$<$ 3, Range\+Number\+Type $>$ {\bfseries ky\+\_\+shape\+\_\+value\+\_\+table\+\_\+for\+\_\+common\+\_\+edge}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a8d2e45be4d32bae87467a9b249ea1ae8}\label{classLaplaceBEM_1_1BEMValues_a8d2e45be4d32bae87467a9b249ea1ae8}} 
+Table$<$ 3, Range\+Number\+Type $>$ {\bfseries kx\+\_\+shape\+\_\+value\+\_\+table\+\_\+for\+\_\+common\+\_\+vertex}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_ad9ef63cf6509fa3916ddf835293baf39}\label{classLaplaceBEM_1_1BEMValues_ad9ef63cf6509fa3916ddf835293baf39}} 
+Table$<$ 3, Range\+Number\+Type $>$ {\bfseries ky\+\_\+shape\+\_\+value\+\_\+table\+\_\+for\+\_\+common\+\_\+vertex}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_aef7b057d9bb7d63d74ac30c34b0add62}\label{classLaplaceBEM_1_1BEMValues_aef7b057d9bb7d63d74ac30c34b0add62}} 
+Table$<$ 3, Range\+Number\+Type $>$ {\bfseries kx\+\_\+shape\+\_\+value\+\_\+table\+\_\+for\+\_\+regular}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_aec5f9fa16be14831e124275fe74921f0}\label{classLaplaceBEM_1_1BEMValues_aec5f9fa16be14831e124275fe74921f0}} 
+Table$<$ 3, Range\+Number\+Type $>$ {\bfseries ky\+\_\+shape\+\_\+value\+\_\+table\+\_\+for\+\_\+regular}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a66a2d68e7fbc709fbca53c5d3158b288}\label{classLaplaceBEM_1_1BEMValues_a66a2d68e7fbc709fbca53c5d3158b288}} 
+Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$ $>$ {\bfseries kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table\+\_\+for\+\_\+same\+\_\+panel}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_aea315427a1f1fec575cf6b9710907747}\label{classLaplaceBEM_1_1BEMValues_aea315427a1f1fec575cf6b9710907747}} 
+Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$ $>$ {\bfseries ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table\+\_\+for\+\_\+same\+\_\+panel}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_ae25c2dc5d9aa6c4dfd5c05b41197a7ef}\label{classLaplaceBEM_1_1BEMValues_ae25c2dc5d9aa6c4dfd5c05b41197a7ef}} 
+Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$ $>$ {\bfseries kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table\+\_\+for\+\_\+common\+\_\+edge}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_ae30c6f5629a6aebd6cf2445f7dc7357f}\label{classLaplaceBEM_1_1BEMValues_ae30c6f5629a6aebd6cf2445f7dc7357f}} 
+Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$ $>$ {\bfseries ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table\+\_\+for\+\_\+common\+\_\+edge}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_af272687194bb9836a8e54ae25e2ef538}\label{classLaplaceBEM_1_1BEMValues_af272687194bb9836a8e54ae25e2ef538}} 
+Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$ $>$ {\bfseries kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table\+\_\+for\+\_\+common\+\_\+vertex}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a86ef4b138039af89dc71569bbf18a711}\label{classLaplaceBEM_1_1BEMValues_a86ef4b138039af89dc71569bbf18a711}} 
+Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$ $>$ {\bfseries ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table\+\_\+for\+\_\+common\+\_\+vertex}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a34933185cecf9d4cea46597642f8d802}\label{classLaplaceBEM_1_1BEMValues_a34933185cecf9d4cea46597642f8d802}} 
+Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$ $>$ {\bfseries kx\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table\+\_\+for\+\_\+regular}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_ad6938f3aad2ab93ed61fc48de8e4de65}\label{classLaplaceBEM_1_1BEMValues_ad6938f3aad2ab93ed61fc48de8e4de65}} 
+Table$<$ 2, Full\+Matrix$<$ Range\+Number\+Type $>$ $>$ {\bfseries ky\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+table\+\_\+for\+\_\+regular}
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a71328aee0f80bcea63897444b086de99}\label{classLaplaceBEM_1_1BEMValues_a71328aee0f80bcea63897444b086de99}} 
+void {\bfseries init\+\_\+shape\+\_\+value\+\_\+tables} ()
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_a5646d3caf1ede82b5dca1f82be893dd4}\label{classLaplaceBEM_1_1BEMValues_a5646d3caf1ede82b5dca1f82be893dd4}} 
+void {\bfseries init\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+tables} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1BEMValues_ac40a849631e782f840a927e68bc2f9f6}\label{classLaplaceBEM_1_1BEMValues_ac40a849631e782f840a927e68bc2f9f6}} 
+\index{Laplace\+B\+E\+M\+::\+B\+E\+M\+Values@{Laplace\+B\+E\+M\+::\+B\+E\+M\+Values}!B\+E\+M\+Values@{B\+E\+M\+Values}}
+\index{B\+E\+M\+Values@{B\+E\+M\+Values}!Laplace\+B\+E\+M\+::\+B\+E\+M\+Values@{Laplace\+B\+E\+M\+::\+B\+E\+M\+Values}}
+\subsubsection{\texorpdfstring{B\+E\+M\+Values()}{BEMValues()}}
+{\footnotesize\ttfamily template$<$int dim, int spacedim, typename Range\+Number\+Type $>$ \\
+\hyperlink{classLaplaceBEM_1_1BEMValues}{Laplace\+B\+E\+M\+::\+B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$\+::\hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values} (\begin{DoxyParamCaption}\item[{const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ dim, spacedim, Range\+Number\+Type $>$ \&}]{bem\+\_\+values }\end{DoxyParamCaption})}
+
+Copy constructor for class {\ttfamily \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}}. 
+\begin{DoxyParams}{Parameters}
+{\em bem\+\_\+values} & \\
+\hline
+\end{DoxyParams}
+
+
+References Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+edge(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+common\+\_\+vertex(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+regular(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+grad\+\_\+matrices\+\_\+same\+\_\+panel(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+edge(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+common\+\_\+vertex(), Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+regular(), and Laplace\+B\+E\+M\+::bem\+\_\+shape\+\_\+values\+\_\+same\+\_\+panel().
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/jihuan/\+Projects/deal.\+ii/program/dealii-\/9.\+1.\+1/examples/laplace-\/bem/include/\hyperlink{laplace__bem_8h}{laplace\+\_\+bem.\+h}\end{DoxyCompactItemize}
