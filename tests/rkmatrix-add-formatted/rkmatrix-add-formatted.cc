@@ -1,7 +1,7 @@
 /**
  * \file rkmatrix-add-formatted.cc
  * \brief Verify the formatted addition of two rank-k matrices.
- * \ingroup
+ * \ingroup testers linalg
  * \author Jihuan Tian
  * \date 2021-06-30
  */

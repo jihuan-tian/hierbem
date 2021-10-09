@@ -124,6 +124,10 @@ public:
   /**
    * Perform SVD on the product of two component matrices \f$A\f$ and \f$B^T\f$
    * with truncation by a specified rank.
+   *
+   * N.B. If the actual rank of the matrix is less than the specified \p
+   * truncation_rank, i.e. rank deficient, the matrix will be truncated to its
+   * actual rank.
    * @param A
    * @param B
    * @param U
@@ -592,7 +596,8 @@ public:
        const size_type   src_offset_i = 0,
        const size_type   src_offset_j = 0,
        const Number      factor       = 1.,
-       const bool        transpose    = false);
+       const bool        transpose    = false,
+       const bool        is_adding    = false);
 
   /**
    * Fill the matrix \p M into the current matrix based on the global block
@@ -610,7 +615,8 @@ public:
          &                        col_index_global_to_local_map,
        const LAPACKFullMatrixExt &M,
        const std::vector<types::global_dof_index> &M_tau_index_set,
-       const std::vector<types::global_dof_index> &M_sigma_index_set);
+       const std::vector<types::global_dof_index> &M_sigma_index_set,
+       const bool                                  is_adding = false);
 
   /**
    * Fill the data in \p M by rows into the current matrix based on the global
@@ -629,7 +635,8 @@ public:
   fill_rows(const std::map<types::global_dof_index, size_t>
               &                        row_index_global_to_local_map,
             const LAPACKFullMatrixExt &M,
-            const std::vector<types::global_dof_index> &M_row_global_index_set);
+            const std::vector<types::global_dof_index> &M_row_global_index_set,
+            const bool                                  is_adding = false);
 
   /**
    * Fill the \p values to the \p row_index'th row of the current matrix.
@@ -637,7 +644,9 @@ public:
    * @param values
    */
   void
-  fill_row(const size_type row_index, const Vector<Number> &values);
+  fill_row(const size_type       row_index,
+           const Vector<Number> &values,
+           const bool            is_adding = false);
 
   /**
    * Fill the data in \p M by columns into the current matrix based on the
@@ -650,7 +659,8 @@ public:
   fill_cols(const std::map<types::global_dof_index, size_t>
               &                        col_index_global_to_local_map,
             const LAPACKFullMatrixExt &M,
-            const std::vector<types::global_dof_index> &M_col_global_index_set);
+            const std::vector<types::global_dof_index> &M_col_global_index_set,
+            const bool                                  is_adding = false);
 
   /**
    * Fill the \p values to the \p col_index'th column of the current matrix.
@@ -658,7 +668,9 @@ public:
    * @param values
    */
   void
-  fill_col(const size_type col_index, const Vector<Number> &values);
+  fill_col(const size_type       col_index,
+           const Vector<Number> &values,
+           const bool            is_adding = false);
 
   /**
    * Horizontally stack two matrices, \f$C = [A, B]\f$.
@@ -754,11 +766,28 @@ public:
       const LAPACKFullMatrixExt<Number> &B) const;
 
   /**
+   * Add two matrix into a new matrix \f$C = A + b*B\f$ with a factor \f$b\f$
+   * multiplied with \f$B\f$, where \f$A\f$ is the current matrix.
+   */
+  void
+  add(LAPACKFullMatrixExt<Number> &      C,
+      const Number                       b,
+      const LAPACKFullMatrixExt<Number> &B) const;
+
+  /**
    * Add the matrix \p B into the current matrix.
    * @param B
    */
   void
   add(const LAPACKFullMatrixExt<Number> &B);
+
+  /**
+   * Add the matrix \p B into the current matrix with a factor \f$b\f$
+   * multiplied with \f$B\f$.
+   * @param B
+   */
+  void
+  add(const Number b, const LAPACKFullMatrixExt<Number> &B);
 
   /**
    * Multiply two matrices: \f$C = A \cdot B\f$
@@ -1160,9 +1189,9 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
    * not be of full rank and the actual rank is less than this representation
    * rank.
    */
-  const size_type representation_rank = A.n();
+  const size_type formal_rank = A.n();
 
-  if (A.m() > representation_rank && B.m() > representation_rank)
+  if (A.m() > formal_rank && B.m() > formal_rank)
     {
       is_qr_used = true;
 
@@ -1194,9 +1223,9 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
       RA.mTmult(R, RB);
       R.svd(U_hat, Sigma_r, VT_hat);
 
-      U.reinit(QA.m(), representation_rank);
+      U.reinit(QA.m(), formal_rank);
       QA.mmult(U, U_hat);
-      VT.reinit(representation_rank, QB.m());
+      VT.reinit(formal_rank, QB.m());
       VT_hat.mTmult(VT, QB);
     }
   else
@@ -1245,28 +1274,37 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
 
   if (truncation_rank < min_dim)
     {
-      /**
-       * Keep the first \p truncation_rank singular values, while discarding
-       * others.
-       */
-      std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
-        std::move(Sigma_r));
-      Sigma_r.resize(truncation_rank);
-      for (size_type i = 0; i < truncation_rank; i++)
+      if (truncation_rank > 0)
         {
-          Sigma_r.at(i) = copy.at(i);
+          /**
+           * Keep the first \p truncation_rank singular values, while discarding
+           * others.
+           */
+          std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
+            std::move(Sigma_r));
+          Sigma_r.resize(truncation_rank);
+          for (size_type i = 0; i < truncation_rank; i++)
+            {
+              Sigma_r.at(i) = copy.at(i);
+            }
+
+          /**
+           * Keep the first \p truncation_rank columns of \p U, while deleting
+           * others.
+           */
+          U.keep_first_n_columns(truncation_rank, true);
+
+          /**
+           * Keep the first \p truncation_rank rows of \p VT, while deleting
+           * others.
+           */
+          VT.keep_first_n_rows(truncation_rank, true);
         }
-
-      /**
-       * Keep the first \p truncation_rank columns of \p U, while deleting
-       * others.
-       */
-      U.keep_first_n_columns(truncation_rank, true);
-
-      /**
-       * Keep the first \p truncation_rank rows of \p VT, while deleting others.
-       */
-      VT.keep_first_n_rows(truncation_rank, true);
+      else
+        {
+          U.reinit(0, 0);
+          VT.reinit(0, 0);
+        }
     }
   else
     {
@@ -1286,7 +1324,7 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
            * representation rank}}\f$
            * * \f$V \in \mathbb{R}^{n \times {\rm representation rank}}\f$
            */
-          if (truncation_rank < representation_rank)
+          if (truncation_rank < formal_rank)
             {
               /**
                * Keep the first \p truncation_rank singular values, while
@@ -1892,9 +1930,7 @@ LAPACKFullMatrixExt<Number>::keep_first_n_rows(const size_type n,
     }
   else
     {
-      /**
-       * Do nothing.
-       */
+      this->reinit(0, 0);
     }
 }
 
@@ -2028,9 +2064,7 @@ LAPACKFullMatrixExt<Number>::keep_first_n_columns(const size_type n,
     }
   else
     {
-      /**
-       * Do nothing.
-       */
+      this->reinit(0, 0);
     }
 }
 
@@ -2669,7 +2703,8 @@ LAPACKFullMatrixExt<Number>::fill(const MatrixType &src,
                                   const size_type   src_offset_i,
                                   const size_type   src_offset_j,
                                   const Number      factor,
-                                  const bool        transpose)
+                                  const bool        transpose,
+                                  const bool        is_adding)
 {
   AssertIndexRange(src_offset_i, src.m());
   AssertIndexRange(src_offset_j, src.n());
@@ -2702,8 +2737,16 @@ LAPACKFullMatrixExt<Number>::fill(const MatrixType &src,
         {
           for (size_type j = 0; j < ncols_for_copy; j++)
             {
-              (*this)(dst_offset_i + i, dst_offset_j + j) =
-                factor * src(src_offset_i + j, src_offset_j + i);
+              if (is_adding)
+                {
+                  (*this)(dst_offset_i + i, dst_offset_j + j) +=
+                    factor * src(src_offset_i + j, src_offset_j + i);
+                }
+              else
+                {
+                  (*this)(dst_offset_i + i, dst_offset_j + j) =
+                    factor * src(src_offset_i + j, src_offset_j + i);
+                }
             }
         }
     }
@@ -2713,8 +2756,16 @@ LAPACKFullMatrixExt<Number>::fill(const MatrixType &src,
         {
           for (size_type j = 0; j < ncols_for_copy; j++)
             {
-              (*this)(dst_offset_i + i, dst_offset_j + j) =
-                factor * src(src_offset_i + i, src_offset_j + j);
+              if (is_adding)
+                {
+                  (*this)(dst_offset_i + i, dst_offset_j + j) +=
+                    factor * src(src_offset_i + i, src_offset_j + j);
+                }
+              else
+                {
+                  (*this)(dst_offset_i + i, dst_offset_j + j) =
+                    factor * src(src_offset_i + i, src_offset_j + j);
+                }
             }
         }
     }
@@ -2730,7 +2781,8 @@ LAPACKFullMatrixExt<Number>::fill(
     &                                         col_index_global_to_local_map,
   const LAPACKFullMatrixExt &                 M,
   const std::vector<types::global_dof_index> &M_tau_index_set,
-  const std::vector<types::global_dof_index> &M_sigma_index_set)
+  const std::vector<types::global_dof_index> &M_sigma_index_set,
+  const bool                                  is_adding)
 {
   /**
    * Make assertions about the sizes of row and column index global to local
@@ -2743,9 +2795,18 @@ LAPACKFullMatrixExt<Number>::fill(
     {
       for (size_type j = 0; j < M.n(); j++)
         {
-          (*this)(row_index_global_to_local_map.at(M_tau_index_set[i]),
-                  col_index_global_to_local_map.at(M_sigma_index_set[j])) =
-            M(i, j);
+          if (is_adding)
+            {
+              (*this)(row_index_global_to_local_map.at(M_tau_index_set[i]),
+                      col_index_global_to_local_map.at(M_sigma_index_set[j])) +=
+                M(i, j);
+            }
+          else
+            {
+              (*this)(row_index_global_to_local_map.at(M_tau_index_set[i]),
+                      col_index_global_to_local_map.at(M_sigma_index_set[j])) =
+                M(i, j);
+            }
         }
     }
 }
@@ -2757,7 +2818,8 @@ LAPACKFullMatrixExt<Number>::fill_rows(
   const std::map<types::global_dof_index, size_t>
     &                                         row_index_global_to_local_map,
   const LAPACKFullMatrixExt &                 M,
-  const std::vector<types::global_dof_index> &M_row_global_index_set)
+  const std::vector<types::global_dof_index> &M_row_global_index_set,
+  const bool                                  is_adding)
 {
   AssertDimension(this->m(), row_index_global_to_local_map.size());
   AssertDimension(this->n(), M.n());
@@ -2767,8 +2829,18 @@ LAPACKFullMatrixExt<Number>::fill_rows(
     {
       for (size_type j = 0; j < M.n(); j++)
         {
-          (*this)(row_index_global_to_local_map.at(M_row_global_index_set[i]),
-                  j) = M(i, j);
+          if (is_adding)
+            {
+              (*this)(row_index_global_to_local_map.at(
+                        M_row_global_index_set[i]),
+                      j) += M(i, j);
+            }
+          else
+            {
+              (*this)(row_index_global_to_local_map.at(
+                        M_row_global_index_set[i]),
+                      j) = M(i, j);
+            }
         }
     }
 }
@@ -2777,7 +2849,8 @@ LAPACKFullMatrixExt<Number>::fill_rows(
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::fill_row(const size_type       row_index,
-                                      const Vector<Number> &values)
+                                      const Vector<Number> &values,
+                                      const bool            is_adding)
 {
   const size_type n_rows = this->m();
   const size_type n_cols = this->n();
@@ -2787,7 +2860,14 @@ LAPACKFullMatrixExt<Number>::fill_row(const size_type       row_index,
 
   for (size_type j = 0; j < n_cols; j++)
     {
-      (*this)(row_index, j) = values(j);
+      if (is_adding)
+        {
+          (*this)(row_index, j) += values(j);
+        }
+      else
+        {
+          (*this)(row_index, j) = values(j);
+        }
     }
 }
 
@@ -2798,7 +2878,8 @@ LAPACKFullMatrixExt<Number>::fill_cols(
   const std::map<types::global_dof_index, size_t>
     &                                         col_index_global_to_local_map,
   const LAPACKFullMatrixExt &                 M,
-  const std::vector<types::global_dof_index> &M_col_global_index_set)
+  const std::vector<types::global_dof_index> &M_col_global_index_set,
+  const bool                                  is_adding)
 {
   AssertDimension(this->n(), col_index_global_to_local_map.size());
   AssertDimension(this->m(), M.m());
@@ -2808,9 +2889,18 @@ LAPACKFullMatrixExt<Number>::fill_cols(
     {
       for (size_type j = 0; j < M.n(); j++)
         {
-          (*this)(i,
-                  col_index_global_to_local_map.at(M_col_global_index_set[j])) =
-            M(i, j);
+          if (is_adding)
+            {
+              (*this)(i,
+                      col_index_global_to_local_map.at(
+                        M_col_global_index_set[j])) += M(i, j);
+            }
+          else
+            {
+              (*this)(i,
+                      col_index_global_to_local_map.at(
+                        M_col_global_index_set[j])) = M(i, j);
+            }
         }
     }
 }
@@ -2819,7 +2909,8 @@ LAPACKFullMatrixExt<Number>::fill_cols(
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::fill_col(const size_type       col_index,
-                                      const Vector<Number> &values)
+                                      const Vector<Number> &values,
+                                      const bool            is_adding)
 {
   const size_type n_rows = this->m();
   const size_type n_cols = this->n();
@@ -2829,7 +2920,14 @@ LAPACKFullMatrixExt<Number>::fill_col(const size_type       col_index,
 
   for (size_type i = 0; i < n_rows; i++)
     {
-      (*this)(i, col_index) = values(i);
+      if (is_adding)
+        {
+          (*this)(i, col_index) += values(i);
+        }
+      else
+        {
+          (*this)(i, col_index) = values(i);
+        }
     }
 }
 
@@ -2928,21 +3026,24 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
    */
   const size_type effective_rank = this->reduced_svd(A, Sigma_r, B, k);
 
-  if (is_left_associative)
+  if (effective_rank > 0)
     {
-      /**
-       * Let A = A*Sigma_r and B = B^T.
-       */
-      A.scale_columns(Sigma_r);
-      B.transpose();
-    }
-  else
-    {
-      /**
-       * Let A = A and B = (Sigma_r * B)^T.
-       */
-      B.scale_rows(Sigma_r);
-      B.transpose();
+      if (is_left_associative)
+        {
+          /**
+           * Let A = A*Sigma_r and B = B^T.
+           */
+          A.scale_columns(Sigma_r);
+          B.transpose();
+        }
+      else
+        {
+          /**
+           * Let A = A and B = (Sigma_r * B)^T.
+           */
+          B.scale_rows(Sigma_r);
+          B.transpose();
+        }
     }
 
   return effective_rank;
@@ -2974,6 +3075,30 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
+LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
+                                 const Number                       b,
+                                 const LAPACKFullMatrixExt<Number> &B) const
+{
+  AssertDimension(this->m(), B.m());
+  AssertDimension(this->n(), B.n());
+
+  const size_type nrows = this->m();
+  const size_type ncols = this->n();
+
+  C.reinit(nrows, ncols);
+
+  for (size_type i = 0; i < nrows; i++)
+    {
+      for (size_type j = 0; j < ncols; j++)
+        {
+          C(i, j) = (*this)(i, j) + b * B(i, j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
 LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B)
 {
   AssertDimension(this->m(), B.m());
@@ -2987,6 +3112,27 @@ LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B)
       for (size_type j = 0; j < ncols; j++)
         {
           (*this)(i, j) += B(i, j);
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::add(const Number                       b,
+                                 const LAPACKFullMatrixExt<Number> &B)
+{
+  AssertDimension(this->m(), B.m());
+  AssertDimension(this->n(), B.n());
+
+  const size_type nrows = this->m();
+  const size_type ncols = this->n();
+
+  for (size_type i = 0; i < nrows; i++)
+    {
+      for (size_type j = 0; j < ncols; j++)
+        {
+          (*this)(i, j) += b * B(i, j);
         }
     }
 }

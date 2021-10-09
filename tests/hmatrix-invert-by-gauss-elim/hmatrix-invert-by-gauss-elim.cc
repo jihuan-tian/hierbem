@@ -54,22 +54,35 @@ main()
   /**
    * Create the \hmat from the full matrix \p M.
    */
-  const unsigned int fixed_rank = 2;
-  HMatrix<3, double> H(bct, M, fixed_rank);
-  HMatrix<3, double> H_inv;
-  InitAndCreateHMatrixChildrenWithoutAlloc(&H_inv, bct.get_root(), true);
-  H.invert_by_gauss_elim(H_inv, H, bct, fixed_rank);
+  const unsigned int          fixed_rank = 5;
+  HMatrix<3, double>          H(bct, M, fixed_rank);
+  LAPACKFullMatrixExt<double> H_before_inv_full, H_after_inv_full, H_inv_full;
 
-  std::ofstream out("H_bct.dat");
-  H.write_leaf_set_by_iteration(out);
-  out.close();
+  std::ofstream out1("H_before_inv_bct.dat");
+  H.write_leaf_set_by_iteration(out1);
+  out1.close();
 
-  /**
-   * Convert the inverted matrix into a full matrix for validation.
-   */
-  LAPACKFullMatrixExt<double> H_full;
-  H.convertToFullMatrix(H_full);
-  H_full.print_formatted_to_mat(std::cout, "H_inv_full", 12, true, 20, "0");
+  H.convertToFullMatrix(H_before_inv_full);
+  H_before_inv_full.print_formatted_to_mat(
+    std::cout, "H_before_inv_full", 15, true, 25, "0");
+
+  HMatrix<3, double> H_inv(bct, fixed_rank);
+  H.invert_by_gauss_elim(H_inv, fixed_rank);
+
+  std::ofstream out2("H_after_inv_bct.dat");
+  H.write_leaf_set_by_iteration(out2);
+  out2.close();
+
+  H.convertToFullMatrix(H_after_inv_full);
+  H_after_inv_full.print_formatted_to_mat(
+    std::cout, "H_after_inv_full", 15, true, 25, "0");
+
+  std::ofstream out3("H_inv_bct.dat");
+  H_inv.write_leaf_set_by_iteration(out3);
+  out3.close();
+
+  H_inv.convertToFullMatrix(H_inv_full);
+  H_inv_full.print_formatted_to_mat(std::cout, "H_inv_full", 15, true, 25, "0");
 
   return 0;
 }

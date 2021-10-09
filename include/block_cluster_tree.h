@@ -704,7 +704,7 @@ private:
   unsigned int node_num;
 
   /**
-   * Whether the current block cluster tree is a subtree is an existing tree.
+   * Whether the current block cluster tree is a subtree of an existing tree.
    */
   bool is_subtree;
 };

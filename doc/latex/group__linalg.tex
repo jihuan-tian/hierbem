@@ -5,6 +5,13 @@
 Linear algebra computation.  
 
 
+Collaboration diagram for Linear algebra\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{group__linalg}
+\end{center}
+\end{figure}
 \subsection*{Files}
 \begin{DoxyCompactItemize}
 \item 
@@ -18,6 +25,8 @@ file \hyperlink{lapack-matrix-fill_8cc}{lapack-\/matrix-\/fill.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify filling a \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} from a source matrix. \end{DoxyCompactList}\item 
 file \hyperlink{hstack-vstack_8cc}{hstack-\/vstack.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify horizontal and vertical stacking of two \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} objects. \end{DoxyCompactList}\item 
+file \hyperlink{lapack-matrix-scale-matrix_8cc}{lapack-\/matrix-\/scale-\/matrix.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the scale of a whole full matrix. \end{DoxyCompactList}\item 
 file \hyperlink{scale-rows-and-columns_8cc}{scale-\/rows-\/and-\/columns.\+cc}
 \begin{DoxyCompactList}\small\item\em Test scaling rows and columns of a \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}, which is actually left and right multiplication with a diagonal matrix. \end{DoxyCompactList}\item 
 file \hyperlink{svd_8cc}{svd.\+cc}
@@ -28,8 +37,12 @@ file \hyperlink{transpose_8cc}{transpose.\+cc}
 \begin{DoxyCompactList}\small\item\em Test in-\/place transpose of a \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}. \end{DoxyCompactList}\item 
 file \hyperlink{rkmatrix_8cc}{rkmatrix.\+cc}
 \begin{DoxyCompactList}\small\item\em Test \hyperlink{classRkMatrix}{Rk\+Matrix} class. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-add-formatted_8cc}{rkmatrix-\/add-\/formatted.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the formatted addition of two rank-\/k matrices. \end{DoxyCompactList}\item 
 file \hyperlink{rkmatrix-add-formatted-using-qr_8cc}{rkmatrix-\/add-\/formatted-\/using-\/qr.\+cc}
-\begin{DoxyCompactList}\small\item\em Verify the formatted addition of two rank-\/k matrices by using the QR decomposition. This requires that the component matrices of rank-\/k matrices should wide matrix, i.\+e. having more rows than columns. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Verify the formatted addition of two rank-\/k matrices by using the QR decomposition. This requires that the component matrices of rank-\/k matrices should be wide matrix, i.\+e. having more rows than columns. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-add-formatted-with-factor_8cc}{rkmatrix-\/add-\/formatted-\/with-\/factor.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the formatted addition of two rank-\/k matrices $C = A + b B$. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}

@@ -4,6 +4,7 @@
  * obtained from horizontal or vertical splitting. The index sets of several
  * child clusters are interwoven together into the index set of the parent
  * cluster.
+ *
  * \ingroup testers
  * \author Jihuan Tian
  * \date 2021-08-05
@@ -58,7 +59,8 @@ main()
     8, 13, 2};
 
   /**
-   * Build the global to local indices maps.
+   * Build the global to local indices maps for the target agglomerated
+   * matrices.
    */
   std::map<types::global_dof_index, size_t>
     row_index_global_to_local_map_for_M_agglomerated1;
@@ -126,7 +128,7 @@ main()
   /**
    * Create corresponding rank-k submatrices.
    */
-  const unsigned int fixed_rank = 1;
+  const unsigned int fixed_rank = 2;
   RkMatrix<double>   M1_rk(fixed_rank, M1);
   RkMatrix<double>   M2_rk(fixed_rank, M2);
   RkMatrix<double>   M3_rk(fixed_rank, M3);

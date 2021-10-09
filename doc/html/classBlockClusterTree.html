@@ -540,6 +540,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">bc_node</td><td></td></tr>
+    <tr><td class="paramname">n_min</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -1101,8 +1102,6 @@ template&lt;int spacedim, typename Number &gt; </div>
 </div><div class="memdoc">
 <p>Get the admissibility parameter. </p><dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>.</p>
-
 </div>
 </div>
 <a id="a2980726dc3789773b5cd3c04df5e69a3"></a>
@@ -1227,7 +1226,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 </div><div class="memdoc">
 <p>Get the minimum cluster size. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>, and <a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt; spacedim, Number &gt;::mmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt; spacedim, Number &gt;::mmult()</a>.</p>
 
 </div>
 </div>
@@ -1313,7 +1312,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 
 <p class="reference">References <a class="el" href="classBlockClusterTree.html#ae77f8167ce49871f5751b8dcf8c93153">BlockClusterTree&lt; spacedim, Number &gt;::partition_tensor_product_from_block_cluster_node()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="classBlockClusterTree.html#a1c31aecfd91383f8b96601fd2b63dd62">BlockClusterTree&lt; spacedim, Number &gt;::BlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a6a4dead0321e8df38865bf6fbd0f6e81">HMatrix&lt; spacedim, Number &gt;::HMatrix()</a>, <a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt; spacedim, Number &gt;::mmult()</a>, <a class="el" href="classBlockClusterTree.html#a85553cc442e419b8d707720312118328">BlockClusterTree&lt; spacedim, Number &gt;::operator=()</a>, and <a class="el" href="classHMatrix.html#a83f804163e1695cfb952ddb6b0df2503">HMatrix&lt; spacedim, Number &gt;::reinit()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classBlockClusterTree.html#a1c31aecfd91383f8b96601fd2b63dd62">BlockClusterTree&lt; spacedim, Number &gt;::BlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a6a4dead0321e8df38865bf6fbd0f6e81">HMatrix&lt; spacedim, Number &gt;::HMatrix()</a>, <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-all-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, <a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt; spacedim, Number &gt;::mmult()</a>, <a class="el" href="classBlockClusterTree.html#a85553cc442e419b8d707720312118328">BlockClusterTree&lt; spacedim, Number &gt;::operator=()</a>, and <a class="el" href="classHMatrix.html#a83f804163e1695cfb952ddb6b0df2503">HMatrix&lt; spacedim, Number &gt;::reinit()</a>.</p>
 
 </div>
 </div>
@@ -2344,7 +2343,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Whether the current block cluster tree is a subtree is an existing tree. </p>
+<p>Whether the current block cluster tree is a subtree of an existing tree. </p>
 
 <p class="reference">Referenced by <a class="el" href="classBlockClusterTree.html#ab4227d666cd2872fbbfb4eec69e66313">BlockClusterTree&lt; spacedim, Number &gt;::clear()</a>, <a class="el" href="classBlockClusterTree.html#a85553cc442e419b8d707720312118328">BlockClusterTree&lt; spacedim, Number &gt;::operator=()</a>, and <a class="el" href="classBlockClusterTree.html#a43b969867200b06f3416647c3e4f9f61">BlockClusterTree&lt; spacedim, Number &gt;::~BlockClusterTree()</a>.</p>
 

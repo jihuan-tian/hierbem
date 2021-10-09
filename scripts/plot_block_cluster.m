@@ -5,6 +5,7 @@ function plot_block_cluster(bc, unit_size, enable_display_rank)
 
   yrange = [(bc.tau(1) - 0.5) * unit_size, (bc.tau(end) + 0.5) * unit_size];
   xrange = [(bc.sigma(1) - 0.5) * unit_size, (bc.sigma(end) + 0.5) * unit_size];
+  xlength = xrange(2) - xrange(1);
 
   block_shape = [xrange(1), yrange(1);
 		 xrange(1), yrange(2);
@@ -25,6 +26,6 @@ function plot_block_cluster(bc, unit_size, enable_display_rank)
     text_x_coord = (xrange(2) + xrange(1)) / 2;
     text_y_coord = (yrange(2) + yrange(1)) / 2;
 
-    text(text_x_coord, text_y_coord, num2str(bc.rank), "fontsize", 3, "horizontalalignment", "center", "verticalalignment", "middle");
+    text(text_x_coord, text_y_coord, num2str(bc.rank), "fontsize", min(xlength * 4, xlength * 8), "horizontalalignment", "center", "verticalalignment", "middle");
   endif
 endfunction

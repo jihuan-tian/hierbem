@@ -143,9 +143,9 @@ $(function() {
 <tr>
 <td>\(\mathcal{T}_{r \leftarrow s}^{\mathcal{R}}\) </td><td>Truncation of a rank-k matrix </td><td><a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt;Number&gt;::truncate_to_rank(size_type new_rank)</a> </td></tr>
 <tr>
-<td>\(\mathcal{T}_{r \leftarrow s}^{\mathcal{H}}\) </td><td>Truncation of rank-k matrix blocks in an \(\mathcal{H}\)-matrix </td><td><a class="el" href="classHMatrix.html#a64be687cacd167efc12b892aa154dcd3">HMatrix&lt;spacedim, Number&gt;::truncate_to_rank(size_type new_rank)</a> </td></tr>
+<td>\(\mathcal{T}_{r \leftarrow s}^{\mathcal{H}}\) </td><td>Truncation of an \(\mathcal{H}\)-matrix, i.e. truncation of all rank-k matrix blocks in an \(\mathcal{H}\)-matrix, while full matrix blocks are kept intact. </td><td><a class="el" href="classHMatrix.html#a64be687cacd167efc12b892aa154dcd3">HMatrix&lt;spacedim, Number&gt;::truncate_to_rank(size_type new_rank)</a> </td></tr>
 <tr>
-<td>\(\mathcal{T}_r^{\mathcal{R} \leftarrow \mathcal{F}}\) </td><td>Convert a full matrix to rank-k matrix </td><td><ul>
+<td>\(\mathcal{T}_r^{\mathcal{R} \leftarrow \mathcal{F}}\) </td><td>Convert a full matrix to rank-k matrix. Comment: this is useful when a full matrix is to be assembled into a larger rank-k matrix, during which it will be firstly converted to a rank-k matrix without loss of accuracy, then assembled into the target rank-k matrix via formatted addition. </td><td><ul>
 <li>
 <a class="el" href="classRkMatrix.html#a6078a6d21d37f140ff8774b8310a19eb">RkMatrix&lt;Number&gt;::RkMatrix(const size_type fixed_rank_k, LAPACKFullMatrixExt&lt;Number&gt; &amp;M)</a> </li>
 <li>
@@ -214,9 +214,9 @@ $(function() {
 </p>
  </td><td>Agglomeration of four rank-k submatrices into a larger rank-k matrix using pairwise formatted addition </td><td><ul>
 <li>
-<a class="el" href="classRkMatrix.html#acefd088fc714d99b701a553713c405ce">RkMatrix&lt;Number&gt;::RkMatrix(const size_type fixed_rank_k, const RkMatrix&lt;Number&gt; &amp;M11, const RkMatrix&lt;Number&gt; &amp;M12, const RkMatrix&lt;Number&gt; &amp;M21, const RkMatrix&lt;Number&gt; &amp;M22)</a></li>
+RkMatrix&lt;Number&gt;::RkMatrix(const size_type fixed_rank_k, const RkMatrix&lt;Number&gt; &amp;M11, const RkMatrix&lt;Number&gt; &amp;M12, const RkMatrix&lt;Number&gt; &amp;M21, const RkMatrix&lt;Number&gt; &amp;M22)</li>
 <li>
-<a class="el" href="classRkMatrix.html#a08f64aa2d91226f2d4e4f84911be5079">RkMatrix&lt;Number&gt;::RkMatrix(const size_type fixed_rank_k, const std::map&lt;types::global_dof_index, size_t&gt; &amp;row_index_global_to_local_map_for_M, const std::map&lt;types::global_dof_index, size_t&gt; &amp; col_index_global_to_local_map_for_M, const RkMatrix&lt;Number&gt; &amp;M11, const std::vector&lt;types::global_dof_index&gt; &amp;M11_tau_index_set, const std::vector&lt;types::global_dof_index&gt; &amp;M11_sigma_index_set, const RkMatrix&lt;Number&gt; &amp; M12, const std::vector&lt;types::global_dof_index&gt; &amp;M12_tau_index_set, const std::vector&lt;types::global_dof_index&gt; &amp;M12_sigma_index_set, const RkMatrix&lt;Number&gt; &amp; M21, const std::vector&lt;types::global_dof_index&gt; &amp;M21_tau_index_set, const std::vector&lt;types::global_dof_index&gt; &amp;M21_sigma_index_set, const RkMatrix&lt;Number&gt; &amp; M22, const std::vector&lt;types::global_dof_index&gt; &amp;M22_tau_index_set, const std::vector&lt;types::global_dof_index&gt; &amp;M22_sigma_index_set)</a></li>
+RkMatrix&lt;Number&gt;::RkMatrix(const size_type fixed_rank_k, const std::map&lt;types::global_dof_index, size_t&gt; &amp;row_index_global_to_local_map_for_M, const std::map&lt;types::global_dof_index, size_t&gt; &amp; col_index_global_to_local_map_for_M, const RkMatrix&lt;Number&gt; &amp;M11, const std::vector&lt;types::global_dof_index&gt; &amp;M11_tau_index_set, const std::vector&lt;types::global_dof_index&gt; &amp;M11_sigma_index_set, const RkMatrix&lt;Number&gt; &amp; M12, const std::vector&lt;types::global_dof_index&gt; &amp;M12_tau_index_set, const std::vector&lt;types::global_dof_index&gt; &amp;M12_sigma_index_set, const RkMatrix&lt;Number&gt; &amp; M21, const std::vector&lt;types::global_dof_index&gt; &amp;M21_tau_index_set, const std::vector&lt;types::global_dof_index&gt; &amp;M21_sigma_index_set, const RkMatrix&lt;Number&gt; &amp; M22, const std::vector&lt;types::global_dof_index&gt; &amp;M22_tau_index_set, const std::vector&lt;types::global_dof_index&gt; &amp;M22_sigma_index_set)</li>
 </ul>
 </td></tr>
 <tr>
@@ -232,26 +232,84 @@ $(function() {
 <tr>
 <td>\(\mathcal{T}^{\mathcal{F} \leftarrow \mathcal{H}}\) </td><td>Convert an \(\mathcal{H}\)-matrix to a full matrix (for verification purpose only) </td><td><a class="el" href="classHMatrix.html#a00bdd40f7fcf5c912c34c427df518300">HMatrix&lt;spacedim, Number&gt;::convertToFullMatrix(MatrixType &amp;M) const </a> </td></tr>
 <tr>
-<td>\(\mathcal{T}_r^{\mathcal{R} \leftarrow \mathcal{H}} \; (Convert\_H)\) </td><td>Convert an \(\mathcal{H}\)-matrix to a rank-k matrix </td><td><a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix(HMatrix&lt;spacedim, Number&gt; * hmat_block, const unsigned int fixed_rank_k, const HMatrix&lt;spacedim, Number&gt; *hmat_root_block, size_t * calling_counter, const std::string &amp;output_file_base_name)</a> </td></tr>
+<td>\(\mathcal{T}_r^{\mathcal{R} \leftarrow \mathcal{H}} \; (Convert\_H)\) </td><td>Convert an \(\mathcal{H}\)-matrix to a rank-k matrix, which is used for coarsening an \(\mathcal{H}\)-matrix to a specified \(\mathcal{H}\)-matrix node in its hierarchy. </td><td><a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix(HMatrix&lt;spacedim, Number&gt; * hmat_block, const unsigned int fixed_rank_k, const HMatrix&lt;spacedim, Number&gt; *hmat_root_block, size_t * calling_counter, const std::string &amp;output_file_base_name)</a> </td></tr>
 <tr>
 <td>\(\mathcal{T}_{P&#39; \leftarrow P}^{\mathcal{H} \leftarrow \mathcal{H}}\) with \(T(I \times J, P&#39;) \subset T(I \times J, P)\) </td><td>Coarsen an \(\mathcal{H}\)-matrix to a subtree \(T(I \times J, P&#39;)\) or the partition \(P&#39;\) </td><td><ul>
 <li>
 <a class="el" href="classHMatrix.html#a27c7390b792e6e47ab2861616a997d99">HMatrix&lt;spacedim, Number&gt;::coarsen_to_subtree( const BlockClusterTree&lt;spacedim, Number&gt; &amp;subtree, const unsigned int fixed_rank_k)</a></li>
 <li>
-<a class="el" href="classHMatrix.html#a525ad4d453f4f496b98cccb341c8b60b">HMatrix&lt;spacedim, Number&gt;::coarsen_to_partition( const std::vector&lt; typename BlockClusterTree&lt;spacedim, Number&gt;::node_pointer_type&gt; &amp;partition, const unsigned int fixed_rank_k)</a></li>
+<a class="el" href="classHMatrix.html#a525ad4d453f4f496b98cccb341c8b60b">HMatrix&lt;spacedim, Number&gt;::coarsen_to_partition( const std::vector&lt; typename BlockClusterTree&lt;spacedim, Number&gt;::node_pointer_type&gt; &amp;partition, const unsigned int fixed_rank_k)</a> (Internally, it calls <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix(HMatrix&lt;spacedim, Number&gt; * hmat_block, const unsigned int fixed_rank_k, const HMatrix&lt;spacedim, Number&gt; *hmat_root_block, size_t * calling_counter, const std::string &amp;output_file_base_name)</a>)</li>
 </ul>
 </td></tr>
 <tr>
-<td>\(\mathcal{T}_{P&#39; \leftarrow P}^{\mathcal{H} \leftarrow \mathcal{H}}\) with \(T(I \times J, P&#39;) \supset T(I \times J, P)\) </td><td>Refine an \(\mathcal{H}\)-matrix to an extended block cluster tree with the finer partition \(P&#39;\) </td><td><a class="el" href="classHMatrix.html#ad2b353962226c78910d6ddb6b5b8e460">HMatrix&lt;spacedim, Number&gt;::refine_to_supertree()</a> </td></tr>
+<td>\(\mathcal{T}_{P&#39; \leftarrow P}^{\mathcal{H} \leftarrow \mathcal{H}}\) with \(T(I \times J, P&#39;) \supset T(I \times J, P)\) </td><td>Refine an \(\mathcal{H}\)-matrix to an extended block cluster tree with the finer partition \(P&#39;\) </td><td><a class="el" href="classHMatrix.html#ad2b353962226c78910d6ddb6b5b8e460">HMatrix&lt;spacedim, Number&gt;::refine_to_supertree()</a> (Internally, it calls <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree(HMatrix&lt;spacedim, Number&gt; *starting_hmat, HMatrix&lt;spacedim, Number&gt; *current_hmat)</a>) </td></tr>
 <tr>
-<td>\(\mathcal{T}_{P&#39; \leftarrow P}^{\mathcal{H} \leftarrow \mathcal{H}}\) with \(T(I \times J, P&#39;) \not\subset T(I \times J, P)\) and \(T(I \times J, P&#39;) \not\supset T(I \times J, P)\) </td><td>Convert an \(\mathcal{H}\)-matrix to another \(\mathcal{H}\)-matrix with a different block cluster tree </td><td><a class="el" href="classHMatrix.html#af6fd60090b0de7bdea52fc84ddeb22c3">HMatrix&lt;spacedim, Number&gt;::convert_between_different_block_cluster_trees( BlockClusterTree&lt;spacedim, Number&gt; &amp;bct1, BlockClusterTree&lt;spacedim, Number&gt; &amp;bct2, const unsigned int fixed_rank_k2)</a> </td></tr>
+<td>\(\mathcal{T}_{P&#39; \leftarrow P}^{\mathcal{H} \leftarrow \mathcal{H}}\) with \(T(I \times J, P&#39;) \not\subset T(I \times J, P)\) and \(T(I \times J, P&#39;) \not\supset T(I \times J, P)\) </td><td>Convert an \(\mathcal{H}\)-matrix to another \(\mathcal{H}\)-matrix associated with a different block cluster tree </td><td><a class="el" href="classHMatrix.html#af6fd60090b0de7bdea52fc84ddeb22c3">HMatrix&lt;spacedim, Number&gt;::convert_between_different_block_cluster_trees( BlockClusterTree&lt;spacedim, Number&gt; &amp;bct1, BlockClusterTree&lt;spacedim, Number&gt; &amp;bct2, const unsigned int fixed_rank_k2)</a> </td></tr>
 <tr>
 <td>\(y\vert_{\tau} = y\vert_{\tau} + M\vert_b \cdot x\vert_{\sigma}\) </td><td>Multiplication of an \(\mathcal{H}\)-matrix and a block vector </td><td><a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt;spacedim, Number&gt;::vmult(Vector&lt;Number&gt; &amp; y, const Vector&lt;Number&gt; &amp;x) const </a> </td></tr>
 <tr>
 <td>\(y\vert_{\sigma} = y\vert_{\sigma} + M^T\vert_b \cdot x\vert_{\tau} \) </td><td>Multiplication of the transpose of an \(\mathcal{H}\)-matrix and a block vector </td><td><a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt;spacedim, Number&gt;::Tvmult(Vector&lt;Number&gt; &amp; y, const Vector&lt;Number&gt; &amp;x) const </a> </td></tr>
 <tr>
 <td>\( M_1 \oplus_r M_2 \) </td><td>Formatted addition of two \(\mathcal{H}\)-matrices </td><td><a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt;spacedim, Number&gt;::add(HMatrix&lt;spacedim, Number&gt; &amp; C, const HMatrix&lt;spacedim, Number&gt; &amp;B, const size_type fixed_rank_k) const </a> </td></tr>
+<tr>
+<td>\( M_1 := M_1 \oplus_r M_2 \) </td><td>Formatted addition of an \(\mathcal{H}\)-matrix into the current \(\mathcal{H}\)-matrix </td><td><a class="el" href="classHMatrix.html#a9bd48ada567962ab0dc75c31986bd1a6">HMatrix&lt;spacedim, Number&gt;::add(const HMatrix&lt;spacedim, Number&gt; &amp;B, const size_type fixed_rank_k) const </a> </td></tr>
+<tr>
+<td>\( M_1 := M_1 \oplus_r R_2 \) </td><td>Formatted addition of a rank-k matrix into the current \(\mathcal{H}\)-matrix </td><td><ul>
+<li>
+<a class="el" href="classHMatrix.html#ab9000d7604e2045cf7cad7458daca340">HMatrix&lt;spacedim, Number&gt;::add(const RkMatrix&lt;Number&gt; &amp;B, const size_type fixed_rank_k)</a> </li>
+<li>
+<a class="el" href="classHMatrix.html#a1793dff400aeae649f909d7f45db8b8a">HMatrix&lt;spacedim, Number&gt;::add(const RkMatrix&lt;Number&gt; &amp;B, const std::map&lt;types::global_dof_index, size_t&gt; &amp;row_index_global_to_local_map_for_rk, const std::map&lt;types::global_dof_index, size_t&gt; &amp;col_index_global_to_local_map_for_rk, const size_type fixed_rank_k) const</a></li>
+</ul>
+</td></tr>
+<tr>
+<td>\( M_1 \oplus_r b M_2 \) </td><td>Formatted addition of two \(\mathcal{H}\)-matrices with the second operand scaled by a factor </td><td><a class="el" href="classHMatrix.html#aea42f5112b88270fef73342853fa386d">HMatrix&lt;spacedim, Number&gt;::add(HMatrix&lt;spacedim, Number&gt; &amp; C, const Number b, const HMatrix&lt;spacedim, Number&gt; &amp;B, const size_type fixed_rank_k) const </a> </td></tr>
+<tr>
+<td>\( M_1 := M_1 \oplus_r b M_2 \) </td><td>Formatted addition of an \(\mathcal{H}\)-matrix scaled by a factor into the current \(\mathcal{H}\)-matrix </td><td><a class="el" href="classHMatrix.html#af42aaa86b9f47c5c1514e4f06e343db6">HMatrix&lt;spacedim, Number&gt;::add(const Number b, const HMatrix&lt;spacedim, Number&gt; &amp;B, const size_type fixed_rank_k) const </a> </td></tr>
+<tr>
+<td>\( M_1 := M_1 \oplus_r b R_2 \) </td><td>Formatted addition of a rank-k matrix scaled by a factor into the current \(\mathcal{H}\)-matrix </td><td><ul>
+<li>
+<a class="el" href="classHMatrix.html#a94981e45b7d9aa0f2afae77d414f1c1a">HMatrix&lt;spacedim, Number&gt;::add(const Number b, const RkMatrix&lt;Number&gt; &amp;B, const size_type fixed_rank_k)</a></li>
+<li>
+<a class="el" href="classHMatrix.html#ad3800d6fded523d5c8eeb8fd0c106a34">HMatrix&lt;spacedim, Number&gt;::add(const Number b, const RkMatrix&lt;Number&gt; &amp;B, const std::map&lt;types::global_dof_index, size_t&gt; &amp;row_index_global_to_local_map_for_rk, const std::map&lt;types::global_dof_index, size_t&gt; &amp;col_index_global_to_local_map_for_rk, const size_type fixed_rank_k) const</a></li>
+</ul>
+</td></tr>
+<tr>
+<td>\(\mathcal{F} \times \mathcal{H} \rightarrow \mathcal{F}\) </td><td>Multiplication of a full matrix and an \(\mathcal{H}\)-matrix, which results a full matrix. </td><td><a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult(const LAPACKFullMatrixExt&lt;Number&gt; &amp;M1, HMatrix&lt;spacedim, Number&gt; &amp; M2, LAPACKFullMatrixExt&lt;Number&gt; &amp; M)</a> </td></tr>
+<tr>
+<td>\(\mathcal{F} \times \mathcal{H} \rightarrow \mathcal{R}\) </td><td>Multiplication of a full matrix and an \(\mathcal{H}\)-matrix, which results an rank-k matrix. </td><td><a class="el" href="hmatrix_8h.html#a2138cf7f25917862b5353a6ceee9ea11">f_h_mmult(const LAPACKFullMatrixExt&lt;Number&gt; &amp;M1, HMatrix&lt;spacedim, Number&gt; &amp; M2, RkMatrix&lt;Number&gt; &amp; M)</a> </td></tr>
+<tr>
+<td>\(\mathcal{H} \times \mathcal{H} \rightarrow \mathcal{F} \cup \mathcal{R} \) </td><td>Multiplication of two \(\mathcal{H}\)-matrices, where the first matrix is of <code>FullMatrixType</code>. </td><td><a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult(const HMatrix&lt;spacedim, Number&gt; *M1, HMatrix&lt;spacedim, Number&gt; * M2, HMatrix&lt;spacedim, Number&gt; * M, bool is_M1M2_last_in_M_Sigma_P)</a> </td></tr>
+<tr>
+<td>\(\mathcal{H} \times \mathcal{F} \rightarrow \mathcal{F}\) </td><td>Multiplication of an \(\mathcal{H}\)-matrix and a full matrix, which results a full matrix. </td><td><a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult(HMatrix&lt;spacedim, Number&gt; &amp; M1, const LAPACKFullMatrixExt&lt;Number&gt; &amp;M2, LAPACKFullMatrixExt&lt;Number&gt; &amp; M)</a> </td></tr>
+<tr>
+<td>\(\mathcal{H} \times \mathcal{F} \rightarrow \mathcal{R}\) </td><td>Multiplication of an \(\mathcal{H}\)-matrix and a full matrix, which results an rank-k matrix. </td><td><a class="el" href="hmatrix_8h.html#a723281b6cf62859890ec5ee49555c908">h_f_mmult(HMatrix&lt;spacedim, Number&gt; &amp; M1, const LAPACKFullMatrixExt&lt;Number&gt; &amp;M2, RkMatrix&lt;Number&gt; &amp; M)</a> </td></tr>
+<tr>
+<td>\(\mathcal{H} \times \mathcal{H} \rightarrow \mathcal{F} \cup \mathcal{R} \) </td><td>Multiplication of two \(\mathcal{H}\)-matrices, where the second matrix is of <code>FullMatrixType</code>. </td><td><a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult(HMatrix&lt;spacedim, Number&gt; * M1, const HMatrix&lt;spacedim, Number&gt; *M2, HMatrix&lt;spacedim, Number&gt; * M, bool is_M1M2_last_in_M_Sigma_P)</a> </td></tr>
+<tr>
+<td>\(\mathcal{R} \times \mathcal{H} \rightarrow \mathcal{R}\) </td><td>Multiplication of a rank-k matrix and an \(\mathcal{H}\)-matrix, which results a rank-k matrix. </td><td><a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult(const RkMatrix&lt;Number&gt; &amp; M1, HMatrix&lt;spacedim, Number&gt; &amp;M2, RkMatrix&lt;Number&gt; &amp; M)</a> </td></tr>
+<tr>
+<td>\(\mathcal{H} \times \mathcal{H} \rightarrow \mathcal{R} \) </td><td>Multiplication of two \(\mathcal{H}\)-matrices, where the first matrix is of <code>RkMatrixType</code>. </td><td><a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult(const HMatrix&lt;spacedim, Number&gt; *M1, HMatrix&lt;spacedim, Number&gt; * M2, HMatrix&lt;spacedim, Number&gt; * M, bool is_M1M2_last_in_M_Sigma_P)</a> </td></tr>
+<tr>
+<td>\(\mathcal{H} \times \mathcal{R} \rightarrow \mathcal{R}\) </td><td>Multiplication of an \(\mathcal{H}\)-matrix and a rank-k matrix, which results a rank-k matrix. </td><td><a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult(HMatrix&lt;spacedim, Number&gt; &amp;M1, const RkMatrix&lt;Number&gt; &amp; M2, RkMatrix&lt;Number&gt; &amp; M)</a> </td></tr>
+<tr>
+<td>\(\mathcal{H} \times \mathcal{H} \rightarrow \mathcal{R} \) </td><td>Multiplication of two \(\mathcal{H}\)-matrices, where the second matrix is of <code>RkMatrixType</code>. </td><td><a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult(HMatrix&lt;spacedim, Number&gt; * M1, const HMatrix&lt;spacedim, Number&gt; *M2, HMatrix&lt;spacedim, Number&gt; * M, bool is_M1M2_last_in_M_Sigma_P)</a> </td></tr>
+<tr>
+<td>\(M_1 \odot_r M_2\) </td><td>General multiplication of two \(\mathcal{H}\)-matrices having different block cluster tree structures </td><td><a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt;spacedim, Number&gt;::mmult( HMatrix&lt;spacedim, Number&gt; &amp; C, HMatrix&lt;spacedim, Number&gt; &amp; B, const BlockClusterTree&lt;spacedim, Number&gt; &amp;bct_a, const BlockClusterTree&lt;spacedim, Number&gt; &amp;bct_b, BlockClusterTree&lt;spacedim, Number&gt; &amp; bct_c, const unsigned int fixed_rank)</a> </td></tr>
+<tr>
+<td>\(M := M \oplus_r M_1 \odot_r M_2\) </td><td>General multiplication of two \(\mathcal{H}\)-matrices having different block cluster tree structures, the result of which will be added to the target matrix <code>M</code>. </td><td><a class="el" href="classHMatrix.html#a4139e9069e3b18d4719c527ce2e0414c">HMatrix&lt;spacedim, Number&gt;::mmult( HMatrix&lt;spacedim, Number&gt; &amp; C, HMatrix&lt;spacedim, Number&gt; &amp; B, const BlockClusterTree&lt;spacedim, Number&gt; &amp;bct_a, const BlockClusterTree&lt;spacedim, Number&gt; &amp;bct_b, BlockClusterTree&lt;spacedim, Number&gt; &amp; bct_c, const unsigned int fixed_rank, const bool adding)</a> </td></tr>
+<tr>
+<td>\(M := M \oplus_r M_1 \odot_r M_2\) </td><td>Level conserving multiplication of two \(\mathcal{H}\)-matrices having different block cluster tree structures, the result of which will be added to the target matrix <code>M</code>. </td><td><ul>
+<li>
+<a class="el" href="hmatrix_8h.html#a6534ff122b0835d0313d94264794b601">h_h_mmult_level_conserving(HMatrix&lt;spacedim, Number&gt; &amp;M0, HMatrix&lt;spacedim, Number&gt; &amp;M, HMatrix&lt;spacedim, Number&gt; &amp;M1, HMatrix&lt;spacedim, Number&gt; &amp;M2, const unsigned int fixed_rank)</a> </li>
+<li>
+<a class="el" href="classHMatrix.html#a4ea0317bff2670e3ed7e48416f908873">HMatrix&lt;spacedim, Number&gt;::mmult_level_conserving(HMatrix&lt;spacedim, Number&gt; &amp;C, HMatrix&lt;spacedim, Number&gt; &amp;B, const unsigned int fixed_rank)</a></li>
+</ul>
+</td></tr>
+<tr>
+<td>\(M^{-1}\) </td><td>Matrix inversion via Gauss elimination. Specifically, when \(T(I)\) is a binary tree, it is equivalent to the Schur complement method. </td><td><a class="el" href="classHMatrix.html#af972cb62d436b8dca5d95a5b6e2ed964">HMatrix&lt;spacedim, Number&gt;::invert_by_gauss_elim(HMatrix&lt;spacedim, Number&gt; &amp;M_inv, const size_type fixed_rank_k)</a> </td></tr>
 </table>
+<p>Author: Jihuan Tian<br />
+Date: 2021-10-05 </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

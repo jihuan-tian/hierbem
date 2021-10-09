@@ -52,7 +52,11 @@ bool \hyperlink{classBlockCluster_a620554d7d66beaf4dc38f166bc6dceed}{is\+\_\+adm
 \item 
 bool \hyperlink{classBlockCluster_ac263721e28921a6177a025139745fe8d}{get\+\_\+is\+\_\+near\+\_\+field} () const
 \item 
+void \hyperlink{classBlockCluster_a89063f39db2c5868abb54650108623dc}{set\+\_\+is\+\_\+near\+\_\+field} (const bool \hyperlink{classBlockCluster_a6f719cbd6a646328f8128355c857745a}{is\+\_\+near\+\_\+field})
+\item 
 bool \hyperlink{classBlockCluster_a792554d843db2dfb996a1d1086e9178b}{get\+\_\+is\+\_\+admissible} () const
+\item 
+void \hyperlink{classBlockCluster_a598050ab9a4340c3cd02f678788f5bb0}{set\+\_\+is\+\_\+admissible} (const bool \hyperlink{classBlockCluster_ae85d165894d10b7e58fbe20edd506abe}{is\+\_\+admissible})
 \item 
 \mbox{\Hypertarget{classBlockCluster_a115554141628dd4d4c43000a17d0de87}\label{classBlockCluster_a115554141628dd4d4c43000a17d0de87}} 
 \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+pointer\+\_\+type {\bfseries get\+\_\+tau\+\_\+node} ()
@@ -207,7 +211,7 @@ bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::ge
 
 Get the boolean value whether the block cluster is admissible. 
 
-References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible, Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
+References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible.
 
 \mbox{\Hypertarget{classBlockCluster_ac263721e28921a6177a025139745fe8d}\label{classBlockCluster_ac263721e28921a6177a025139745fe8d}} 
 \index{Block\+Cluster@{Block\+Cluster}!get\+\_\+is\+\_\+near\+\_\+field@{get\+\_\+is\+\_\+near\+\_\+field}}
@@ -390,6 +394,28 @@ Check if the index set of the current block cluster is a superset of that of the
 
 References Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
 
+\mbox{\Hypertarget{classBlockCluster_a598050ab9a4340c3cd02f678788f5bb0}\label{classBlockCluster_a598050ab9a4340c3cd02f678788f5bb0}} 
+\index{Block\+Cluster@{Block\+Cluster}!set\+\_\+is\+\_\+admissible@{set\+\_\+is\+\_\+admissible}}
+\index{set\+\_\+is\+\_\+admissible@{set\+\_\+is\+\_\+admissible}!Block\+Cluster@{Block\+Cluster}}
+\subsubsection{\texorpdfstring{set\+\_\+is\+\_\+admissible()}{set\_is\_admissible()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+admissible (\begin{DoxyParamCaption}\item[{const bool}]{is\+\_\+admissible }\end{DoxyParamCaption})}
+
+Set the boolean value whether the block cluster is admissible. 
+
+References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible, Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
+
+\mbox{\Hypertarget{classBlockCluster_a89063f39db2c5868abb54650108623dc}\label{classBlockCluster_a89063f39db2c5868abb54650108623dc}} 
+\index{Block\+Cluster@{Block\+Cluster}!set\+\_\+is\+\_\+near\+\_\+field@{set\+\_\+is\+\_\+near\+\_\+field}}
+\index{set\+\_\+is\+\_\+near\+\_\+field@{set\+\_\+is\+\_\+near\+\_\+field}!Block\+Cluster@{Block\+Cluster}}
+\subsubsection{\texorpdfstring{set\+\_\+is\+\_\+near\+\_\+field()}{set\_is\_near\_field()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+near\+\_\+field (\begin{DoxyParamCaption}\item[{const bool}]{is\+\_\+near\+\_\+field }\end{DoxyParamCaption})}
+
+Set the boolean value whether the block cluster is near field. 
+
+References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+near\+\_\+field.
+
 
 
 \subsection{Friends And Related Function Documentation}
@@ -454,7 +480,7 @@ bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::is
 
 Is admissible. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+admissible(), and Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small().
+Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), and Block\+Cluster$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+admissible().
 
 \mbox{\Hypertarget{classBlockCluster_a6f719cbd6a646328f8128355c857745a}\label{classBlockCluster_a6f719cbd6a646328f8128355c857745a}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+near\+\_\+field@{is\+\_\+near\+\_\+field}}
@@ -465,7 +491,7 @@ bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::is
 
 Whether the block cluster is of near-\/field, so that it needs a full matrix representation. Otherwise, it requires a rank-\/r matrix representation. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), and Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+small().
+Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+small(), and Block\+Cluster$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+near\+\_\+field().
 
 \mbox{\Hypertarget{classBlockCluster_ae1005ec7feedbdb990b27d845b24bad2}\label{classBlockCluster_ae1005ec7feedbdb990b27d845b24bad2}} 
 \index{Block\+Cluster@{Block\+Cluster}!sigma\+\_\+node@{sigma\+\_\+node}}
@@ -476,7 +502,7 @@ Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\
 
 Pointer to a node in the binary tree which holds the cluster $\sigma$. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::intersect(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+superset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+superset(), and operator==().
+Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::intersect(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+superset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+superset(), operator==(), and Block\+Cluster$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+admissible().
 
 \mbox{\Hypertarget{classBlockCluster_aac88834478cb4e409596e58100a5e9de}\label{classBlockCluster_aac88834478cb4e409596e58100a5e9de}} 
 \index{Block\+Cluster@{Block\+Cluster}!tau\+\_\+node@{tau\+\_\+node}}
@@ -487,7 +513,7 @@ Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admis
 
 Pointer to a node in the binary tree which holds the cluster $\tau$. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::intersect(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+superset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+superset(), and operator==().
+Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::intersect(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+superset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+superset(), operator==(), and Block\+Cluster$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+admissible().
 
 
 

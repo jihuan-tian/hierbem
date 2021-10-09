@@ -185,8 +185,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a620554d7d66beaf4dc38f166bc6dceed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac263721e28921a6177a025139745fe8d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBlockCluster.html#ac263721e28921a6177a025139745fe8d">get_is_near_field</a> () const</td></tr>
 <tr class="separator:ac263721e28921a6177a025139745fe8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89063f39db2c5868abb54650108623dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBlockCluster.html#a89063f39db2c5868abb54650108623dc">set_is_near_field</a> (const bool <a class="el" href="classBlockCluster.html#a6f719cbd6a646328f8128355c857745a">is_near_field</a>)</td></tr>
+<tr class="separator:a89063f39db2c5868abb54650108623dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a792554d843db2dfb996a1d1086e9178b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBlockCluster.html#a792554d843db2dfb996a1d1086e9178b">get_is_admissible</a> () const</td></tr>
 <tr class="separator:a792554d843db2dfb996a1d1086e9178b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a598050ab9a4340c3cd02f678788f5bb0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBlockCluster.html#a598050ab9a4340c3cd02f678788f5bb0">set_is_admissible</a> (const bool <a class="el" href="classBlockCluster.html#ae85d165894d10b7e58fbe20edd506abe">is_admissible</a>)</td></tr>
+<tr class="separator:a598050ab9a4340c3cd02f678788f5bb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a115554141628dd4d4c43000a17d0de87"><td class="memItemLeft" align="right" valign="top"><a id="a115554141628dd4d4c43000a17d0de87"></a>
 <a class="el" href="classClusterTree.html">ClusterTree</a>&lt; spacedim, Number &gt;::node_pointer_type&#160;</td><td class="memItemRight" valign="bottom"><b>get_tau_node</b> ()</td></tr>
 <tr class="separator:a115554141628dd4d4c43000a17d0de87"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -431,7 +435,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 </div><div class="memdoc">
 <p>Get the boolean value whether the block cluster is admissible. </p>
 
-<p class="reference">References <a class="el" href="classBlockCluster.html#ae85d165894d10b7e58fbe20edd506abe">BlockCluster&lt; spacedim, Number &gt;::is_admissible</a>, <a class="el" href="classBlockCluster.html#ae1005ec7feedbdb990b27d845b24bad2">BlockCluster&lt; spacedim, Number &gt;::sigma_node</a>, and <a class="el" href="classBlockCluster.html#aac88834478cb4e409596e58100a5e9de">BlockCluster&lt; spacedim, Number &gt;::tau_node</a>.</p>
+<p class="reference">References <a class="el" href="classBlockCluster.html#ae85d165894d10b7e58fbe20edd506abe">BlockCluster&lt; spacedim, Number &gt;::is_admissible</a>.</p>
 
 </div>
 </div>
@@ -766,6 +770,52 @@ template&lt;int spacedim, typename Number &gt; </div>
 
 </div>
 </div>
+<a id="a598050ab9a4340c3cd02f678788f5bb0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a598050ab9a4340c3cd02f678788f5bb0">&#9670;&nbsp;</a></span>set_is_admissible()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classBlockCluster.html">BlockCluster</a>&lt; spacedim, Number &gt;::set_is_admissible </td>
+          <td>(</td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_admissible</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Set the boolean value whether the block cluster is admissible. </p>
+
+<p class="reference">References <a class="el" href="classBlockCluster.html#ae85d165894d10b7e58fbe20edd506abe">BlockCluster&lt; spacedim, Number &gt;::is_admissible</a>, <a class="el" href="classBlockCluster.html#ae1005ec7feedbdb990b27d845b24bad2">BlockCluster&lt; spacedim, Number &gt;::sigma_node</a>, and <a class="el" href="classBlockCluster.html#aac88834478cb4e409596e58100a5e9de">BlockCluster&lt; spacedim, Number &gt;::tau_node</a>.</p>
+
+</div>
+</div>
+<a id="a89063f39db2c5868abb54650108623dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89063f39db2c5868abb54650108623dc">&#9670;&nbsp;</a></span>set_is_near_field()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classBlockCluster.html">BlockCluster</a>&lt; spacedim, Number &gt;::set_is_near_field </td>
+          <td>(</td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_near_field</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Set the boolean value whether the block cluster is near field. </p>
+
+<p class="reference">References <a class="el" href="classBlockCluster.html#a6f719cbd6a646328f8128355c857745a">BlockCluster&lt; spacedim, Number &gt;::is_near_field</a>.</p>
+
+</div>
+</div>
 <h2 class="groupheader">Friends And Related Function Documentation</h2>
 <a id="a770daa1c7399aa72cfb7e1e7dc65b6bb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a770daa1c7399aa72cfb7e1e7dc65b6bb">&#9670;&nbsp;</a></span>is_equal</h2>
@@ -915,7 +965,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Is admissible. </p>
 
-<p class="reference">Referenced by <a class="el" href="classBlockCluster.html#a1f56a4b4d2c24fe8e78a954e13134ee1">BlockCluster&lt; spacedim, Number &gt;::check_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a792554d843db2dfb996a1d1086e9178b">BlockCluster&lt; spacedim, Number &gt;::get_is_admissible()</a>, and <a class="el" href="classBlockCluster.html#a3d1d12357cac0ff4df90fd576c5f2aa0">BlockCluster&lt; spacedim, Number &gt;::is_admissible_or_small()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classBlockCluster.html#a1f56a4b4d2c24fe8e78a954e13134ee1">BlockCluster&lt; spacedim, Number &gt;::check_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a792554d843db2dfb996a1d1086e9178b">BlockCluster&lt; spacedim, Number &gt;::get_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a3d1d12357cac0ff4df90fd576c5f2aa0">BlockCluster&lt; spacedim, Number &gt;::is_admissible_or_small()</a>, and <a class="el" href="classBlockCluster.html#a598050ab9a4340c3cd02f678788f5bb0">BlockCluster&lt; spacedim, Number &gt;::set_is_admissible()</a>.</p>
 
 </div>
 </div>
@@ -942,7 +992,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Whether the block cluster is of near-field, so that it needs a full matrix representation. Otherwise, it requires a rank-r matrix representation. </p>
 
-<p class="reference">Referenced by <a class="el" href="classBlockCluster.html#a44900c760eac0578f700fa678ef4e416">BlockCluster&lt; spacedim, Number &gt;::check_is_near_field()</a>, <a class="el" href="classBlockCluster.html#ac263721e28921a6177a025139745fe8d">BlockCluster&lt; spacedim, Number &gt;::get_is_near_field()</a>, <a class="el" href="classBlockCluster.html#a3d1d12357cac0ff4df90fd576c5f2aa0">BlockCluster&lt; spacedim, Number &gt;::is_admissible_or_small()</a>, and <a class="el" href="classBlockCluster.html#adb6edc09ec2c579677e0532644b9f57d">BlockCluster&lt; spacedim, Number &gt;::is_small()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classBlockCluster.html#a44900c760eac0578f700fa678ef4e416">BlockCluster&lt; spacedim, Number &gt;::check_is_near_field()</a>, <a class="el" href="classBlockCluster.html#ac263721e28921a6177a025139745fe8d">BlockCluster&lt; spacedim, Number &gt;::get_is_near_field()</a>, <a class="el" href="classBlockCluster.html#a3d1d12357cac0ff4df90fd576c5f2aa0">BlockCluster&lt; spacedim, Number &gt;::is_admissible_or_small()</a>, <a class="el" href="classBlockCluster.html#adb6edc09ec2c579677e0532644b9f57d">BlockCluster&lt; spacedim, Number &gt;::is_small()</a>, and <a class="el" href="classBlockCluster.html#a89063f39db2c5868abb54650108623dc">BlockCluster&lt; spacedim, Number &gt;::set_is_near_field()</a>.</p>
 
 </div>
 </div>
@@ -969,7 +1019,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Pointer to a node in the binary tree which holds the cluster \(\sigma\). </p>
 
-<p class="reference">Referenced by <a class="el" href="classBlockCluster.html#a1f56a4b4d2c24fe8e78a954e13134ee1">BlockCluster&lt; spacedim, Number &gt;::check_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a44900c760eac0578f700fa678ef4e416">BlockCluster&lt; spacedim, Number &gt;::check_is_near_field()</a>, <a class="el" href="classBlockCluster.html#a792554d843db2dfb996a1d1086e9178b">BlockCluster&lt; spacedim, Number &gt;::get_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a361efceed1f584db66a518007b5af633">BlockCluster&lt; spacedim, Number &gt;::intersect()</a>, <a class="el" href="classBlockCluster.html#a9963a6320591f82824398667bcb9cdf8">BlockCluster&lt; spacedim, Number &gt;::is_proper_subset()</a>, <a class="el" href="classBlockCluster.html#ad81d5a494f48b16662ef471966899b65">BlockCluster&lt; spacedim, Number &gt;::is_proper_superset()</a>, <a class="el" href="classBlockCluster.html#af479a9471d056baa51a3f300bd0a5a27">BlockCluster&lt; spacedim, Number &gt;::is_subset()</a>, <a class="el" href="classBlockCluster.html#a445fc9afc9a246f7d3832c9c96c16d21">BlockCluster&lt; spacedim, Number &gt;::is_superset()</a>, and <a class="el" href="block__cluster_8h.html#ac23e3e876ac4316263d9ce0c4f51ad07">operator==()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classBlockCluster.html#a1f56a4b4d2c24fe8e78a954e13134ee1">BlockCluster&lt; spacedim, Number &gt;::check_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a44900c760eac0578f700fa678ef4e416">BlockCluster&lt; spacedim, Number &gt;::check_is_near_field()</a>, <a class="el" href="classBlockCluster.html#a361efceed1f584db66a518007b5af633">BlockCluster&lt; spacedim, Number &gt;::intersect()</a>, <a class="el" href="classBlockCluster.html#a9963a6320591f82824398667bcb9cdf8">BlockCluster&lt; spacedim, Number &gt;::is_proper_subset()</a>, <a class="el" href="classBlockCluster.html#ad81d5a494f48b16662ef471966899b65">BlockCluster&lt; spacedim, Number &gt;::is_proper_superset()</a>, <a class="el" href="classBlockCluster.html#af479a9471d056baa51a3f300bd0a5a27">BlockCluster&lt; spacedim, Number &gt;::is_subset()</a>, <a class="el" href="classBlockCluster.html#a445fc9afc9a246f7d3832c9c96c16d21">BlockCluster&lt; spacedim, Number &gt;::is_superset()</a>, <a class="el" href="block__cluster_8h.html#ac23e3e876ac4316263d9ce0c4f51ad07">operator==()</a>, and <a class="el" href="classBlockCluster.html#a598050ab9a4340c3cd02f678788f5bb0">BlockCluster&lt; spacedim, Number &gt;::set_is_admissible()</a>.</p>
 
 </div>
 </div>
@@ -996,7 +1046,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Pointer to a node in the binary tree which holds the cluster \(\tau\). </p>
 
-<p class="reference">Referenced by <a class="el" href="classBlockCluster.html#a1f56a4b4d2c24fe8e78a954e13134ee1">BlockCluster&lt; spacedim, Number &gt;::check_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a44900c760eac0578f700fa678ef4e416">BlockCluster&lt; spacedim, Number &gt;::check_is_near_field()</a>, <a class="el" href="classBlockCluster.html#a792554d843db2dfb996a1d1086e9178b">BlockCluster&lt; spacedim, Number &gt;::get_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a361efceed1f584db66a518007b5af633">BlockCluster&lt; spacedim, Number &gt;::intersect()</a>, <a class="el" href="classBlockCluster.html#a9963a6320591f82824398667bcb9cdf8">BlockCluster&lt; spacedim, Number &gt;::is_proper_subset()</a>, <a class="el" href="classBlockCluster.html#ad81d5a494f48b16662ef471966899b65">BlockCluster&lt; spacedim, Number &gt;::is_proper_superset()</a>, <a class="el" href="classBlockCluster.html#af479a9471d056baa51a3f300bd0a5a27">BlockCluster&lt; spacedim, Number &gt;::is_subset()</a>, <a class="el" href="classBlockCluster.html#a445fc9afc9a246f7d3832c9c96c16d21">BlockCluster&lt; spacedim, Number &gt;::is_superset()</a>, and <a class="el" href="block__cluster_8h.html#ac23e3e876ac4316263d9ce0c4f51ad07">operator==()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classBlockCluster.html#a1f56a4b4d2c24fe8e78a954e13134ee1">BlockCluster&lt; spacedim, Number &gt;::check_is_admissible()</a>, <a class="el" href="classBlockCluster.html#a44900c760eac0578f700fa678ef4e416">BlockCluster&lt; spacedim, Number &gt;::check_is_near_field()</a>, <a class="el" href="classBlockCluster.html#a361efceed1f584db66a518007b5af633">BlockCluster&lt; spacedim, Number &gt;::intersect()</a>, <a class="el" href="classBlockCluster.html#a9963a6320591f82824398667bcb9cdf8">BlockCluster&lt; spacedim, Number &gt;::is_proper_subset()</a>, <a class="el" href="classBlockCluster.html#ad81d5a494f48b16662ef471966899b65">BlockCluster&lt; spacedim, Number &gt;::is_proper_superset()</a>, <a class="el" href="classBlockCluster.html#af479a9471d056baa51a3f300bd0a5a27">BlockCluster&lt; spacedim, Number &gt;::is_subset()</a>, <a class="el" href="classBlockCluster.html#a445fc9afc9a246f7d3832c9c96c16d21">BlockCluster&lt; spacedim, Number &gt;::is_superset()</a>, <a class="el" href="block__cluster_8h.html#ac23e3e876ac4316263d9ce0c4f51ad07">operator==()</a>, and <a class="el" href="classBlockCluster.html#a598050ab9a4340c3cd02f678788f5bb0">BlockCluster&lt; spacedim, Number &gt;::set_is_admissible()</a>.</p>
 
 </div>
 </div>

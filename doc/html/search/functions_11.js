@@ -10,6 +10,8 @@ var searchData=
   ['set_5fchild_5fnum',['set_child_num',['../classBinaryTreeNode.html#ae9c5a478fed2c72e7aa9f2b28a0010e7',1,'BinaryTreeNode::set_child_num()'],['../classTreeNode.html#a68c80783a2900d01a37fc33f14951e66',1,'TreeNode::set_child_num()']]],
   ['set_5fchild_5fpointer',['set_child_pointer',['../classBinaryTreeNode.html#a37f0dd5197e454f14e3e99c85ab516eb',1,'BinaryTreeNode::set_child_pointer()'],['../classTreeNode.html#a3d2f374424a723cb72409857ee5237bc',1,'TreeNode::set_child_pointer()']]],
   ['set_5fcolumn_5fzeros',['set_column_zeros',['../classLAPACKFullMatrixExt.html#a0ee8a3f97dc3f391f9c963d6a275a25b',1,'LAPACKFullMatrixExt']]],
+  ['set_5fis_5fadmissible',['set_is_admissible',['../classBlockCluster.html#a598050ab9a4340c3cd02f678788f5bb0',1,'BlockCluster']]],
+  ['set_5fis_5fnear_5ffield',['set_is_near_field',['../classBlockCluster.html#a89063f39db2c5868abb54650108623dc',1,'BlockCluster']]],
   ['set_5flevel',['set_level',['../classBinaryTreeNode.html#ae420da1d4c6a4ac054cd181535e718f2',1,'BinaryTreeNode::set_level()'],['../classTreeNode.html#a67e5762f796247c38f4a2560c1250b11',1,'TreeNode::set_level()']]],
   ['set_5fnode_5fnum',['set_node_num',['../classBlockClusterTree.html#a02be4a882acca918386ad024769925bc',1,'BlockClusterTree']]],
   ['set_5frow_5fzeros',['set_row_zeros',['../classLAPACKFullMatrixExt.html#abf191c72c4a8813470f32c6107f2ffbc',1,'LAPACKFullMatrixExt']]],

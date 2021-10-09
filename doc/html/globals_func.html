@@ -211,6 +211,12 @@ $(function() {
 <li>h_f_mmult_for_h_h_mmult()
 : <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">hmatrix.h</a>
 </li>
+<li>h_h_mmult_from_leaf_node()
+: <a class="el" href="hmatrix_8h.html#a2b842125056627d38c5aee3a077e596c">hmatrix.h</a>
+</li>
+<li>h_h_mmult_level_conserving()
+: <a class="el" href="hmatrix_8h.html#a6534ff122b0835d0313d94264794b601">hmatrix.h</a>
+</li>
 <li>h_h_mmult_phase1_recursion()
 : <a class="el" href="hmatrix_8h.html#aad08ee9bd389abe7b7b76fd0f2cb292e">hmatrix.h</a>
 </li>
@@ -230,6 +236,9 @@ $(function() {
 <li>InitAndCreateHMatrixChildren()
 : <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">hmatrix.h</a>
 </li>
+<li>InitAndCreateHMatrixChildrenWithoutAlloc()
+: <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">hmatrix.h</a>
+</li>
 <li>InitHMatrixWrtBlockClusterNode()
 : <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">hmatrix.h</a>
 </li>
@@ -246,36 +255,49 @@ $(function() {
 <li>main()
 : <a class="el" href="block-cluster-tree_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">block-cluster-tree.cc</a>
 , <a class="el" href="bct-copy-constructor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-copy-constructor.cc</a>
-, <a class="el" href="hmatrix-add-formatted_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-add-formatted.cc</a>
-, <a class="el" href="rkmatrix-agglomeration-of-two-submatrices-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-of-two-submatrices-interwoven-indices.cc</a>
-, <a class="el" href="hmatrix-rkmatrix-conversion_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-rkmatrix-conversion.cc</a>
-, <a class="el" href="bct-overloaded-assignment_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-overloaded-assignment.cc</a>
-, <a class="el" href="bct-extend-finer-than-partition_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-extend-finer-than-partition.cc</a>
-, <a class="el" href="cluster-diameter_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">cluster-diameter.cc</a>
+, <a class="el" href="rkmatrix-add-formatted_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-add-formatted.cc</a>
 , <a class="el" href="bct-subtree_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-subtree.cc</a>
 , <a class="el" href="bct-visualize-with-rank_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-visualize-with-rank.cc</a>
-, <a class="el" href="rkmatrix-agglomeration-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-interwoven-indices.cc</a>
+, <a class="el" href="block-cluster-tree-hp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">block-cluster-tree-hp.cc</a>
+, <a class="el" href="bct-extend-to-finer-partition_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-extend-to-finer-partition.cc</a>
+, <a class="el" href="simple-bounding-box_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">simple-bounding-box.cc</a>
+, <a class="el" href="rkmatrix-local-to-submatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-local-to-submatrix.cc</a>
+, <a class="el" href="hmatrix-add-rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-add-rkmatrix.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-fine-coarse-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-fine-coarse-fine-ntp.cc</a>
 , <a class="el" href="cluster-tree_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">cluster-tree.cc</a>
 , <a class="el" href="cluster-tree-copy-constructor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">cluster-tree-copy-constructor.cc</a>
 , <a class="el" href="cluster-tree-hp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">cluster-tree-hp.cc</a>
 , <a class="el" href="fullmatrix-hmatrix-mmult_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">fullmatrix-hmatrix-mmult.cc</a>
-, <a class="el" href="lapack-matrix-global-to-rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-global-to-rkmatrix.cc</a>
-, <a class="el" href="hmatrix-bct-struct-with-rank_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-bct-struct-with-rank.cc</a>
 , <a class="el" href="rkmatrix-truncate-to-rank_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-truncate-to-rank.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-all-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-level-conserving-all-coarse-ntp.cc</a>
+, <a class="el" href="hmatrix-add-formatted-with-factor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-add-formatted-with-factor.cc</a>
+, <a class="el" href="hmatrix-add-rkmatrix-into-new-hmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-add-rkmatrix-into-new-hmatrix.cc</a>
+, <a class="el" href="hmatrix-add-rkmatrix-into-new-hmatrix-with-factor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-add-rkmatrix-into-new-hmatrix-with-factor.cc</a>
+, <a class="el" href="hmatrix-add-rkmatrix-with-factor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-add-rkmatrix-with-factor.cc</a>
+, <a class="el" href="hmatrix-bct-struct-with-rank_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-bct-struct-with-rank.cc</a>
+, <a class="el" href="hmatrix-coarsening_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-coarsening.cc</a>
 , <a class="el" href="hmatrix-deep-copy-constructor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-deep-copy-constructor.cc</a>
 , <a class="el" href="hmatrix-fine-ntp-to-tp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-fine-ntp-to-tp.cc</a>
 , <a class="el" href="hmatrix-fullmatrix-mmult_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-fullmatrix-mmult.cc</a>
 , <a class="el" href="hmatrix-hmatrix-mmult-all-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-all-coarse-ntp.cc</a>
-, <a class="el" href="hmatrix-hmatrix-mmult-all-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-all-fine-ntp.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-all-fine-ntp_8cc.html#a0ddf1224851353fc92bfbff6f499fa97">hmatrix-hmatrix-mmult-all-fine-ntp.cc</a>
 , <a class="el" href="hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-all-fine-ntp-with-adding.cc</a>
 , <a class="el" href="hmatrix-hmatrix-mmult-coarse-coarse-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-coarse-coarse-fine-ntp.cc</a>
 , <a class="el" href="hmatrix-hmatrix-mmult-coarse-fine-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-coarse-fine-coarse-ntp.cc</a>
-, <a class="el" href="hmatrix-hmatrix-mmult-fine-coarse-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-fine-coarse-fine-ntp.cc</a>
-, <a class="el" href="hmatrix-hmatrix-mmult-fine-fine-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-fine-fine-coarse-ntp.cc</a>
+, <a class="el" href="hmatrix-add-formatted_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-add-formatted.cc</a>
+, <a class="el" href="rkmatrix-assemble-from-rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-assemble-from-rkmatrix.cc</a>
+, <a class="el" href="rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix.cc</a>
+, <a class="el" href="svd-degenerate-cases_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">svd-degenerate-cases.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp-member-function-call_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp-member-function-call.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-coarse-coarse-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-level-conserving-coarse-coarse-fine-ntp.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-coarse-fine-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-level-conserving-coarse-fine-coarse-ntp.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-fine-coarse-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-level-conserving-fine-coarse-fine-ntp.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-fine-fine-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-level-conserving-fine-fine-coarse-ntp.cc</a>
+, <a class="el" href="hmatrix-invert-by-gauss-elim_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-invert-by-gauss-elim.cc</a>
 , <a class="el" href="hmatrix-overloaded-deep-assignment_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-overloaded-deep-assignment.cc</a>
 , <a class="el" href="hmatrix-overloaded-shallow-assignment_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-overloaded-shallow-assignment.cc</a>
 , <a class="el" href="hmatrix-refinement_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-refinement.cc</a>
-, <a class="el" href="simple-bounding-box_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">simple-bounding-box.cc</a>
+, <a class="el" href="hmatrix-rkmatrix-conversion_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-rkmatrix-conversion.cc</a>
 , <a class="el" href="hmatrix-rkmatrix-mmult_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-rkmatrix-mmult.cc</a>
 , <a class="el" href="hmatrix-shallow-copy-constructor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-shallow-copy-constructor.cc</a>
 , <a class="el" href="hmatrix-truncate-to-fixed-rank_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-truncate-to-fixed-rank.cc</a>
@@ -285,7 +307,7 @@ $(function() {
 , <a class="el" href="lapack-matrix-agglomeration_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-agglomeration.cc</a>
 , <a class="el" href="lapack-matrix-agglomeration-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-agglomeration-interwoven-indices.cc</a>
 , <a class="el" href="lapack-matrix-agglomeration-of-two-submatrices-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-agglomeration-of-two-submatrices-interwoven-indices.cc</a>
-, <a class="el" href="bct-hp-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-hp-fine-ntp.cc</a>
+, <a class="el" href="lapack-matrix-global-to-rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-global-to-rkmatrix.cc</a>
 , <a class="el" href="lapack-matrix-global-to-submatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-global-to-submatrix.cc</a>
 , <a class="el" href="lapack-matrix-inverse_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-inverse.cc</a>
 , <a class="el" href="lapack-matrix-local-to-rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-local-to-rkmatrix.cc</a>
@@ -294,21 +316,33 @@ $(function() {
 , <a class="el" href="lapack-matrix-rk-decompose_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-rk-decompose.cc</a>
 , <a class="el" href="lapack-matrix-rsvd-degenerate-cases_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">lapack-matrix-rsvd-degenerate-cases.cc</a>
 , <a class="el" href="scale-rows-and-columns_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">scale-rows-and-columns.cc</a>
-, <a class="el" href="svd-degenerate-cases_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">svd-degenerate-cases.cc</a>
-, <a class="el" href="rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix.cc</a>
-, <a class="el" href="rkmatrix-add-formatted_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-add-formatted.cc</a>
-, <a class="el" href="rkmatrix-add-formatted-using-qr_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-add-formatted-using-qr.cc</a>
+, <a class="el" href="bct-overloaded-assignment_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-overloaded-assignment.cc</a>
+, <a class="el" href="bct-hp-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-hp-fine-ntp.cc</a>
+, <a class="el" href="cluster-diameter_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">cluster-diameter.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp.cc</a>
+, <a class="el" href="rkmatrix-add-formatted-with-factor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-add-formatted-with-factor.cc</a>
 , <a class="el" href="rkmatrix-agglomeration_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration.cc</a>
-, <a class="el" href="bct-hp-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-hp-coarse-ntp.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-2nd-block-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-2nd-block-rank0.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-3rd-block-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-3rd-block-rank0.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-4th-block-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-4th-block-rank0.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-interwoven-indices.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-interwoven-indices-2nd-block-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-interwoven-indices-2nd-block-rank0.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-interwoven-indices-3rd-block-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-interwoven-indices-3rd-block-rank0.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-interwoven-indices-4th-block-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-interwoven-indices-4th-block-rank0.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-interwoven-indices-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-interwoven-indices-rank0.cc</a>
 , <a class="el" href="rkmatrix-agglomeration-of-two-submatrices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-of-two-submatrices.cc</a>
-, <a class="el" href="hmatrix-coarsening_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-coarsening.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-of-two-submatrices-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-of-two-submatrices-interwoven-indices.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-of-two-submatrices-interwoven-indices-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-of-two-submatrices-interwoven-indices-rank0.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-rank0.cc</a>
+, <a class="el" href="rkmatrix-add-formatted-using-qr_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-add-formatted-using-qr.cc</a>
+, <a class="el" href="bct-hp-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-hp-coarse-ntp.cc</a>
 , <a class="el" href="rkmatrix-global-to-rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-global-to-rkmatrix.cc</a>
 , <a class="el" href="rkmatrix-global-to-submatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-global-to-submatrix.cc</a>
 , <a class="el" href="rkmatrix-hmatrix-mmult_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-hmatrix-mmult.cc</a>
 , <a class="el" href="rkmatrix-local-to-rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-local-to-rkmatrix.cc</a>
-, <a class="el" href="block-cluster-tree-hp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">block-cluster-tree-hp.cc</a>
-, <a class="el" href="bct-extend-to-finer-partition_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-extend-to-finer-partition.cc</a>
-, <a class="el" href="rkmatrix-local-to-submatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-local-to-submatrix.cc</a>
+, <a class="el" href="hmatrix-hmatrix-mmult-fine-fine-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">hmatrix-hmatrix-mmult-fine-fine-coarse-ntp.cc</a>
+, <a class="el" href="rkmatrix-agglomeration-of-two-submatrices-rank0_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">rkmatrix-agglomeration-of-two-submatrices-rank0.cc</a>
+, <a class="el" href="bct-extend-finer-than-partition_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">bct-extend-finer-than-partition.cc</a>
 </li>
 <li>MakeIntExampleTree()
 : <a class="el" href="binary-tree-copy_8cc.html#ac883754e3b5ec7169c6d767f15641276">binary-tree-copy.cc</a>

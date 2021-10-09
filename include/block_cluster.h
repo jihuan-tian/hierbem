@@ -204,10 +204,22 @@ public:
   get_is_near_field() const;
 
   /**
+   * Set the boolean value whether the block cluster is near field.
+   */
+  void
+  set_is_near_field(const bool is_near_field);
+
+  /**
    * Get the boolean value whether the block cluster is admissible.
    */
   bool
   get_is_admissible() const;
+
+  /**
+   * Set the boolean value whether the block cluster is admissible.
+   */
+  void
+  set_is_admissible(const bool is_admissible);
 
   typename ClusterTree<spacedim, Number>::node_pointer_type
   get_tau_node();
@@ -546,10 +558,26 @@ BlockCluster<spacedim, Number>::get_is_near_field() const
 
 
 template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::set_is_near_field(const bool is_near_field)
+{
+  this->is_near_field = is_near_field;
+}
+
+
+template <int spacedim, typename Number>
 bool
 BlockCluster<spacedim, Number>::get_is_admissible() const
 {
   return is_admissible;
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::set_is_admissible(const bool is_admissible)
+{
+  this->is_admissible = is_admissible;
 }
 
 

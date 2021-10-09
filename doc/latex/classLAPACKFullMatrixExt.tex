@@ -103,17 +103,17 @@ void \hyperlink{classLAPACKFullMatrixExt_ac46d71bc1b0288fce7ad44b222e9210b}{tran
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_a12a95aeff6e93f0284c59cffd0fb7b8e}{transpose} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&AT) const
 \item 
-{\footnotesize template$<$typename Matrix\+Type $>$ }\\void \hyperlink{classLAPACKFullMatrixExt_a305ba1b717f1c27d6245bac2f5aad6f1}{fill} (const Matrix\+Type \&src, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} dst\+\_\+offset\+\_\+i=0, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} dst\+\_\+offset\+\_\+j=0, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} src\+\_\+offset\+\_\+i=0, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} src\+\_\+offset\+\_\+j=0, const Number factor=1., const bool \hyperlink{classLAPACKFullMatrixExt_ac46d71bc1b0288fce7ad44b222e9210b}{transpose}=false)
+{\footnotesize template$<$typename Matrix\+Type $>$ }\\void \hyperlink{classLAPACKFullMatrixExt_ada3ff3d40049aca2c4d554baa701d613}{fill} (const Matrix\+Type \&src, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} dst\+\_\+offset\+\_\+i=0, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} dst\+\_\+offset\+\_\+j=0, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} src\+\_\+offset\+\_\+i=0, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} src\+\_\+offset\+\_\+j=0, const Number factor=1., const bool \hyperlink{classLAPACKFullMatrixExt_ac46d71bc1b0288fce7ad44b222e9210b}{transpose}=false, const bool is\+\_\+adding=false)
 \item 
-void \hyperlink{classLAPACKFullMatrixExt_a64a3f3cf133fc6e1044535b28130e0a1}{fill} (const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} \&M, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+tau\+\_\+index\+\_\+set, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+sigma\+\_\+index\+\_\+set)
+void \hyperlink{classLAPACKFullMatrixExt_a3f0dffff13babd0b952a821b5f1f23c9}{fill} (const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} \&M, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+tau\+\_\+index\+\_\+set, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+sigma\+\_\+index\+\_\+set, const bool is\+\_\+adding=false)
 \item 
-void \hyperlink{classLAPACKFullMatrixExt_a769c252524d12cf453bff2bc881a246d}{fill\+\_\+rows} (const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} \&M, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+row\+\_\+global\+\_\+index\+\_\+set)
+void \hyperlink{classLAPACKFullMatrixExt_a73e9ad59ab56c377edc852d8ba16995c}{fill\+\_\+rows} (const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} \&M, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+row\+\_\+global\+\_\+index\+\_\+set, const bool is\+\_\+adding=false)
 \item 
-void \hyperlink{classLAPACKFullMatrixExt_a127d66494b154288d3c0c4c7f865650f}{fill\+\_\+row} (const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} row\+\_\+index, const Vector$<$ Number $>$ \&values)
+void \hyperlink{classLAPACKFullMatrixExt_a74d566120461e1a2437b9fd9a070633f}{fill\+\_\+row} (const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} row\+\_\+index, const Vector$<$ Number $>$ \&values, const bool is\+\_\+adding=false)
 \item 
-void \hyperlink{classLAPACKFullMatrixExt_ac1dcaa9fe085860f88c1034adb06f43e}{fill\+\_\+cols} (const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} \&M, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+col\+\_\+global\+\_\+index\+\_\+set)
+void \hyperlink{classLAPACKFullMatrixExt_af988edbf2f192f0eddf542178755eb91}{fill\+\_\+cols} (const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} \&M, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+col\+\_\+global\+\_\+index\+\_\+set, const bool is\+\_\+adding=false)
 \item 
-void \hyperlink{classLAPACKFullMatrixExt_a15180c6e8165380739735b6a7e4d1c32}{fill\+\_\+col} (const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} col\+\_\+index, const Vector$<$ Number $>$ \&values)
+void \hyperlink{classLAPACKFullMatrixExt_a497a2e73b69f5b07cedb729330e95667}{fill\+\_\+col} (const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} col\+\_\+index, const Vector$<$ Number $>$ \&values, const bool is\+\_\+adding=false)
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_aeeae2d2698007889a47f192043adb75c}{hstack} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B) const
 \item 
@@ -127,7 +127,11 @@ void \hyperlink{classLAPACKFullMatrixExt_a0f315932c3729240d03bc941bb2de849}{vsta
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_a824a7a919666c8af3df5723175f6201e}{add} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B) const
 \item 
+void \hyperlink{classLAPACKFullMatrixExt_a793c6b5e30522c2ae653df0e80ed6ab3}{add} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const Number b, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B) const
+\item 
 void \hyperlink{classLAPACKFullMatrixExt_ae199890a11b5034d8ec2342c7de6c439}{add} (const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B)
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_a7c46d0cb2e278577196b3d923e389efd}{add} (const Number b, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B)
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_a176ae32c5467facafd5dcc3252c07c20}{mmult} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, const bool adding=false) const
 \item 
@@ -398,7 +402,7 @@ References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::fill(), and L\+A
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a824a7a919666c8af3df5723175f6201e}\label{classLAPACKFullMatrixExt_a824a7a919666c8af3df5723175f6201e}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!add@{add}}
 \index{add@{add}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::add (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B }\end{DoxyParamCaption}) const}
 
@@ -406,14 +410,33 @@ Add two matrix into a new matrix $C = A + B$, where $A$ is the current matrix.
 
 Referenced by main().
 
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_ae199890a11b5034d8ec2342c7de6c439}\label{classLAPACKFullMatrixExt_ae199890a11b5034d8ec2342c7de6c439}} 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a793c6b5e30522c2ae653df0e80ed6ab3}\label{classLAPACKFullMatrixExt_a793c6b5e30522c2ae653df0e80ed6ab3}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!add@{add}}
 \index{add@{add}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::add (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{const Number}]{b,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B }\end{DoxyParamCaption}) const}
+
+Add two matrix into a new matrix $C = A + b*B$ with a factor $b$ multiplied with $B$, where $A$ is the current matrix. \mbox{\Hypertarget{classLAPACKFullMatrixExt_ae199890a11b5034d8ec2342c7de6c439}\label{classLAPACKFullMatrixExt_ae199890a11b5034d8ec2342c7de6c439}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!add@{add}}
+\index{add@{add}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::add (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B }\end{DoxyParamCaption})}
 
 Add the matrix {\ttfamily B} into the current matrix. 
+\begin{DoxyParams}{Parameters}
+{\em B} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a7c46d0cb2e278577196b3d923e389efd}\label{classLAPACKFullMatrixExt_a7c46d0cb2e278577196b3d923e389efd}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!add@{add}}
+\index{add@{add}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{add()}{add()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::add (\begin{DoxyParamCaption}\item[{const Number}]{b,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B }\end{DoxyParamCaption})}
+
+Add the matrix {\ttfamily B} into the current matrix with a factor $b$ multiplied with $B$. 
 \begin{DoxyParams}{Parameters}
 {\em B} & \\
 \hline
@@ -460,13 +483,13 @@ Create a constant valued diagonal matrix.
 {\em matrix} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_a305ba1b717f1c27d6245bac2f5aad6f1}\label{classLAPACKFullMatrixExt_a305ba1b717f1c27d6245bac2f5aad6f1}} 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_ada3ff3d40049aca2c4d554baa701d613}\label{classLAPACKFullMatrixExt_ada3ff3d40049aca2c4d554baa701d613}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill@{fill}}
 \index{fill@{fill}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{fill()}{fill()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 template$<$typename Matrix\+Type $>$ \\
-void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill (\begin{DoxyParamCaption}\item[{const Matrix\+Type \&}]{src,  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{dst\+\_\+offset\+\_\+i = {\ttfamily 0},  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{dst\+\_\+offset\+\_\+j = {\ttfamily 0},  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{src\+\_\+offset\+\_\+i = {\ttfamily 0},  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{src\+\_\+offset\+\_\+j = {\ttfamily 0},  }\item[{const Number}]{factor = {\ttfamily 1.},  }\item[{const bool}]{transpose = {\ttfamily false} }\end{DoxyParamCaption})}
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill (\begin{DoxyParamCaption}\item[{const Matrix\+Type \&}]{src,  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{dst\+\_\+offset\+\_\+i = {\ttfamily 0},  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{dst\+\_\+offset\+\_\+j = {\ttfamily 0},  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{src\+\_\+offset\+\_\+i = {\ttfamily 0},  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{src\+\_\+offset\+\_\+j = {\ttfamily 0},  }\item[{const Number}]{factor = {\ttfamily 1.},  }\item[{const bool}]{transpose = {\ttfamily false},  }\item[{const bool}]{is\+\_\+adding = {\ttfamily false} }\end{DoxyParamCaption})}
 
 Fill a rectangular block. This function has the similar behavior as Full\+Matrix\+::fill. 
 \begin{DoxyParams}{Parameters}
@@ -487,14 +510,14 @@ Fill a rectangular block. This function has the similar behavior as Full\+Matrix
 \end{DoxyParams}
 Determine the number of rows and columns to be copied.
 
-Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::hstack(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::vstack().
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::hstack(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext(), main(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::vstack().
 
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_a64a3f3cf133fc6e1044535b28130e0a1}\label{classLAPACKFullMatrixExt_a64a3f3cf133fc6e1044535b28130e0a1}} 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a3f0dffff13babd0b952a821b5f1f23c9}\label{classLAPACKFullMatrixExt_a3f0dffff13babd0b952a821b5f1f23c9}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill@{fill}}
 \index{fill@{fill}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{fill()}{fill()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
-void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill (\begin{DoxyParamCaption}\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M\+\_\+tau\+\_\+index\+\_\+set,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M\+\_\+sigma\+\_\+index\+\_\+set }\end{DoxyParamCaption})}
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill (\begin{DoxyParamCaption}\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M\+\_\+tau\+\_\+index\+\_\+set,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M\+\_\+sigma\+\_\+index\+\_\+set,  }\item[{const bool}]{is\+\_\+adding = {\ttfamily false} }\end{DoxyParamCaption})}
 
 Fill the matrix {\ttfamily M} into the current matrix based on the global block cluster indices. 
 \begin{DoxyParams}{Parameters}
@@ -509,12 +532,12 @@ Fill the matrix {\ttfamily M} into the current matrix based on the global block 
 {\em M\+\_\+sigma\+\_\+index\+\_\+set} & \\
 \hline
 \end{DoxyParams}
-Make assertions about the sizes of row and column index global to local maps for the current matrix.\mbox{\Hypertarget{classLAPACKFullMatrixExt_a15180c6e8165380739735b6a7e4d1c32}\label{classLAPACKFullMatrixExt_a15180c6e8165380739735b6a7e4d1c32}} 
+Make assertions about the sizes of row and column index global to local maps for the current matrix.\mbox{\Hypertarget{classLAPACKFullMatrixExt_a497a2e73b69f5b07cedb729330e95667}\label{classLAPACKFullMatrixExt_a497a2e73b69f5b07cedb729330e95667}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+col@{fill\+\_\+col}}
 \index{fill\+\_\+col@{fill\+\_\+col}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{fill\+\_\+col()}{fill\_col()}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
-void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+col (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{col\+\_\+index,  }\item[{const Vector$<$ Number $>$ \&}]{values }\end{DoxyParamCaption})}
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+col (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{col\+\_\+index,  }\item[{const Vector$<$ Number $>$ \&}]{values,  }\item[{const bool}]{is\+\_\+adding = {\ttfamily false} }\end{DoxyParamCaption})}
 
 Fill the {\ttfamily values} to the {\ttfamily col\+\_\+index\textquotesingle{}th} column of the current matrix. 
 \begin{DoxyParams}{Parameters}
@@ -527,12 +550,12 @@ Fill the {\ttfamily values} to the {\ttfamily col\+\_\+index\textquotesingle{}th
 
 Referenced by h\+\_\+f\+\_\+mmult().
 
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_ac1dcaa9fe085860f88c1034adb06f43e}\label{classLAPACKFullMatrixExt_ac1dcaa9fe085860f88c1034adb06f43e}} 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_af988edbf2f192f0eddf542178755eb91}\label{classLAPACKFullMatrixExt_af988edbf2f192f0eddf542178755eb91}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+cols@{fill\+\_\+cols}}
 \index{fill\+\_\+cols@{fill\+\_\+cols}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{fill\+\_\+cols()}{fill\_cols()}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
-void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+cols (\begin{DoxyParamCaption}\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M\+\_\+col\+\_\+global\+\_\+index\+\_\+set }\end{DoxyParamCaption})}
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+cols (\begin{DoxyParamCaption}\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M\+\_\+col\+\_\+global\+\_\+index\+\_\+set,  }\item[{const bool}]{is\+\_\+adding = {\ttfamily false} }\end{DoxyParamCaption})}
 
 Fill the data in {\ttfamily M} by columns into the current matrix based on the global cluster indices. 
 \begin{DoxyParams}{Parameters}
@@ -543,12 +566,12 @@ Fill the data in {\ttfamily M} by columns into the current matrix based on the g
 {\em M\+\_\+col\+\_\+global\+\_\+index\+\_\+set} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_a127d66494b154288d3c0c4c7f865650f}\label{classLAPACKFullMatrixExt_a127d66494b154288d3c0c4c7f865650f}} 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a74d566120461e1a2437b9fd9a070633f}\label{classLAPACKFullMatrixExt_a74d566120461e1a2437b9fd9a070633f}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+row@{fill\+\_\+row}}
 \index{fill\+\_\+row@{fill\+\_\+row}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{fill\+\_\+row()}{fill\_row()}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
-void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+row (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{row\+\_\+index,  }\item[{const Vector$<$ Number $>$ \&}]{values }\end{DoxyParamCaption})}
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+row (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{row\+\_\+index,  }\item[{const Vector$<$ Number $>$ \&}]{values,  }\item[{const bool}]{is\+\_\+adding = {\ttfamily false} }\end{DoxyParamCaption})}
 
 Fill the {\ttfamily values} to the {\ttfamily row\+\_\+index\textquotesingle{}th} row of the current matrix. 
 \begin{DoxyParams}{Parameters}
@@ -561,12 +584,12 @@ Fill the {\ttfamily values} to the {\ttfamily row\+\_\+index\textquotesingle{}th
 
 Referenced by f\+\_\+h\+\_\+mmult().
 
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_a769c252524d12cf453bff2bc881a246d}\label{classLAPACKFullMatrixExt_a769c252524d12cf453bff2bc881a246d}} 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a73e9ad59ab56c377edc852d8ba16995c}\label{classLAPACKFullMatrixExt_a73e9ad59ab56c377edc852d8ba16995c}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+rows@{fill\+\_\+rows}}
 \index{fill\+\_\+rows@{fill\+\_\+rows}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{fill\+\_\+rows()}{fill\_rows()}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
-void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+rows (\begin{DoxyParamCaption}\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M\+\_\+row\+\_\+global\+\_\+index\+\_\+set }\end{DoxyParamCaption})}
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+rows (\begin{DoxyParamCaption}\item[{const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&}]{row\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{M\+\_\+row\+\_\+global\+\_\+index\+\_\+set,  }\item[{const bool}]{is\+\_\+adding = {\ttfamily false} }\end{DoxyParamCaption})}
 
 Fill the data in {\ttfamily M} by rows into the current matrix based on the global cluster indices.
 
@@ -712,7 +735,7 @@ When {\ttfamily other\+\_\+columns\+\_\+removed} is true, the other columns are 
 {\em other\+\_\+rows\+\_\+removed} & \\
 \hline
 \end{DoxyParams}
-Do nothing.
+
 
 Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+qr(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd().
 
@@ -734,7 +757,7 @@ When {\ttfamily other\+\_\+rows\+\_\+removed} is true, the other rows are delete
 {\em other\+\_\+rows\+\_\+removed} & \\
 \hline
 \end{DoxyParams}
-Do nothing.
+
 
 Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+qr(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd().
 
@@ -1170,7 +1193,9 @@ Referenced by Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{U,  }\item[{std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{Sigma\+\_\+r,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{VT,  }\item[{\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{truncation\+\_\+rank,  }\item[{Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-Perform S\+VD on the product of two component matrices $A$ and $B^T$ with truncation by a specified rank. 
+Perform S\+VD on the product of two component matrices $A$ and $B^T$ with truncation by a specified rank.
+
+N.\+B. If the actual rank of the matrix is less than the specified {\ttfamily truncation\+\_\+rank}, i.\+e. rank deficient, the matrix will be truncated to its actual rank. 
 \begin{DoxyParams}{Parameters}
 {\em A} & \\
 \hline

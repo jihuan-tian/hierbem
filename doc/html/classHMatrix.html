@@ -147,7 +147,8 @@ $(function() {
 <div class="dynheader">
 Collaboration diagram for HMatrix&lt; spacedim, Number &gt;:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classHMatrix__coll__graph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classHMatrix__coll__graph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
@@ -244,15 +245,32 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ab315324e3ece178943f406823f792746"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af40d53aabc8bec86fa543638d48ba64e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">mmult</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;C, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;B, const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_a, const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_b, <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_c, const unsigned int fixed_rank=1)</td></tr>
 <tr class="separator:af40d53aabc8bec86fa543638d48ba64e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4139e9069e3b18d4719c527ce2e0414c"><td class="memItemLeft" align="right" valign="top"><a id="a4139e9069e3b18d4719c527ce2e0414c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>mmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;C, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;B, const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_a, const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_b, <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_c, const unsigned int fixed_rank, const bool adding)</td></tr>
+<tr class="memitem:a4139e9069e3b18d4719c527ce2e0414c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a4139e9069e3b18d4719c527ce2e0414c">mmult</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;C, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;B, const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_a, const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_b, <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;bct_c, const unsigned int fixed_rank, const bool adding)</td></tr>
 <tr class="separator:a4139e9069e3b18d4719c527ce2e0414c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ea0317bff2670e3ed7e48416f908873"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a4ea0317bff2670e3ed7e48416f908873">mmult_level_conserving</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;C, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;B, const unsigned int fixed_rank)</td></tr>
+<tr class="separator:a4ea0317bff2670e3ed7e48416f908873"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f96186426cd3147d5af32ca84ad25ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">add</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;C, const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;B, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k) const</td></tr>
 <tr class="separator:a8f96186426cd3147d5af32ca84ad25ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea42f5112b88270fef73342853fa386d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#aea42f5112b88270fef73342853fa386d">add</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;C, const Number b, const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;B, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k) const</td></tr>
+<tr class="separator:aea42f5112b88270fef73342853fa386d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9bd48ada567962ab0dc75c31986bd1a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a9bd48ada567962ab0dc75c31986bd1a6">add</a> (const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;B, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k) const</td></tr>
 <tr class="separator:a9bd48ada567962ab0dc75c31986bd1a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab100d1469f662efdbf894a0345b702b8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">invert_by_gauss_elim</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;M_inv, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;M_root, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;M_inv_root, const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;M_root_bct, const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;M_inv_root_bct, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k)</td></tr>
-<tr class="separator:ab100d1469f662efdbf894a0345b702b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af42aaa86b9f47c5c1514e4f06e343db6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#af42aaa86b9f47c5c1514e4f06e343db6">add</a> (const Number b, const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;B, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k) const</td></tr>
+<tr class="separator:af42aaa86b9f47c5c1514e4f06e343db6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1793dff400aeae649f909d7f45db8b8a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a1793dff400aeae649f909d7f45db8b8a">add</a> (const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;B, const std::map&lt; types::global_dof_index, size_t &gt; &amp;row_index_global_to_local_map_for_rk, const std::map&lt; types::global_dof_index, size_t &gt; &amp;col_index_global_to_local_map_for_rk, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k) const</td></tr>
+<tr class="separator:a1793dff400aeae649f909d7f45db8b8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3800d6fded523d5c8eeb8fd0c106a34"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#ad3800d6fded523d5c8eeb8fd0c106a34">add</a> (const Number b, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;B, const std::map&lt; types::global_dof_index, size_t &gt; &amp;row_index_global_to_local_map_for_rk, const std::map&lt; types::global_dof_index, size_t &gt; &amp;col_index_global_to_local_map_for_rk, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k) const</td></tr>
+<tr class="separator:ad3800d6fded523d5c8eeb8fd0c106a34"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9000d7604e2045cf7cad7458daca340"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#ab9000d7604e2045cf7cad7458daca340">add</a> (const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;B, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k)</td></tr>
+<tr class="separator:ab9000d7604e2045cf7cad7458daca340"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94981e45b7d9aa0f2afae77d414f1c1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a94981e45b7d9aa0f2afae77d414f1c1a">add</a> (const Number b, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;B, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k)</td></tr>
+<tr class="separator:a94981e45b7d9aa0f2afae77d414f1c1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a403d72a5eea3912d67fd0807ddd0baf8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a403d72a5eea3912d67fd0807ddd0baf8">add</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;C, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;B, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k)</td></tr>
+<tr class="separator:a403d72a5eea3912d67fd0807ddd0baf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af66071b53145fe007ac040fa0c4b47c6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#af66071b53145fe007ac040fa0c4b47c6">add</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;C, const Number b, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;B, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k)</td></tr>
+<tr class="separator:af66071b53145fe007ac040fa0c4b47c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af972cb62d436b8dca5d95a5b6e2ed964"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#af972cb62d436b8dca5d95a5b6e2ed964">invert_by_gauss_elim</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;M_inv, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k)</td></tr>
+<tr class="separator:af972cb62d436b8dca5d95a5b6e2ed964"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27c7390b792e6e47ab2861616a997d99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a27c7390b792e6e47ab2861616a997d99">coarsen_to_subtree</a> (const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;subtree, const unsigned int fixed_rank_k)</td></tr>
 <tr class="separator:a27c7390b792e6e47ab2861616a997d99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a525ad4d453f4f496b98cccb341c8b60b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a525ad4d453f4f496b98cccb341c8b60b">coarsen_to_partition</a> (const std::vector&lt; typename <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt;::node_pointer_type &gt; &amp;partition, const unsigned int fixed_rank_k)</td></tr>
@@ -285,13 +303,15 @@ Private Member Functions</h2></td></tr>
 <tr class="separator:ab55b568236ffdd71b5378ac6c6ace50a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60934e84cc3c9f6c75d011a2005f512a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a60934e84cc3c9f6c75d011a2005f512a">_build_leaf_set</a> (std::vector&lt; <a class="el" href="classHMatrix.html">HMatrix</a> *&gt; &amp;total_leaf_set) const</td></tr>
 <tr class="separator:a60934e84cc3c9f6c75d011a2005f512a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01360c3d9a93154f2e629b6c413aa991"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves</a> ()</td></tr>
-<tr class="separator:a01360c3d9a93154f2e629b6c413aa991"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a963ad3e2c76ba7034b5057fef03254e1"><td class="memItemLeft" align="right" valign="top"><a id="a963ad3e2c76ba7034b5057fef03254e1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>distribute_sigma_r_and_f_to_leaves</b> ()</td></tr>
-<tr class="separator:a963ad3e2c76ba7034b5057fef03254e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2229caab9b862f9c54b7f3a806125fba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">_distribute_sigma_r_and_f_to_leaves</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;starting_hmat)</td></tr>
-<tr class="separator:a2229caab9b862f9c54b7f3a806125fba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66979dbdf56155c63f0706649e8545b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves</a> (const unsigned int fixed_rank=0)</td></tr>
+<tr class="separator:a66979dbdf56155c63f0706649e8545b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39e24569fe32027c840b160f9dcd1ad7"><td class="memItemLeft" align="right" valign="top"><a id="a39e24569fe32027c840b160f9dcd1ad7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>distribute_sigma_r_and_f_to_leaves</b> (const unsigned int fixed_rank=0)</td></tr>
+<tr class="separator:a39e24569fe32027c840b160f9dcd1ad7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a187e0c009a7c28679df7e92e0b01929c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">_distribute_sigma_r_and_f_to_leaves</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;starting_hmat, const unsigned int fixed_rank=0)</td></tr>
+<tr class="separator:a187e0c009a7c28679df7e92e0b01929c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af74e3b0c19e9178cfe699a6620a51170"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classHMatrix.html#af74e3b0c19e9178cfe699a6620a51170">_invert_by_gauss_elim</a> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;M_inv, const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a> fixed_rank_k)</td></tr>
+<tr class="separator:af74e3b0c19e9178cfe699a6620a51170"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -342,6 +362,10 @@ template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:abe123e0f8daa856e4b85e00829398b79"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>InitHMatrixWrtBlockClusterNode</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;hmat, typename <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim1, Number1 &gt;::node_const_pointer_type <a class="el" href="classHMatrix.html#a4a304494c970b5b267be1d8459d51586">bc_node</a>, const std::pair&lt; <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *&gt; &amp;hmat_pair)</td></tr>
 <tr class="separator:abe123e0f8daa856e4b85e00829398b79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69a9e7eae8c4fbab8c426552399d072a"><td class="memTemplParams" colspan="2"><a id="a69a9e7eae8c4fbab8c426552399d072a"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a69a9e7eae8c4fbab8c426552399d072a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>InitAndCreateHMatrixChildrenWithoutAlloc</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *hmat, typename <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim1, Number1 &gt;::node_const_pointer_type <a class="el" href="classHMatrix.html#a4a304494c970b5b267be1d8459d51586">bc_node</a>, const bool is_build_index_set_global_to_local_map)</td></tr>
+<tr class="separator:a69a9e7eae8c4fbab8c426552399d072a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9dff162efb21e08ab5d6fc3bc2219fa"><td class="memTemplParams" colspan="2"><a id="ac9dff162efb21e08ab5d6fc3bc2219fa"></a>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:ac9dff162efb21e08ab5d6fc3bc2219fa"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>InitAndCreateHMatrixChildren</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *hmat, typename <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim1, Number1 &gt;::node_const_pointer_type <a class="el" href="classHMatrix.html#a4a304494c970b5b267be1d8459d51586">bc_node</a>, const unsigned int fixed_rank_k, bool is_build_index_set_global_to_local_map)</td></tr>
@@ -417,6 +441,14 @@ template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:ac58016ed0bee33836c69eb23970c24df"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_h_mmult_phase2</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M, <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim1, Number1 &gt; &amp;target_bc_tree, const unsigned int fixed_rank)</td></tr>
 <tr class="separator:ac58016ed0bee33836c69eb23970c24df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae51daefaa59911ec728910847e968027"><td class="memTemplParams" colspan="2"><a id="ae51daefaa59911ec728910847e968027"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:ae51daefaa59911ec728910847e968027"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_h_mmult_from_leaf_node</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M0, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, const unsigned int fixed_rank)</td></tr>
+<tr class="separator:ae51daefaa59911ec728910847e968027"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13cad078355a647e17dd33970f5449e0"><td class="memTemplParams" colspan="2"><a id="a13cad078355a647e17dd33970f5449e0"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a13cad078355a647e17dd33970f5449e0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_h_mmult_level_conserving</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M0, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, const unsigned int fixed_rank)</td></tr>
+<tr class="separator:a13cad078355a647e17dd33970f5449e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ec67bee413b9db0bedfe58ddc0d91c1"><td class="memTemplParams" colspan="2"><a id="a4ec67bee413b9db0bedfe58ddc0d91c1"></a>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a4ec67bee413b9db0bedfe58ddc0d91c1"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>copy_hmatrix_node</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;hmat_dst, const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;hmat_src)</td></tr>
@@ -812,7 +844,7 @@ template&lt;int spacedim, typename Number &gt; </div>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c">RkMatrixType</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, and <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>.</p>
+<p class="reference">References <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c">RkMatrixType</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, and <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>.</p>
 
 <p class="reference">Referenced by <a class="el" href="classHMatrix.html#a139f32982527ba981e0211b5663e3b43">HMatrix&lt; spacedim, Number &gt;::build_leaf_set()</a>.</p>
 
@@ -858,8 +890,8 @@ template&lt;typename MatrixType &gt; </div>
 
 </div>
 </div>
-<a id="a2229caab9b862f9c54b7f3a806125fba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2229caab9b862f9c54b7f3a806125fba">&#9670;&nbsp;</a></span>_distribute_sigma_r_and_f_to_leaves()</h2>
+<a id="a187e0c009a7c28679df7e92e0b01929c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a187e0c009a7c28679df7e92e0b01929c">&#9670;&nbsp;</a></span>_distribute_sigma_r_and_f_to_leaves()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -873,8 +905,18 @@ template&lt;int spacedim, typename Number &gt; </div>
           <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
-          <td class="paramname"><em>starting_hmat</em></td><td>)</td>
+          <td class="paramname"><em>starting_hmat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const unsigned int&#160;</td>
+          <td class="paramname"><em>fixed_rank</em> = <code>0</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -890,12 +932,80 @@ template&lt;int spacedim, typename Number &gt; </div>
 
 <p class="reference">References <a class="el" href="classHMatrix.html#ab337c7b4f2f40699b9b7f3ab17a1e056">HMatrix&lt; spacedim, Number &gt;::col_index_global_to_local_map</a>, <a class="el" href="classHMatrix.html#ac30ae65e37ec5e4ccc7de2f6b9ea91e6">HMatrix&lt; spacedim, Number &gt;::col_indices</a>, <a class="el" href="classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533">HMatrix&lt; spacedim, Number &gt;::fullmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="classRkMatrix.html#a5305306386e47bcded819ce8d7f7935c">RkMatrix&lt; Number &gt;::restrictToFullMatrix()</a>, <a class="el" href="classHMatrix.html#aa97a8f5e42aba0f1d5faf41f35a27819">HMatrix&lt; spacedim, Number &gt;::rkmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c">RkMatrixType</a>, <a class="el" href="classHMatrix.html#a4d64145335fc0521603b206a22a67578">HMatrix&lt; spacedim, Number &gt;::row_index_global_to_local_map</a>, <a class="el" href="classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae">HMatrix&lt; spacedim, Number &gt;::row_indices</a>, <a class="el" href="classHMatrix.html#aa659b6df63d533432ec1a24435cd9c40">HMatrix&lt; spacedim, Number &gt;::Sigma_F</a>, <a class="el" href="classHMatrix.html#a04d341b4e606d1be2d71b8ea636efe7b">HMatrix&lt; spacedim, Number &gt;::Sigma_R</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, and <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>.</p>
+
+</div>
+</div>
+<a id="af74e3b0c19e9178cfe699a6620a51170"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af74e3b0c19e9178cfe699a6620a51170">&#9670;&nbsp;</a></span>_invert_by_gauss_elim()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::_invert_by_gauss_elim </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>M_inv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Calculate the inverse of the \(\mathcal{H}\)-matrix node via Gauss elimination.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">M_inv</td><td></td></tr>
+    <tr><td class="paramname">M_root</td><td>The \(\mathcal{H}\)-matrix node from which this recursive function is called for the first time. </td></tr>
+    <tr><td class="paramname">M_root_bct</td><td>The block cluster tree associated with <code>M_root</code>. </td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>If the current matrix block to be handled has a same \(\tau\) cluster and \(\sigma\) cluster and belongs to the leaf set of <code>M_root</code>, directly calculate its inverse as full matrix.</p>
+<p><b>2021-10-05 At present, we assume the \(\mathcal{H}\)-matrix hierarchy is completely the same as the associated block cluster tree, or rather, the block cluster tree is not finer than the \(\mathcal{H}\)-matrix. Therefore, whether the block cluster node is a leaf is equivalent to whether the \(\mathcal{H}\)-matrix node is a leaf. In a more generalized implementation, the block cluster tree can be finer than the \(\mathcal{H}\)-matrix hierarchy.</b></p>
+<p>Number of matrix blocks in a row, which is also the number of matrix blocks in a column.</p>
+<p>Stage 1: eliminate the lower triangular part of the matrix.</p>
+<p>Calculate the inverse of the diagonal block \(M \vert_{\tau[l]\times\tau[l]}\). The formula \(l + l \cdot k\) calculates the 1D index of the diagonal block in <code>submatrices</code>. This is because the submatrices of the current \(\mathcal{H}\)-matrix node is stored in the following order:</p>
+<p><code> submatrices = {tau[0]*sigma[0], tau[0]*sigma[1], tau[1]*sigma[0], tau[1]*sigma[1]} </code></p>
+<p>Since \(\tau\) is the same as \(\sigma\), we have</p>
+<p><code> submatrices = {tau[0]*tau[0], tau[0]*tau[1], tau[1]*tau[0], tau[1]*tau[1]} </code></p>
+<p>Hence, the index of <code>tau</code>[0]*tau[0] in <code>submatrices</code> is 0 and the index of <code>tau</code>[1]*tau[1] in <code>submatrices</code> is 3. The former index is calculated as <code>0 + 0 * 2 = 0</code>, while the latter index is calculated as <code>1 + 1 * 2 = 3</code>.</p>
+<p>Iterate over the columns from \(l + 1\) to \(k\) in the source matrix and scale each matrix block with the factor <code>M_inv.submatrices</code>[diag_block_index_in_submatrices]. Also note that the column index starts from zero, therefore the loop variable \(j \in [l+1, k)\).</p>
+<p>Migrate the newly created \(\mathcal{H}\)-matrix to the target submatrix.</p>
+<p>Iterate over the columns from \(0\) to \(l - 1\) in the inverse matrix and scale each matrix block with the factor <code>M_inv.submatrices</code>[diag_block_index_in_submatrices].</p>
+<p>Migrate the newly created \(\mathcal{H}\)-matrix to the target submatrix.</p>
+<p>Iterate over the rows from \(l + 1\) to \(k - 1\) in order to eliminate the matrix blocks \(M_{l+1,l}, \cdots, M_{k - 1,l}\).</p>
+<p>Stage 2: eliminate the upper triangular part of the matrix.</p>
+<p>Eliminate the elements \(M_{l-1,l}, \cdots, M_{1,l}\).</p>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#a4a304494c970b5b267be1d8459d51586">HMatrix&lt; spacedim, Number &gt;::bc_node</a>, <a class="el" href="classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533">HMatrix&lt; spacedim, Number &gt;::fullmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="classHMatrix.html#aa5523463043e4d542eae17d262bd22ad">HMatrix&lt; spacedim, Number &gt;::m</a>, <a class="el" href="classHMatrix.html#ab5ae2eb472f81f80653ed4411629c2d1">HMatrix&lt; spacedim, Number &gt;::n</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, and <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#af972cb62d436b8dca5d95a5b6e2ed964">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>.</p>
 
 </div>
 </div>
 <a id="a8f96186426cd3147d5af32ca84ad25ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8f96186426cd3147d5af32ca84ad25ea">&#9670;&nbsp;</a></span>add() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f96186426cd3147d5af32ca84ad25ea">&#9670;&nbsp;</a></span>add() <span class="overload">[1/10]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -949,12 +1059,69 @@ template&lt;int spacedim, typename Number &gt; </div>
 
 <p class="reference">References <a class="el" href="classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533">HMatrix&lt; spacedim, Number &gt;::fullmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="classHMatrix.html#aa97a8f5e42aba0f1d5faf41f35a27819">HMatrix&lt; spacedim, Number &gt;::rkmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c">RkMatrixType</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>, and <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494aba1ff44c7102f5c03299dffd067b74b7">UndefinedMatrixType</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="hmatrix-add-formatted_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, and <a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt; spacedim, Number &gt;::mmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab9000d7604e2045cf7cad7458daca340">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="hmatrix_8h.html#a6534ff122b0835d0313d94264794b601">h_h_mmult_level_conserving()</a>, <a class="el" href="hmatrix-add-formatted-with-factor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, and <a class="el" href="classHMatrix.html#a4139e9069e3b18d4719c527ce2e0414c">HMatrix&lt; spacedim, Number &gt;::mmult()</a>.</p>
+
+</div>
+</div>
+<a id="aea42f5112b88270fef73342853fa386d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aea42f5112b88270fef73342853fa386d">&#9670;&nbsp;</a></span>add() <span class="overload">[2/10]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Number&#160;</td>
+          <td class="paramname"><em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Perform the addition with factor \(C = A + b B\). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">C</td><td></td></tr>
+    <tr><td class="paramname">b</td><td></td></tr>
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p><b>Work flow</b></p>
+<p>Recursively add each pair of submatrices.</p>
+<p>Perform addition of full matrices.</p>
+<p>Perform addition of rank-k matrices.</p>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533">HMatrix&lt; spacedim, Number &gt;::fullmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="classHMatrix.html#aa97a8f5e42aba0f1d5faf41f35a27819">HMatrix&lt; spacedim, Number &gt;::rkmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c">RkMatrixType</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>, and <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494aba1ff44c7102f5c03299dffd067b74b7">UndefinedMatrixType</a>.</p>
 
 </div>
 </div>
 <a id="a9bd48ada567962ab0dc75c31986bd1a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9bd48ada567962ab0dc75c31986bd1a6">&#9670;&nbsp;</a></span>add() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bd48ada567962ab0dc75c31986bd1a6">&#9670;&nbsp;</a></span>add() <span class="overload">[3/10]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -999,6 +1166,360 @@ template&lt;int spacedim, typename Number &gt; </div>
 
 </div>
 </div>
+<a id="af42aaa86b9f47c5c1514e4f06e343db6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af42aaa86b9f47c5c1514e4f06e343db6">&#9670;&nbsp;</a></span>add() <span class="overload">[4/10]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype">const Number&#160;</td>
+          <td class="paramname"><em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Perform the addition \(A = A + b B\). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p><b>Work flow</b></p>
+<p>Recursively add each pair of submatrices.</p>
+<p>Perform addition of full matrices.</p>
+<p>Perform addition of rank-k matrices.</p>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533">HMatrix&lt; spacedim, Number &gt;::fullmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="classHMatrix.html#aa97a8f5e42aba0f1d5faf41f35a27819">HMatrix&lt; spacedim, Number &gt;::rkmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c">RkMatrixType</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>, and <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494aba1ff44c7102f5c03299dffd067b74b7">UndefinedMatrixType</a>.</p>
+
+</div>
+</div>
+<a id="a1793dff400aeae649f909d7f45db8b8a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1793dff400aeae649f909d7f45db8b8a">&#9670;&nbsp;</a></span>add() <span class="overload">[5/10]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::map&lt; types::global_dof_index, size_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>row_index_global_to_local_map_for_rk</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::map&lt; types::global_dof_index, size_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>col_index_global_to_local_map_for_rk</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Add a rank-k matrix into the current \(\mathcal{H}\)-matrix node.</p>
+<p>The rank-k matrix will be restricted to each leaf node of the \(\mathcal{H}\)-matrix node and the addition will be performed there. In this implementation, the row and column global to local index maps with respect to <code>B</code> should be explicit provided.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Restrict the rank-k matrix to the local full matrix then perform the addition with the leaf node of the \(\mathcal{H}\)-matrix.</p>
+<p>Create a local rank-k matrix by restricting from the original large rank-k matrix.</p>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#ac30ae65e37ec5e4ccc7de2f6b9ea91e6">HMatrix&lt; spacedim, Number &gt;::col_indices</a>, <a class="el" href="classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533">HMatrix&lt; spacedim, Number &gt;::fullmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="classRkMatrix.html#a5305306386e47bcded819ce8d7f7935c">RkMatrix&lt; Number &gt;::restrictToFullMatrix()</a>, <a class="el" href="classHMatrix.html#aa97a8f5e42aba0f1d5faf41f35a27819">HMatrix&lt; spacedim, Number &gt;::rkmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c">RkMatrixType</a>, <a class="el" href="classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae">HMatrix&lt; spacedim, Number &gt;::row_indices</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>, and <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494aba1ff44c7102f5c03299dffd067b74b7">UndefinedMatrixType</a>.</p>
+
+</div>
+</div>
+<a id="ad3800d6fded523d5c8eeb8fd0c106a34"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3800d6fded523d5c8eeb8fd0c106a34">&#9670;&nbsp;</a></span>add() <span class="overload">[6/10]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype">const Number&#160;</td>
+          <td class="paramname"><em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::map&lt; types::global_dof_index, size_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>row_index_global_to_local_map_for_rk</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::map&lt; types::global_dof_index, size_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>col_index_global_to_local_map_for_rk</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Add a rank-k matrix multiplied by a factor into the current \(\mathcal{H}\)-matrix node.</p>
+<p>The rank-k matrix will be restricted to each leaf node of the \(\mathcal{H}\)-matrix node and the addition will be performed there. In this implementation, the row and column global to local index maps with respect to <code>B</code> should be explicit provided.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">b</td><td></td></tr>
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Restrict the rank-k matrix to the local full matrix then perform the addition with the leaf node of the \(\mathcal{H}\)-matrix.</p>
+<p>Create a local rank-k matrix by restricting from the original large rank-k matrix.</p>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#ac30ae65e37ec5e4ccc7de2f6b9ea91e6">HMatrix&lt; spacedim, Number &gt;::col_indices</a>, <a class="el" href="classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533">HMatrix&lt; spacedim, Number &gt;::fullmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="classRkMatrix.html#a5305306386e47bcded819ce8d7f7935c">RkMatrix&lt; Number &gt;::restrictToFullMatrix()</a>, <a class="el" href="classHMatrix.html#aa97a8f5e42aba0f1d5faf41f35a27819">HMatrix&lt; spacedim, Number &gt;::rkmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c">RkMatrixType</a>, <a class="el" href="classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae">HMatrix&lt; spacedim, Number &gt;::row_indices</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>, and <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494aba1ff44c7102f5c03299dffd067b74b7">UndefinedMatrixType</a>.</p>
+
+</div>
+</div>
+<a id="ab9000d7604e2045cf7cad7458daca340"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9000d7604e2045cf7cad7458daca340">&#9670;&nbsp;</a></span>add() <span class="overload">[7/10]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Add a rank-k matrix into the current \(\mathcal{H}\)-matrix node.</p>
+<p>The rank-k matrix will be restricted to each leaf node of the \(\mathcal{H}\)-matrix node and the addition will be performed there. In this implementation, the row and column global to local index maps with respect to <code>B</code> are the same as those associated with the \(\mathcal{H}\)-matrix, i.e. the rank-k matrix and \(\mathcal{H}\)-matrix are on a same block.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#ab337c7b4f2f40699b9b7f3ab17a1e056">HMatrix&lt; spacedim, Number &gt;::col_index_global_to_local_map</a>, <a class="el" href="classHMatrix.html#ac30ae65e37ec5e4ccc7de2f6b9ea91e6">HMatrix&lt; spacedim, Number &gt;::col_indices</a>, <a class="el" href="classRkMatrix.html#a58686c65ca8c952558eae4fa185e7d6a">RkMatrix&lt; Number &gt;::get_m()</a>, <a class="el" href="classRkMatrix.html#a4f719c760482c2ab75cc5647277a9cdd">RkMatrix&lt; Number &gt;::get_n()</a>, <a class="el" href="classHMatrix.html#aa5523463043e4d542eae17d262bd22ad">HMatrix&lt; spacedim, Number &gt;::m</a>, <a class="el" href="classHMatrix.html#ab5ae2eb472f81f80653ed4411629c2d1">HMatrix&lt; spacedim, Number &gt;::n</a>, <a class="el" href="classHMatrix.html#a4d64145335fc0521603b206a22a67578">HMatrix&lt; spacedim, Number &gt;::row_index_global_to_local_map</a>, and <a class="el" href="classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae">HMatrix&lt; spacedim, Number &gt;::row_indices</a>.</p>
+
+</div>
+</div>
+<a id="a94981e45b7d9aa0f2afae77d414f1c1a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94981e45b7d9aa0f2afae77d414f1c1a">&#9670;&nbsp;</a></span>add() <span class="overload">[8/10]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype">const Number&#160;</td>
+          <td class="paramname"><em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Add a rank-k matrix multiplied by a factor into the current \(\mathcal{H}\)-matrix node.</p>
+<p>The rank-k matrix will be restricted to each leaf node of the \(\mathcal{H}\)-matrix node and the addition will be performed there. In this implementation, the row and column global to local index maps with respect to <code>B</code> are the same as those associated with the \(\mathcal{H}\)-matrix, i.e. the rank-k matrix and \(\mathcal{H}\)-matrix are on a same block.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">b</td><td></td></tr>
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#ab337c7b4f2f40699b9b7f3ab17a1e056">HMatrix&lt; spacedim, Number &gt;::col_index_global_to_local_map</a>, <a class="el" href="classHMatrix.html#ac30ae65e37ec5e4ccc7de2f6b9ea91e6">HMatrix&lt; spacedim, Number &gt;::col_indices</a>, <a class="el" href="classRkMatrix.html#a58686c65ca8c952558eae4fa185e7d6a">RkMatrix&lt; Number &gt;::get_m()</a>, <a class="el" href="classRkMatrix.html#a4f719c760482c2ab75cc5647277a9cdd">RkMatrix&lt; Number &gt;::get_n()</a>, <a class="el" href="classHMatrix.html#aa5523463043e4d542eae17d262bd22ad">HMatrix&lt; spacedim, Number &gt;::m</a>, <a class="el" href="classHMatrix.html#ab5ae2eb472f81f80653ed4411629c2d1">HMatrix&lt; spacedim, Number &gt;::n</a>, <a class="el" href="classHMatrix.html#a4d64145335fc0521603b206a22a67578">HMatrix&lt; spacedim, Number &gt;::row_index_global_to_local_map</a>, and <a class="el" href="classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae">HMatrix&lt; spacedim, Number &gt;::row_indices</a>.</p>
+
+</div>
+</div>
+<a id="a403d72a5eea3912d67fd0807ddd0baf8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a403d72a5eea3912d67fd0807ddd0baf8">&#9670;&nbsp;</a></span>add() <span class="overload">[9/10]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Perform the \(\mathcal{H}\)-matrix addition \(C = A + B\). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">C</td><td></td></tr>
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>.</p>
+
+</div>
+</div>
+<a id="af66071b53145fe007ac040fa0c4b47c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af66071b53145fe007ac040fa0c4b47c6">&#9670;&nbsp;</a></span>add() <span class="overload">[10/10]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Number&#160;</td>
+          <td class="paramname"><em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Perform the \(\mathcal{H}\)-matrix addition \(C = A + b B\). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">C</td><td></td></tr>
+    <tr><td class="paramname">b</td><td></td></tr>
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>.</p>
+
+</div>
+</div>
 <a id="a139f32982527ba981e0211b5663e3b43"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a139f32982527ba981e0211b5663e3b43">&#9670;&nbsp;</a></span>build_leaf_set()</h2>
 
@@ -1019,7 +1540,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 
 <p class="reference">References <a class="el" href="classHMatrix.html#a60934e84cc3c9f6c75d011a2005f512a">HMatrix&lt; spacedim, Number &gt;::_build_leaf_set()</a>, and <a class="el" href="classHMatrix.html#a61dbd471077be0ad8325d0f2afe3d43f">HMatrix&lt; spacedim, Number &gt;::leaf_set</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a27c7390b792e6e47ab2861616a997d99">HMatrix&lt; spacedim, Number &gt;::coarsen_to_subtree()</a>, <a class="el" href="classHMatrix.html#af6fd60090b0de7bdea52fc84ddeb22c3">HMatrix&lt; spacedim, Number &gt;::convert_between_different_block_cluster_trees()</a>, <a class="el" href="classHMatrix.html#a6a4dead0321e8df38865bf6fbd0f6e81">HMatrix&lt; spacedim, Number &gt;::HMatrix()</a>, <a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt; spacedim, Number &gt;::mmult()</a>, <a class="el" href="classHMatrix.html#a83958971f40409b3b2a192b71eae1513">HMatrix&lt; spacedim, Number &gt;::operator=()</a>, <a class="el" href="classHMatrix.html#ad2b353962226c78910d6ddb6b5b8e460">HMatrix&lt; spacedim, Number &gt;::refine_to_supertree()</a>, and <a class="el" href="classHMatrix.html#a83f804163e1695cfb952ddb6b0df2503">HMatrix&lt; spacedim, Number &gt;::reinit()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a27c7390b792e6e47ab2861616a997d99">HMatrix&lt; spacedim, Number &gt;::coarsen_to_subtree()</a>, <a class="el" href="classHMatrix.html#af6fd60090b0de7bdea52fc84ddeb22c3">HMatrix&lt; spacedim, Number &gt;::convert_between_different_block_cluster_trees()</a>, <a class="el" href="classHMatrix.html#a6a4dead0321e8df38865bf6fbd0f6e81">HMatrix&lt; spacedim, Number &gt;::HMatrix()</a>, <a class="el" href="classHMatrix.html#af972cb62d436b8dca5d95a5b6e2ed964">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt; spacedim, Number &gt;::mmult()</a>, <a class="el" href="classHMatrix.html#a83958971f40409b3b2a192b71eae1513">HMatrix&lt; spacedim, Number &gt;::operator=()</a>, <a class="el" href="classHMatrix.html#ad2b353962226c78910d6ddb6b5b8e460">HMatrix&lt; spacedim, Number &gt;::refine_to_supertree()</a>, and <a class="el" href="classHMatrix.html#a83f804163e1695cfb952ddb6b0df2503">HMatrix&lt; spacedim, Number &gt;::reinit()</a>.</p>
 
 </div>
 </div>
@@ -1274,7 +1795,7 @@ template&lt;typename MatrixType &gt; </div>
 
 <p class="reference">References <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#aa5523463043e4d542eae17d262bd22ad">HMatrix&lt; spacedim, Number &gt;::m</a>, and <a class="el" href="classHMatrix.html#ab5ae2eb472f81f80653ed4411629c2d1">HMatrix&lt; spacedim, Number &gt;::n</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="hmatrix-add-formatted_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="hmatrix-add-formatted-with-factor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
 
 </div>
 </div>
@@ -1302,8 +1823,8 @@ template&lt;int spacedim, typename Number &gt; </div>
 
 </div>
 </div>
-<a id="a01360c3d9a93154f2e629b6c413aa991"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a01360c3d9a93154f2e629b6c413aa991">&#9670;&nbsp;</a></span>distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</h2>
+<a id="a66979dbdf56155c63f0706649e8545b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66979dbdf56155c63f0706649e8545b9">&#9670;&nbsp;</a></span>distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1316,7 +1837,8 @@ template&lt;int spacedim, typename Number &gt; </div>
         <tr>
           <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const unsigned int&#160;</td>
+          <td class="paramname"><em>fixed_rank</em> = <code>0</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1327,13 +1849,13 @@ template&lt;int spacedim, typename Number &gt; </div>
 </table>
 </div><div class="memdoc">
 <p>Only non-leaf \(\mathcal{H}\)-matrix nodes need to be processed.</p>
-<p>Since the current \(\mathcal{H}\)-matrix node has children, its type should be <code>HierarchicalMatrixType</code>.</p>
-<p>Distribute matrices in \(\Sigma_b^R\) and \(\Sigma_b^F\) of the current \(\mathcal{H}\)-matrix node to its leaves, which is also a recursive function call.</p>
-<p>Distribute matrices in \(\Sigma_b^R\) and \(\Sigma_b^F\) of each child matrix of the current \(\mathcal{H}\)-matrix node to its leaves</p>
+<p>Since the current \(\mathcal{H}\)-matrix node has children, its type should be <code>HierarchicalMatrixType</code> and we make an assertion on it.</p>
+<p>Distribute matrices in \(\Sigma_b^R\) and \(\Sigma_b^F\) of the current \(\mathcal{H}\)-matrix node to the leaf nodes which are its descendants. This is a recursive function call.</p>
+<p>Distribute matrices in \(\Sigma_b^R\) and \(\Sigma_b^F\) of each child matrix of the current \(\mathcal{H}\)-matrix node to the leaf nodes which are its descendants.</p>
 
-<p class="reference">References <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#ab337c7b4f2f40699b9b7f3ab17a1e056">HMatrix&lt; spacedim, Number &gt;::col_index_global_to_local_map</a>, <a class="el" href="classHMatrix.html#ac30ae65e37ec5e4ccc7de2f6b9ea91e6">HMatrix&lt; spacedim, Number &gt;::col_indices</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="classHMatrix.html#a4d64145335fc0521603b206a22a67578">HMatrix&lt; spacedim, Number &gt;::row_index_global_to_local_map</a>, <a class="el" href="classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae">HMatrix&lt; spacedim, Number &gt;::row_indices</a>, <a class="el" href="classHMatrix.html#aa659b6df63d533432ec1a24435cd9c40">HMatrix&lt; spacedim, Number &gt;::Sigma_F</a>, <a class="el" href="classHMatrix.html#a04d341b4e606d1be2d71b8ea636efe7b">HMatrix&lt; spacedim, Number &gt;::Sigma_R</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, and <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>.</p>
+<p class="reference">References <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#ab337c7b4f2f40699b9b7f3ab17a1e056">HMatrix&lt; spacedim, Number &gt;::col_index_global_to_local_map</a>, <a class="el" href="classHMatrix.html#ac30ae65e37ec5e4ccc7de2f6b9ea91e6">HMatrix&lt; spacedim, Number &gt;::col_indices</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a8721e6353d7dcebee5c58f4990a0241d">HierarchicalMatrixType</a>, <a class="el" href="classHMatrix.html#a4d64145335fc0521603b206a22a67578">HMatrix&lt; spacedim, Number &gt;::row_index_global_to_local_map</a>, <a class="el" href="classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae">HMatrix&lt; spacedim, Number &gt;::row_indices</a>, <a class="el" href="classHMatrix.html#aa659b6df63d533432ec1a24435cd9c40">HMatrix&lt; spacedim, Number &gt;::Sigma_F</a>, <a class="el" href="classHMatrix.html#a04d341b4e606d1be2d71b8ea636efe7b">HMatrix&lt; spacedim, Number &gt;::Sigma_R</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, and <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a60934e84cc3c9f6c75d011a2005f512a">HMatrix&lt; spacedim, Number &gt;::_build_leaf_set()</a>, and <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>.</p>
 
 </div>
 </div>
@@ -1369,8 +1891,6 @@ template&lt;int spacedim, typename Number &gt; </div>
 </dl>
 
 <p class="reference">References <a class="el" href="classHMatrix.html#a61dbd471077be0ad8325d0f2afe3d43f">HMatrix&lt; spacedim, Number &gt;::leaf_set</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>.</p>
 
 </div>
 </div>
@@ -1474,8 +1994,6 @@ template&lt;int spacedim, typename Number &gt; </div>
 <p>Get the reference to the leaf set of the current \(\mathcal{H}\)-matrix node. </p><dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 <p class="reference">References <a class="el" href="classHMatrix.html#a61dbd471077be0ad8325d0f2afe3d43f">HMatrix&lt; spacedim, Number &gt;::leaf_set</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>.</p>
 
 </div>
 </div>
@@ -1786,8 +2304,8 @@ template&lt;int spacedim, typename Number &gt; </div>
 
 </div>
 </div>
-<a id="ab100d1469f662efdbf894a0345b702b8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab100d1469f662efdbf894a0345b702b8">&#9670;&nbsp;</a></span>invert_by_gauss_elim()</h2>
+<a id="af972cb62d436b8dca5d95a5b6e2ed964"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af972cb62d436b8dca5d95a5b6e2ed964">&#9670;&nbsp;</a></span>invert_by_gauss_elim()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1803,30 +2321,6 @@ template&lt;int spacedim, typename Number &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
-          <td class="paramname"><em>M_root</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
-          <td class="paramname"><em>M_inv_root</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
-          <td class="paramname"><em>M_root_bct</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
-          <td class="paramname"><em>M_inv_root_bct</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">const <a class="el" href="classHMatrix.html#a5ca8dc549783d38371a01ecd621ecb34">size_type</a>&#160;</td>
           <td class="paramname"><em>fixed_rank_k</em>&#160;</td>
         </tr>
@@ -1837,35 +2331,26 @@ template&lt;int spacedim, typename Number &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the inverse of the \(\mathcal{H}\)-matrix node via Gauss elimination.</p>
+<p>Calculate the inverse of the \(\mathcal{H}\)-matrix node via Gauss elimination by calling the recursive function <a class="el" href="classHMatrix.html">HMatrix</a>&lt;spacedim, Number&gt;::_invert_by_gauss_elim.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">M_inv</td><td></td></tr>
     <tr><td class="paramname">M_root</td><td>The \(\mathcal{H}\)-matrix node from which this recursive function is called for the first time. </td></tr>
-    <tr><td class="paramname">M_inv_root</td><td>The \(\mathcal{H}\)-matrix node storing the inverse matrix of <code>M_root</code>. </td></tr>
     <tr><td class="paramname">M_root_bct</td><td>The block cluster tree associated with <code>M_root</code>. </td></tr>
-    <tr><td class="paramname">M_inv_root_bct</td><td>The block cluster tree associated with <code>M_inv_root</code>. </td></tr>
     <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
   </table>
   </dd>
 </dl>
-<p>If the current matrix block to be handled has a same \(\tau\) cluster and \(\sigma\) cluster and belongs to the leaf set of <code>M_root</code>, directly calculate its inverse as full matrix.</p>
-<p>Number of matrix block in a row.</p>
-<p>Stage 1: eliminate the lower triangular part of the matrix.</p>
-<p>Calculate the inverse of the diagonal block \(M \vert_{\tau[l]\times\tau[l]}\). The formula \(l + l \cdot k\) calculates the 1D index of the diagonal block in <code>submatrices</code>. This is because the submatrices of the current \(\mathcal{H}\)-matrix node is stored in the following order:</p>
-<p><code> submatrices = {tau[0]*sigma[0], tau[0]*sigma[1], tau[1]*sigma[0], tau[1]*sigma[1]} </code></p>
-<p>Since \(\tau\) is the same as \(\sigma\), we have</p>
-<p><code> submatrices = {tau[0]*tau[0], tau[0]*tau[1], tau[1]*tau[0], tau[1]*tau[1]} </code></p>
-<p>Hence, the index of <code>tau</code>[0]*tau[0] in <code>submatrices</code> is 0 and the index of <code>tau</code>[1]*tau[1] in <code>submatrices</code> is 3. The former index is calculated as <code>0 + 0 * 2 = 0</code>, while the latter index is calculated as <code>1 + 1 * 2 = 3</code>.</p>
-<p>Create subtrees used for matrix multiplication.</p>
-<p>Stage 2: eliminate the upper triangular part of the matrix.</p>
+<p>Rebuild the leaf set of the current \(\mathcal{H}\)-matrix and its inverse.</p>
 
-<p class="reference">References <a class="el" href="classHMatrix.html#a4a304494c970b5b267be1d8459d51586">HMatrix&lt; spacedim, Number &gt;::bc_node</a>, <a class="el" href="classHMatrix.html#ab0f83de878e6079330ec3c374f587a04">HMatrix&lt; spacedim, Number &gt;::find_block_cluster_in_leaf_set()</a>, <a class="el" href="classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533">HMatrix&lt; spacedim, Number &gt;::fullmatrix</a>, <a class="el" href="hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924">FullMatrixType</a>, <a class="el" href="classBlockClusterTree.html#a312d01ddb6cf5560d84abf7d254fa2c3">BlockClusterTree&lt; spacedim, Number &gt;::get_eta()</a>, <a class="el" href="classHMatrix.html#ac5c9102fc04997c1ae3627185379d9bb">HMatrix&lt; spacedim, Number &gt;::get_leaf_set()</a>, <a class="el" href="classBlockClusterTree.html#ab00acda5e8fd4c3e381637d8d9322923">BlockClusterTree&lt; spacedim, Number &gt;::get_n_min()</a>, <a class="el" href="classHMatrix.html#aa5523463043e4d542eae17d262bd22ad">HMatrix&lt; spacedim, Number &gt;::m</a>, <a class="el" href="classHMatrix.html#ab5ae2eb472f81f80653ed4411629c2d1">HMatrix&lt; spacedim, Number &gt;::n</a>, <a class="el" href="classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f">HMatrix&lt; spacedim, Number &gt;::submatrices</a>, and <a class="el" href="classHMatrix.html#a89ef60f3ba737c04708195ca0bb13620">HMatrix&lt; spacedim, Number &gt;::type</a>.</p>
+<p class="reference">References <a class="el" href="classHMatrix.html#af74e3b0c19e9178cfe699a6620a51170">HMatrix&lt; spacedim, Number &gt;::_invert_by_gauss_elim()</a>, and <a class="el" href="classHMatrix.html#a139f32982527ba981e0211b5663e3b43">HMatrix&lt; spacedim, Number &gt;::build_leaf_set()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="hmatrix-invert-by-gauss-elim_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
 
 </div>
 </div>
 <a id="af40d53aabc8bec86fa543638d48ba64e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af40d53aabc8bec86fa543638d48ba64e">&#9670;&nbsp;</a></span>mmult()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#af40d53aabc8bec86fa543638d48ba64e">&#9670;&nbsp;</a></span>mmult() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1960,9 +2445,130 @@ template&lt;int spacedim, typename Number &gt; </div>
 </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#a139f32982527ba981e0211b5663e3b43">HMatrix&lt; spacedim, Number &gt;::build_leaf_set()</a>, <a class="el" href="classTreeNode.html#a7bf414928c965e707e0246f7a90a747d">TreeNode&lt; T, N &gt;::get_data_reference()</a>, <a class="el" href="classBlockClusterTree.html#ab00acda5e8fd4c3e381637d8d9322923">BlockClusterTree&lt; spacedim, Number &gt;::get_n_min()</a>, <a class="el" href="classBlockClusterTree.html#a4a4f3b893380d1d7f53b772589a847d2">BlockClusterTree&lt; spacedim, Number &gt;::get_root()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="classHMatrix.html#a12da9454687e5ca15837d63e2bf0b595">HMatrix&lt; spacedim, Number &gt;::Tind</a>.</p>
+<p class="reference">References <a class="el" href="classHMatrix.html#a139f32982527ba981e0211b5663e3b43">HMatrix&lt; spacedim, Number &gt;::build_leaf_set()</a>, <a class="el" href="classTreeNode.html#a7bf414928c965e707e0246f7a90a747d">TreeNode&lt; T, N &gt;::get_data_reference()</a>, <a class="el" href="classBlockClusterTree.html#ab00acda5e8fd4c3e381637d8d9322923">BlockClusterTree&lt; spacedim, Number &gt;::get_n_min()</a>, <a class="el" href="classBlockClusterTree.html#a4a4f3b893380d1d7f53b772589a847d2">BlockClusterTree&lt; spacedim, Number &gt;::get_root()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="classHMatrix.html#a12da9454687e5ca15837d63e2bf0b595">HMatrix&lt; spacedim, Number &gt;::Tind</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="hmatrix-hmatrix-mmult-all-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="hmatrix-hmatrix-mmult-all-coarse-ntp_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, and <a class="el" href="classHMatrix.html#a4139e9069e3b18d4719c527ce2e0414c">HMatrix&lt; spacedim, Number &gt;::mmult()</a>.</p>
+
+</div>
+</div>
+<a id="a4139e9069e3b18d4719c527ce2e0414c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4139e9069e3b18d4719c527ce2e0414c">&#9670;&nbsp;</a></span>mmult() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::mmult </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bct_a</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bct_b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classBlockClusterTree.html">BlockClusterTree</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bct_c</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const unsigned int&#160;</td>
+          <td class="paramname"><em>fixed_rank</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>adding</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Multiplication of two \(\mathcal{H}\)-matrices, the result of which will be appended to the target matrix <code>C</code>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">C</td><td></td></tr>
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">bct_a</td><td></td></tr>
+    <tr><td class="paramname">bct_b</td><td></td></tr>
+    <tr><td class="paramname">bct_c</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank</td><td></td></tr>
+    <tr><td class="paramname">adding</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, and <a class="el" href="classHMatrix.html#af40d53aabc8bec86fa543638d48ba64e">HMatrix&lt; spacedim, Number &gt;::mmult()</a>.</p>
+
+</div>
+</div>
+<a id="a4ea0317bff2670e3ed7e48416f908873"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ea0317bff2670e3ed7e48416f908873">&#9670;&nbsp;</a></span>mmult_level_conserving()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim, typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt;::mmult_level_conserving </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim, Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const unsigned int&#160;</td>
+          <td class="paramname"><em>fixed_rank</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Level conserving \(\mathcal{H}\)-matrix multiplication, the result of which will be appended to the target matrix <code>C</code>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">C</td><td></td></tr>
+    <tr><td class="paramname">B</td><td></td></tr>
+    <tr><td class="paramname">fixed_rank</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">Referenced by <a class="el" href="hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp-member-function-call_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
 
 </div>
 </div>
@@ -2812,7 +3418,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Pointer to the corresponding block cluster node in a <a class="el" href="classBlockClusterTree.html" title="Class for block cluster tree. ">BlockClusterTree</a>. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="classHMatrix.html#a525ad4d453f4f496b98cccb341c8b60b">HMatrix&lt; spacedim, Number &gt;::coarsen_to_partition()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#ab315324e3ece178943f406823f792746">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_cross_split()</a>, <a class="el" href="classHMatrix.html#a38c88893c6ca784d4e56653d8b0e3e67">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_horizontal_split()</a>, <a class="el" href="classHMatrix.html#a168b6eea2e5b27528497850bf5ee2bbe">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_reduction()</a>, <a class="el" href="classHMatrix.html#a253c23d09e89a9a37a7d808374b5ae4e">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_vertical_split()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#ad8f87883cf49080706233441c0e09171">HMatrix&lt; spacedim, Number &gt;::print_matrix_info()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="classHMatrix.html#a42f958a13c56d64564d59487e67bc8a2">HMatrix&lt; spacedim, Number &gt;::write_fullmatrix_leaf_node()</a>, and <a class="el" href="classHMatrix.html#ac2c8ccd5763d3952505741c657b6468c">HMatrix&lt; spacedim, Number &gt;::write_rkmatrix_leaf_node()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#af74e3b0c19e9178cfe699a6620a51170">HMatrix&lt; spacedim, Number &gt;::_invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="classHMatrix.html#a525ad4d453f4f496b98cccb341c8b60b">HMatrix&lt; spacedim, Number &gt;::coarsen_to_partition()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#ab315324e3ece178943f406823f792746">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_cross_split()</a>, <a class="el" href="hmatrix_8h.html#a2b842125056627d38c5aee3a077e596c">h_h_mmult_from_leaf_node()</a>, <a class="el" href="classHMatrix.html#a38c88893c6ca784d4e56653d8b0e3e67">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_horizontal_split()</a>, <a class="el" href="hmatrix_8h.html#a6534ff122b0835d0313d94264794b601">h_h_mmult_level_conserving()</a>, <a class="el" href="classHMatrix.html#a168b6eea2e5b27528497850bf5ee2bbe">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_reduction()</a>, <a class="el" href="classHMatrix.html#a253c23d09e89a9a37a7d808374b5ae4e">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_vertical_split()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="classHMatrix.html#ad8f87883cf49080706233441c0e09171">HMatrix&lt; spacedim, Number &gt;::print_matrix_info()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="classHMatrix.html#a42f958a13c56d64564d59487e67bc8a2">HMatrix&lt; spacedim, Number &gt;::write_fullmatrix_leaf_node()</a>, and <a class="el" href="classHMatrix.html#ac2c8ccd5763d3952505741c657b6468c">HMatrix&lt; spacedim, Number &gt;::write_rkmatrix_leaf_node()</a>.</p>
 
 </div>
 </div>
@@ -2843,7 +3449,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 <dd>This mapping is only constructed for H-matrices in the leaf set. </dd>
 </dl>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#ab9000d7604e2045cf7cad7458daca340">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>.</p>
 
 </div>
 </div>
@@ -2870,7 +3476,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Pointer to the vector of global column indices, which is stored as the index set in the cluster \(\sigma\). It is a subset of \(J\). By accessing this vector using indices starting from 0, we actually obtain the mapping from the current matrix's local column indices to the global column indices. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a1793dff400aeae649f909d7f45db8b8a">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
 
 </div>
 </div>
@@ -2897,7 +3503,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Pointer to the full matrix. It is not null when the current <a class="el" href="classHMatrix.html">HMatrix</a> object belongs to the near field. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a9d914c27d4e990d476a4529b2daa64cd">HMatrix&lt; spacedim, Number &gt;::get_fullmatrix()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#a7e849f7e8f35e3ebdfcb2dbb7ad4ad01">HMatrix&lt; spacedim, Number &gt;::print_formatted()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#af74e3b0c19e9178cfe699a6620a51170">HMatrix&lt; spacedim, Number &gt;::_invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a9d914c27d4e990d476a4529b2daa64cd">HMatrix&lt; spacedim, Number &gt;::get_fullmatrix()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a6534ff122b0835d0313d94264794b601">h_h_mmult_level_conserving()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="classHMatrix.html#a7e849f7e8f35e3ebdfcb2dbb7ad4ad01">HMatrix&lt; spacedim, Number &gt;::print_formatted()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
 
 </div>
 </div>
@@ -2951,7 +3557,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Total number of rows in the matrix. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="classHMatrix.html#a00bdd40f7fcf5c912c34c427df518300">HMatrix&lt; spacedim, Number &gt;::convertToFullMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="classHMatrix.html#aabe735f7712a10ba5325ff116f8ca1c7">HMatrix&lt; spacedim, Number &gt;::get_m()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#af74e3b0c19e9178cfe699a6620a51170">HMatrix&lt; spacedim, Number &gt;::_invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#ab9000d7604e2045cf7cad7458daca340">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="classHMatrix.html#a00bdd40f7fcf5c912c34c427df518300">HMatrix&lt; spacedim, Number &gt;::convertToFullMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#aabe735f7712a10ba5325ff116f8ca1c7">HMatrix&lt; spacedim, Number &gt;::get_m()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
 
 </div>
 </div>
@@ -2978,7 +3584,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Total number of columns in the matrix. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="classHMatrix.html#a00bdd40f7fcf5c912c34c427df518300">HMatrix&lt; spacedim, Number &gt;::convertToFullMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="classHMatrix.html#abff89130116d62ea4159bc69ca11f8d5">HMatrix&lt; spacedim, Number &gt;::get_n()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#af74e3b0c19e9178cfe699a6620a51170">HMatrix&lt; spacedim, Number &gt;::_invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#ab9000d7604e2045cf7cad7458daca340">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="classHMatrix.html#a00bdd40f7fcf5c912c34c427df518300">HMatrix&lt; spacedim, Number &gt;::convertToFullMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#abff89130116d62ea4159bc69ca11f8d5">HMatrix&lt; spacedim, Number &gt;::get_n()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
 
 </div>
 </div>
@@ -3005,7 +3611,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Pointer to the rank-k matrix. It is not null when the current <a class="el" href="classHMatrix.html">HMatrix</a> object belongs to the far field. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a0189de6e276fbd3425c4a7ef132f5e16">HMatrix&lt; spacedim, Number &gt;::get_rkmatrix()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="classHMatrix.html#a7e849f7e8f35e3ebdfcb2dbb7ad4ad01">HMatrix&lt; spacedim, Number &gt;::print_formatted()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a64be687cacd167efc12b892aa154dcd3">HMatrix&lt; spacedim, Number &gt;::truncate_to_rank()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a0189de6e276fbd3425c4a7ef132f5e16">HMatrix&lt; spacedim, Number &gt;::get_rkmatrix()</a>, <a class="el" href="hmatrix_8h.html#a6534ff122b0835d0313d94264794b601">h_h_mmult_level_conserving()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="classHMatrix.html#a7e849f7e8f35e3ebdfcb2dbb7ad4ad01">HMatrix&lt; spacedim, Number &gt;::print_formatted()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a64be687cacd167efc12b892aa154dcd3">HMatrix&lt; spacedim, Number &gt;::truncate_to_rank()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
 
 </div>
 </div>
@@ -3036,7 +3642,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 <dd>This mapping is only constructed for H-matrices in the leaf set. </dd>
 </dl>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#ab9000d7604e2045cf7cad7458daca340">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>.</p>
 
 </div>
 </div>
@@ -3063,7 +3669,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Pointer to the vector of global row indices, which is stored as the index in the cluster \(\tau\). It is a subset of \(I\). By accessing this vector using indices starting from 0, we actually obtain the mapping from the current matrix's local row indices to the global row indices. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a1793dff400aeae649f909d7f45db8b8a">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, and <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>.</p>
 
 </div>
 </div>
@@ -3090,7 +3696,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>List of full matrix pointers used in \(\mathcal{H}\)-matrix multiplication. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a3e61ba5438c4cf0337664ec4b8562873">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="classHMatrix.html#ad8f87883cf49080706233441c0e09171">HMatrix&lt; spacedim, Number &gt;::print_matrix_info()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a3e61ba5438c4cf0337664ec4b8562873">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="classHMatrix.html#ad8f87883cf49080706233441c0e09171">HMatrix&lt; spacedim, Number &gt;::print_matrix_info()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>.</p>
 
 </div>
 </div>
@@ -3144,7 +3750,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>List of rank-k matrix pointers used in \(\mathcal{H}\)-matrix multiplication. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a3e61ba5438c4cf0337664ec4b8562873">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="classHMatrix.html#ad8f87883cf49080706233441c0e09171">HMatrix&lt; spacedim, Number &gt;::print_matrix_info()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a3e61ba5438c4cf0337664ec4b8562873">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a21892e360616f81dd5ad1c7089f9eaab">InitHMatrixWrtBlockClusterNode()</a>, <a class="el" href="classHMatrix.html#ad8f87883cf49080706233441c0e09171">HMatrix&lt; spacedim, Number &gt;::print_matrix_info()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, and <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>.</p>
 
 </div>
 </div>
@@ -3171,7 +3777,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>A list of submatrices of type <a class="el" href="classHMatrix.html">HMatrix</a>. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a60934e84cc3c9f6c75d011a2005f512a">HMatrix&lt; spacedim, Number &gt;::_build_leaf_set()</a>, <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#ae55bd45587b895bfdb977e7cbea46519">HMatrix&lt; spacedim, Number &gt;::clear()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="classHMatrix.html#a525ad4d453f4f496b98cccb341c8b60b">HMatrix&lt; spacedim, Number &gt;::coarsen_to_partition()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#af4b3e4f5b78b4b6a9885325225eba0a1">copy_hmatrix()</a>, <a class="el" href="hmatrix_8h.html#a3e61ba5438c4cf0337664ec4b8562873">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a0572b2c0484ce618db0034e3bc7988ed">HMatrix&lt; spacedim, Number &gt;::get_submatrices()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#a7e849f7e8f35e3ebdfcb2dbb7ad4ad01">HMatrix&lt; spacedim, Number &gt;::print_formatted()</a>, <a class="el" href="classHMatrix.html#ad8f87883cf49080706233441c0e09171">HMatrix&lt; spacedim, Number &gt;::print_matrix_info()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="classHMatrix.html#a64be687cacd167efc12b892aa154dcd3">HMatrix&lt; spacedim, Number &gt;::truncate_to_rank()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>, and <a class="el" href="classHMatrix.html#aaf0ae0960a40ad78a941aee823e80315">HMatrix&lt; spacedim, Number &gt;::write_leaf_set()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a60934e84cc3c9f6c75d011a2005f512a">HMatrix&lt; spacedim, Number &gt;::_build_leaf_set()</a>, <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#af74e3b0c19e9178cfe699a6620a51170">HMatrix&lt; spacedim, Number &gt;::_invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#ae55bd45587b895bfdb977e7cbea46519">HMatrix&lt; spacedim, Number &gt;::clear()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="classHMatrix.html#a525ad4d453f4f496b98cccb341c8b60b">HMatrix&lt; spacedim, Number &gt;::coarsen_to_partition()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#af4b3e4f5b78b4b6a9885325225eba0a1">copy_hmatrix()</a>, <a class="el" href="hmatrix_8h.html#a3e61ba5438c4cf0337664ec4b8562873">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a0572b2c0484ce618db0034e3bc7988ed">HMatrix&lt; spacedim, Number &gt;::get_submatrices()</a>, <a class="el" href="hmatrix_8h.html#a6534ff122b0835d0313d94264794b601">h_h_mmult_level_conserving()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="classHMatrix.html#a7e849f7e8f35e3ebdfcb2dbb7ad4ad01">HMatrix&lt; spacedim, Number &gt;::print_formatted()</a>, <a class="el" href="classHMatrix.html#ad8f87883cf49080706233441c0e09171">HMatrix&lt; spacedim, Number &gt;::print_matrix_info()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="classHMatrix.html#a64be687cacd167efc12b892aa154dcd3">HMatrix&lt; spacedim, Number &gt;::truncate_to_rank()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>, and <a class="el" href="classHMatrix.html#aaf0ae0960a40ad78a941aee823e80315">HMatrix&lt; spacedim, Number &gt;::write_leaf_set()</a>.</p>
 
 </div>
 </div>
@@ -3225,7 +3831,7 @@ template&lt;int spacedim, typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Matrix type. </p>
 
-<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a60934e84cc3c9f6c75d011a2005f512a">HMatrix&lt; spacedim, Number &gt;::_build_leaf_set()</a>, <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a2229caab9b862f9c54b7f3a806125fba">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#ae55bd45587b895bfdb977e7cbea46519">HMatrix&lt; spacedim, Number &gt;::clear()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a01360c3d9a93154f2e629b6c413aa991">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#aadea9fa59f420d22b3b1c939f6b573cc">HMatrix&lt; spacedim, Number &gt;::get_type()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="classHMatrix.html#a168b6eea2e5b27528497850bf5ee2bbe">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_reduction()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="classHMatrix.html#ab100d1469f662efdbf894a0345b702b8">HMatrix&lt; spacedim, Number &gt;::invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#a7e849f7e8f35e3ebdfcb2dbb7ad4ad01">HMatrix&lt; spacedim, Number &gt;::print_formatted()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a64be687cacd167efc12b892aa154dcd3">HMatrix&lt; spacedim, Number &gt;::truncate_to_rank()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>, <a class="el" href="classHMatrix.html#a42f958a13c56d64564d59487e67bc8a2">HMatrix&lt; spacedim, Number &gt;::write_fullmatrix_leaf_node()</a>, <a class="el" href="classHMatrix.html#aaf0ae0960a40ad78a941aee823e80315">HMatrix&lt; spacedim, Number &gt;::write_leaf_set()</a>, <a class="el" href="classHMatrix.html#aac1e1ddbfeb133520dcd50c0174aab8d">HMatrix&lt; spacedim, Number &gt;::write_leaf_set_by_iteration()</a>, and <a class="el" href="classHMatrix.html#ac2c8ccd5763d3952505741c657b6468c">HMatrix&lt; spacedim, Number &gt;::write_rkmatrix_leaf_node()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#a60934e84cc3c9f6c75d011a2005f512a">HMatrix&lt; spacedim, Number &gt;::_build_leaf_set()</a>, <a class="el" href="classHMatrix.html#ab55b568236ffdd71b5378ac6c6ace50a">HMatrix&lt; spacedim, Number &gt;::_convertToFullMatrix()</a>, <a class="el" href="classHMatrix.html#a187e0c009a7c28679df7e92e0b01929c">HMatrix&lt; spacedim, Number &gt;::_distribute_sigma_r_and_f_to_leaves()</a>, <a class="el" href="classHMatrix.html#af74e3b0c19e9178cfe699a6620a51170">HMatrix&lt; spacedim, Number &gt;::_invert_by_gauss_elim()</a>, <a class="el" href="classHMatrix.html#a8f96186426cd3147d5af32ca84ad25ea">HMatrix&lt; spacedim, Number &gt;::add()</a>, <a class="el" href="classHMatrix.html#ae55bd45587b895bfdb977e7cbea46519">HMatrix&lt; spacedim, Number &gt;::clear()</a>, <a class="el" href="classHMatrix.html#aec0815bc9c3654391bb2b3095383e6cb">HMatrix&lt; spacedim, Number &gt;::clear_hmat_node()</a>, <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a1eeb0a11d6f43231a21267b2b45fefb2">copy_hmatrix_node()</a>, <a class="el" href="classHMatrix.html#a66979dbdf56155c63f0706649e8545b9">HMatrix&lt; spacedim, Number &gt;::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()</a>, <a class="el" href="hmatrix_8h.html#a242e7e3da010e972783e20326ae15a36">f_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#aadea9fa59f420d22b3b1c939f6b573cc">HMatrix&lt; spacedim, Number &gt;::get_type()</a>, <a class="el" href="hmatrix_8h.html#a374070dba133f2152e9c44ce10947f20">h_f_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a6534ff122b0835d0313d94264794b601">h_h_mmult_level_conserving()</a>, <a class="el" href="hmatrix_8h.html#a199fb48349b9486624a3c55c5aece3f4">h_h_mmult_phase2()</a>, <a class="el" href="classHMatrix.html#a168b6eea2e5b27528497850bf5ee2bbe">HMatrix&lt; spacedim, Number &gt;::h_h_mmult_reduction()</a>, <a class="el" href="hmatrix_8h.html#a84df06910d958d84ac8c544f9a8423a8">h_rk_mmult_for_h_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="classHMatrix.html#a7e849f7e8f35e3ebdfcb2dbb7ad4ad01">HMatrix&lt; spacedim, Number &gt;::print_formatted()</a>, <a class="el" href="hmatrix_8h.html#a090df12c1646d637bc390fa6dae55f24">RefineHMatrixWrtExtendedBlockClusterTree()</a>, <a class="el" href="classHMatrix.html#a812e8276888b2ad866edf7ce9b286839">HMatrix&lt; spacedim, Number &gt;::release()</a>, <a class="el" href="hmatrix_8h.html#a43aef4fd52ce71103baa047f549293c6">rk_h_mmult_for_h_h_mmult()</a>, <a class="el" href="classHMatrix.html#a64be687cacd167efc12b892aa154dcd3">HMatrix&lt; spacedim, Number &gt;::truncate_to_rank()</a>, <a class="el" href="classHMatrix.html#a72e5255eb5ce46136d0e2b195c82f016">HMatrix&lt; spacedim, Number &gt;::Tvmult()</a>, <a class="el" href="classHMatrix.html#a166893f3f371d4542cb57aaa33e533d1">HMatrix&lt; spacedim, Number &gt;::Tvmult_local_vector()</a>, <a class="el" href="classHMatrix.html#aa11b5761aba86606effd14b4bdf31912">HMatrix&lt; spacedim, Number &gt;::vmult()</a>, <a class="el" href="classHMatrix.html#a2afddab534366617b6be203b3c5238a6">HMatrix&lt; spacedim, Number &gt;::vmult_local_vector()</a>, <a class="el" href="classHMatrix.html#a42f958a13c56d64564d59487e67bc8a2">HMatrix&lt; spacedim, Number &gt;::write_fullmatrix_leaf_node()</a>, <a class="el" href="classHMatrix.html#aaf0ae0960a40ad78a941aee823e80315">HMatrix&lt; spacedim, Number &gt;::write_leaf_set()</a>, <a class="el" href="classHMatrix.html#aac1e1ddbfeb133520dcd50c0174aab8d">HMatrix&lt; spacedim, Number &gt;::write_leaf_set_by_iteration()</a>, and <a class="el" href="classHMatrix.html#ac2c8ccd5763d3952505741c657b6468c">HMatrix&lt; spacedim, Number &gt;::write_rkmatrix_leaf_node()</a>.</p>
 
 </div>
 </div>

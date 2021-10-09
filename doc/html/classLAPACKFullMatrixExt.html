@@ -236,19 +236,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>reinit</b> (const <a 
 <tr class="separator:ac46d71bc1b0288fce7ad44b222e9210b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12a95aeff6e93f0284c59cffd0fb7b8e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a12a95aeff6e93f0284c59cffd0fb7b8e">transpose</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;AT) const</td></tr>
 <tr class="separator:a12a95aeff6e93f0284c59cffd0fb7b8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a305ba1b717f1c27d6245bac2f5aad6f1"><td class="memTemplParams" colspan="2">template&lt;typename MatrixType &gt; </td></tr>
-<tr class="memitem:a305ba1b717f1c27d6245bac2f5aad6f1"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a305ba1b717f1c27d6245bac2f5aad6f1">fill</a> (const MatrixType &amp;src, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> dst_offset_i=0, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> dst_offset_j=0, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> src_offset_i=0, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> src_offset_j=0, const Number factor=1., const bool <a class="el" href="classLAPACKFullMatrixExt.html#ac46d71bc1b0288fce7ad44b222e9210b">transpose</a>=false)</td></tr>
-<tr class="separator:a305ba1b717f1c27d6245bac2f5aad6f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64a3f3cf133fc6e1044535b28130e0a1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a64a3f3cf133fc6e1044535b28130e0a1">fill</a> (const std::map&lt; types::global_dof_index, size_t &gt; &amp;row_index_global_to_local_map, const std::map&lt; types::global_dof_index, size_t &gt; &amp;col_index_global_to_local_map, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> &amp;M, const std::vector&lt; types::global_dof_index &gt; &amp;M_tau_index_set, const std::vector&lt; types::global_dof_index &gt; &amp;M_sigma_index_set)</td></tr>
-<tr class="separator:a64a3f3cf133fc6e1044535b28130e0a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a769c252524d12cf453bff2bc881a246d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a769c252524d12cf453bff2bc881a246d">fill_rows</a> (const std::map&lt; types::global_dof_index, size_t &gt; &amp;row_index_global_to_local_map, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> &amp;M, const std::vector&lt; types::global_dof_index &gt; &amp;M_row_global_index_set)</td></tr>
-<tr class="separator:a769c252524d12cf453bff2bc881a246d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a127d66494b154288d3c0c4c7f865650f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a127d66494b154288d3c0c4c7f865650f">fill_row</a> (const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> row_index, const Vector&lt; Number &gt; &amp;values)</td></tr>
-<tr class="separator:a127d66494b154288d3c0c4c7f865650f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1dcaa9fe085860f88c1034adb06f43e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#ac1dcaa9fe085860f88c1034adb06f43e">fill_cols</a> (const std::map&lt; types::global_dof_index, size_t &gt; &amp;col_index_global_to_local_map, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> &amp;M, const std::vector&lt; types::global_dof_index &gt; &amp;M_col_global_index_set)</td></tr>
-<tr class="separator:ac1dcaa9fe085860f88c1034adb06f43e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15180c6e8165380739735b6a7e4d1c32"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a15180c6e8165380739735b6a7e4d1c32">fill_col</a> (const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> col_index, const Vector&lt; Number &gt; &amp;values)</td></tr>
-<tr class="separator:a15180c6e8165380739735b6a7e4d1c32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada3ff3d40049aca2c4d554baa701d613"><td class="memTemplParams" colspan="2">template&lt;typename MatrixType &gt; </td></tr>
+<tr class="memitem:ada3ff3d40049aca2c4d554baa701d613"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#ada3ff3d40049aca2c4d554baa701d613">fill</a> (const MatrixType &amp;src, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> dst_offset_i=0, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> dst_offset_j=0, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> src_offset_i=0, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> src_offset_j=0, const Number factor=1., const bool <a class="el" href="classLAPACKFullMatrixExt.html#ac46d71bc1b0288fce7ad44b222e9210b">transpose</a>=false, const bool is_adding=false)</td></tr>
+<tr class="separator:ada3ff3d40049aca2c4d554baa701d613"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f0dffff13babd0b952a821b5f1f23c9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a3f0dffff13babd0b952a821b5f1f23c9">fill</a> (const std::map&lt; types::global_dof_index, size_t &gt; &amp;row_index_global_to_local_map, const std::map&lt; types::global_dof_index, size_t &gt; &amp;col_index_global_to_local_map, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> &amp;M, const std::vector&lt; types::global_dof_index &gt; &amp;M_tau_index_set, const std::vector&lt; types::global_dof_index &gt; &amp;M_sigma_index_set, const bool is_adding=false)</td></tr>
+<tr class="separator:a3f0dffff13babd0b952a821b5f1f23c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73e9ad59ab56c377edc852d8ba16995c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a73e9ad59ab56c377edc852d8ba16995c">fill_rows</a> (const std::map&lt; types::global_dof_index, size_t &gt; &amp;row_index_global_to_local_map, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> &amp;M, const std::vector&lt; types::global_dof_index &gt; &amp;M_row_global_index_set, const bool is_adding=false)</td></tr>
+<tr class="separator:a73e9ad59ab56c377edc852d8ba16995c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74d566120461e1a2437b9fd9a070633f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a74d566120461e1a2437b9fd9a070633f">fill_row</a> (const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> row_index, const Vector&lt; Number &gt; &amp;values, const bool is_adding=false)</td></tr>
+<tr class="separator:a74d566120461e1a2437b9fd9a070633f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af988edbf2f192f0eddf542178755eb91"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#af988edbf2f192f0eddf542178755eb91">fill_cols</a> (const std::map&lt; types::global_dof_index, size_t &gt; &amp;col_index_global_to_local_map, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> &amp;M, const std::vector&lt; types::global_dof_index &gt; &amp;M_col_global_index_set, const bool is_adding=false)</td></tr>
+<tr class="separator:af988edbf2f192f0eddf542178755eb91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a497a2e73b69f5b07cedb729330e95667"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a497a2e73b69f5b07cedb729330e95667">fill_col</a> (const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> col_index, const Vector&lt; Number &gt; &amp;values, const bool is_adding=false)</td></tr>
+<tr class="separator:a497a2e73b69f5b07cedb729330e95667"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeeae2d2698007889a47f192043adb75c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#aeeae2d2698007889a47f192043adb75c">hstack</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;C, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;B) const</td></tr>
 <tr class="separator:aeeae2d2698007889a47f192043adb75c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f315932c3729240d03bc941bb2de849"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a0f315932c3729240d03bc941bb2de849">vstack</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;C, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;B) const</td></tr>
@@ -261,8 +261,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>reinit</b> (const <a 
 <tr class="separator:aba252fd1854009998639c21c969909d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a824a7a919666c8af3df5723175f6201e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a824a7a919666c8af3df5723175f6201e">add</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;C, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;B) const</td></tr>
 <tr class="separator:a824a7a919666c8af3df5723175f6201e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a793c6b5e30522c2ae653df0e80ed6ab3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a793c6b5e30522c2ae653df0e80ed6ab3">add</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;C, const Number b, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;B) const</td></tr>
+<tr class="separator:a793c6b5e30522c2ae653df0e80ed6ab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae199890a11b5034d8ec2342c7de6c439"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#ae199890a11b5034d8ec2342c7de6c439">add</a> (const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;B)</td></tr>
 <tr class="separator:ae199890a11b5034d8ec2342c7de6c439"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c46d0cb2e278577196b3d923e389efd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a7c46d0cb2e278577196b3d923e389efd">add</a> (const Number b, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;B)</td></tr>
+<tr class="separator:a7c46d0cb2e278577196b3d923e389efd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a176ae32c5467facafd5dcc3252c07c20"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a176ae32c5467facafd5dcc3252c07c20">mmult</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;C, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;B, const bool adding=false) const</td></tr>
 <tr class="separator:a176ae32c5467facafd5dcc3252c07c20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13bbc430a0f60d4158d1693a2d7a0235"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a13bbc430a0f60d4158d1693a2d7a0235">invert_by_gauss_elim</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;M_inv)</td></tr>
@@ -662,7 +666,7 @@ template&lt;typename Number &gt; </div>
 <p>Perform vertical stacking of the two submatrices.</p>
 <p>Perform horizontal stacking of the two submatrices.</p>
 
-<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#a305ba1b717f1c27d6245bac2f5aad6f1">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>.</p>
+<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#ada3ff3d40049aca2c4d554baa701d613">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>.</p>
 
 </div>
 </div>
@@ -718,7 +722,7 @@ template&lt;typename Number &gt; </div>
 </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#a305ba1b717f1c27d6245bac2f5aad6f1">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>.</p>
+<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#ada3ff3d40049aca2c4d554baa701d613">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>.</p>
 
 </div>
 </div>
@@ -857,13 +861,13 @@ template&lt;typename Number &gt; </div>
 <p>Make assertions about the sizes of row and column index global to local maps for <code>M</code>.</p>
 <p>Make assertions about the submatrix sizes and corresponding index sets.</p>
 
-<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#a305ba1b717f1c27d6245bac2f5aad6f1">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#a48a8520d322ba5be9f5bb38e67f9b01b">LAPACKFullMatrixExt&lt; Number &gt;::operator=()</a>.</p>
+<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#ada3ff3d40049aca2c4d554baa701d613">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#a48a8520d322ba5be9f5bb38e67f9b01b">LAPACKFullMatrixExt&lt; Number &gt;::operator=()</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a824a7a919666c8af3df5723175f6201e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a824a7a919666c8af3df5723175f6201e">&#9670;&nbsp;</a></span>add() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a824a7a919666c8af3df5723175f6201e">&#9670;&nbsp;</a></span>add() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -891,12 +895,49 @@ template&lt;typename Number &gt; </div>
 </div><div class="memdoc">
 <p>Add two matrix into a new matrix \(C = A + B\), where \(A\) is the current matrix. </p>
 
-<p class="reference">Referenced by <a class="el" href="hmatrix-add-formatted_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="hmatrix-add-formatted-with-factor_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
+
+</div>
+</div>
+<a id="a793c6b5e30522c2ae653df0e80ed6ab3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a793c6b5e30522c2ae653df0e80ed6ab3">&#9670;&nbsp;</a></span>add() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Number&#160;</td>
+          <td class="paramname"><em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Add two matrix into a new matrix \(C = A + b*B\) with a factor \(b\) multiplied with \(B\), where \(A\) is the current matrix. </p>
 
 </div>
 </div>
 <a id="ae199890a11b5034d8ec2342c7de6c439"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae199890a11b5034d8ec2342c7de6c439">&#9670;&nbsp;</a></span>add() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ae199890a11b5034d8ec2342c7de6c439">&#9670;&nbsp;</a></span>add() <span class="overload">[3/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -913,6 +954,42 @@ template&lt;typename Number &gt; </div>
       </table>
 </div><div class="memdoc">
 <p>Add the matrix <code>B</code> into the current matrix. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">B</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a7c46d0cb2e278577196b3d923e389efd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c46d0cb2e278577196b3d923e389efd">&#9670;&nbsp;</a></span>add() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt;::add </td>
+          <td>(</td>
+          <td class="paramtype">const Number&#160;</td>
+          <td class="paramname"><em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Add the matrix <code>B</code> into the current matrix with a factor \(b\) multiplied with \(B\). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">B</td><td></td></tr>
   </table>
@@ -1036,8 +1113,8 @@ template&lt;typename Number &gt; </div>
 
 </div>
 </div>
-<a id="a305ba1b717f1c27d6245bac2f5aad6f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a305ba1b717f1c27d6245bac2f5aad6f1">&#9670;&nbsp;</a></span>fill() <span class="overload">[1/2]</span></h2>
+<a id="ada3ff3d40049aca2c4d554baa701d613"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada3ff3d40049aca2c4d554baa701d613">&#9670;&nbsp;</a></span>fill() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1086,7 +1163,13 @@ template&lt;typename MatrixType &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const bool&#160;</td>
-          <td class="paramname"><em>transpose</em> = <code>false</code>&#160;</td>
+          <td class="paramname"><em>transpose</em> = <code>false</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_adding</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1109,12 +1192,12 @@ template&lt;typename MatrixType &gt; </div>
 </dl>
 <p>Determine the number of rows and columns to be copied.</p>
 
-<p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#aeeae2d2698007889a47f192043adb75c">LAPACKFullMatrixExt&lt; Number &gt;::hstack()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a1c8c9c59c2edc349031c4867c19067ef">LAPACKFullMatrixExt&lt; Number &gt;::LAPACKFullMatrixExt()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#a0f315932c3729240d03bc941bb2de849">LAPACKFullMatrixExt&lt; Number &gt;::vstack()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#aeeae2d2698007889a47f192043adb75c">LAPACKFullMatrixExt&lt; Number &gt;::hstack()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a1c8c9c59c2edc349031c4867c19067ef">LAPACKFullMatrixExt&lt; Number &gt;::LAPACKFullMatrixExt()</a>, <a class="el" href="rkmatrix-assemble-from-rkmatrix_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#a0f315932c3729240d03bc941bb2de849">LAPACKFullMatrixExt&lt; Number &gt;::vstack()</a>.</p>
 
 </div>
 </div>
-<a id="a64a3f3cf133fc6e1044535b28130e0a1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a64a3f3cf133fc6e1044535b28130e0a1">&#9670;&nbsp;</a></span>fill() <span class="overload">[2/2]</span></h2>
+<a id="a3f0dffff13babd0b952a821b5f1f23c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3f0dffff13babd0b952a821b5f1f23c9">&#9670;&nbsp;</a></span>fill() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1149,7 +1232,13 @@ template&lt;typename Number &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; types::global_dof_index &gt; &amp;&#160;</td>
-          <td class="paramname"><em>M_sigma_index_set</em>&#160;</td>
+          <td class="paramname"><em>M_sigma_index_set</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_adding</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1172,8 +1261,8 @@ template&lt;typename Number &gt; </div>
 
 </div>
 </div>
-<a id="a15180c6e8165380739735b6a7e4d1c32"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a15180c6e8165380739735b6a7e4d1c32">&#9670;&nbsp;</a></span>fill_col()</h2>
+<a id="a497a2e73b69f5b07cedb729330e95667"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a497a2e73b69f5b07cedb729330e95667">&#9670;&nbsp;</a></span>fill_col()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1190,7 +1279,13 @@ template&lt;typename Number &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const Vector&lt; Number &gt; &amp;&#160;</td>
-          <td class="paramname"><em>values</em>&#160;</td>
+          <td class="paramname"><em>values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_adding</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1211,8 +1306,8 @@ template&lt;typename Number &gt; </div>
 
 </div>
 </div>
-<a id="ac1dcaa9fe085860f88c1034adb06f43e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1dcaa9fe085860f88c1034adb06f43e">&#9670;&nbsp;</a></span>fill_cols()</h2>
+<a id="af988edbf2f192f0eddf542178755eb91"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af988edbf2f192f0eddf542178755eb91">&#9670;&nbsp;</a></span>fill_cols()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1235,7 +1330,13 @@ template&lt;typename Number &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; types::global_dof_index &gt; &amp;&#160;</td>
-          <td class="paramname"><em>M_col_global_index_set</em>&#160;</td>
+          <td class="paramname"><em>M_col_global_index_set</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_adding</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1255,8 +1356,8 @@ template&lt;typename Number &gt; </div>
 
 </div>
 </div>
-<a id="a127d66494b154288d3c0c4c7f865650f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a127d66494b154288d3c0c4c7f865650f">&#9670;&nbsp;</a></span>fill_row()</h2>
+<a id="a74d566120461e1a2437b9fd9a070633f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74d566120461e1a2437b9fd9a070633f">&#9670;&nbsp;</a></span>fill_row()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1273,7 +1374,13 @@ template&lt;typename Number &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const Vector&lt; Number &gt; &amp;&#160;</td>
-          <td class="paramname"><em>values</em>&#160;</td>
+          <td class="paramname"><em>values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_adding</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1294,8 +1401,8 @@ template&lt;typename Number &gt; </div>
 
 </div>
 </div>
-<a id="a769c252524d12cf453bff2bc881a246d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a769c252524d12cf453bff2bc881a246d">&#9670;&nbsp;</a></span>fill_rows()</h2>
+<a id="a73e9ad59ab56c377edc852d8ba16995c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73e9ad59ab56c377edc852d8ba16995c">&#9670;&nbsp;</a></span>fill_rows()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1318,7 +1425,13 @@ template&lt;typename Number &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; types::global_dof_index &gt; &amp;&#160;</td>
-          <td class="paramname"><em>M_row_global_index_set</em>&#160;</td>
+          <td class="paramname"><em>M_row_global_index_set</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_adding</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1456,7 +1569,7 @@ template&lt;typename Number &gt; </div>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#a305ba1b717f1c27d6245bac2f5aad6f1">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>.</p>
+<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#ada3ff3d40049aca2c4d554baa701d613">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>.</p>
 
 <p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#a98851864591035df275caca76e07ebe3">LAPACKFullMatrixExt&lt; Number &gt;::LAPACKFullMatrixExt()</a>.</p>
 
@@ -1584,7 +1697,6 @@ template&lt;typename Number &gt; </div>
   </table>
   </dd>
 </dl>
-<p>Do nothing.</p>
 
 <p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#a2d29694b336c319402fd867658a25253">LAPACKFullMatrixExt&lt; Number &gt;::reduced_qr()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a0a6e1d0e88bc84b372b1d0a0f4b79f86">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a355ed6360b21081b6e86e09833bf95db">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd_on_AxBT()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#a5e51e358cbef31895021abfff0940edd">LAPACKFullMatrixExt&lt; Number &gt;::svd()</a>.</p>
 
@@ -1626,7 +1738,6 @@ template&lt;typename Number &gt; </div>
   </table>
   </dd>
 </dl>
-<p>Do nothing.</p>
 
 <p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#a2d29694b336c319402fd867658a25253">LAPACKFullMatrixExt&lt; Number &gt;::reduced_qr()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a0a6e1d0e88bc84b372b1d0a0f4b79f86">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a355ed6360b21081b6e86e09833bf95db">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd_on_AxBT()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#a5e51e358cbef31895021abfff0940edd">LAPACKFullMatrixExt&lt; Number &gt;::svd()</a>.</p>
 
@@ -2376,7 +2487,8 @@ template&lt;typename Number &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Perform SVD on the product of two component matrices \(A\) and \(B^T\) with truncation by a specified rank. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Perform SVD on the product of two component matrices \(A\) and \(B^T\) with truncation by a specified rank.</p>
+<p>N.B. If the actual rank of the matrix is less than the specified <code>truncation_rank</code>, i.e. rank deficient, the matrix will be truncated to its actual rank. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">A</td><td></td></tr>
     <tr><td class="paramname">B</td><td></td></tr>
@@ -2575,7 +2687,7 @@ template&lt;typename Number &gt; </div>
 </div><div class="memdoc">
 <p>Reshape a vector of values into a <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> in column major. </p>
 
-<p class="reference">Referenced by <a class="el" href="lapack-matrix-agglomeration-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="hmatrix-invert-by-gauss-elim_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>.</p>
 
 </div>
 </div>
@@ -2978,7 +3090,7 @@ template&lt;typename Number &gt; </div>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#a305ba1b717f1c27d6245bac2f5aad6f1">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>.</p>
+<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#ada3ff3d40049aca2c4d554baa701d613">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>.</p>
 
 <p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#a98851864591035df275caca76e07ebe3">LAPACKFullMatrixExt&lt; Number &gt;::LAPACKFullMatrixExt()</a>.</p>
 

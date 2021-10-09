@@ -41,7 +41,7 @@ main()
   RkMatrix<double> M21_rk(fixed_rank_k, M21);
   RkMatrix<double> M22_rk(fixed_rank_k, M22);
 
-  RkMatrix<double> M_rk(fixed_rank_k, M11_rk, M12_rk, M21_rk, M22_rk);
+  RkMatrix<double> M_rk(fixed_rank_k, M11_rk, M12_rk, M21_rk, M22_rk, 1.5);
 
   /**
    * Output the matrices.

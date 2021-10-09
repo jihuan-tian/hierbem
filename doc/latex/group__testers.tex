@@ -21,6 +21,18 @@ file \hyperlink{bct-overloaded-assignment_8cc}{bct-\/overloaded-\/assignment.\+c
 \begin{DoxyCompactList}\small\item\em Verify the deep and shallow overloaded assignment operators for {\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}}. \end{DoxyCompactList}\item 
 file \hyperlink{fullmatrix-hmatrix-mmult_8cc}{fullmatrix-\/hmatrix-\/mmult.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the full matrix/\+H-\/matrix multiplication. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-add-formatted_8cc}{hmatrix-\/add-\/formatted.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify formatted addition of two $\mathcal{H}$-\/matrices. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-add-formatted-with-factor_8cc}{hmatrix-\/add-\/formatted-\/with-\/factor.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify formatted addition of two $\mathcal{H}$-\/matrices $C = A + b B$. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-add-rkmatrix_8cc}{hmatrix-\/add-\/rkmatrix.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the addition of a rank-\/k matrix into an $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-add-rkmatrix-into-new-hmatrix_8cc}{hmatrix-\/add-\/rkmatrix-\/into-\/new-\/hmatrix.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the addition of a rank-\/k matrix and an $\mathcal{H}$-\/matrix into a new $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-add-rkmatrix-into-new-hmatrix-with-factor_8cc}{hmatrix-\/add-\/rkmatrix-\/into-\/new-\/hmatrix-\/with-\/factor.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the addition of a rank-\/k matrix multiplied by a factor and an $\mathcal{H}$-\/matrix into a new $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-add-rkmatrix-with-factor_8cc}{hmatrix-\/add-\/rkmatrix-\/with-\/factor.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the addition of a rank-\/k matrix multiplied by a factor into an $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-coarsening_8cc}{hmatrix-\/coarsening.\+cc}
 \begin{DoxyCompactList}\small\item\em Coarsen a H-\/matrix to its subtree. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-deep-copy-constructor_8cc}{hmatrix-\/deep-\/copy-\/constructor.\+cc}
@@ -43,6 +55,22 @@ file \hyperlink{hmatrix-hmatrix-mmult-fine-coarse-fine-ntp_8cc}{hmatrix-\/hmatri
 \begin{DoxyCompactList}\small\item\em Verify the multiplication of two $\mathcal{H}$-\/matrices, where M1, M2 and M have fine-\/coarse-\/fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-hmatrix-mmult-fine-fine-coarse-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/fine-\/fine-\/coarse-\/ntp.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the multiplication of two $\mathcal{H}$-\/matrices, where M1, M2 and M have fine-\/fine-\/coarse non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-all-coarse-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/all-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. Both operands and the result matrices have the coarse non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/all-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. Both operands and the result matrices have the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp-member-function-call_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/all-\/fine-\/ntp-\/member-\/function-\/call.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. Both operands and the result matrices have the fine non-\/tensor product partitions. This version uses the member function call of multiplication. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-coarse-coarse-fine-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/coarse-\/coarse-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. Both operands have the coarse non-\/tensor product partitions, while the result matrix has the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-coarse-fine-coarse-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/coarse-\/fine-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. The first operand and the result matrix have the coarse non-\/tensor product partitions, while the second operand has the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-fine-coarse-fine-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/fine-\/coarse-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. The first operand and the result matrix have the fine non-\/tensor product partitions, while the second operand has the coarse non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-fine-fine-coarse-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/fine-\/fine-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. Both operands have the fine non-\/tensor product partitions, while the result matrix has the coarse non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-invert-by-gauss-elim_8cc}{hmatrix-\/invert-\/by-\/gauss-\/elim.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the inverse of an $\mathcal{H}$-\/matrix using Gauss elimination. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-overloaded-deep-assignment_8cc}{hmatrix-\/overloaded-\/deep-\/assignment.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the overloaded deep assignment operator of $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-overloaded-shallow-assignment_8cc}{hmatrix-\/overloaded-\/shallow-\/assignment.\+cc}
@@ -57,24 +85,62 @@ file \hyperlink{hmatrix-shallow-copy-constructor_8cc}{hmatrix-\/shallow-\/copy-\
 \begin{DoxyCompactList}\small\item\em Verify the deep copy constructor of $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-truncate-to-fixed-rank_8cc}{hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the truncation of an \hyperlink{classHMatrix}{H\+Matrix} to an \hyperlink{classRkMatrix}{Rk\+Matrix}. \end{DoxyCompactList}\item 
+file \hyperlink{lapack-matrix-add-with-factor_8cc}{lapack-\/matrix-\/add-\/with-\/factor.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify matrix addition $C = A + b B$. \end{DoxyCompactList}\item 
 file \hyperlink{lapack-matrix-agglomeration-interwoven-indices_8cc}{lapack-\/matrix-\/agglomeration-\/interwoven-\/indices.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the agglomeration of four full submatrices into a larger full matrix when the index sets of several child clusters are interwoven together into the index set of the parent cluster. \end{DoxyCompactList}\item 
 file \hyperlink{lapack-matrix-agglomeration-of-two-submatrices_8cc}{lapack-\/matrix-\/agglomeration-\/of-\/two-\/submatrices.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the agglomeration of two full submatrices which have been obtained from horizontal or vertical splitting. \end{DoxyCompactList}\item 
 file \hyperlink{lapack-matrix-agglomeration-of-two-submatrices-interwoven-indices_8cc}{lapack-\/matrix-\/agglomeration-\/of-\/two-\/submatrices-\/interwoven-\/indices.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the agglomeration of two full submatrices which have been obtained from horizontal or vertical splitting. The index sets of several child clusters are interwoven together into the index set of the parent cluster. \end{DoxyCompactList}\item 
+file \hyperlink{lapack-matrix-init-with-zeros_8cc}{lapack-\/matrix-\/init-\/with-\/zeros.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify if a \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} is initialized with zeros. \end{DoxyCompactList}\item 
 file \hyperlink{lapack-matrix-inverse_8cc}{lapack-\/matrix-\/inverse.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify matrix inverse computed by Gauss elimination, which is compared with the standard function in deal.\+ii. \end{DoxyCompactList}\item 
 file \hyperlink{lapack-matrix-mmult_8cc}{lapack-\/matrix-\/mmult.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the multiplication of two {\ttfamily \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}. \end{DoxyCompactList}\item 
+file \hyperlink{lapack-matrix-scale-matrix_8cc}{lapack-\/matrix-\/scale-\/matrix.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the scale of a whole full matrix. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-add-formatted_8cc}{rkmatrix-\/add-\/formatted.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the formatted addition of two rank-\/k matrices. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-add-formatted-using-qr_8cc}{rkmatrix-\/add-\/formatted-\/using-\/qr.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the formatted addition of two rank-\/k matrices by using the QR decomposition. This requires that the component matrices of rank-\/k matrices should be wide matrix, i.\+e. having more rows than columns. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-add-formatted-with-factor_8cc}{rkmatrix-\/add-\/formatted-\/with-\/factor.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the formatted addition of two rank-\/k matrices $C = A + b B$. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-2nd-block-rank0_8cc}{rkmatrix-\/agglomeration-\/2nd-\/block-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix. Some of the submatrices have rank zero. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-3rd-block-rank0_8cc}{rkmatrix-\/agglomeration-\/3rd-\/block-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix. Some of the submatrices have rank zero. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-4th-block-rank0_8cc}{rkmatrix-\/agglomeration-\/4th-\/block-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix. Some of the submatrices have rank zero. \end{DoxyCompactList}\item 
 file \hyperlink{rkmatrix-agglomeration-interwoven-indices_8cc}{rkmatrix-\/agglomeration-\/interwoven-\/indices.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix when the index sets of several child clusters are interwoven together into the index set of the parent cluster. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-interwoven-indices-2nd-block-rank0_8cc}{rkmatrix-\/agglomeration-\/interwoven-\/indices-\/2nd-\/block-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix when the index sets of several child clusters are interwoven together into the index set of the parent cluster. Some of the submatrices has rank zero. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-interwoven-indices-3rd-block-rank0_8cc}{rkmatrix-\/agglomeration-\/interwoven-\/indices-\/3rd-\/block-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix when the index sets of several child clusters are interwoven together into the index set of the parent cluster. Some of the submatrices has rank zero. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-interwoven-indices-4th-block-rank0_8cc}{rkmatrix-\/agglomeration-\/interwoven-\/indices-\/4th-\/block-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix when the index sets of several child clusters are interwoven together into the index set of the parent cluster. Some of the submatrices has rank zero. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-interwoven-indices-rank0_8cc}{rkmatrix-\/agglomeration-\/interwoven-\/indices-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix when the index sets of several child clusters are interwoven together into the index set of the parent cluster. Some of the submatrices has rank zero. \end{DoxyCompactList}\item 
 file \hyperlink{rkmatrix-agglomeration-of-two-submatrices_8cc}{rkmatrix-\/agglomeration-\/of-\/two-\/submatrices.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the agglomeration of two rank-\/k submatrices which have been obtained from horizontal or vertical splitting. \end{DoxyCompactList}\item 
 file \hyperlink{rkmatrix-agglomeration-of-two-submatrices-interwoven-indices_8cc}{rkmatrix-\/agglomeration-\/of-\/two-\/submatrices-\/interwoven-\/indices.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the agglomeration of two rank-\/k submatrices which have been obtained from horizontal or vertical splitting. The index sets of several child clusters are interwoven together into the index set of the parent cluster. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-of-two-submatrices-interwoven-indices-rank0_8cc}{rkmatrix-\/agglomeration-\/of-\/two-\/submatrices-\/interwoven-\/indices-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of two rank-\/k submatrices which have been obtained from horizontal or vertical splitting. The index sets of several child clusters are interwoven together into the index set of the parent cluster. One of the submatrices has rank zero. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-of-two-submatrices-rank0_8cc}{rkmatrix-\/agglomeration-\/of-\/two-\/submatrices-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of two rank-\/k submatrices which have been obtained from horizontal or vertical splitting. One of the submatrices has rank 0. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-agglomeration-rank0_8cc}{rkmatrix-\/agglomeration-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the agglomeration of four rank-\/k submatrices into a larger rank-\/k matrix. Some of the submatrices have rank zero. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-assemble-from-rkmatrix_8cc}{rkmatrix-\/assemble-\/from-\/rkmatrix.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify assemble a rank-\/k matrix into a larger rank-\/k matrix. \end{DoxyCompactList}\item 
 file \hyperlink{rkmatrix-hmatrix-mmult_8cc}{rkmatrix-\/hmatrix-\/mmult.\+cc}
-\begin{DoxyCompactList}\small\item\em Verify the rank-\/k/\+H-\/matrix matrix multiplication. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Verify the rank-\/k/\+H-\/matrix matrix multiplication. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-to-fullmatrix-rank0_8cc}{rkmatrix-\/to-\/fullmatrix-\/rank0.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the conversion of a rank-\/0 matrix to a full matrix. \end{DoxyCompactList}\item 
+file \hyperlink{rkmatrix-vmult_8cc}{rkmatrix-\/vmult.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of a rank-\/k matrix with a vector. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}

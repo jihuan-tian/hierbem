@@ -4,6 +4,7 @@ load hmatrix-hmatrix-mmult-all-fine-ntp.output;
 norm(H_full - H1_mult_H2_full, 'fro') / norm(H_full, 'fro')
 M = M1 * M2;
 norm(M - H1_mult_H2_full, 'fro') / norm(M, 'fro')
+norm(H_full - M, 'fro') / norm(M, 'fro')
 
 figure;
 subplot(2, 3, 1);

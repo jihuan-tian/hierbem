@@ -1,53 +1,66 @@
 <map id="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/include/tree.h" name="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/include/tree.h">
-<area shape="rect" id="node2" href="$cluster__tree_8h_source.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/include/cluster_tree.h" alt="" coords="2833,131,3011,202"/>
-<area shape="rect" id="node4" href="$block__cluster__tree_8h.html" title="Implementation of the class BlockClusterTree. " alt="" coords="2513,405,2731,476"/>
-<area shape="rect" id="node49" href="$binary-tree-copy_8cc.html" title="Verify the copy constructor of a binary tree. " alt="" coords="3035,124,3217,209"/>
-<area shape="rect" id="node50" href="$binary-tree-get-leaves_8cc.html" title="Verify extraction of the leaves of a binary tree. " alt="" coords="3241,124,3451,209"/>
-<area shape="rect" id="node51" href="$quad-tree-copy_8cc.html" title="Verify. " alt="" coords="3476,124,3651,209"/>
-<area shape="rect" id="node52" href="$quad-tree-get-leaves_8cc.html" title="Verify extraction of the leaves of a tree. " alt="" coords="3675,124,3879,209"/>
-<area shape="rect" id="node3" href="$block__cluster_8h.html" title="Implementation of the class BlockCluster. " alt="" coords="2645,272,2833,343"/>
-<area shape="rect" id="node35" href="$block-cluster-tree_8cc.html" title="This files verifies the admissible block cluster partition. " alt="" coords="1445,531,1615,617"/>
-<area shape="rect" id="node39" href="$block-cluster-tree-hp_8cc.html" title="Test the construction of a &#160;block cluster tree using the tensor product partition. " alt="" coords="3160,531,3367,617"/>
-<area shape="rect" id="node40" href="$bct-hp-coarse-ntp_8cc.html" title="Test the construction of a &#160;block cluster tree using the coarse non&#45;tensor product partition..." alt="" coords="3391,524,3583,624"/>
-<area shape="rect" id="node41" href="$bct-hp-fine-ntp_8cc.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/tests/block&#45;cluster\l&#45;tree&#45;hp&#45;fine&#45;non&#45;tensor\l&#45;product/bct&#45;hp&#45;fine&#45;ntp.cc" alt="" coords="3636,524,3811,624"/>
-<area shape="rect" id="node45" href="$cluster-diameter_8cc.html" title="This files verifies the cluster diameter and pair&#45;wise distance calculation using a 3x3 grid in a squ..." alt="" coords="2959,265,3141,350"/>
-<area shape="rect" id="node46" href="$cluster-tree_8cc.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/tests/cluster&#45;tree\l/cluster&#45;tree.cc" alt="" coords="3165,265,3325,350"/>
-<area shape="rect" id="node47" href="$cluster-tree-copy-constructor_8cc.html" title="Verify the copy constructor of cluster tree. " alt="" coords="3349,257,3516,357"/>
-<area shape="rect" id="node48" href="$cluster-tree-hp_8cc.html" title="Test the construction of a &#160;cluster tree. " alt="" coords="3541,265,3701,350"/>
-<area shape="rect" id="node5" href="$hmatrix_8h.html" title="Definition of hierarchical matrix. " alt="" coords="2975,539,3135,609"/>
-<area shape="rect" id="node9" href="$hmatrix-coarsening_8cc.html" title="Coarsen a H&#45;matrix to its subtree. " alt="" coords="5,687,204,772"/>
-<area shape="rect" id="node36" href="$bct-copy-constructor_8cc.html" title="Verify the copy constructor of block cluster tree. " alt="" coords="2321,524,2491,624"/>
-<area shape="rect" id="node37" href="$bct-extend-finer-than-partition_8cc.html" title="Verify extend a block cluster tree to be finer than a given partition. " alt="" coords="2515,524,2729,624"/>
-<area shape="rect" id="node38" href="$bct-extend-to-finer-partition_8cc.html" title="Verify extend a block cluster tree to a given finer partition. " alt="" coords="2753,524,2952,624"/>
-<area shape="rect" id="node42" href="$bct-overloaded-assignment_8cc.html" title="Verify the deep and shallow overloaded assignment operators for BlockClusterTree. ..." alt="" coords="1639,524,1839,624"/>
-<area shape="rect" id="node43" href="$bct-subtree_8cc.html" title="Verify the construction of a block cluster subtree and check the equality of its nodes with the origi..." alt="" coords="1864,531,2047,617"/>
-<area shape="rect" id="node44" href="$bct-visualize-with-rank_8cc.html" title="Visualize the block cluster tree structure with matrix block&#39;s rank calculated. " alt="" coords="2071,524,2245,624"/>
-<area shape="rect" id="node6" href="$fullmatrix-hmatrix-mmult_8cc.html" title="Verify the full matrix/H&#45;matrix multiplication. " alt="" coords="6073,687,6297,772"/>
-<area shape="rect" id="node7" href="$hmatrix-add-formatted_8cc.html" title="Verify formatted addition of two h&#45;matrices. " alt="" coords="228,687,443,772"/>
-<area shape="rect" id="node8" href="$hmatrix-bct-struct-with-rank_8cc.html" title="Visualize the block cluster tree structure of an H&#45;matrix with displayed rank. " alt="" coords="467,679,657,779"/>
-<area shape="rect" id="node10" href="$hmatrix-deep-copy-constructor_8cc.html" title="Verify the deep copy constructor of &#45;matrix. " alt="" coords="682,679,855,779"/>
-<area shape="rect" id="node11" href="$hmatrix-fine-ntp-to-tp_8cc.html" title="Verify the conversion of an &#45;matrix from fine non&#45;tensor product structure to tensor product structur..." alt="" coords="879,679,1047,779"/>
-<area shape="rect" id="node12" href="$hmatrix-fullmatrix-mmult_8cc.html" title="Verify the H&#45;matrix/full matrix multiplication. " alt="" coords="1071,687,1295,772"/>
-<area shape="rect" id="node13" href="$hmatrix-hmatrix-mmult-all-coarse-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices. Both operands and the result matrices have the coarse non..." alt="" coords="1320,679,1529,779"/>
-<area shape="rect" id="node14" href="$hmatrix-hmatrix-mmult-all-fine-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices. Both operands and the result matrices have the fine non&#45;t..." alt="" coords="1553,679,1744,779"/>
-<area shape="rect" id="node15" href="$hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc.html" title="Verify the multiplication of two &#45;matrices. Both operands and the result matrices have the fine non&#45;t..." alt="" coords="1768,672,1967,787"/>
-<area shape="rect" id="node16" href="$hmatrix-hmatrix-mmult-coarse-coarse-fine-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices, where M1, M2 and M have coarse&#45;coarse&#45;fine non&#45;tensor pro..." alt="" coords="1991,672,2170,787"/>
-<area shape="rect" id="node17" href="$hmatrix-hmatrix-mmult-coarse-fine-coarse-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices, where M1, M2 and M have coarse&#45;fine&#45;coarse non&#45;tensor pro..." alt="" coords="2194,672,2373,787"/>
-<area shape="rect" id="node18" href="$hmatrix-hmatrix-mmult-fine-coarse-fine-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices, where M1, M2 and M have fine&#45;coarse&#45;fine non&#45;tensor produ..." alt="" coords="2397,672,2578,787"/>
-<area shape="rect" id="node19" href="$hmatrix-hmatrix-mmult-fine-fine-coarse-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices, where M1, M2 and M have fine&#45;fine&#45;coarse non&#45;tensor produ..." alt="" coords="2602,672,2783,787"/>
-<area shape="rect" id="node20" href="$hmatrix-overloaded-deep-assignment_8cc.html" title="Verify the overloaded deep assignment operator of &#45;matrix. " alt="" coords="2808,679,3047,779"/>
-<area shape="rect" id="node21" href="$hmatrix-overloaded-shallow-assignment_8cc.html" title="Verify the overloaded shallow assignment operator of &#45;matrix. " alt="" coords="3071,679,3298,779"/>
-<area shape="rect" id="node22" href="$hmatrix-refinement_8cc.html" title="Verify the refinement of an &#45;matrix hierarchy with respect to its extended block cluster tree..." alt="" coords="3323,687,3519,772"/>
-<area shape="rect" id="node23" href="$hmatrix-rkmatrix-conversion_8cc.html" title="Verify the conversion from an H&#45;matrix to a rank&#45;k matrix. " alt="" coords="3543,679,3730,779"/>
-<area shape="rect" id="node24" href="$hmatrix-rkmatrix-mmult_8cc.html" title="Verify the H&#45;matrix/rank&#45;k matrix multiplication. " alt="" coords="3754,687,3973,772"/>
-<area shape="rect" id="node25" href="$hmatrix-shallow-copy-constructor_8cc.html" title="Verify the deep copy constructor of &#45;matrix. " alt="" coords="3997,679,4186,779"/>
-<area shape="rect" id="node26" href="$hmatrix-truncate-to-fixed-rank_8cc.html" title="Verify the truncation of an HMatrix to an RkMatrix. " alt="" coords="4211,679,4407,779"/>
-<area shape="rect" id="node27" href="$hmatrix-vmult_8cc.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/tests/hmatrix&#45;vmult\l/hmatrix&#45;vmult.cc" alt="" coords="4431,687,4597,772"/>
-<area shape="rect" id="node28" href="$hmatrix-write-leaf-set-by-iteration_8cc.html" title="Verify the method for write out leaf set by iteration over the constructed leaf set instead of recurs..." alt="" coords="4622,679,4809,779"/>
-<area shape="rect" id="node29" href="$hp-matrix_8cc.html" title="Test the &#160;matrix. " alt="" coords="4833,687,4993,772"/>
-<area shape="rect" id="node30" href="$lapack-matrix-local-to-rkmatrix_8cc.html" title="Verify the restriction of a local full matrix to a rank&#45;k submatrix. " alt="" coords="5017,679,5195,779"/>
-<area shape="rect" id="node31" href="$lapack-matrix-local-to-submatrix_8cc.html" title="Verify the restriction of a local full matrix to sub full matrix. " alt="" coords="5219,679,5406,779"/>
-<area shape="rect" id="node32" href="$rkmatrix-hmatrix-mmult_8cc.html" title="Verify the rank&#45;k/H&#45;matrix matrix multiplication. " alt="" coords="5430,687,5649,772"/>
-<area shape="rect" id="node33" href="$rkmatrix-local-to-rkmatrix_8cc.html" title="Verify the restriction of a local rank&#45;k matrix to a rank&#45;k submatrix. " alt="" coords="5673,679,5843,779"/>
-<area shape="rect" id="node34" href="$rkmatrix-local-to-submatrix_8cc.html" title="Verify the restriction of a local rank&#45;k matrix to a full submatrix. " alt="" coords="5868,679,6048,779"/>
+<area shape="rect" id="node2" href="$cluster__tree_8h_source.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/include/cluster_tree.h" alt="" coords="4397,131,4575,202"/>
+<area shape="rect" id="node4" href="$block__cluster__tree_8h.html" title="Implementation of the class BlockClusterTree. " alt="" coords="4077,405,4295,476"/>
+<area shape="rect" id="node62" href="$binary-tree-copy_8cc.html" title="Verify the copy constructor of a binary tree. " alt="" coords="4599,124,4781,209"/>
+<area shape="rect" id="node63" href="$binary-tree-get-leaves_8cc.html" title="Verify extraction of the leaves of a binary tree. " alt="" coords="4805,124,5015,209"/>
+<area shape="rect" id="node64" href="$quad-tree-copy_8cc.html" title="Verify. " alt="" coords="5040,124,5215,209"/>
+<area shape="rect" id="node65" href="$quad-tree-get-leaves_8cc.html" title="Verify extraction of the leaves of a tree. " alt="" coords="5239,124,5443,209"/>
+<area shape="rect" id="node3" href="$block__cluster_8h.html" title="Implementation of the class BlockCluster. " alt="" coords="4209,272,4397,343"/>
+<area shape="rect" id="node48" href="$block-cluster-tree_8cc.html" title="This files verifies the admissible block cluster partition. " alt="" coords="3009,531,3179,617"/>
+<area shape="rect" id="node52" href="$block-cluster-tree-hp_8cc.html" title="Test the construction of a &#160;block cluster tree using the tensor product partition. " alt="" coords="4724,531,4931,617"/>
+<area shape="rect" id="node53" href="$bct-hp-coarse-ntp_8cc.html" title="Test the construction of a &#160;block cluster tree using the coarse non&#45;tensor product partition..." alt="" coords="4955,524,5147,624"/>
+<area shape="rect" id="node54" href="$bct-hp-fine-ntp_8cc.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/tests/block&#45;cluster\l&#45;tree&#45;hp&#45;fine&#45;non&#45;tensor\l&#45;product/bct&#45;hp&#45;fine&#45;ntp.cc" alt="" coords="5200,524,5375,624"/>
+<area shape="rect" id="node58" href="$cluster-diameter_8cc.html" title="This files verifies the cluster diameter and pair&#45;wise distance calculation using a 3x3 grid in a squ..." alt="" coords="4523,265,4705,350"/>
+<area shape="rect" id="node59" href="$cluster-tree_8cc.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/tests/cluster&#45;tree\l/cluster&#45;tree.cc" alt="" coords="4729,265,4889,350"/>
+<area shape="rect" id="node60" href="$cluster-tree-copy-constructor_8cc.html" title="Verify the copy constructor of cluster tree. " alt="" coords="4913,257,5080,357"/>
+<area shape="rect" id="node61" href="$cluster-tree-hp_8cc.html" title="Test the construction of a &#160;cluster tree. " alt="" coords="5105,265,5265,350"/>
+<area shape="rect" id="node5" href="$hmatrix_8h.html" title="Definition of hierarchical matrix. " alt="" coords="4539,539,4699,609"/>
+<area shape="rect" id="node14" href="$hmatrix-coarsening_8cc.html" title="Coarsen a H&#45;matrix to its subtree. " alt="" coords="5,694,204,779"/>
+<area shape="rect" id="node49" href="$bct-copy-constructor_8cc.html" title="Verify the copy constructor of block cluster tree. " alt="" coords="3885,524,4055,624"/>
+<area shape="rect" id="node50" href="$bct-extend-finer-than-partition_8cc.html" title="Verify extend a block cluster tree to be finer than a given partition. " alt="" coords="4079,524,4293,624"/>
+<area shape="rect" id="node51" href="$bct-extend-to-finer-partition_8cc.html" title="Verify extend a block cluster tree to a given finer partition. " alt="" coords="4317,524,4516,624"/>
+<area shape="rect" id="node55" href="$bct-overloaded-assignment_8cc.html" title="Verify the deep and shallow overloaded assignment operators for BlockClusterTree. ..." alt="" coords="3203,524,3403,624"/>
+<area shape="rect" id="node56" href="$bct-subtree_8cc.html" title="Verify the construction of a block cluster subtree and check the equality of its nodes with the origi..." alt="" coords="3428,531,3611,617"/>
+<area shape="rect" id="node57" href="$bct-visualize-with-rank_8cc.html" title="Visualize the block cluster tree structure with matrix block&#39;s rank calculated. " alt="" coords="3635,524,3809,624"/>
+<area shape="rect" id="node6" href="$fullmatrix-hmatrix-mmult_8cc.html" title="Verify the full matrix/H&#45;matrix multiplication. " alt="" coords="9261,694,9485,779"/>
+<area shape="rect" id="node7" href="$hmatrix-add-formatted_8cc.html" title="Verify formatted addition of two &#45;matrices. " alt="" coords="228,694,443,779"/>
+<area shape="rect" id="node8" href="$hmatrix-add-formatted-with-factor_8cc.html" title="Verify formatted addition of two &#45;matrices . " alt="" coords="467,687,686,787"/>
+<area shape="rect" id="node9" href="$hmatrix-add-rkmatrix_8cc.html" title="Verify the addition of a rank&#45;k matrix into an &#45;matrix. " alt="" coords="711,694,917,779"/>
+<area shape="rect" id="node10" href="$hmatrix-add-rkmatrix-into-new-hmatrix_8cc.html" title="Verify the addition of a rank&#45;k matrix and an &#45;matrix into a new &#45;matrix. " alt="" coords="941,687,1148,787"/>
+<area shape="rect" id="node11" href="$hmatrix-add-rkmatrix-into-new-hmatrix-with-factor_8cc.html" title="Verify the addition of a rank&#45;k matrix multiplied by a factor and an &#45;matrix into a new &#45;matrix..." alt="" coords="1172,679,1379,794"/>
+<area shape="rect" id="node12" href="$hmatrix-add-rkmatrix-with-factor_8cc.html" title="Verify the addition of a rank&#45;k matrix multiplied by a factor into an &#45;matrix. " alt="" coords="1403,687,1614,787"/>
+<area shape="rect" id="node13" href="$hmatrix-bct-struct-with-rank_8cc.html" title="Visualize the block cluster tree structure of an H&#45;matrix with displayed rank. " alt="" coords="1639,687,1829,787"/>
+<area shape="rect" id="node15" href="$hmatrix-deep-copy-constructor_8cc.html" title="Verify the deep copy constructor of &#45;matrix. " alt="" coords="1854,687,2027,787"/>
+<area shape="rect" id="node16" href="$hmatrix-fine-ntp-to-tp_8cc.html" title="Verify the conversion of an &#45;matrix from fine non&#45;tensor product structure to tensor product structur..." alt="" coords="2051,687,2219,787"/>
+<area shape="rect" id="node17" href="$hmatrix-fullmatrix-mmult_8cc.html" title="Verify the H&#45;matrix/full matrix multiplication. " alt="" coords="2243,694,2467,779"/>
+<area shape="rect" id="node18" href="$hmatrix-hmatrix-mmult-all-coarse-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices. Both operands and the result matrices have the coarse non..." alt="" coords="2492,687,2701,787"/>
+<area shape="rect" id="node19" href="$hmatrix-hmatrix-mmult-all-fine-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices. Both operands and the result matrices have the fine non&#45;t..." alt="" coords="2725,687,2916,787"/>
+<area shape="rect" id="node20" href="$hmatrix-hmatrix-mmult-all-fine-ntp-with-adding_8cc.html" title="Verify the multiplication of two &#45;matrices. Both operands and the result matrices have the fine non&#45;t..." alt="" coords="2940,679,3139,794"/>
+<area shape="rect" id="node21" href="$hmatrix-hmatrix-mmult-coarse-coarse-fine-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices, where M1, M2 and M have coarse&#45;coarse&#45;fine non&#45;tensor pro..." alt="" coords="3163,679,3342,794"/>
+<area shape="rect" id="node22" href="$hmatrix-hmatrix-mmult-coarse-fine-coarse-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices, where M1, M2 and M have coarse&#45;fine&#45;coarse non&#45;tensor pro..." alt="" coords="3366,679,3545,794"/>
+<area shape="rect" id="node23" href="$hmatrix-hmatrix-mmult-fine-coarse-fine-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices, where M1, M2 and M have fine&#45;coarse&#45;fine non&#45;tensor produ..." alt="" coords="3569,679,3750,794"/>
+<area shape="rect" id="node24" href="$hmatrix-hmatrix-mmult-fine-fine-coarse-ntp_8cc.html" title="Verify the multiplication of two &#45;matrices, where M1, M2 and M have fine&#45;fine&#45;coarse non&#45;tensor produ..." alt="" coords="3774,679,3955,794"/>
+<area shape="rect" id="node25" href="$hmatrix-hmatrix-mmult-level-conserving-all-coarse-ntp_8cc.html" title="Verify the multiplication of two level&#45;conserving &#45;matrices. Both operands and the result matrices ha..." alt="" coords="3980,679,4240,794"/>
+<area shape="rect" id="node26" href="$hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp_8cc.html" title="Verify the multiplication of two level&#45;conserving &#45;matrices. Both operands and the result matrices ha..." alt="" coords="4265,679,4467,794"/>
+<area shape="rect" id="node27" href="$hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp-member-function-call_8cc.html" title="Verify the multiplication of two level&#45;conserving &#45;matrices. Both operands and the result matrices ha..." alt="" coords="4492,672,4747,801"/>
+<area shape="rect" id="node28" href="$hmatrix-hmatrix-mmult-level-conserving-coarse-coarse-fine-ntp_8cc.html" title="Verify the multiplication of two level&#45;conserving &#45;matrices. Both operands have the coarse non&#45;tensor..." alt="" coords="4771,672,5017,801"/>
+<area shape="rect" id="node29" href="$hmatrix-hmatrix-mmult-level-conserving-coarse-fine-coarse-ntp_8cc.html" title="Verify the multiplication of two level&#45;conserving &#45;matrices. The first operand and the result matrix ..." alt="" coords="5041,672,5269,801"/>
+<area shape="rect" id="node30" href="$hmatrix-hmatrix-mmult-level-conserving-fine-coarse-fine-ntp_8cc.html" title="Verify the multiplication of two level&#45;conserving &#45;matrices. The first operand and the result matrix ..." alt="" coords="5293,672,5521,801"/>
+<area shape="rect" id="node31" href="$hmatrix-hmatrix-mmult-level-conserving-fine-fine-coarse-ntp_8cc.html" title="Verify the multiplication of two level&#45;conserving &#45;matrices. Both operands have the fine non&#45;tensor p..." alt="" coords="5546,672,5757,801"/>
+<area shape="rect" id="node32" href="$hmatrix-invert-by-gauss-elim_8cc.html" title="Verify the inverse of an &#45;matrix using Gauss elimination. " alt="" coords="5781,687,5972,787"/>
+<area shape="rect" id="node33" href="$hmatrix-overloaded-deep-assignment_8cc.html" title="Verify the overloaded deep assignment operator of &#45;matrix. " alt="" coords="5996,687,6235,787"/>
+<area shape="rect" id="node34" href="$hmatrix-overloaded-shallow-assignment_8cc.html" title="Verify the overloaded shallow assignment operator of &#45;matrix. " alt="" coords="6259,687,6486,787"/>
+<area shape="rect" id="node35" href="$hmatrix-refinement_8cc.html" title="Verify the refinement of an &#45;matrix hierarchy with respect to its extended block cluster tree..." alt="" coords="6511,694,6707,779"/>
+<area shape="rect" id="node36" href="$hmatrix-rkmatrix-conversion_8cc.html" title="Verify the conversion from an H&#45;matrix to a rank&#45;k matrix. " alt="" coords="6731,687,6918,787"/>
+<area shape="rect" id="node37" href="$hmatrix-rkmatrix-mmult_8cc.html" title="Verify the H&#45;matrix/rank&#45;k matrix multiplication. " alt="" coords="6942,694,7161,779"/>
+<area shape="rect" id="node38" href="$hmatrix-shallow-copy-constructor_8cc.html" title="Verify the deep copy constructor of &#45;matrix. " alt="" coords="7185,687,7374,787"/>
+<area shape="rect" id="node39" href="$hmatrix-truncate-to-fixed-rank_8cc.html" title="Verify the truncation of an HMatrix to an RkMatrix. " alt="" coords="7399,687,7595,787"/>
+<area shape="rect" id="node40" href="$hmatrix-vmult_8cc.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/tests/hmatrix&#45;vmult\l/hmatrix&#45;vmult.cc" alt="" coords="7619,694,7785,779"/>
+<area shape="rect" id="node41" href="$hmatrix-write-leaf-set-by-iteration_8cc.html" title="Verify the method for write out leaf set by iteration over the constructed leaf set instead of recurs..." alt="" coords="7810,687,7997,787"/>
+<area shape="rect" id="node42" href="$hp-matrix_8cc.html" title="Test the &#160;matrix. " alt="" coords="8021,694,8181,779"/>
+<area shape="rect" id="node43" href="$lapack-matrix-local-to-rkmatrix_8cc.html" title="Verify the restriction of a local full matrix to a rank&#45;k submatrix. " alt="" coords="8205,687,8383,787"/>
+<area shape="rect" id="node44" href="$lapack-matrix-local-to-submatrix_8cc.html" title="Verify the restriction of a local full matrix to sub full matrix. " alt="" coords="8407,687,8594,787"/>
+<area shape="rect" id="node45" href="$rkmatrix-hmatrix-mmult_8cc.html" title="Verify the rank&#45;k/H&#45;matrix matrix multiplication. " alt="" coords="8618,694,8837,779"/>
+<area shape="rect" id="node46" href="$rkmatrix-local-to-rkmatrix_8cc.html" title="Verify the restriction of a local rank&#45;k matrix to a rank&#45;k submatrix. " alt="" coords="8861,687,9031,787"/>
+<area shape="rect" id="node47" href="$rkmatrix-local-to-submatrix_8cc.html" title="Verify the restriction of a local rank&#45;k matrix to a full submatrix. " alt="" coords="9056,687,9236,787"/>
 </map>

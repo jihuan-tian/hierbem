@@ -105,7 +105,8 @@ main()
                         M21_sigma_index_set,
                         M22_rk,
                         M22_tau_index_set,
-                        M22_sigma_index_set);
+                        M22_sigma_index_set,
+                        1.5);
 
   /**
    * Output the matrices.

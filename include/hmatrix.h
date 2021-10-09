@@ -227,6 +227,22 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  h_h_mmult_from_leaf_node(HMatrix<spacedim1, Number1> &M0,
+                           HMatrix<spacedim1, Number1> &M,
+                           HMatrix<spacedim1, Number1> &M1,
+                           HMatrix<spacedim1, Number1> &M2,
+                           const unsigned int           fixed_rank);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_h_mmult_level_conserving(HMatrix<spacedim1, Number1> &M0,
+                             HMatrix<spacedim1, Number1> &M,
+                             HMatrix<spacedim1, Number1> &M1,
+                             HMatrix<spacedim1, Number1> &M2,
+                             const unsigned int           fixed_rank);
+
+  template <int spacedim1, typename Number1>
+  friend void
   copy_hmatrix_node(HMatrix<spacedim1, Number1> &      hmat_dst,
                     const HMatrix<spacedim1, Number1> &hmat_src);
 
@@ -736,6 +752,17 @@ public:
         BlockClusterTree<spacedim, Number> &      bct_c,
         const unsigned int                        fixed_rank = 1);
 
+  /**
+   * Multiplication of two \f$\mathcal{H}\f$-matrices, the result of which will
+   * be appended to the target matrix \p C.
+   * @param C
+   * @param B
+   * @param bct_a
+   * @param bct_b
+   * @param bct_c
+   * @param fixed_rank
+   * @param adding
+   */
   void
   mmult(HMatrix<spacedim, Number> &               C,
         HMatrix<spacedim, Number> &               B,
@@ -744,6 +771,19 @@ public:
         BlockClusterTree<spacedim, Number> &      bct_c,
         const unsigned int                        fixed_rank,
         const bool                                adding);
+
+  /**
+   * Level conserving \hmatrix multiplication, the result of which will be
+   * appended to the target matrix \p C.
+   *
+   * @param C
+   * @param B
+   * @param fixed_rank
+   */
+  void
+  mmult_level_conserving(HMatrix<spacedim, Number> &C,
+                         HMatrix<spacedim, Number> &B,
+                         const unsigned int         fixed_rank);
 
   /**
    * Add the current HMatrix \p A with another HMatrix \p B into \p C, i.e.
@@ -771,6 +811,19 @@ public:
       const size_type                  fixed_rank_k) const;
 
   /**
+   * Perform the addition with factor \f$C = A + b B\f$.
+   * @param C
+   * @param b
+   * @param B
+   * @param fixed_rank_k
+   */
+  void
+  add(HMatrix<spacedim, Number> &      C,
+      const Number                     b,
+      const HMatrix<spacedim, Number> &B,
+      const size_type                  fixed_rank_k) const;
+
+  /**
    * Add the HMatrix \p B into the current HMatrix \p A, i.e.
    * whole matrix addition instead of addition limited to a specific block,
    * where \p C will be truncated to a fixed rank \p fixed_rank.
@@ -790,8 +843,114 @@ public:
   add(const HMatrix<spacedim, Number> &B, const size_type fixed_rank_k) const;
 
   /**
+   * Perform the addition \f$A = A + b B\f$.
+   * @param B
+   * @param fixed_rank_k
+   */
+  void
+  add(const Number                     b,
+      const HMatrix<spacedim, Number> &B,
+      const size_type                  fixed_rank_k) const;
+
+  /**
+   * Add a rank-k matrix into the current \hmatrix node.
+   *
+   * The rank-k matrix will be restricted to each leaf node of the \hmatrix node
+   * and the addition will be performed there. In this implementation, the row
+   * and column global to local index maps with respect to \p B should be
+   * explicit provided.
+   *
+   * @param B
+   * @param fixed_rank_k
+   */
+  void
+  add(const RkMatrix<Number> &B,
+      const std::map<types::global_dof_index, size_t>
+        &row_index_global_to_local_map_for_rk,
+      const std::map<types::global_dof_index, size_t>
+        &             col_index_global_to_local_map_for_rk,
+      const size_type fixed_rank_k) const;
+
+  /**
+   * Add a rank-k matrix multiplied by a factor into the current \hmatrix node.
+   *
+   * The rank-k matrix will be restricted to each leaf node of the \hmatrix node
+   * and the addition will be performed there. In this implementation, the row
+   * and column global to local index maps with respect to \p B should be
+   * explicit provided.
+   *
+   * @param b
+   * @param B
+   * @param fixed_rank_k
+   */
+  void
+  add(const Number            b,
+      const RkMatrix<Number> &B,
+      const std::map<types::global_dof_index, size_t>
+        &row_index_global_to_local_map_for_rk,
+      const std::map<types::global_dof_index, size_t>
+        &             col_index_global_to_local_map_for_rk,
+      const size_type fixed_rank_k) const;
+
+  /**
+   * Add a rank-k matrix into the current \hmatrix node.
+   *
+   * The rank-k matrix will be restricted to each leaf node of the \hmatrix node
+   * and the addition will be performed there. In this implementation, the row
+   * and column global to local index maps with respect to \p B are the same as
+   * those associated with the \hmatrix, i.e. the rank-k matrix and \hmatrix are
+   * on a same block.
+   *
+   * @param B
+   * @param fixed_rank_k
+   */
+  void
+  add(const RkMatrix<Number> &B, const size_type fixed_rank_k);
+
+  /**
+   * Add a rank-k matrix multiplied by a factor into the current \hmatrix node.
+   *
+   * The rank-k matrix will be restricted to each leaf node of the \hmatrix node
+   * and the addition will be performed there. In this implementation, the row
+   * and column global to local index maps with respect to \p B are the same as
+   * those associated with the \hmatrix, i.e. the rank-k matrix and \hmatrix are
+   * on a same block.
+   *
+   * @param b
+   * @param B
+   * @param fixed_rank_k
+   */
+  void
+  add(const Number b, const RkMatrix<Number> &B, const size_type fixed_rank_k);
+
+  /**
+   * Perform the \hmatrix addition \f$C = A + B\f$.
+   * @param C
+   * @param B
+   * @param fixed_rank_k
+   */
+  void
+  add(HMatrix<spacedim, Number> &C,
+      const RkMatrix<Number> &   B,
+      const size_type            fixed_rank_k);
+
+  /**
+   * Perform the \hmatrix addition \f$C = A + b B\f$.
+   * @param C
+   * @param b
+   * @param B
+   * @param fixed_rank_k
+   */
+  void
+  add(HMatrix<spacedim, Number> &C,
+      const Number               b,
+      const RkMatrix<Number> &   B,
+      const size_type            fixed_rank_k);
+
+  /**
    * Calculate the inverse of the \hmatrix node via Gauss
-   * elimination.
+   * elimination by calling the recursive function HMatrix<spacedim,
+   * Number>::_invert_by_gauss_elim.
    *
    * @param M_inv
    * @param M_root The \hmatnode from which this recursive function is called for
@@ -800,10 +959,8 @@ public:
    * @param fixed_rank_k
    */
   void
-  invert_by_gauss_elim(HMatrix<spacedim, Number> &               M_inv,
-                       HMatrix<spacedim, Number> &               M_root,
-                       const BlockClusterTree<spacedim, Number> &M_root_bct,
-                       const size_type                           fixed_rank_k);
+  invert_by_gauss_elim(HMatrix<spacedim, Number> &M_inv,
+                       const size_type            fixed_rank_k);
 
   /**
    * Coarsen the current \hmatrix so that it corresponds to the
@@ -999,13 +1156,29 @@ private:
   _build_leaf_set(std::vector<HMatrix *> &total_leaf_set) const;
 
   void
-  distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves();
+  distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves(
+    const unsigned int fixed_rank = 0);
 
   void
-  distribute_sigma_r_and_f_to_leaves();
+  distribute_sigma_r_and_f_to_leaves(const unsigned int fixed_rank = 0);
 
   void
-  _distribute_sigma_r_and_f_to_leaves(HMatrix<spacedim, Number> &starting_hmat);
+  _distribute_sigma_r_and_f_to_leaves(HMatrix<spacedim, Number> &starting_hmat,
+                                      const unsigned int fixed_rank = 0);
+
+  /**
+   * Calculate the inverse of the \hmatrix node via Gauss
+   * elimination.
+   *
+   * @param M_inv
+   * @param M_root The \hmatnode from which this recursive function is called for
+   * the first time.
+   * @param M_root_bct The \bct associated with \p M_root.
+   * @param fixed_rank_k
+   */
+  void
+  _invert_by_gauss_elim(HMatrix<spacedim, Number> &M_inv,
+                        const size_type            fixed_rank_k);
 
   /**
    * Matrix type.
@@ -1274,10 +1447,7 @@ InitHMatrixWrtBlockClusterNode(
 /**
  * Recursively construct the children of an \hmatrix with
  * respect to a block cluster tree by starting from a tree node which is
- * associated with the current \hmatrix.
- *
- * The matrices in the leaf set are initialized with zero values. The rank of
- * the near field matrices are predefined fixed values.
+ * to be associated with the current \hmatrix.
  *
  * @param hmat Pointer to the current \hmatrix node, <strong>which has already been
  * created on the heap but with its internal data left empty.</strong>
@@ -1497,8 +1667,25 @@ InitAndCreateHMatrixChildren(
         }
       else
         {
-          hmat->type     = RkMatrixType;
-          hmat->rkmatrix = new RkMatrix<Number>(hmat->m, hmat->n, fixed_rank_k);
+          hmat->type = RkMatrixType;
+
+          if (fixed_rank_k == 0)
+            {
+              // When the given rank is zero, an empty rank-k matrix is created,
+              // whose memory is left for further allocation.
+              hmat->rkmatrix = new RkMatrix<Number>();
+            }
+          else
+            {
+              //              // DEBUG
+              //              std::cout << "InitAndCreateHMatrixChildren begins"
+              //              << std::endl;
+              hmat->rkmatrix =
+                new RkMatrix<Number>(hmat->m, hmat->n, fixed_rank_k);
+              //              // DEBUG
+              //              std::cout << "InitAndCreateHMatrixChildren ends"
+              //              << std::endl;
+            }
         }
     }
 }
@@ -3082,6 +3269,15 @@ h_f_mmult(HMatrix<spacedim, Number> &        M1,
 }
 
 
+/**
+ * Multiplication of two \hmatrices, where the second one is of \p
+ * FullMatrixType. An \hmatrix is returned in \p M, which is either of \p
+ * FullMatrixType or \p RkMatrixType.
+ * @param M1
+ * @param M2
+ * @param M
+ * @param is_M1M2_last_in_M_Sigma_P
+ */
 template <int spacedim, typename Number = double>
 void
 h_f_mmult_for_h_h_mmult(HMatrix<spacedim, Number> *      M1,
@@ -3143,6 +3339,13 @@ h_f_mmult_for_h_h_mmult(HMatrix<spacedim, Number> *      M1,
 }
 
 
+/**
+ * Multiplication of a full matrix and a \hmatrix. A full matrix is returned in
+ * \p M.
+ * @param M1
+ * @param M2
+ * @param M
+ */
 template <int spacedim, typename Number = double>
 void
 f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
@@ -3186,7 +3389,14 @@ f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
 }
 
 
-template <int spacedim, typename Number>
+/**
+ * Multiplication of a full matrix and a \hmatrix. A rank-k matrix is returned
+ * in \p M.
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
 void
 f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
           HMatrix<spacedim, Number> &        M2,
@@ -3194,12 +3404,25 @@ f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
 {
   AssertDimension(M1.n(), M2.m);
 
+  /**
+   * \alert{The creation of the rank-k matrix \p M1_rk from \p M1 will modify \p
+   * M1 internally. Hence, we make a copy of \p M1 here.}
+   */
   LAPACKFullMatrixExt<Number> M1_copy(M1);
   RkMatrix<Number>            M1_rk(M1_copy);
   rk_h_mmult(M1_rk, M2, M);
 }
 
 
+/**
+ * Multiplication of two \hmatrices, where the first one is of \p
+ * FullMatrixType. An \hmatrix is returned in \p M, which is either of \p
+ * FullMatrixType or \p RkMatrixType.
+ * @param M1
+ * @param M2
+ * @param M
+ * @param is_M1M2_last_in_M_Sigma_P
+ */
 template <int spacedim, typename Number = double>
 void
 f_h_mmult_for_h_h_mmult(const HMatrix<spacedim, Number> *M1,
@@ -3283,11 +3506,21 @@ h_h_mmult_phase1_recursion(HMatrix<spacedim, Number> *         M,
             {
               M->h_h_mmult_horizontal_split(Tind);
 
+              Assert(
+                false,
+                ExcMessage(
+                  "For level conserving H-matrix multiplication, HorizontalSplitMode should not appear!"));
+
               break;
             }
           case VerticalSplitMode:
             {
               M->h_h_mmult_vertical_split(Tind);
+
+              Assert(
+                false,
+                ExcMessage(
+                  "For level conserving H-matrix multiplication, VerticalSplitMode should not appear!"));
 
               break;
             }
@@ -3337,7 +3570,8 @@ h_h_mmult_phase2(HMatrix<spacedim, Number> &         M,
     {
       /**
        * Here we make sure that \hmatrix pairs in the list
-       * \f$\Sigma_b^P\f$ have all been processed and erased.
+       * \f$\Sigma_b^P\f$ have all been processed and erased, hence the list
+       * should be empty.
        */
       AssertDimension(hmat->Sigma_P.size(), 0);
 
@@ -3347,8 +3581,14 @@ h_h_mmult_phase2(HMatrix<spacedim, Number> &         M,
 
           /**
            * Perform pairwise formatted addition for the list of rank-k
-           * matrices.
+           * matrices stored in the list \f$\Sigma_b^R\f$, the result of which
+           * will be assigned to the \p rkmatrix field of the current \hmatrix
+           * leaf node.
            */
+          Assert(
+            hmat->rkmatrix == nullptr,
+            ExcMessage(
+              "The pointer hmat->rkmatrix should be nullptr before the following assignment:\n\nhmat->rkmatrix = hmat->Sigma_R[0];\n"));
           hmat->rkmatrix = hmat->Sigma_R[0];
           for (size_t i = 1; i < hmat->Sigma_R.size(); i++)
             {
@@ -3356,6 +3596,11 @@ h_h_mmult_phase2(HMatrix<spacedim, Number> &         M,
               delete hmat->Sigma_R[i];
               hmat->Sigma_R[i] = nullptr;
             }
+
+          /**
+           * Clear the list \f$\Sigma_b^R\f$ after adding all of its rank-k
+           * matrices.
+           */
           hmat->Sigma_R.clear();
         }
       else if (hmat->Sigma_R.size() == 0 && hmat->Sigma_F.size() > 0)
@@ -3363,6 +3608,10 @@ h_h_mmult_phase2(HMatrix<spacedim, Number> &         M,
           Assert(hmat->type == FullMatrixType,
                  ExcInvalidHMatrixType(hmat->type));
 
+          Assert(
+            hmat->fullmatrix == nullptr,
+            ExcMessage(
+              "The pointer hmat->fullmatrix should be nullptr before the following assignment:\n\nhmat->fullmatrix = hmat->Sigma_F[0];\n"));
           hmat->fullmatrix = hmat->Sigma_F[0];
           for (size_t i = 1; i < hmat->Sigma_F.size(); i++)
             {
@@ -3370,6 +3619,11 @@ h_h_mmult_phase2(HMatrix<spacedim, Number> &         M,
               delete hmat->Sigma_F[i];
               hmat->Sigma_F[i] = nullptr;
             }
+
+          /**
+           * Clear the list \f$\Sigma_b^F\f$ after adding all of its full
+           * matrices.
+           */
           hmat->Sigma_F.clear();
         }
       else
@@ -3379,10 +3633,11 @@ h_h_mmult_phase2(HMatrix<spacedim, Number> &         M,
     }
 
   /**
-   * Distribute matrices stored in \f$\Sigma_b^R\f$ and \f$\Sigma_b^F\f$ of each
-   * non-leaf node to its leaf nodes.
+   * \alert{Important}: Distribute matrices stored in \f$\Sigma_b^R\f$ and
+   * \f$\Sigma_b^F\f$ of each \alert{non-leaf node} to the leaf nodes which are
+   * its descendants.
    */
-  M.distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves();
+  M.distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves(fixed_rank);
 
   /**
    * Convert the calculated product matrix to the specified matrix structure.
@@ -3390,6 +3645,354 @@ h_h_mmult_phase2(HMatrix<spacedim, Number> &         M,
   M.convert_between_different_block_cluster_trees(M.Tind,
                                                   target_bc_tree,
                                                   fixed_rank);
+}
+
+
+/**
+ * \hmatrix-\hmatrix multiplication when the product matrix belongs to the leaf
+ * set of the target \bct.
+ *
+ * This function implements the recursive \p MMR algorithm in (7.26) in
+ * Hackbusch's \hmatrix book.
+ *
+ * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
+ *
+ * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
+ * which will assembles the contribution from \f$M_1 \cdot M_2\f$. For the first
+ * call of this function, \p M is the same as \p M0.
+ * @param M1 The first operand of the multiplication, which is built upon the
+ * \bcn \f$\tau\times\sigma\f$.
+ * @param M2 The second operand of the multiplication, which is built upon the
+ * \bcn \f$\sigma\times\rho\f$.
+ * @param fixed_rank
+ */
+template <int spacedim, typename Number>
+void
+h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &M0,
+                         HMatrix<spacedim, Number> &M,
+                         HMatrix<spacedim, Number> &M1,
+                         HMatrix<spacedim, Number> &M2,
+                         const unsigned int         fixed_rank)
+{
+  Assert(M0.bc_node->is_leaf(), ExcMessage("M0 should be a leaf node!"));
+
+  // Array of empty child pointers used for initializing a block
+  // cluster tree node.
+  const std::array<
+    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
+    BlockClusterTree<spacedim, Number>::child_num>
+    empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+
+  /**
+   * Create a \bcn \f$\tau\times\rho\f$ for the current local product matrix \p
+   * Z. Since this \bcn will not be connected with other \bcns in a \bct, it has
+   * neither parent nor children and its level is set to zero.
+   */
+  typename BlockClusterTree<spacedim, Number>::node_value_type
+    current_product_bc_node(
+      BlockCluster<spacedim, Number>(
+        M1.bc_node->get_data_reference().get_tau_node(),
+        M2.bc_node->get_data_reference().get_sigma_node()),
+      0,
+      empty_child_pointers,
+      nullptr,
+      UnsplitMode);
+
+  /**
+   * Set the \p is_near_field flag of the \bcn for the current
+   * local product matrix \p Z according to the matrix type of the initial leaf
+   * node matrix \p M0, i.e. it inherits the \p is_near_field flag of the \bcn
+   * for \p M0.
+   */
+  if (M0.bc_node->get_data_reference().get_is_near_field())
+    {
+      Assert(M0.type == FullMatrixType, ExcInvalidHMatrixType(M0.type));
+
+      current_product_bc_node.get_data_reference().set_is_near_field(true);
+    }
+  else
+    {
+      Assert(M0.type == RkMatrixType, ExcInvalidHMatrixType(M0.type));
+
+      current_product_bc_node.get_data_reference().set_is_near_field(false);
+    }
+
+  /**
+   * Create the local \hmatrix \p Z associated with the current \bcn. During its
+   * initialization, memory will be allocated for \p Z depending on its matrix
+   * type.
+   */
+  HMatrix<spacedim, Number> Z(&current_product_bc_node, fixed_rank);
+  // Local variable storing the rank-k matrix obtained from multiplication
+  // involving leaf node.
+  RkMatrix<Number> ZR;
+  // Local variable storing the full matrix obtained from multiplication
+  // involving leaf node.
+  LAPACKFullMatrixExt<Number> ZF;
+  // The result matrix type for the multiplication involving leaf node.
+  HMatrixType result_matrix_type;
+
+  if (M1.bc_node->is_leaf() || M2.bc_node->is_leaf())
+    {
+      /**
+       * When either operand \p M1 or \p M2 is a leaf node, directly evaluation
+       * of their multiplication can be performed.
+       */
+      if (M1.type == RkMatrixType)
+        {
+          rk_h_mmult(*(M1.rkmatrix), M2, ZR);
+          result_matrix_type = RkMatrixType;
+        }
+      else if (M2.type == RkMatrixType)
+        {
+          h_rk_mmult(M1, *(M2.rkmatrix), ZR);
+          result_matrix_type = RkMatrixType;
+        }
+      else if (M1.type == FullMatrixType)
+        {
+          f_h_mmult(*(M1.fullmatrix), M2, ZF);
+          result_matrix_type = FullMatrixType;
+        }
+      else if (M2.type == FullMatrixType)
+        {
+          h_f_mmult(M1, *(M2.fullmatrix), ZF);
+          result_matrix_type = FullMatrixType;
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      if (Z.type == RkMatrixType)
+        {
+          // The desired result should be a rank-k matrix.
+          if (result_matrix_type == RkMatrixType)
+            {
+              *(Z.rkmatrix) = ZR;
+            }
+          else if (result_matrix_type == FullMatrixType)
+            {
+              // Convert the full matrix to rank-k matrix.
+              *(Z.rkmatrix) = RkMatrix<Number>(fixed_rank, ZF);
+            }
+          else
+            {
+              Assert(false, ExcInvalidHMatrixType(result_matrix_type));
+            }
+        }
+      else if (Z.type == FullMatrixType)
+        {
+          // The desired result should be a full matrix.
+          if (result_matrix_type == RkMatrixType)
+            {
+              // Convert the rank-k matrix to full matrix.
+              ZR.convertToFullMatrix(*(Z.fullmatrix));
+            }
+          else if (result_matrix_type == FullMatrixType)
+            {
+              *(Z.fullmatrix) = ZF;
+            }
+          else
+            {
+              Assert(false, ExcInvalidHMatrixType(result_matrix_type));
+            }
+        }
+      else
+        {
+          Assert(false, ExcInvalidHMatrixType(Z.type));
+        }
+    }
+  else
+    {
+      /**
+       * \alert{When we perform submatrix multiplication, we use a higher
+       * specified rank, since the results will be assembled into the larger
+       * matrix \p Z via pairwise formatted addition, during which the actual
+       * matrix rank may increase.}
+       */
+      const unsigned int local_fixed_rank =
+        std::min(fixed_rank * 2, std::min(Z.m, Z.n));
+
+      h_h_mmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[0]), *(M2.submatrices[0]), local_fixed_rank);
+      h_h_mmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[1]), *(M2.submatrices[2]), local_fixed_rank);
+      h_h_mmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[0]), *(M2.submatrices[1]), local_fixed_rank);
+      h_h_mmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[1]), *(M2.submatrices[3]), local_fixed_rank);
+      h_h_mmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[2]), *(M2.submatrices[0]), local_fixed_rank);
+      h_h_mmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[3]), *(M2.submatrices[2]), local_fixed_rank);
+      h_h_mmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[2]), *(M2.submatrices[1]), local_fixed_rank);
+      h_h_mmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[3]), *(M2.submatrices[3]), local_fixed_rank);
+    }
+
+  /**
+   * Assemble the local matrix \p Z to the product matrix \p M.
+   */
+  if (M0.bc_node->get_data_reference().get_is_near_field())
+    {
+      /**
+       * When the original matrix \p M0 belongs to the near field, assemble the
+       * full matrix stored in \p Z directly into \p M.
+       */
+      Assert(M.fullmatrix, ExcInternalError());
+
+      M.fullmatrix->fill(M.row_index_global_to_local_map,
+                         M.col_index_global_to_local_map,
+                         *(Z.fullmatrix),
+                         *(Z.row_indices),
+                         *(Z.col_indices),
+                         true);
+    }
+  else
+    {
+      /**
+       * When the original matrix \p M0 does not belong to the near field,
+       * assemble the rank-k matrix stored in \p Z into \p M by first embedding
+       * then formatted addition, which has been implemented in the member
+       * function \p assemble_from_rkmatrix.
+       */
+      Assert(M.rkmatrix, ExcInternalError());
+
+      M.rkmatrix->assemble_from_rkmatrix(M.row_index_global_to_local_map,
+                                         M.col_index_global_to_local_map,
+                                         *(Z.rkmatrix),
+                                         *(Z.row_indices),
+                                         *(Z.col_indices),
+                                         fixed_rank);
+      //      // DEBUG
+      //      std::cout << "M.rkmatrix: [";
+      //      print_vector_values(std::cout, *(M.row_indices), ",", false);
+      //      std::cout << "],[";
+      //      print_vector_values(std::cout, *(M1.col_indices), ",", false);
+      //      std::cout << "],[";
+      //      print_vector_values(std::cout, *(M.col_indices), ",", false);
+      //      std::cout << "] assembled from [";
+      //      print_vector_values(std::cout, *(Z.row_indices), ",", false);
+      //      std::cout << "],[";
+      //      print_vector_values(std::cout, *(Z.col_indices), ",", false);
+      //      std::cout << "]\n";
+      //      std::cout << "M.rkmatrix: formal_rank=" <<
+      //      M.rkmatrix->get_formal_rank()
+      //                << ", rank=" << M.rkmatrix->get_rank() << std::endl;
+    }
+}
+
+
+/**
+ * This function performs the multiplication of two level-conserving \hmatrices.
+ *
+ * It is required that an empty result matrix \p M should be created first with
+ * respect to a \bct.
+ *
+ * @param M0
+ * @param M
+ * @param M1
+ * @param M2
+ * @param fixed_rank
+ */
+template <int spacedim, typename Number>
+void
+h_h_mmult_level_conserving(HMatrix<spacedim, Number> &M0,
+                           HMatrix<spacedim, Number> &M,
+                           HMatrix<spacedim, Number> &M1,
+                           HMatrix<spacedim, Number> &M2,
+                           const unsigned int         fixed_rank)
+{
+  //  // DEBUG
+  //  std::cout << "mmult: ([";
+  //  print_vector_values(std::cout, *(M1.row_indices), ",", false);
+  //  std::cout << "],[";
+  //  print_vector_values(std::cout, *(M1.col_indices), ",", false);
+  //  std::cout << "]) * ([";
+  //  print_vector_values(std::cout, *(M2.row_indices), ",", false);
+  //  std::cout << "],[";
+  //  print_vector_values(std::cout, *(M2.col_indices), ",", false);
+  //  std::cout << "]) = ([";
+  //  print_vector_values(std::cout, *(M.row_indices), ",", false);
+  //  std::cout << "],[";
+  //  print_vector_values(std::cout, *(M.col_indices), ",", false);
+  //  std::cout << "])" << std::endl;
+
+  if (!(M1.bc_node->is_leaf()) && !(M2.bc_node->is_leaf()) &&
+      !(M.bc_node->is_leaf()))
+    {
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[0]),
+                                 *(M1.submatrices[0]),
+                                 *(M2.submatrices[0]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[0]),
+                                 *(M1.submatrices[1]),
+                                 *(M2.submatrices[2]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[1]),
+                                 *(M1.submatrices[0]),
+                                 *(M2.submatrices[1]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[1]),
+                                 *(M1.submatrices[1]),
+                                 *(M2.submatrices[3]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[2]),
+                                 *(M1.submatrices[2]),
+                                 *(M2.submatrices[0]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[2]),
+                                 *(M1.submatrices[3]),
+                                 *(M2.submatrices[2]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[3]),
+                                 *(M1.submatrices[2]),
+                                 *(M2.submatrices[1]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[3]),
+                                 *(M1.submatrices[3]),
+                                 *(M2.submatrices[3]),
+                                 fixed_rank);
+    }
+  else if (!(M.bc_node->is_leaf()))
+    {
+      RkMatrix<Number> Z;
+      if (M1.type == RkMatrixType)
+        {
+          rk_h_mmult(*(M1.rkmatrix), M2, Z);
+        }
+      else if (M2.type == RkMatrixType)
+        {
+          h_rk_mmult(M1, *(M2.rkmatrix), Z);
+        }
+      else if (M1.type == FullMatrixType)
+        {
+          f_h_mmult(*(M1.fullmatrix), M2, Z);
+        }
+      else if (M2.type == FullMatrixType)
+        {
+          h_f_mmult(M1, *(M2.fullmatrix), Z);
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      M.add(Z, fixed_rank);
+    }
+  else
+    {
+      h_h_mmult_from_leaf_node(M, M, M1, M2, fixed_rank);
+    }
 }
 
 
@@ -3863,6 +4466,11 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(MatrixType &M) const
       case RkMatrixType:
         Assert(rkmatrix, ExcInternalError());
 
+        // DEBUG
+        //        std::cout << "* rank-k matrix rank: formal rank="
+        //                  << rkmatrix->get_formal_rank()
+        //                  << ", rank=" << rkmatrix->get_rank() << std::endl;
+
         rkmatrix->convertToFullMatrix(matrix_block);
 
         for (size_type i = 0; i < m; i++)
@@ -3872,6 +4480,10 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(MatrixType &M) const
                 M(row_indices->at(i), col_indices->at(j)) = matrix_block(i, j);
               }
           }
+
+        // DEBUG
+        //        std::cout << "* full matrix rank: " << matrix_block.rank(0.)
+        //                  << std::endl;
 
         break;
       case HierarchicalMatrixType:
@@ -3927,8 +4539,9 @@ HMatrix<spacedim, Number>::_build_leaf_set(
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim,
-        Number>::distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves()
+HMatrix<spacedim, Number>::
+  distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves(
+    const unsigned int fixed_rank)
 {
   /**
    * Only non-leaf \hmatrix nodes need to be processed.
@@ -3937,26 +4550,28 @@ HMatrix<spacedim,
     {
       /**
        * Since the current \hmatrix node has children, its type
-       * should be \p HierarchicalMatrixType.
+       * should be \p HierarchicalMatrixType and we make an assertion on it.
        */
       Assert(type == HierarchicalMatrixType, ExcInvalidHMatrixType(type));
 
       /**
        * Distribute matrices in \f$\Sigma_b^R\f$ and \f$\Sigma_b^F\f$ of the
-       * current \hmatrix node to its leaves, which is also a
-       * recursive function call.
+       * current \hmatrix node to the leaf nodes which are its descendants.
+       * This is a recursive function call.
        */
-      distribute_sigma_r_and_f_to_leaves();
+      distribute_sigma_r_and_f_to_leaves(fixed_rank);
 
       /**
        * Distribute matrices in \f$\Sigma_b^R\f$ and \f$\Sigma_b^F\f$ of each
-       * child matrix of the current \hmatrix node to its leaves
+       * child matrix of the current \hmatrix node to the leaf nodes which are
+       * its descendants.
        */
       for (HMatrix<spacedim, Number> *submatrix : submatrices)
         {
           Assert(submatrix, ExcInternalError());
 
-          submatrix->distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves();
+          submatrix->distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves(
+            fixed_rank);
         }
     }
 }
@@ -3964,7 +4579,8 @@ HMatrix<spacedim,
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::distribute_sigma_r_and_f_to_leaves()
+HMatrix<spacedim, Number>::distribute_sigma_r_and_f_to_leaves(
+  const unsigned int fixed_rank)
 {
   if (Sigma_R.size() > 0 || Sigma_F.size() > 0)
     {
@@ -3980,7 +4596,7 @@ HMatrix<spacedim, Number>::distribute_sigma_r_and_f_to_leaves()
                                               col_index_global_to_local_map);
         }
 
-      _distribute_sigma_r_and_f_to_leaves(*this);
+      _distribute_sigma_r_and_f_to_leaves(*this, fixed_rank);
 
       for (auto &rkmatrix_in_starting_hmat : Sigma_R)
         {
@@ -4010,13 +4626,15 @@ HMatrix<spacedim, Number>::distribute_sigma_r_and_f_to_leaves()
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::_distribute_sigma_r_and_f_to_leaves(
-  HMatrix<spacedim, Number> &starting_hmat)
+  HMatrix<spacedim, Number> &starting_hmat,
+  const unsigned int         fixed_rank)
 {
   if (submatrices.size() > 0)
     {
       for (HMatrix<spacedim, Number> *submatrix : submatrices)
         {
-          submatrix->_distribute_sigma_r_and_f_to_leaves(starting_hmat);
+          submatrix->_distribute_sigma_r_and_f_to_leaves(starting_hmat,
+                                                         fixed_rank);
         }
     }
   else
@@ -4085,7 +4703,14 @@ HMatrix<spacedim, Number>::_distribute_sigma_r_and_f_to_leaves(
                     starting_hmat.row_index_global_to_local_map,
                     starting_hmat.col_index_global_to_local_map);
 
-                  rkmatrix->add(rkmatrix_restricted);
+                  if (fixed_rank == 0)
+                    {
+                      rkmatrix->add(rkmatrix_restricted);
+                    }
+                  else
+                    {
+                      rkmatrix->add(rkmatrix_restricted, fixed_rank);
+                    }
                 }
 
               /**
@@ -4104,7 +4729,14 @@ HMatrix<spacedim, Number>::_distribute_sigma_r_and_f_to_leaves(
                     starting_hmat.row_index_global_to_local_map,
                     starting_hmat.col_index_global_to_local_map);
 
-                  rkmatrix->add(rkmatrix_restricted);
+                  if (fixed_rank == 0)
+                    {
+                      rkmatrix->add(rkmatrix_restricted);
+                    }
+                  else
+                    {
+                      rkmatrix->add(rkmatrix_restricted, fixed_rank);
+                    }
                 }
 
               break;
@@ -4485,6 +5117,9 @@ HMatrix<spacedim, Number>::write_rkmatrix_leaf_node(std::ostream &out) const
    * Print the \p rank flag.
    */
   out << rkmatrix->get_rank() << "\n";
+
+  // DEBUG: Print out the rkmatrix.
+  rkmatrix->print_formatted(out, 8, false, 16, "0");
 }
 
 
@@ -5465,6 +6100,16 @@ HMatrix<spacedim, Number>::mmult(
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::mmult_level_conserving(HMatrix<spacedim, Number> &C,
+                                                  HMatrix<spacedim, Number> &B,
+                                                  const unsigned int fixed_rank)
+{
+  h_h_mmult_level_conserving(C, C, (*this), B, fixed_rank);
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
                                const HMatrix<spacedim, Number> &B,
                                const size_type fixed_rank_k) const
@@ -5504,6 +6149,59 @@ HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
            * Perform addition of rank-k matrices.
            */
           this->rkmatrix->add(*(C.rkmatrix), *(B.rkmatrix), fixed_rank_k);
+
+          break;
+        }
+      case UndefinedMatrixType:
+        Assert(false, ExcInvalidHMatrixType(type));
+        break;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
+                               const Number                     b,
+                               const HMatrix<spacedim, Number> &B,
+                               const size_type fixed_rank_k) const
+{
+  /**
+   * <strong>Work flow</strong>
+   */
+
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        {
+          /**
+           * Recursively add each pair of submatrices.
+           */
+          for (size_type i = 0; i < submatrices.size(); i++)
+            {
+              submatrices.at(i)->add(*(C.submatrices.at(i)),
+                                     b,
+                                     *(B.submatrices.at(i)),
+                                     fixed_rank_k);
+            }
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          /**
+           * Perform addition of full matrices.
+           */
+          this->fullmatrix->add(*(C.fullmatrix), b, *(B.fullmatrix));
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          /**
+           * Perform addition of rank-k matrices.
+           */
+          this->rkmatrix->add(*(C.rkmatrix), b, *(B.rkmatrix), fixed_rank_k);
 
           break;
         }
@@ -5564,11 +6262,297 @@ HMatrix<spacedim, Number>::add(const HMatrix<spacedim, Number> &B,
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::add(const Number                     b,
+                               const HMatrix<spacedim, Number> &B,
+                               const size_type fixed_rank_k) const
+{
+  /**
+   * <strong>Work flow</strong>
+   */
+
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        {
+          /**
+           * Recursively add each pair of submatrices.
+           */
+          for (size_type i = 0; i < submatrices.size(); i++)
+            {
+              submatrices.at(i)->add(b, *(B.submatrices.at(i)), fixed_rank_k);
+            }
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          /**
+           * Perform addition of full matrices.
+           */
+          this->fullmatrix->add(b, *(B.fullmatrix));
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          /**
+           * Perform addition of rank-k matrices.
+           */
+          this->rkmatrix->add(b, *(B.rkmatrix), fixed_rank_k);
+
+          break;
+        }
+      case UndefinedMatrixType:
+        Assert(false, ExcInvalidHMatrixType(type));
+        break;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(const RkMatrix<Number> &B,
+                               const std::map<types::global_dof_index, size_t>
+                                 &row_index_global_to_local_map_for_rk,
+                               const std::map<types::global_dof_index, size_t>
+                                 &col_index_global_to_local_map_for_rk,
+                               const size_type fixed_rank_k) const
+{
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        {
+          for (size_type i = 0; i < submatrices.size(); i++)
+            {
+              submatrices.at(i)->add(B,
+                                     row_index_global_to_local_map_for_rk,
+                                     col_index_global_to_local_map_for_rk,
+                                     fixed_rank_k);
+            }
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          /**
+           * Restrict the rank-k matrix to the local full matrix then perform
+           * the addition with the leaf node of the \hmatrix.
+           */
+          LAPACKFullMatrixExt<Number> fullmatrix_from_rk;
+          B.restrictToFullMatrix(*(row_indices),
+                                 *(col_indices),
+                                 row_index_global_to_local_map_for_rk,
+                                 col_index_global_to_local_map_for_rk,
+                                 fullmatrix_from_rk);
+          this->fullmatrix->add(fullmatrix_from_rk);
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          /**
+           * Create a local rank-k matrix by restricting from the original large
+           * rank-k matrix.
+           */
+          RkMatrix<Number> rkmatrix_by_restriction(
+            *(row_indices),
+            *(col_indices),
+            B,
+            row_index_global_to_local_map_for_rk,
+            col_index_global_to_local_map_for_rk);
+
+          //          // DEBUG
+          //          std::cout << "rkmatrix rank before addition: "
+          //                    << this->rkmatrix->get_rank() << std::endl;
+
+          this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
+
+          //          // DEBUG
+          //          std::cout << "rkmatrix rank after addition: "
+          //                    << this->rkmatrix->get_rank() << std::endl;
+
+          break;
+        }
+      case UndefinedMatrixType:
+        Assert(false, ExcInvalidHMatrixType(type));
+        break;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(const Number            b,
+                               const RkMatrix<Number> &B,
+                               const std::map<types::global_dof_index, size_t>
+                                 &row_index_global_to_local_map_for_rk,
+                               const std::map<types::global_dof_index, size_t>
+                                 &col_index_global_to_local_map_for_rk,
+                               const size_type fixed_rank_k) const
+{
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        {
+          for (size_type i = 0; i < submatrices.size(); i++)
+            {
+              submatrices.at(i)->add(b,
+                                     B,
+                                     row_index_global_to_local_map_for_rk,
+                                     col_index_global_to_local_map_for_rk,
+                                     fixed_rank_k);
+            }
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          /**
+           * Restrict the rank-k matrix to the local full matrix then perform
+           * the addition with the leaf node of the \hmatrix.
+           */
+          LAPACKFullMatrixExt<Number> fullmatrix_from_rk;
+          B.restrictToFullMatrix(*(row_indices),
+                                 *(col_indices),
+                                 row_index_global_to_local_map_for_rk,
+                                 col_index_global_to_local_map_for_rk,
+                                 fullmatrix_from_rk);
+          this->fullmatrix->add(b, fullmatrix_from_rk);
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          /**
+           * Create a local rank-k matrix by restricting from the original large
+           * rank-k matrix.
+           */
+          RkMatrix<Number> rkmatrix_by_restriction(
+            *(row_indices),
+            *(col_indices),
+            B,
+            row_index_global_to_local_map_for_rk,
+            col_index_global_to_local_map_for_rk);
+
+          //          // DEBUG
+          //          std::cout << "rkmatrix rank before addition: "
+          //                    << this->rkmatrix->get_rank() << std::endl;
+
+          this->rkmatrix->add(b, rkmatrix_by_restriction, fixed_rank_k);
+
+          //          // DEBUG
+          //          std::cout << "rkmatrix rank after addition: "
+          //                    << this->rkmatrix->get_rank() << std::endl;
+
+          break;
+        }
+      case UndefinedMatrixType:
+        Assert(false, ExcInvalidHMatrixType(type));
+        break;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(const RkMatrix<Number> &B,
+                               const size_type         fixed_rank_k)
+{
+  AssertDimension(m, B.get_m());
+  AssertDimension(n, B.get_n());
+
+  if (row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(row_indices),
+                                          row_index_global_to_local_map);
+    }
+
+  if (col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(col_indices),
+                                          col_index_global_to_local_map);
+    }
+
+  this->add(B,
+            row_index_global_to_local_map,
+            col_index_global_to_local_map,
+            fixed_rank_k);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(const Number            b,
+                               const RkMatrix<Number> &B,
+                               const size_type         fixed_rank_k)
+{
+  AssertDimension(m, B.get_m());
+  AssertDimension(n, B.get_n());
+
+  if (row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(row_indices),
+                                          row_index_global_to_local_map);
+    }
+
+  if (col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(col_indices),
+                                          col_index_global_to_local_map);
+    }
+
+  this->add(b,
+            B,
+            row_index_global_to_local_map,
+            col_index_global_to_local_map,
+            fixed_rank_k);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &C,
+                               const RkMatrix<Number> &   B,
+                               const size_type            fixed_rank_k)
+{
+  C = (*this);
+  C.add(B, fixed_rank_k);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &C,
+                               const Number               b,
+                               const RkMatrix<Number> &   B,
+                               const size_type            fixed_rank_k)
+{
+  C = (*this);
+  C.add(b, B, fixed_rank_k);
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::invert_by_gauss_elim(
-  HMatrix<spacedim, Number> &               M_inv,
-  HMatrix<spacedim, Number> &               M_root,
-  const BlockClusterTree<spacedim, Number> &M_root_bct,
-  const size_type                           fixed_rank_k)
+  HMatrix<spacedim, Number> &M_inv,
+  const size_type            fixed_rank_k)
+{
+  _invert_by_gauss_elim(M_inv, fixed_rank_k);
+
+  /**
+   * Rebuild the leaf set of the current \hmatrix and its inverse.
+   */
+  build_leaf_set();
+  M_inv.build_leaf_set();
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::_invert_by_gauss_elim(
+  HMatrix<spacedim, Number> &M_inv,
+  const size_type            fixed_rank_k)
 {
   AssertDimension(m, n);
 
@@ -5576,11 +6560,16 @@ HMatrix<spacedim, Number>::invert_by_gauss_elim(
    * If the current matrix block to be handled has a same \f$\tau\f$ cluster and
    * \f$\sigma\f$ cluster and belongs to the leaf set of \p M_root, directly
    * calculate its inverse as full matrix.
+   *
+   * \alert{2021-10-05 At present, we assume the \hmatrix hierarchy is
+   * completely the same as the associated \bct, or rather, the \bct is not
+   * finer than the \hmatrix. Therefore, whether the \bcn is a leaf is
+   * equivalent to whether the \hmatrix node is a leaf. In a more generalized
+   * implementation, the \bct can be finer than the \hmatrix hierarchy.}
    */
   if (*(bc_node->get_data_reference().get_tau_node()) ==
         *(bc_node->get_data_reference().get_sigma_node()) &&
-      M_root.find_block_cluster_in_leaf_set(bc_node->get_data_reference()) !=
-        M_root.get_leaf_set().end())
+      bc_node->is_leaf())
     {
       Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
 
@@ -5593,10 +6582,11 @@ HMatrix<spacedim, Number>::invert_by_gauss_elim(
         bc_node->get_data_reference().get_sigma_node()->get_child_num());
 
       /**
-       * Number of matrix block in a row.
+       * Number of matrix blocks in a row, which is also the number of matrix
+       * blocks in a column.
        */
       const size_type k =
-        bc_node->get_data_reference().get_tau_node()->get_child_num();
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
 
       /**
        * Stage 1: eliminate the lower triangular part of the matrix.
@@ -5628,49 +6618,119 @@ HMatrix<spacedim, Number>::invert_by_gauss_elim(
            * index is calculated as <code>1 + 1 * 2 = 3</code>.
            */
           const size_type diag_block_index_in_submatrices = l + l * k;
-          submatrices[diag_block_index_in_submatrices]->invert_by_gauss_elim(
+          submatrices[diag_block_index_in_submatrices]->_invert_by_gauss_elim(
             *(M_inv.submatrices[diag_block_index_in_submatrices]),
-            M_root,
-            M_root_bct,
             fixed_rank_k);
 
+          /**
+           * Iterate over the columns from \f$l + 1\f$ to \f$k\f$ in the source
+           * matrix and scale each matrix block with the factor \p
+           * M_inv.submatrices[diag_block_index_in_submatrices]. Also note that
+           * the column index starts from zero, therefore the loop variable \f$j
+           * \in [l+1, k)\f$.
+           */
           for (size_type j = l + 1; j < k; j++)
             {
-              /**
-               * Create subtrees used for matrix multiplication.
-               */
-              BlockClusterTree<spacedim, Number> bct_op1(
-                M_inv.submatrices[diag_block_index_in_submatrices]->bc_node,
-                M_root_bct.get_eta(),
-                M_root_bct.get_n_min());
-              BlockClusterTree<spacedim, Number> bct_op2(
-                submatrices[l + j * k]->bc_node,
-                M_root_bct.get_eta(),
-                M_root_bct.get_n_min());
-              BlockClusterTree<spacedim, Number> bct_res(
-                submatrices[l + j * k]->bc_node,
-                M_root_bct.get_eta(),
-                M_root_bct.get_n_min());
-
-              HMatrix<spacedim, Number> *C = new HMatrix<spacedim, Number>();
-              M_inv.submatrices[diag_block_index_in_submatrices]->mmult(
-                *C,
-                *(submatrices[l + j * k]),
-                bct_op1,
-                bct_op2,
-                bct_res,
-                fixed_rank_k);
+              HMatrix<spacedim, Number> *C =
+                new HMatrix<spacedim, Number>(submatrices[j + l * k]->bc_node,
+                                              fixed_rank_k);
+              M_inv.submatrices[diag_block_index_in_submatrices]
+                ->mmult_level_conserving(*C,
+                                         *(submatrices[j + l * k]),
+                                         fixed_rank_k);
 
               /**
                * Migrate the newly created \hmat to the target submatrix.
                */
-              *(submatrices[l + j * k]) = std::move(*C);
+              *(submatrices[j + l * k]) = std::move(*C);
+
+              delete C;
+            }
+
+          /**
+           * Iterate over the columns from \f$0\f$ to \f$l - 1\f$ in the inverse
+           * matrix and scale each matrix block with the factor \p
+           * M_inv.submatrices[diag_block_index_in_submatrices].
+           */
+          for (size_type j = 0; j < l; j++)
+            {
+              HMatrix<spacedim, Number> *C = new HMatrix<spacedim, Number>(
+                M_inv.submatrices[j + l * k]->bc_node, fixed_rank_k);
+              M_inv.submatrices[diag_block_index_in_submatrices]
+                ->mmult_level_conserving(*C,
+                                         *(M_inv.submatrices[j + l * k]),
+                                         fixed_rank_k);
+
+              /**
+               * Migrate the newly created \hmat to the target submatrix.
+               */
+              *(M_inv.submatrices[j + l * k]) = std::move(*C);
+
+              delete C;
+            }
+
+          /**
+           * Iterate over the rows from \f$l + 1\f$ to \f$k - 1\f$ in order to
+           * eliminate the matrix blocks \f$M_{l+1,l}, \cdots, M_{k - 1,l}\f$.
+           */
+          for (size_type i = l + 1; i < k; i++)
+            {
+              for (size_type j = 0; j <= l; j++)
+                {
+                  HMatrix<spacedim, Number> *C = new HMatrix<spacedim, Number>(
+                    M_inv.submatrices[j + i * k]->bc_node, fixed_rank_k);
+                  submatrices[l + i * k]->mmult_level_conserving(
+                    *C, *(M_inv.submatrices[j + l * k]), fixed_rank_k);
+                  M_inv.submatrices[j + i * k]->add(-1.0, *C, fixed_rank_k);
+
+                  delete C;
+                }
+
+              for (size_type j = l + 1; j < k; j++)
+                {
+                  HMatrix<spacedim, Number> *C = new HMatrix<spacedim, Number>(
+                    submatrices[j + i * k]->bc_node, fixed_rank_k);
+                  submatrices[l + i * k]->mmult_level_conserving(
+                    *C, *(submatrices[j + l * k]), fixed_rank_k);
+                  submatrices[j + i * k]->add(-1.0, *C, fixed_rank_k);
+
+                  delete C;
+                }
             }
         }
 
       /**
        * Stage 2: eliminate the upper triangular part of the matrix.
        */
+      for (size_type l = k - 1; l > 0; l--)
+        {
+          /**
+           * Eliminate the elements \f$M_{l-1,l}, \cdots, M_{1,l}\f$.
+           */
+          size_type i = l - 1;
+          while (true)
+            {
+              for (size_type j = 0; j < k; j++)
+                {
+                  HMatrix<spacedim, Number> *C = new HMatrix<spacedim, Number>(
+                    M_inv.submatrices[j + i * k]->bc_node, fixed_rank_k);
+                  submatrices[l + i * k]->mmult_level_conserving(
+                    *C, *(M_inv.submatrices[j + l * k]), fixed_rank_k);
+                  M_inv.submatrices[j + i * k]->add(-1.0, *C, fixed_rank_k);
+
+                  delete C;
+                }
+
+              if (i == 0)
+                {
+                  break;
+                }
+              else
+                {
+                  i--;
+                }
+            }
+        }
     }
 }
 

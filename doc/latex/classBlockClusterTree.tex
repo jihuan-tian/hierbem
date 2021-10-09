@@ -306,6 +306,8 @@ The constructed block cluster subtree simply takes over an existing block cluste
 \begin{DoxyParams}{Parameters}
 {\em bc\+\_\+node} & \\
 \hline
+{\em n\+\_\+min} & \\
+\hline
 \end{DoxyParams}
 
 
@@ -673,10 +675,6 @@ Number \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Numb
 Get the admissibility parameter. \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Referenced by H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim().
-
 \mbox{\Hypertarget{classBlockClusterTree_a2980726dc3789773b5cd3c04df5e69a3}\label{classBlockClusterTree_a2980726dc3789773b5cd3c04df5e69a3}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!get\+\_\+far\+\_\+field\+\_\+set@{get\+\_\+far\+\_\+field\+\_\+set}}
 \index{get\+\_\+far\+\_\+field\+\_\+set@{get\+\_\+far\+\_\+field\+\_\+set}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
@@ -729,7 +727,7 @@ unsigned int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim
 
 Get the minimum cluster size. 
 
-Referenced by H\+Matrix$<$ spacedim, Number $>$\+::invert\+\_\+by\+\_\+gauss\+\_\+elim(), and H\+Matrix$<$ spacedim, Number $>$\+::mmult().
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::mmult().
 
 \mbox{\Hypertarget{classBlockClusterTree_a82f61b31f1e9cf869831fa4c8232df81}\label{classBlockClusterTree_a82f61b31f1e9cf869831fa4c8232df81}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!get\+\_\+near\+\_\+field\+\_\+set@{get\+\_\+near\+\_\+field\+\_\+set}}
@@ -772,7 +770,7 @@ References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor
 
 
 
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::\+H\+Matrix(), H\+Matrix$<$ spacedim, Number $>$\+::mmult(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and H\+Matrix$<$ spacedim, Number $>$\+::reinit().
+Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::\+H\+Matrix(), main(), H\+Matrix$<$ spacedim, Number $>$\+::mmult(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and H\+Matrix$<$ spacedim, Number $>$\+::reinit().
 
 \mbox{\Hypertarget{classBlockClusterTree_aec9920e5b215fbfe2aa9f54980d3b30a}\label{classBlockClusterTree_aec9920e5b215fbfe2aa9f54980d3b30a}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!increase\+\_\+node\+\_\+num@{increase\+\_\+node\+\_\+num}}
@@ -1413,7 +1411,7 @@ Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\
 {\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
 bool \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::is\+\_\+subtree\hspace{0.3cm}{\ttfamily [private]}}
 
-Whether the current block cluster tree is a subtree is an existing tree. 
+Whether the current block cluster tree is a subtree of an existing tree. 
 
 Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::$\sim$\+Block\+Cluster\+Tree().
 
