@@ -1,31 +1,5 @@
 var searchData=
 [
-  ['rkmatrix_2dadd_2dformatted_2dusing_2dqr_2ecc',['rkmatrix-add-formatted-using-qr.cc',['../rkmatrix-add-formatted-using-qr_8cc.html',1,'']]],
-  ['rkmatrix_2dadd_2dformatted_2dwith_2dfactor_2ecc',['rkmatrix-add-formatted-with-factor.cc',['../rkmatrix-add-formatted-with-factor_8cc.html',1,'']]],
-  ['rkmatrix_2dadd_2dformatted_2ecc',['rkmatrix-add-formatted.cc',['../rkmatrix-add-formatted_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2d2nd_2dblock_2drank0_2ecc',['rkmatrix-agglomeration-2nd-block-rank0.cc',['../rkmatrix-agglomeration-2nd-block-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2d3rd_2dblock_2drank0_2ecc',['rkmatrix-agglomeration-3rd-block-rank0.cc',['../rkmatrix-agglomeration-3rd-block-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2d4th_2dblock_2drank0_2ecc',['rkmatrix-agglomeration-4th-block-rank0.cc',['../rkmatrix-agglomeration-4th-block-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dinterwoven_2dindices_2d2nd_2dblock_2drank0_2ecc',['rkmatrix-agglomeration-interwoven-indices-2nd-block-rank0.cc',['../rkmatrix-agglomeration-interwoven-indices-2nd-block-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dinterwoven_2dindices_2d3rd_2dblock_2drank0_2ecc',['rkmatrix-agglomeration-interwoven-indices-3rd-block-rank0.cc',['../rkmatrix-agglomeration-interwoven-indices-3rd-block-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dinterwoven_2dindices_2d4th_2dblock_2drank0_2ecc',['rkmatrix-agglomeration-interwoven-indices-4th-block-rank0.cc',['../rkmatrix-agglomeration-interwoven-indices-4th-block-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dinterwoven_2dindices_2drank0_2ecc',['rkmatrix-agglomeration-interwoven-indices-rank0.cc',['../rkmatrix-agglomeration-interwoven-indices-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dinterwoven_2dindices_2ecc',['rkmatrix-agglomeration-interwoven-indices.cc',['../rkmatrix-agglomeration-interwoven-indices_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dof_2dtwo_2dsubmatrices_2dinterwoven_2dindices_2drank0_2ecc',['rkmatrix-agglomeration-of-two-submatrices-interwoven-indices-rank0.cc',['../rkmatrix-agglomeration-of-two-submatrices-interwoven-indices-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dof_2dtwo_2dsubmatrices_2dinterwoven_2dindices_2ecc',['rkmatrix-agglomeration-of-two-submatrices-interwoven-indices.cc',['../rkmatrix-agglomeration-of-two-submatrices-interwoven-indices_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dof_2dtwo_2dsubmatrices_2drank0_2ecc',['rkmatrix-agglomeration-of-two-submatrices-rank0.cc',['../rkmatrix-agglomeration-of-two-submatrices-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2dof_2dtwo_2dsubmatrices_2ecc',['rkmatrix-agglomeration-of-two-submatrices.cc',['../rkmatrix-agglomeration-of-two-submatrices_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2drank0_2ecc',['rkmatrix-agglomeration-rank0.cc',['../rkmatrix-agglomeration-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dagglomeration_2ecc',['rkmatrix-agglomeration.cc',['../rkmatrix-agglomeration_8cc.html',1,'']]],
-  ['rkmatrix_2dassemble_2dfrom_2drkmatrix_2ecc',['rkmatrix-assemble-from-rkmatrix.cc',['../rkmatrix-assemble-from-rkmatrix_8cc.html',1,'']]],
-  ['rkmatrix_2dglobal_2dto_2drkmatrix_2ecc',['rkmatrix-global-to-rkmatrix.cc',['../rkmatrix-global-to-rkmatrix_8cc.html',1,'']]],
-  ['rkmatrix_2dglobal_2dto_2dsubmatrix_2ecc',['rkmatrix-global-to-submatrix.cc',['../rkmatrix-global-to-submatrix_8cc.html',1,'']]],
-  ['rkmatrix_2dhmatrix_2dmmult_2ecc',['rkmatrix-hmatrix-mmult.cc',['../rkmatrix-hmatrix-mmult_8cc.html',1,'']]],
-  ['rkmatrix_2dlocal_2dto_2drkmatrix_2ecc',['rkmatrix-local-to-rkmatrix.cc',['../rkmatrix-local-to-rkmatrix_8cc.html',1,'']]],
-  ['rkmatrix_2dlocal_2dto_2dsubmatrix_2ecc',['rkmatrix-local-to-submatrix.cc',['../rkmatrix-local-to-submatrix_8cc.html',1,'']]],
-  ['rkmatrix_2dto_2dfullmatrix_2drank0_2ecc',['rkmatrix-to-fullmatrix-rank0.cc',['../rkmatrix-to-fullmatrix-rank0_8cc.html',1,'']]],
-  ['rkmatrix_2dtruncate_2dto_2drank_2ecc',['rkmatrix-truncate-to-rank.cc',['../rkmatrix-truncate-to-rank_8cc.html',1,'']]],
-  ['rkmatrix_2dvmult_2ecc',['rkmatrix-vmult.cc',['../rkmatrix-vmult_8cc.html',1,'']]],
-  ['rkmatrix_2ecc',['rkmatrix.cc',['../rkmatrix_8cc.html',1,'']]],
-  ['rkmatrix_2eh',['rkmatrix.h',['../rkmatrix_8h.html',1,'']]]
+  ['quad_2dtree_2dcopy_2ecc',['quad-tree-copy.cc',['../quad-tree-copy_8cc.html',1,'']]],
+  ['quad_2dtree_2dget_2dleaves_2ecc',['quad-tree-get-leaves.cc',['../quad-tree-get-leaves_8cc.html',1,'']]]
 ];

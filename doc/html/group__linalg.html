@@ -145,7 +145,7 @@ $(function() {
 <div class="dynheader">
 Collaboration diagram for Linear algebra:</div>
 <div class="dyncontent">
-<center><table><tr><td><div class="center"><iframe scrolling="no" frameborder="0" src="group__linalg.svg" width="398" height="127"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<center><table><tr><td><div class="center"><iframe scrolling="no" frameborder="0" src="group__linalg.svg" width="398" height="274"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </td></tr></table></center>
 </div>
 <table class="memberdecls">
@@ -157,20 +157,35 @@ Files</h2></td></tr>
 <tr class="memitem:lapack-matrix-agglomeration_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lapack-matrix-agglomeration_8cc.html">lapack-matrix-agglomeration.cc</a></td></tr>
 <tr class="memdesc:lapack-matrix-agglomeration_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify the agglomeration of four full submatrices into a larger full matrix. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:lapack-matrix-backward-substitution_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lapack-matrix-backward-substitution_8cc.html">lapack-matrix-backward-substitution.cc</a></td></tr>
+<tr class="memdesc:lapack-matrix-backward-substitution_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify backward substitution of an upper triangle matrix. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:delete-rows-and-columns_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="delete-rows-and-columns_8cc.html">delete-rows-and-columns.cc</a></td></tr>
 <tr class="memdesc:delete-rows-and-columns_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test deleting rows and columns as well as keeping the first <code>n</code> rows or columns from a <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>. . <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:lapack-matrix-fill_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lapack-matrix-fill_8cc.html">lapack-matrix-fill.cc</a></td></tr>
 <tr class="memdesc:lapack-matrix-fill_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify filling a <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> from a source matrix. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:lapack-matrix-forward-substitution_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lapack-matrix-forward-substitution_8cc.html">lapack-matrix-forward-substitution.cc</a></td></tr>
+<tr class="memdesc:lapack-matrix-forward-substitution_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify forward substitution of a unit lower triangle matrix. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:hstack-vstack_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hstack-vstack_8cc.html">hstack-vstack.cc</a></td></tr>
 <tr class="memdesc:hstack-vstack_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify horizontal and vertical stacking of two <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> objects. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:lapack-matrix-read-from-mat_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lapack-matrix-read-from-mat_8cc.html">lapack-matrix-read-from-mat.cc</a></td></tr>
+<tr class="memdesc:lapack-matrix-read-from-mat_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify reading a matrix from a file saved from Octave in text format, i.e. saved with the option <code>-text</code>. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:lapack-matrix-scale-matrix_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lapack-matrix-scale-matrix_8cc.html">lapack-matrix-scale-matrix.cc</a></td></tr>
 <tr class="memdesc:lapack-matrix-scale-matrix_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify the scale of a whole full matrix. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:scale-rows-and-columns_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scale-rows-and-columns_8cc.html">scale-rows-and-columns.cc</a></td></tr>
 <tr class="memdesc:scale-rows-and-columns_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test scaling rows and columns of a <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>, which is actually left and right multiplication with a diagonal matrix. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:lapack-matrix-solve-by-cholesky_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lapack-matrix-solve-by-cholesky_8cc.html">lapack-matrix-solve-by-cholesky.cc</a></td></tr>
+<tr class="memdesc:lapack-matrix-solve-by-cholesky_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify solving a full matrix using Cholesky decomposition. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:lapack-matrix-solve-by-lu_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lapack-matrix-solve-by-lu_8cc.html">lapack-matrix-solve-by-lu.cc</a></td></tr>
+<tr class="memdesc:lapack-matrix-solve-by-lu_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify solving a full matrix using LU decomposition. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:svd_8cc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="svd_8cc.html">svd.cc</a></td></tr>
 <tr class="memdesc:svd_8cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test singular value decomposition (SVD) and reduced SVD. <br /></td></tr>

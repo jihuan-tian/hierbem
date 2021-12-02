@@ -83,6 +83,16 @@ void \hyperlink{classLAPACKFullMatrixExt_a5e51e358cbef31895021abfff0940edd}{svd}
 \item 
 \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_a0a6e1d0e88bc84b372b1d0a0f4b79f86}{reduced\+\_\+svd} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&U, std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&Sigma\+\_\+r, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&VT, \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} truncation\+\_\+rank, Number singular\+\_\+value\+\_\+threshold=0.)
 \item 
+\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_aeafd1f1aca169f4b9164f0a5e521e8cb}{reduced\+\_\+svd} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&U, std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&Sigma\+\_\+r, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&VT, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&D, \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} truncation\+\_\+rank, Number singular\+\_\+value\+\_\+threshold=0.)
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_a110a711628c9d66adb2161779f2ecf63}{compute\+\_\+lu\+\_\+factorization} ()
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_a6aaaec84d900ee2dface5b80614ce30f}{compute\+\_\+cholesky\+\_\+factorization} ()
+\item 
+std\+::vector$<$ types\+::blas\+\_\+int $>$ \& \hyperlink{classLAPACKFullMatrixExt_a623bea36c16f0320c2f750f5881f9214}{get\+\_\+lu\+\_\+permutation} ()
+\item 
+const std\+::vector$<$ types\+::blas\+\_\+int $>$ \& \hyperlink{classLAPACKFullMatrixExt_a2f435bd8d68ef6da859405ff5c583cd0}{get\+\_\+lu\+\_\+permutation} () const
+\item 
 \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_a94f6a6df2b48201549f58bcbadcc6053}{rank} (Number threshold=0.) const
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_a0413f3b6186f8e8fc0f2cb2e0cb5cc42}{qr} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&Q, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&R)
@@ -121,9 +131,13 @@ void \hyperlink{classLAPACKFullMatrixExt_a0f315932c3729240d03bc941bb2de849}{vsta
 \item 
 \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_ab28877de241a7f5f901fa612c6352ce9}{rank\+\_\+k\+\_\+decompose} (const unsigned int k, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B)
 \item 
+\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_ae37081b41ac92e7c75e7f9b42422531f}{rank\+\_\+k\+\_\+decompose} (const unsigned int k, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&D)
+\item 
 \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_af4406db24d0924c5f7e891336bfbcffe}{rank\+\_\+k\+\_\+decompose} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B)
 \item 
 \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_aba252fd1854009998639c21c969909d8}{rank\+\_\+k\+\_\+decompose} (const unsigned int k, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, bool is\+\_\+left\+\_\+associative)
+\item 
+\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_a935a8f39a295ca51844f5f6669e8dc32}{rank\+\_\+k\+\_\+decompose} (const unsigned int k, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&D, bool is\+\_\+left\+\_\+associative)
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_a824a7a919666c8af3df5723175f6201e}{add} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B) const
 \item 
@@ -135,9 +149,27 @@ void \hyperlink{classLAPACKFullMatrixExt_a7c46d0cb2e278577196b3d923e389efd}{add}
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_a176ae32c5467facafd5dcc3252c07c20}{mmult} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, const bool adding=false) const
 \item 
+void \hyperlink{classLAPACKFullMatrixExt_ad38cc9eb7e424a932d9faff01cf08109}{mmult} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const Number alpha, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, const bool adding=false) const
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_a132200a53d62265a213059e2d93c8e82}{m\+Tmult} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, const bool adding=false) const
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_a051726629042a908eafc057587a1b601}{m\+Tmult} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, const Number alpha, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, const bool adding=false) const
+\item 
 void \hyperlink{classLAPACKFullMatrixExt_a13bbc430a0f60d4158d1693a2d7a0235}{invert\+\_\+by\+\_\+gauss\+\_\+elim} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M\+\_\+inv)
 \item 
+void \hyperlink{classLAPACKFullMatrixExt_a604d19d69393d88430293b48aad71a3b}{set\+\_\+property} (const L\+A\+P\+A\+C\+K\+Support\+::\+Property property)
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_a72a5ead3fac2a7c37a9d5a14a9d6b286}{solve\+\_\+by\+\_\+forward\+\_\+substitution} (Vector$<$ Number $>$ \&b, const bool transposed=false, const bool is\+\_\+unit\+\_\+diagonal=true, const bool permute\+\_\+rhs\+\_\+vector=false) const
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_a865aa33c5a63bc68851e4685ce3b1379}{solve\+\_\+by\+\_\+forward\+\_\+substitution} (Vector$<$ Number $>$ \&x, const Vector$<$ Number $>$ \&b, const bool transposed=false, const bool is\+\_\+unit\+\_\+diagonal=true) const
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_ac36f444148f8a0d3972867a0e79f887e}{solve\+\_\+by\+\_\+backward\+\_\+substitution} (Vector$<$ Number $>$ \&b, const bool transposed=false, const bool is\+\_\+unit\+\_\+diagonal=false) const
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_ac81fbff25894b934408d8329c953ba5a}{solve\+\_\+by\+\_\+backward\+\_\+substitution} (Vector$<$ Number $>$ \&x, const Vector$<$ Number $>$ \&b, const bool transposed=false, const bool is\+\_\+unit\+\_\+diagonal=false) const
+\item 
 void \hyperlink{classLAPACKFullMatrixExt_aae17980cb1bd3802fdc4a629040b6ed7}{print\+\_\+formatted\+\_\+to\+\_\+mat} (std\+::ostream \&out, const std\+::string \&name, const unsigned int precision=8, const bool scientific=true, const unsigned int width=0, const char $\ast$zero\+\_\+string=\char`\"{}0\char`\"{}, const double denominator=1., const double threshold=0.) const
+\item 
+void \hyperlink{classLAPACKFullMatrixExt_a3188024ca9775667de38d03fd07ac525}{read\+\_\+from\+\_\+mat} (std\+::ifstream \&in, const std\+::string \&name)
 \end{DoxyCompactItemize}
 \subsection*{Static Public Member Functions}
 \begin{DoxyCompactItemize}
@@ -155,6 +187,8 @@ static void \hyperlink{classLAPACKFullMatrixExt_abae222273b3fd527dff492aed33c1b6
 static \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_a355ed6360b21081b6e86e09833bf95db}{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&U, std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&Sigma\+\_\+r, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&VT, Number singular\+\_\+value\+\_\+threshold=0.)
 \item 
 static \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_a56dbf804ab7f3ffb3ed3a09d5b4e5170}{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&U, std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&Sigma\+\_\+r, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&VT, \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} truncation\+\_\+rank, Number singular\+\_\+value\+\_\+threshold=0.)
+\item 
+static \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt_a4107b8340a75683fd59024e20631ce10}{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&B, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&U, std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&Sigma\+\_\+r, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&VT, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&C, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&D, \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} truncation\+\_\+rank, Number singular\+\_\+value\+\_\+threshold=0.)
 \end{DoxyCompactItemize}
 \subsection*{Private Attributes}
 \begin{DoxyCompactItemize}
@@ -162,11 +196,16 @@ static \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{si
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_adec2cd643cd2bf3d66293f43e72af687}\label{classLAPACKFullMatrixExt_adec2cd643cd2bf3d66293f43e72af687}} 
 L\+A\+P\+A\+C\+K\+Support\+::\+State {\bfseries state}
 \item 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a17c0100c66b9c4be46b87cbceea1be6d}\label{classLAPACKFullMatrixExt_a17c0100c66b9c4be46b87cbceea1be6d}} 
+L\+A\+P\+A\+C\+K\+Support\+::\+Property {\bfseries property}
+\item 
 std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \hyperlink{classLAPACKFullMatrixExt_a91fb784892cbe9d24ad2062fbf642635}{tau}
 \item 
 std\+::vector$<$ Number $>$ \hyperlink{classLAPACKFullMatrixExt_a971d29c6d7664fca553b6ba377519946}{work}
 \item 
 std\+::vector$<$ types\+::blas\+\_\+int $>$ \hyperlink{classLAPACKFullMatrixExt_ac091f1f6af485b451c4c9398abb67230}{iwork}
+\item 
+std\+::vector$<$ types\+::blas\+\_\+int $>$ \hyperlink{classLAPACKFullMatrixExt_a436d7290d5b2b17c0691b5b63cca36fa}{ipiv}
 \end{DoxyCompactItemize}
 
 
@@ -194,7 +233,7 @@ Declare the type for container size.
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{size = {\ttfamily 0} }\end{DoxyParamCaption})}
 
-Construct a square matrix by specifying the dimension. \mbox{\Hypertarget{classLAPACKFullMatrixExt_a82986acedd4e702133151cb9a3ae2c97}\label{classLAPACKFullMatrixExt_a82986acedd4e702133151cb9a3ae2c97}} 
+Construct a square matrix by specifying the dimension. Set the property of the parent class as well.\mbox{\Hypertarget{classLAPACKFullMatrixExt_a82986acedd4e702133151cb9a3ae2c97}\label{classLAPACKFullMatrixExt_a82986acedd4e702133151cb9a3ae2c97}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext()}{LAPACKFullMatrixExt()}\hspace{0.1cm}{\footnotesize\ttfamily [2/10]}}
@@ -208,7 +247,7 @@ Construct a matrix by specifying the number of rows and columns.
 {\em cols} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_a95c6843f5138c51aa42b554ec843b717}\label{classLAPACKFullMatrixExt_a95c6843f5138c51aa42b554ec843b717}} 
+Set the property of the parent class as well.\mbox{\Hypertarget{classLAPACKFullMatrixExt_a95c6843f5138c51aa42b554ec843b717}\label{classLAPACKFullMatrixExt_a95c6843f5138c51aa42b554ec843b717}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext()}{LAPACKFullMatrixExt()}\hspace{0.1cm}{\footnotesize\ttfamily [3/10]}}
@@ -220,7 +259,7 @@ Copy constructor from an \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+
 {\em mat} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_adfb752e5770370e4f7ddbd298d873c60}\label{classLAPACKFullMatrixExt_adfb752e5770370e4f7ddbd298d873c60}} 
+Set the property of the parent class as well.\mbox{\Hypertarget{classLAPACKFullMatrixExt_adfb752e5770370e4f7ddbd298d873c60}\label{classLAPACKFullMatrixExt_adfb752e5770370e4f7ddbd298d873c60}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext()}{LAPACKFullMatrixExt()}\hspace{0.1cm}{\footnotesize\ttfamily [4/10]}}
@@ -232,7 +271,7 @@ Copy constructor from an L\+A\+P\+A\+C\+K\+Full\+Matrix object.
 {\em mat} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_adcc17e75248175c5d89ba15ee58be954}\label{classLAPACKFullMatrixExt_adcc17e75248175c5d89ba15ee58be954}} 
+Set the property of the parent class as well.\mbox{\Hypertarget{classLAPACKFullMatrixExt_adcc17e75248175c5d89ba15ee58be954}\label{classLAPACKFullMatrixExt_adcc17e75248175c5d89ba15ee58be954}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext()}{LAPACKFullMatrixExt()}\hspace{0.1cm}{\footnotesize\ttfamily [5/10]}}
@@ -248,6 +287,8 @@ Construct a full matrix by restriction to the block cluster $\tau \times \sigma$
 {\em M} & \\
 \hline
 \end{DoxyParams}
+Set the property of the parent class as well.
+
 Extract the data for the submatrix defined on the block cluster $\tau \times \sigma$ from the full global matrix {\ttfamily M}.
 
 Because {\ttfamily M} is global, the indices in $\tau$ and $\sigma$ can be directly used for accessing the elements of {\ttfamily M}.\mbox{\Hypertarget{classLAPACKFullMatrixExt_a6ffdb7d0e8168100762813185480fb10}\label{classLAPACKFullMatrixExt_a6ffdb7d0e8168100762813185480fb10}} 
@@ -270,6 +311,8 @@ Construct a full matrix by restriction to the block cluster $\tau \times \sigma$
 {\em col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map\+\_\+for\+\_\+M} & \\
 \hline
 \end{DoxyParams}
+Set the property of the parent class as well.
+
 Extract the data for the submatrix block $b = \tau \times \sigma$ in the original matrix {\ttfamily M}.\mbox{\Hypertarget{classLAPACKFullMatrixExt_a98851864591035df275caca76e07ebe3}\label{classLAPACKFullMatrixExt_a98851864591035df275caca76e07ebe3}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
@@ -290,7 +333,7 @@ When the two submatrices have been obtained from horizontal splitting, {\ttfamil
 {\em is\+\_\+horizontal\+\_\+split} & \\
 \hline
 \end{DoxyParams}
-
+Set the property of the parent class as well.
 
 References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::hstack(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::vstack().
 
@@ -305,7 +348,9 @@ Construct a full matrix $M$ from an agglomeration of two full submatrices $M_1$ 
 
 When the two submatrices have been obtained from horizontal splitting, {\ttfamily vstack} will be used for the agglomeration. When the two submatrices have been obtained from vertical splitting, {\ttfamily hstack} will be used for the agglomeration.
 
-This method handles the case when the index sets of child clusters are interwoven together into the index set of the parent cluster. This is based on the fact that during DoF support point coordinates based cluster tree partition, the continuity of the index set is not preserved. Make assertions about the submatrix sizes and corresponding index sets.
+This method handles the case when the index sets of child clusters are interwoven together into the index set of the parent cluster. This is based on the fact that during DoF support point coordinates based cluster tree partition, the continuity of the index set is not preserved. Set the property of the parent class as well.
+
+Make assertions about the submatrix sizes and corresponding index sets.
 
 Perform vertical stacking of the two submatrices.
 
@@ -331,7 +376,7 @@ Construct a full matrix $M$ from an agglomeration of four full submatrices, $M_{
 \item This method implements (7.\+7) for full matrices in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book.
 \item This method is only applicable in the case when the cardinality based cluster tree partition is used.  
 \end{DoxyEnumerate}
-\end{DoxyDescription}
+\end{DoxyDescription}Set the property of the parent class as well.
 
 References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::fill().
 
@@ -394,6 +439,8 @@ Make assertions about the sizes of row and column index global to local maps for
 
 Make assertions about the submatrix sizes and corresponding index sets.
 
+Set the property of the parent class as well.
+
 References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::fill(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::operator=().
 
 
@@ -441,6 +488,38 @@ Add the matrix {\ttfamily B} into the current matrix with a factor $b$ multiplie
 {\em B} & \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a6aaaec84d900ee2dface5b80614ce30f}\label{classLAPACKFullMatrixExt_a6aaaec84d900ee2dface5b80614ce30f}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!compute\+\_\+cholesky\+\_\+factorization@{compute\+\_\+cholesky\+\_\+factorization}}
+\index{compute\+\_\+cholesky\+\_\+factorization@{compute\+\_\+cholesky\+\_\+factorization}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{compute\+\_\+cholesky\+\_\+factorization()}{compute\_cholesky\_factorization()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::compute\+\_\+cholesky\+\_\+factorization (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Compute the Cholesky factorization of the full matrix.
+
+
+\begin{DoxyDescription}
+\item[Note ]This is a wrapper of the same function in {\ttfamily L\+A\+P\+A\+C\+K\+Full\+Matrix$<$\+Number$>$} in order that the {\ttfamily state} of the current {\ttfamily L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$\+Number$>$} object can be updated. 
+\end{DoxyDescription}Explicitly set the matrix property to be {\ttfamily symmetric}, which is required by {\ttfamily L\+A\+P\+A\+C\+K\+Full\+Matrix$<$\+Number$>$\+::compute\+\_\+cholesky\+\_\+factorization()}.
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::set\+\_\+property().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a110a711628c9d66adb2161779f2ecf63}\label{classLAPACKFullMatrixExt_a110a711628c9d66adb2161779f2ecf63}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!compute\+\_\+lu\+\_\+factorization@{compute\+\_\+lu\+\_\+factorization}}
+\index{compute\+\_\+lu\+\_\+factorization@{compute\+\_\+lu\+\_\+factorization}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{compute\+\_\+lu\+\_\+factorization()}{compute\_lu\_factorization()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::compute\+\_\+lu\+\_\+factorization (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Compute the LU factorization of the full matrix.
+
+
+\begin{DoxyDescription}
+\item[Note ]This is a copy of the same function in {\ttfamily L\+A\+P\+A\+C\+K\+Full\+Matrix$<$\+Number$>$} in order that the permutation vector {\ttfamily ipiv} can be accessed, sincie {\ttfamily ipiv} is private in {\ttfamily L\+A\+P\+A\+C\+K\+Full\+Matrix$<$\+Number$>$}. 
+\end{DoxyDescription}
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::ipiv.
+
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a82a4dc9f9f5de6913e26f479eb3880f7}\label{classLAPACKFullMatrixExt_a82a4dc9f9f5de6913e26f479eb3880f7}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!Constant\+Matrix@{Constant\+Matrix}}
 \index{Constant\+Matrix@{Constant\+Matrix}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
@@ -510,7 +589,7 @@ Fill a rectangular block. This function has the similar behavior as Full\+Matrix
 \end{DoxyParams}
 Determine the number of rows and columns to be copied.
 
-Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::hstack(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext(), main(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::vstack().
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::hstack(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext(), main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::vstack().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a3f0dffff13babd0b952a821b5f1f23c9}\label{classLAPACKFullMatrixExt_a3f0dffff13babd0b952a821b5f1f23c9}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill@{fill}}
@@ -548,7 +627,7 @@ Fill the {\ttfamily values} to the {\ttfamily col\+\_\+index\textquotesingle{}th
 \end{DoxyParams}
 
 
-Referenced by h\+\_\+f\+\_\+mmult().
+Referenced by h\+\_\+f\+\_\+mmult(), and h\+\_\+f\+\_\+m\+Tmult().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_af988edbf2f192f0eddf542178755eb91}\label{classLAPACKFullMatrixExt_af988edbf2f192f0eddf542178755eb91}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+cols@{fill\+\_\+cols}}
@@ -582,7 +661,7 @@ Fill the {\ttfamily values} to the {\ttfamily row\+\_\+index\textquotesingle{}th
 \end{DoxyParams}
 
 
-Referenced by f\+\_\+h\+\_\+mmult().
+Referenced by f\+\_\+h\+\_\+mmult(), and f\+\_\+h\+\_\+m\+Tmult().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a73e9ad59ab56c377edc852d8ba16995c}\label{classLAPACKFullMatrixExt_a73e9ad59ab56c377edc852d8ba16995c}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+rows@{fill\+\_\+rows}}
@@ -623,6 +702,38 @@ Get the values of the column {\ttfamily col\+\_\+index} into a {\ttfamily Vector
 
 Referenced by h\+\_\+f\+\_\+mmult().
 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a623bea36c16f0320c2f750f5881f9214}\label{classLAPACKFullMatrixExt_a623bea36c16f0320c2f750f5881f9214}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!get\+\_\+lu\+\_\+permutation@{get\+\_\+lu\+\_\+permutation}}
+\index{get\+\_\+lu\+\_\+permutation@{get\+\_\+lu\+\_\+permutation}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{get\+\_\+lu\+\_\+permutation()}{get\_lu\_permutation()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+std\+::vector$<$ types\+::blas\+\_\+int $>$ \& \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::get\+\_\+lu\+\_\+permutation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the reference to the vector which stores the row permutation relation obtained from an LU factorization.
+
+\begin{DoxyReturn}{Returns}
+The vector storing the row permutation relation. Its i\textquotesingle{}th element stores the row index of the matrix to which the i\textquotesingle{}th row migrates. 
+\end{DoxyReturn}
+
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::ipiv.
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a2f435bd8d68ef6da859405ff5c583cd0}\label{classLAPACKFullMatrixExt_a2f435bd8d68ef6da859405ff5c583cd0}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!get\+\_\+lu\+\_\+permutation@{get\+\_\+lu\+\_\+permutation}}
+\index{get\+\_\+lu\+\_\+permutation@{get\+\_\+lu\+\_\+permutation}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{get\+\_\+lu\+\_\+permutation()}{get\_lu\_permutation()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+const std\+::vector$<$ types\+::blas\+\_\+int $>$ \& \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::get\+\_\+lu\+\_\+permutation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get the const reference to the vector which stores the row permutation relation obtained from an LU factorization.
+
+\begin{DoxyReturn}{Returns}
+The vector storing the row permutation relation. Its i\textquotesingle{}th element stores the row index of the matrix to which the i\textquotesingle{}th row migrates. 
+\end{DoxyReturn}
+
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::ipiv.
+
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_abc010374ccacc6d1e482196af807d247}\label{classLAPACKFullMatrixExt_abc010374ccacc6d1e482196af807d247}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!get\+\_\+row@{get\+\_\+row}}
 \index{get\+\_\+row@{get\+\_\+row}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
@@ -639,7 +750,7 @@ Get the values of the row {\ttfamily row\+\_\+index} into a {\ttfamily Vector}.
 \end{DoxyParams}
 
 
-Referenced by f\+\_\+h\+\_\+mmult().
+Referenced by f\+\_\+h\+\_\+mmult(), f\+\_\+h\+\_\+m\+Tmult(), and h\+\_\+f\+\_\+m\+Tmult().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_aeeae2d2698007889a47f192043adb75c}\label{classLAPACKFullMatrixExt_aeeae2d2698007889a47f192043adb75c}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!hstack@{hstack}}
@@ -764,22 +875,88 @@ Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a176ae32c5467facafd5dcc3252c07c20}\label{classLAPACKFullMatrixExt_a176ae32c5467facafd5dcc3252c07c20}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!mmult@{mmult}}
 \index{mmult@{mmult}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{mmult()}{mmult()}}
+\subsubsection{\texorpdfstring{mmult()}{mmult()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::mmult (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{const bool}]{adding = {\ttfamily false} }\end{DoxyParamCaption}) const}
 
-Multiply two matrices\+: $C = A \cdot B$ 
+Multiply two matrices, i.\+e. $C = AB$ or $C = C + AB$.
+
+
 \begin{DoxyParams}{Parameters}
 {\em C} & \\
 \hline
 {\em B} & \\
+\hline
+{\em adding} & \\
 \hline
 \end{DoxyParams}
 
 
 Referenced by main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::qr(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T().
 
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_a48a8520d322ba5be9f5bb38e67f9b01b}\label{classLAPACKFullMatrixExt_a48a8520d322ba5be9f5bb38e67f9b01b}} 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_ad38cc9eb7e424a932d9faff01cf08109}\label{classLAPACKFullMatrixExt_ad38cc9eb7e424a932d9faff01cf08109}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!mmult@{mmult}}
+\index{mmult@{mmult}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{mmult()}{mmult()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::mmult (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{const Number}]{alpha,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{const bool}]{adding = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+Multiply two matrices with the product scaled by a factor, i.\+e. $C = \alpha \cdot AB$ or $C = C + \alpha \cdot AB$.
+
+
+\begin{DoxyParams}{Parameters}
+{\em C} & \\
+\hline
+{\em alpha} & \\
+\hline
+{\em B} & \\
+\hline
+{\em adding} & \\
+\hline
+\end{DoxyParams}
+Make a local copy of the matrix {\ttfamily B} and scale it.\mbox{\Hypertarget{classLAPACKFullMatrixExt_a132200a53d62265a213059e2d93c8e82}\label{classLAPACKFullMatrixExt_a132200a53d62265a213059e2d93c8e82}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!m\+Tmult@{m\+Tmult}}
+\index{m\+Tmult@{m\+Tmult}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{m\+Tmult()}{mTmult()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::m\+Tmult (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{const bool}]{adding = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+Multiply two matrices with the second operand transposed, i.\+e. $C = AB^T$ or $C = C + AB^T$.
+
+
+\begin{DoxyParams}{Parameters}
+{\em C} & \\
+\hline
+{\em B} & \\
+\hline
+{\em adding} & \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a051726629042a908eafc057587a1b601}\label{classLAPACKFullMatrixExt_a051726629042a908eafc057587a1b601}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!m\+Tmult@{m\+Tmult}}
+\index{m\+Tmult@{m\+Tmult}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{m\+Tmult()}{mTmult()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::m\+Tmult (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{const Number}]{alpha,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{const bool}]{adding = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+Multiply two matrices with the second operand transposed and with the product scaled by a factor, i.\+e. $C = \alpha \cdot AB^T$ or $C = C + \alpha \cdot AB^T$.
+
+
+\begin{DoxyParams}{Parameters}
+{\em C} & \\
+\hline
+{\em alpha} & \\
+\hline
+{\em B} & \\
+\hline
+{\em adding} & \\
+\hline
+\end{DoxyParams}
+Make a local copy of the matrix {\ttfamily B} and scale it.\mbox{\Hypertarget{classLAPACKFullMatrixExt_a48a8520d322ba5be9f5bb38e67f9b01b}\label{classLAPACKFullMatrixExt_a48a8520d322ba5be9f5bb38e67f9b01b}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!operator=@{operator=}}
 \index{operator=@{operator=}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
@@ -794,6 +971,10 @@ Overloaded assignment operator.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
+Since {\ttfamily ipiv} contains the crucial permutation data if the matrix has been factorized by LU, it needs to be copied.
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::ipiv.
+
 
 
 Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext().
@@ -813,7 +994,7 @@ Overloaded assignment operator.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classLAPACKFullMatrixExt_aae17980cb1bd3802fdc4a629040b6ed7}\label{classLAPACKFullMatrixExt_aae17980cb1bd3802fdc4a629040b6ed7}} 
+Because {\ttfamily state} and {\ttfamily property} are private members of {\ttfamily L\+A\+P\+A\+C\+K\+Full\+Matrix$<$\+Number$>$}, they cannot be copied from the given {\ttfamily matrix}. Hence, they are assigned with the default values {\ttfamily L\+A\+P\+A\+C\+K\+Support\+::matrix} and {\ttfamily L\+A\+P\+A\+C\+K\+Support\+::general}.\mbox{\Hypertarget{classLAPACKFullMatrixExt_aae17980cb1bd3802fdc4a629040b6ed7}\label{classLAPACKFullMatrixExt_aae17980cb1bd3802fdc4a629040b6ed7}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!print\+\_\+formatted\+\_\+to\+\_\+mat@{print\+\_\+formatted\+\_\+to\+\_\+mat}}
 \index{print\+\_\+formatted\+\_\+to\+\_\+mat@{print\+\_\+formatted\+\_\+to\+\_\+mat}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{print\+\_\+formatted\+\_\+to\+\_\+mat()}{print\_formatted\_to\_mat()}}
@@ -909,7 +1090,7 @@ Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_ab28877de241a7f5f901fa612c6352ce9}\label{classLAPACKFullMatrixExt_ab28877de241a7f5f901fa612c6352ce9}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}}
 \index{rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{rank\+\_\+k\+\_\+decompose()}{rank\_k\_decompose()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+\subsubsection{\texorpdfstring{rank\+\_\+k\+\_\+decompose()}{rank\_k\_decompose()}\hspace{0.1cm}{\footnotesize\ttfamily [1/5]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose (\begin{DoxyParamCaption}\item[{const unsigned int}]{k,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B }\end{DoxyParamCaption})}
 
@@ -936,10 +1117,44 @@ When the matrix is wide, apply left associativity.
 
 Referenced by main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose(), and Rk\+Matrix$<$ Number $>$\+::\+Rk\+Matrix().
 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_ae37081b41ac92e7c75e7f9b42422531f}\label{classLAPACKFullMatrixExt_ae37081b41ac92e7c75e7f9b42422531f}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}}
+\index{rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{rank\+\_\+k\+\_\+decompose()}{rank\_k\_decompose()}\hspace{0.1cm}{\footnotesize\ttfamily [2/5]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose (\begin{DoxyParamCaption}\item[{const unsigned int}]{k,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{D }\end{DoxyParamCaption})}
+
+Decompose the full matrix into the two components of its rank-\/k representation, the associativity of triple-\/matrix multiplication is automatically detected. The error matrices are returned.
+
+
+\begin{DoxyDescription}
+\item[Note ]This method will be used for converting a full matrix to a rank-\/k matrix, which underlies the operator $\mathcal{T}_{r}^{\mathcal{R} \leftarrow \mathcal{F}}$ in (7.\+2) in Hackbusch\textquotesingle{}s $\mathcal{H}$-\/matrix book. 
+\end{DoxyDescription}
+\begin{DoxyParams}{Parameters}
+{\em k} & \\
+\hline
+{\em A} & \\
+\hline
+{\em B} & \\
+\hline
+{\em C} & \\
+\hline
+{\em D} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+When the matrix is long, apply right associativity.
+
+When the matrix is wide, apply left associativity.
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose().
+
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_af4406db24d0924c5f7e891336bfbcffe}\label{classLAPACKFullMatrixExt_af4406db24d0924c5f7e891336bfbcffe}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}}
 \index{rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{rank\+\_\+k\+\_\+decompose()}{rank\_k\_decompose()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+\subsubsection{\texorpdfstring{rank\+\_\+k\+\_\+decompose()}{rank\_k\_decompose()}\hspace{0.1cm}{\footnotesize\ttfamily [3/5]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B }\end{DoxyParamCaption})}
 
@@ -965,7 +1180,7 @@ References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_aba252fd1854009998639c21c969909d8}\label{classLAPACKFullMatrixExt_aba252fd1854009998639c21c969909d8}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}}
 \index{rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{rank\+\_\+k\+\_\+decompose()}{rank\_k\_decompose()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+\subsubsection{\texorpdfstring{rank\+\_\+k\+\_\+decompose()}{rank\_k\_decompose()}\hspace{0.1cm}{\footnotesize\ttfamily [4/5]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose (\begin{DoxyParamCaption}\item[{const unsigned int}]{k,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{bool}]{is\+\_\+left\+\_\+associative }\end{DoxyParamCaption})}
 
@@ -998,6 +1213,78 @@ Let A = A and B = (Sigma\+\_\+r $\ast$ B)$^\wedge$T.
 
 References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+rows(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::transpose().
 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a935a8f39a295ca51844f5f6669e8dc32}\label{classLAPACKFullMatrixExt_a935a8f39a295ca51844f5f6669e8dc32}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}}
+\index{rank\+\_\+k\+\_\+decompose@{rank\+\_\+k\+\_\+decompose}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{rank\+\_\+k\+\_\+decompose()}{rank\_k\_decompose()}\hspace{0.1cm}{\footnotesize\ttfamily [5/5]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose (\begin{DoxyParamCaption}\item[{const unsigned int}]{k,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{D,  }\item[{bool}]{is\+\_\+left\+\_\+associative }\end{DoxyParamCaption})}
+
+Decompose the full matrix into the two components of its rank-\/k representation, while the error matrices are returned.
+
+
+\begin{DoxyDescription}
+\item[Note ]Because the {\ttfamily reduced\+\_\+svd} member function is called by {\ttfamily rank\+\_\+k\+\_\+decompose}, the effective rank of the matrix will be returned, which can be smaller than the specified fixed rank {\ttfamily k}. 
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em k} & User specified truncation rank. \\
+\hline
+{\em is\+\_\+left\+\_\+associative} & \\
+\hline
+{\em A} & \\
+\hline
+{\em B} & \\
+\hline
+{\em C} & \\
+\hline
+{\em D} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Effective rank. 
+\end{DoxyReturn}
+Perform R\+S\+VD for the matrix and return U and VT into A and B respectively. N.\+B. After running this function, B actually holds the transposition of itself at the moment.
+
+Let A = A$\ast$\+Sigma\+\_\+r and B = B$^\wedge$T.
+
+Let A = A and B = (Sigma\+\_\+r $\ast$ B)$^\wedge$T.
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+rows(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::transpose().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a3188024ca9775667de38d03fd07ac525}\label{classLAPACKFullMatrixExt_a3188024ca9775667de38d03fd07ac525}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!read\+\_\+from\+\_\+mat@{read\+\_\+from\+\_\+mat}}
+\index{read\+\_\+from\+\_\+mat@{read\+\_\+from\+\_\+mat}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{read\+\_\+from\+\_\+mat()}{read\_from\_mat()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::read\+\_\+from\+\_\+mat (\begin{DoxyParamCaption}\item[{std\+::ifstream \&}]{in,  }\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})}
+
+Read the data of a full matrix with the specified variable name from a file saved by Octave using the option {\ttfamily -\/text}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em in} & Input file stream \\
+\hline
+{\em name} & Variable name \\
+\hline
+\end{DoxyParams}
+Iterate over each line of the file to search the desired variable.
+
+When the desired variable is found, read the next line to check the data type is {\ttfamily matrix}.
+
+Read a new line to extract the number of rows.
+
+Read a new line to extract the number of columns.
+
+Get each row of the matrix.
+
+Get each matrix element in a row.
+
+After reading all matrix data, exit from the loop.
+
+Referenced by main().
+
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a2d29694b336c319402fd867658a25253}\label{classLAPACKFullMatrixExt_a2d29694b336c319402fd867658a25253}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!reduced\+\_\+qr@{reduced\+\_\+qr}}
 \index{reduced\+\_\+qr@{reduced\+\_\+qr}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
@@ -1025,7 +1312,7 @@ Referenced by main(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::r
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a0a6e1d0e88bc84b372b1d0a0f4b79f86}\label{classLAPACKFullMatrixExt_a0a6e1d0e88bc84b372b1d0a0f4b79f86}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!reduced\+\_\+svd@{reduced\+\_\+svd}}
 \index{reduced\+\_\+svd@{reduced\+\_\+svd}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{reduced\+\_\+svd()}{reduced\_svd()}}
+\subsubsection{\texorpdfstring{reduced\+\_\+svd()}{reduced\_svd()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::reduced\+\_\+svd (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{U,  }\item[{std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{Sigma\+\_\+r,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{VT,  }\item[{\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{truncation\+\_\+rank,  }\item[{Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption})}
 
@@ -1073,6 +1360,8 @@ Perform singular value truncation when the given {\ttfamily truncation\+\_\+rank
 \item Keep the first {\ttfamily truncation\+\_\+rank} rows of {\ttfamily VT}, while discarding the others.
 \end{DoxyEnumerate}
 
+Clear the S\+VD result matrix and singular value vector.
+
 When {\ttfamily truncation\+\_\+rank} (after value limiting wrt. the actual rank) is equal to the minimum matrix dimension, we only need to adjust the columns of $U$ or the rows of $V^T$ depending on the shape of the matrix $M$.
 
 For details, if $M$ has a dimension $m \times n$, the dimensions of all matrices obtained from S\+VD are\+:
@@ -1099,14 +1388,115 @@ References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\
 
 Referenced by main(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose().
 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_aeafd1f1aca169f4b9164f0a5e521e8cb}\label{classLAPACKFullMatrixExt_aeafd1f1aca169f4b9164f0a5e521e8cb}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!reduced\+\_\+svd@{reduced\+\_\+svd}}
+\index{reduced\+\_\+svd@{reduced\+\_\+svd}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{reduced\+\_\+svd()}{reduced\_svd()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::reduced\+\_\+svd (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{U,  }\item[{std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{Sigma\+\_\+r,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{VT,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{D,  }\item[{\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{truncation\+\_\+rank,  }\item[{Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption})}
+
+Perform the reduced singular value decomposition (S\+VD) with rank truncation. In addition, the components $C$ and $D$ of the error matrix due to rank truncation are returned. The error matrix $E = CD^T$.
+
+
+\begin{DoxyDescription}
+\item[Note ]Even though an explicit truncation rank is specified, inside this function, after S\+VD, the effective rank of the matrix is obtained. Because any given truncation rank value larger than the effective matrix rank is meaningless, it will be limited to be the effective rank. 
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em U} & \\
+\hline
+{\em Sigma\+\_\+r} & \\
+\hline
+{\em VT} & \\
+\hline
+{\em C} & \\
+\hline
+{\em D} & \\
+\hline
+{\em truncation\+\_\+rank} & Truncation rank specified by the user. \\
+\hline
+{\em singular\+\_\+value\+\_\+threshold} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Effective rank. 
+\end{DoxyReturn}
+
+\begin{DoxyDescription}
+\item[Work flow ]
+
+Perform the full S\+VD.
+
+If the singular value threshold is perfect zero, calculate a threshold value instead.
+
+Get the actual rank of the matrix by counting the total number of singular values which are larger than the given threshold {\ttfamily singular\+\_\+value\+\_\+threshold}. The actual rank should always be less than or equal to {\ttfamily min\+\_\+dim}.
+
+Limit the value of {\ttfamily truncation\+\_\+rank} not larger than the actual rank just obtained by counting effective singular values.
+
+Perform singular value truncation when the given {\ttfamily truncation\+\_\+rank} (after value limiting wrt. the actual rank) is less than the minimum matrix dimension. The procedures are as below.
+
+
+\begin{DoxyEnumerate}
+\item Keep the first {\ttfamily truncation\+\_\+rank} singular values, while discarding the others.
+\end{DoxyEnumerate}
+
+Copy the remaining singular values for constructing the error matrices.
+
+Allocate memory for the error matrices. At the moment, $D$ stores its transpose.
+
+When the original full matrix $AB^T$ is a long matrix, perform right association.
+
+When the original full matrix $AB^T$ is a wide matrix, perform left association.
+
+
+\begin{DoxyEnumerate}
+\item Keep the first {\ttfamily truncation\+\_\+rank} columns of {\ttfamily U}, while discarding the others.
+\item Keep the first {\ttfamily truncation\+\_\+rank} rows of {\ttfamily VT}, while discarding the others.
+\end{DoxyEnumerate}
+
+When the truncation rank is zero, the error matrices should be directly obtained from the S\+VD results.
+
+When the original full matrix $AB^T$ is a long matrix, perform right association.
+
+When the original full matrix $AB^T$ is a wide matrix, perform left association.
+
+Then, clear the S\+VD result matrix and singular value vector.
+
+When {\ttfamily truncation\+\_\+rank} (after value limiting wrt. the actual rank) is equal to the minimum matrix dimension, we only need to adjust the columns of $U$ or the rows of $V^T$ depending on the shape of the matrix $M$.
+
+There is no effective rank truncation and thus no accuracy loss. Therefore, the error matrix components $C$ and $D$ are set to zero dimension.
+
+For details, if $M$ has a dimension $m \times n$, the dimensions of all matrices obtained from S\+VD are\+:
+\begin{DoxyItemize}
+\item $U \in \mathbb{R}^{m \times m}$
+\item $\Sigma_r \in \mathbb{R}^{m \times n}$
+\item $V \in \mathbb{R}^{n \times n}$
+\end{DoxyItemize}
+
+When $M$ is long, $\Sigma_r = \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}$. Therefore, we keep the first {\ttfamily min\+\_\+dim} columns of $U$, while deleting others. $V^T$ is kept intact.
+
+When $M$ is wide, $\Sigma_r = \begin{pmatrix} \Sigma_r' & 0 \end{pmatrix}$. Therefore, we keep the first {\ttfamily min\+\_\+dim} rows of $V^T$, while deleting others. $U$ is kept intact.
+
+When $M$ is square, do nothing.
+
+Return the value of {\ttfamily truncation\+\_\+rank}. Instead of its original specified value, it now contains the actual rank of the matrix after truncation.
+
+
+\end{DoxyDescription}
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::fill(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::transpose().
+
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a355ed6360b21081b6e86e09833bf95db}\label{classLAPACKFullMatrixExt_a355ed6360b21081b6e86e09833bf95db}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT@{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT}}
 \index{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT@{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T()}{reduced\_svd\_on\_AxBT()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+\subsubsection{\texorpdfstring{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T()}{reduced\_svd\_on\_AxBT()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{U,  }\item[{std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{Sigma\+\_\+r,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{VT,  }\item[{Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-Perform S\+VD on the product of two component matrices $A$ and $B^T$ without rank truncation. If the matrix is not of full rank, truncate it to the effective rank. It returns the effective rank. 
+Perform S\+VD on the product of two component matrices $A$ and $B^T$ without rank truncation. If the matrix is not of full rank, truncate it to the effective rank. It returns the effective rank.
+
+{\bfseries The operation of this function has no accuracy loss.} 
 \begin{DoxyParams}{Parameters}
 {\em A} & \\
 \hline
@@ -1151,9 +1541,9 @@ When the matrix is of full rank, i.\+e. {\ttfamily rank} == {\ttfamily min\+\_\+
 
 When QR decomposition has been used, if {\ttfamily M} has a dimension $m \times n$, the dimensions of all matrices are\+:
 \begin{DoxyItemize}
-\item $U \in \mathbb{R}^{m \times {\rm representation rank}}$
-\item $\Sigma_r \in \mathbb{R}^{{\rm representation rank} \times {\rm representation rank}}$
-\item $V \in \mathbb{R}^{n \times {\rm representation rank}}$
+\item $U \in \mathbb{R}^{m \times {\rm formal rank}}$
+\item $\Sigma_r \in \mathbb{R}^{{\rm formal rank} \times {\rm formal rank}}$
+\item $V \in \mathbb{R}^{n \times {\rm formal rank}}$
 \end{DoxyItemize}
 
 When the matrix rank is less than the formal rank, keep the first {\ttfamily rank} singular values, while discarding the others.
@@ -1180,7 +1570,7 @@ Return the actual rank of the matrix.
 
 \end{DoxyDescription}
 
-References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::mmult(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+qr(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd().
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::mmult(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::m\+Tmult(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+qr(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd().
 
 
 
@@ -1189,13 +1579,15 @@ Referenced by Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a56dbf804ab7f3ffb3ed3a09d5b4e5170}\label{classLAPACKFullMatrixExt_a56dbf804ab7f3ffb3ed3a09d5b4e5170}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT@{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT}}
 \index{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT@{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T()}{reduced\_svd\_on\_AxBT()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+\subsubsection{\texorpdfstring{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T()}{reduced\_svd\_on\_AxBT()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{U,  }\item[{std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{Sigma\+\_\+r,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{VT,  }\item[{\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{truncation\+\_\+rank,  }\item[{Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
 Perform S\+VD on the product of two component matrices $A$ and $B^T$ with truncation by a specified rank.
 
-N.\+B. If the actual rank of the matrix is less than the specified {\ttfamily truncation\+\_\+rank}, i.\+e. rank deficient, the matrix will be truncated to its actual rank. 
+{\bfseries The operation of this function may have accuracy loss when the specified rank is less than the actual rank of the matrix.}
+
+N.\+B. If the actual rank of the matrix is less than the specified {\ttfamily truncation\+\_\+rank}, i.\+e. rank deficient, the matrix will be truncated to its actual rank. Then, this function has no accuracy loss. 
 \begin{DoxyParams}{Parameters}
 {\em A} & \\
 \hline
@@ -1212,7 +1604,7 @@ N.\+B. If the actual rank of the matrix is less than the specified {\ttfamily tr
 \end{DoxyParams}
 In a rank-\/k matrix, the number of columns in the component matrix {\ttfamily A} should match that of {\ttfamily B}.
 
-N.\+B. The number of columns in the component matrix {\ttfamily A} or {\ttfamily B} is the representation rank of the rank-\/k matrix, which means the rank-\/k matrix may not be of full rank and the actual rank is less than this representation rank.
+N.\+B. The number of columns in the component matrix {\ttfamily A} or {\ttfamily B} is the formal rank of the rank-\/k matrix, which means the rank-\/k matrix may not be of full rank and the actual rank is less than this formal rank.
 
 When both {\ttfamily A} and {\ttfamily B} are long matrices, i.\+e. they have more rows than columns, perform reduced QR decomposition to component matrix {\ttfamily A}, which has a dimension of $m \times r$.
 
@@ -1236,13 +1628,15 @@ Keep the first {\ttfamily truncation\+\_\+rank} columns of {\ttfamily U}, while 
 
 Keep the first {\ttfamily truncation\+\_\+rank} rows of {\ttfamily VT}, while deleting others.
 
+When the truncation rank is zero, clear the S\+VD result matrix and singular value vector.
+
 In this case, it could only be {\ttfamily truncation\+\_\+rank} == {\ttfamily min\+\_\+dim}.
 
 In this case, the results {\ttfamily U}, {\ttfamily Sigma\+\_\+r} and {\ttfamily VT} are obtained via QR decomposition. And if {\ttfamily M} has a dimension $m \times n$, the dimensions of all matrices are\+:
 \begin{DoxyItemize}
-\item $U \in \mathbb{R}^{m \times {\rm representation rank}}$
-\item $\Sigma_r \in \mathbb{R}^{{\rm representation rank} \times {\rm representation rank}}$
-\item $V \in \mathbb{R}^{n \times {\rm representation rank}}$
+\item $U \in \mathbb{R}^{m \times {\rm formal rank}}$
+\item $\Sigma_r \in \mathbb{R}^{{\rm formal rank} \times {\rm formal rank}}$
+\item $V \in \mathbb{R}^{n \times {\rm formal rank}}$
 \end{DoxyItemize}
 
 Keep the first {\ttfamily truncation\+\_\+rank} singular values, while discarding others.
@@ -1264,7 +1658,107 @@ When the original matrix is wide, $\Sigma_r = \begin{pmatrix} \Sigma_r' & 0 \end
 
 When the original matrix is square, do nothing.
 
-References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::mmult(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+qr(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd().
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::mmult(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::m\+Tmult(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+qr(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a4107b8340a75683fd59024e20631ce10}\label{classLAPACKFullMatrixExt_a4107b8340a75683fd59024e20631ce10}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT@{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT}}
+\index{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT@{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T()}{reduced\_svd\_on\_AxBT()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{B,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{U,  }\item[{std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{Sigma\+\_\+r,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{VT,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{C,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{D,  }\item[{\hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{truncation\+\_\+rank,  }\item[{Number}]{singular\+\_\+value\+\_\+threshold = {\ttfamily 0.} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Perform S\+VD on the product of two component matrices $A$ and $B^T$ with truncation by a specified rank. In addition, the components $C$ and $D$ of the error matrix due to rank truncation are returned. The error matrix $E = CD^T$.
+
+{\bfseries The operation of this function may have accuracy loss when the specified rank is less than the actual rank of the matrix.}
+
+N.\+B. If the actual rank of the matrix is less than the specified {\ttfamily truncation\+\_\+rank}, i.\+e. rank deficient, the matrix will be truncated to its actual rank. Then, this function has no accuracy loss. 
+\begin{DoxyParams}{Parameters}
+{\em A} & \\
+\hline
+{\em B} & \\
+\hline
+{\em U} & \\
+\hline
+{\em Sigma\+\_\+r} & \\
+\hline
+{\em VT} & \\
+\hline
+{\em C} & \\
+\hline
+{\em D} & \\
+\hline
+{\em truncation\+\_\+rank} & \\
+\hline
+\end{DoxyParams}
+In a rank-\/k matrix, the number of columns in the component matrix {\ttfamily A} should match that of {\ttfamily B}.
+
+N.\+B. The number of columns in the component matrix {\ttfamily A} or {\ttfamily B} is the formal rank of the rank-\/k matrix, which means the rank-\/k matrix may not be of full rank and the actual rank is less than this formal rank.
+
+When both {\ttfamily A} and {\ttfamily B} are long matrices, i.\+e. they have more rows than columns, i.\+e. the formal rank, perform reduced QR decomposition to component matrix {\ttfamily A}, which has a dimension of $m \times r$.
+
+Perform reduced QR decomposition to component matrix {\ttfamily B}, which has a dimension of $n \times r$.
+
+Perform S\+VD to the product $R$ of the two upper triangular matrices, i.\+e. $R = R_A R_B^T$.
+
+N.\+B. Before L\+A\+P\+A\+CK matrix multiplication, the memory of the result matrix should be reinitialized.
+
+When {\ttfamily A} and {\ttfamily B} are not all long matrices, firstly convert the rank-\/k matrix to a full matrix, then perform S\+VD on this full matrix.
+
+If the singular value threshold is perfect zero, calculate a threshold value instead.
+
+Get the actual rank of the matrix by counting the total number of singular values which are larger than the given threshold {\ttfamily singular\+\_\+value\+\_\+threshold}. The actual rank should always be less than or equal to {\ttfamily min\+\_\+dim}.
+
+Limit the value of {\ttfamily truncation\+\_\+rank} not larger than the actual rank just obtained by counting effective singular values.
+
+Keep the first {\ttfamily truncation\+\_\+rank} singular values, while discarding others.
+
+Copy the remaining singular values for constructing the error matrices.
+
+Allocate memory for the error matrices. At the moment, $D$ stores its transpose.
+
+When the original full matrix $AB^T$ is a long matrix, perform right association.
+
+When the original full matrix $AB^T$ is a wide matrix, perform left association.
+
+Keep the first {\ttfamily truncation\+\_\+rank} columns of {\ttfamily U}, while deleting others.
+
+Keep the first {\ttfamily truncation\+\_\+rank} rows of {\ttfamily VT}, while deleting others.
+
+When the truncation rank is zero, the error matrices should be directly copied from the original component matrices.
+
+Then, clear the S\+VD result matrix and singular value vector.
+
+In this case, it could only be that {\ttfamily truncation\+\_\+rank} == {\ttfamily min\+\_\+dim}.
+
+There is no effective rank truncation and thus no accuracy loss. Therefore, the error matrix components $C$ and $D$ are set to zero dimension.
+
+In this case, the results {\ttfamily U}, {\ttfamily Sigma\+\_\+r} and {\ttfamily VT} are obtained via QR decomposition. And if {\ttfamily M} has a dimension $m \times n$, the dimensions of all matrices are\+:
+\begin{DoxyItemize}
+\item $U \in \mathbb{R}^{m \times {\rm formal rank}}$
+\item $\Sigma_r \in \mathbb{R}^{{\rm formal rank} \times {\rm formal rank}}$
+\item $V \in \mathbb{R}^{n \times {\rm formal rank}}$
+\end{DoxyItemize}
+
+Keep the first {\ttfamily truncation\+\_\+rank} singular values, while discarding others.
+
+Keep the first {\ttfamily truncation\+\_\+rank} columns of {\ttfamily U}, while deleting others.
+
+Keep the first {\ttfamily truncation\+\_\+rank} rows of {\ttfamily VT}, while deleting others.
+
+In this case, the results {\ttfamily U}, {\ttfamily Sigma\+\_\+r} and {\ttfamily VT} are obtained from full matrix S\+VD. And if {\ttfamily M} has a dimension $m \times n$, the dimensions of all matrices obtained from S\+VD are\+:
+\begin{DoxyItemize}
+\item $U \in \mathbb{R}^{m \times m}$
+\item $\Sigma_r \in \mathbb{R}^{m \times n}$
+\item $V \in \mathbb{R}^{n \times n}$
+\end{DoxyItemize}
+
+When the original matrix is long, $\Sigma_r = \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}$. Therefore, we keep the first {\ttfamily min\+\_\+dim} columns of {\ttfamily U}, while deleting others. {\ttfamily VT} is kept intact.
+
+When the original matrix is wide, $\Sigma_r = \begin{pmatrix} \Sigma_r' & 0 \end{pmatrix}$. Therefore, we keep the first {\ttfamily min\+\_\+dim} rows of {\ttfamily VT}, while deleting others. {\ttfamily U} is kept intact.
+
+When the original matrix is square, we do nothing, since the truncation rank is the same as the matrix dimension.
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::fill(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::mmult(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::m\+Tmult(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+qr(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::transpose().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a4b4bb2b69261608f54c42f329d272195}\label{classLAPACKFullMatrixExt_a4b4bb2b69261608f54c42f329d272195}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!remove\+\_\+column@{remove\+\_\+column}}
@@ -1332,14 +1826,16 @@ Referenced by main().
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::scale\+\_\+columns (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{V }\end{DoxyParamCaption})}
 
-Right multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored in a std\+::vector. 
+Right multiply the current matrix with a diagonal matrix {\ttfamily V}, which is equivalent to scale the columns of the current matrix with the corresponding scalar elements in {\ttfamily V}. The result is stored in a {\ttfamily std\+::vector}.
+
+
 \begin{DoxyParams}{Parameters}
 {\em V} & \\
 \hline
 \end{DoxyParams}
 
 
-Referenced by main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+Referenced by main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a2510d3bd30956bb2831b960796d3abca}\label{classLAPACKFullMatrixExt_a2510d3bd30956bb2831b960796d3abca}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!scale\+\_\+columns@{scale\+\_\+columns}}
@@ -1348,7 +1844,9 @@ Referenced by main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::scale\+\_\+columns (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{const std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{V }\end{DoxyParamCaption}) const}
 
-Right multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored in a std\+::vector. The results are stored in a new matrix. 
+Right multiply the current matrix with a diagonal matrix {\ttfamily V}, which is equivalent to scale the columns of the current matrix with the corresponding scalar elements in {\ttfamily V}. The result is stored in a new matrix {\ttfamily A}.
+
+
 \begin{DoxyParams}{Parameters}
 {\em A} & \\
 \hline
@@ -1362,7 +1860,9 @@ Right multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored 
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::scale\+\_\+columns (\begin{DoxyParamCaption}\item[{const Vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{V }\end{DoxyParamCaption})}
 
-Right multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored in a Vector. 
+Right multiply the current matrix with a diagonal matrix {\ttfamily V}, which is equivalent to scale the columns of the current matrix with the corresponding scalar elements in {\ttfamily V}. The result is stored in a {\ttfamily Vector}.
+
+
 \begin{DoxyParams}{Parameters}
 {\em V} & \\
 \hline
@@ -1374,7 +1874,7 @@ Right multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored 
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::scale\+\_\+rows (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{V }\end{DoxyParamCaption})}
 
-Left multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored in a std\+::vector.
+Left multiply the current matrix with a diagonal matrix {\ttfamily V}, which is equivalent to scale the rows of the current matrix with the corresponding scalar elements in {\ttfamily V}. The result is stored in a {\ttfamily std\+::vector}.
 
 
 \begin{DoxyParams}{Parameters}
@@ -1383,7 +1883,7 @@ Left multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored i
 \end{DoxyParams}
 
 
-Referenced by main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+Referenced by main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a88b31beb3170825867a0b15b59770d61}\label{classLAPACKFullMatrixExt_a88b31beb3170825867a0b15b59770d61}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!scale\+\_\+rows@{scale\+\_\+rows}}
@@ -1392,7 +1892,9 @@ Referenced by main(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::scale\+\_\+rows (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{A,  }\item[{const std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{V }\end{DoxyParamCaption}) const}
 
-Left multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored in a std\+::vector. The results are stored in a new matrix. 
+Left multiply the current matrix with a diagonal matrix {\ttfamily V}, which is equivalent to scale the rows of the current matrix with the corresponding scalar elements in {\ttfamily V}. The result is stored in a new matrix {\ttfamily A}.
+
+
 \begin{DoxyParams}{Parameters}
 {\em A} & \\
 \hline
@@ -1406,21 +1908,151 @@ Left multiply the matrix with a diagonal matrix {\ttfamily V}, which is stored i
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::set\+\_\+column\+\_\+zeros (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{col\+\_\+index }\end{DoxyParamCaption})}
 
-Set a matrix column as zeros. \mbox{\Hypertarget{classLAPACKFullMatrixExt_abf191c72c4a8813470f32c6107f2ffbc}\label{classLAPACKFullMatrixExt_abf191c72c4a8813470f32c6107f2ffbc}} 
+Set a matrix column as zeros. \mbox{\Hypertarget{classLAPACKFullMatrixExt_a604d19d69393d88430293b48aad71a3b}\label{classLAPACKFullMatrixExt_a604d19d69393d88430293b48aad71a3b}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!set\+\_\+property@{set\+\_\+property}}
+\index{set\+\_\+property@{set\+\_\+property}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{set\+\_\+property()}{set\_property()}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::set\+\_\+property (\begin{DoxyParamCaption}\item[{const L\+A\+P\+A\+C\+K\+Support\+::\+Property}]{property }\end{DoxyParamCaption})}
+
+Set the matrix property of type {\ttfamily L\+A\+P\+A\+C\+K\+Support\+::\+Property} for the matrix.
+
+
+\begin{DoxyDescription}
+\item[Comment ]The property should be explicitly set by the caller and the algorithm will not check its validity, since in most cases, this is difficult or expensive to achieve. 
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em property} & \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::compute\+\_\+cholesky\+\_\+factorization(), and main().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_abf191c72c4a8813470f32c6107f2ffbc}\label{classLAPACKFullMatrixExt_abf191c72c4a8813470f32c6107f2ffbc}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!set\+\_\+row\+\_\+zeros@{set\+\_\+row\+\_\+zeros}}
 \index{set\+\_\+row\+\_\+zeros@{set\+\_\+row\+\_\+zeros}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{set\+\_\+row\+\_\+zeros()}{set\_row\_zeros()}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::set\+\_\+row\+\_\+zeros (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{row\+\_\+index }\end{DoxyParamCaption})}
 
-Set a matrix row as zeros. \mbox{\Hypertarget{classLAPACKFullMatrixExt_a5be14a4d7f9c615f940e870b85d09ecd}\label{classLAPACKFullMatrixExt_a5be14a4d7f9c615f940e870b85d09ecd}} 
+Set a matrix row as zeros. \mbox{\Hypertarget{classLAPACKFullMatrixExt_ac36f444148f8a0d3972867a0e79f887e}\label{classLAPACKFullMatrixExt_ac36f444148f8a0d3972867a0e79f887e}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!solve\+\_\+by\+\_\+backward\+\_\+substitution@{solve\+\_\+by\+\_\+backward\+\_\+substitution}}
+\index{solve\+\_\+by\+\_\+backward\+\_\+substitution@{solve\+\_\+by\+\_\+backward\+\_\+substitution}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{solve\+\_\+by\+\_\+backward\+\_\+substitution()}{solve\_by\_backward\_substitution()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::solve\+\_\+by\+\_\+backward\+\_\+substitution (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{b,  }\item[{const bool}]{transposed = {\ttfamily false},  }\item[{const bool}]{is\+\_\+unit\+\_\+diagonal = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+Solve the upper triangular matrix $Ux=b$ by backward substitution.
+
+The right hand side vector $b$ will be overwritten by the solution vector $x$.
+
+
+\begin{DoxyParams}{Parameters}
+{\em b} & Right hand side vector and after execution, it stores the result vector. \\
+\hline
+{\em transposed} & \\
+\hline
+\end{DoxyParams}
+{\bfseries The member variable {\ttfamily values} of {\ttfamily b} is private, which cannot be directly accessed. Therefore, the function {\ttfamily trsv\+\_\+helper} is designed to accept the data pointer of {\ttfamily b}, which can be obtained via {\ttfamily b.\+data()}.}
+
+Referenced by main(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::solve\+\_\+by\+\_\+backward\+\_\+substitution().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_ac81fbff25894b934408d8329c953ba5a}\label{classLAPACKFullMatrixExt_ac81fbff25894b934408d8329c953ba5a}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!solve\+\_\+by\+\_\+backward\+\_\+substitution@{solve\+\_\+by\+\_\+backward\+\_\+substitution}}
+\index{solve\+\_\+by\+\_\+backward\+\_\+substitution@{solve\+\_\+by\+\_\+backward\+\_\+substitution}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{solve\+\_\+by\+\_\+backward\+\_\+substitution()}{solve\_by\_backward\_substitution()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::solve\+\_\+by\+\_\+backward\+\_\+substitution (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{x,  }\item[{const Vector$<$ Number $>$ \&}]{b,  }\item[{const bool}]{transposed = {\ttfamily false},  }\item[{const bool}]{is\+\_\+unit\+\_\+diagonal = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+Solve the upper triangular matrix $Ux=b$ by backward substitution.
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & Result vector. \\
+\hline
+{\em b} & Right hand side vector. \\
+\hline
+{\em transposed} & \\
+\hline
+\end{DoxyParams}
+
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::solve\+\_\+by\+\_\+backward\+\_\+substitution().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a72a5ead3fac2a7c37a9d5a14a9d6b286}\label{classLAPACKFullMatrixExt_a72a5ead3fac2a7c37a9d5a14a9d6b286}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!solve\+\_\+by\+\_\+forward\+\_\+substitution@{solve\+\_\+by\+\_\+forward\+\_\+substitution}}
+\index{solve\+\_\+by\+\_\+forward\+\_\+substitution@{solve\+\_\+by\+\_\+forward\+\_\+substitution}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{solve\+\_\+by\+\_\+forward\+\_\+substitution()}{solve\_by\_forward\_substitution()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::solve\+\_\+by\+\_\+forward\+\_\+substitution (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{b,  }\item[{const bool}]{transposed = {\ttfamily false},  }\item[{const bool}]{is\+\_\+unit\+\_\+diagonal = {\ttfamily true},  }\item[{const bool}]{permute\+\_\+rhs\+\_\+vector = {\ttfamily false} }\end{DoxyParamCaption}) const}
+
+Solve the unit lower triangular matrix $Lx=b$ by forward substitution.
+
+The right hand side vector $b$ will be overwritten by the solution vector $x$.
+
+
+\begin{DoxyDescription}
+\item[Comment ]When the forward substitution procedure is applied to the matrix factorized by LU, the right hand side vector {\ttfamily b} should be permuted according to the {\ttfamily ipiv} vector, which is obtained from the L\+A\+P\+A\+CK LU factorization with row pivoting. Remember that we have this relation $PA=LU$.
+
+However, when the lower triangular matrix to be solved is the transpose of an upper triangular matrix, there is no need to permute the right hand side vector {\ttfamily b} anymore, because permutation has been or will be performed during the solution of matrix blocks related to the lower triangulation matrix. For short, the permutation of the right hand side vector should only be performed once.
+
+By the way, no permutation is needed when calling backward substitution or solving Cholesky related matrices. 
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em b} & Right hand side vector and after execution, it stores the result vector. \\
+\hline
+{\em transposed} & \\
+\hline
+{\em permute\+\_\+rhs\+\_\+vector} & \\
+\hline
+\end{DoxyParams}
+Permute R\+HS vector if the current matrix is obtained from LU factorization.
+
+{\bfseries The member variable {\ttfamily values} of {\ttfamily b} is private, which cannot be directly accessed. Therefore, the function {\ttfamily trsv\+\_\+helper} is designed to accept the data pointer of {\ttfamily b}, which can be obtained via {\ttfamily b.\+data()}.}
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::ipiv, and permute\+\_\+vector\+\_\+by\+\_\+ipiv().
+
+
+
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::solve\+\_\+by\+\_\+forward\+\_\+substitution().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a865aa33c5a63bc68851e4685ce3b1379}\label{classLAPACKFullMatrixExt_a865aa33c5a63bc68851e4685ce3b1379}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!solve\+\_\+by\+\_\+forward\+\_\+substitution@{solve\+\_\+by\+\_\+forward\+\_\+substitution}}
+\index{solve\+\_\+by\+\_\+forward\+\_\+substitution@{solve\+\_\+by\+\_\+forward\+\_\+substitution}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{solve\+\_\+by\+\_\+forward\+\_\+substitution()}{solve\_by\_forward\_substitution()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::solve\+\_\+by\+\_\+forward\+\_\+substitution (\begin{DoxyParamCaption}\item[{Vector$<$ Number $>$ \&}]{x,  }\item[{const Vector$<$ Number $>$ \&}]{b,  }\item[{const bool}]{transposed = {\ttfamily false},  }\item[{const bool}]{is\+\_\+unit\+\_\+diagonal = {\ttfamily true} }\end{DoxyParamCaption}) const}
+
+Solve the unit lower triangular matrix $Lx=b$ by forward substitution.
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & Result vector. \\
+\hline
+{\em b} & Right hand side vector. \\
+\hline
+{\em transposed} & \\
+\hline
+\end{DoxyParams}
+
+
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::solve\+\_\+by\+\_\+forward\+\_\+substitution().
+
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a5be14a4d7f9c615f940e870b85d09ecd}\label{classLAPACKFullMatrixExt_a5be14a4d7f9c615f940e870b85d09ecd}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!svd@{svd}}
 \index{svd@{svd}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
 \subsubsection{\texorpdfstring{svd()}{svd()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::svd (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{U,  }\item[{std\+::vector$<$ typename numbers\+::\+Number\+Traits$<$ Number $>$\+::real\+\_\+type $>$ \&}]{Sigma\+\_\+r,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{VT }\end{DoxyParamCaption})}
 
-Perform the standard singular value decomposition (S\+VD). 
+Perform the standard singular value decomposition (S\+VD).
+
+
 \begin{DoxyParams}{Parameters}
 {\em U} & with a dimension $m \times m$. \\
 \hline
@@ -1449,7 +2081,7 @@ Perform the real S\+VD.
 
 Integer work space for pivoting. 
 
-References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::work.
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::ipiv, and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::work.
 
 
 
@@ -1496,7 +2128,7 @@ void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<
 
 Perform in-\/place transpose of the matrix. 
 
-Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank\+\_\+k\+\_\+decompose(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T(), and Rk\+Matrix$<$ Number $>$\+::truncate\+\_\+to\+\_\+rank().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a12a95aeff6e93f0284c59cffd0fb7b8e}\label{classLAPACKFullMatrixExt_a12a95aeff6e93f0284c59cffd0fb7b8e}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!transpose@{transpose}}
@@ -1553,6 +2185,17 @@ Create a zero valued matrix.
 
 
 \subsection{Member Data Documentation}
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a436d7290d5b2b17c0691b5b63cca36fa}\label{classLAPACKFullMatrixExt_a436d7290d5b2b17c0691b5b63cca36fa}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!ipiv@{ipiv}}
+\index{ipiv@{ipiv}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{ipiv}{ipiv}}
+{\footnotesize\ttfamily template$<$typename Number$>$ \\
+std\+::vector$<$types\+::blas\+\_\+int$>$ \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::ipiv\hspace{0.3cm}{\ttfamily [private]}}
+
+The vector storing the permutations applied for pivoting in the L\+U-\/factorization. 
+
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::compute\+\_\+lu\+\_\+factorization(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::get\+\_\+lu\+\_\+permutation(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::operator=(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::solve\+\_\+by\+\_\+forward\+\_\+substitution(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd().
+
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_ac091f1f6af485b451c4c9398abb67230}\label{classLAPACKFullMatrixExt_ac091f1f6af485b451c4c9398abb67230}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!iwork@{iwork}}
 \index{iwork@{iwork}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}

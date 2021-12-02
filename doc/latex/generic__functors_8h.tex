@@ -5,18 +5,19 @@
 This header file contains a set of self-\/defined generic functors.  
 
 
+{\ttfamily \#include $<$deal.\+I\+I/base/exceptions.\+h$>$}\newline
 {\ttfamily \#include $<$deal.\+I\+I/base/types.\+h$>$}\newline
+{\ttfamily \#include $<$deal.\+I\+I/lac/lapack\+\_\+support.\+h$>$}\newline
 {\ttfamily \#include $<$map$>$}\newline
 {\ttfamily \#include $<$vector$>$}\newline
 Include dependency graph for generic\+\_\+functors.\+h\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=299pt]{generic__functors_8h__incl}
+\includegraphics[width=350pt]{generic__functors_8h__incl}
 \end{center}
 \end{figure}
-This graph shows which files directly or indirectly include this file\+:
-\nopagebreak
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -29,6 +30,8 @@ This graph shows which files directly or indirectly include this file\+:
 {\footnotesize template$<$typename Input\+Iterator , typename T $>$ }\\Input\+Iterator \hyperlink{generic__functors_8h_ad741e5fc6f9f2d7acafe6e5530b1f52e}{find\+\_\+pointer\+\_\+data} (Input\+Iterator first, Input\+Iterator last, const T $\ast$value\+\_\+pointer)
 \item 
 void \hyperlink{generic__functors_8h_a45ed12a09686ebca5400b5161a186c09}{build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map} (const std\+::vector$<$ dealii\+::types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set\+\_\+as\+\_\+local\+\_\+to\+\_\+global\+\_\+map, std\+::map$<$ dealii\+::types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&global\+\_\+to\+\_\+local\+\_\+map)
+\item 
+{\footnotesize template$<$typename Vector\+Type $>$ }\\void \hyperlink{generic__functors_8h_ab23e18e8bbc85673ecd9d4c80b406973}{permute\+\_\+vector\+\_\+by\+\_\+ipiv} (Vector\+Type \&v, const std\+::vector$<$ dealii\+::types\+::blas\+\_\+int $>$ \&ipiv)
 \end{DoxyCompactItemize}
 
 
@@ -59,7 +62,7 @@ Build a map from global indices to local indices based on the given index set, w
 \end{DoxyParams}
 
 
-Referenced by convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), f\+\_\+h\+\_\+mmult(), find\+\_\+pointer\+\_\+data(), h\+\_\+f\+\_\+mmult(), h\+\_\+rk\+\_\+mmult(), Init\+And\+Create\+H\+Matrix\+Children(), Init\+And\+Create\+H\+Matrix\+Children\+Without\+Alloc(), main(), and rk\+\_\+h\+\_\+mmult().
+Referenced by convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), f\+\_\+h\+\_\+mmult(), f\+\_\+h\+\_\+m\+Tmult(), find\+\_\+pointer\+\_\+data(), h\+\_\+f\+\_\+mmult(), h\+\_\+f\+\_\+m\+Tmult(), h\+\_\+rk\+\_\+mmult(), h\+\_\+rk\+\_\+m\+Tmult(), Init\+And\+Create\+H\+Matrix\+Children(), Init\+And\+Create\+H\+Matrix\+Children\+Without\+Alloc(), main(), rk\+\_\+h\+\_\+mmult(), and rk\+\_\+h\+\_\+m\+Tmult().
 
 \mbox{\Hypertarget{generic__functors_8h_ad741e5fc6f9f2d7acafe6e5530b1f52e}\label{generic__functors_8h_ad741e5fc6f9f2d7acafe6e5530b1f52e}} 
 \index{generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}!find\+\_\+pointer\+\_\+data@{find\+\_\+pointer\+\_\+data}}
@@ -87,4 +90,24 @@ References build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map().
 
 
 Referenced by H\+Matrix$<$ spacedim, Number $>$\+::coarsen\+\_\+to\+\_\+partition(), and prune\+\_\+to\+\_\+partition\+\_\+recursion().
+
+\mbox{\Hypertarget{generic__functors_8h_ab23e18e8bbc85673ecd9d4c80b406973}\label{generic__functors_8h_ab23e18e8bbc85673ecd9d4c80b406973}} 
+\index{generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}!permute\+\_\+vector\+\_\+by\+\_\+ipiv@{permute\+\_\+vector\+\_\+by\+\_\+ipiv}}
+\index{permute\+\_\+vector\+\_\+by\+\_\+ipiv@{permute\+\_\+vector\+\_\+by\+\_\+ipiv}!generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}}
+\subsubsection{\texorpdfstring{permute\+\_\+vector\+\_\+by\+\_\+ipiv()}{permute\_vector\_by\_ipiv()}}
+{\footnotesize\ttfamily template$<$typename Vector\+Type $>$ \\
+void permute\+\_\+vector\+\_\+by\+\_\+ipiv (\begin{DoxyParamCaption}\item[{Vector\+Type \&}]{v,  }\item[{const std\+::vector$<$ dealii\+::types\+::blas\+\_\+int $>$ \&}]{ipiv }\end{DoxyParamCaption})}
+
+Permute a vector according to the permutation vector {\ttfamily ipiv} obtained from an LU factorization.
+
+
+\begin{DoxyParams}{Parameters}
+{\em v} & \\
+\hline
+{\em ipiv} & The vector storing the row permutation obtained from an LU factorization. {\bfseries The row indices stored in {\ttfamily ipiv} starts from 1 instead of 0.} \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::solve\+\_\+by\+\_\+forward\+\_\+substitution().
 

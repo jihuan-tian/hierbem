@@ -1,6 +1,8 @@
 <map id="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/tests/lapack&#45;matrix&#45;svd&#45;degenerate&#45;cases/svd&#45;degenerate&#45;cases.cc" name="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/tests/lapack&#45;matrix&#45;svd&#45;degenerate&#45;cases/svd&#45;degenerate&#45;cases.cc">
-<area shape="rect" id="node2" href="$debug__tools_8h.html" title="This file includes a bunch of helper functions for printing out and visualizing information about gri..." alt="" coords="608,161,711,187"/>
-<area shape="rect" id="node10" href="$lapack__full__matrix__ext_8h_source.html" title="lapack_full_matrix\l_ext.h" alt="" coords="1089,153,1216,195"/>
-<area shape="rect" id="node14" href="$general__exceptions_8h.html" title="Definition of self&#45;defined general exceptions. " alt="" coords="1245,243,1391,269"/>
-<area shape="rect" id="node16" href="$lapack__helpers_8h.html" title="Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following the..." alt="" coords="1793,243,1913,269"/>
+<area shape="rect" id="node2" href="$debug__tools_8h.html" title="This file includes a bunch of helper functions for printing out and visualizing information about gri..." alt="" coords="565,161,667,187"/>
+<area shape="rect" id="node10" href="$lapack__full__matrix__ext_8h_source.html" title="lapack_full_matrix\l_ext.h" alt="" coords="1570,153,1697,195"/>
+<area shape="rect" id="node16" href="$general__exceptions_8h.html" title="Definition of self&#45;defined general exceptions. " alt="" coords="2069,243,2214,269"/>
+<area shape="rect" id="node18" href="$generic__functors_8h.html" title="This header file contains a set of self&#45;defined generic functors. " alt="" coords="1810,243,1939,269"/>
+<area shape="rect" id="node21" href="$lapack__helpers_8h.html" title="Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following the..." alt="" coords="1013,243,1133,269"/>
+<area shape="rect" id="node31" href="$lapack__templates__ext_8h.html" title="Append more template based LAPACK functions to those existing in deal.ii. " alt="" coords="1532,325,1692,351"/>
 </map>

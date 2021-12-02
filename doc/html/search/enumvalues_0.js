@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['fullmatrixtype',['FullMatrixType',['../hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a51de26f7a73c478c006090ae907e7924',1,'hmatrix.h']]]
+  ['diagonal',['diagonal',['../hmatrix__support_8h.html#a2651831f827cb8204df1771cf48301a2a84912705e6a0095e329202650c5c0780',1,'HMatrixSupport']]]
 ];

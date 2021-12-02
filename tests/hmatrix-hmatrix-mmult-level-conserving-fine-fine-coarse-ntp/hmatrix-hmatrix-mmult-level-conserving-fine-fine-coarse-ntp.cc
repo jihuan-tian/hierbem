@@ -4,7 +4,8 @@
  * \f$\mathcal{H}\f$-matrices. Both operands have the fine non-tensor product
  * partitions, while the result matrix has the coarse non-tensor product
  * partitions.
- * \ingroup testers
+ *
+ * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-10-03
  */

@@ -162,6 +162,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a2ed616a9c4e1b12688a903b427260241"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6078a6d21d37f140ff8774b8310a19eb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#a6078a6d21d37f140ff8774b8310a19eb">RkMatrix</a> (const <a class="el" href="classRkMatrix.html#add060bfc3a4cc77f858c3d6dd58cadd5">size_type</a> fixed_rank_k, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;M)</td></tr>
 <tr class="separator:a6078a6d21d37f140ff8774b8310a19eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd9d75ce0a42585337d4c630d5e08140"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#afd9d75ce0a42585337d4c630d5e08140">RkMatrix</a> (const <a class="el" href="classRkMatrix.html#add060bfc3a4cc77f858c3d6dd58cadd5">size_type</a> fixed_rank_k, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;M, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;C, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;D)</td></tr>
+<tr class="separator:afd9d75ce0a42585337d4c630d5e08140"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08ab45361d9e3cca139727dca31f9bfa"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#a08ab45361d9e3cca139727dca31f9bfa">RkMatrix</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;M)</td></tr>
 <tr class="separator:a08ab45361d9e3cca139727dca31f9bfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdd046caab506cd04e09b65bb3ffc1f9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#acdd046caab506cd04e09b65bb3ffc1f9">RkMatrix</a> (const std::vector&lt; types::global_dof_index &gt; &amp;tau, const std::vector&lt; types::global_dof_index &gt; &amp;sigma, const <a class="el" href="classRkMatrix.html#add060bfc3a4cc77f858c3d6dd58cadd5">size_type</a> fixed_rank_k, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;M)</td></tr>
@@ -224,6 +226,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ada4d32bb08cce5d5e41ee4673bc88e00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a555e0c3184b8411db1350c8fe1e875a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">truncate_to_rank</a> (<a class="el" href="classRkMatrix.html#add060bfc3a4cc77f858c3d6dd58cadd5">size_type</a> new_rank)</td></tr>
 <tr class="separator:a555e0c3184b8411db1350c8fe1e875a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbaf1dad03ca2fe0ede5bab2315d8859"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#adbaf1dad03ca2fe0ede5bab2315d8859">truncate_to_rank</a> (<a class="el" href="classRkMatrix.html#add060bfc3a4cc77f858c3d6dd58cadd5">size_type</a> new_rank, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;C, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;D)</td></tr>
+<tr class="separator:adbaf1dad03ca2fe0ede5bab2315d8859"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab41155389e6ee81d5f127514ca3166b4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#ab41155389e6ee81d5f127514ca3166b4">calc_rank_upper_bound</a> ()</td></tr>
+<tr class="separator:ab41155389e6ee81d5f127514ca3166b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25753b7f6d82dca931992cd975165972"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#a25753b7f6d82dca931992cd975165972">vmult</a> (Vector&lt; Number &gt; &amp;y, const Vector&lt; Number &gt; &amp;x, const bool adding=false) const</td></tr>
 <tr class="separator:a25753b7f6d82dca931992cd975165972"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7162dd0c4580dbb5e98715d9b8dd56c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRkMatrix.html#a7162dd0c4580dbb5e98715d9b8dd56c1">Tvmult</a> (Vector&lt; Number &gt; &amp;y, const Vector&lt; Number &gt; &amp;x, const bool adding=false) const</td></tr>
@@ -270,6 +276,18 @@ Friends</h2></td></tr>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a1b5b4592067610eec18b830482897243"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_rk_mmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
 <tr class="separator:a1b5b4592067610eec18b830482897243"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af04c7cb6f2968253cf41b1d1a93760c7"><td class="memTemplParams" colspan="2"><a id="af04c7cb6f2968253cf41b1d1a93760c7"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:af04c7cb6f2968253cf41b1d1a93760c7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_rk_mmult</b> (const Number1 alpha, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:af04c7cb6f2968253cf41b1d1a93760c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad59530b8595d7716e02b405e35dbc561"><td class="memTemplParams" colspan="2"><a id="ad59530b8595d7716e02b405e35dbc561"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:ad59530b8595d7716e02b405e35dbc561"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_rk_mTmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:ad59530b8595d7716e02b405e35dbc561"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8cf5a4058289ffe89a9f88379e643e53"><td class="memTemplParams" colspan="2"><a id="a8cf5a4058289ffe89a9f88379e643e53"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a8cf5a4058289ffe89a9f88379e643e53"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_rk_mTmult</b> (const Number1 alpha, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a8cf5a4058289ffe89a9f88379e643e53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a614ba3b92b97d95cb3146db181611a34"><td class="memTemplParams" colspan="2"><a id="a614ba3b92b97d95cb3146db181611a34"></a>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a614ba3b92b97d95cb3146db181611a34"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_rk_mmult_for_h_h_mmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M1, const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M2, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M, bool is_M1M2_last_in_M_Sigma_P)</td></tr>
@@ -278,6 +296,18 @@ template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:afa94f9688a9443024a2631d2bfae06c8"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>rk_h_mmult</b> (const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
 <tr class="separator:afa94f9688a9443024a2631d2bfae06c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52a9c2821153dd59f0d230a997879ff3"><td class="memTemplParams" colspan="2"><a id="a52a9c2821153dd59f0d230a997879ff3"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a52a9c2821153dd59f0d230a997879ff3"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>rk_h_mmult</b> (const Number1 alpha, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a52a9c2821153dd59f0d230a997879ff3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c04e99e7f40fb0c9f3dcc042e95882a"><td class="memTemplParams" colspan="2"><a id="a0c04e99e7f40fb0c9f3dcc042e95882a"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a0c04e99e7f40fb0c9f3dcc042e95882a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>rk_h_mTmult</b> (const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a0c04e99e7f40fb0c9f3dcc042e95882a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fddb7ff1c462d5605b63ea0b10bcc34"><td class="memTemplParams" colspan="2"><a id="a2fddb7ff1c462d5605b63ea0b10bcc34"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a2fddb7ff1c462d5605b63ea0b10bcc34"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>rk_h_mTmult</b> (const Number1 alpha, const <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a2fddb7ff1c462d5605b63ea0b10bcc34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b12cf1aa7504c436b84394f2116f6a9"><td class="memTemplParams" colspan="2"><a id="a9b12cf1aa7504c436b84394f2116f6a9"></a>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a9b12cf1aa7504c436b84394f2116f6a9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>rk_h_mmult_for_h_h_mmult</b> (const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M2, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M, bool is_M1M2_last_in_M_Sigma_P)</td></tr>
@@ -286,10 +316,34 @@ template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a85ccef980f81f9fb3c63675f3f9c014f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M)</td></tr>
 <tr class="separator:a85ccef980f81f9fb3c63675f3f9c014f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab72731e18525c507f92b16d880858b93"><td class="memTemplParams" colspan="2"><a id="ab72731e18525c507f92b16d880858b93"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:ab72731e18525c507f92b16d880858b93"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mmult</b> (const Number1 alpha, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:ab72731e18525c507f92b16d880858b93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcedf4b5e2f14d085cce5cdc3f2b46cf"><td class="memTemplParams" colspan="2"><a id="adcedf4b5e2f14d085cce5cdc3f2b46cf"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:adcedf4b5e2f14d085cce5cdc3f2b46cf"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mTmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:adcedf4b5e2f14d085cce5cdc3f2b46cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86eb2a4d2b7039163dd4f28650fe747e"><td class="memTemplParams" colspan="2"><a id="a86eb2a4d2b7039163dd4f28650fe747e"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a86eb2a4d2b7039163dd4f28650fe747e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mTmult</b> (const Number1 alpha, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a86eb2a4d2b7039163dd4f28650fe747e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea3866052a5345742ad9f44f11f33989"><td class="memTemplParams" colspan="2"><a id="aea3866052a5345742ad9f44f11f33989"></a>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:aea3866052a5345742ad9f44f11f33989"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
 <tr class="separator:aea3866052a5345742ad9f44f11f33989"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad090448398bf367cba0b208456144e7d"><td class="memTemplParams" colspan="2"><a id="ad090448398bf367cba0b208456144e7d"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:ad090448398bf367cba0b208456144e7d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mmult</b> (const Number1 alpha, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:ad090448398bf367cba0b208456144e7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f368b3c372ece4b6506d89bb9e255df"><td class="memTemplParams" colspan="2"><a id="a8f368b3c372ece4b6506d89bb9e255df"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a8f368b3c372ece4b6506d89bb9e255df"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mTmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a8f368b3c372ece4b6506d89bb9e255df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad81f9d9c00ebd7bdabb28b6ea0646236"><td class="memTemplParams" colspan="2"><a id="ad81f9d9c00ebd7bdabb28b6ea0646236"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:ad81f9d9c00ebd7bdabb28b6ea0646236"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mTmult</b> (const Number1 alpha, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M1, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:ad81f9d9c00ebd7bdabb28b6ea0646236"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a897365f6716975f71b528f610498c69b"><td class="memTemplParams" colspan="2"><a id="a897365f6716975f71b528f610498c69b"></a>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a897365f6716975f71b528f610498c69b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>h_f_mmult_for_h_h_mmult</b> (<a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M1, const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M2, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M, bool is_M1M2_last_in_M_Sigma_P)</td></tr>
@@ -298,10 +352,34 @@ template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a67b0f45b3a6734fef74d90f28fcefbc1"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mmult</b> (const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M)</td></tr>
 <tr class="separator:a67b0f45b3a6734fef74d90f28fcefbc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58df6eed9eb48d8d725476c8e289d859"><td class="memTemplParams" colspan="2"><a id="a58df6eed9eb48d8d725476c8e289d859"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a58df6eed9eb48d8d725476c8e289d859"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mmult</b> (const Number1 alpha, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a58df6eed9eb48d8d725476c8e289d859"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a400c086f929a643da87cf6dc493c26"><td class="memTemplParams" colspan="2"><a id="a6a400c086f929a643da87cf6dc493c26"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a6a400c086f929a643da87cf6dc493c26"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mTmult</b> (const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a6a400c086f929a643da87cf6dc493c26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2beff0c056d76818dc4e61dded73fe0"><td class="memTemplParams" colspan="2"><a id="ac2beff0c056d76818dc4e61dded73fe0"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:ac2beff0c056d76818dc4e61dded73fe0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mTmult</b> (const Number1 alpha, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:ac2beff0c056d76818dc4e61dded73fe0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a66d1ce72cb294b2c4da6536250905a32"><td class="memTemplParams" colspan="2"><a id="a66d1ce72cb294b2c4da6536250905a32"></a>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a66d1ce72cb294b2c4da6536250905a32"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mmult</b> (const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
 <tr class="separator:a66d1ce72cb294b2c4da6536250905a32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6da79ad8924c127c5eb34acf396cf00"><td class="memTemplParams" colspan="2"><a id="ac6da79ad8924c127c5eb34acf396cf00"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:ac6da79ad8924c127c5eb34acf396cf00"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mmult</b> (const Number1 alpha, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:ac6da79ad8924c127c5eb34acf396cf00"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a439a1469e55ddc97987ee592b920cedb"><td class="memTemplParams" colspan="2"><a id="a439a1469e55ddc97987ee592b920cedb"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a439a1469e55ddc97987ee592b920cedb"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mTmult</b> (const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a439a1469e55ddc97987ee592b920cedb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c51795179e7c52726d2eb3a76a17914"><td class="memTemplParams" colspan="2"><a id="a7c51795179e7c52726d2eb3a76a17914"></a>
+template&lt;int spacedim1, typename Number1 &gt; </td></tr>
+<tr class="memitem:a7c51795179e7c52726d2eb3a76a17914"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mTmult</b> (const Number1 alpha, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; &amp;M2, <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number1 &gt; &amp;M)</td></tr>
+<tr class="separator:a7c51795179e7c52726d2eb3a76a17914"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a311938523b49a053a8cf16bc96576cdf"><td class="memTemplParams" colspan="2"><a id="a311938523b49a053a8cf16bc96576cdf"></a>
 template&lt;int spacedim1, typename Number1 &gt; </td></tr>
 <tr class="memitem:a311938523b49a053a8cf16bc96576cdf"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>f_h_mmult_for_h_h_mmult</b> (const <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M1, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M2, <a class="el" href="classHMatrix.html">HMatrix</a>&lt; spacedim1, Number1 &gt; *M, bool is_M1M2_last_in_M_Sigma_P)</td></tr>
@@ -331,7 +409,7 @@ template&lt;typename Number = double&gt; </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa2753ce8e37595824ac275e6b26255cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa2753ce8e37595824ac275e6b26255cf">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[1/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2753ce8e37595824ac275e6b26255cf">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[1/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -351,7 +429,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a2ed616a9c4e1b12688a903b427260241"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2ed616a9c4e1b12688a903b427260241">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[2/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ed616a9c4e1b12688a903b427260241">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[2/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -393,13 +471,14 @@ template&lt;typename Number &gt; </div>
 </dl>
 <p>If the given <code>fixed_rank_k</code> is larger than the minimum matrix dimension \(\min\{m, n\}\), simply set it as this value.</p>
 <p><b>Only when the effective rank is larger than zero and the matrix has non-zero row or column dimension, memory for the component matrices is allocated.</b></p>
+<p><b>Even though the component matrices are zero-valued at the moment, because the current rank-k matrix is to be assigned with effect data, its rank should be still set to the <code>effective_rank</code>.</b></p>
 
 <p class="reference">References <a class="el" href="classRkMatrix.html#a7e4a8f0500daba627665c6a5ed8888d9">RkMatrix&lt; Number &gt;::formal_rank</a>, and <a class="el" href="classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256">RkMatrix&lt; Number &gt;::rank</a>.</p>
 
 </div>
 </div>
 <a id="a6078a6d21d37f140ff8774b8310a19eb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6078a6d21d37f140ff8774b8310a19eb">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[3/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a6078a6d21d37f140ff8774b8310a19eb">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[3/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -446,8 +525,72 @@ template&lt;typename Number &gt; </div>
 
 </div>
 </div>
+<a id="afd9d75ce0a42585337d4c630d5e08140"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd9d75ce0a42585337d4c630d5e08140">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[4/19]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt;::<a class="el" href="classRkMatrix.html">RkMatrix</a> </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classRkMatrix.html#add060bfc3a4cc77f858c3d6dd58cadd5">size_type</a>&#160;</td>
+          <td class="paramname"><em>fixed_rank_k</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>M</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>D</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Construct a rank-k matrix by conversion from a full matrix <code>M</code> with rank truncation. The error matrices are returned.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>This method converts a full matrix to a rank-k matrix, which implements the operator \(\mathcal{T}_{r}^{\mathcal{R} \leftarrow \mathcal{F}}\) in (7.2) in Hackbusch's \(\mathcal{H}\)-matrix book. The original full matrix <code>will</code> be modified since SVD will be applied to it. </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fixed_rank_k</td><td></td></tr>
+    <tr><td class="paramname">M</td><td></td></tr>
+    <tr><td class="paramname">C</td><td></td></tr>
+    <tr><td class="paramname">D</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p><b>If the size of the row or column dimension of <code>M</code> is zero or the given rank is zero, do not allocate memory for the component matrices of the rank-k matrix, since there is no effective data.</b></p>
+<p>Set the error matrices as zero.</p>
+<p>Handle the case when the source full matrix is a scalar.</p>
+<p>When the scalar value is zero. We do nothing here and the rank-k matrix still has a dimension \(1 \times 1\) with zero rank and empty component matrices.</p>
+<p>When the scalar value is non-zero, both component matrices have the dimension \(1 \times 1\) and the rank-k matrix has rank 1.</p>
+<p>Set the error matrices as zero.</p>
+
+<p class="reference">References <a class="el" href="classRkMatrix.html#a7e4a8f0500daba627665c6a5ed8888d9">RkMatrix&lt; Number &gt;::formal_rank</a>, <a class="el" href="classRkMatrix.html#a8ca8898bcfedeee135437833f83b144c">RkMatrix&lt; Number &gt;::m</a>, <a class="el" href="classRkMatrix.html#a06d3b6636bb423c391c66e4ccc722687">RkMatrix&lt; Number &gt;::n</a>, <a class="el" href="classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256">RkMatrix&lt; Number &gt;::rank</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#ab28877de241a7f5f901fa612c6352ce9">LAPACKFullMatrixExt&lt; Number &gt;::rank_k_decompose()</a>.</p>
+
+</div>
+</div>
 <a id="a08ab45361d9e3cca139727dca31f9bfa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a08ab45361d9e3cca139727dca31f9bfa">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[4/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a08ab45361d9e3cca139727dca31f9bfa">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[5/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -484,7 +627,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="acdd046caab506cd04e09b65bb3ffc1f9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acdd046caab506cd04e09b65bb3ffc1f9">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[5/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#acdd046caab506cd04e09b65bb3ffc1f9">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[6/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -548,7 +691,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a4cfccf769e03141b5221c1356bd718a1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4cfccf769e03141b5221c1356bd718a1">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[6/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a4cfccf769e03141b5221c1356bd718a1">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[7/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -605,7 +748,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="adf204b7ad92834e63c7f63f6b9ca59a9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf204b7ad92834e63c7f63f6b9ca59a9">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[7/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#adf204b7ad92834e63c7f63f6b9ca59a9">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[8/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -683,7 +826,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="aee16f709a7a73d022add2f044cdcb26a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee16f709a7a73d022add2f044cdcb26a">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[8/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aee16f709a7a73d022add2f044cdcb26a">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[9/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -754,7 +897,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="aa5aff0d31115d7a67ef2f11db0b4ea24"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa5aff0d31115d7a67ef2f11db0b4ea24">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[9/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa5aff0d31115d7a67ef2f11db0b4ea24">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[10/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -815,7 +958,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a311b3ac28f647cb191eeb97a0b9d5815"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a311b3ac28f647cb191eeb97a0b9d5815">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[10/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a311b3ac28f647cb191eeb97a0b9d5815">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[11/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -869,7 +1012,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a5a2841fc6a697007fafcab2619fc5390"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5a2841fc6a697007fafcab2619fc5390">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[11/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a2841fc6a697007fafcab2619fc5390">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[12/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -944,7 +1087,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a89ad98e45e6ae6c23a6ffc478c7ebb9f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a89ad98e45e6ae6c23a6ffc478c7ebb9f">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[12/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a89ad98e45e6ae6c23a6ffc478c7ebb9f">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[13/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1012,7 +1155,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a22cbf825bdbff58434ab3d4a6c478b96"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22cbf825bdbff58434ab3d4a6c478b96">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[13/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a22cbf825bdbff58434ab3d4a6c478b96">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[14/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1055,7 +1198,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="ae15a15d55d04dd677a8dc90dbf789674"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae15a15d55d04dd677a8dc90dbf789674">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[14/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ae15a15d55d04dd677a8dc90dbf789674">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[15/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1116,7 +1259,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a0ef50f2d8d07bcbffa0a6d015dc0d1a4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0ef50f2d8d07bcbffa0a6d015dc0d1a4">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[15/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ef50f2d8d07bcbffa0a6d015dc0d1a4">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[16/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1222,7 +1365,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="ab2826404ecbffa257d56feac015a4c5f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab2826404ecbffa257d56feac015a4c5f">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[16/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2826404ecbffa257d56feac015a4c5f">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[17/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1300,7 +1443,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a00a2465dfb9445dca842f19fc757d008"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00a2465dfb9445dca842f19fc757d008">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[17/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a00a2465dfb9445dca842f19fc757d008">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[18/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1446,7 +1589,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a5f886128ba604cc85f99e3c9c9a07e7c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f886128ba604cc85f99e3c9c9a07e7c">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[18/18]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f886128ba604cc85f99e3c9c9a07e7c">&#9670;&nbsp;</a></span>RkMatrix() <span class="overload">[19/19]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1837,6 +1980,28 @@ template&lt;typename Number &gt; </div>
 <p><b>Only when the rank-k matrix <code>M</code> has a rank larger than zero, the assembly operation will take place.</b></p>
 
 <p class="reference">References <a class="el" href="classRkMatrix.html#a260584004c862292b4ae401cff236588">RkMatrix&lt; Number &gt;::add()</a>, <a class="el" href="classRkMatrix.html#a7e4a8f0500daba627665c6a5ed8888d9">RkMatrix&lt; Number &gt;::formal_rank</a>, <a class="el" href="classRkMatrix.html#a8ca8898bcfedeee135437833f83b144c">RkMatrix&lt; Number &gt;::m</a>, <a class="el" href="classRkMatrix.html#a06d3b6636bb423c391c66e4ccc722687">RkMatrix&lt; Number &gt;::n</a>, and <a class="el" href="classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256">RkMatrix&lt; Number &gt;::rank</a>.</p>
+
+</div>
+</div>
+<a id="ab41155389e6ee81d5f127514ca3166b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab41155389e6ee81d5f127514ca3166b4">&#9670;&nbsp;</a></span>calc_rank_upper_bound()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt;::calc_rank_upper_bound </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calculate the upper bound of the matrix rank, which is \(\min\{{\rm rank}(A), {\rm rank}(B), rank\}\). </p>
+
+<p class="reference">References <a class="el" href="classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256">RkMatrix&lt; Number &gt;::rank</a>.</p>
 
 </div>
 </div>
@@ -2275,7 +2440,7 @@ template&lt;typename Number &gt; </div>
 
 <p class="reference">References <a class="el" href="classRkMatrix.html#a7e4a8f0500daba627665c6a5ed8888d9">RkMatrix&lt; Number &gt;::formal_rank</a>, <a class="el" href="classRkMatrix.html#a8ca8898bcfedeee135437833f83b144c">RkMatrix&lt; Number &gt;::m</a>, <a class="el" href="classRkMatrix.html#a06d3b6636bb423c391c66e4ccc722687">RkMatrix&lt; Number &gt;::n</a>, and <a class="el" href="classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256">RkMatrix&lt; Number &gt;::rank</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, and <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a4d0d61778a104b7e1452c3b9be60b5e4">h_rk_mTmult()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, and <a class="el" href="hmatrix_8h.html#aca19ab9519b7b1aa1b9660dbfa8fe604">rk_h_mTmult()</a>.</p>
 
 </div>
 </div>
@@ -2381,7 +2546,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a555e0c3184b8411db1350c8fe1e875a0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a555e0c3184b8411db1350c8fe1e875a0">&#9670;&nbsp;</a></span>truncate_to_rank()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a555e0c3184b8411db1350c8fe1e875a0">&#9670;&nbsp;</a></span>truncate_to_rank() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2410,13 +2575,71 @@ template&lt;typename Number &gt; </div>
 </dl>
 <p><b>Only when the current rank-k matrix and the given new rank have nonzero rank, it is meaningful to perform the rank truncation.</b></p>
 <p>Work flow introduction: Use QR decomposition to perform the rank truncation.</p>
+<p><b>Since the initial matrix may not have the correct rank, even though its <code>rank</code> is larger than zero, its actual <code>rank</code> may be less or even zero. Therefore, it is possible that the returned <code>rank</code> from the above execution of <code>reduced_svd_on_AxBT</code> may be zero. Therefore, it needs a special treatment here.</b></p>
 <p>Adopt right associativity when the matrix is long.</p>
 <p>Adopt left associativity when the matrix is wide.</p>
 <p>Update the formal rank.</p>
 
 <p class="reference">References <a class="el" href="classRkMatrix.html#a7e4a8f0500daba627665c6a5ed8888d9">RkMatrix&lt; Number &gt;::formal_rank</a>, <a class="el" href="classRkMatrix.html#a8ca8898bcfedeee135437833f83b144c">RkMatrix&lt; Number &gt;::m</a>, <a class="el" href="classRkMatrix.html#a06d3b6636bb423c391c66e4ccc722687">RkMatrix&lt; Number &gt;::n</a>, <a class="el" href="classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256">RkMatrix&lt; Number &gt;::rank</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a355ed6360b21081b6e86e09833bf95db">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd_on_AxBT()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a75b2bb9434eb015f756747b943669fd7">LAPACKFullMatrixExt&lt; Number &gt;::scale_columns()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#aae9a6124afe70d17335d6338f323f22a">LAPACKFullMatrixExt&lt; Number &gt;::scale_rows()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#ac46d71bc1b0288fce7ad44b222e9210b">LAPACKFullMatrixExt&lt; Number &gt;::transpose()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#ad8668d42978011b3e65d0381bfb068d5">RkMatrix&lt; Number &gt;::add()</a>, <a class="el" href="rkmatrix-truncate-to-rank_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, and <a class="el" href="classRkMatrix.html#aa5aff0d31115d7a67ef2f11db0b4ea24">RkMatrix&lt; Number &gt;::RkMatrix()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#ad8668d42978011b3e65d0381bfb068d5">RkMatrix&lt; Number &gt;::add()</a>, <a class="el" href="rkmatrix-truncate-to-rank-with-error-matrices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, and <a class="el" href="classRkMatrix.html#aa5aff0d31115d7a67ef2f11db0b4ea24">RkMatrix&lt; Number &gt;::RkMatrix()</a>.</p>
+
+</div>
+</div>
+<a id="adbaf1dad03ca2fe0ede5bab2315d8859"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbaf1dad03ca2fe0ede5bab2315d8859">&#9670;&nbsp;</a></span>truncate_to_rank() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classRkMatrix.html">RkMatrix</a>&lt; Number &gt;::truncate_to_rank </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classRkMatrix.html#add060bfc3a4cc77f858c3d6dd58cadd5">size_type</a>&#160;</td>
+          <td class="paramname"><em>new_rank</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>C</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>D</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Truncate the <a class="el" href="classRkMatrix.html">RkMatrix</a> to <code>new_rank</code> with the error matrices returned.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>This method implements the operator \(\mathcal{T}_{r \leftarrow s}^{\mathcal{R}}\) in (7.4) in Hackbusch's \(\mathcal{H}\)-matrix book. If the actual rank of the matrix is less than the specified <code>new_rank</code>, i.e. rank deficient, the matrix will be truncated to its actual rank. </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">new_rank</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p><b>Only when the current rank-k matrix and the given new rank have nonzero rank, it is meaningful to perform the rank truncation.</b></p>
+<p>Work flow introduction: Use QR decomposition to perform the rank truncation.</p>
+<p><b>Since the initial matrix may not have the correct rank, even though its <code>rank</code> is larger than zero, its actual <code>rank</code> may be less or even zero. Therefore, it is possible that the returned <code>rank</code> from the above execution of <code>reduced_svd_on_AxBT</code> may be zero. Therefore, it needs a special treatment here.</b></p>
+<p>Adopt right associativity when the matrix is long.</p>
+<p>Adopt left associativity when the matrix is wide.</p>
+<p>Update the formal rank.</p>
+<p>If the original matrix's rank is zero, the error matrices should be zero matrices.</p>
+<p>If the original matrix's rank is nonzero but it is to be truncated to zero rank, the error matrices should be directly copied from \(A\) and \(B\).</p>
+
+<p class="reference">References <a class="el" href="classRkMatrix.html#a7e4a8f0500daba627665c6a5ed8888d9">RkMatrix&lt; Number &gt;::formal_rank</a>, <a class="el" href="classRkMatrix.html#a8ca8898bcfedeee135437833f83b144c">RkMatrix&lt; Number &gt;::m</a>, <a class="el" href="classRkMatrix.html#a06d3b6636bb423c391c66e4ccc722687">RkMatrix&lt; Number &gt;::n</a>, <a class="el" href="classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256">RkMatrix&lt; Number &gt;::rank</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a355ed6360b21081b6e86e09833bf95db">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd_on_AxBT()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a75b2bb9434eb015f756747b943669fd7">LAPACKFullMatrixExt&lt; Number &gt;::scale_columns()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#aae9a6124afe70d17335d6338f323f22a">LAPACKFullMatrixExt&lt; Number &gt;::scale_rows()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#ac46d71bc1b0288fce7ad44b222e9210b">LAPACKFullMatrixExt&lt; Number &gt;::transpose()</a>.</p>
 
 </div>
 </div>
@@ -2542,7 +2765,7 @@ template&lt;typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Formal matrix rank, which is equal to the number of columns of <code>A</code> or <code>B</code>, i.e. <code>A.n</code> or <code>B.n</code>. </p>
 
-<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#a9ff620f9f71181c794e129d71d76da7c">RkMatrix&lt; Number &gt;::assemble_from_rkmatrix()</a>, <a class="el" href="classRkMatrix.html#a384cdf3033d98f90b80d373add20b556">RkMatrix&lt; Number &gt;::convertToFullMatrix()</a>, <a class="el" href="classRkMatrix.html#ae69122e3ee1c49a4fbe48cf3d7a20581">RkMatrix&lt; Number &gt;::get_formal_rank()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="classRkMatrix.html#a8894542d0a6cda34a78cccf34eb3f990">RkMatrix&lt; Number &gt;::operator=()</a>, <a class="el" href="classRkMatrix.html#aeccb86734649be94a64d76cb613eea79">RkMatrix&lt; Number &gt;::print_formatted()</a>, <a class="el" href="classRkMatrix.html#ada4d32bb08cce5d5e41ee4673bc88e00">RkMatrix&lt; Number &gt;::print_formatted_to_mat()</a>, <a class="el" href="rkmatrix_8h.html#a98cfcb94c35ec5dd907524961623a2a5">print_rkmatrix_to_mat()</a>, <a class="el" href="classRkMatrix.html#a5457372194e8009bffc7b88f11b95d03">RkMatrix&lt; Number &gt;::reinit()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="classRkMatrix.html#a2ed616a9c4e1b12688a903b427260241">RkMatrix&lt; Number &gt;::RkMatrix()</a>, <a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt; Number &gt;::truncate_to_rank()</a>, <a class="el" href="classRkMatrix.html#a7162dd0c4580dbb5e98715d9b8dd56c1">RkMatrix&lt; Number &gt;::Tvmult()</a>, and <a class="el" href="classRkMatrix.html#a25753b7f6d82dca931992cd975165972">RkMatrix&lt; Number &gt;::vmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#a9ff620f9f71181c794e129d71d76da7c">RkMatrix&lt; Number &gt;::assemble_from_rkmatrix()</a>, <a class="el" href="classRkMatrix.html#a384cdf3033d98f90b80d373add20b556">RkMatrix&lt; Number &gt;::convertToFullMatrix()</a>, <a class="el" href="classRkMatrix.html#ae69122e3ee1c49a4fbe48cf3d7a20581">RkMatrix&lt; Number &gt;::get_formal_rank()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a4d0d61778a104b7e1452c3b9be60b5e4">h_rk_mTmult()</a>, <a class="el" href="classRkMatrix.html#a8894542d0a6cda34a78cccf34eb3f990">RkMatrix&lt; Number &gt;::operator=()</a>, <a class="el" href="classRkMatrix.html#aeccb86734649be94a64d76cb613eea79">RkMatrix&lt; Number &gt;::print_formatted()</a>, <a class="el" href="classRkMatrix.html#ada4d32bb08cce5d5e41ee4673bc88e00">RkMatrix&lt; Number &gt;::print_formatted_to_mat()</a>, <a class="el" href="rkmatrix_8h.html#a98cfcb94c35ec5dd907524961623a2a5">print_rkmatrix_to_mat()</a>, <a class="el" href="classRkMatrix.html#a5457372194e8009bffc7b88f11b95d03">RkMatrix&lt; Number &gt;::reinit()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#aca19ab9519b7b1aa1b9660dbfa8fe604">rk_h_mTmult()</a>, <a class="el" href="classRkMatrix.html#a2ed616a9c4e1b12688a903b427260241">RkMatrix&lt; Number &gt;::RkMatrix()</a>, <a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt; Number &gt;::truncate_to_rank()</a>, <a class="el" href="classRkMatrix.html#a7162dd0c4580dbb5e98715d9b8dd56c1">RkMatrix&lt; Number &gt;::Tvmult()</a>, and <a class="el" href="classRkMatrix.html#a25753b7f6d82dca931992cd975165972">RkMatrix&lt; Number &gt;::vmult()</a>.</p>
 
 </div>
 </div>
@@ -2569,7 +2792,7 @@ template&lt;typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Total number of rows. </p>
 
-<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#a9ff620f9f71181c794e129d71d76da7c">RkMatrix&lt; Number &gt;::assemble_from_rkmatrix()</a>, <a class="el" href="classRkMatrix.html#a384cdf3033d98f90b80d373add20b556">RkMatrix&lt; Number &gt;::convertToFullMatrix()</a>, <a class="el" href="classRkMatrix.html#a58686c65ca8c952558eae4fa185e7d6a">RkMatrix&lt; Number &gt;::get_m()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="classRkMatrix.html#a8894542d0a6cda34a78cccf34eb3f990">RkMatrix&lt; Number &gt;::operator=()</a>, <a class="el" href="classRkMatrix.html#aeccb86734649be94a64d76cb613eea79">RkMatrix&lt; Number &gt;::print_formatted()</a>, <a class="el" href="classRkMatrix.html#ada4d32bb08cce5d5e41ee4673bc88e00">RkMatrix&lt; Number &gt;::print_formatted_to_mat()</a>, <a class="el" href="rkmatrix_8h.html#a98cfcb94c35ec5dd907524961623a2a5">print_rkmatrix_to_mat()</a>, <a class="el" href="classRkMatrix.html#a5457372194e8009bffc7b88f11b95d03">RkMatrix&lt; Number &gt;::reinit()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="classRkMatrix.html#a6078a6d21d37f140ff8774b8310a19eb">RkMatrix&lt; Number &gt;::RkMatrix()</a>, and <a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt; Number &gt;::truncate_to_rank()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#a9ff620f9f71181c794e129d71d76da7c">RkMatrix&lt; Number &gt;::assemble_from_rkmatrix()</a>, <a class="el" href="classRkMatrix.html#a384cdf3033d98f90b80d373add20b556">RkMatrix&lt; Number &gt;::convertToFullMatrix()</a>, <a class="el" href="classRkMatrix.html#a58686c65ca8c952558eae4fa185e7d6a">RkMatrix&lt; Number &gt;::get_m()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a4d0d61778a104b7e1452c3b9be60b5e4">h_rk_mTmult()</a>, <a class="el" href="classRkMatrix.html#a8894542d0a6cda34a78cccf34eb3f990">RkMatrix&lt; Number &gt;::operator=()</a>, <a class="el" href="classRkMatrix.html#aeccb86734649be94a64d76cb613eea79">RkMatrix&lt; Number &gt;::print_formatted()</a>, <a class="el" href="classRkMatrix.html#ada4d32bb08cce5d5e41ee4673bc88e00">RkMatrix&lt; Number &gt;::print_formatted_to_mat()</a>, <a class="el" href="rkmatrix_8h.html#a98cfcb94c35ec5dd907524961623a2a5">print_rkmatrix_to_mat()</a>, <a class="el" href="classRkMatrix.html#a5457372194e8009bffc7b88f11b95d03">RkMatrix&lt; Number &gt;::reinit()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#aca19ab9519b7b1aa1b9660dbfa8fe604">rk_h_mTmult()</a>, <a class="el" href="classRkMatrix.html#a6078a6d21d37f140ff8774b8310a19eb">RkMatrix&lt; Number &gt;::RkMatrix()</a>, and <a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt; Number &gt;::truncate_to_rank()</a>.</p>
 
 </div>
 </div>
@@ -2596,7 +2819,7 @@ template&lt;typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Total number of columns </p>
 
-<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#a9ff620f9f71181c794e129d71d76da7c">RkMatrix&lt; Number &gt;::assemble_from_rkmatrix()</a>, <a class="el" href="classRkMatrix.html#a384cdf3033d98f90b80d373add20b556">RkMatrix&lt; Number &gt;::convertToFullMatrix()</a>, <a class="el" href="classRkMatrix.html#a4f719c760482c2ab75cc5647277a9cdd">RkMatrix&lt; Number &gt;::get_n()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="classRkMatrix.html#a8894542d0a6cda34a78cccf34eb3f990">RkMatrix&lt; Number &gt;::operator=()</a>, <a class="el" href="classRkMatrix.html#aeccb86734649be94a64d76cb613eea79">RkMatrix&lt; Number &gt;::print_formatted()</a>, <a class="el" href="classRkMatrix.html#ada4d32bb08cce5d5e41ee4673bc88e00">RkMatrix&lt; Number &gt;::print_formatted_to_mat()</a>, <a class="el" href="rkmatrix_8h.html#a98cfcb94c35ec5dd907524961623a2a5">print_rkmatrix_to_mat()</a>, <a class="el" href="classRkMatrix.html#a5457372194e8009bffc7b88f11b95d03">RkMatrix&lt; Number &gt;::reinit()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="classRkMatrix.html#a6078a6d21d37f140ff8774b8310a19eb">RkMatrix&lt; Number &gt;::RkMatrix()</a>, and <a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt; Number &gt;::truncate_to_rank()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#a9ff620f9f71181c794e129d71d76da7c">RkMatrix&lt; Number &gt;::assemble_from_rkmatrix()</a>, <a class="el" href="classRkMatrix.html#a384cdf3033d98f90b80d373add20b556">RkMatrix&lt; Number &gt;::convertToFullMatrix()</a>, <a class="el" href="classRkMatrix.html#a4f719c760482c2ab75cc5647277a9cdd">RkMatrix&lt; Number &gt;::get_n()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a4d0d61778a104b7e1452c3b9be60b5e4">h_rk_mTmult()</a>, <a class="el" href="classRkMatrix.html#a8894542d0a6cda34a78cccf34eb3f990">RkMatrix&lt; Number &gt;::operator=()</a>, <a class="el" href="classRkMatrix.html#aeccb86734649be94a64d76cb613eea79">RkMatrix&lt; Number &gt;::print_formatted()</a>, <a class="el" href="classRkMatrix.html#ada4d32bb08cce5d5e41ee4673bc88e00">RkMatrix&lt; Number &gt;::print_formatted_to_mat()</a>, <a class="el" href="rkmatrix_8h.html#a98cfcb94c35ec5dd907524961623a2a5">print_rkmatrix_to_mat()</a>, <a class="el" href="classRkMatrix.html#a5457372194e8009bffc7b88f11b95d03">RkMatrix&lt; Number &gt;::reinit()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#aca19ab9519b7b1aa1b9660dbfa8fe604">rk_h_mTmult()</a>, <a class="el" href="classRkMatrix.html#a6078a6d21d37f140ff8774b8310a19eb">RkMatrix&lt; Number &gt;::RkMatrix()</a>, and <a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt; Number &gt;::truncate_to_rank()</a>.</p>
 
 </div>
 </div>
@@ -2623,7 +2846,7 @@ template&lt;typename Number = double&gt; </div>
 </div><div class="memdoc">
 <p>Matrix rank, which is either the actual matrix rank or the minimum of <code>m</code>, <code>n</code> and <code>A.n</code> (or <code>B.n</code>). Actually, this is an upper bound of the actual matrix rank. </p>
 
-<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#a260584004c862292b4ae401cff236588">RkMatrix&lt; Number &gt;::add()</a>, <a class="el" href="classRkMatrix.html#a9ff620f9f71181c794e129d71d76da7c">RkMatrix&lt; Number &gt;::assemble_from_rkmatrix()</a>, <a class="el" href="classRkMatrix.html#a1b2231c1e02862c91f4451e2b0a5fab4">RkMatrix&lt; Number &gt;::get_rank()</a>, <a class="el" href="classRkMatrix.html#a8894542d0a6cda34a78cccf34eb3f990">RkMatrix&lt; Number &gt;::operator=()</a>, <a class="el" href="classRkMatrix.html#aeccb86734649be94a64d76cb613eea79">RkMatrix&lt; Number &gt;::print_formatted()</a>, <a class="el" href="classRkMatrix.html#ada4d32bb08cce5d5e41ee4673bc88e00">RkMatrix&lt; Number &gt;::print_formatted_to_mat()</a>, <a class="el" href="rkmatrix_8h.html#a98cfcb94c35ec5dd907524961623a2a5">print_rkmatrix_to_mat()</a>, <a class="el" href="classRkMatrix.html#a5457372194e8009bffc7b88f11b95d03">RkMatrix&lt; Number &gt;::reinit()</a>, <a class="el" href="classRkMatrix.html#a2ed616a9c4e1b12688a903b427260241">RkMatrix&lt; Number &gt;::RkMatrix()</a>, <a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt; Number &gt;::truncate_to_rank()</a>, <a class="el" href="classRkMatrix.html#a7162dd0c4580dbb5e98715d9b8dd56c1">RkMatrix&lt; Number &gt;::Tvmult()</a>, and <a class="el" href="classRkMatrix.html#a25753b7f6d82dca931992cd975165972">RkMatrix&lt; Number &gt;::vmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classRkMatrix.html#a260584004c862292b4ae401cff236588">RkMatrix&lt; Number &gt;::add()</a>, <a class="el" href="classRkMatrix.html#a9ff620f9f71181c794e129d71d76da7c">RkMatrix&lt; Number &gt;::assemble_from_rkmatrix()</a>, <a class="el" href="classRkMatrix.html#ab41155389e6ee81d5f127514ca3166b4">RkMatrix&lt; Number &gt;::calc_rank_upper_bound()</a>, <a class="el" href="classRkMatrix.html#a1b2231c1e02862c91f4451e2b0a5fab4">RkMatrix&lt; Number &gt;::get_rank()</a>, <a class="el" href="classRkMatrix.html#a8894542d0a6cda34a78cccf34eb3f990">RkMatrix&lt; Number &gt;::operator=()</a>, <a class="el" href="classRkMatrix.html#aeccb86734649be94a64d76cb613eea79">RkMatrix&lt; Number &gt;::print_formatted()</a>, <a class="el" href="classRkMatrix.html#ada4d32bb08cce5d5e41ee4673bc88e00">RkMatrix&lt; Number &gt;::print_formatted_to_mat()</a>, <a class="el" href="rkmatrix_8h.html#a98cfcb94c35ec5dd907524961623a2a5">print_rkmatrix_to_mat()</a>, <a class="el" href="classRkMatrix.html#a5457372194e8009bffc7b88f11b95d03">RkMatrix&lt; Number &gt;::reinit()</a>, <a class="el" href="classRkMatrix.html#a2ed616a9c4e1b12688a903b427260241">RkMatrix&lt; Number &gt;::RkMatrix()</a>, <a class="el" href="classRkMatrix.html#a555e0c3184b8411db1350c8fe1e875a0">RkMatrix&lt; Number &gt;::truncate_to_rank()</a>, <a class="el" href="classRkMatrix.html#a7162dd0c4580dbb5e98715d9b8dd56c1">RkMatrix&lt; Number &gt;::Tvmult()</a>, and <a class="el" href="classRkMatrix.html#a25753b7f6d82dca931992cd975165972">RkMatrix&lt; Number &gt;::vmult()</a>.</p>
 
 </div>
 </div>

@@ -45,6 +45,26 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  h_rk_mmult(const Number1                alpha,
+             HMatrix<spacedim1, Number1> &M1,
+             const RkMatrix<Number1> &    M2,
+             RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_rk_mTmult(HMatrix<spacedim1, Number1> &M1,
+              const RkMatrix<Number1> &    M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_rk_mTmult(const Number1                alpha,
+              HMatrix<spacedim1, Number1> &M1,
+              const RkMatrix<Number1> &    M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   h_rk_mmult_for_h_h_mmult(HMatrix<spacedim1, Number1> *      M1,
                            const HMatrix<spacedim1, Number1> *M2,
                            HMatrix<spacedim1, Number1> *      M,
@@ -55,6 +75,26 @@ public:
   rk_h_mmult(const RkMatrix<Number1> &    M1,
              HMatrix<spacedim1, Number1> &M2,
              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  rk_h_mmult(const Number1                alpha,
+             const RkMatrix<Number1> &    M1,
+             HMatrix<spacedim1, Number1> &M2,
+             RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  rk_h_mTmult(const RkMatrix<Number1> &    M1,
+              HMatrix<spacedim1, Number1> &M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  rk_h_mTmult(const Number1                alpha,
+              const RkMatrix<Number1> &    M1,
+              HMatrix<spacedim1, Number1> &M2,
+              RkMatrix<Number1> &          M);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -71,9 +111,49 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  h_f_mmult(const Number1                       alpha,
+            HMatrix<spacedim1, Number1> &       M1,
+            const LAPACKFullMatrixExt<Number1> &M2,
+            LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mTmult(HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mTmult(const Number1                       alpha,
+             HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   h_f_mmult(HMatrix<spacedim1, Number1> &       M1,
             const LAPACKFullMatrixExt<Number1> &M2,
             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mmult(const Number1                       alpha,
+            HMatrix<spacedim1, Number1> &       M1,
+            const LAPACKFullMatrixExt<Number1> &M2,
+            RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mTmult(HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mTmult(const Number1                       alpha,
+             HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             RkMatrix<Number1> &                 M);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -90,9 +170,49 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  f_h_mmult(const Number1                       alpha,
+            const LAPACKFullMatrixExt<Number1> &M1,
+            HMatrix<spacedim1, Number1> &       M2,
+            LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mTmult(const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mTmult(const Number1                       alpha,
+             const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   f_h_mmult(const LAPACKFullMatrixExt<Number1> &M1,
             HMatrix<spacedim1, Number1> &       M2,
             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mmult(const Number1                       alpha,
+            const LAPACKFullMatrixExt<Number1> &M1,
+            HMatrix<spacedim1, Number1> &       M2,
+            RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mTmult(const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mTmult(const Number1                       alpha,
+             const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             RkMatrix<Number1> &                 M);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -143,6 +263,28 @@ public:
    * @param M
    */
   RkMatrix(const size_type fixed_rank_k, LAPACKFullMatrixExt<Number> &M);
+
+  /**
+   * Construct a rank-k matrix by conversion from a full matrix \p M with rank
+   * truncation. The error matrices are returned.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>This method converts a full matrix to a rank-k matrix, which
+   * implements the operator \f$\mathcal{T}_{r}^{\mathcal{R} \leftarrow
+   * \mathcal{F}}\f$ in (7.2) in Hackbusch's \f$\mathcal{H}\f$-matrix book. The
+   * original full matrix \p will be modified since SVD will be applied to
+   * it.</dd>
+   * </dl>
+   * @param fixed_rank_k
+   * @param M
+   * @param C
+   * @param D
+   */
+  RkMatrix(const size_type              fixed_rank_k,
+           LAPACKFullMatrixExt<Number> &M,
+           LAPACKFullMatrixExt<Number> &C,
+           LAPACKFullMatrixExt<Number> &D);
 
   /**
    * Construct a rank-k matrix by conversion from a full matrix \p M without
@@ -644,6 +786,31 @@ public:
   truncate_to_rank(size_type new_rank);
 
   /**
+   * Truncate the RkMatrix to \p new_rank with the error matrices returned.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>This method implements the operator \f$\mathcal{T}_{r \leftarrow
+   * s}^{\mathcal{R}}\f$ in (7.4) in Hackbusch's \f$\mathcal{H}\f$-matrix
+   * book. If the actual rank of the matrix is less than the specified \p
+   * new_rank, i.e. rank deficient, the matrix will be truncated to its actual
+   * rank.</dd>
+   * </dl>
+   * @param new_rank
+   */
+  void
+  truncate_to_rank(size_type                    new_rank,
+                   LAPACKFullMatrixExt<Number> &C,
+                   LAPACKFullMatrixExt<Number> &D);
+
+  /**
+   * Calculate the upper bound of the matrix rank, which is \f$\min\{{\rm
+   * rank}(A), {\rm rank}(B), rank\}\f$.
+   */
+  void
+  calc_rank_upper_bound();
+
+  /**
    * Calculate matrix-vector multiplication as \f$y = A B^T x\f$ or \f$y =
    * y + A B^T x\f$.
    * @param y
@@ -687,7 +854,7 @@ public:
 
   /**
    * Perform the addition of two rank-k matrices \f$M = M_1 + m_2 M_2\f$ with a
-   * factor \f$m_2\f$ multiplied to \f$M_2\f$.
+   * factor \f$m_2\f$ multiplied to \f$M_2\f$. There is no rank truncation.
    */
   void
   add(RkMatrix<Number> &M, const Number m2, const RkMatrix<Number> &M2) const;
@@ -703,7 +870,7 @@ public:
 
   /**
    * Perform the addition of two rank-k matrices \f$M = M + m_1 M_1\f$ with a
-   * factor \f$m_1\f$ multiplied to \f$M_1\f$.
+   * factor \f$m_1\f$ multiplied to \f$M_1\f$. There is no rank truncation.
    * @param M1
    */
   void
@@ -720,6 +887,24 @@ public:
       const size_type         fixed_rank_k) const;
 
   /**
+   * Perform the formatted addition of two rank-k matrices, \f$M = M_1 + M_2\f$.
+   * The resulted rank-k matrix \p M will be truncated to the fixed rank \p
+   * fixed_rank_k. The truncation error is returned as the product \f$CD^T\f$.
+   *
+   * @param M
+   * @param M2
+   * @param fixed_rank_k
+   * @param C
+   * @param D
+   */
+  void
+  add(RkMatrix<Number> &           M,
+      const RkMatrix<Number> &     M2,
+      const size_type              fixed_rank_k,
+      LAPACKFullMatrixExt<Number> &C,
+      LAPACKFullMatrixExt<Number> &D) const;
+
+  /**
    * Perform the formatted addition of two rank-k matrices, \f$M = M_1 + m_2
    * M_2\f$ with a factor \f$m_2\f$ multiplied to \f$M_2\f$. The resulted rank-k
    * matrix \p M will be truncated to the fixed rank \p fixed_rank_k.
@@ -731,12 +916,50 @@ public:
       const size_type         fixed_rank_k) const;
 
   /**
+   * Perform the formatted addition of two rank-k matrices, \f$M = M_1 + m_2
+   * M_2\f$ with a factor \f$m_2\f$ multiplied to \f$M_2\f$. The resulted rank-k
+   * matrix \p M will be truncated to the fixed rank \p fixed_rank_k. The
+   * truncation error is returned as the product \f$CD^T\f$.
+   *
+   * @param M
+   * @param m2
+   * @param M2
+   * @param fixed_rank_k
+   * @param C
+   * @param D
+   */
+  void
+  add(RkMatrix<Number> &           M,
+      const Number                 m2,
+      const RkMatrix<Number> &     M2,
+      const size_type              fixed_rank_k,
+      LAPACKFullMatrixExt<Number> &C,
+      LAPACKFullMatrixExt<Number> &D) const;
+
+  /**
    * Perform the formatted addition of two rank-k matrices, \f$M = M + M_1\f$.
    * \p M_1 is added to the current matrix itself. The resulted rank-k matrix \p
    * M will be truncated to the fixed rank \p fixed_rank_k.
    */
   void
   add(const RkMatrix<Number> &M1, const size_type fixed_rank_k);
+
+  /**
+   * Perform the formatted addition of two rank-k matrices, \f$M = M + M_1\f$.
+   * \p M_1 is added to the current matrix itself. The resulted rank-k matrix \p
+   * M will be truncated to the fixed rank \p fixed_rank_k. The truncation
+   * error is returned as the product \f$CD^T\f$.
+   *
+   * @param M1
+   * @param fixed_rank_k
+   * @param C
+   * @param D
+   */
+  void
+  add(const RkMatrix<Number> &     M1,
+      const size_type              fixed_rank_k,
+      LAPACKFullMatrixExt<Number> &C,
+      LAPACKFullMatrixExt<Number> &D);
 
   /**
    * Perform the formatted addition of two rank-k matrices, \f$M = M + m_1
@@ -748,6 +971,26 @@ public:
   add(const Number            m1,
       const RkMatrix<Number> &M1,
       const size_type         fixed_rank_k);
+
+  /**
+   * Perform the formatted addition of two rank-k matrices, \f$M = M + m_1
+   * M_1\f$ with factor \f$m_1\f$ multiplied to \f$M_1\f$. \p M_1 is added to
+   * the current matrix itself. The resulted rank-k matrix \p M will be
+   * truncated to the fixed rank \p fixed_rank_k. The truncation
+   * error is returned as the product \f$CD^T\f$.
+   *
+   * @param m1
+   * @param M1
+   * @param fixed_rank_k
+   * @param C
+   * @param D
+   */
+  void
+  add(const Number                 m1,
+      const RkMatrix<Number> &     M1,
+      const size_type              fixed_rank_k,
+      LAPACKFullMatrixExt<Number> &C,
+      LAPACKFullMatrixExt<Number> &D);
 
   /**
    * Assemble the smaller rank-k matrix \p M into the current rank-k matrix with
@@ -764,6 +1007,34 @@ public:
     const std::vector<types::global_dof_index> &M_tau_index_set,
     const std::vector<types::global_dof_index> &M_sigma_index_set,
     const size_type                             fixed_rank_k);
+
+  /**
+   * Assemble the smaller rank-k matrix \p M into the current rank-k matrix with
+   * respect to the specified \p row_index_global_to_local_map and \p
+   * col_index_global_to_local_map. The truncation error is returned as the
+   * product \f$CD^T\f$.
+   *
+   * @param row_index_global_to_local_map
+   * @param col_index_global_to_local_map
+   * @param M
+   * @param M_tau_index_set
+   * @param M_sigma_index_set
+   * @param fixed_rank_k
+   * @param C
+   * @param D
+   */
+  void
+  assemble_from_rkmatrix(
+    const std::map<types::global_dof_index, size_t>
+      &row_index_global_to_local_map,
+    const std::map<types::global_dof_index, size_t>
+      &                                         col_index_global_to_local_map,
+    const RkMatrix<Number> &                    M,
+    const std::vector<types::global_dof_index> &M_tau_index_set,
+    const std::vector<types::global_dof_index> &M_sigma_index_set,
+    const size_type                             fixed_rank_k,
+    LAPACKFullMatrixExt<Number> &               C,
+    LAPACKFullMatrixExt<Number> &               D);
 
 private:
   LAPACKFullMatrixExt<Number> A;
@@ -839,6 +1110,11 @@ RkMatrix<Number>::RkMatrix(const size_type m,
        */
       A.reinit(m, effective_rank);
       B.reinit(n, effective_rank);
+      /**
+       * \alert{Even though the component matrices are zero-valued at the
+       * moment, because the current rank-k matrix is to be assigned with effect
+       * data, its rank should be still set to the \p effective_rank.}
+       */
       rank        = effective_rank;
       formal_rank = effective_rank;
     }
@@ -897,6 +1173,78 @@ RkMatrix<Number>::RkMatrix(const size_type              fixed_rank_k,
       else
         {
           rank        = M.rank_k_decompose(fixed_rank_k, A, B);
+          formal_rank = A.n();
+        }
+    }
+}
+
+
+template <typename Number>
+RkMatrix<Number>::RkMatrix(const size_type              fixed_rank_k,
+                           LAPACKFullMatrixExt<Number> &M,
+                           LAPACKFullMatrixExt<Number> &C,
+                           LAPACKFullMatrixExt<Number> &D)
+  : A()
+  , B()
+  , rank(0)
+  , formal_rank(0)
+  , m(M.m())
+  , n(M.n())
+{
+  if (m == 0 || n == 0 || fixed_rank_k == 0)
+    {
+      /**
+       * \alert{If the size of the row or column dimension of \p M is zero or
+       * the given rank is zero, do not allocate memory for the component
+       * matrices of the rank-k matrix, since there is no effective data.}
+       */
+
+      /**
+       * Set the error matrices as zero.
+       */
+      C.reinit(0, 0);
+      D.reinit(0, 0);
+    }
+  else
+    {
+      if (m == 1 && n == 1)
+        {
+          /**
+           * Handle the case when the source full matrix is a scalar.
+           */
+          if (std::abs(M(0, 0)) < std::numeric_limits<double>::epsilon())
+            {
+              /**
+               * When the scalar value is zero. We do nothing here and the
+               * rank-k matrix still has a dimension \f$1 \times 1\f$ with zero
+               * rank and empty component matrices.
+               */
+            }
+          else
+            {
+              /**
+               * When the scalar value is non-zero, both component matrices have
+               * the dimension \f$1 \times 1\f$ and the rank-k matrix has
+               * rank 1.
+               */
+              A.reinit(1, 1);
+              B.reinit(1, 1);
+              formal_rank = 1;
+              rank        = 1;
+
+              A(0, 0) = std::sqrt(std::abs(M(0, 0)));
+              B(0, 0) = A(0, 0) * (std::signbit(M(0, 0)) ? -1.0 : 1.0);
+            }
+
+          /**
+           * Set the error matrices as zero.
+           */
+          C.reinit(0, 0);
+          D.reinit(0, 0);
+        }
+      else
+        {
+          rank        = M.rank_k_decompose(fixed_rank_k, A, B, C, D);
           formal_rank = A.n();
         }
     }
@@ -2616,28 +2964,45 @@ RkMatrix<Number>::truncate_to_rank(size_type new_rank)
       rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
         A, B, U, Sigma_r, VT, new_rank);
 
-      if (n < m)
+      /**
+       * \alert{Since the initial matrix may not have the correct rank, even
+       * though its \p rank is larger than zero, its actual \p rank may be less
+       * or even zero. Therefore, it is possible that the returned \p rank from
+       * the above execution of \p reduced_svd_on_AxBT may be zero. Therefore,
+       * it needs a special treatment here.}
+       */
+      if (rank > 0)
         {
+          if (n < m)
+            {
+              /**
+               * Adopt right associativity when the matrix is long.
+               */
+              A = U;
+              VT.scale_rows(Sigma_r);
+              VT.transpose(B);
+            }
+          else
+            {
+              /**
+               * Adopt left associativity when the matrix is wide.
+               */
+              U.scale_columns(A, Sigma_r);
+              VT.transpose(B);
+            }
+
           /**
-           * Adopt right associativity when the matrix is long.
+           * Update the formal rank.
            */
-          A = U;
-          VT.scale_rows(Sigma_r);
-          VT.transpose(B);
+          formal_rank = A.n();
         }
       else
         {
-          /**
-           * Adopt left associativity when the matrix is wide.
-           */
-          U.scale_columns(A, Sigma_r);
-          VT.transpose(B);
+          A.reinit(0, 0);
+          B.reinit(0, 0);
+          rank        = 0;
+          formal_rank = 0;
         }
-
-      /**
-       * Update the formal rank.
-       */
-      formal_rank = A.n();
     }
   else
     {
@@ -2646,6 +3011,110 @@ RkMatrix<Number>::truncate_to_rank(size_type new_rank)
       rank        = 0;
       formal_rank = 0;
     }
+}
+
+
+template <typename Number>
+void
+RkMatrix<Number>::truncate_to_rank(size_type                    new_rank,
+                                   LAPACKFullMatrixExt<Number> &C,
+                                   LAPACKFullMatrixExt<Number> &D)
+{
+  if (rank > 0 && new_rank > 0)
+    {
+      /**
+       * \alert{Only when the current rank-k matrix and the given new rank have
+       * nonzero rank, it is meaningful to perform the rank truncation.}
+       */
+
+      /**
+       * Work flow introduction: Use QR decomposition to perform the rank
+       * truncation.
+       */
+      LAPACKFullMatrixExt<Number>                                    U, VT;
+      std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
+
+      rank = LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
+        A, B, U, Sigma_r, VT, C, D, new_rank);
+
+      /**
+       * \alert{Since the initial matrix may not have the correct rank, even
+       * though its \p rank is larger than zero, its actual \p rank may be less
+       * or even zero. Therefore, it is possible that the returned \p rank from
+       * the above execution of \p reduced_svd_on_AxBT may be zero. Therefore,
+       * it needs a special treatment here.}
+       */
+      if (rank > 0)
+        {
+          if (n < m)
+            {
+              /**
+               * Adopt right associativity when the matrix is long.
+               */
+              A = U;
+              VT.scale_rows(Sigma_r);
+              VT.transpose(B);
+            }
+          else
+            {
+              /**
+               * Adopt left associativity when the matrix is wide.
+               */
+              U.scale_columns(A, Sigma_r);
+              VT.transpose(B);
+            }
+
+          /**
+           * Update the formal rank.
+           */
+          formal_rank = A.n();
+        }
+      else
+        {
+          A.reinit(0, 0);
+          B.reinit(0, 0);
+          rank        = 0;
+          formal_rank = 0;
+        }
+    }
+  else
+    {
+      if (rank == 0)
+        {
+          /**
+           * If the original matrix's rank is zero, the error matrices should be
+           * zero matrices.
+           */
+          C.reinit(0, 0);
+          D.reinit(0, 0);
+        }
+      else
+        {
+          /**
+           * If the original matrix's rank is nonzero but it is to be truncated
+           * to zero rank, the error matrices should be directly copied from
+           * \f$A\f$ and \f$B\f$.
+           */
+          C = A;
+          D = B;
+        }
+
+      A.reinit(0, 0);
+      B.reinit(0, 0);
+      rank        = 0;
+      formal_rank = 0;
+    }
+}
+
+
+template <typename Number>
+void
+RkMatrix<Number>::calc_rank_upper_bound()
+{
+  const size_type rank_A = A.rank();
+  const size_type rank_B = B.rank();
+
+  rank = std::min(std::min(rank_A, rank_B), rank);
 }
 
 
@@ -2854,6 +3323,23 @@ RkMatrix<Number>::add(RkMatrix<Number> &      M,
 
 template <typename Number>
 void
+RkMatrix<Number>::add(RkMatrix<Number> &           M,
+                      const RkMatrix<Number> &     M2,
+                      const size_type              fixed_rank_k,
+                      LAPACKFullMatrixExt<Number> &C,
+                      LAPACKFullMatrixExt<Number> &D) const
+{
+  /**
+   * Perform the addition via a simple juxtaposition of matrix components. Then
+   * rank truncation is carried out.
+   */
+  this->add(M, M2);
+  M.truncate_to_rank(fixed_rank_k, C, D);
+}
+
+
+template <typename Number>
+void
 RkMatrix<Number>::add(RkMatrix<Number> &      M,
                       const Number            m2,
                       const RkMatrix<Number> &M2,
@@ -2865,6 +3351,24 @@ RkMatrix<Number>::add(RkMatrix<Number> &      M,
    */
   this->add(M, m2, M2);
   M.truncate_to_rank(fixed_rank_k);
+}
+
+
+template <typename Number>
+void
+RkMatrix<Number>::add(RkMatrix<Number> &           M,
+                      const Number                 m2,
+                      const RkMatrix<Number> &     M2,
+                      const size_type              fixed_rank_k,
+                      LAPACKFullMatrixExt<Number> &C,
+                      LAPACKFullMatrixExt<Number> &D) const
+{
+  /**
+   * Perform the addition via a simple juxtaposition of matrix components. Then
+   * rank truncation is carried out.
+   */
+  this->add(M, m2, M2);
+  M.truncate_to_rank(fixed_rank_k, C, D);
 }
 
 
@@ -2883,6 +3387,22 @@ RkMatrix<Number>::add(const RkMatrix<Number> &M1, const size_type fixed_rank_k)
 
 template <typename Number>
 void
+RkMatrix<Number>::add(const RkMatrix<Number> &     M1,
+                      const size_type              fixed_rank_k,
+                      LAPACKFullMatrixExt<Number> &C,
+                      LAPACKFullMatrixExt<Number> &D)
+{
+  /**
+   * Perform the addition via a simple juxtaposition of matrix components. Then
+   * rank truncation is carried out.
+   */
+  this->add(M1);
+  this->truncate_to_rank(fixed_rank_k, C, D);
+}
+
+
+template <typename Number>
+void
 RkMatrix<Number>::add(const Number            m1,
                       const RkMatrix<Number> &M1,
                       const size_type         fixed_rank_k)
@@ -2893,6 +3413,23 @@ RkMatrix<Number>::add(const Number            m1,
    */
   this->add(m1, M1);
   this->truncate_to_rank(fixed_rank_k);
+}
+
+
+template <typename Number>
+void
+RkMatrix<Number>::add(const Number                 m1,
+                      const RkMatrix<Number> &     M1,
+                      const size_type              fixed_rank_k,
+                      LAPACKFullMatrixExt<Number> &C,
+                      LAPACKFullMatrixExt<Number> &D)
+{
+  /**
+   * Perform the addition via a simple juxtaposition of matrix components. Then
+   * rank truncation is carried out.
+   */
+  this->add(m1, M1);
+  this->truncate_to_rank(fixed_rank_k, C, D);
 }
 
 
@@ -2929,6 +3466,50 @@ RkMatrix<Number>::assemble_from_rkmatrix(
                              M_sigma_index_set);
 
       this->add(M_embedded, fixed_rank_k);
+    }
+}
+
+
+template <typename Number>
+void
+RkMatrix<Number>::assemble_from_rkmatrix(
+  const std::map<types::global_dof_index, size_t>
+    &row_index_global_to_local_map,
+  const std::map<types::global_dof_index, size_t>
+    &                                         col_index_global_to_local_map,
+  const RkMatrix<Number> &                    M,
+  const std::vector<types::global_dof_index> &M_tau_index_set,
+  const std::vector<types::global_dof_index> &M_sigma_index_set,
+  const size_type                             fixed_rank_k,
+  LAPACKFullMatrixExt<Number> &               C,
+  LAPACKFullMatrixExt<Number> &               D)
+{
+  /**
+   * \alert{When perform rank-k matrix embedding, the formal rank instead of the
+   * real rank should be used since matrix row copy operation will be
+   * performed in which the formal rank will be involved as the number of
+   * columns.}
+   */
+  if (M.rank > 0 && M.m > 0 && M.n > 0)
+    {
+      /**
+       * \alert{Only when the rank-k matrix \p M has a rank larger than zero,
+       * the assembly operation will take place.}
+       */
+      RkMatrix<Number> M_embedded(m, n, M.formal_rank);
+      M_embedded.A.fill_rows(row_index_global_to_local_map,
+                             M.A,
+                             M_tau_index_set);
+      M_embedded.B.fill_rows(col_index_global_to_local_map,
+                             M.B,
+                             M_sigma_index_set);
+
+      this->add(M_embedded, fixed_rank_k, C, D);
+    }
+  else
+    {
+      C.reinit(0, 0);
+      D.reinit(0, 0);
     }
 }
 

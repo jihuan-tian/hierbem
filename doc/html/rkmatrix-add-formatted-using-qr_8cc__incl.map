@@ -1,7 +1,9 @@
 <map id="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/tests/rkmatrix&#45;add&#45;formatted&#45;using&#45;qr/rkmatrix&#45;add&#45;formatted&#45;using&#45;qr.cc" name="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/tests/rkmatrix&#45;add&#45;formatted&#45;using&#45;qr/rkmatrix&#45;add&#45;formatted&#45;using&#45;qr.cc">
-<area shape="rect" id="node4" href="$debug__tools_8h.html" title="This file includes a bunch of helper functions for printing out and visualizing information about gri..." alt="" coords="253,153,355,180"/>
-<area shape="rect" id="node10" href="$rkmatrix_8h.html" title="Definition of rank&#45;k matrix. " alt="" coords="1316,153,1396,180"/>
-<area shape="rect" id="node19" href="$lapack__full__matrix__ext_8h_source.html" title="lapack_full_matrix\l_ext.h" alt="" coords="1063,228,1190,269"/>
-<area shape="rect" id="node21" href="$general__exceptions_8h.html" title="Definition of self&#45;defined general exceptions. " alt="" coords="957,317,1102,344"/>
-<area shape="rect" id="node23" href="$lapack__helpers_8h.html" title="Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following the..." alt="" coords="1127,317,1247,344"/>
+<area shape="rect" id="node4" href="$debug__tools_8h.html" title="This file includes a bunch of helper functions for printing out and visualizing information about gri..." alt="" coords="278,153,381,180"/>
+<area shape="rect" id="node10" href="$rkmatrix_8h.html" title="Definition of rank&#45;k matrix. " alt="" coords="2384,153,2464,180"/>
+<area shape="rect" id="node19" href="$lapack__full__matrix__ext_8h_source.html" title="lapack_full_matrix\l_ext.h" alt="" coords="1298,228,1425,269"/>
+<area shape="rect" id="node23" href="$general__exceptions_8h.html" title="Definition of self&#45;defined general exceptions. " alt="" coords="1354,317,1499,344"/>
+<area shape="rect" id="node25" href="$generic__functors_8h.html" title="This header file contains a set of self&#45;defined generic functors. " alt="" coords="1523,317,1653,344"/>
+<area shape="rect" id="node26" href="$lapack__helpers_8h.html" title="Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following the..." alt="" coords="2413,317,2533,344"/>
+<area shape="rect" id="node33" href="$lapack__templates__ext_8h.html" title="Append more template based LAPACK functions to those existing in deal.ii. " alt="" coords="2641,399,2801,426"/>
 </map>

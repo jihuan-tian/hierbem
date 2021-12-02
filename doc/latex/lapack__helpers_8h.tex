@@ -15,6 +15,7 @@ Exposes L\+A\+P\+A\+CK helper functions defined in lapack\+\_\+full\+\_\+matrix.
 {\ttfamily \#include $<$deal.\+I\+I/lac/sparse\+\_\+matrix.\+h$>$}\newline
 {\ttfamily \#include $<$deal.\+I\+I/lac/utilities.\+h$>$}\newline
 {\ttfamily \#include $<$deal.\+I\+I/lac/vector.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}lapack\+\_\+templates\+\_\+ext.\+h\char`\"{}}\newline
 Include dependency graph for lapack\+\_\+helpers.\+h\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
@@ -22,8 +23,7 @@ Include dependency graph for lapack\+\_\+helpers.\+h\+:\nopagebreak
 \includegraphics[width=350pt]{lapack__helpers_8h__incl}
 \end{center}
 \end{figure}
-This graph shows which files directly or indirectly include this file\+:
-\nopagebreak
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -44,6 +44,10 @@ This graph shows which files directly or indirectly include this file\+:
 {\footnotesize template$<$typename T $>$ }\\void \hyperlink{lapack__helpers_8h_a3611798f42eeae8f9bbacdbd91cb21d3}{internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::gesdd\+\_\+helper} (const char job, const types\+::blas\+\_\+int n\+\_\+rows, const types\+::blas\+\_\+int n\+\_\+cols, Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&matrix, std\+::vector$<$ T $>$ \&singular\+\_\+values, Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&left\+\_\+vectors, Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&right\+\_\+vectors, std\+::vector$<$ std\+::complex$<$ T $>$$>$ \&work, std\+::vector$<$ T $>$ \&real\+\_\+work, std\+::vector$<$ types\+::blas\+\_\+int $>$ \&integer\+\_\+work, const types\+::blas\+\_\+int \&work\+\_\+flag, types\+::blas\+\_\+int \&info)
 \item 
 {\footnotesize template$<$typename T $>$ }\\void \hyperlink{lapack__helpers_8h_a34e4760e961fb844c588891d4b92f501}{internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::geqrf\+\_\+helper} (const types\+::blas\+\_\+int n\+\_\+rows, const types\+::blas\+\_\+int n\+\_\+cols, Aligned\+Vector$<$ T $>$ \&matrix, std\+::vector$<$ T $>$ \&tau, std\+::vector$<$ T $>$ \&work, const types\+::blas\+\_\+int work\+\_\+flag, types\+::blas\+\_\+int \&info)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \hyperlink{lapack__helpers_8h_a710c8024792e4f764359b8822f4f9aaa}{internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::trsv\+\_\+helper} (const char uplo, const bool is\+\_\+transposed, const bool is\+\_\+unit\+\_\+diagonal, const types\+::blas\+\_\+int n\+\_\+rows, const Aligned\+Vector$<$ T $>$ \&matrix, T $\ast$right\+\_\+vector\+\_\+pointer, const types\+::blas\+\_\+int incx=1)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \hyperlink{lapack__helpers_8h_a63e3db81c35e97de4391dc8dfe444c1d}{internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::trsv\+\_\+helper} (const char uplo, const bool is\+\_\+transposed, const bool is\+\_\+unit\+\_\+diagonal, const types\+::blas\+\_\+int n\+\_\+rows, const Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&matrix, std\+::complex$<$ T $>$ $\ast$right\+\_\+vector\+\_\+pointer, const types\+::blas\+\_\+int incx=1)
 \end{DoxyCompactItemize}
 
 
@@ -140,3 +144,71 @@ Its implementation has already existed in the deal.\+ii library.
 {\em info} & \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{lapack__helpers_8h_file_a710c8024792e4f764359b8822f4f9aaa}\label{lapack__helpers_8h_file_a710c8024792e4f764359b8822f4f9aaa}} 
+\index{lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}!trsv\+\_\+helper@{trsv\+\_\+helper}}
+\index{trsv\+\_\+helper@{trsv\+\_\+helper}!lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}}
+\subsubsection{\texorpdfstring{trsv\+\_\+helper()}{trsv\_helper()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::trsv\+\_\+helper (\begin{DoxyParamCaption}\item[{const char}]{uplo,  }\item[{const bool}]{is\+\_\+transposed,  }\item[{const bool}]{is\+\_\+unit\+\_\+diagonal,  }\item[{const types\+::blas\+\_\+int}]{n\+\_\+rows,  }\item[{const Aligned\+Vector$<$ T $>$ \&}]{matrix,  }\item[{T $\ast$}]{right\+\_\+vector\+\_\+pointer,  }\item[{const types\+::blas\+\_\+int}]{incx = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Real valued version of the helper function for {\ttfamily trsv}.
+
+{\bfseries Since the {\ttfamily values} member variable of type {\ttfamily Aligned\+Vector} stored in the right hand side vector is private, which cannot be directly accessed from {\ttfamily \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}, the data pointer to the right hand side vector is passed as argument, which can be obtained via the member function {\ttfamily data} of {\ttfamily Vector}.}
+
+
+\begin{DoxyParams}{Parameters}
+{\em uplo} & \\
+\hline
+{\em is\+\_\+transposed} & \\
+\hline
+{\em is\+\_\+unit\+\_\+diagonal} & \\
+\hline
+{\em n\+\_\+rows} & \\
+\hline
+{\em matrix} & \\
+\hline
+{\em right\+\_\+vector} & \\
+\hline
+{\em incx} & \\
+\hline
+\end{DoxyParams}
+
+
+References internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::trsv\+\_\+helper().
+
+
+
+Referenced by internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::trsv\+\_\+helper().
+
+\mbox{\Hypertarget{lapack__helpers_8h_file_a63e3db81c35e97de4391dc8dfe444c1d}\label{lapack__helpers_8h_file_a63e3db81c35e97de4391dc8dfe444c1d}} 
+\index{lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}!trsv\+\_\+helper@{trsv\+\_\+helper}}
+\index{trsv\+\_\+helper@{trsv\+\_\+helper}!lapack\+\_\+helpers.\+h@{lapack\+\_\+helpers.\+h}}
+\subsubsection{\texorpdfstring{trsv\+\_\+helper()}{trsv\_helper()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::trsv\+\_\+helper (\begin{DoxyParamCaption}\item[{const char}]{uplo,  }\item[{const bool}]{is\+\_\+transposed,  }\item[{const bool}]{is\+\_\+unit\+\_\+diagonal,  }\item[{const types\+::blas\+\_\+int}]{n\+\_\+rows,  }\item[{const Aligned\+Vector$<$ std\+::complex$<$ T $>$$>$ \&}]{matrix,  }\item[{std\+::complex$<$ T $>$ $\ast$}]{right\+\_\+vector\+\_\+pointer,  }\item[{const types\+::blas\+\_\+int}]{incx = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Complex valued version of the helper function for {\ttfamily trsv}.
+
+{\bfseries Since the {\ttfamily values} member variable of type {\ttfamily Aligned\+Vector} stored in the right hand side vector is private, which cannot be directly accessed from {\ttfamily \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}, the data pointer to the right hand side vector is passed as argument, which can be obtained via the member function {\ttfamily data} of {\ttfamily Vector}.}
+
+
+\begin{DoxyParams}{Parameters}
+{\em uplo} & \\
+\hline
+{\em is\+\_\+transposed} & \\
+\hline
+{\em is\+\_\+unit\+\_\+diagonal} & \\
+\hline
+{\em n\+\_\+rows} & \\
+\hline
+{\em matrix} & \\
+\hline
+{\em right\+\_\+vector} & \\
+\hline
+{\em incx} & \\
+\hline
+\end{DoxyParams}
+
+
+References internal\+::\+L\+A\+P\+A\+C\+K\+Full\+Matrix\+Implementation\+::trsv\+\_\+helper().
+

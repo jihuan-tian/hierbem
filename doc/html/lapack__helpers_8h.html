@@ -156,16 +156,16 @@ $(function() {
 <code>#include &lt;deal.II/lac/sparse_matrix.h&gt;</code><br />
 <code>#include &lt;deal.II/lac/utilities.h&gt;</code><br />
 <code>#include &lt;deal.II/lac/vector.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="lapack__templates__ext_8h_source.html">lapack_templates_ext.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for lapack_helpers.h:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="lapack__helpers_8h__incl.svg" width="100%" height="428"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="lapack__helpers_8h__incl.svg" width="100%" height="495"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="lapack__helpers_8h__dep__incl.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-</div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="lapack__helpers_8h__dep__incl.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 </div>
 <p><a href="lapack__helpers_8h_source.html">Go to the source code of this file.</a></p>
@@ -189,6 +189,12 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a34e4760e961fb844c588891d4b92f501"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a34e4760e961fb844c588891d4b92f501"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="lapack__helpers_8h.html#a34e4760e961fb844c588891d4b92f501">internal::LAPACKFullMatrixImplementation::geqrf_helper</a> (const types::blas_int n_rows, const types::blas_int n_cols, AlignedVector&lt; T &gt; &amp;matrix, std::vector&lt; T &gt; &amp;tau, std::vector&lt; T &gt; &amp;work, const types::blas_int work_flag, types::blas_int &amp;info)</td></tr>
 <tr class="separator:a34e4760e961fb844c588891d4b92f501"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a710c8024792e4f764359b8822f4f9aaa"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a710c8024792e4f764359b8822f4f9aaa"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="lapack__helpers_8h.html#a710c8024792e4f764359b8822f4f9aaa">internal::LAPACKFullMatrixImplementation::trsv_helper</a> (const char uplo, const bool is_transposed, const bool is_unit_diagonal, const types::blas_int n_rows, const AlignedVector&lt; T &gt; &amp;matrix, T *right_vector_pointer, const types::blas_int incx=1)</td></tr>
+<tr class="separator:a710c8024792e4f764359b8822f4f9aaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a63e3db81c35e97de4391dc8dfe444c1d"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a63e3db81c35e97de4391dc8dfe444c1d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="lapack__helpers_8h.html#a63e3db81c35e97de4391dc8dfe444c1d">internal::LAPACKFullMatrixImplementation::trsv_helper</a> (const char uplo, const bool is_transposed, const bool is_unit_diagonal, const types::blas_int n_rows, const AlignedVector&lt; std::complex&lt; T &gt;&gt; &amp;matrix, std::complex&lt; T &gt; *right_vector_pointer, const types::blas_int incx=1)</td></tr>
+<tr class="separator:a63e3db81c35e97de4391dc8dfe444c1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following them as examples. </p>
@@ -470,6 +476,160 @@ template&lt;typename T &gt; </div>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="file_a710c8024792e4f764359b8822f4f9aaa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a710c8024792e4f764359b8822f4f9aaa">&#9670;&nbsp;</a></span>trsv_helper() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void internal::LAPACKFullMatrixImplementation::trsv_helper </td>
+          <td>(</td>
+          <td class="paramtype">const char&#160;</td>
+          <td class="paramname"><em>uplo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_transposed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_unit_diagonal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const types::blas_int&#160;</td>
+          <td class="paramname"><em>n_rows</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const AlignedVector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>matrix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>right_vector_pointer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const types::blas_int&#160;</td>
+          <td class="paramname"><em>incx</em> = <code>1</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Real valued version of the helper function for <code>trsv</code>.</p>
+<p><b>Since the <code>values</code> member variable of type <code>AlignedVector</code> stored in the right hand side vector is private, which cannot be directly accessed from <code><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a></code>, the data pointer to the right hand side vector is passed as argument, which can be obtained via the member function <code>data</code> of <code>Vector</code>.</b></p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">uplo</td><td></td></tr>
+    <tr><td class="paramname">is_transposed</td><td></td></tr>
+    <tr><td class="paramname">is_unit_diagonal</td><td></td></tr>
+    <tr><td class="paramname">n_rows</td><td></td></tr>
+    <tr><td class="paramname">matrix</td><td></td></tr>
+    <tr><td class="paramname">right_vector</td><td></td></tr>
+    <tr><td class="paramname">incx</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="lapack__helpers_8h.html#a710c8024792e4f764359b8822f4f9aaa">internal::LAPACKFullMatrixImplementation::trsv_helper()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="lapack__helpers_8h.html#a710c8024792e4f764359b8822f4f9aaa">internal::LAPACKFullMatrixImplementation::trsv_helper()</a>.</p>
+
+</div>
+</div>
+<a id="file_a63e3db81c35e97de4391dc8dfe444c1d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a63e3db81c35e97de4391dc8dfe444c1d">&#9670;&nbsp;</a></span>trsv_helper() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void internal::LAPACKFullMatrixImplementation::trsv_helper </td>
+          <td>(</td>
+          <td class="paramtype">const char&#160;</td>
+          <td class="paramname"><em>uplo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_transposed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_unit_diagonal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const types::blas_int&#160;</td>
+          <td class="paramname"><em>n_rows</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const AlignedVector&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>matrix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>right_vector_pointer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const types::blas_int&#160;</td>
+          <td class="paramname"><em>incx</em> = <code>1</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Complex valued version of the helper function for <code>trsv</code>.</p>
+<p><b>Since the <code>values</code> member variable of type <code>AlignedVector</code> stored in the right hand side vector is private, which cannot be directly accessed from <code><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a></code>, the data pointer to the right hand side vector is passed as argument, which can be obtained via the member function <code>data</code> of <code>Vector</code>.</b></p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">uplo</td><td></td></tr>
+    <tr><td class="paramname">is_transposed</td><td></td></tr>
+    <tr><td class="paramname">is_unit_diagonal</td><td></td></tr>
+    <tr><td class="paramname">n_rows</td><td></td></tr>
+    <tr><td class="paramname">matrix</td><td></td></tr>
+    <tr><td class="paramname">right_vector</td><td></td></tr>
+    <tr><td class="paramname">incx</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="lapack__helpers_8h.html#a710c8024792e4f764359b8822f4f9aaa">internal::LAPACKFullMatrixImplementation::trsv_helper()</a>.</p>
 
 </div>
 </div>

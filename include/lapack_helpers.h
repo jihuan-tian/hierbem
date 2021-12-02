@@ -22,6 +22,8 @@
 #include <deal.II/lac/utilities.h>
 #include <deal.II/lac/vector.h>
 
+#include "lapack_templates_ext.h"
+
 DEAL_II_NAMESPACE_OPEN
 
 using namespace LAPACKSupport;
@@ -159,6 +161,101 @@ namespace internal
             work.data(),
             &work_flag,
             &info);
+    }
+
+
+    /**
+     * Real valued version of the helper function for \p trsv.
+     *
+     * \alert{Since the \p values member variable of type \p AlignedVector
+     * stored in the right hand side vector is private, which cannot be directly
+     * accessed from \p LAPACKFullMatrixExt, the data pointer to the right hand
+     * side vector is passed as argument, which can be obtained via the member
+     * function \p data of \p Vector.}
+     *
+     * @param uplo
+     * @param is_transposed
+     * @param is_unit_diagonal
+     * @param n_rows
+     * @param matrix
+     * @param right_vector
+     * @param incx
+     */
+    template <typename T>
+    void
+    trsv_helper(const char              uplo,
+                const bool              is_transposed,
+                const bool              is_unit_diagonal,
+                const types::blas_int   n_rows,
+                const AlignedVector<T> &matrix,
+                T *                     right_vector_pointer,
+                const types::blas_int   incx = 1)
+    {
+      // The matrix should be square.
+      Assert(static_cast<size_t>(n_rows * n_rows) == matrix.size(),
+             ExcInternalError());
+
+      const char trans(is_transposed ? 'T' : 'N');
+      const char diag(is_unit_diagonal ? 'U' : 'N');
+
+      trsv(&uplo,
+           &trans,
+           &diag,
+           &n_rows,
+           matrix.data(), // Get the data pointer to the \p AlignedVector.
+           &n_rows,
+           right_vector_pointer,
+           &incx);
+    }
+
+
+    /**
+     * Complex valued version of the helper function for \p trsv.
+     *
+     * \alert{Since the \p values member variable of type \p AlignedVector
+     * stored in the right hand side vector is private, which cannot be directly
+     * accessed from \p LAPACKFullMatrixExt, the data pointer to the right hand
+     * side vector is passed as argument, which can be obtained via the member
+     * function \p data of \p Vector.}
+     *
+     * @param uplo
+     * @param is_transposed
+     * @param is_unit_diagonal
+     * @param n_rows
+     * @param matrix
+     * @param right_vector
+     * @param incx
+     */
+    template <typename T>
+    void
+    trsv_helper(const char                            uplo,
+                const bool                            is_transposed,
+                const bool                            is_unit_diagonal,
+                const types::blas_int                 n_rows,
+                const AlignedVector<std::complex<T>> &matrix,
+                std::complex<T> *                     right_vector_pointer,
+                const types::blas_int                 incx = 1)
+    {
+      Assert(uplo == 'U' || uplo == 'u' || uplo == 'L' || uplo == 'l',
+             ExcInternalError());
+      // The matrix should be square.
+      Assert(static_cast<size_t>(n_rows * n_rows) == matrix.size(),
+             ExcInternalError());
+
+      // N.B. When the number field \f$\mathbb{K}\f$ for matrix is complex, the
+      // transposition of a matrix is Hermitian, i.e. including both the normal
+      // transposition and complex conjugation.
+      const char trans(is_transposed ? 'C' : 'N');
+      const char diag(is_unit_diagonal ? 'U' : 'N');
+
+      trsv(&uplo,
+           &trans,
+           &diag,
+           &n_rows,
+           matrix.data(), // Get the data pointer to the \p AlignedVector.
+           &n_rows,
+           right_vector_pointer,
+           &incx);
     }
   } // namespace LAPACKFullMatrixImplementation
 } // namespace internal

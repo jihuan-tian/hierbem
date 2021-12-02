@@ -1,5 +1,7 @@
 <map id="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/tests/lapack&#45;matrix&#45;qr/lapack&#45;matrix&#45;qr.cc" name="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/tests/lapack&#45;matrix&#45;qr/lapack&#45;matrix&#45;qr.cc">
-<area shape="rect" id="node2" href="$lapack__full__matrix__ext_8h_source.html" title="lapack_full_matrix\l_ext.h" alt="" coords="277,139,403,180"/>
-<area shape="rect" id="node6" href="$general__exceptions_8h.html" title="Definition of self&#45;defined general exceptions. " alt="" coords="394,228,539,255"/>
-<area shape="rect" id="node8" href="$lapack__helpers_8h.html" title="Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following the..." alt="" coords="943,228,1063,255"/>
+<area shape="rect" id="node2" href="$lapack__full__matrix__ext_8h_source.html" title="lapack_full_matrix\l_ext.h" alt="" coords="413,139,540,180"/>
+<area shape="rect" id="node9" href="$general__exceptions_8h.html" title="Definition of self&#45;defined general exceptions. " alt="" coords="404,228,549,255"/>
+<area shape="rect" id="node11" href="$generic__functors_8h.html" title="This header file contains a set of self&#45;defined generic functors. " alt="" coords="251,228,380,255"/>
+<area shape="rect" id="node14" href="$lapack__helpers_8h.html" title="Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following the..." alt="" coords="1153,228,1273,255"/>
+<area shape="rect" id="node24" href="$lapack__templates__ext_8h.html" title="Append more template based LAPACK functions to those existing in deal.ii. " alt="" coords="565,310,725,337"/>
 </map>

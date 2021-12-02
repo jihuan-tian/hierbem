@@ -5,6 +5,12 @@
  */
 
 /**
+ * \defgroup rkmatrices Rank-k matrices
+ * \brief Implementation of rank-k matrix data structure and algebraic
+ * operations.
+ */
+
+/**
  * \defgroup sauter_quadrature Sauter quadrature
  * \brief Implementation of Stefan Sauter's method about 4D numerical
  * quadrature which aims to handle singularity.
@@ -19,6 +25,11 @@
 /**
  * \defgroup linalg Linear algebra
  * \brief Linear algebra computation.
+ */
+
+/**
+ * \defgroup lapack LAPACK functions
+ * \brief LAPACK functions
  */
 
 /**

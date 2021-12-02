@@ -5,7 +5,7 @@
  * partitions, while the result matrix has the fine non-tensor product
  * partitions.
  *
- * \ingroup testers
+ * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-10-03
  */

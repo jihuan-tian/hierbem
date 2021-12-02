@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -113,7 +114,29 @@ public:
     HMatrix<spacedim1, Number1> *hmat,
     typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
                                         bc_node,
+    const LAPACKFullMatrixExt<Number1> &M,
+    bool                                is_build_index_set_global_to_local_map);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  InitAndCreateHMatrixChildren(
+    HMatrix<spacedim1, Number1> *hmat,
+    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
+                                        bc_node,
     const unsigned int                  fixed_rank_k,
+    const LAPACKFullMatrixExt<Number1> &M,
+    const std::map<types::global_dof_index, size_t>
+      &row_index_global_to_local_map_for_M,
+    const std::map<types::global_dof_index, size_t>
+      &  col_index_global_to_local_map_for_M,
+    bool is_build_index_set_global_to_local_map);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  InitAndCreateHMatrixChildren(
+    HMatrix<spacedim1, Number1> *hmat,
+    typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
+                                        bc_node,
     const LAPACKFullMatrixExt<Number1> &M,
     const std::map<types::global_dof_index, size_t>
       &row_index_global_to_local_map_for_M,
@@ -158,6 +181,26 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  h_rk_mmult(const Number1                alpha,
+             HMatrix<spacedim1, Number1> &M1,
+             const RkMatrix<Number1> &    M2,
+             RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_rk_mTmult(HMatrix<spacedim1, Number1> &M1,
+              const RkMatrix<Number1> &    M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_rk_mTmult(const Number1                alpha,
+              HMatrix<spacedim1, Number1> &M1,
+              const RkMatrix<Number1> &    M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   h_rk_mmult_for_h_h_mmult(HMatrix<spacedim1, Number1> *      M1,
                            const HMatrix<spacedim1, Number1> *M2,
                            HMatrix<spacedim1, Number1> *      M,
@@ -168,6 +211,26 @@ public:
   rk_h_mmult(const RkMatrix<Number1> &    M1,
              HMatrix<spacedim1, Number1> &M2,
              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  rk_h_mmult(const Number1                alpha,
+             const RkMatrix<Number1> &    M1,
+             HMatrix<spacedim1, Number1> &M2,
+             RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  rk_h_mTmult(const RkMatrix<Number1> &    M1,
+              HMatrix<spacedim1, Number1> &M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  rk_h_mTmult(const Number1                alpha,
+              const RkMatrix<Number1> &    M1,
+              HMatrix<spacedim1, Number1> &M2,
+              RkMatrix<Number1> &          M);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -184,9 +247,49 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  h_f_mmult(const Number1                       alpha,
+            HMatrix<spacedim1, Number1> &       M1,
+            const LAPACKFullMatrixExt<Number1> &M2,
+            LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mTmult(HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mTmult(const Number1                       alpha,
+             HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   h_f_mmult(HMatrix<spacedim1, Number1> &       M1,
             const LAPACKFullMatrixExt<Number1> &M2,
             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mmult(const Number1                       alpha,
+            HMatrix<spacedim1, Number1> &       M1,
+            const LAPACKFullMatrixExt<Number1> &M2,
+            RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mTmult(HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_mTmult(const Number1                       alpha,
+             HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             RkMatrix<Number1> &                 M);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -203,9 +306,49 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  f_h_mmult(const Number1                       alpha,
+            const LAPACKFullMatrixExt<Number1> &M1,
+            HMatrix<spacedim1, Number1> &       M2,
+            LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mTmult(const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mTmult(const Number1                       alpha,
+             const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   f_h_mmult(const LAPACKFullMatrixExt<Number1> &M1,
             HMatrix<spacedim1, Number1> &       M2,
             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mmult(const Number1                       alpha,
+            const LAPACKFullMatrixExt<Number1> &M1,
+            HMatrix<spacedim1, Number1> &       M2,
+            RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mTmult(const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_mTmult(const Number1                       alpha,
+             const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             RkMatrix<Number1> &                 M);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -235,11 +378,63 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  h_h_mmult_from_leaf_node(HMatrix<spacedim1, Number1> &M0,
+                           HMatrix<spacedim1, Number1> &M,
+                           const Number1                alpha,
+                           HMatrix<spacedim1, Number1> &M1,
+                           HMatrix<spacedim1, Number1> &M2,
+                           const unsigned int           fixed_rank);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_h_mTmult_from_leaf_node(HMatrix<spacedim1, Number1> &M0,
+                            HMatrix<spacedim1, Number1> &M,
+                            HMatrix<spacedim1, Number1> &M1,
+                            HMatrix<spacedim1, Number1> &M2,
+                            const unsigned int           fixed_rank);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_h_mTmult_from_leaf_node(HMatrix<spacedim1, Number1> &M0,
+                            HMatrix<spacedim1, Number1> &M,
+                            const Number1                alpha,
+                            HMatrix<spacedim1, Number1> &M1,
+                            HMatrix<spacedim1, Number1> &M2,
+                            const unsigned int           fixed_rank);
+
+  template <int spacedim1, typename Number1>
+  friend void
   h_h_mmult_level_conserving(HMatrix<spacedim1, Number1> &M0,
                              HMatrix<spacedim1, Number1> &M,
                              HMatrix<spacedim1, Number1> &M1,
                              HMatrix<spacedim1, Number1> &M2,
                              const unsigned int           fixed_rank);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_h_mmult_level_conserving(HMatrix<spacedim1, Number1> &M0,
+                             HMatrix<spacedim1, Number1> &M,
+                             const Number1                alpha,
+                             HMatrix<spacedim1, Number1> &M1,
+                             HMatrix<spacedim1, Number1> &M2,
+                             const unsigned int           fixed_rank);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_h_mTmult_level_conserving(HMatrix<spacedim1, Number1> &M0,
+                              HMatrix<spacedim1, Number1> &M,
+                              HMatrix<spacedim1, Number1> &M1,
+                              HMatrix<spacedim1, Number1> &M2,
+                              const unsigned int           fixed_rank);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_h_mTmult_level_conserving(HMatrix<spacedim1, Number1> &M0,
+                              HMatrix<spacedim1, Number1> &M,
+                              const Number1                alpha,
+                              HMatrix<spacedim1, Number1> &M1,
+                              HMatrix<spacedim1, Number1> &M2,
+                              const unsigned int           fixed_rank);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -270,6 +465,25 @@ public:
                                      const std::string &                name2,
                                      const HMatrix<spacedim1, Number1> &M2);
 
+  template <int spacedim1, typename Number1>
+  friend void
+  hmatrix_solve_lu(const HMatrix<spacedim1, Number1> &L,
+                   const HMatrix<spacedim1, Number1> &U,
+                   Vector<Number1> &                  x,
+                   const Vector<Number1> &            b);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  hmatrix_solve_cholesky(const HMatrix<spacedim1, Number1> &L,
+                         Vector<Number1> &                  x,
+                         const Vector<Number1> &            b);
+
+  /**
+   * Invalid submatrix index of the current \hmatnode wrt. its parent \hmatnode,
+   * which is used for initializing the @p submatrix_index member variable.
+   */
+  static const unsigned int submatrix_index_invalid = 9;
+
   /**
    * Default constructor.
    */
@@ -297,7 +511,17 @@ public:
    */
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
           const LAPACKFullMatrixExt<Number> &       M,
-          const unsigned int                        fixed_rank_k = 1);
+          const unsigned int                        fixed_rank_k);
+
+  /**
+   * Construct from the root node of a BlockClusterTree while copying the data
+   * of a global full matrix, which is created on the complete block cluster
+   * \f$I \times J\f$.
+   *
+   * This version has no rank truncation.
+   */
+  HMatrix(const BlockClusterTree<spacedim, Number> &bct,
+          const LAPACKFullMatrixExt<Number> &       M);
 
   /**
    * Construct from a TreeNode in a BlockClusterTree while copying the data of a
@@ -307,7 +531,18 @@ public:
   HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
                                              bc_node,
           const LAPACKFullMatrixExt<Number> &M,
-          const unsigned int                 fixed_rank_k = 1);
+          const unsigned int                 fixed_rank_k);
+
+  /**
+   * Construct from a TreeNode in a BlockClusterTree while copying the data of a
+   * global full matrix, which is created on the complete block cluster \f$I
+   * \times J\f$.
+   *
+   * This version has no rank truncation.
+   */
+  HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
+                                             bc_node,
+          const LAPACKFullMatrixExt<Number> &M);
 
   /**
    * Construct from a \p TreeNode in a \p BlockClusterTree while moving the data
@@ -340,7 +575,7 @@ public:
    * Shallow copy constructor.
    *
    * After the copy operation, the data in the source matrix \p H are
-   * transferred to the current \hmatrix node and \p H is
+   * transferred to the current \hmatnode and \p H is
    * cleared.
    *
    * @param H
@@ -419,7 +654,7 @@ public:
   clear();
 
   /**
-   * Clear the current \hmatrix node.
+   * Clear the current \hmatnode.
    */
   void
   clear_hmat_node();
@@ -430,21 +665,21 @@ public:
   ~HMatrix();
 
   /**
-   * Get the matrix type of the current \hmatrix node.
+   * Get the matrix type of the current \hmatnode.
    * @return
    */
   HMatrixType
   get_type() const;
 
   /**
-   * Get the number of rows of the current \hmatrix node.
+   * Get the number of rows of the current \hmatnode.
    * @return
    */
   size_type
   get_m() const;
 
   /**
-   * Get the number of columns of the current \hmatrix node.
+   * Get the number of columns of the current \hmatnode.
    * @return
    */
   size_type
@@ -452,7 +687,7 @@ public:
 
   /**
    * Get the pointer to the rank-k matrix of the current
-   * \hmatrix node.
+   * \hmatnode.
    * @return
    */
   RkMatrix<Number> *
@@ -460,11 +695,18 @@ public:
 
   /**
    * Get the pointer to the rank-k matrix of the current
-   * \hmatrix node (const version).
+   * \hmatnode (const version).
    * @return
    */
   const RkMatrix<Number> *
   get_rkmatrix() const;
+
+  /**
+   * Calculate and set the rank upper bound for each rank-k matrix in the
+   * \hmatrix hierarchy.
+   */
+  void
+  calc_rank_upper_bound_for_rkmatrices() const;
 
   /**
    * Get the pointer to the full matrix of the current \hmatrix
@@ -484,7 +726,7 @@ public:
 
   /**
    * Get the reference to the vector of submatrices of the current
-   * \hmatrix node.
+   * \hmatnode.
    * @return
    */
   std::vector<HMatrix<spacedim, Number> *> &
@@ -492,14 +734,15 @@ public:
 
   /**
    * Get the reference to the vector of submatrices of the current
-   * \hmatrix node (const version).
+   * \hmatnode (const version).
    * @return
    */
   const std::vector<HMatrix<spacedim, Number> *> &
   get_submatrices() const;
 
   /**
-   * Print the HMatrix.
+   * Print the \hmatrix data.
+   *
    * @param out
    * @param precision
    * @param scientific
@@ -517,8 +760,30 @@ public:
                   const double       denominator = 1.,
                   const double       threshold   = 0.) const;
 
+  /**
+   * Print the \hmatrix hierarchy information.
+   *
+   * @param out
+   */
   void
   print_matrix_info(std::ostream &out) const;
+
+  /**
+   * Print the current \hmatnode information.
+   *
+   * @param out
+   */
+  void
+  print_current_matrix_info(std::ostream &out) const;
+
+  /**
+   * Print the \hmatrix hierarchy information as directional graph in Graphviz
+   * dot format.
+   *
+   * @param out
+   */
+  void
+  print_matrix_info_as_dot(std::ostream &out) const;
 
   /**
    * Write formatted full matrix leaf node to the output stream.
@@ -595,6 +860,34 @@ public:
                               const Number singular_value_threshold = 0.) const;
 
   /**
+   * Find the diagonal block corresponding to the row block cluster of the
+   * current \hmatnode which is assumed in the lower triangular part of the
+   * whole matrix.
+   *
+   * \alert{The algorithm does not check internally whether the current
+   * \hmatnode locates in the lower triangular part of the whole matrix. The
+   * user should ensure this presumption.}
+   *
+   * @return
+   */
+  HMatrix *
+  find_row_diag_block_for_offdiag_block();
+
+  /**
+   * Find the diagonal block corresponding to the column block cluster of the
+   * current \hmatnode which is assumed in the lower triangular part of the
+   * whole matrix.
+   *
+   * \alert{The algorithm does not check internally whether the current
+   * \hmatnode locates in the lower triangular part of the whole matrix. The
+   * user should ensure this presumption.}
+   *
+   * @return
+   */
+  HMatrix *
+  find_col_diag_block_for_offdiag_block();
+
+  /**
    * Truncate all rank-k matrices in the leaf set of the
    * \hmatrix to rank-k matrices with the given \p new_rank,
    * while the full matrices in the leaf set, i.e. those near-field matrices,
@@ -612,12 +905,61 @@ public:
   truncate_to_rank(size_type new_rank);
 
   /**
+   * Truncate all rank-k matrices in the leaf set of the
+   * \hmatrix to rank-k matrices with the given \p new_rank,
+   * while the full matrices in the leaf set, i.e. those near-field matrices,
+   * are kept intact.
+   *
+   * \alert{The original \hmatrix is assumed to be symmetric and positive
+   * definite (SPD). When rank truncation is performed for far field rank-k
+   * matrices, the truncation error matrix components will be added to diagonal
+   * blocks according to the stabilization method proposed in Bebendorf, M., and
+   * W. Hackbusch. 2007. “Stabilized Rounded Addition of Hierarchical Matrices.”
+   * Numerical Linear Algebra with Applications 14 (5): 407–23.
+   * https://doi.org/10.1002/nla.525.}
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>This method implements the operator \f$\mathcal{T}_{r \leftarrow
+   * s}^{\mathcal{H}}\f$ in (7.5) in Hackbusch's \hmatrix
+   * book.</dd>
+   * </dl>
+   * @param new_rank
+   */
+  void
+  truncate_to_rank_preserve_positive_definite(size_type new_rank);
+
+  /**
+   * Truncate all rank-k matrices in the leaf set of the
+   * \hmatrix to rank-k matrices with the given \p new_rank,
+   * while the full matrices in the leaf set, i.e. those near-field matrices,
+   * are kept intact. In this version, the initial \hmatrix is a diagonal block.
+   *
+   * @param new_rank
+   */
+  void
+  truncate_to_rank_diag_preserve_positive_definite(size_type new_rank);
+
+  /**
+   * Truncate all rank-k matrices in the leaf set of the
+   * \hmatrix to rank-k matrices with the given \p new_rank,
+   * while the full matrices in the leaf set, i.e. those near-field matrices,
+   * are kept intact. In this version, the initial \hmatrix is an off-diagonal
+   * block.
+   *
+   * @param new_rank
+   */
+  void
+  truncate_to_rank_off_diag_preserve_positive_definite(size_type new_rank);
+
+  /**
    * Calculate matrix-vector multiplication as \f$y = y +
    * M \cdot x\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
-   *   <dd>1. The recursive algorithm for \hmatrix-vector
+   *   <dd>
+   *   1. The recursive algorithm for \hmatrix-vector
    * multiplication needs to collect the results from different components in
    * the leaf set and corresponding vector block in \f$x\f$. More importantly,
    * there will be a series of such results contributing to a same block in the
@@ -627,8 +969,10 @@ public:
    * first one, this \p add flag should be set to \p true, irrespective of the
    * original flag value passed into the first call of \p vmult. Hence, we do
    * not include the \p add flag in the \p vmult function.
-   * 2. The input vectors \p x and \p y are to be accessed via global DoF
-   * indices.</dd>
+   *
+   *   2. The input vectors \p x and \p y are to be accessed via global DoF
+   * indices.
+   *   </dd>
    * </dl>
    *
    * @param y
@@ -638,12 +982,24 @@ public:
   vmult(Vector<Number> &y, const Vector<Number> &x) const;
 
   /**
+   * Calculate matrix-vector multiplication as \f$y = y + \alpha \codt M \cdot
+   * x\f$.
+   *
+   * @param y
+   * @param alpha
+   * @param x
+   */
+  void
+  vmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
+
+  /**
    * Calculate matrix-vector multiplication as \f$y = y +
    * M \cdot x\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
-   *   <dd>1. The recursive algorithm for \hmatrix-vector
+   *   <dd>
+   *   1. The recursive algorithm for \hmatrix-vector
    * multiplication needs to collect the results from different components in
    * the leaf set and corresponding vector block in \f$x\f$. More importantly,
    * there will be a series of such results contributing to a same block in the
@@ -653,7 +1009,8 @@ public:
    * first one, this \p add flag should be set to \p true, irrespective of the
    * original flag value passed into the first call of \p vmult. Hence, we do
    * not include the \p add flag in the \p vmult function.
-   * 2. The input vectors \p x and \p y are to be accessed via local indices
+   *
+   *   2. The input vectors \p x and \p y are to be accessed via local indices
    * with the assistance of \p row_index_global_to_local_map and \p
    * col_index_global_to_local_map.</dd>
    * </dl>
@@ -662,12 +1019,31 @@ public:
    * @param x
    */
   void
-  vmult_local_vector(Vector<Number> &y,
-                     const std::map<types::global_dof_index, size_t>
-                       &                   y_index_global_to_local_map,
-                     const Vector<Number> &x,
-                     const std::map<types::global_dof_index, size_t>
-                       &x_index_global_to_local_map) const;
+  vmult(Vector<Number> &y,
+        const std::map<types::global_dof_index, size_t>
+          &                   y_index_global_to_local_map,
+        const Vector<Number> &x,
+        const std::map<types::global_dof_index, size_t>
+          &x_index_global_to_local_map) const;
+
+  /**
+   * Calculate matrix-vector multiplication as \f$y = y + \alpha \cdot M \cdot
+   * x\f$.
+   *
+   * @param y
+   * @param y_index_global_to_local_map
+   * @param alpha
+   * @param x
+   * @param x_index_global_to_local_map
+   */
+  void
+  vmult(Vector<Number> &y,
+        const std::map<types::global_dof_index, size_t>
+          &                   y_index_global_to_local_map,
+        const Number          alpha,
+        const Vector<Number> &x,
+        const std::map<types::global_dof_index, size_t>
+          &x_index_global_to_local_map) const;
 
   /**
    * Calculate matrix-vector multiplication as \f$y = y +
@@ -683,6 +1059,19 @@ public:
 
   /**
    * Calculate matrix-vector multiplication as \f$y = y +
+   * \alpha \cdot M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+   *
+   * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
+   * \p col_indices should be swapped. Also refer to HMatrix::vmult.
+   * @param y
+   * @param alpha
+   * @param x
+   */
+  void
+  Tvmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
+
+  /**
+   * Calculate matrix-vector multiplication as \f$y = y +
    * M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
    *
    * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
@@ -695,17 +1084,44 @@ public:
    * col_index_global_to_local_map.</dd>
    * </dl>
    *
-   * Also refer to HMatrix::vmult_local_vector.
+   * Also refer to HMatrix::vmult.
    * @param y
    * @param x
    */
   void
-  Tvmult_local_vector(Vector<Number> &y,
-                      const std::map<types::global_dof_index, size_t>
-                        &                   y_index_global_to_local_map,
-                      const Vector<Number> &x,
-                      const std::map<types::global_dof_index, size_t>
-                        &x_index_global_to_local_map) const;
+  Tvmult(Vector<Number> &y,
+         const std::map<types::global_dof_index, size_t>
+           &                   y_index_global_to_local_map,
+         const Vector<Number> &x,
+         const std::map<types::global_dof_index, size_t>
+           &x_index_global_to_local_map) const;
+
+  /**
+   * Calculate matrix-vector multiplication as \f$y = y +
+   * \alpha \cdot M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+   *
+   * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
+   * \p col_indices should be swapped.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>The input vectors \p x and \p y are to be accessed via local indices
+   * with the assistance of \p row_index_global_to_local_map and \p
+   * col_index_global_to_local_map.</dd>
+   * </dl>
+   *
+   * Also refer to HMatrix::vmult.
+   * @param y
+   * @param x
+   */
+  void
+  Tvmult(Vector<Number> &y,
+         const std::map<types::global_dof_index, size_t>
+           &                   y_index_global_to_local_map,
+         const Number          alpha,
+         const Vector<Number> &x,
+         const std::map<types::global_dof_index, size_t>
+           &x_index_global_to_local_map) const;
 
   /**
    * Perform \hmatrix MM multiplication reduction. This is
@@ -774,7 +1190,7 @@ public:
 
   /**
    * Level conserving \hmatrix multiplication, the result of which will be
-   * appended to the target matrix \p C.
+   * appended to the target matrix \p C, i.e. \f$C = C + AB\f$.
    *
    * @param C
    * @param B
@@ -784,6 +1200,52 @@ public:
   mmult_level_conserving(HMatrix<spacedim, Number> &C,
                          HMatrix<spacedim, Number> &B,
                          const unsigned int         fixed_rank);
+
+  /**
+   * Level conserving \hmatrix multiplication with a factored multiplied to
+   * the matrix product, the result of which will be appended to the target
+   * matrix \p C, i.e. \f$C = C + \alpha \cdot A B\f$.
+   *
+   * @param C
+   * @param alpha
+   * @param B
+   * @param fixed_rank
+   */
+  void
+  mmult_level_conserving(HMatrix<spacedim, Number> &C,
+                         const Number               alpha,
+                         HMatrix<spacedim, Number> &B,
+                         const unsigned int         fixed_rank);
+
+  /**
+   * Level conserving \hmatrix multiplication with the second operand being
+   * transposed, the result of which will be
+   * appended to the target matrix @p C, i.e. \f$C = C + \alpha \cdot A B^T\f$.
+   *
+   * @param C
+   * @param B
+   * @param fixed_rank
+   */
+  void
+  mTmult_level_conserving(HMatrix<spacedim, Number> &C,
+                          HMatrix<spacedim, Number> &B,
+                          const unsigned int         fixed_rank);
+
+  /**
+   * Level conserving \hmatrix multiplication with the second operand being
+   * transposed, the result of which will be multiplied by a factor and then
+   * appended to the target matrix @p C, i.e. \f$C = C + \alpha \cdot A B^T\f$.
+   *
+   * @param C
+   * @param alpha
+   * @param B
+   * @param fixed_rank
+   */
+  void
+  mTmult_level_conserving(HMatrix<spacedim, Number> &C,
+                          const Number               alpha,
+                          HMatrix<spacedim, Number> &B,
+                          const unsigned int         fixed_rank);
 
   /**
    * Add the current HMatrix \p A with another HMatrix \p B into \p C, i.e.
@@ -853,9 +1315,9 @@ public:
       const size_type                  fixed_rank_k) const;
 
   /**
-   * Add a rank-k matrix into the current \hmatrix node.
+   * Add a rank-k matrix into the current \hmatnode.
    *
-   * The rank-k matrix will be restricted to each leaf node of the \hmatrix node
+   * The rank-k matrix will be restricted to each leaf node of the \hmatnode
    * and the addition will be performed there. In this implementation, the row
    * and column global to local index maps with respect to \p B should be
    * explicit provided.
@@ -872,12 +1334,12 @@ public:
       const size_type fixed_rank_k) const;
 
   /**
-   * Add a rank-k matrix multiplied by a factor into the current \hmatrix node.
+   * Add a rank-k matrix multiplied by a factor into the current \hmatnode.
    *
-   * The rank-k matrix will be restricted to each leaf node of the \hmatrix node
+   * The rank-k matrix will be restricted to each leaf node of the \hmatnode
    * and the addition will be performed there. In this implementation, the row
    * and column global to local index maps with respect to \p B should be
-   * explicit provided.
+   * explicitly provided.
    *
    * @param b
    * @param B
@@ -893,9 +1355,9 @@ public:
       const size_type fixed_rank_k) const;
 
   /**
-   * Add a rank-k matrix into the current \hmatrix node.
+   * Add a rank-k matrix into the current \hmatnode.
    *
-   * The rank-k matrix will be restricted to each leaf node of the \hmatrix node
+   * The rank-k matrix will be restricted to each leaf node of the \hmatnode
    * and the addition will be performed there. In this implementation, the row
    * and column global to local index maps with respect to \p B are the same as
    * those associated with the \hmatrix, i.e. the rank-k matrix and \hmatrix are
@@ -908,9 +1370,9 @@ public:
   add(const RkMatrix<Number> &B, const size_type fixed_rank_k);
 
   /**
-   * Add a rank-k matrix multiplied by a factor into the current \hmatrix node.
+   * Add a rank-k matrix multiplied by a factor into the current \hmatnode.
    *
-   * The rank-k matrix will be restricted to each leaf node of the \hmatrix node
+   * The rank-k matrix will be restricted to each leaf node of the \hmatnode
    * and the addition will be performed there. In this implementation, the row
    * and column global to local index maps with respect to \p B are the same as
    * those associated with the \hmatrix, i.e. the rank-k matrix and \hmatrix are
@@ -922,6 +1384,15 @@ public:
    */
   void
   add(const Number b, const RkMatrix<Number> &B, const size_type fixed_rank_k);
+
+  /**
+   * Add the error matrix \f$EE^H\f$ recursively to the leaf diagonal blocks of
+   * the current \hmatnode for preserving positive definiteness.
+   *
+   * @param E
+   */
+  void
+  addsym_diag(const LAPACKFullMatrixExt<Number> &E);
 
   /**
    * Perform the \hmatrix addition \f$C = A + B\f$.
@@ -948,7 +1419,7 @@ public:
       const size_type            fixed_rank_k);
 
   /**
-   * Calculate the inverse of the \hmatrix node via Gauss
+   * Calculate the inverse of the \hmatnode via Gauss
    * elimination by calling the recursive function HMatrix<spacedim,
    * Number>::_invert_by_gauss_elim.
    *
@@ -961,6 +1432,564 @@ public:
   void
   invert_by_gauss_elim(HMatrix<spacedim, Number> &M_inv,
                        const size_type            fixed_rank_k);
+
+  /**
+   * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * \alert{The vector \p b is accessed directly by using the DoF index stored
+   * in clusters.}
+   *
+   * @param b Right hand side global vector. After execution, it stores the
+   * result vector.
+   */
+  void
+  solve_by_forward_substitution(Vector<Number> &b,
+                                const bool      is_unit_diagonal = true) const;
+
+  /**
+   * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution.
+   *
+   * \alert{The vectors \p b and \p x are accessed directly by using the DoF
+   * index stored in clusters.}
+   *
+   * @param x
+   * @param b Right hand side global vector.
+   * @param is_unit_diagonal
+   */
+  void
+  solve_by_forward_substitution(Vector<Number> &      x,
+                                const Vector<Number> &b,
+                                const bool is_unit_diagonal = true) const;
+
+  /**
+   * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * \alert{The vector \p b is to be accessed via local indices with the
+   * assistance of \p vector_index_global_to_local_map.}
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_by_forward_substitution(Vector<Number> &b,
+                                const std::map<types::global_dof_index, size_t>
+                                  &        vector_index_global_to_local_map,
+                                const bool is_unit_diagonal = true) const;
+
+  /**
+   * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution.
+   *
+   * \alert{The vectors \p x and \p b are to be accessed via local indices with
+   * the assistance of \p vector_index_global_to_local_map.}
+   *
+   * @param x
+   * @param b
+   * @param is_unit_diagonal
+   */
+  void
+  solve_by_forward_substitution(Vector<Number> &      x,
+                                const Vector<Number> &b,
+                                const std::map<types::global_dof_index, size_t>
+                                  &        vector_index_global_to_local_map,
+                                const bool is_unit_diagonal = true) const;
+
+  /**
+   * Solve the matrix-valued problem
+   * \f$L\vert_{\tau\times\tau}X\vert_{\tau\times\sigma}=Z\vert_{\tau\times\sigma}\f$
+   * using forward substitution.
+   *
+   * \alert{The problem to be solved is restricted to specific \bcs. Hence, when
+   * this recursive algorithm for forward substitution comes to a leaf node of
+   * \f$Z\f$, it implies the column vectors stored in \f$Z\f$ are to be accessed
+   * via local indices. Therefore, when calling the procedure \p HMAtrix<spacedim, Number>::solve_by_forward_substitution,
+   * the version with the argument \p vector_index_global_to_local_map should be used, i.e.
+   * @p HMatrix<spacedim, Number>::solve_by_forward_substitution(Vector<Number> &b, const std::map<types::global_dof_index, size_t> & vector_index_global_to_local_map, const bool is_unit_diagonal) const.}
+   *
+   * \mynote{Because the \p col_index_global_to_local_map in in some diagonal
+   * \hmatnode in \f$L\f$ may be built, this member function is not \p const.}
+   *
+   * @param X
+   * @param Z
+   * @param fixed_rank
+   * @param is_unit_diagonal
+   */
+  void
+  solve_by_forward_substitution_matrix_valued(
+    HMatrix<spacedim, Number> &X,
+    HMatrix<spacedim, Number> &Z,
+    const unsigned int         fixed_rank,
+    const bool                 is_unit_diagonal = true);
+
+  /**
+   * Solve the matrix-valued problem
+   * \f$L\vert_{\tau\times\tau}X\vert_{\tau\times\sigma}=Z\vert_{\tau\times\sigma}\f$
+   * using forward substitution, where \f$L\vert_{\tau\times\tau}\f$ is obtained
+   * from a Cholesky decomposition. Hence, \f$L\vert_{\tau\times\tau}\f$ is not
+   * normed.
+   *
+   * This function directly calls \p
+   * solve_by_forward_substitution_matrix_valued( HMatrix<spacedim, Number> &X,
+   * HMatrix<spacedim, Number> &Z, const unsigned int fixed_rank, const bool
+   * is_unit_diagonal = false) with \p is_unit_diagonal being \p false.
+   *
+   * @param X
+   * @param Z
+   * @param fixed_rank
+   */
+  void
+  solve_cholesky_by_forward_substitution_matrix_valued(
+    HMatrix<spacedim, Number> &X,
+    HMatrix<spacedim, Number> &Z,
+    const unsigned int         fixed_rank);
+
+  /**
+   * Solve the transpose of an upper triangular matrix \f$U^Tx=b\f$ by forward
+   * substitution.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_transpose_by_forward_substitution(Vector<Number> &b) const;
+
+  /**
+   * Solve the transpose of an upper triangular matrix \f$U^Tx=b\f$ by forward
+   * substitution.
+   *
+   * @param x Result vector.
+   * @param b Right hand side vector.
+   */
+  void
+  solve_transpose_by_forward_substitution(Vector<Number> &      x,
+                                          const Vector<Number> &b) const;
+
+  /**
+   * Solve the transpose of an upper triangular matrix \f$U^Tx=b\f$ by forward
+   * substitution.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * \alert{The vector \p b is to be accessed via local indices with the
+   * assistance of \p vector_index_global_to_local_map.}
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_transpose_by_forward_substitution(
+    Vector<Number> &b,
+    const std::map<types::global_dof_index, size_t>
+      &vector_index_global_to_local_map) const;
+
+  /**
+   * Solve the transpose of an upper triangular matrix \f$U^Tx=b\f$ by forward
+   * substitution.
+   *
+   * \alert{The vectors \p x and \p b are to be accessed via local indices with
+   * the assistance of \p vector_index_global_to_local_map.}
+   *
+   * @param x Result vector.
+   * @param b Right hand side vector.
+   */
+  void
+  solve_transpose_by_forward_substitution(
+    Vector<Number> &      x,
+    const Vector<Number> &b,
+    const std::map<types::global_dof_index, size_t>
+      &vector_index_global_to_local_map) const;
+
+  /**
+   * Solve the matrix-valued problem
+   * \f$X\vert_{\tau\times\sigma}U\vert_{\sigma\times\sigma} =
+   * Z\vert_{\tau\times\sigma}\f$.
+   *
+   * A transposed system is solved, i.e.
+   * \f$U^T\vert_{\sigma\times\sigma}X^T\vert_{\sigma\times\tau} =
+   * Z^T\vert_{\sigma\times\tau}\f$. Then \f$U^T\vert_{\sigma\times\sigma}\f$ is
+   * a lower triangular \hmatrix and a similar procedure as that in the
+   * matrix-valued forward substitution can be applied.
+   *
+   * @param X
+   * @param Z
+   * @param fixed_rank
+   */
+  void
+  solve_transpose_by_forward_substitution_matrix_valued(
+    HMatrix<spacedim, Number> &X,
+    HMatrix<spacedim, Number> &Z,
+    const unsigned int         fixed_rank);
+
+  /**
+   * Solve the matrix-valued problem
+   * \f$X\vert_{\tau\times\sigma}U\vert_{\sigma\times\sigma} =
+   * Z\vert_{\tau\times\sigma}\f$, where the upper triangular \hmatrix
+   * \f$U\vert_{\sigma\times\sigma}\f$ is obtained from a Cholesky
+   * factorization.
+   *
+   * Since only the lower triangular part of a Cholesky factorization is stored
+   * or effective, \f$U\vert_{\sigma\times\sigma} =
+   * L^T\vert_{\sigma\times\sigma}\f$. Therefore, a transposed system is solved
+   * using forward substitution, i.e.
+   * \f$U^T\vert_{\sigma\times\sigma}X^T\vert_{\sigma\times\tau} =
+   * L\vert_{\sigma\times\sigma}X^T\vert_{\sigma\times\tau} =
+   * Z^T\vert_{\sigma\times\tau}\f$.
+   *
+   * @param X
+   * @param Z
+   * @param fixed_rank
+   */
+  void
+  solve_cholesky_transpose_by_forward_substitution_matrix_valued(
+    HMatrix<spacedim, Number> &X,
+    HMatrix<spacedim, Number> &Z,
+    const unsigned int         fixed_rank);
+
+  /**
+   * Solve the block lower triangular matrix \f$Lx=b\f$ by forward substitution.
+   *
+   * Being different from the version for solving triangular \hmatrix,
+   *
+   * 1. when the block lower triangular matrix is unit, its diagonal blocks in
+   * the leaf set, which must be in the full matrix format, should be an
+   * identity matrix, i.e. \f$L\vert_{\tau\times\tau} = I\f$ for
+   * \f$\tau\times\tau \in P\f$. In this case, there is no need to actually
+   * solve it.
+   *
+   * 2. when the block lower triangular matrix is not unit, its diagonal blocks
+   * in the leaf set should be full matrices. In this case, a general linear
+   * system solver should be adopted to solve it.
+   *
+   * \alert{Even though the member variables of the current class will be not be
+   * modified, the actual heap memory data related to full matrix in the leaf
+   * set will be changed, since LU factorization will be performed.}
+   *
+   * @param b
+   * @param is_unit_diagonal
+   */
+  void
+  solve_block_triangular_by_forward_substitution(
+    Vector<Number> &b,
+    const bool      is_unit_block_diagonal = true) const;
+
+  /**
+   * Solve the block lower triangular matrix \f$Lx=b\f$ by forward substitution.
+   *
+   * Refer to \p solve_block_triangular_by_forward_substitution( Vector<Number>
+   * &b, const bool is_unit_block_diagonal = false) const.
+   *
+   * @param x
+   * @param b
+   * @param is_unit_block_diagonal
+   */
+  void
+  solve_block_triangular_by_forward_substitution(
+    Vector<Number> &      x,
+    const Vector<Number> &b,
+    const bool            is_unit_block_diagonal = true) const;
+
+  /**
+   * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution, where
+   * \f$L\f$ is obtained from a Cholesky decomposition. Hence, \f$L\f$ is not
+   * normed.
+   *
+   * This function directly calls \p
+   * solve_by_forward_substitution(Vector<Number> &b, const bool
+   * is_unit_diagonal = false) with \p is_unit_diagonal being \p false.
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_cholesky_by_forward_substitution(Vector<Number> &b) const;
+
+  /**
+   * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution, where
+   * \f$L\f$ is obtained from a Cholesky decomposition. Hence, \f$L\f$ is not
+   * normed.
+   *
+   * This function directly calls \p void
+   * solve_by_forward_substitution(Vector<Number> & x, const Vector<Number> &b,
+   * const bool is_unit_diagonal = false) const with \p is_unit_diagonal being
+   * \p false.
+   *
+   * @param x Solution vector.
+   * @param b Right hand side vector.
+   */
+  void
+  solve_cholesky_by_forward_substitution(Vector<Number> &      x,
+                                         const Vector<Number> &b) const;
+
+  /**
+   * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution, where
+   * \f$L\f$ is obtained from a Cholesky decomposition. Hence, \f$L\f$ is not
+   * normed.
+   *
+   * This function directly calls \p
+   * solve_by_forward_substitution(Vector<Number> &b, const
+   * std::map<types::global_dof_index, size_t> &
+   * vector_index_global_to_local_map, const bool is_unit_diagonal = false) with
+   * \p is_unit_diagonal being \p false.
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_cholesky_by_forward_substitution(
+    Vector<Number> &b,
+    const std::map<types::global_dof_index, size_t>
+      &vector_index_global_to_local_map) const;
+
+  /**
+   * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution, where
+   * \f$L\f$ is obtained from a Cholesky decomposition. Hence, \f$L\f$ is not
+   * normed.
+   *
+   * This function directly calls \p
+   * solve_by_forward_substitution(Vector<Number> &      x, const Vector<Number>
+   * &b, const std::map<types::global_dof_index, size_t> &
+   * vector_index_global_to_local_map, const bool is_unit_diagonal = false) with
+   * \p is_unit_diagonal being \p false.
+   *
+   * @param x Solution vector.
+   * @param b Right hand side vector.
+   */
+  void
+  solve_cholesky_by_forward_substitution(
+    Vector<Number> &      x,
+    const Vector<Number> &b,
+    const std::map<types::global_dof_index, size_t>
+      &vector_index_global_to_local_map) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_by_backward_substitution(Vector<Number> &b,
+                                 const bool is_unit_diagonal = false) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
+   *
+   * @param x
+   * @param b
+   * @param is_unit_diagonal
+   */
+  void
+  solve_by_backward_substitution(Vector<Number> &      x,
+                                 const Vector<Number> &b,
+                                 const bool is_unit_diagonal = false) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * \alert{The vector \p b is to be accessed via local indices with the
+   * assistance of \p vector_index_global_to_local_map.}
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_by_backward_substitution(Vector<Number> &b,
+                                 const std::map<types::global_dof_index, size_t>
+                                   &        vector_index_global_to_local_map,
+                                 const bool is_unit_diagonal = false) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
+   *
+   * \alert{The vectors \p x and \p b are to be accessed via local indices with
+   * the assistance of \p vector_index_global_to_local_map.}
+   *
+   * @param x
+   * @param b
+   * @param is_unit_diagonal
+   */
+  void
+  solve_by_backward_substitution(Vector<Number> &      x,
+                                 const Vector<Number> &b,
+                                 const std::map<types::global_dof_index, size_t>
+                                   &        vector_index_global_to_local_map,
+                                 const bool is_unit_diagonal = false) const;
+
+  /**
+   * Solve the block upper triangular matrix \f$Ux=b\f$ by backward
+   * substitution.
+   *
+   * Being different from the version for solving triangular \hmatrix,
+   *
+   * 1. when the block upper triangular matrix is unit, its diagonal blocks in
+   * the leaf set, which must be in the full matrix format, should be an
+   * identity matrix, i.e. \f$L\vert_{\tau\times\tau} = I\f$ for
+   * \f$\tau\times\tau \in P\f$. In this case, there is no need to actually
+   * solve it.
+   *
+   * 2. when the block upper triangular matrix is not unit, its diagonal blocks
+   * in the leaf set should be full matrices. In this case, a general linear
+   * system solver should be adopted to solve it.
+   *
+   * \alert{Even though the member variables of the current class will be not be
+   * modified, the actual heap memory data related to full matrix in the leaf
+   * set will be changed, since LU factorization will be performed.}
+   *
+   * @param b
+   * @param is_unit_diagonal
+   */
+  void
+  solve_block_triangular_by_backward_substitution(
+    Vector<Number> &b,
+    const bool      is_unit_block_diagonal = false) const;
+
+  /**
+   * Solve the block upper triangular matrix \f$Lx=b\f$ by backward
+   * substitution.
+   *
+   * Refer to \p solve_block_triangular_by_backward_substitution( Vector<Number>
+   * &b, const bool is_unit_block_diagonal = false) const.
+   *
+   * @param x
+   * @param b
+   * @param is_unit_block_diagonal
+   */
+  void
+  solve_block_triangular_by_backward_substitution(
+    Vector<Number> &      x,
+    const Vector<Number> &b,
+    const bool            is_unit_block_diagonal = false) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution,
+   * where \f$U\f$ is the transpose of the current matrix \f$L\f$.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_cholesky_by_backward_substitution(Vector<Number> &b) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution,
+   * where \f$U\f$ is the transpose of the current matrix \f$L\f$.
+   *
+   * @param x Result vector.
+   * @param b Right hand side vector.
+   */
+  void
+  solve_cholesky_by_backward_substitution(Vector<Number> &      x,
+                                          const Vector<Number> &b) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution,
+   * where \f$U\f$ is the transpose of the current matrix \f$L\f$.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * \alert{The vector \p b is to be accessed via local indices with the
+   * assistance of \p vector_index_global_to_local_map.}
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   */
+  void
+  solve_cholesky_by_backward_substitution(
+    Vector<Number> &b,
+    const std::map<types::global_dof_index, size_t>
+      &vector_index_global_to_local_map) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution,
+   * where \f$U\f$ is the transpose of the current matrix \f$L\f$.
+   *
+   * \alert{The vectors \p x and \p b are to be accessed via local indices with
+   * the assistance of \p vector_index_global_to_local_map.}
+   *
+   * @param x Result vector.
+   * @param b Right hand side vector.
+   */
+  void
+  solve_cholesky_by_backward_substitution(
+    Vector<Number> &      x,
+    const Vector<Number> &b,
+    const std::map<types::global_dof_index, size_t>
+      &vector_index_global_to_local_map) const;
+
+  /**
+   * Compute the LU factorization of an \hmatrix. The resulted \f$L\f$ and
+   * \f$U\f$ factors are stored in a same \hmatrix \f$LU\f$. The matrix \f$LU\f$
+   * should have the same hierarchical structure as the original matrix.
+   *
+   * @param LU
+   * @param fixed_rank
+   */
+  void
+  compute_lu_factorization(HMatrix<spacedim, Number> &LU,
+                           const unsigned int         fixed_rank) const;
+
+  /**
+   * Compute the LU factorization of an \hmatrix in situ. The resulted \f$L\f$
+   * and \f$U\f$ factors are stored in the original \hmatrix.
+   *
+   * @param fixed_rank
+   */
+  void
+  compute_lu_factorization(const unsigned int fixed_rank);
+
+  /**
+   * Compute the Cholesky factorization of an \hmatrix. Only the lower
+   * triangular \hmatrix factor \f$L\f$ is stored in the output variable \p L.
+   * The matrix \f$L\f$ should have the same hierarchical structure as the
+   * original matrix.
+   *
+   * @param L
+   * @param fixed_rank
+   */
+  void
+  compute_cholesky_factorization(HMatrix<spacedim, Number> &L,
+                                 const unsigned int         fixed_rank) const;
+
+  /**
+   * Compute the Cholesky factorization of an \hmatrix in situ. Only the lower
+   * triangular \hmatrix factor \f$L\f$ is stored in the original matrix.
+   *
+   * @param fixed_rank
+   */
+  void
+  compute_cholesky_factorization(const unsigned int fixed_rank);
+
+  /**
+   * Solve the whole linear system formed by the current \hmatrix, which should
+   * have been applied the LU factorization. The right hand side vector \p b
+   * should be accessed via global indices.
+   *
+   * @param x
+   * @param b
+   */
+  void
+  solve_lu(Vector<Number> &x, const Vector<Number> &b) const;
+
+  /**
+   * Solve the whole linear system formed by the current \hmatrix, which should
+   * have been applied the Cholesky factorization. The right hand side vector
+   * \p b should be accessed via global indices.
+   *
+   * @param x
+   * @param b
+   */
+  void
+  solve_cholesky(Vector<Number> &x, const Vector<Number> &b) const;
 
   /**
    * Coarsen the current \hmatrix so that it corresponds to the
@@ -1010,7 +2039,7 @@ public:
     const unsigned int fixed_rank_k);
 
   /**
-   * Build the leaf set of the current \hmatrix node.
+   * Build the leaf set of the current \hmatnode.
    */
   void
   build_leaf_set();
@@ -1034,7 +2063,7 @@ public:
   /**
    * Find a block cluster in the leaf set of the current
    * \hmatrix and returns the iterator of the corresponding
-   * \hmatrix node in the leaf set.
+   * \hmatnode in the leaf set.
    *
    * @param block_cluster
    * @return
@@ -1046,7 +2075,7 @@ public:
   /**
    * Find a block cluster in the leaf set of the current
    * \hmatrix and returns the iterator of the corresponding
-   * \hmatrix node in the leaf set (const version).
+   * \hmatnode in the leaf set (const version).
    *
    * @param block_cluster
    * @return
@@ -1112,7 +2141,7 @@ public:
     const unsigned int                  fixed_rank_k2 = 1);
 
   /**
-   * Remove a pair of \hmatrix nodes from the list of
+   * Remove a pair of \hmatnodes from the list of
    * matrix-matrix product subtasks to be performed, i.e. from the list
    * \p HMatrix::Sigma_P.
    */
@@ -1121,7 +2150,7 @@ public:
                                         const HMatrix<spacedim, Number> *M2);
 
   /**
-   * Remove a pair of \hmatrix nodes from the list of
+   * Remove a pair of \hmatnodes from the list of
    * matrix-matrix product subtasks to be performed, i.e. from the list
    * \p HMatrix::Sigma_P.
    */
@@ -1132,14 +2161,23 @@ public:
 
   /**
    * Check the consistency of the tree node split modes which are associated
-   * with the \hmatrix node pairs stored in the list
-   * \f$\Sigma_P\f$ of the current \hmatrix node.
+   * with the \hmatnode pairs stored in the list
+   * \f$\Sigma_P\f$ of the current \hmatnode.
    * @return
    */
   TreeNodeSplitMode
   determine_mm_split_mode_from_Sigma_P();
 
 private:
+  /**
+   * Print the \hmatrix hierarchy information recursively as a node in the
+   * directional graph in Graphviz dot format.
+   *
+   * @param out
+   */
+  void
+  _print_matrix_info_as_dot_node(std::ostream &out) const;
+
   /**
    * Convert an HMatrix to a full matrix by recursion.
    * @param matrix
@@ -1149,7 +2187,7 @@ private:
   _convertToFullMatrix(MatrixType &M) const;
 
   /**
-   * Collect \hmatrix nodes in the leaf set into a vector.
+   * Collect \hmatnodes in the leaf set into a vector.
    * @param total_leaf_set
    */
   void
@@ -1167,7 +2205,7 @@ private:
                                       const unsigned int fixed_rank = 0);
 
   /**
-   * Calculate the inverse of the \hmatrix node via Gauss
+   * Calculate the inverse of the \hmatnode via Gauss
    * elimination.
    *
    * @param M_inv
@@ -1186,9 +2224,19 @@ private:
   HMatrixType type;
 
   /**
-   * A list of submatrices of type HMatrix.
+   * A list of submatrices of type \hmatrix.
    */
   std::vector<HMatrix<spacedim, Number> *> submatrices;
+
+  /**
+   * Pointer to the parent \hmatrix.
+   */
+  HMatrix<spacedim, Number> *parent;
+
+  /**
+   * Submatrix index of the current \hmatnode wrt. its parent \hmatnode.
+   */
+  unsigned int submatrix_index;
 
   /**
    * A list of submatrices in the leaf set.
@@ -1271,7 +2319,7 @@ private:
   BlockClusterTree<spacedim, Number> Tind;
 
   /**
-   * List of pairs of pointers to \hmatrix nodes for
+   * List of pairs of pointers to \hmatnodes for
    * multiplication.
    */
   std::vector<
@@ -1293,8 +2341,9 @@ private:
 
 
 /**
- * Initialize an \hmatrix node with respect to a block cluster
+ * Initialize an \hmatnode with respect to a block cluster
  * node. The list \f$\Sigma_b^P\f$ is set to empty.
+ *
  * @param hmat
  * @param bc_node
  * @param Sigma_P
@@ -1340,9 +2389,10 @@ InitHMatrixWrtBlockClusterNode(
 
 
 /**
- * Initialize an \hmatrix node with respect to a block cluster
+ * Initialize an \hmatnode with respect to a block cluster
  * node. Its member list \f$\Sigma_b^P\f$ will be merged with the given \p
  * Sigma_P.
+ *
  * @param hmat
  * @param bc_node
  * @param Sigma_P
@@ -1395,9 +2445,10 @@ InitHMatrixWrtBlockClusterNode(
 
 
 /**
- * Initialize an \hmatrix node with respect to a block cluster
+ * Initialize an \hmatnode with respect to a block cluster
  * node. The given \p hmat_pair will be appended to the list
  * \f$\Sigma_b^P\f$.
+ *
  * @param hmat
  * @param bc_node
  * @param hmat_pair
@@ -1449,7 +2500,7 @@ InitHMatrixWrtBlockClusterNode(
  * respect to a block cluster tree by starting from a tree node which is
  * to be associated with the current \hmatrix.
  *
- * @param hmat Pointer to the current \hmatrix node, <strong>which has already been
+ * @param hmat Pointer to the current \hmatnode, <strong>which has already been
  * created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
  * associated with \p hmat.
@@ -1518,6 +2569,14 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
            * Append the initialized child to the list of submatrices of \p hmat.
            */
           hmat->submatrices.push_back(child_hmat);
+
+          /**
+           * Set the pointer to the parent \hmatnode of the current child
+           * \hmatnode.
+           */
+          child_hmat->parent = hmat;
+
+          child_hmat->submatrix_index = i;
         }
     }
   else
@@ -1565,7 +2624,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
  * The matrices in the leaf set are initialized with zero values. The rank of
  * the near field matrices are predefined fixed values.
  *
- * @param hmat Pointer to the current \hmatrix node, <strong>which has already been
+ * @param hmat Pointer to the current \hmatnode, <strong>which has already been
  * created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
  * associated with \p hmat.
@@ -1635,6 +2694,14 @@ InitAndCreateHMatrixChildren(
            * Append the initialized child to the list of submatrices of \p hmat.
            */
           hmat->submatrices.push_back(child_hmat);
+
+          /**
+           * Set the pointer to the parent \hmatnode of the current child
+           * \hmatnode.
+           */
+          child_hmat->parent = hmat;
+
+          child_hmat->submatrix_index = i;
         }
     }
   else
@@ -1677,14 +2744,8 @@ InitAndCreateHMatrixChildren(
             }
           else
             {
-              //              // DEBUG
-              //              std::cout << "InitAndCreateHMatrixChildren begins"
-              //              << std::endl;
               hmat->rkmatrix =
                 new RkMatrix<Number>(hmat->m, hmat->n, fixed_rank_k);
-              //              // DEBUG
-              //              std::cout << "InitAndCreateHMatrixChildren ends"
-              //              << std::endl;
             }
         }
     }
@@ -1699,13 +2760,13 @@ InitAndCreateHMatrixChildren(
  * The matrices in the leaf set are initialized with the data in the given
  * global full matrix \p M, which is created on the complete block cluster index
  * set \f$I \times J\f$ and whose elements should be accessed via indices stored
- * in the block cluster. The rank of the near field matrices are predefined
+ * in the block cluster. The rank of the far field matrices are predefined
  * fixed values.
  *
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
  *
- * @param hmat Pointer to the current \hmatrix node, <strong>which has already been
+ * @param hmat Pointer to the current \hmatnode, <strong>which has already been
  * created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
  * associated with \p hmat.
@@ -1777,6 +2838,14 @@ InitAndCreateHMatrixChildren(
            * Append the initialized child to the list of submatrices of \p hmat.
            */
           hmat->submatrices.push_back(child_hmat);
+
+          /**
+           * Set the pointer to the parent \hmatnode of the current child
+           * \hmatnode.
+           */
+          child_hmat->parent = hmat;
+
+          child_hmat->submatrix_index = i;
         }
     }
   else
@@ -1834,19 +2903,164 @@ InitAndCreateHMatrixChildren(
 /**
  * Recursively construct the children of an \hmatrix with
  * respect to a block cluster tree by starting from a tree node which is
+ * associated with the current \hmatrix. There is no rank truncation to the
+ * rank-k matrices.
+ *
+ * The matrices in the leaf set are initialized with the data in the given
+ * global full matrix \p M, which is created on the complete block cluster index
+ * set \f$I \times J\f$ and whose elements should be accessed via indices stored
+ * in the block cluster.
+ *
+ * During the recursive calling of this function, the source data matrix \p M is
+ * kept intact, which will not be restricted to small matrix blocks.
+ *
+ * @param hmat Pointer to the current \hmatnode, <strong>which has already been
+ * created on the heap but with its internal data left empty.</strong>
+ * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
+ * associated with \p hmat.
+ * @param M The global full matrix containing all the data required to initialize the
+ * \hmatrix.
+ * @param is_build_index_set_global_to_local_map
+ */
+template <int spacedim, typename Number = double>
+void
+InitAndCreateHMatrixChildren(
+  HMatrix<spacedim, Number> *                                          hmat,
+  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  const LAPACKFullMatrixExt<Number> &                                  M,
+  bool is_build_index_set_global_to_local_map = true)
+{
+  /**
+   * Link \p hmat with \p bc_node.
+   */
+  hmat->bc_node =
+    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
+      bc_node);
+
+  /**
+   * Link row and column indices.
+   */
+  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+    &(hmat->bc_node->get_data_reference()
+        .get_tau_node()
+        ->get_data_reference()
+        .get_index_set()));
+  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+    &(hmat->bc_node->get_data_reference()
+        .get_sigma_node()
+        ->get_data_reference()
+        .get_index_set()));
+
+  /**
+   * Update the matrix dimension of \p hmat.
+   */
+  hmat->m = hmat->row_indices->size();
+  hmat->n = hmat->col_indices->size();
+
+  const unsigned int bc_node_child_num = bc_node->get_child_num();
+
+  if (bc_node_child_num > 0)
+    {
+      /**
+       * When the block cluster node \p bc_node has children, set the current \p
+       * hmat type as \p HierarchicalMatrixType. Then we will
+       * continue constructing hierarchical submatrices.
+       */
+      hmat->type = HierarchicalMatrixType;
+
+      for (unsigned int i = 0; i < bc_node_child_num; i++)
+        {
+          /**
+           * Create an empty HMatrix on the heap.
+           */
+          HMatrix<spacedim, Number> *child_hmat =
+            new HMatrix<spacedim, Number>();
+
+          InitAndCreateHMatrixChildren(child_hmat,
+                                       bc_node->get_child_pointer(i),
+                                       M,
+                                       is_build_index_set_global_to_local_map);
+
+          /**
+           * Append the initialized child to the list of submatrices of \p hmat.
+           */
+          hmat->submatrices.push_back(child_hmat);
+
+          /**
+           * Set the pointer to the parent \hmatnode of the current child
+           * \hmatnode.
+           */
+          child_hmat->parent = hmat;
+
+          child_hmat->submatrix_index = i;
+        }
+    }
+  else
+    {
+      if (is_build_index_set_global_to_local_map)
+        {
+          /**
+           * Build the maps from global row and column indices respectively to
+           * local indices.
+           */
+          build_index_set_global_to_local_map(
+            *(hmat->row_indices), hmat->row_index_global_to_local_map);
+          build_index_set_global_to_local_map(
+            *(hmat->col_indices), hmat->col_index_global_to_local_map);
+        }
+
+      /**
+       * Update the current matrix type according to the identity of the block
+       * cluster node. When the block cluster belongs to the near field, \p hmat
+       * should be represented as a \p LAPACKFullMatrixExt. When the block
+       * cluster belongs to the far field, \p hmat should be represented as an
+       * \p RkMatrix. Correspondingly, new matrices, either full matrix or
+       * rank-k matrix will be created on the heap and assigned to the current
+       * \hmatrix.
+       */
+      if (bc_node->get_data_reference().get_is_near_field())
+        {
+          hmat->type       = FullMatrixType;
+          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+          /**
+           * Assign matrix values from \p M to the current HMatrix.
+           */
+          for (unsigned int i = 0; i < hmat->m; i++)
+            {
+              for (unsigned int j = 0; j < hmat->n; j++)
+                {
+                  (*hmat->fullmatrix)(i, j) =
+                    M(hmat->row_indices->at(i), hmat->col_indices->at(j));
+                }
+            }
+        }
+      else
+        {
+          hmat->type = RkMatrixType;
+          hmat->rkmatrix =
+            new RkMatrix<Number>(*(hmat->row_indices), *(hmat->col_indices), M);
+        }
+    }
+}
+
+
+/**
+ * Recursively construct the children of an \hmatrix with
+ * respect to a block cluster tree by starting from a tree node which is
  * associated with the current \hmatrix.
  *
  * The matrices in the leaf set are initialized with the data in the given full
  * matrix \p M, which is created on the block cluster index set \f$\tau \times
  * \sigma\f$ associated with the current \hmatrix. Hence, this
  * full matrix is just a block of the original global full matrix created on the
- * block cluster index set \f$I \times J\f$. The rank of the near field matrices
+ * block cluster index set \f$I \times J\f$. The rank of the far field matrices
  * are predefined fixed values.
  *
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
  *
- * @param hmat Pointer to the current \hmatrix node, <strong>which has already been
+ * @param hmat Pointer to the current \hmatnode, <strong>which has already been
  * created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
  * associated with \p hmat.
@@ -1930,6 +3144,14 @@ InitAndCreateHMatrixChildren(
            * Append the initialized child to the list of submatrices of \p hmat.
            */
           hmat->submatrices.push_back(child_hmat);
+
+          /**
+           * Set the pointer to the parent \hmatnode of the current child
+           * \hmatnode.
+           */
+          child_hmat->parent = hmat;
+
+          child_hmat->submatrix_index = i;
         }
     }
   else
@@ -1991,12 +3213,176 @@ InitAndCreateHMatrixChildren(
 
 
 /**
- * Recursively construct the children of an \hmatrix node with
+ * Recursively construct the children of an \hmatrix with
  * respect to a block cluster tree by starting from a tree node which is
- * associated with the current \hmatrix node.
+ * associated with the current \hmatrix. There is no rank truncation to the
+ * rank-k matrices.
+ *
+ * The matrices in the leaf set are initialized with the data in the given full
+ * matrix \p M, which is created on the block cluster index set \f$\tau \times
+ * \sigma\f$ associated with the current \hmatrix. Hence, this
+ * full matrix is just a block of the original global full matrix created on the
+ * block cluster index set \f$I \times J\f$.
+ *
+ * During the recursive calling of this function, the source data matrix \p M is
+ * kept intact, which will not be restricted to small matrix blocks.
+ *
+ * @param hmat Pointer to the current \hmatnode, <strong>which has already been
+ * created on the heap but with its internal data left empty.</strong>
+ * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
+ * associated with \p hmat.
+ * @param M The full matrix, as a submatrix of the global full matrix,
+ * containing all the data required to initialize the \hmatrix.
+ * @param row_index_global_to_local_map_for_M The map from the global row
+ * indices to the local indices of the matrix associated the
+ * \hmatrix when first calling this recursive function.
+ * @param col_index_global_to_local_map_for_M The map from the global column
+ * indices to the local indices of the matrix associated the
+ * \hmatrix when first calling this recursive function.
+ */
+template <int spacedim, typename Number = double>
+void
+InitAndCreateHMatrixChildren(
+  HMatrix<spacedim, Number> *                                          hmat,
+  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  const LAPACKFullMatrixExt<Number> &                                  M,
+  const std::map<types::global_dof_index, size_t>
+    &row_index_global_to_local_map_for_M,
+  const std::map<types::global_dof_index, size_t>
+    &  col_index_global_to_local_map_for_M,
+  bool is_build_index_set_global_to_local_map = true)
+{
+  /**
+   * Link \p hmat with \p bc_node.
+   */
+  hmat->bc_node =
+    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
+      bc_node);
+
+  /**
+   * Link row and column indices.
+   */
+  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+    &(hmat->bc_node->get_data_reference()
+        .get_tau_node()
+        ->get_data_reference()
+        .get_index_set()));
+  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+    &(hmat->bc_node->get_data_reference()
+        .get_sigma_node()
+        ->get_data_reference()
+        .get_index_set()));
+
+  /**
+   * Update the matrix dimension of \p hmat.
+   */
+  hmat->m = hmat->row_indices->size();
+  hmat->n = hmat->col_indices->size();
+
+  const unsigned int bc_node_child_num = bc_node->get_child_num();
+
+  if (bc_node_child_num > 0)
+    {
+      /**
+       * When the block cluster node \p bc_node has children, set the current \p
+       * hmat type as \p HierarchicalMatrixType. Then we will
+       * continue constructing hierarchical submatrices.
+       */
+      hmat->type = HierarchicalMatrixType;
+
+      for (unsigned int i = 0; i < bc_node_child_num; i++)
+        {
+          /**
+           * Create an empty HMatrix on the heap.
+           */
+          HMatrix<spacedim, Number> *child_hmat =
+            new HMatrix<spacedim, Number>();
+
+          InitAndCreateHMatrixChildren(child_hmat,
+                                       bc_node->get_child_pointer(i),
+                                       M,
+                                       row_index_global_to_local_map_for_M,
+                                       col_index_global_to_local_map_for_M,
+                                       is_build_index_set_global_to_local_map);
+
+          /**
+           * Append the initialized child to the list of submatrices of \p hmat.
+           */
+          hmat->submatrices.push_back(child_hmat);
+
+          /**
+           * Set the pointer to the parent \hmatnode of the current child
+           * \hmatnode.
+           */
+          child_hmat->parent = hmat;
+
+          child_hmat->submatrix_index = i;
+        }
+    }
+  else
+    {
+      if (is_build_index_set_global_to_local_map)
+        {
+          /**
+           * Build the maps from global row and column indices respectively to
+           * local indices.
+           */
+          build_index_set_global_to_local_map(
+            *(hmat->row_indices), hmat->row_index_global_to_local_map);
+          build_index_set_global_to_local_map(
+            *(hmat->col_indices), hmat->col_index_global_to_local_map);
+        }
+
+      /**
+       * Update the current matrix type according to the identity of the block
+       * cluster node. When the block cluster belongs to the near field, \p hmat
+       * should be represented as a \p LAPACKFullMatrixExt. When the block
+       * cluster belongs to the far field, \p hmat should be represented as an
+       * \p RkMatrix. Correspondingly, new matrices, either full matrix or
+       * rank-k matrix will be created on the heap and assigned to the current
+       * \hmatrix.
+       */
+      if (bc_node->get_data_reference().get_is_near_field())
+        {
+          hmat->type       = FullMatrixType;
+          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+          /**
+           * Assign matrix values from \p M to the current HMatrix.
+           */
+          for (unsigned int i = 0; i < hmat->m; i++)
+            {
+              for (unsigned int j = 0; j < hmat->n; j++)
+                {
+                  (*hmat->fullmatrix)(i, j) =
+                    M(row_index_global_to_local_map_for_M.at(
+                        hmat->row_indices->at(i)),
+                      col_index_global_to_local_map_for_M.at(
+                        hmat->col_indices->at(j)));
+                }
+            }
+        }
+      else
+        {
+          hmat->type = RkMatrixType;
+          hmat->rkmatrix =
+            new RkMatrix<Number>(*(hmat->row_indices),
+                                 *(hmat->col_indices),
+                                 M,
+                                 row_index_global_to_local_map_for_M,
+                                 col_index_global_to_local_map_for_M);
+        }
+    }
+}
+
+
+/**
+ * Recursively construct the children of an \hmatnode with
+ * respect to a block cluster tree by starting from a tree node which is
+ * associated with the current \hmatnode.
  *
  * The matrices in the leaf set take the data migrated from the leaf set of the
- * given \hmatrix \p M.
+ * given \hmatrix \p H.
  *
  * @param hmat
  * @param M
@@ -2065,19 +3451,27 @@ InitAndCreateHMatrixChildren(
            * Append the initialized child to the list of submatrices of \p hmat.
            */
           hmat->submatrices.push_back(child_hmat);
+
+          /**
+           * Set the pointer to the parent \hmatnode of the current child
+           * \hmatnode.
+           */
+          child_hmat->parent = hmat;
+
+          child_hmat->submatrix_index = i;
         }
     }
   else
     {
       /**
-       * When the current \hmatrix node is a leaf, migrate the
+       * When the current \hmatnode is a leaf, migrate the
        * data from the leaf set of \p H to it.
        */
       HMatrix<spacedim, Number> *matched_source_hmat = *(
         H.find_block_cluster_in_leaf_set(hmat->bc_node->get_data_reference()));
       /**
-       * Shallow copy the found \hmatrix node in the leaf set to
-       * the current \hmatrix node.
+       * Shallow copy the found \hmatnode in the leaf set to
+       * the current \hmatnode.
        */
       (*hmat) = std::move(*matched_source_hmat);
     }
@@ -2085,16 +3479,16 @@ InitAndCreateHMatrixChildren(
 
 
 /**
- * Refine an \hmatrix node with respect to its associated block
+ * Refine an \hmatnode with respect to its associated block
  * cluster tree which has already been extended to be finer than the original
- * tree. The \hmatrix node should be of either \p FullMatrixType
+ * tree. The \hmatnode should be of either \p FullMatrixType
  * or \p RkMatrixType, i.e. it belongs to the leaf set of the block cluster tree
  * before extension.
  *
  * @param starting_hmat The pointer to the initial \hmatrix
  * node from which this recursive function is called for the first time, i.e.
- * the \hmatrix node from which the refinement begins.
- * @param current_hmat The pointer to the current \hmatrix node
+ * the \hmatnode from which the refinement begins.
+ * @param current_hmat The pointer to the current \hmatnode
  * being handled during the recursion. For the first time of calling this
  * function, \p current_hmat is the same as \p starting_hmat.
  */
@@ -2107,7 +3501,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
   /**
    * <dl class="section">
    *   <dt>Work flow</dt>
-   *   <dd>Because the \hmatrix node from which the refinement
+   *   <dd>Because the \hmatnode from which the refinement
    * begins belongs to the leaf set of the original block cluster tree, its
    * \hmatrix type can only be \p FullMatrixType or \p
    * RkMatrixType. Therefore, we make an assertion here.
@@ -2118,7 +3512,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
 
   /**
    * Determine the total number of children of the current
-   * \hmatrix node by querying its associated block cluster
+   * \hmatnode by querying its associated block cluster
    * node. We do it like this is because the block cluster tree has already been
    * extended which contains a set of child node, while the hierarchy of
    * H-matrices has still not been extended yet.
@@ -2129,12 +3523,12 @@ RefineHMatrixWrtExtendedBlockClusterTree(
     {
       /**
        * If the associated block cluster node of the current
-       * \hmatrix node has children, we firstly update the
+       * \hmatnode has children, we firstly update the
        * \hmatrix type for the current \hmatrix
        * node as \p HierarchicalMatrix and this is only performed when the
-       * current \hmatrix node is not the starting
-       * \hmatrix node, because the original matrix type of the
-       * starting \hmatrix node will be used later during
+       * current \hmatnode is not the starting
+       * \hmatnode, because the original matrix type of the
+       * starting \hmatnode will be used later during
        * restriction operations to the current block cluster.
        */
       if (current_hmat != starting_hmat)
@@ -2155,7 +3549,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
           current_hmat->submatrices.push_back(child_hmat);
 
           /**
-           * Link the child \hmatrix node with the corresponding
+           * Link the child \hmatnode with the corresponding
            * block cluster node.
            */
           child_hmat->bc_node = const_cast<
@@ -2187,6 +3581,14 @@ RefineHMatrixWrtExtendedBlockClusterTree(
           child_hmat->n = child_hmat->col_indices->size();
 
           /**
+           * Set the pointer to the parent \hmatnode of the current child
+           * \hmatnode.
+           */
+          child_hmat->parent = current_hmat;
+
+          child_hmat->submatrix_index = i;
+
+          /**
            * Recursively call the function.
            */
           RefineHMatrixWrtExtendedBlockClusterTree(starting_hmat, child_hmat);
@@ -2195,50 +3597,21 @@ RefineHMatrixWrtExtendedBlockClusterTree(
   else
     {
       /**
-       * When the current \hmatrix node has no children, i.e. it
+       * When the current \hmatnode has no children, i.e. it
        * belongs to the leaf set of the extended block cluster tree.
        */
       if (current_hmat == starting_hmat)
         {
           /**
-           * If the current \hmatrix node is still the same as
-           * the starting \hmatrix node, there is no actual
+           * If the current \hmatnode is still the same as
+           * the starting \hmatnode, there is no actual
            * refinement work to be done.
            */
         }
       else
         {
-          //          /**
-          //           * If the current \hmatrix node is not the
-          //           starting
-          //           * \hmatrix node, we firstly build the
-          //           maps from
-          //           * global row and column indices to their respective local
-          //           indices.
-          //           * When there will be further refinement from those nodes,
-          //           these maps
-          //           * will be used for matrix restriction.
-          //           *
-          //           * <dl class="section note">
-          //           *   <dt>Note</dt>
-          //           *   <dd>These two global to local maps are only needed
-          //           for
-          //           * \hmatrix nodes in the leaf set, because
-          //           only these
-          //           * \hmatrix nodes contain the actual full
-          //           matrix data
-          //           * or rank-k matrix data.</dd>
-          //           * </dl>
-          //           */
-          //          build_index_set_global_to_local_map(
-          //            *(current_hmat->row_indices),
-          //            current_hmat->row_index_global_to_local_map);
-          //          build_index_set_global_to_local_map(
-          //            *(current_hmat->col_indices),
-          //            current_hmat->col_index_global_to_local_map);
-
           /**
-           * Update the current \hmatrix node type according to
+           * Update the current \hmatnode type according to
            * the identity of the block cluster node: when the block cluster
            * belongs to the near field, \p current_hmat should be represented as
            * a full matrix \p LAPACKFullMatrixExt; when the block cluster
@@ -2254,9 +3627,9 @@ RefineHMatrixWrtExtendedBlockClusterTree(
 
               /**
                * Fill the current full matrix with the data extracted from
-               * the starting \hmatrix node. This is actually a
-               * restriction of the starting \hmatrix node to
-               * the current \hmatrix node.
+               * the starting \hmatnode. This is actually a
+               * restriction of the starting \hmatnode to
+               * the current \hmatnode.
                */
               switch (starting_hmat->type)
                 {
@@ -2299,7 +3672,7 @@ RefineHMatrixWrtExtendedBlockClusterTree(
 
               /**
                * Fill the current rank-k matrix with the data extracted
-               * from the starting \hmatrix node.
+               * from the starting \hmatnode.
                */
               switch (starting_hmat->type)
                 {
@@ -2524,7 +3897,7 @@ convertHMatBlockToRkMatrix(
 
           /**
            * Build the map from the global DoF indices to the local row indices
-           * of the current \hmatrix node, if necessary.
+           * of the current \hmatnode, if necessary.
            */
           if (hmat_block->row_index_global_to_local_map.size() == 0)
             {
@@ -2535,7 +3908,7 @@ convertHMatBlockToRkMatrix(
 
           /**
            * Build the map from the global DoF indices to the local column
-           * indices of the current \hmatrix node, if necessary.
+           * indices of the current \hmatnode, if necessary.
            */
           if (hmat_block->col_index_global_to_local_map.size() == 0)
             {
@@ -2638,7 +4011,7 @@ convertHMatBlockToRkMatrix(
 
           /**
            * Build the map from the global DoF indices to the local row indices
-           * of the current \hmatrix node, if necessary.
+           * of the current \hmatnode, if necessary.
            */
           if (hmat_block->row_index_global_to_local_map.size() == 0)
             {
@@ -2649,7 +4022,7 @@ convertHMatBlockToRkMatrix(
 
           /**
            * Build the map from the global DoF indices to the local column
-           * indices of the current \hmatrix node, if necessary.
+           * indices of the current \hmatnode, if necessary.
            */
           if (hmat_block->col_index_global_to_local_map.size() == 0)
             {
@@ -2891,7 +4264,7 @@ convertHMatBlockToRkMatrix(
 
       /**
        * Visualize the partition structure if a not-null pointer to the root
-       * \hmatrix node and a a not-null pointer to a \p
+       * \hmatnode and a a not-null pointer to a \p
        * calling_counter are provided.
        */
       if (hmat_root_block != nullptr && calling_counter != nullptr)
@@ -2912,7 +4285,7 @@ convertHMatBlockToRkMatrix(
 
 
 /**
- * Calculate the product of two \hmatrix nodes, where the second
+ * Calculate the product of two \hmatnodes, where the second
  * one \p M2 has \p RkMatrixType and the result will also be a rank-k matrix.
  *
  * The arithmetic operation to be performed is
@@ -2986,10 +4359,10 @@ h_rk_mmult(HMatrix<spacedim, Number> &M1,
     {
       M2.A.get_column(j, col_vect_in_A);
       result_vect = 0.;
-      M1.vmult_local_vector(result_vect,
-                            M1.row_index_global_to_local_map,
-                            col_vect_in_A,
-                            M1.col_index_global_to_local_map);
+      M1.vmult(result_vect,
+               M1.row_index_global_to_local_map,
+               col_vect_in_A,
+               M1.col_index_global_to_local_map);
 
       /**
        * Fill the result vector into the \p A component matrix of \p M.
@@ -3000,7 +4373,285 @@ h_rk_mmult(HMatrix<spacedim, Number> &M1,
 
 
 /**
- * Calculate the product of two \hmatrix nodes, where the second
+ * Calculate the product of two \hmatnodes and the result is scaled by a
+ * factor, where the second one \p M2 has \p RkMatrixType and the result will
+ * also be a rank-k matrix.
+ *
+ * The arithmetic operation to be performed is
+ * \f[
+ * M = \alpha \cdot M_1 \cdot M_2 = \alpha \cdot M_1 (A B^T) = \alpha \cdot (M_1
+ * A) B^T = \alpha \cdot A' B^T, \f]
+ * where \f$A' = M_1 A\f$ is calculated as a series of
+ * \hmatrix-vector multiplications. For details,
+ * \f[
+ * M_1 A = M_1
+ * \begin{bmatrix}
+ * a_{\sigma,1} & \cdots & a_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * M_1 a_{\sigma,1} & \cdots & M_1 a_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * a'_{\tau,1} & \cdots & a'_{\tau,r}
+ * \end{bmatrix}.
+ * \f]
+ * It can be seen that the formal rank \f$r\f$ of the result matrix \p M is the
+ * same as that of \p M2.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_rk_mmult(const Number               alpha,
+           HMatrix<spacedim, Number> &M1,
+           const RkMatrix<Number> &   M2,
+           RkMatrix<Number> &         M)
+{
+  AssertDimension(M1.n, M2.m);
+
+  /**
+   * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
+   * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
+   * matrix-vector product \f$M_1 \cdot a_{\sigma,j}\f$.
+   */
+  Vector<Number> col_vect_in_A(M2.A.m());
+  Vector<Number> result_vect(M1.m);
+
+  /**
+   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+   * Its \p B component matrix is the same as that of \p M2.
+   */
+  M.reinit(M1.m, M2.n, M2.formal_rank);
+  M.B = M2.B;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M1.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.row_indices),
+                                          M1.row_index_global_to_local_map);
+    }
+
+  if (M1.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.col_indices),
+                                          M1.col_index_global_to_local_map);
+    }
+
+  /**
+   * Then we calculate the \p A component matrix of \p M, which is \p
+   * M1*M2.A.
+   */
+  for (size_t j = 0; j < M2.formal_rank; j++)
+    {
+      M2.A.get_column(j, col_vect_in_A);
+      /**
+       * \alert{Since the following \p vmult will compute \f$y = y + M x\f$,
+       * \p result_vect should be reset to zero beforehand.}
+       */
+      result_vect = 0.;
+      M1.vmult(result_vect,
+               M1.row_index_global_to_local_map,
+               alpha,
+               col_vect_in_A,
+               M1.col_index_global_to_local_map);
+
+      /**
+       * Fill the result vector into the \p A component matrix of \p M.
+       */
+      M.A.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the second operand being
+ * transposed, where the second
+ * operand \p M2 has \p RkMatrixType and the result will also be a rank-k matrix.
+ *
+ * The arithmetic operation to be performed is
+ * \f[
+ * M = M_1 \cdot M_2^T = M_1 (A B^T)^T = (M_1 B) A^T = A' B'^T,
+ * \f]
+ * where \f$A' = M_1 B\f$ is calculated as a series of
+ * \hmatrix-vector multiplications, and \f$B' = A\f$. For details,
+ * \f[
+ * M_1 B = M_1
+ * \begin{bmatrix}
+ * b_{\sigma,1} & \cdots & b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * M_1 b_{\sigma,1} & \cdots & M_1 b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * b'_{\tau,1} & \cdots & b'_{\tau,r}
+ * \end{bmatrix}.
+ * \f]
+ * It can be seen that the formal rank \f$r\f$ of the result matrix \p M is the
+ * same as that of \p M2.
+ *
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_rk_mTmult(HMatrix<spacedim, Number> &M1,
+            const RkMatrix<Number> &   M2,
+            RkMatrix<Number> &         M)
+{
+  AssertDimension(M1.n, M2.n);
+
+  /**
+   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+   * B component of \p M2 and another \p Vector \f$b'_{\tau,j}\f$ storing the
+   * matrix-vector product \f$M_1 \cdot b_{\sigma,j}\f$.
+   */
+  Vector<Number> col_vect_in_B(M2.B.m());
+  Vector<Number> result_vect(M1.m);
+
+  /**
+   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+   * Its \p B component matrix is the same as that of \p M2.
+   */
+  M.reinit(M1.m, M2.m, M2.formal_rank);
+  M.B = M2.A;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M1.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.row_indices),
+                                          M1.row_index_global_to_local_map);
+    }
+
+  if (M1.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.col_indices),
+                                          M1.col_index_global_to_local_map);
+    }
+
+  /**
+   * Then we calculate the \p A component matrix of \p M, which is \p
+   * M1*M2.B.
+   */
+  for (size_t j = 0; j < M2.formal_rank; j++)
+    {
+      M2.B.get_column(j, col_vect_in_B);
+      result_vect = 0.;
+      M1.vmult(result_vect,
+               M1.row_index_global_to_local_map,
+               col_vect_in_B,
+               M1.col_index_global_to_local_map);
+
+      /**
+       * Fill the result vector into the \p A component matrix of \p M.
+       */
+      M.A.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the second operand being
+ * transposed, where the second
+ * operand \p M2 has \p RkMatrixType and the result will also be a rank-k
+ * matrix. The result will be scaled by a factor.
+ *
+ * The arithmetic operation to be performed is
+ * \f[
+ * M = \alpha \cdot M_1 \cdot M_2^T = \alpha \cdot M_1 (A B^T)^T = \alpha \cdot
+ * (M_1 B) A^T = \alpha \cdot A' B'^T, \f]
+ * where \f$A' = M_1 B\f$ is calculated as a series of
+ * \hmatrix-vector multiplications, and \f$B' = A\f$. For details,
+ * \f[
+ * M_1 B = M_1
+ * \begin{bmatrix}
+ * b_{\sigma,1} & \cdots & b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * M_1 b_{\sigma,1} & \cdots & M_1 b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * b'_{\tau,1} & \cdots & b'_{\tau,r}
+ * \end{bmatrix}.
+ * \f]
+ * It can be seen that the formal rank \f$r\f$ of the result matrix \p M is the
+ * same as that of \p M2.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_rk_mTmult(const Number               alpha,
+            HMatrix<spacedim, Number> &M1,
+            const RkMatrix<Number> &   M2,
+            RkMatrix<Number> &         M)
+{
+  AssertDimension(M1.n, M2.n);
+
+  /**
+   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+   * B component of \p M2 and another \p Vector \f$b'_{\tau,j}\f$ storing the
+   * matrix-vector product \f$M_1 \cdot b_{\sigma,j}\f$.
+   */
+  Vector<Number> col_vect_in_B(M2.B.m());
+  Vector<Number> result_vect(M1.m);
+
+  /**
+   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+   * Its \p B component matrix is the same as that of \p M2.
+   */
+  M.reinit(M1.m, M2.m, M2.formal_rank);
+  M.B = M2.A;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M1.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.row_indices),
+                                          M1.row_index_global_to_local_map);
+    }
+
+  if (M1.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.col_indices),
+                                          M1.col_index_global_to_local_map);
+    }
+
+  /**
+   * Then we calculate the \p A component matrix of \p M, which is \p
+   * M1*M2.B.
+   */
+  for (size_t j = 0; j < M2.formal_rank; j++)
+    {
+      M2.B.get_column(j, col_vect_in_B);
+      result_vect = 0.;
+      M1.vmult(result_vect,
+               M1.row_index_global_to_local_map,
+               alpha,
+               col_vect_in_B,
+               M1.col_index_global_to_local_map);
+
+      /**
+       * Fill the result vector into the \p A component matrix of \p M.
+       */
+      M.A.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes, where the second
  * one \p M2 has \p RkMatrixType and the result will also be a rank-k matrix.
  * This function is to be called by the matrix-matrix multiplication function.
  * @param M1
@@ -3048,7 +4699,7 @@ h_rk_mmult_for_h_h_mmult(HMatrix<spacedim, Number> *      M1,
 
 
 /**
- * Calculate the product of two \hmatrix nodes, where the first
+ * Calculate the product of two \hmatnodes, where the first
  * one \p M1 has \p RkMatrixType and the result is also a rank-k matrix.
  *
  * The arithmetic operation to be performed is
@@ -3122,10 +4773,10 @@ rk_h_mmult(const RkMatrix<Number> &   M1,
     {
       M1.B.get_column(j, col_vect_in_B);
       result_vect = 0.;
-      M2.Tvmult_local_vector(result_vect,
-                             M2.col_index_global_to_local_map,
-                             col_vect_in_B,
-                             M2.row_index_global_to_local_map);
+      M2.Tvmult(result_vect,
+                M2.col_index_global_to_local_map,
+                col_vect_in_B,
+                M2.row_index_global_to_local_map);
 
       /**
        * Fill the result vector into the \p B component matrix of \p M.
@@ -3136,7 +4787,280 @@ rk_h_mmult(const RkMatrix<Number> &   M1,
 
 
 /**
- * Calculate the product of two \hmatrix nodes, where the first
+ * Calculate the product of two \hmatnodes and the result is scaled by a
+ * factor, where the first one \p M1 has \p RkMatrixType and the result is also
+ * a rank-k matrix.
+ *
+ * The arithmetic operation to be performed is
+ * \f[
+ * M = \alpha \cdot M_1 \cdot M_2 = \alpha \cdot  (A B^T) M_2 = \alpha \cdot A
+ * (B^T M_2) = \alpha \cdot  A B'^T, \f]
+ * where \f$B' = M_2^T B\f$ is calculated as a series of
+ * transposed \hmatrix-vector multiplications. For details,
+ * \f[
+ * M_2^T B = M_2^T
+ * \begin{bmatrix}
+ * b_{\sigma,1} & \cdots & b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * M_2^T b_{\sigma,1} & \cdots & M_2^T b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * b'_{\rho,1} & \cdots & b'_{\rho,r}
+ * \end{bmatrix}.
+ * \f]
+ * It can be seen that the formal rank \f$r\f$ of the result matrix \p M is the
+ * same as that of \p M1.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+rk_h_mmult(const Number               alpha,
+           const RkMatrix<Number> &   M1,
+           HMatrix<spacedim, Number> &M2,
+           RkMatrix<Number> &         M)
+{
+  AssertDimension(M1.n, M2.m);
+
+  /**
+   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+   * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
+   * matrix-vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
+   */
+  Vector<Number> col_vect_in_B(M1.B.m());
+  Vector<Number> result_vect(M2.n);
+
+  /**
+   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+   * Its \p A component matrix is the same as that of \p M1_rk.
+   */
+  M.reinit(M1.m, M2.n, M1.formal_rank);
+  M.A = M1.A;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M2.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.row_indices),
+                                          M2.row_index_global_to_local_map);
+    }
+
+  if (M2.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.col_indices),
+                                          M2.col_index_global_to_local_map);
+    }
+
+  /**
+   * Then we calculate the \p B component matrix of \p M, which is \p
+   * M2^T*M1_rk.B.
+   */
+  for (size_t j = 0; j < M.formal_rank; j++)
+    {
+      M1.B.get_column(j, col_vect_in_B);
+      /**
+       * \alert{Since the following \p Tvmult will compute \f$y = y + M^T x\f$,
+       * \p result_vect should be reset to zero beforehand.}
+       */
+      result_vect = 0.;
+      M2.Tvmult(result_vect,
+                M2.col_index_global_to_local_map,
+                alpha,
+                col_vect_in_B,
+                M2.row_index_global_to_local_map);
+
+      /**
+       * Fill the result vector into the \p B component matrix of \p M.
+       */
+      M.B.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the second operand being
+ * transposed, where the first operand \p M1 has \p RkMatrixType and the result
+ * is also a rank-k matrix.
+ *
+ * The arithmetic operation to be performed is
+ * \f[
+ * M = M_1 \cdot M_2^T = (A B^T) M_2^T = A (B^T M_2^T) = A B'^T,
+ * \f]
+ * where \f$B' = M_2 B\f$ is calculated as a series of \hmatrix-vector
+ * multiplications. For details,
+ * \f[ M_2 B = M_2 \begin{bmatrix}
+ * b_{\sigma,1} & \cdots & b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * M_2 b_{\sigma,1} & \cdots & M_2 b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * b'_{\rho,1} & \cdots & b'_{\rho,r}
+ * \end{bmatrix}.
+ * \f]
+ * It can be seen that the formal rank \f$r\f$ of the result matrix \p M is the
+ * same as that of \p M1.
+ *
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+rk_h_mTmult(const RkMatrix<Number> &   M1,
+            HMatrix<spacedim, Number> &M2,
+            RkMatrix<Number> &         M)
+{
+  AssertDimension(M1.n, M2.n);
+
+  /**
+   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+   * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
+   * matrix-vector product \f$M_2 \cdot b_{\sigma,j}\f$.
+   */
+  Vector<Number> col_vect_in_B(M1.B.m());
+  Vector<Number> result_vect(M2.m);
+
+  /**
+   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+   * Its \p A component matrix is the same as that of \p M1_rk.
+   */
+  M.reinit(M1.m, M2.m, M1.formal_rank);
+  M.A = M1.A;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M2.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.row_indices),
+                                          M2.row_index_global_to_local_map);
+    }
+
+  if (M2.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.col_indices),
+                                          M2.col_index_global_to_local_map);
+    }
+
+  /**
+   * Then we calculate the \p B component matrix of \p M, which is \p
+   * M2*M1_rk.B.
+   */
+  for (size_t j = 0; j < M.formal_rank; j++)
+    {
+      M1.B.get_column(j, col_vect_in_B);
+      result_vect = 0.;
+      M2.vmult(result_vect,
+               M2.row_index_global_to_local_map,
+               col_vect_in_B,
+               M2.col_index_global_to_local_map);
+
+      /**
+       * Fill the result vector into the \p B component matrix of \p M.
+       */
+      M.B.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the second operand being
+ * transposed, where the first operand \p M1 has \p RkMatrixType and the result
+ * is also a rank-k matrix. The result will be scaled by a factor.
+ *
+ * The arithmetic operation to be performed is
+ * \f[
+ * M = \alpha \cdot M_1 \cdot M_2^T = \alpha \cdot (A B^T) M_2^T = \alpha \cdot
+ * A (B^T M_2^T) = \alpha \cdot A B'^T, \f]
+ * where \f$B' = M_2 B\f$ is calculated as a series of \hmatrix-vector
+ * multiplications. For details,
+ * \f[ M_2 B = M_2 \begin{bmatrix}
+ * b_{\sigma,1} & \cdots & b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * M_2 b_{\sigma,1} & \cdots & M_2 b_{\sigma,r}
+ * \end{bmatrix} =
+ * \begin{bmatrix}
+ * b'_{\rho,1} & \cdots & b'_{\rho,r}
+ * \end{bmatrix}.
+ * \f]
+ * It can be seen that the formal rank \f$r\f$ of the result matrix \p M is the
+ * same as that of \p M1.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+rk_h_mTmult(const Number               alpha,
+            const RkMatrix<Number> &   M1,
+            HMatrix<spacedim, Number> &M2,
+            RkMatrix<Number> &         M)
+{
+  AssertDimension(M1.n, M2.n);
+
+  /**
+   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+   * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
+   * matrix-vector product \f$M_2 \cdot b_{\sigma,j}\f$.
+   */
+  Vector<Number> col_vect_in_B(M1.B.m());
+  Vector<Number> result_vect(M2.m);
+
+  /**
+   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+   * Its \p A component matrix is the same as that of \p M1_rk.
+   */
+  M.reinit(M1.m, M2.m, M1.formal_rank);
+  M.A = M1.A;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M2.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.row_indices),
+                                          M2.row_index_global_to_local_map);
+    }
+
+  if (M2.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.col_indices),
+                                          M2.col_index_global_to_local_map);
+    }
+
+  /**
+   * Then we calculate the \p B component matrix of \p M, which is \p
+   * M2*M1_rk.B.
+   */
+  for (size_t j = 0; j < M.formal_rank; j++)
+    {
+      M1.B.get_column(j, col_vect_in_B);
+      result_vect = 0.;
+      M2.vmult(result_vect,
+               M2.row_index_global_to_local_map,
+               alpha,
+               col_vect_in_B,
+               M2.col_index_global_to_local_map);
+
+      /**
+       * Fill the result vector into the \p B component matrix of \p M.
+       */
+      M.B.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes, where the first
  * one \p M1 has \p RkMatrixType and the result will also be a rank-k matrix.
  * This function is to be called by the matrix-matrix multiplication function.
  * @param M1
@@ -3184,9 +5108,10 @@ rk_h_mmult_for_h_h_mmult(const HMatrix<spacedim, Number> *M1,
 
 
 /**
- * Calculate the product of two \hmatrix nodes, where the second
+ * Calculate the product of two \hmatnodes, where the second
  * one is a full matrix and the result is also represented as a full matrix
  * because the associated block cluster node \f$\tau\times\rho\f$ is small.
+ *
  * @param M1
  * @param M2
  * @param M
@@ -3225,17 +5150,181 @@ h_f_mmult(HMatrix<spacedim, Number> &        M1,
     {
       M2.get_column(j, col_vect_in_M2);
       result_vect = 0.;
-      M1.vmult_local_vector(result_vect,
-                            M1.row_index_global_to_local_map,
-                            col_vect_in_M2,
-                            M1.col_index_global_to_local_map);
+      M1.vmult(result_vect,
+               M1.row_index_global_to_local_map,
+               col_vect_in_M2,
+               M1.col_index_global_to_local_map);
       M.fill_col(j, result_vect);
     }
 }
 
 
 /**
- * Calculate the product of two \hmatrix nodes, where the second
+ * Calculate the product of two \hmatnodes with the result scaled by a
+ * factor. The second operand is a full matrix and the result is also
+ * represented as a full matrix because the associated block cluster node
+ * \f$\tau\times\rho\f$ is small.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_f_mmult(const Number                       alpha,
+          HMatrix<spacedim, Number> &        M1,
+          const LAPACKFullMatrixExt<Number> &M2,
+          LAPACKFullMatrixExt<Number> &      M)
+{
+  AssertDimension(M1.n, M2.m());
+
+  Vector<Number> col_vect_in_M2(M2.m());
+  Vector<Number> result_vect(M1.m);
+
+  const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m;
+  const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.n();
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M1.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.row_indices),
+                                          M1.row_index_global_to_local_map);
+    }
+
+  if (M1.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.col_indices),
+                                          M1.col_index_global_to_local_map);
+    }
+
+  M.reinit(n_rows, n_cols);
+  for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
+    {
+      M2.get_column(j, col_vect_in_M2);
+      result_vect = 0.;
+      M1.vmult(result_vect,
+               M1.row_index_global_to_local_map,
+               alpha,
+               col_vect_in_M2,
+               M1.col_index_global_to_local_map);
+      M.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the second operand being
+ * transposed, where the second one is a full matrix and the result is also
+ * represented as a full matrix because the associated block cluster node
+ * \f$\tau\times\rho\f$ is small.
+ *
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_f_mTmult(HMatrix<spacedim, Number> &        M1,
+           const LAPACKFullMatrixExt<Number> &M2,
+           LAPACKFullMatrixExt<Number> &      M)
+{
+  AssertDimension(M1.n, M2.n());
+
+  Vector<Number> row_vect_in_M2(M2.n());
+  Vector<Number> result_vect(M1.m);
+
+  const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m;
+  const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.m();
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M1.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.row_indices),
+                                          M1.row_index_global_to_local_map);
+    }
+
+  if (M1.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.col_indices),
+                                          M1.col_index_global_to_local_map);
+    }
+
+  M.reinit(n_rows, n_cols);
+  for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
+    {
+      M2.get_row(j, row_vect_in_M2);
+      result_vect = 0.;
+      M1.vmult(result_vect,
+               M1.row_index_global_to_local_map,
+               row_vect_in_M2,
+               M1.col_index_global_to_local_map);
+      M.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the second operand being
+ * transposed, where the second one is a full matrix and the result is also
+ * represented as a full matrix because the associated block cluster node
+ * \f$\tau\times\rho\f$ is small. The result will be scaled by a factor.
+ *
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_f_mTmult(const Number                       alpha,
+           HMatrix<spacedim, Number> &        M1,
+           const LAPACKFullMatrixExt<Number> &M2,
+           LAPACKFullMatrixExt<Number> &      M)
+{
+  AssertDimension(M1.n, M2.n());
+
+  Vector<Number> row_vect_in_M2(M2.n());
+  Vector<Number> result_vect(M1.m);
+
+  const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m;
+  const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.m();
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M1.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.row_indices),
+                                          M1.row_index_global_to_local_map);
+    }
+
+  if (M1.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M1.col_indices),
+                                          M1.col_index_global_to_local_map);
+    }
+
+  M.reinit(n_rows, n_cols);
+  for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
+    {
+      M2.get_row(j, row_vect_in_M2);
+      result_vect = 0.;
+      M1.vmult(result_vect,
+               M1.row_index_global_to_local_map,
+               alpha,
+               row_vect_in_M2,
+               M1.col_index_global_to_local_map);
+      M.fill_col(j, result_vect);
+    }
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes, where the second
  * one is a full matrix and the result is represented as a rank-k matrix because
  * the associated block cluster is large.
  *
@@ -3266,6 +5355,118 @@ h_f_mmult(HMatrix<spacedim, Number> &        M1,
   RkMatrix<Number> M2_rk(M2_copy);
 
   h_rk_mmult(M1, M2_rk, M);
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the result scaled by a
+ * factor. The second operand is a full matrix and the result is represented as
+ * a rank-k matrix because the associated block cluster is large.
+ *
+ * The second matrix \p M2 will be firstly converted to a rank-k matrix. Then
+ * its multiplication with \p M1 will be carried by calling \p h_rk_mmult. Since
+ * the conversion from a full matrix to a rank-k matrix will modify the original
+ * data, a copy of \p M2 will be created.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_f_mmult(const Number                       alpha,
+          HMatrix<spacedim, Number> &        M1,
+          const LAPACKFullMatrixExt<Number> &M2,
+          RkMatrix<Number> &                 M)
+{
+  AssertDimension(M1.n, M2.m());
+
+  /**
+   * Create a local copy of the full matrix \p M2.
+   */
+  LAPACKFullMatrixExt<Number> M2_copy(M2);
+
+  /**
+   * Convert the full matrix \p M2 to a rank-k matrix.
+   */
+  RkMatrix<Number> M2_rk(M2_copy);
+
+  h_rk_mmult(alpha, M1, M2_rk, M);
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the second operand being
+ * transposed, where the second one is a full matrix and the result is
+ * represented as a rank-k matrix because the associated block cluster is large.
+ *
+ * The second matrix \p M2 will be firstly converted to a rank-k matrix. Then
+ * its multiplication with \p M1 will be carried by calling \p h_rk_mTmult. Since
+ * the conversion from a full matrix to a rank-k matrix will modify the original
+ * data, a copy of \p M2 will be created.
+ *
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_f_mTmult(HMatrix<spacedim, Number> &        M1,
+           const LAPACKFullMatrixExt<Number> &M2,
+           RkMatrix<Number> &                 M)
+{
+  AssertDimension(M1.n, M2.n());
+
+  /**
+   * Create a local copy of the full matrix \p M2.
+   */
+  LAPACKFullMatrixExt<Number> M2_copy(M2);
+
+  /**
+   * Convert the full matrix \p M2 to a rank-k matrix.
+   */
+  RkMatrix<Number> M2_rk(M2_copy);
+
+  h_rk_mTmult(M1, M2_rk, M);
+}
+
+
+/**
+ * Calculate the product of two \hmatnodes with the second operand being
+ * transposed, where the second one is a full matrix and the result is
+ * represented as a rank-k matrix because the associated block cluster is large.
+ * The result will be scaled by a factor.
+ *
+ * The second matrix \p M2 will be firstly converted to a rank-k matrix. Then
+ * its multiplication with \p M1 will be carried by calling \p h_rk_mTmult. Since
+ * the conversion from a full matrix to a rank-k matrix will modify the original
+ * data, a copy of \p M2 will be created.
+ *
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+h_f_mTmult(const Number                       alpha,
+           HMatrix<spacedim, Number> &        M1,
+           const LAPACKFullMatrixExt<Number> &M2,
+           RkMatrix<Number> &                 M)
+{
+  AssertDimension(M1.n, M2.n());
+
+  /**
+   * Create a local copy of the full matrix \p M2.
+   */
+  LAPACKFullMatrixExt<Number> M2_copy(M2);
+
+  /**
+   * Convert the full matrix \p M2 to a rank-k matrix.
+   */
+  RkMatrix<Number> M2_rk(M2_copy);
+
+  h_rk_mTmult(alpha, M1, M2_rk, M);
 }
 
 
@@ -3380,10 +5581,173 @@ f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
     {
       M1.get_row(i, row_vect_in_M1);
       result_vect = 0.;
-      M2.Tvmult_local_vector(result_vect,
-                             M2.col_index_global_to_local_map,
-                             row_vect_in_M1,
-                             M2.row_index_global_to_local_map);
+      M2.Tvmult(result_vect,
+                M2.col_index_global_to_local_map,
+                row_vect_in_M1,
+                M2.row_index_global_to_local_map);
+      M.fill_row(i, result_vect);
+    }
+}
+
+
+/**
+ * Multiplication of a full matrix and a \hmatrix and the result is scaled by a
+ * factor. A full matrix is returned in \p M.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+f_h_mmult(const Number                       alpha,
+          const LAPACKFullMatrixExt<Number> &M1,
+          HMatrix<spacedim, Number> &        M2,
+          LAPACKFullMatrixExt<Number> &      M)
+{
+  AssertDimension(M1.n(), M2.m);
+
+  Vector<Number> row_vect_in_M1(M1.n());
+  Vector<Number> result_vect(M2.n);
+
+  const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m();
+  const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.n;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M2.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.row_indices),
+                                          M2.row_index_global_to_local_map);
+    }
+
+  if (M2.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.col_indices),
+                                          M2.col_index_global_to_local_map);
+    }
+
+  M.reinit(n_rows, n_cols);
+  for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
+    {
+      M1.get_row(i, row_vect_in_M1);
+      /**
+       * \alert{Since the following \p Tvmult will compute \f$y = y + M^T x\f$,
+       * \p result_vect should be reset to zero beforehand.}
+       */
+      result_vect = 0.;
+      M2.Tvmult(result_vect,
+                M2.col_index_global_to_local_map,
+                alpha,
+                row_vect_in_M1,
+                M2.row_index_global_to_local_map);
+      M.fill_row(i, result_vect);
+    }
+}
+
+
+/**
+ * Multiplication of a full matrix and a \hmatrix with the second operand being
+ * transposed. A full matrix is returned in \p M.
+ *
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+f_h_mTmult(const LAPACKFullMatrixExt<Number> &M1,
+           HMatrix<spacedim, Number> &        M2,
+           LAPACKFullMatrixExt<Number> &      M)
+{
+  AssertDimension(M1.n(), M2.n);
+
+  Vector<Number> row_vect_in_M1(M1.n());
+  Vector<Number> result_vect(M2.m);
+
+  const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m();
+  const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.m;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M2.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.row_indices),
+                                          M2.row_index_global_to_local_map);
+    }
+
+  if (M2.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.col_indices),
+                                          M2.col_index_global_to_local_map);
+    }
+
+  M.reinit(n_rows, n_cols);
+  for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
+    {
+      M1.get_row(i, row_vect_in_M1);
+      result_vect = 0.;
+      M2.vmult(result_vect,
+               M2.row_index_global_to_local_map,
+               row_vect_in_M1,
+               M2.col_index_global_to_local_map);
+      M.fill_row(i, result_vect);
+    }
+}
+
+
+/**
+ * Multiplication of a full matrix and a \hmatrix with the second operand being
+ * transposed, the result of which will be scaled by a factor. A full matrix is returned in \p M.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+f_h_mTmult(const Number                       alpha,
+           const LAPACKFullMatrixExt<Number> &M1,
+           HMatrix<spacedim, Number> &        M2,
+           LAPACKFullMatrixExt<Number> &      M)
+{
+  AssertDimension(M1.n(), M2.n);
+
+  Vector<Number> row_vect_in_M1(M1.n());
+  Vector<Number> result_vect(M2.m);
+
+  const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m();
+  const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.m;
+
+  /**
+   * Build the map from global DoF indices to local matrix indices if necessary.
+   */
+  if (M2.row_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.row_indices),
+                                          M2.row_index_global_to_local_map);
+    }
+
+  if (M2.col_index_global_to_local_map.size() == 0)
+    {
+      build_index_set_global_to_local_map(*(M2.col_indices),
+                                          M2.col_index_global_to_local_map);
+    }
+
+  M.reinit(n_rows, n_cols);
+  for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
+    {
+      M1.get_row(i, row_vect_in_M1);
+      result_vect = 0.;
+      M2.vmult(result_vect,
+               M2.row_index_global_to_local_map,
+               alpha,
+               row_vect_in_M1,
+               M2.col_index_global_to_local_map);
       M.fill_row(i, result_vect);
     }
 }
@@ -3392,6 +5756,7 @@ f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
 /**
  * Multiplication of a full matrix and a \hmatrix. A rank-k matrix is returned
  * in \p M.
+ *
  * @param M1
  * @param M2
  * @param M
@@ -3411,6 +5776,88 @@ f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
   LAPACKFullMatrixExt<Number> M1_copy(M1);
   RkMatrix<Number>            M1_rk(M1_copy);
   rk_h_mmult(M1_rk, M2, M);
+}
+
+
+/**
+ * Multiplication of a full matrix and a \hmatrix and the result is scaled by a
+ * factor. A rank-k matrix is returned in \p M.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+f_h_mmult(const Number                       alpha,
+          const LAPACKFullMatrixExt<Number> &M1,
+          HMatrix<spacedim, Number> &        M2,
+          RkMatrix<Number> &                 M)
+{
+  AssertDimension(M1.n(), M2.m);
+
+  /**
+   * \alert{The creation of the rank-k matrix \p M1_rk from \p M1 will modify \p
+   * M1 internally. Hence, we make a copy of \p M1 here.}
+   */
+  LAPACKFullMatrixExt<Number> M1_copy(M1);
+  RkMatrix<Number>            M1_rk(M1_copy);
+  rk_h_mmult(alpha, M1_rk, M2, M);
+}
+
+
+/**
+ * Multiplication of a full matrix and a \hmatrix with the second operand being
+ * transposed. A rank-k matrix is returned in \p M.
+ *
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+f_h_mTmult(const LAPACKFullMatrixExt<Number> &M1,
+           HMatrix<spacedim, Number> &        M2,
+           RkMatrix<Number> &                 M)
+{
+  AssertDimension(M1.n(), M2.n);
+
+  /**
+   * \alert{The creation of the rank-k matrix \p M1_rk from \p M1 will modify \p
+   * M1 internally. Hence, we make a copy of \p M1 here.}
+   */
+  LAPACKFullMatrixExt<Number> M1_copy(M1);
+  RkMatrix<Number>            M1_rk(M1_copy);
+  rk_h_mTmult(M1_rk, M2, M);
+}
+
+
+/**
+ * Multiplication of a full matrix and a \hmatrix with the second operand being
+ * transposed. The result will be scaled by a factor. A rank-k matrix is returned in \p M.
+ *
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param M
+ */
+template <int spacedim, typename Number = double>
+void
+f_h_mTmult(const Number                       alpha,
+           const LAPACKFullMatrixExt<Number> &M1,
+           HMatrix<spacedim, Number> &        M2,
+           RkMatrix<Number> &                 M)
+{
+  AssertDimension(M1.n(), M2.n);
+
+  /**
+   * \alert{The creation of the rank-k matrix \p M1_rk from \p M1 will modify \p
+   * M1 internally. Hence, we make a copy of \p M1 here.}
+   */
+  LAPACKFullMatrixExt<Number> M1_copy(M1);
+  RkMatrix<Number>            M1_rk(M1_copy);
+  rk_h_mTmult(alpha, M1_rk, M2, M);
 }
 
 
@@ -3543,9 +5990,9 @@ h_h_mmult_phase1_recursion(HMatrix<spacedim, Number> *         M,
 
       /**
        * After previous reduction and splitting, the matrix multiplication for
-       * the current \hmatrix node should be replaced by the
+       * the current \hmatnode should be replaced by the
        * multiplication subtasks for submatrices. These subtasks are recorded as
-       * \hmatrix node pairs which are stored in
+       * \hmatnode pairs which are stored in
        * \f$\Sigma_b^P\f$ of the submatrices.
        */
       AssertDimension(M->Sigma_P.size(), 0);
@@ -3885,10 +6332,747 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &M0,
 
 
 /**
- * This function performs the multiplication of two level-conserving \hmatrices.
+ * \hmatrix-\hmatrix multiplication with the result scaled by a factor, when the
+ * product matrix belongs to the leaf set of the target \bct.
  *
- * It is required that an empty result matrix \p M should be created first with
- * respect to a \bct.
+ * This function implements the recursive \p MMR algorithm in (7.26) in
+ * Hackbusch's \hmatrix book.
+ *
+ * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
+ *
+ * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
+ * which will assembles the contribution from \f$M_1 \cdot M_2\f$. For the first
+ * call of this function, \p M is the same as \p M0.
+ * @param M1 The first operand of the multiplication, which is built upon the
+ * \bcn \f$\tau\times\sigma\f$.
+ * @param M2 The second operand of the multiplication, which is built upon the
+ * \bcn \f$\sigma\times\rho\f$.
+ * @param fixed_rank
+ */
+template <int spacedim, typename Number>
+void
+h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &M0,
+                         HMatrix<spacedim, Number> &M,
+                         const Number               alpha,
+                         HMatrix<spacedim, Number> &M1,
+                         HMatrix<spacedim, Number> &M2,
+                         const unsigned int         fixed_rank)
+{
+  // DEBUG
+  //  std::cout << "h_h_mmult_from_leaf_node: ";
+  //  print_h_h_submatrix_mmult_accessor(std::cout, "M1", M1, "M2", M2);
+  //  std::cout << " = ";
+  //  print_h_submatrix_accessor(std::cout, "M", M);
+  //  std::cout << std::endl;
+
+  Assert(M0.bc_node->is_leaf(), ExcMessage("M0 should be a leaf node!"));
+
+  // Array of empty child pointers used for initializing a block
+  // cluster tree node.
+  const std::array<
+    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
+    BlockClusterTree<spacedim, Number>::child_num>
+    empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+
+  /**
+   * Create a \bcn \f$\tau\times\rho\f$ for the current local product matrix \p
+   * Z. Since this \bcn will not be connected with other \bcns in a \bct, it has
+   * neither parent nor children and its level is set to zero.
+   */
+  typename BlockClusterTree<spacedim, Number>::node_value_type
+    current_product_bc_node(
+      BlockCluster<spacedim, Number>(
+        M1.bc_node->get_data_reference().get_tau_node(),
+        M2.bc_node->get_data_reference().get_sigma_node()),
+      0,
+      empty_child_pointers,
+      nullptr,
+      UnsplitMode);
+
+  /**
+   * Set the \p is_near_field flag of the \bcn for the current
+   * local product matrix \p Z according to the matrix type of the initial leaf
+   * node matrix \p M0, i.e. it inherits the \p is_near_field flag of the \bcn
+   * for \p M0.
+   */
+  if (M0.bc_node->get_data_reference().get_is_near_field())
+    {
+      Assert(M0.type == FullMatrixType, ExcInvalidHMatrixType(M0.type));
+
+      current_product_bc_node.get_data_reference().set_is_near_field(true);
+    }
+  else
+    {
+      Assert(M0.type == RkMatrixType, ExcInvalidHMatrixType(M0.type));
+
+      current_product_bc_node.get_data_reference().set_is_near_field(false);
+    }
+
+  /**
+   * Create the local \hmatrix \p Z associated with the current \bcn. During its
+   * initialization, memory will be allocated for \p Z depending on its matrix
+   * type.
+   */
+  HMatrix<spacedim, Number> Z(&current_product_bc_node, fixed_rank);
+  // Local variable storing the rank-k matrix obtained from multiplication
+  // involving leaf node.
+  RkMatrix<Number> ZR;
+  // Local variable storing the full matrix obtained from multiplication
+  // involving leaf node.
+  LAPACKFullMatrixExt<Number> ZF;
+  // The result matrix type for the multiplication involving leaf node.
+  HMatrixType result_matrix_type;
+
+  if (M1.bc_node->is_leaf() || M2.bc_node->is_leaf())
+    {
+      /**
+       * When either operand \p M1 or \p M2 is a leaf node, directly evaluation
+       * of their multiplication can be performed.
+       */
+      if (M1.type == RkMatrixType)
+        {
+          rk_h_mmult(alpha, *(M1.rkmatrix), M2, ZR);
+          result_matrix_type = RkMatrixType;
+        }
+      else if (M2.type == RkMatrixType)
+        {
+          h_rk_mmult(alpha, M1, *(M2.rkmatrix), ZR);
+          result_matrix_type = RkMatrixType;
+        }
+      else if (M1.type == FullMatrixType)
+        {
+          f_h_mmult(alpha, *(M1.fullmatrix), M2, ZF);
+          result_matrix_type = FullMatrixType;
+        }
+      else if (M2.type == FullMatrixType)
+        {
+          h_f_mmult(alpha, M1, *(M2.fullmatrix), ZF);
+          result_matrix_type = FullMatrixType;
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      if (Z.type == RkMatrixType)
+        {
+          // The desired result should be a rank-k matrix.
+          if (result_matrix_type == RkMatrixType)
+            {
+              *(Z.rkmatrix) = ZR;
+            }
+          else if (result_matrix_type == FullMatrixType)
+            {
+              // Convert the full matrix to rank-k matrix.
+              *(Z.rkmatrix) = RkMatrix<Number>(fixed_rank, ZF);
+            }
+          else
+            {
+              Assert(false, ExcInvalidHMatrixType(result_matrix_type));
+            }
+        }
+      else if (Z.type == FullMatrixType)
+        {
+          // The desired result should be a full matrix.
+          if (result_matrix_type == RkMatrixType)
+            {
+              // Convert the rank-k matrix to full matrix.
+              ZR.convertToFullMatrix(*(Z.fullmatrix));
+            }
+          else if (result_matrix_type == FullMatrixType)
+            {
+              *(Z.fullmatrix) = ZF;
+            }
+          else
+            {
+              Assert(false, ExcInvalidHMatrixType(result_matrix_type));
+            }
+        }
+      else
+        {
+          Assert(false, ExcInvalidHMatrixType(Z.type));
+        }
+    }
+  else
+    {
+      /**
+       * \alert{When we perform submatrix multiplication, we use a higher
+       * specified rank, since the results will be assembled into the larger
+       * matrix \p Z via pairwise formatted addition, during which the actual
+       * matrix rank may increase.}
+       */
+      const unsigned int local_fixed_rank =
+        std::min(fixed_rank * 2, std::min(Z.m, Z.n));
+
+      h_h_mmult_from_leaf_node(M0,
+                               Z,
+                               alpha,
+                               *(M1.submatrices[0]),
+                               *(M2.submatrices[0]),
+                               local_fixed_rank);
+      h_h_mmult_from_leaf_node(M0,
+                               Z,
+                               alpha,
+                               *(M1.submatrices[1]),
+                               *(M2.submatrices[2]),
+                               local_fixed_rank);
+      h_h_mmult_from_leaf_node(M0,
+                               Z,
+                               alpha,
+                               *(M1.submatrices[0]),
+                               *(M2.submatrices[1]),
+                               local_fixed_rank);
+      h_h_mmult_from_leaf_node(M0,
+                               Z,
+                               alpha,
+                               *(M1.submatrices[1]),
+                               *(M2.submatrices[3]),
+                               local_fixed_rank);
+      h_h_mmult_from_leaf_node(M0,
+                               Z,
+                               alpha,
+                               *(M1.submatrices[2]),
+                               *(M2.submatrices[0]),
+                               local_fixed_rank);
+      h_h_mmult_from_leaf_node(M0,
+                               Z,
+                               alpha,
+                               *(M1.submatrices[3]),
+                               *(M2.submatrices[2]),
+                               local_fixed_rank);
+      h_h_mmult_from_leaf_node(M0,
+                               Z,
+                               alpha,
+                               *(M1.submatrices[2]),
+                               *(M2.submatrices[1]),
+                               local_fixed_rank);
+      h_h_mmult_from_leaf_node(M0,
+                               Z,
+                               alpha,
+                               *(M1.submatrices[3]),
+                               *(M2.submatrices[3]),
+                               local_fixed_rank);
+    }
+
+  /**
+   * Assemble the local matrix \p Z to the product matrix \p M.
+   */
+  if (M0.bc_node->get_data_reference().get_is_near_field())
+    {
+      /**
+       * When the original matrix \p M0 belongs to the near field, assemble the
+       * full matrix stored in \p Z directly into \p M.
+       */
+      Assert(M.fullmatrix, ExcInternalError());
+
+      M.fullmatrix->fill(M.row_index_global_to_local_map,
+                         M.col_index_global_to_local_map,
+                         *(Z.fullmatrix),
+                         *(Z.row_indices),
+                         *(Z.col_indices),
+                         true);
+    }
+  else
+    {
+      /**
+       * When the original matrix \p M0 does not belong to the near field,
+       * assemble the rank-k matrix stored in \p Z into \p M by first embedding
+       * then formatted addition, which has been implemented in the member
+       * function \p assemble_from_rkmatrix.
+       */
+      Assert(M.rkmatrix, ExcInternalError());
+
+      // DEBUG
+      //      Z.rkmatrix->print_formatted_to_mat(std::cout, "Z", 15, false, 25,
+      //      "0");
+
+      M.rkmatrix->assemble_from_rkmatrix(M.row_index_global_to_local_map,
+                                         M.col_index_global_to_local_map,
+                                         *(Z.rkmatrix),
+                                         *(Z.row_indices),
+                                         *(Z.col_indices),
+                                         fixed_rank);
+    }
+}
+
+
+/**
+ * \hmatrix-\hmatrix multiplication with the second operand transposed,
+ * when the product matrix belongs to the leaf set of the target \bct.
+ *
+ * This function implements the recursive \p MMR algorithm in (7.26) in
+ * Hackbusch's \hmatrix book.
+ *
+ * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
+ * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
+ * which will assembles the contribution from \f$M_1 \cdot M_2\f$. For the first
+ * call of this function, \p M is the same as \p M0.
+ * @param M1 The first operand of the multiplication, which is built upon the
+ * \bcn \f$\tau\times\sigma\f$.
+ * @param M2 The second operand of the multiplication, which is built upon the
+ * \bcn \f$\rho\times\sigma\f$.
+ * @param fixed_rank
+ */
+template <int spacedim, typename Number>
+void
+h_h_mTmult_from_leaf_node(HMatrix<spacedim, Number> &M0,
+                          HMatrix<spacedim, Number> &M,
+                          HMatrix<spacedim, Number> &M1,
+                          HMatrix<spacedim, Number> &M2,
+                          const unsigned int         fixed_rank)
+{
+  Assert(M0.bc_node->is_leaf(), ExcMessage("M0 should be a leaf node!"));
+
+  // Array of empty child pointers used for initializing a block
+  // cluster tree node.
+  const std::array<
+    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
+    BlockClusterTree<spacedim, Number>::child_num>
+    empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+
+  /**
+   * Create a \bcn \f$\tau\times\rho\f$ for the current local product matrix \p
+   * Z. Since this \bcn will not be connected with other \bcns in a \bct, it has
+   * neither parent nor children and its level is set to zero.
+   */
+  typename BlockClusterTree<spacedim, Number>::node_value_type
+    current_product_bc_node(BlockCluster<spacedim, Number>(
+                              M1.bc_node->get_data_reference().get_tau_node(),
+                              M2.bc_node->get_data_reference().get_tau_node()),
+                            0,
+                            empty_child_pointers,
+                            nullptr,
+                            UnsplitMode);
+
+  /**
+   * Set the \p is_near_field flag of the \bcn for the current
+   * local product matrix \p Z according to the matrix type of the initial leaf
+   * node matrix \p M0, i.e. it inherits the \p is_near_field flag of the \bcn
+   * for \p M0.
+   */
+  if (M0.bc_node->get_data_reference().get_is_near_field())
+    {
+      Assert(M0.type == FullMatrixType, ExcInvalidHMatrixType(M0.type));
+
+      current_product_bc_node.get_data_reference().set_is_near_field(true);
+    }
+  else
+    {
+      Assert(M0.type == RkMatrixType, ExcInvalidHMatrixType(M0.type));
+
+      current_product_bc_node.get_data_reference().set_is_near_field(false);
+    }
+
+  /**
+   * Create the local \hmatrix \p Z associated with the current \bcn. During its
+   * initialization, memory will be allocated for \p Z depending on its matrix
+   * type.
+   */
+  HMatrix<spacedim, Number> Z(&current_product_bc_node, fixed_rank);
+  // Local variable storing the rank-k matrix obtained from multiplication
+  // involving leaf node.
+  RkMatrix<Number> ZR;
+  // Local variable storing the full matrix obtained from multiplication
+  // involving leaf node.
+  LAPACKFullMatrixExt<Number> ZF;
+  // The result matrix type for the multiplication involving leaf node.
+  HMatrixType result_matrix_type;
+
+  if (M1.bc_node->is_leaf() || M2.bc_node->is_leaf())
+    {
+      /**
+       * When either operand \p M1 or \p M2 is a leaf node, directly evaluation
+       * of their multiplication can be performed.
+       */
+      if (M1.type == RkMatrixType)
+        {
+          rk_h_mTmult(*(M1.rkmatrix), M2, ZR);
+          result_matrix_type = RkMatrixType;
+        }
+      else if (M2.type == RkMatrixType)
+        {
+          h_rk_mTmult(M1, *(M2.rkmatrix), ZR);
+          result_matrix_type = RkMatrixType;
+        }
+      else if (M1.type == FullMatrixType)
+        {
+          f_h_mTmult(*(M1.fullmatrix), M2, ZF);
+          result_matrix_type = FullMatrixType;
+        }
+      else if (M2.type == FullMatrixType)
+        {
+          h_f_mTmult(M1, *(M2.fullmatrix), ZF);
+          result_matrix_type = FullMatrixType;
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      if (Z.type == RkMatrixType)
+        {
+          // The desired result should be a rank-k matrix.
+          if (result_matrix_type == RkMatrixType)
+            {
+              *(Z.rkmatrix) = ZR;
+            }
+          else if (result_matrix_type == FullMatrixType)
+            {
+              // Convert the full matrix to rank-k matrix.
+              *(Z.rkmatrix) = RkMatrix<Number>(fixed_rank, ZF);
+            }
+          else
+            {
+              Assert(false, ExcInvalidHMatrixType(result_matrix_type));
+            }
+        }
+      else if (Z.type == FullMatrixType)
+        {
+          // The desired result should be a full matrix.
+          if (result_matrix_type == RkMatrixType)
+            {
+              // Convert the rank-k matrix to full matrix.
+              ZR.convertToFullMatrix(*(Z.fullmatrix));
+            }
+          else if (result_matrix_type == FullMatrixType)
+            {
+              *(Z.fullmatrix) = ZF;
+            }
+          else
+            {
+              Assert(false, ExcInvalidHMatrixType(result_matrix_type));
+            }
+        }
+      else
+        {
+          Assert(false, ExcInvalidHMatrixType(Z.type));
+        }
+    }
+  else
+    {
+      /**
+       * \alert{When we perform submatrix multiplication, we use a higher
+       * specified rank, since the results will be assembled into the larger
+       * matrix \p Z via pairwise formatted addition, during which the actual
+       * matrix rank may increase.}
+       */
+      const unsigned int local_fixed_rank =
+        std::min(fixed_rank * 2, std::min(Z.m, Z.n));
+
+      h_h_mTmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[0]), *(M2.submatrices[0]), local_fixed_rank);
+      h_h_mTmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[1]), *(M2.submatrices[1]), local_fixed_rank);
+      h_h_mTmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[0]), *(M2.submatrices[2]), local_fixed_rank);
+      h_h_mTmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[1]), *(M2.submatrices[3]), local_fixed_rank);
+      h_h_mTmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[2]), *(M2.submatrices[0]), local_fixed_rank);
+      h_h_mTmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[3]), *(M2.submatrices[1]), local_fixed_rank);
+      h_h_mTmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[2]), *(M2.submatrices[2]), local_fixed_rank);
+      h_h_mTmult_from_leaf_node(
+        M0, Z, *(M1.submatrices[3]), *(M2.submatrices[3]), local_fixed_rank);
+    }
+
+  /**
+   * Assemble the local matrix \p Z to the product matrix \p M.
+   */
+  if (M0.bc_node->get_data_reference().get_is_near_field())
+    {
+      /**
+       * When the original matrix \p M0 belongs to the near field, assemble the
+       * full matrix stored in \p Z directly into \p M.
+       */
+      Assert(M.fullmatrix, ExcInternalError());
+
+      M.fullmatrix->fill(M.row_index_global_to_local_map,
+                         M.col_index_global_to_local_map,
+                         *(Z.fullmatrix),
+                         *(Z.row_indices),
+                         *(Z.col_indices),
+                         true);
+    }
+  else
+    {
+      /**
+       * When the original matrix \p M0 does not belong to the near field,
+       * assemble the rank-k matrix stored in \p Z into \p M by first embedding
+       * then formatted addition, which has been implemented in the member
+       * function \p assemble_from_rkmatrix.
+       */
+      Assert(M.rkmatrix, ExcInternalError());
+
+      M.rkmatrix->assemble_from_rkmatrix(M.row_index_global_to_local_map,
+                                         M.col_index_global_to_local_map,
+                                         *(Z.rkmatrix),
+                                         *(Z.row_indices),
+                                         *(Z.col_indices),
+                                         fixed_rank);
+    }
+}
+
+
+/**
+ * \hmatrix-\hmatrix multiplication with the second operand transposed,
+ * when the product matrix belongs to the leaf set of the target \bct.
+ *
+ * This function implements the recursive \p MMR algorithm in (7.26) in
+ * Hackbusch's \hmatrix book.
+ *
+ * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
+ * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
+ * which will assembles the contribution from \f$M_1 \cdot M_2\f$. For the first
+ * call of this function, \p M is the same as \p M0.
+ * @param M1 The first operand of the multiplication, which is built upon the
+ * \bcn \f$\tau\times\sigma\f$.
+ * @param M2 The second operand of the multiplication, which is built upon the
+ * \bcn \f$\rho\times\sigma\f$.
+ * @param fixed_rank
+ */
+template <int spacedim, typename Number>
+void
+h_h_mTmult_from_leaf_node(HMatrix<spacedim, Number> &M0,
+                          HMatrix<spacedim, Number> &M,
+                          const Number               alpha,
+                          HMatrix<spacedim, Number> &M1,
+                          HMatrix<spacedim, Number> &M2,
+                          const unsigned int         fixed_rank)
+{
+  Assert(M0.bc_node->is_leaf(), ExcMessage("M0 should be a leaf node!"));
+
+  // Array of empty child pointers used for initializing a block
+  // cluster tree node.
+  const std::array<
+    typename BlockClusterTree<spacedim, Number>::node_pointer_type,
+    BlockClusterTree<spacedim, Number>::child_num>
+    empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+
+  /**
+   * Create a \bcn \f$\tau\times\rho\f$ for the current local product matrix \p
+   * Z. Since this \bcn will not be connected with other \bcns in a \bct, it has
+   * neither parent nor children and its level is set to zero.
+   */
+  typename BlockClusterTree<spacedim, Number>::node_value_type
+    current_product_bc_node(BlockCluster<spacedim, Number>(
+                              M1.bc_node->get_data_reference().get_tau_node(),
+                              M2.bc_node->get_data_reference().get_tau_node()),
+                            0,
+                            empty_child_pointers,
+                            nullptr,
+                            UnsplitMode);
+
+  /**
+   * Set the \p is_near_field flag of the \bcn for the current
+   * local product matrix \p Z according to the matrix type of the initial leaf
+   * node matrix \p M0, i.e. it inherits the \p is_near_field flag of the \bcn
+   * for \p M0.
+   */
+  if (M0.bc_node->get_data_reference().get_is_near_field())
+    {
+      Assert(M0.type == FullMatrixType, ExcInvalidHMatrixType(M0.type));
+
+      current_product_bc_node.get_data_reference().set_is_near_field(true);
+    }
+  else
+    {
+      Assert(M0.type == RkMatrixType, ExcInvalidHMatrixType(M0.type));
+
+      current_product_bc_node.get_data_reference().set_is_near_field(false);
+    }
+
+  /**
+   * Create the local \hmatrix \p Z associated with the current \bcn. During its
+   * initialization, memory will be allocated for \p Z depending on its matrix
+   * type.
+   */
+  HMatrix<spacedim, Number> Z(&current_product_bc_node, fixed_rank);
+  // Local variable storing the rank-k matrix obtained from multiplication
+  // involving leaf node.
+  RkMatrix<Number> ZR;
+  // Local variable storing the full matrix obtained from multiplication
+  // involving leaf node.
+  LAPACKFullMatrixExt<Number> ZF;
+  // The result matrix type for the multiplication involving leaf node.
+  HMatrixType result_matrix_type;
+
+  if (M1.bc_node->is_leaf() || M2.bc_node->is_leaf())
+    {
+      /**
+       * When either operand \p M1 or \p M2 is a leaf node, directly evaluation
+       * of their multiplication can be performed.
+       */
+      if (M1.type == RkMatrixType)
+        {
+          rk_h_mTmult(alpha, *(M1.rkmatrix), M2, ZR);
+          result_matrix_type = RkMatrixType;
+        }
+      else if (M2.type == RkMatrixType)
+        {
+          h_rk_mTmult(alpha, M1, *(M2.rkmatrix), ZR);
+          result_matrix_type = RkMatrixType;
+        }
+      else if (M1.type == FullMatrixType)
+        {
+          f_h_mTmult(alpha, *(M1.fullmatrix), M2, ZF);
+          result_matrix_type = FullMatrixType;
+        }
+      else if (M2.type == FullMatrixType)
+        {
+          h_f_mTmult(alpha, M1, *(M2.fullmatrix), ZF);
+          result_matrix_type = FullMatrixType;
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      if (Z.type == RkMatrixType)
+        {
+          // The desired result should be a rank-k matrix.
+          if (result_matrix_type == RkMatrixType)
+            {
+              *(Z.rkmatrix) = ZR;
+            }
+          else if (result_matrix_type == FullMatrixType)
+            {
+              // Convert the full matrix to rank-k matrix.
+              *(Z.rkmatrix) = RkMatrix<Number>(fixed_rank, ZF);
+            }
+          else
+            {
+              Assert(false, ExcInvalidHMatrixType(result_matrix_type));
+            }
+        }
+      else if (Z.type == FullMatrixType)
+        {
+          // The desired result should be a full matrix.
+          if (result_matrix_type == RkMatrixType)
+            {
+              // Convert the rank-k matrix to full matrix.
+              ZR.convertToFullMatrix(*(Z.fullmatrix));
+            }
+          else if (result_matrix_type == FullMatrixType)
+            {
+              *(Z.fullmatrix) = ZF;
+            }
+          else
+            {
+              Assert(false, ExcInvalidHMatrixType(result_matrix_type));
+            }
+        }
+      else
+        {
+          Assert(false, ExcInvalidHMatrixType(Z.type));
+        }
+    }
+  else
+    {
+      /**
+       * \alert{When we perform submatrix multiplication, we use a higher
+       * specified rank, since the results will be assembled into the larger
+       * matrix \p Z via pairwise formatted addition, during which the actual
+       * matrix rank may increase.}
+       */
+      const unsigned int local_fixed_rank =
+        std::min(fixed_rank * 2, std::min(Z.m, Z.n));
+
+      h_h_mTmult_from_leaf_node(M0,
+                                Z,
+                                alpha,
+                                *(M1.submatrices[0]),
+                                *(M2.submatrices[0]),
+                                local_fixed_rank);
+      h_h_mTmult_from_leaf_node(M0,
+                                Z,
+                                alpha,
+                                *(M1.submatrices[1]),
+                                *(M2.submatrices[1]),
+                                local_fixed_rank);
+      h_h_mTmult_from_leaf_node(M0,
+                                Z,
+                                alpha,
+                                *(M1.submatrices[0]),
+                                *(M2.submatrices[2]),
+                                local_fixed_rank);
+      h_h_mTmult_from_leaf_node(M0,
+                                Z,
+                                alpha,
+                                *(M1.submatrices[1]),
+                                *(M2.submatrices[3]),
+                                local_fixed_rank);
+      h_h_mTmult_from_leaf_node(M0,
+                                Z,
+                                alpha,
+                                *(M1.submatrices[2]),
+                                *(M2.submatrices[0]),
+                                local_fixed_rank);
+      h_h_mTmult_from_leaf_node(M0,
+                                Z,
+                                alpha,
+                                *(M1.submatrices[3]),
+                                *(M2.submatrices[1]),
+                                local_fixed_rank);
+      h_h_mTmult_from_leaf_node(M0,
+                                Z,
+                                alpha,
+                                *(M1.submatrices[2]),
+                                *(M2.submatrices[2]),
+                                local_fixed_rank);
+      h_h_mTmult_from_leaf_node(M0,
+                                Z,
+                                alpha,
+                                *(M1.submatrices[3]),
+                                *(M2.submatrices[3]),
+                                local_fixed_rank);
+    }
+
+  /**
+   * Assemble the local matrix \p Z to the product matrix \p M.
+   */
+  if (M0.bc_node->get_data_reference().get_is_near_field())
+    {
+      /**
+       * When the original matrix \p M0 belongs to the near field, assemble the
+       * full matrix stored in \p Z directly into \p M.
+       */
+      Assert(M.fullmatrix, ExcInternalError());
+
+      M.fullmatrix->fill(M.row_index_global_to_local_map,
+                         M.col_index_global_to_local_map,
+                         *(Z.fullmatrix),
+                         *(Z.row_indices),
+                         *(Z.col_indices),
+                         true);
+    }
+  else
+    {
+      /**
+       * When the original matrix \p M0 does not belong to the near field,
+       * assemble the rank-k matrix stored in \p Z into \p M by first embedding
+       * then formatted addition, which has been implemented in the member
+       * function \p assemble_from_rkmatrix.
+       */
+      Assert(M.rkmatrix, ExcInternalError());
+
+      M.rkmatrix->assemble_from_rkmatrix(M.row_index_global_to_local_map,
+                                         M.col_index_global_to_local_map,
+                                         *(Z.rkmatrix),
+                                         *(Z.row_indices),
+                                         *(Z.col_indices),
+                                         fixed_rank);
+    }
+}
+
+
+/**
+ * Multiplication of two level-conserving \hmatrices and the result will be
+ * added to the target matrix \p M, i.e. \f$M = M + M_1 M_2\f$.
+ *
+ * \mynote{It is required that an empty result matrix \p M should be created
+ * first with respect to a \bct.}
  *
  * @param M0
  * @param M
@@ -3997,7 +7181,331 @@ h_h_mmult_level_conserving(HMatrix<spacedim, Number> &M0,
 
 
 /**
- * Shallow copy an \hmatrix node into the target node, i.e. the
+ * Multiplication of two level-conserving \hmatrices with a factor multiplied to
+ * the matrix product and the result will be added to the target matrix \p M,
+ * i.e. \f$M = M + \alpha \cdot M_1 M_2\f$.
+ *
+ * \mynote{It is required that an empty result matrix \p M should be created
+ * first with respect to a \bct.}
+ *
+ * @param M0
+ * @param M
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param fixed_rank
+ */
+template <int spacedim, typename Number>
+void
+h_h_mmult_level_conserving(HMatrix<spacedim, Number> &M0,
+                           HMatrix<spacedim, Number> &M,
+                           const Number               alpha,
+                           HMatrix<spacedim, Number> &M1,
+                           HMatrix<spacedim, Number> &M2,
+                           const unsigned int         fixed_rank)
+{
+  // DEBUG
+  //  std::cout << "h_h_mmult_level_conserving: ";
+  //  print_h_h_submatrix_mmult_accessor(std::cout, "M1", M1, "M2", M2);
+  //  std::cout << " = ";
+  //  print_h_submatrix_accessor(std::cout, "M", M);
+  //  std::cout << std::endl;
+
+  if (!(M1.bc_node->is_leaf()) && !(M2.bc_node->is_leaf()) &&
+      !(M.bc_node->is_leaf()))
+    {
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[0]),
+                                 alpha,
+                                 *(M1.submatrices[0]),
+                                 *(M2.submatrices[0]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[0]),
+                                 alpha,
+                                 *(M1.submatrices[1]),
+                                 *(M2.submatrices[2]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[1]),
+                                 alpha,
+                                 *(M1.submatrices[0]),
+                                 *(M2.submatrices[1]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[1]),
+                                 alpha,
+                                 *(M1.submatrices[1]),
+                                 *(M2.submatrices[3]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[2]),
+                                 alpha,
+                                 *(M1.submatrices[2]),
+                                 *(M2.submatrices[0]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[2]),
+                                 alpha,
+                                 *(M1.submatrices[3]),
+                                 *(M2.submatrices[2]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[3]),
+                                 alpha,
+                                 *(M1.submatrices[2]),
+                                 *(M2.submatrices[1]),
+                                 fixed_rank);
+      h_h_mmult_level_conserving(M0,
+                                 *(M.submatrices[3]),
+                                 alpha,
+                                 *(M1.submatrices[3]),
+                                 *(M2.submatrices[3]),
+                                 fixed_rank);
+    }
+  else if (!(M.bc_node->is_leaf()))
+    {
+      RkMatrix<Number> Z;
+      if (M1.type == RkMatrixType)
+        {
+          rk_h_mmult(alpha, *(M1.rkmatrix), M2, Z);
+        }
+      else if (M2.type == RkMatrixType)
+        {
+          h_rk_mmult(alpha, M1, *(M2.rkmatrix), Z);
+        }
+      else if (M1.type == FullMatrixType)
+        {
+          f_h_mmult(alpha, *(M1.fullmatrix), M2, Z);
+        }
+      else if (M2.type == FullMatrixType)
+        {
+          h_f_mmult(alpha, M1, *(M2.fullmatrix), Z);
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      M.add(Z, fixed_rank);
+    }
+  else
+    {
+      h_h_mmult_from_leaf_node(M, M, alpha, M1, M2, fixed_rank);
+    }
+}
+
+
+/**
+ * Multiplication of two level-conserving \hmatrices with the second operand
+ * transposed. The result will be added to the target matrix \p M, i.e.
+ * \f$M = M + M_1 M_2^T\f$.
+ *
+ * \mynote{It is required that an empty result matrix \p M should be created
+ * first with respect to a \bct.}
+ *
+ * @param M0
+ * @param M
+ * @param M1
+ * @param M2
+ * @param fixed_rank
+ */
+template <int spacedim, typename Number>
+void
+h_h_mTmult_level_conserving(HMatrix<spacedim, Number> &M0,
+                            HMatrix<spacedim, Number> &M,
+                            HMatrix<spacedim, Number> &M1,
+                            HMatrix<spacedim, Number> &M2,
+                            const unsigned int         fixed_rank)
+{
+  if (!(M1.bc_node->is_leaf()) && !(M2.bc_node->is_leaf()) &&
+      !(M.bc_node->is_leaf()))
+    {
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[0]),
+                                  *(M1.submatrices[0]),
+                                  *(M2.submatrices[0]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[0]),
+                                  *(M1.submatrices[1]),
+                                  *(M2.submatrices[1]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[1]),
+                                  *(M1.submatrices[0]),
+                                  *(M2.submatrices[2]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[1]),
+                                  *(M1.submatrices[1]),
+                                  *(M2.submatrices[3]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[2]),
+                                  *(M1.submatrices[2]),
+                                  *(M2.submatrices[0]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[2]),
+                                  *(M1.submatrices[3]),
+                                  *(M2.submatrices[1]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[3]),
+                                  *(M1.submatrices[2]),
+                                  *(M2.submatrices[2]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[3]),
+                                  *(M1.submatrices[3]),
+                                  *(M2.submatrices[3]),
+                                  fixed_rank);
+    }
+  else if (!(M.bc_node->is_leaf()))
+    {
+      RkMatrix<Number> Z;
+      if (M1.type == RkMatrixType)
+        {
+          rk_h_mTmult(*(M1.rkmatrix), M2, Z);
+        }
+      else if (M2.type == RkMatrixType)
+        {
+          h_rk_mTmult(M1, *(M2.rkmatrix), Z);
+        }
+      else if (M1.type == FullMatrixType)
+        {
+          f_h_mTmult(*(M1.fullmatrix), M2, Z);
+        }
+      else if (M2.type == FullMatrixType)
+        {
+          h_f_mTmult(M1, *(M2.fullmatrix), Z);
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      M.add(Z, fixed_rank);
+    }
+  else
+    {
+      h_h_mTmult_from_leaf_node(M, M, M1, M2, fixed_rank);
+    }
+}
+
+
+/**
+ * Multiplication of two level-conserving \hmatrices with the second operand
+ * transposed. The result will multiplied by a factor and then added to
+ * the target matrix \p M, i.e. \f$M = M + \alpha \cdot M_1 M_2^T\f$.
+ *
+ * \mynote{It is required that an empty result matrix \p M should be created
+ * first with respect to a \bct.}
+ *
+ * @param M0
+ * @param M
+ * @param alpha
+ * @param M1
+ * @param M2
+ * @param fixed_rank
+ */
+template <int spacedim, typename Number>
+void
+h_h_mTmult_level_conserving(HMatrix<spacedim, Number> &M0,
+                            HMatrix<spacedim, Number> &M,
+                            const Number               alpha,
+                            HMatrix<spacedim, Number> &M1,
+                            HMatrix<spacedim, Number> &M2,
+                            const unsigned int         fixed_rank)
+{
+  if (!(M1.bc_node->is_leaf()) && !(M2.bc_node->is_leaf()) &&
+      !(M.bc_node->is_leaf()))
+    {
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[0]),
+                                  alpha,
+                                  *(M1.submatrices[0]),
+                                  *(M2.submatrices[0]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[0]),
+                                  alpha,
+                                  *(M1.submatrices[1]),
+                                  *(M2.submatrices[1]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[1]),
+                                  alpha,
+                                  *(M1.submatrices[0]),
+                                  *(M2.submatrices[2]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[1]),
+                                  alpha,
+                                  *(M1.submatrices[1]),
+                                  *(M2.submatrices[3]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[2]),
+                                  alpha,
+                                  *(M1.submatrices[2]),
+                                  *(M2.submatrices[0]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[2]),
+                                  alpha,
+                                  *(M1.submatrices[3]),
+                                  *(M2.submatrices[1]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[3]),
+                                  alpha,
+                                  *(M1.submatrices[2]),
+                                  *(M2.submatrices[2]),
+                                  fixed_rank);
+      h_h_mTmult_level_conserving(M0,
+                                  *(M.submatrices[3]),
+                                  alpha,
+                                  *(M1.submatrices[3]),
+                                  *(M2.submatrices[3]),
+                                  fixed_rank);
+    }
+  else if (!(M.bc_node->is_leaf()))
+    {
+      RkMatrix<Number> Z;
+      if (M1.type == RkMatrixType)
+        {
+          rk_h_mTmult(alpha, *(M1.rkmatrix), M2, Z);
+        }
+      else if (M2.type == RkMatrixType)
+        {
+          h_rk_mTmult(alpha, M1, *(M2.rkmatrix), Z);
+        }
+      else if (M1.type == FullMatrixType)
+        {
+          f_h_mTmult(alpha, *(M1.fullmatrix), M2, Z);
+        }
+      else if (M2.type == FullMatrixType)
+        {
+          h_f_mTmult(alpha, M1, *(M2.fullmatrix), Z);
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      M.add(Z, fixed_rank);
+    }
+  else
+    {
+      h_h_mTmult_from_leaf_node(M, M, alpha, M1, M2, fixed_rank);
+    }
+}
+
+
+/**
+ * Deep copy an \hmatnode into the target node, i.e. the
  * copy is limited within the current node without recursion into its
  * descendants. This function will be called by \p copy_hmatrix.
  *
@@ -4009,8 +7517,9 @@ h_h_mmult_level_conserving(HMatrix<spacedim, Number> &M0,
  * hierarchy has been constructed, the leaf set will be built in the
  * constructor.
  *
- * Do not copy the working data: \p Sigma_P, \p Sigma_F, \p Sigma_R and \p
- * Tind.
+ * Do not copy the working data: \p Sigma_P, \p Sigma_F, \p Sigma_R and
+ * \p Tind.
+ *
  * @param hmat_dst
  * @param hmat_src
  */
@@ -4019,7 +7528,8 @@ void
 copy_hmatrix_node(HMatrix<spacedim, Number> &      hmat_dst,
                   const HMatrix<spacedim, Number> &hmat_src)
 {
-  hmat_dst.type = hmat_src.type;
+  hmat_dst.type            = hmat_src.type;
+  hmat_dst.submatrix_index = hmat_src.submatrix_index;
 
   /**
    * Copy the rank-k matrix in the source submatrix if it is not \p NULL.
@@ -4059,7 +7569,7 @@ copy_hmatrix_node(HMatrix<spacedim, Number> &      hmat_dst,
 
 
 /**
- * Deep copy an \hmatrix node into the target node, i.e. the
+ * Shallow copy an \hmatnode into the target node, i.e. the
  * copy is limited within the current node without recursion into its
  * descendants.
  * @param hmat_dst
@@ -4070,14 +7580,16 @@ void
 copy_hmatrix_node(HMatrix<spacedim, Number> & hmat_dst,
                   HMatrix<spacedim, Number> &&hmat_src)
 {
-  hmat_dst.type        = hmat_src.type;
-  hmat_dst.submatrices = hmat_src.submatrices;
-  hmat_dst.leaf_set    = hmat_src.leaf_set;
-  hmat_dst.rkmatrix    = hmat_src.rkmatrix;
-  hmat_dst.fullmatrix  = hmat_src.fullmatrix;
-  hmat_dst.bc_node     = hmat_src.bc_node;
-  hmat_dst.row_indices = hmat_src.row_indices;
-  hmat_dst.col_indices = hmat_src.col_indices;
+  hmat_dst.type            = hmat_src.type;
+  hmat_dst.submatrices     = hmat_src.submatrices;
+  hmat_dst.submatrix_index = hmat_src.submatrix_index;
+  hmat_dst.parent          = hmat_src.parent;
+  hmat_dst.leaf_set        = hmat_src.leaf_set;
+  hmat_dst.rkmatrix        = hmat_src.rkmatrix;
+  hmat_dst.fullmatrix      = hmat_src.fullmatrix;
+  hmat_dst.bc_node         = hmat_src.bc_node;
+  hmat_dst.row_indices     = hmat_src.row_indices;
+  hmat_dst.col_indices     = hmat_src.col_indices;
   hmat_dst.row_index_global_to_local_map =
     hmat_src.row_index_global_to_local_map;
   hmat_dst.col_index_global_to_local_map =
@@ -4102,25 +7614,26 @@ copy_hmatrix(HMatrix<spacedim, Number> &      hmat_dst,
              const HMatrix<spacedim, Number> &hmat_src)
 {
   /**
-   * Copy the current \hmatrix node.
+   * Copy the current \hmatnode.
    */
   copy_hmatrix_node(hmat_dst, hmat_src);
 
   /**
-   * Recursively copy child \hmatrix nodes.
+   * Recursively copy child \hmatnodes.
    */
   for (HMatrix<spacedim, Number> *submatrix : hmat_src.submatrices)
     {
       Assert(submatrix, ExcInternalError());
 
       /**
-       * Create a corresponding child \hmatrix node on the heap
+       * Create a corresponding child \hmatnode on the heap
        * and push it back into the \p submatrices list of the current
-       * \hmatrix node.
+       * \hmatnode.
        */
       HMatrix<spacedim, Number> *child_hmat = new HMatrix<spacedim, Number>();
       copy_hmatrix(*child_hmat, *submatrix);
       hmat_dst.submatrices.push_back(child_hmat);
+      child_hmat->parent = &hmat_dst;
     }
 }
 
@@ -4135,7 +7648,7 @@ print_h_submatrix_accessor(std::ostream &                   out,
   print_vector_values(out, *(M.row_indices), ",", false);
   out << "],[" << std::flush;
   print_vector_values(out, *(M.col_indices), ",", false);
-  out << "])" << std::endl;
+  out << "])";
 }
 
 
@@ -4147,15 +7660,34 @@ print_h_h_submatrix_mmult_accessor(std::ostream &                   out,
                                    const std::string &              name2,
                                    const HMatrix<spacedim, Number> &M2)
 {
-  out << name1 + std::string("([") << std::flush;
-  print_vector_indices(out, *(M1.row_indices), ",", false, false);
-  out << "],[" << std::flush;
-  print_vector_indices(out, *(M1.col_indices), ",", false, false);
-  out << "]) * " << name2 + std::string("([") << std::flush;
-  print_vector_indices(out, *(M2.row_indices), ",", false, false);
-  out << "],[" << std::flush;
-  print_vector_indices(out, *(M2.col_indices), ",", false, false);
-  out << "])" << std::endl;
+  print_h_submatrix_accessor(out, name1, M1);
+  out << " * ";
+  print_h_submatrix_accessor(out, name2, M2);
+}
+
+
+template <int spacedim, typename Number>
+void
+hmatrix_solve_lu(const HMatrix<spacedim, Number> &L,
+                 const HMatrix<spacedim, Number> &U,
+                 Vector<Number> &                 x,
+                 const Vector<Number> &           b)
+{
+  x = b;
+  L.solve_by_forward_substitution(x, true);
+  U.solve_by_backward_substitution(x, false);
+}
+
+
+template <int spacedim, typename Number>
+void
+hmatrix_solve_cholesky(const HMatrix<spacedim, Number> &L,
+                       Vector<Number> &                 x,
+                       const Vector<Number> &           b)
+{
+  x = b;
+  L.solve_cholesky_by_forward_substitution(x);
+  L.solve_cholesky_by_backward_substitution(x);
 }
 
 
@@ -4163,6 +7695,8 @@ template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix()
   : type(UndefinedMatrixType)
   , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
   , leaf_set(0)
   , rkmatrix(nullptr)
   , fullmatrix(nullptr)
@@ -4186,6 +7720,8 @@ HMatrix<spacedim, Number>::HMatrix(
   const unsigned int                        fixed_rank_k)
   : type(UndefinedMatrixType)
   , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
   , leaf_set(0)
   , rkmatrix(nullptr)
   , fullmatrix(nullptr)
@@ -4212,6 +7748,8 @@ HMatrix<spacedim, Number>::HMatrix(
   const unsigned int fixed_rank_k)
   : type(UndefinedMatrixType)
   , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
   , leaf_set(0)
   , rkmatrix(nullptr)
   , fullmatrix(nullptr)
@@ -4239,6 +7777,8 @@ HMatrix<spacedim, Number>::HMatrix(
   const unsigned int                        fixed_rank_k)
   : type(UndefinedMatrixType)
   , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
   , leaf_set(0)
   , rkmatrix(nullptr)
   , fullmatrix(nullptr)
@@ -4261,11 +7801,41 @@ HMatrix<spacedim, Number>::HMatrix(
 
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
+  const BlockClusterTree<spacedim, Number> &bct,
+  const LAPACKFullMatrixExt<Number> &       M)
+  : type(UndefinedMatrixType)
+  , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
+  , leaf_set(0)
+  , rkmatrix(nullptr)
+  , fullmatrix(nullptr)
+  , bc_node(nullptr)
+  , row_indices(nullptr)
+  , col_indices(nullptr)
+  , row_index_global_to_local_map()
+  , col_index_global_to_local_map()
+  , m(0)
+  , n(0)
+  , Tind()
+  , Sigma_P(0)
+  , Sigma_R(0)
+  , Sigma_F(0)
+{
+  InitAndCreateHMatrixChildren(this, bct.get_root(), M);
+  build_leaf_set();
+}
+
+
+template <int spacedim, typename Number>
+HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const LAPACKFullMatrixExt<Number> &                                  M,
   const unsigned int fixed_rank_k)
   : type(UndefinedMatrixType)
   , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
   , leaf_set(0)
   , rkmatrix(nullptr)
   , fullmatrix(nullptr)
@@ -4289,9 +7859,39 @@ HMatrix<spacedim, Number>::HMatrix(
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
+  const LAPACKFullMatrixExt<Number> &                                  M)
+  : type(UndefinedMatrixType)
+  , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
+  , leaf_set(0)
+  , rkmatrix(nullptr)
+  , fullmatrix(nullptr)
+  , bc_node(nullptr)
+  , row_indices(nullptr)
+  , col_indices(nullptr)
+  , row_index_global_to_local_map()
+  , col_index_global_to_local_map()
+  , m(0)
+  , n(0)
+  , Tind()
+  , Sigma_P(0)
+  , Sigma_R(0)
+  , Sigma_F(0)
+{
+  InitAndCreateHMatrixChildren(this, bc_node, M);
+  build_leaf_set();
+}
+
+
+template <int spacedim, typename Number>
+HMatrix<spacedim, Number>::HMatrix(
+  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   HMatrix<spacedim, Number> &&                                         H)
   : type(UndefinedMatrixType)
   , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
   , leaf_set(0)
   , rkmatrix(nullptr)
   , fullmatrix(nullptr)
@@ -4318,6 +7918,8 @@ HMatrix<spacedim, Number>::HMatrix(
   HMatrix<spacedim, Number> &&              H)
   : type(UndefinedMatrixType)
   , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
   , leaf_set(0)
   , rkmatrix(nullptr)
   , fullmatrix(nullptr)
@@ -4342,6 +7944,8 @@ template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(const HMatrix<spacedim, Number> &H)
   : type(UndefinedMatrixType)
   , submatrices(0)
+  , parent(nullptr)
+  , submatrix_index(submatrix_index_invalid)
   , leaf_set(0)
   , rkmatrix(nullptr)
   , fullmatrix(nullptr)
@@ -4366,6 +7970,8 @@ template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(HMatrix<spacedim, Number> &&H)
   : type(H.type)
   , submatrices(H.submatrices)
+  , parent(H.parent)
+  , submatrix_index(H.submatrix_index)
   , leaf_set(H.leaf_set)
   , rkmatrix(H.rkmatrix)
   , fullmatrix(H.fullmatrix)
@@ -4466,11 +8072,6 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(MatrixType &M) const
       case RkMatrixType:
         Assert(rkmatrix, ExcInternalError());
 
-        // DEBUG
-        //        std::cout << "* rank-k matrix rank: formal rank="
-        //                  << rkmatrix->get_formal_rank()
-        //                  << ", rank=" << rkmatrix->get_rank() << std::endl;
-
         rkmatrix->convertToFullMatrix(matrix_block);
 
         for (size_type i = 0; i < m; i++)
@@ -4480,10 +8081,6 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(MatrixType &M) const
                 M(row_indices->at(i), col_indices->at(j)) = matrix_block(i, j);
               }
           }
-
-        // DEBUG
-        //        std::cout << "* full matrix rank: " << matrix_block.rank(0.)
-        //                  << std::endl;
 
         break;
       case HierarchicalMatrixType:
@@ -4544,26 +8141,26 @@ HMatrix<spacedim, Number>::
     const unsigned int fixed_rank)
 {
   /**
-   * Only non-leaf \hmatrix nodes need to be processed.
+   * Only non-leaf \hmatnodes need to be processed.
    */
   if (submatrices.size() > 0)
     {
       /**
-       * Since the current \hmatrix node has children, its type
+       * Since the current \hmatnode has children, its type
        * should be \p HierarchicalMatrixType and we make an assertion on it.
        */
       Assert(type == HierarchicalMatrixType, ExcInvalidHMatrixType(type));
 
       /**
        * Distribute matrices in \f$\Sigma_b^R\f$ and \f$\Sigma_b^F\f$ of the
-       * current \hmatrix node to the leaf nodes which are its descendants.
+       * current \hmatnode to the leaf nodes which are its descendants.
        * This is a recursive function call.
        */
       distribute_sigma_r_and_f_to_leaves(fixed_rank);
 
       /**
        * Distribute matrices in \f$\Sigma_b^R\f$ and \f$\Sigma_b^F\f$ of each
-       * child matrix of the current \hmatrix node to the leaf nodes which are
+       * child matrix of the current \hmatnode to the leaf nodes which are
        * its descendants.
        */
       for (HMatrix<spacedim, Number> *submatrix : submatrices)
@@ -4784,10 +8381,12 @@ HMatrix<spacedim, Number>::release()
   submatrices.clear();
   leaf_set.clear();
 
-  type        = UndefinedMatrixType;
-  bc_node     = nullptr;
-  row_indices = nullptr;
-  col_indices = nullptr;
+  type            = UndefinedMatrixType;
+  bc_node         = nullptr;
+  parent          = nullptr;
+  submatrix_index = submatrix_index_invalid;
+  row_indices     = nullptr;
+  col_indices     = nullptr;
   row_index_global_to_local_map.clear();
   col_index_global_to_local_map.clear();
   m = 0;
@@ -4849,6 +8448,8 @@ HMatrix<spacedim, Number>::clear_hmat_node()
 {
   type = UndefinedMatrixType;
   submatrices.clear();
+  parent          = nullptr;
+  submatrix_index = submatrix_index_invalid;
   leaf_set.clear();
   rkmatrix    = nullptr;
   fullmatrix  = nullptr;
@@ -4910,6 +8511,35 @@ const RkMatrix<Number> *
 HMatrix<spacedim, Number>::get_rkmatrix() const
 {
   return rkmatrix;
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::calc_rank_upper_bound_for_rkmatrices() const
+{
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        {
+          for (HMatrix *submatrix : submatrices)
+            {
+              submatrix->calc_rank_upper_bound_for_rkmatrices();
+            }
+        }
+
+        break;
+      case RkMatrixType:
+        {
+          this->rkmatrix->calc_rank_upper_bound();
+        }
+
+        break;
+      default: // Do nothing.
+        {
+          break;
+        }
+    }
 }
 
 
@@ -5002,10 +8632,40 @@ template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::print_matrix_info(std::ostream &out) const
 {
+  print_current_matrix_info(out);
+
+  for (const HMatrix<spacedim, Number> *submatrix : submatrices)
+    {
+      submatrix->print_matrix_info(out);
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::print_current_matrix_info(std::ostream &out) const
+{
+  out << "H-matrix address: " << std::hex << this << "\n";
+  out << "Parent H-matrix address: " << std::hex << this->parent << "\n";
+  out << "Submatrix addresses: (";
+  for (unsigned int i = 0; i < submatrices.size(); i++)
+    {
+      out << std::hex << submatrices[i];
+
+      if (i < submatrices.size() - 1)
+        {
+          out << ",";
+        }
+    }
+  out << ")\n";
+  out << "Submatrix index wrt. the parent H-matrix: " << std::dec
+      << this->submatrix_index << std::endl;
+
   /**
    * Print the size of \f$\Sigma_b^P\f$, \f$\Sigma_b^R\f$ and \f$\Sigma_b^F\f$.
    */
   print_h_submatrix_accessor(std::cout, "M", *this);
+  out << std::endl;
   out << "(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=("
       << bc_node->get_level() << "," << Sigma_P.size() << "," << Sigma_R.size()
       << "," << Sigma_F.size() << ")" << std::endl;
@@ -5017,10 +8677,98 @@ HMatrix<spacedim, Number>::print_matrix_info(std::ostream &out) const
       print_h_h_submatrix_mmult_accessor(
         std::cout, "M1", *(hmat_pair.first), "M2", *(hmat_pair.second));
     }
+}
 
-  for (const HMatrix<spacedim, Number> *submatrix : submatrices)
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::print_matrix_info_as_dot(std::ostream &out) const
+{
+  /**
+   * Write the header of the Graphviz dot file.
+   */
+  out << "#@startdot\n";
+  out << "digraph hmatrix {\n";
+
+  /**
+   * Define the node style.
+   */
+  out << "node [style=filled, shape=box]\n";
+
+  /**
+   * Add comment nodes.
+   */
+  out << "\"Non-leaf block\" [fillcolor=white]\n";
+  out << "\"Near field block\" [fillcolor=red]\n";
+  out << "\"Far field block\" [fillcolor=green]\n";
+
+  _print_matrix_info_as_dot_node(out);
+
+  /**
+   * Finalize the Graphviz dot file.
+   */
+  out << "}\n";
+  out << "#@enddot" << std::endl;
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::_print_matrix_info_as_dot_node(
+  std::ostream &out) const
+{
+  /**
+   * Create the graph node for the current \hmatnode. When the current \hmatnode
+   * is a full matrix, use red background. When it is a rank-k matrix, use green
+   * background.
+   */
+  out << "\"" << std::hex << this << "\""
+      << "[label=<<b>" << std::hex << this << "</b><br/>" << std::dec
+      << "tau: [";
+  print_vector_values(out, *row_indices, ",", false);
+  out << "]<br/>sigma: [";
+  print_vector_values(out, *col_indices, ",", false);
+  out << "]<br/>Level: " << bc_node->get_level() << "<br/>";
+  out << "Parent: " << std::hex << parent << "<br/>";
+  out << "Submatrix index: " << std::dec << submatrix_index << ">,";
+
+  std::string node_color;
+
+  if (type == FullMatrixType)
     {
-      submatrix->print_matrix_info(out);
+      node_color = "red";
+    }
+  else if (type == RkMatrixType)
+    {
+      node_color = "green";
+    }
+  else
+    {
+      node_color = "white";
+    }
+  out << "fillcolor = " << node_color << "]\n\n";
+
+  /**
+   * Construct the relationship between the current node and its children.
+   */
+  for (HMatrix<spacedim, Number> *submatrix : submatrices)
+    {
+      Assert(submatrix != nullptr, ExcInternalError());
+
+      out << "\"" << std::hex << this << "\""
+          << "->"
+          << "\"" << std::hex << submatrix << "\"\n";
+    }
+  out << "\n";
+
+  /**
+   * Print each submatrix node.
+   */
+  for (HMatrix<spacedim, Number> *submatrix : submatrices)
+    {
+      Assert(submatrix != nullptr, ExcInternalError());
+
+      submatrix->_print_matrix_info_as_dot_node(out);
     }
 }
 
@@ -5197,6 +8945,351 @@ HMatrix<spacedim, Number>::write_leaf_set_by_iteration(
 
 
 template <int spacedim, typename Number>
+HMatrix<spacedim, Number> *
+HMatrix<spacedim, Number>::find_row_diag_block_for_offdiag_block()
+{
+  /**
+   * We make an assertion here that the current \hmatnode should not be on the
+   * top level in the \hmatrix hierarchy.
+   */
+  Assert(
+    parent != nullptr,
+    ExcMessage(
+      "The current H-matrix node, the diagonal block of which on a same row is to be found, should not be on the top level!"));
+
+  /**
+   * According to the currently adopted tensor product way of constructing
+   * block clusters from clusters, the diagonal block can only be the first or
+   * last sibling of the current \hmatnode. Therefore, when the current
+   * \hmatnode's @p submatrix_index is 1 (2), we will directly check if the
+   * first (last) sibling is a diagonal block on a same row.
+   *
+   * We should also note that if an off-diagonal block is split into sub-blocks
+   * and such case will occur when the fine non-tensor product partition is
+   * adopted, none of its submatrices are diagonal blocks, even though the
+   * @p submatrix_index of which is 0 or 3.
+   */
+
+  /**
+   * When the first or last sibling of the current \hmatnode is not a diagonal
+   * block, we will look for the corresponding diagonal block on a same row by
+   * first recursing back to the top level of the \hmatrix hierarchy then
+   * recursing forward to the current level.
+   */
+  std::vector<unsigned int> submatrix_index_stack;
+  submatrix_index_stack.reserve(this->bc_node->get_level());
+
+  HMatrix<spacedim, Number> *current_hmat_during_recursion = this;
+  bool                       is_recursion_continued        = true;
+  while (is_recursion_continued)
+    {
+      if (current_hmat_during_recursion->parent == nullptr)
+        {
+          /**
+           * When the current \hmatnode is on the top level of the \hmatrix
+           * hierarchy, throw an error.
+           */
+          Assert(false, ExcInternalError());
+          is_recursion_continued = false;
+        }
+      else
+        {
+          switch (current_hmat_during_recursion->submatrix_index)
+            {
+              case 1:
+                {
+                  /**
+                   * Check if the first sibling of the current \hmatnode is a
+                   * diagonal block. Such checking is performed via shallow
+                   * comparison, i.e.
+                   * compare the pointer addresses of \f$\tau\f$ and \f$\sigma\f$
+                   * clusters.
+                   *
+                   * \mynote{By default, the submatrices are organized in the
+                   * following order.
+                   * <code>
+                   * | 0 | 1 |
+                   * | - | - |
+                   * | 2 | 3 |
+                   * </code>}
+                   */
+                  if (current_hmat_during_recursion->parent->submatrices[0]
+                        ->bc_node->get_data_reference()
+                        .get_tau_node() ==
+                      current_hmat_during_recursion->parent->submatrices[0]
+                        ->bc_node->get_data_reference()
+                        .get_sigma_node())
+                    {
+                      current_hmat_during_recursion =
+                        current_hmat_during_recursion->parent->submatrices[0];
+                      is_recursion_continued = false;
+                    }
+                  else
+                    {
+                      /**
+                       * Go one recursion level up for further searching.
+                       */
+                      submatrix_index_stack.push_back(
+                        current_hmat_during_recursion->submatrix_index);
+                      current_hmat_during_recursion =
+                        current_hmat_during_recursion->parent;
+                    }
+
+                  break;
+                }
+              case 2:
+                {
+                  /**
+                   * Check if the last (3rd) sibling of the current \hmatnode is
+                   * a diagonal block. Such checking is performed via shallow
+                   * comparison,
+                   * i.e. compare the pointer addresses of \f$\tau\f$ and \f$\sigma\f$
+                   * clusters.
+                   */
+                  if (current_hmat_during_recursion->parent->submatrices[3]
+                        ->bc_node->get_data_reference()
+                        .get_tau_node() ==
+                      current_hmat_during_recursion->parent->submatrices[3]
+                        ->bc_node->get_data_reference()
+                        .get_sigma_node())
+                    {
+                      current_hmat_during_recursion =
+                        current_hmat_during_recursion->parent->submatrices[3];
+                      is_recursion_continued = false;
+                    }
+                  else
+                    {
+                      /**
+                       * Go one recursion level up for further searching.
+                       */
+                      submatrix_index_stack.push_back(
+                        current_hmat_during_recursion->submatrix_index);
+                      current_hmat_during_recursion =
+                        current_hmat_during_recursion->parent;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  /**
+                   * Go one recursion level up for further searching.
+                   */
+                  submatrix_index_stack.push_back(
+                    current_hmat_during_recursion->submatrix_index);
+                  current_hmat_during_recursion =
+                    current_hmat_during_recursion->parent;
+
+                  break;
+                }
+            }
+        }
+    }
+
+  const unsigned int iter_num = submatrix_index_stack.size();
+  for (unsigned int i = 0; i < iter_num; i++)
+    {
+      switch (submatrix_index_stack.back())
+        {
+          case 0:
+          case 1:
+            {
+              current_hmat_during_recursion =
+                current_hmat_during_recursion->submatrices[0];
+
+              break;
+            }
+          case 2:
+          case 3:
+            {
+              current_hmat_during_recursion =
+                current_hmat_during_recursion->submatrices[3];
+
+              break;
+            }
+        }
+
+      submatrix_index_stack.pop_back();
+    }
+
+  return current_hmat_during_recursion;
+}
+
+
+template <int spacedim, typename Number>
+HMatrix<spacedim, Number> *
+HMatrix<spacedim, Number>::find_col_diag_block_for_offdiag_block()
+{
+  /**
+   * We make an assertion here that the current \hmatnode should not be on the
+   * top level in the \hmatrix hierarchy.
+   */
+  Assert(
+    parent != nullptr,
+    ExcMessage(
+      "The current H-matrix node, the diagonal block of which on a same row is to be found, should not be on the top level!"));
+
+  /**
+   * According to the currently adopted tensor product way of constructing
+   * block clusters from clusters, the diagonal block can only be the first or
+   * last sibling of the current \hmatnode. Therefore, when the current
+   * \hmatnode's @p submatrix_index is 1 (2), we will directly check if the
+   * first (last) sibling is a diagonal block on a same column.
+   *
+   * We should also note that if an off-diagonal block is split into sub-blocks
+   * and such case will occur when the fine non-tensor product partition is
+   * adopted, none of its submatrices are diagonal blocks, even though the
+   * @p submatrix_index of which is 0 or 3.
+   */
+
+  /**
+   * When the first or last sibling of the current \hmatnode is not a diagonal
+   * block, we will look for the corresponding diagonal block on a same column
+   * by first recursing back to the top level of the \hmatrix hierarchy then
+   * recursing forward to the current level.
+   */
+  std::vector<unsigned int> submatrix_index_stack;
+  submatrix_index_stack.reserve(this->bc_node->get_level());
+
+  HMatrix<spacedim, Number> *current_hmat_during_recursion = this;
+  bool                       is_recursion_continued        = true;
+  while (is_recursion_continued)
+    {
+      if (current_hmat_during_recursion->parent == nullptr)
+        {
+          /**
+           * When the current \hmatnode is on the top level of the \hmatrix
+           * hierarchy, throw an error, because the diaognal block should have
+           * been found already.
+           */
+          Assert(false, ExcInternalError());
+          is_recursion_continued = false;
+        }
+      else
+        {
+          switch (current_hmat_during_recursion->submatrix_index)
+            {
+              case 1:
+                {
+                  /**
+                   * Check if the last (3rd) sibling of the current \hmatnode is
+                   * a diagonal block. Such checking is performed via shallow
+                   * comparison, i.e.
+                   * compare the pointer addresses of \f$\tau\f$ and \f$\sigma\f$
+                   * clusters.
+                   *
+                   * \mynote{By default, the submatrices are organized in the
+                   * following order.
+                   * <code>
+                   * | 0 | 1 |
+                   * | - | - |
+                   * | 2 | 3 |
+                   * </code>}
+                   */
+                  if (current_hmat_during_recursion->parent->submatrices[3]
+                        ->bc_node->get_data_reference()
+                        .get_tau_node() ==
+                      current_hmat_during_recursion->parent->submatrices[3]
+                        ->bc_node->get_data_reference()
+                        .get_sigma_node())
+                    {
+                      current_hmat_during_recursion =
+                        current_hmat_during_recursion->parent->submatrices[3];
+                      is_recursion_continued = false;
+                    }
+                  else
+                    {
+                      /**
+                       * Go one recursion level up for further searching.
+                       */
+                      submatrix_index_stack.push_back(
+                        current_hmat_during_recursion->submatrix_index);
+                      current_hmat_during_recursion =
+                        current_hmat_during_recursion->parent;
+                    }
+
+                  break;
+                }
+              case 2:
+                {
+                  /**
+                   * Check if the first sibling of the current \hmatnode is
+                   * a diagonal block. Such checking is performed via shallow
+                   * comparison,
+                   * i.e. compare the pointer addresses of \f$\tau\f$ and \f$\sigma\f$
+                   * clusters.
+                   */
+                  if (current_hmat_during_recursion->parent->submatrices[0]
+                        ->bc_node->get_data_reference()
+                        .get_tau_node() ==
+                      current_hmat_during_recursion->parent->submatrices[0]
+                        ->bc_node->get_data_reference()
+                        .get_sigma_node())
+                    {
+                      current_hmat_during_recursion =
+                        current_hmat_during_recursion->parent->submatrices[0];
+                      is_recursion_continued = false;
+                    }
+                  else
+                    {
+                      /**
+                       * Go one recursion level up for further searching.
+                       */
+                      submatrix_index_stack.push_back(
+                        current_hmat_during_recursion->submatrix_index);
+                      current_hmat_during_recursion =
+                        current_hmat_during_recursion->parent;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  /**
+                   * Go one recursion level up for further searching.
+                   */
+                  submatrix_index_stack.push_back(
+                    current_hmat_during_recursion->submatrix_index);
+                  current_hmat_during_recursion =
+                    current_hmat_during_recursion->parent;
+
+                  break;
+                }
+            }
+        }
+    }
+
+  const unsigned int iter_num = submatrix_index_stack.size();
+  for (unsigned int i = 0; i < iter_num; i++)
+    {
+      switch (submatrix_index_stack.back())
+        {
+          case 0:
+          case 2:
+            {
+              current_hmat_during_recursion =
+                current_hmat_during_recursion->submatrices[0];
+
+              break;
+            }
+          case 1:
+          case 3:
+            {
+              current_hmat_during_recursion =
+                current_hmat_during_recursion->submatrices[3];
+
+              break;
+            }
+        }
+
+      submatrix_index_stack.pop_back();
+    }
+
+  return current_hmat_during_recursion;
+}
+
+
+template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::truncate_to_rank(size_type new_rank)
 {
@@ -5240,61 +9333,279 @@ HMatrix<spacedim, Number>::truncate_to_rank(size_type new_rank)
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::truncate_to_rank_preserve_positive_definite(
+  size_type new_rank)
+{
+  truncate_to_rank_diag_preserve_positive_definite(new_rank);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
+  size_type new_rank)
+{
+  /**
+   * At present, it is prescribed that the \bct should be a quad
+   * tree.
+   */
+  Assert(type == HierarchicalMatrixType, ExcInvalidHMatrixType(type));
+  AssertDimension(submatrices.size(), 4);
+
+  /**
+   * Make an assertion that the first and last submatrices of the current
+   * \hmatnode are really diagonal blocks by comparing the <strong>pointer
+   * addresses</strong> of the \f$\tau\f$ cluster node and \f$\sigma\f$ cluster
+   * node.
+   */
+  Assert(
+    submatrices[0]->bc_node->get_data_reference().get_tau_node() ==
+      submatrices[0]->bc_node->get_data_reference().get_sigma_node(),
+    ExcMessage(
+      "The first submatrix of the current H-matrix node is not a diagonal block!"));
+  Assert(
+    submatrices[3]->bc_node->get_data_reference().get_tau_node() ==
+      submatrices[3]->bc_node->get_data_reference().get_sigma_node(),
+    ExcMessage(
+      "The last submatrix of the current H-matrix node is not a diagonal block!"));
+
+  /**
+   * Only handle the two diagonal blocks and one off-diagonal block in the lower
+   * triangular part.
+   */
+  switch (submatrices[0]->type)
+    {
+      case HierarchicalMatrixType:
+        {
+          submatrices[0]->truncate_to_rank_diag_preserve_positive_definite(
+            new_rank);
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          /**
+           * Do nothing.
+           */
+          break;
+        }
+      case RkMatrixType:
+        /**
+         * Rank-k matrix should not appear as a diagonal block.
+         */
+      case UndefinedMatrixType:
+        {
+          Assert(false, ExcInvalidHMatrixType(type));
+          break;
+        }
+    }
+
+  switch (submatrices[3]->type)
+    {
+      case HierarchicalMatrixType:
+        {
+          submatrices[3]->truncate_to_rank_diag_preserve_positive_definite(
+            new_rank);
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          /**
+           * Do nothing.
+           */
+          break;
+        }
+      case RkMatrixType:
+        /**
+         * Rank-k matrix should not appear as a diagonal block.
+         */
+      case UndefinedMatrixType:
+        {
+          Assert(false, ExcInvalidHMatrixType(type));
+          break;
+        }
+    }
+
+  switch (submatrices[2]->type)
+    {
+      case HierarchicalMatrixType:
+        {
+          submatrices[2]->truncate_to_rank_off_diag_preserve_positive_definite(
+            new_rank);
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          LAPACKFullMatrixExt<double> C, D;
+          submatrices[2]->rkmatrix->truncate_to_rank(new_rank, D, C);
+
+          /**
+           * Since the first and last submatrices of the current \hmatnode are
+           * diagonal blocks, directly add the error matrices into them.
+           */
+          submatrices[0]->addsym_diag(C);
+          submatrices[3]->addsym_diag(D);
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          /**
+           * Do nothing.
+           */
+          break;
+        }
+      case UndefinedMatrixType:
+        {
+          Assert(false, ExcInvalidHMatrixType(type));
+          break;
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::truncate_to_rank_off_diag_preserve_positive_definite(
+  size_type new_rank)
+{
+  /**
+   * At present, it is prescribed that the \bct should be a quad
+   * tree.
+   */
+  Assert(type == HierarchicalMatrixType, ExcInvalidHMatrixType(type));
+  AssertDimension(submatrices.size(), 4);
+
+  /**
+   * Handle the four lower triangular blocks.
+   */
+  for (HMatrix *submatrix : submatrices)
+    {
+      switch (submatrix->type)
+        {
+          case HierarchicalMatrixType:
+            {
+              submatrix->truncate_to_rank_off_diag_preserve_positive_definite(
+                new_rank);
+
+              break;
+            }
+          case FullMatrixType:
+            {
+              /**
+               * Do nothing.
+               */
+              break;
+            }
+          case RkMatrixType:
+            {
+              LAPACKFullMatrixExt<double> C, D;
+              submatrix->rkmatrix->truncate_to_rank(new_rank, D, C);
+
+              /**
+               * Find the diagonal \hmatnode having the same column cluster as
+               * the current \hmatnode.
+               */
+              HMatrix<spacedim, Number> *diag_upper_left =
+                submatrix->find_col_diag_block_for_offdiag_block();
+              Assert(diag_upper_left != submatrix, ExcInternalError());
+              Assert(diag_upper_left != nullptr, ExcInternalError());
+              /**
+               * Find the diagonal \hmatnode having the same row cluster as
+               * the current \hmatnode.
+               */
+              HMatrix<spacedim, Number> *diag_bottom_right =
+                submatrix->find_row_diag_block_for_offdiag_block();
+              Assert(diag_bottom_right != submatrix, ExcInternalError());
+              Assert(diag_bottom_right != nullptr, ExcInternalError());
+
+              /**
+               * Perform error compensation for preserving the positive
+               * definiteness.
+               */
+              diag_upper_left->addsym_diag(C);
+              diag_bottom_right->addsym_diag(D);
+
+              break;
+            }
+          case UndefinedMatrixType:
+            {
+              Assert(false, ExcInvalidHMatrixType(type));
+              break;
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::vmult(Vector<Number> &      y,
                                  const Vector<Number> &x) const
 {
-  Vector<Number> local_y(m);
-  Vector<Number> local_x(n);
-
   switch (type)
     {
       case HierarchicalMatrixType:
-        for (HMatrix *submatrix : submatrices)
-          {
-            submatrix->vmult(y, x);
-          }
+        {
+          for (HMatrix *submatrix : submatrices)
+            {
+              submatrix->vmult(y, x);
+            }
 
-        break;
+          break;
+        }
       case FullMatrixType:
-        /**
-         * Restrict vector x to the current matrix block.
-         */
-        for (size_type j = 0; j < n; j++)
-          {
-            local_x(j) = x(col_indices->at(j));
-          }
+        {
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
 
-        fullmatrix->vmult(local_y, local_x);
+          /**
+           * Restrict vector x to the current matrix block.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) = x(col_indices->at(j));
+            }
 
-        /**
-         * Merge back the result vector \p local_y to \p y.
-         */
-        for (size_type i = 0; i < m; i++)
-          {
-            y(row_indices->at(i)) += local_y(i);
-          }
+          fullmatrix->vmult(local_y, local_x);
 
-        break;
+          /**
+           * Merge back the result vector \p local_y to \p y.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              y(row_indices->at(i)) += local_y(i);
+            }
+
+          break;
+        }
       case RkMatrixType:
-        /**
-         * Restrict vector x to the current matrix block.
-         */
-        for (size_type j = 0; j < n; j++)
-          {
-            local_x(j) = x(col_indices->at(j));
-          }
+        {
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
 
-        rkmatrix->vmult(local_y, local_x);
+          /**
+           * Restrict vector x to the current matrix block.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) = x(col_indices->at(j));
+            }
 
-        /**
-         * Merge back the result vector \p local_y to \p y.
-         */
-        for (size_type i = 0; i < m; i++)
-          {
-            y(row_indices->at(i)) += local_y(i);
-          }
+          rkmatrix->vmult(local_y, local_x);
 
-        break;
+          /**
+           * Merge back the result vector \p local_y to \p y.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              y(row_indices->at(i)) += local_y(i);
+            }
+
+          break;
+        }
       case UndefinedMatrixType:
       default:
         Assert(false, ExcInvalidHMatrixType(type));
@@ -5304,68 +9615,241 @@ HMatrix<spacedim, Number>::vmult(Vector<Number> &      y,
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::vmult_local_vector(
+HMatrix<spacedim, Number>::vmult(Vector<Number> &      y,
+                                 const Number          alpha,
+                                 const Vector<Number> &x) const
+{
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        {
+          for (HMatrix *submatrix : submatrices)
+            {
+              submatrix->vmult(y, alpha, x);
+            }
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
+
+          /**
+           * Restrict vector x to the current matrix block.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) = x(col_indices->at(j));
+            }
+
+          fullmatrix->vmult(local_y, local_x);
+
+          /**
+           * Merge back the result vector \p local_y to \p y.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              y(row_indices->at(i)) += alpha * local_y(i);
+            }
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
+
+          /**
+           * Restrict vector x to the current matrix block.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) = x(col_indices->at(j));
+            }
+
+          rkmatrix->vmult(local_y, local_x);
+
+          /**
+           * Merge back the result vector \p local_y to \p y.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              y(row_indices->at(i)) += alpha * local_y(i);
+            }
+
+          break;
+        }
+      case UndefinedMatrixType:
+      default:
+        Assert(false, ExcInvalidHMatrixType(type));
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::vmult(
   Vector<Number> &                                 y,
   const std::map<types::global_dof_index, size_t> &y_index_global_to_local_map,
   const Vector<Number> &                           x,
   const std::map<types::global_dof_index, size_t> &x_index_global_to_local_map)
   const
 {
-  Vector<Number> local_y(m);
-  Vector<Number> local_x(n);
-
   switch (type)
     {
       case HierarchicalMatrixType:
-        for (HMatrix *submatrix : submatrices)
-          {
-            submatrix->vmult_local_vector(y,
-                                          y_index_global_to_local_map,
-                                          x,
-                                          x_index_global_to_local_map);
-          }
+        {
+          for (HMatrix *submatrix : submatrices)
+            {
+              submatrix->vmult(y,
+                               y_index_global_to_local_map,
+                               x,
+                               x_index_global_to_local_map);
+            }
 
-        break;
+          break;
+        }
       case FullMatrixType:
-        /**
-         * Restrict vector x to the current matrix block.
-         */
-        for (size_type j = 0; j < n; j++)
-          {
-            local_x(j) = x(x_index_global_to_local_map.at(col_indices->at(j)));
-          }
+        {
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
 
-        fullmatrix->vmult(local_y, local_x);
+          /**
+           * Restrict vector x to the current matrix block.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) =
+                x(x_index_global_to_local_map.at(col_indices->at(j)));
+            }
 
-        /**
-         * Merge back the result vector \p local_y to \p y.
-         */
-        for (size_type i = 0; i < m; i++)
-          {
-            y(y_index_global_to_local_map.at(row_indices->at(i))) += local_y(i);
-          }
+          fullmatrix->vmult(local_y, local_x);
 
-        break;
+          /**
+           * Merge back the result vector \p local_y to \p y.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              y(y_index_global_to_local_map.at(row_indices->at(i))) +=
+                local_y(i);
+            }
+
+          break;
+        }
       case RkMatrixType:
-        /**
-         * Restrict vector x to the current matrix block.
-         */
-        for (size_type j = 0; j < n; j++)
-          {
-            local_x(j) = x(x_index_global_to_local_map.at(col_indices->at(j)));
-          }
+        {
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
 
-        rkmatrix->vmult(local_y, local_x);
+          /**
+           * Restrict vector x to the current matrix block.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) =
+                x(x_index_global_to_local_map.at(col_indices->at(j)));
+            }
 
-        /**
-         * Merge back the result vector \p local_y to \p y.
-         */
-        for (size_type i = 0; i < m; i++)
-          {
-            y(y_index_global_to_local_map.at(row_indices->at(i))) += local_y(i);
-          }
+          rkmatrix->vmult(local_y, local_x);
 
-        break;
+          /**
+           * Merge back the result vector \p local_y to \p y.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              y(y_index_global_to_local_map.at(row_indices->at(i))) +=
+                local_y(i);
+            }
+
+          break;
+        }
+      case UndefinedMatrixType:
+      default:
+        Assert(false, ExcInvalidHMatrixType(type));
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::vmult(
+  Vector<Number> &                                 y,
+  const std::map<types::global_dof_index, size_t> &y_index_global_to_local_map,
+  const Number                                     alpha,
+  const Vector<Number> &                           x,
+  const std::map<types::global_dof_index, size_t> &x_index_global_to_local_map)
+  const
+{
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        {
+          for (HMatrix *submatrix : submatrices)
+            {
+              submatrix->vmult(y,
+                               y_index_global_to_local_map,
+                               alpha,
+                               x,
+                               x_index_global_to_local_map);
+            }
+
+          break;
+        }
+      case FullMatrixType:
+        {
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
+
+          /**
+           * Restrict vector x to the current matrix block.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) =
+                x(x_index_global_to_local_map.at(col_indices->at(j)));
+            }
+
+          fullmatrix->vmult(local_y, local_x);
+
+          /**
+           * Merge back the result vector \p local_y to \p y.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              y(y_index_global_to_local_map.at(row_indices->at(i))) +=
+                alpha * local_y(i);
+            }
+
+          break;
+        }
+      case RkMatrixType:
+        {
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
+
+          /**
+           * Restrict vector x to the current matrix block.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) =
+                x(x_index_global_to_local_map.at(col_indices->at(j)));
+            }
+
+          rkmatrix->vmult(local_y, local_x);
+
+          /**
+           * Merge back the result vector \p local_y to \p y.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              y(y_index_global_to_local_map.at(row_indices->at(i))) +=
+                alpha * local_y(i);
+            }
+
+          break;
+        }
       case UndefinedMatrixType:
       default:
         Assert(false, ExcInvalidHMatrixType(type));
@@ -5439,7 +9923,72 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::Tvmult_local_vector(
+HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
+                                  const Number          alpha,
+                                  const Vector<Number> &x) const
+{
+  Vector<Number> local_y(n);
+  Vector<Number> local_x(m);
+
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        for (HMatrix *submatrix : submatrices)
+          {
+            submatrix->Tvmult(y, alpha, x);
+          }
+
+        break;
+      case FullMatrixType:
+        /**
+         * Restrict vector x to the current matrix block.
+         */
+        for (size_type j = 0; j < m; j++)
+          {
+            local_x(j) = x(row_indices->at(j));
+          }
+
+        fullmatrix->Tvmult(local_y, local_x);
+
+        /**
+         * Merge back the result vector \p local_y to \p y.
+         */
+        for (size_type i = 0; i < n; i++)
+          {
+            y(col_indices->at(i)) += alpha * local_y(i);
+          }
+
+        break;
+      case RkMatrixType:
+        /**
+         * Restrict vector x to the current matrix block.
+         */
+        for (size_type j = 0; j < m; j++)
+          {
+            local_x(j) = x(row_indices->at(j));
+          }
+
+        rkmatrix->Tvmult(local_y, local_x);
+
+        /**
+         * Merge back the result vector \p local_y to \p y.
+         */
+        for (size_type i = 0; i < n; i++)
+          {
+            y(col_indices->at(i)) += alpha * local_y(i);
+          }
+
+        break;
+      case UndefinedMatrixType:
+      default:
+        Assert(false, ExcInvalidHMatrixType(type));
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Tvmult(
   Vector<Number> &                                 y,
   const std::map<types::global_dof_index, size_t> &y_index_global_to_local_map,
   const Vector<Number> &                           x,
@@ -5454,10 +10003,10 @@ HMatrix<spacedim, Number>::Tvmult_local_vector(
       case HierarchicalMatrixType:
         for (HMatrix *submatrix : submatrices)
           {
-            submatrix->Tvmult_local_vector(y,
-                                           y_index_global_to_local_map,
-                                           x,
-                                           x_index_global_to_local_map);
+            submatrix->Tvmult(y,
+                              y_index_global_to_local_map,
+                              x,
+                              x_index_global_to_local_map);
           }
 
         break;
@@ -5498,6 +10047,81 @@ HMatrix<spacedim, Number>::Tvmult_local_vector(
         for (size_type i = 0; i < n; i++)
           {
             y(y_index_global_to_local_map.at(col_indices->at(i))) += local_y(i);
+          }
+
+        break;
+      case UndefinedMatrixType:
+      default:
+        Assert(false, ExcInvalidHMatrixType(type));
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::Tvmult(
+  Vector<Number> &                                 y,
+  const std::map<types::global_dof_index, size_t> &y_index_global_to_local_map,
+  const Number                                     alpha,
+  const Vector<Number> &                           x,
+  const std::map<types::global_dof_index, size_t> &x_index_global_to_local_map)
+  const
+{
+  Vector<Number> local_y(n);
+  Vector<Number> local_x(m);
+
+  switch (type)
+    {
+      case HierarchicalMatrixType:
+        for (HMatrix *submatrix : submatrices)
+          {
+            submatrix->Tvmult(y,
+                              y_index_global_to_local_map,
+                              alpha,
+                              x,
+                              x_index_global_to_local_map);
+          }
+
+        break;
+      case FullMatrixType:
+        /**
+         * Restrict vector x to the current matrix block.
+         */
+        for (size_type j = 0; j < m; j++)
+          {
+            local_x(j) = x(x_index_global_to_local_map.at(row_indices->at(j)));
+          }
+
+        fullmatrix->Tvmult(local_y, local_x);
+
+        /**
+         * Merge back the result vector \p local_y to \p y.
+         */
+        for (size_type i = 0; i < n; i++)
+          {
+            y(y_index_global_to_local_map.at(col_indices->at(i))) +=
+              alpha * local_y(i);
+          }
+
+        break;
+      case RkMatrixType:
+        /**
+         * Restrict vector x to the current matrix block.
+         */
+        for (size_type j = 0; j < m; j++)
+          {
+            local_x(j) = x(x_index_global_to_local_map.at(row_indices->at(j)));
+          }
+
+        rkmatrix->Tvmult(local_y, local_x);
+
+        /**
+         * Merge back the result vector \p local_y to \p y.
+         */
+        for (size_type i = 0; i < n; i++)
+          {
+            y(y_index_global_to_local_map.at(col_indices->at(i))) +=
+              alpha * local_y(i);
           }
 
         break;
@@ -5570,8 +10194,8 @@ HMatrix<spacedim, Number>::h_h_mmult_reduction()
            */
           Sigma_P_cannot_reduced.push_back(hmat_pair);
           /**
-           * Remove the current H-matrix node pair from the original list in \p
-           * M.
+           * Remove the current H-matrix node pair from the original list in
+           * \p M.
            */
           Sigma_P.pop_back();
         }
@@ -6110,6 +10734,40 @@ HMatrix<spacedim, Number>::mmult_level_conserving(HMatrix<spacedim, Number> &C,
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::mmult_level_conserving(HMatrix<spacedim, Number> &C,
+                                                  const Number alpha,
+                                                  HMatrix<spacedim, Number> &B,
+                                                  const unsigned int fixed_rank)
+{
+  h_h_mmult_level_conserving(C, C, alpha, (*this), B, fixed_rank);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::mTmult_level_conserving(
+  HMatrix<spacedim, Number> &C,
+  HMatrix<spacedim, Number> &B,
+  const unsigned int         fixed_rank)
+{
+  h_h_mTmult_level_conserving(C, C, (*this), B, fixed_rank);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::mTmult_level_conserving(
+  HMatrix<spacedim, Number> &C,
+  const Number               alpha,
+  HMatrix<spacedim, Number> &B,
+  const unsigned int         fixed_rank)
+{
+  h_h_mTmult_level_conserving(C, C, alpha, (*this), B, fixed_rank);
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
                                const HMatrix<spacedim, Number> &B,
                                const size_type fixed_rank_k) const
@@ -6127,9 +10785,9 @@ HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
            */
           for (size_type i = 0; i < submatrices.size(); i++)
             {
-              submatrices.at(i)->add(*(C.submatrices.at(i)),
-                                     *(B.submatrices.at(i)),
-                                     fixed_rank_k);
+              submatrices[i]->add(*(C.submatrices[i]),
+                                  *(B.submatrices[i]),
+                                  fixed_rank_k);
             }
 
           break;
@@ -6179,10 +10837,10 @@ HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &      C,
            */
           for (size_type i = 0; i < submatrices.size(); i++)
             {
-              submatrices.at(i)->add(*(C.submatrices.at(i)),
-                                     b,
-                                     *(B.submatrices.at(i)),
-                                     fixed_rank_k);
+              submatrices[i]->add(*(C.submatrices[i]),
+                                  b,
+                                  *(B.submatrices[i]),
+                                  fixed_rank_k);
             }
 
           break;
@@ -6230,7 +10888,7 @@ HMatrix<spacedim, Number>::add(const HMatrix<spacedim, Number> &B,
            */
           for (size_type i = 0; i < submatrices.size(); i++)
             {
-              submatrices.at(i)->add(*(B.submatrices.at(i)), fixed_rank_k);
+              submatrices[i]->add(*(B.submatrices[i]), fixed_rank_k);
             }
 
           break;
@@ -6279,7 +10937,7 @@ HMatrix<spacedim, Number>::add(const Number                     b,
            */
           for (size_type i = 0; i < submatrices.size(); i++)
             {
-              submatrices.at(i)->add(b, *(B.submatrices.at(i)), fixed_rank_k);
+              submatrices[i]->add(b, *(B.submatrices[i]), fixed_rank_k);
             }
 
           break;
@@ -6324,10 +10982,10 @@ HMatrix<spacedim, Number>::add(const RkMatrix<Number> &B,
         {
           for (size_type i = 0; i < submatrices.size(); i++)
             {
-              submatrices.at(i)->add(B,
-                                     row_index_global_to_local_map_for_rk,
-                                     col_index_global_to_local_map_for_rk,
-                                     fixed_rank_k);
+              submatrices[i]->add(B,
+                                  row_index_global_to_local_map_for_rk,
+                                  col_index_global_to_local_map_for_rk,
+                                  fixed_rank_k);
             }
 
           break;
@@ -6351,8 +11009,8 @@ HMatrix<spacedim, Number>::add(const RkMatrix<Number> &B,
       case RkMatrixType:
         {
           /**
-           * Create a local rank-k matrix by restricting from the original large
-           * rank-k matrix.
+           * Create a local rank-k matrix by restricting from the original
+           * large rank-k matrix.
            */
           RkMatrix<Number> rkmatrix_by_restriction(
             *(row_indices),
@@ -6396,11 +11054,11 @@ HMatrix<spacedim, Number>::add(const Number            b,
         {
           for (size_type i = 0; i < submatrices.size(); i++)
             {
-              submatrices.at(i)->add(b,
-                                     B,
-                                     row_index_global_to_local_map_for_rk,
-                                     col_index_global_to_local_map_for_rk,
-                                     fixed_rank_k);
+              submatrices[i]->add(b,
+                                  B,
+                                  row_index_global_to_local_map_for_rk,
+                                  col_index_global_to_local_map_for_rk,
+                                  fixed_rank_k);
             }
 
           break;
@@ -6424,8 +11082,8 @@ HMatrix<spacedim, Number>::add(const Number            b,
       case RkMatrixType:
         {
           /**
-           * Create a local rank-k matrix by restricting from the original large
-           * rank-k matrix.
+           * Create a local rank-k matrix by restricting from the original
+           * large rank-k matrix.
            */
           RkMatrix<Number> rkmatrix_by_restriction(
             *(row_indices),
@@ -6511,6 +11169,89 @@ HMatrix<spacedim, Number>::add(const Number            b,
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::addsym_diag(const LAPACKFullMatrixExt<Number> &E)
+{
+  if (E.m() != 0 && E.n() != 0)
+    {
+      /**
+       * Only when the error matrix has non-zero dimension, there will be actual
+       * addition to the diagonal blocks.
+       */
+
+      /**
+       * Make an assertion that the current \hmatnode should be a diagonal
+       * block.
+       */
+      Assert(bc_node->get_data_reference().get_tau_node() ==
+               bc_node->get_data_reference().get_sigma_node(),
+             ExcMessage(
+               "The current H-matrix node should be a diagonal block!"));
+
+      if (type == FullMatrixType)
+        {
+          /**
+           * When the current \hmatnode is a leaf node, since it is a diagonal
+           * block, it must be a full matrix. Then, we directly add \f$EE^H\f$
+           * into the current \hmatnode.
+           */
+          LAPACKFullMatrixExt<Number> EEH;
+          E.mTmult(EEH, E);
+
+          this->fullmatrix->add(EEH);
+        }
+      else
+        {
+          /**
+           * Make an assertion that the current \hmatnode should have
+           * submatrices.
+           */
+          Assert(type == HierarchicalMatrixType, ExcInvalidHMatrixType(type));
+
+          if (row_index_global_to_local_map.size() == 0)
+            {
+              build_index_set_global_to_local_map(
+                *(row_indices), row_index_global_to_local_map);
+            }
+
+          std::vector<types::global_dof_index> &t1_cluster =
+            *(submatrices[0]->row_indices);
+          std::vector<types::global_dof_index> &t2_cluster =
+            *(submatrices[3]->row_indices);
+
+          LAPACKFullMatrixExt<Number> E1(t1_cluster.size(), E.n());
+          LAPACKFullMatrixExt<Number> E2(t2_cluster.size(), E.n());
+
+          /**
+           * Restrict the rows of the error matrix \f$E\f$ to the cluster \f$t_1\f$.
+           */
+          for (size_type i = 0; i < E1.m(); i++)
+            {
+              E1.fill_row(i,
+                          row_index_global_to_local_map.at(t1_cluster[i]),
+                          E,
+                          std::sqrt(2.0));
+            }
+
+          /**
+           * Restrict the rows of the error matrix \f$E\f$ to the cluster \f$t_2\f$.
+           */
+          for (size_type i = 0; i < E2.m(); i++)
+            {
+              E2.fill_row(i,
+                          row_index_global_to_local_map.at(t2_cluster[i]),
+                          E,
+                          std::sqrt(2.0));
+            }
+
+          submatrices[0]->addsym_diag(E1);
+          submatrices[3]->addsym_diag(E2);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::add(HMatrix<spacedim, Number> &C,
                                const RkMatrix<Number> &   B,
                                const size_type            fixed_rank_k)
@@ -6550,6 +11291,2012 @@ HMatrix<spacedim, Number>::invert_by_gauss_elim(
 
 template <int spacedim, typename Number>
 void
+HMatrix<spacedim, Number>::solve_by_forward_substitution(
+  Vector<Number> &b,
+  const bool      is_unit_diagonal) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and can be directly solved via forward substitution.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      Vector<Number> local_b(n);
+
+      /**
+       * Restrict vector \p b to the column cluster of the current \hmatnode.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          local_b(j) = b(col_indices->at(j));
+        }
+
+      /**
+       * Perform forward substitution for the full matrix. N.B. The right hand
+       * side vector should be permuted if the current lower triangular matrix
+       * is obtained from the row pivoted LU factorization.
+       */
+      fullmatrix->solve_by_forward_substitution(local_b,
+                                                false,
+                                                is_unit_diagonal,
+                                                true);
+
+      /**
+       * Copy back the restricted vector \p local_b to the original vector \p b.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          b(row_indices->at(i)) = local_b(i);
+        }
+    }
+  else
+    {
+      /**
+       * Iterate over each block row of the matrix.
+       */
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      for (size_type i = 0; i < n_row_blocks; i++)
+        {
+          /**
+           * Iterate each block column before the i'th column, i.e. before the
+           * diagonal submatrix block.
+           */
+          for (size_type j = 0; j < i; j++)
+            {
+              submatrices[i * n_col_blocks + j]->vmult(b, -1.0, b);
+            }
+
+          /**
+           * Solve the current diagonal block using forward substitution.
+           */
+          submatrices[i * n_col_blocks + i]->solve_by_forward_substitution(
+            b, is_unit_diagonal);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_by_forward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const bool            is_unit_diagonal) const
+{
+  x = b;
+  solve_by_forward_substitution(x, is_unit_diagonal);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_by_forward_substitution(
+  Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &        vector_index_global_to_local_map,
+  const bool is_unit_diagonal) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and can be directly solved via forward substitution.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      Vector<Number> local_b(n);
+
+      /**
+       * Restrict vector \p b to the column cluster of the current \hmatnode.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          local_b(j) =
+            b(vector_index_global_to_local_map.at(col_indices->at(j)));
+        }
+
+      /**
+       * Perform forward substitution for the full matrix. N.B. The right hand
+       * side vector should be permuted if the current lower triangular matrix
+       * is obtained from the row pivoted LU factorization.
+       */
+      fullmatrix->solve_by_forward_substitution(local_b,
+                                                false,
+                                                is_unit_diagonal,
+                                                true);
+
+      /**
+       * Copy back the restricted vector \p local_b to the original vector \p b.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          b(vector_index_global_to_local_map.at(row_indices->at(i))) =
+            local_b(i);
+        }
+    }
+  else
+    {
+      /**
+       * Iterate over each block row of the matrix.
+       */
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      for (size_type i = 0; i < n_row_blocks; i++)
+        {
+          /**
+           * Iterate each block column before the i'th column, i.e. before the
+           * diagonal submatrix block.
+           */
+          for (size_type j = 0; j < i; j++)
+            {
+              submatrices[i * n_col_blocks + j]->vmult(
+                b,
+                vector_index_global_to_local_map,
+                -1.0,
+                b,
+                vector_index_global_to_local_map);
+            }
+
+          /**
+           * Solve the current diagonal block using forward substitution.
+           */
+          submatrices[i * n_col_blocks + i]->solve_by_forward_substitution(
+            b, vector_index_global_to_local_map, is_unit_diagonal);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_by_forward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &        vector_index_global_to_local_map,
+  const bool is_unit_diagonal) const
+{
+  x = b;
+  solve_by_forward_substitution(x,
+                                vector_index_global_to_local_map,
+                                is_unit_diagonal);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_by_forward_substitution_matrix_valued(
+  HMatrix<spacedim, Number> &X,
+  HMatrix<spacedim, Number> &Z,
+  const unsigned int         fixed_rank,
+  const bool                 is_unit_diagonal)
+{
+  AssertDimension(Z.m, X.m);
+  AssertDimension(Z.n, X.n);
+  Assert(
+    Z.type == X.type,
+    ExcMessage(
+      "Matrix Z and X should be built a same block cluster and thus have a same H-matrix type!"));
+  AssertDimension(this->m, this->n);
+  AssertDimension(this->n, X.m);
+
+  if (Z.type == FullMatrixType)
+    {
+      if (this->col_index_global_to_local_map.size() == 0)
+        {
+          build_index_set_global_to_local_map(
+            *(this->col_indices), this->col_index_global_to_local_map);
+        }
+
+      /**
+       * When the current \hmatnode of \p X or \p Z is a full matrix, we need to
+       * solve a multiple RHS problem.
+       */
+      Vector<Number> X_col(X.m);
+      Vector<Number> Z_col(Z.m);
+
+      /**
+       * Iterate over each column of \p X and \p Z.
+       */
+      for (size_type j = 0; j < Z.n; j++)
+        {
+          Z.fullmatrix->get_column(j, Z_col);
+
+          /**
+           * Solve the current lower triangular \hmatrix
+           * \f$L\vert_{\tau,\tau}X\vert_{\tau,j}=Z\vert_{\tau,j}\f$ using the
+           * forward substitution for \hmatrices.
+           */
+          this->solve_by_forward_substitution(
+            X_col,
+            Z_col,
+            this->col_index_global_to_local_map,
+            is_unit_diagonal);
+
+          /**
+           * Merge back the solution vector \p X_col into \p X, while the matrix
+           * \p Z is intact.
+           */
+          X.fullmatrix->fill_col(j, X_col);
+        }
+    }
+  else if (Z.type == RkMatrixType)
+    {
+      if (this->col_index_global_to_local_map.size() == 0)
+        {
+          build_index_set_global_to_local_map(
+            *(this->col_indices), this->col_index_global_to_local_map);
+        }
+
+      /**
+       * When the current \hmatnode of \p X or \p Z is a rank-k matrix, we
+       * iterate over each column of its component matrix \p A and solve a
+       * multiple RHS problem. The resulted solution matrix \p A' is just the
+       * component matrix \p A of the rank-k matrix \p X.
+       *
+       * Copy the data of the rank-k matrix \p Z to the rank-k matrix \p X. The
+       * component matrix \p B of \p X will be intact, while the component
+       * matrix \p A of X will be solved by using the forward substitution for \hmatrices.
+       *
+       * This can be further elucidated as: because
+       * \f$L\vert_{\tau\times\tau}X\vert_{\tau\times\sigma} =
+       * Z\vert_{\tau\times\sigma}\f$, where \f$Z\vert_{\tau\times\sigma} =
+       * AB^T\f$. Since \f$X\f$ is also a rank-k matrix, let \f$X=A'B^T\f$.
+       * Hence, the component matrix \f$A'\f$ of \f$X\f$ can be solved as
+       * \f$L\vert_{\tau\times\tau}A'=A\f$.
+       */
+      (*X.rkmatrix) = (*Z.rkmatrix);
+
+      Vector<Number> A_prime_col(X.m);
+      for (size_type j = 0; j < Z.rkmatrix->get_formal_rank(); j++)
+        {
+          Z.rkmatrix->get_A().get_column(j, A_prime_col);
+
+          this->solve_by_forward_substitution(
+            A_prime_col, this->col_index_global_to_local_map, is_unit_diagonal);
+
+          /**
+           * Merge back the column vector of \p A' into \p A'.
+           */
+          X.rkmatrix->get_A().fill_col(j, A_prime_col);
+        }
+    }
+  else
+    {
+      /**
+       * When the current \hmatnode of \p X or \p Z does not belong to the leaf
+       * set, perform a recursive forward substitution based on the submatrix
+       * structure of the current \hmatrix \f$L\f$.
+       */
+
+      /**
+       * The number of row blocks and column blocks of
+       * \f$L\vert_{\tau\times\tau}\f$ should be the same.
+       */
+      AssertDimension(
+        this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+        this->bc_node->get_data_reference().get_sigma_node()->get_child_num());
+
+      /**
+       * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+       * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the number
+       * of row or column blocks of \f$L\vert_{\tau\times\tau}\f$.
+       */
+      const unsigned int n_row_blocks =
+        X.bc_node->get_data_reference().get_tau_node()->get_child_num();
+      AssertDimension(
+        this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+        n_row_blocks);
+      /**
+       * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+       * \f$Z\vert_{\tau\times\sigma}\f$.
+       */
+      const unsigned int n_col_blocks =
+        X.bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      /**
+       * \mynote{N.B. \p n_row_blocks does not have to be equal to \p n_col_blocks,
+       * since \p X or \p Z may be rectangular.}
+       */
+      AssertDimension(
+        n_row_blocks,
+        Z.bc_node->get_data_reference().get_tau_node()->get_child_num());
+      AssertDimension(
+        n_col_blocks,
+        Z.bc_node->get_data_reference().get_sigma_node()->get_child_num());
+
+      /**
+       * Iterate over each block row of \f$L\vert_{\tau\times\tau}\f$.
+       */
+      for (size_type i = 0; i < n_row_blocks; i++)
+        {
+          /**
+           * Iterate over each child cluster node of the cluster \f$\sigma\f$,
+           * i.e. each block column of \f$X\vert_{\tau\times\sigma}\f$ or
+           * \f$Z\vert_{\tau\times\sigma}\f$.
+           */
+          for (size_type j = 0; j < n_col_blocks; j++)
+            {
+              /**
+               * Iterate over each block column before the i'th column in
+               * \f$L\vert_{\tau\times\tau}\f$.
+               */
+              for (size_type k = 0; k < i; k++)
+                {
+                  this->submatrices[i * n_row_blocks + k]
+                    ->mmult_level_conserving(
+                      *(Z.submatrices[i * n_col_blocks + j]),
+                      -1.0,
+                      *(X.submatrices[k * n_col_blocks + j]),
+                      fixed_rank);
+                }
+
+              /**
+               * Go down one level of recursion and solve the current diagonal
+               * block matrix \f$L\vert_{\tau_i\times\tau_i}\f$.
+               */
+              this->submatrices[i * n_row_blocks + i]
+                ->solve_by_forward_substitution_matrix_valued(
+                  *(X.submatrices[i * n_col_blocks + j]),
+                  *(Z.submatrices[i * n_col_blocks + j]),
+                  fixed_rank,
+                  is_unit_diagonal);
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution_matrix_valued(
+  HMatrix<spacedim, Number> &X,
+  HMatrix<spacedim, Number> &Z,
+  const unsigned int         fixed_rank)
+{
+  solve_by_forward_substitution_matrix_valued(X, Z, fixed_rank, false);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
+  Vector<Number> &b) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix, whose transpose can be directly solved via forward
+       * substitution.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      Vector<Number> local_b(m);
+
+      /**
+       * Restrict vector \p b to the row cluster of the current \hmatnode.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          local_b(i) = b(row_indices->at(i));
+        }
+
+      /**
+       * Perform forward substitution for the transpose of the full matrix.
+       * N.B. The right hand side vector will not be permuted.
+       */
+      fullmatrix->solve_by_forward_substitution(local_b, true, false, false);
+
+      /**
+       * Copy back the restricted vector \p local_b to the original vector \p b.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          b(col_indices->at(j)) = local_b(j);
+        }
+    }
+  else
+    {
+      /**
+       * Iterate over each block row of the matrix.
+       */
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      /**
+       * Iterate each block column.
+       */
+      for (size_type j = 0; j < n_col_blocks; j++)
+        {
+          /**
+           * Iterate each block row before the j'th row, i.e. before the
+           * diagonal submatrix block.
+           */
+          for (size_type i = 0; i < j; i++)
+            {
+              submatrices[i * n_col_blocks + j]->Tvmult(b, -1.0, b);
+            }
+
+          /**
+           * Solve the current diagonal block using forward substitution.
+           */
+          submatrices[j * n_col_blocks + j]
+            ->solve_transpose_by_forward_substitution(b);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b) const
+{
+  x = b;
+  solve_transpose_by_forward_substitution(x);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
+  Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &vector_index_global_to_local_map) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix, whose transpose can be directly solved via forward
+       * substitution.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      Vector<Number> local_b(m);
+
+      /**
+       * Restrict vector \p b to the row cluster of the current \hmatnode.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          local_b(i) =
+            b(vector_index_global_to_local_map.at(row_indices->at(i)));
+        }
+
+      /**
+       * Perform forward substitution for the transpose of the full matrix.
+       * N.B. The right hand side vector will not be permuted.
+       */
+      fullmatrix->solve_by_forward_substitution(local_b, true, false, false);
+
+      /**
+       * Copy back the restricted vector \p local_b to the original vector \p b.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          b(vector_index_global_to_local_map.at(col_indices->at(j))) =
+            local_b(j);
+        }
+    }
+  else
+    {
+      /**
+       * Iterate over each block row of the matrix.
+       */
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      /**
+       * Iterate each block column.
+       */
+      for (size_type j = 0; j < n_col_blocks; j++)
+        {
+          /**
+           * Iterate each block row before the j'th row, i.e. before the
+           * diagonal submatrix block.
+           */
+          for (size_type i = 0; i < j; i++)
+            {
+              submatrices[i * n_col_blocks + j]->Tvmult(
+                b,
+                vector_index_global_to_local_map,
+                -1.0,
+                b,
+                vector_index_global_to_local_map);
+            }
+
+          /**
+           * Solve the current diagonal block using forward substitution.
+           */
+          submatrices[j * n_col_blocks + j]
+            ->solve_transpose_by_forward_substitution(
+              b, vector_index_global_to_local_map);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &vector_index_global_to_local_map) const
+{
+  x = b;
+  solve_transpose_by_forward_substitution(x, vector_index_global_to_local_map);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::
+  solve_transpose_by_forward_substitution_matrix_valued(
+    HMatrix<spacedim, Number> &X,
+    HMatrix<spacedim, Number> &Z,
+    const unsigned int         fixed_rank)
+{
+  AssertDimension(Z.m, X.m);
+  AssertDimension(Z.n, X.n);
+  Assert(
+    Z.type == X.type,
+    ExcMessage(
+      "Matrix Z and X should be built a same block cluster and thus have a same H-matrix type!"));
+  AssertDimension(this->m, this->n);
+  AssertDimension(X.n, this->m);
+
+  if (Z.type == FullMatrixType)
+    {
+      if (this->row_index_global_to_local_map.size() == 0)
+        {
+          build_index_set_global_to_local_map(
+            *(this->row_indices), this->row_index_global_to_local_map);
+        }
+
+      /**
+       * When the current \hmatnode of \p X or \p Z is a full matrix, we need to
+       * solve a multiple RHS problem.
+       */
+      Vector<Number> X_row(X.n);
+      Vector<Number> Z_row(Z.n);
+
+      /**
+       * Iterate over each row of \p X and \p Z.
+       */
+      for (size_type i = 0; i < Z.m; i++)
+        {
+          Z.fullmatrix->get_row(i, Z_row);
+
+          /**
+           * Solve the problem \f$X\vert_{i,\sigma}U\vert_{\sigma\times\sigma} =
+           * Z\vert_{i,\sigma}\f$ using the transposed forward substitution for
+           * \hmatrices.
+           */
+          this->solve_transpose_by_forward_substitution(
+            X_row, Z_row, this->row_index_global_to_local_map);
+
+          /**
+           * Merge back the solution vector \p X_row into \p X, while the matrix
+           * \p Z is intact.
+           */
+          X.fullmatrix->fill_row(i, X_row);
+        }
+    }
+  else if (Z.type == RkMatrixType)
+    {
+      if (this->row_index_global_to_local_map.size() == 0)
+        {
+          build_index_set_global_to_local_map(
+            *(this->row_indices), this->row_index_global_to_local_map);
+        }
+
+      (*X.rkmatrix) = (*Z.rkmatrix);
+
+      Vector<Number> B_prime_col(X.n);
+      for (size_type j = 0; j < Z.rkmatrix->get_formal_rank(); j++)
+        {
+          Z.rkmatrix->get_B().get_column(j, B_prime_col);
+
+          /**
+           * Solve the problem using the transposed forward substitution for
+           * \hmatrices.
+           */
+          this->solve_transpose_by_forward_substitution(
+            B_prime_col, this->row_index_global_to_local_map);
+
+          /**
+           * Merge back the column vector of \p B' into \p B'.
+           */
+          X.rkmatrix->get_B().fill_col(j, B_prime_col);
+        }
+    }
+  else
+    {
+      /**
+       * When the current \hmatnode of \p X or \p Z does not belong to the leaf
+       * set, perform a recursive forward substitution based on the submatrix
+       * structure of the current \hmatrix \f$U\f$.
+       */
+
+      /**
+       * The number of row blocks and column blocks of
+       * \f$L\vert_{\tau\times\tau}\f$ should be the same.
+       */
+      AssertDimension(
+        this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+        this->bc_node->get_data_reference().get_sigma_node()->get_child_num());
+
+      /**
+       * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+       * \f$Z\vert_{\tau\times\sigma}\f$.
+       */
+      const unsigned int n_row_blocks =
+        X.bc_node->get_data_reference().get_tau_node()->get_child_num();
+      /**
+       * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+       * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the number
+       * of row or column blocks of \f$U\vert_{\sigma\times\sigma}\f$.
+       */
+      const unsigned int n_col_blocks =
+        X.bc_node->get_data_reference().get_sigma_node()->get_child_num();
+      AssertDimension(
+        this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+        n_col_blocks);
+
+      /**
+       * \mynote{N.B. \p n_row_blocks does not have to be equal to \p n_col_blocks,
+       * since \p X or \p Z may be rectangular.}
+       */
+      AssertDimension(
+        n_row_blocks,
+        Z.bc_node->get_data_reference().get_tau_node()->get_child_num());
+      AssertDimension(
+        n_col_blocks,
+        Z.bc_node->get_data_reference().get_sigma_node()->get_child_num());
+
+      /**
+       * Iterate over each block column of \f$U\vert_{\sigma\times\sigma}\f$.
+       */
+      for (size_type j = 0; j < n_col_blocks; j++)
+        {
+          /**
+           * Iterate over each child cluster node of the cluster \f$\tau\f$,
+           * i.e. each block row of \f$X\vert_{\tau\times\sigma}\f$ or
+           * \f$Z\vert_{\tau\times\sigma}\f$.
+           */
+          for (size_type i = 0; i < n_row_blocks; i++)
+            {
+              /**
+               * Iterate over each block row before the j'th row in
+               * \f$U\vert_{\sigma\times\sigma}\f$.
+               */
+              for (size_type k = 0; k < j; k++)
+                {
+                  X.submatrices[i * n_col_blocks + k]->mmult_level_conserving(
+                    *(Z.submatrices[i * n_col_blocks + j]),
+                    -1.0,
+                    *(this->submatrices[k * n_col_blocks + j]),
+                    fixed_rank);
+                }
+
+              /**
+               * Go down one level of recursion and solve the current diagonal
+               * block matrix \f$U\vert_{\sigma_j\times\sigma_j}\f$.
+               */
+              this->submatrices[j * n_col_blocks + j]
+                ->solve_transpose_by_forward_substitution_matrix_valued(
+                  *(X.submatrices[i * n_col_blocks + j]),
+                  *(Z.submatrices[i * n_col_blocks + j]),
+                  fixed_rank);
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::
+  solve_cholesky_transpose_by_forward_substitution_matrix_valued(
+    HMatrix<spacedim, Number> &X,
+    HMatrix<spacedim, Number> &Z,
+    const unsigned int         fixed_rank)
+{
+  AssertDimension(Z.m, X.m);
+  AssertDimension(Z.n, X.n);
+  Assert(
+    Z.type == X.type,
+    ExcMessage(
+      "Matrix Z and X should be built a same block cluster and thus have a same H-matrix type!"));
+  AssertDimension(this->m, this->n);
+  /**
+   * The current \hmatrix is \f$L\vert_{\sigma\times\sigma}\f$ and the equation
+   * is \f$L\vert_{\sigma\times\sigma}X\vert_{\sigma\times\tau}^T\f$, the column
+   * dimension of \f$L\f$ should be the same as the column dimension of \f$X\f$.
+   */
+  AssertDimension(X.n, this->n);
+
+  if (Z.type == FullMatrixType)
+    {
+      if (this->col_index_global_to_local_map.size() == 0)
+        {
+          build_index_set_global_to_local_map(
+            *(this->col_indices), this->col_index_global_to_local_map);
+        }
+
+      /**
+       * When the current \hmatnode of \p X or \p Z is a full matrix, we need to
+       * solve a multiple RHS problem.
+       */
+      Vector<Number> X_row(X.n);
+      Vector<Number> Z_row(Z.n);
+
+      /**
+       * Iterate over each row of \p X and \p Z.
+       */
+      for (size_type i = 0; i < Z.m; i++)
+        {
+          Z.fullmatrix->get_row(i, Z_row);
+
+          /**
+           * Solve the problem
+           * \f$L\vert_{\sigma\times\sigma}X\vert_{\sigma,i} =
+           * Z\vert_{\sigma,i}\f$ using the forward substitution for \hmatrices,
+           * while the lower triangular matrix is not unit.
+           */
+          this->solve_by_forward_substitution(
+            X_row, Z_row, this->col_index_global_to_local_map, false);
+
+          /**
+           * Merge back the solution vector \p X_row into \p X, while the matrix
+           * \p Z is intact.
+           */
+          X.fullmatrix->fill_row(i, X_row);
+        }
+    }
+  else if (Z.type == RkMatrixType)
+    {
+      if (this->col_index_global_to_local_map.size() == 0)
+        {
+          build_index_set_global_to_local_map(
+            *(this->col_indices), this->col_index_global_to_local_map);
+        }
+
+      (*X.rkmatrix) = (*Z.rkmatrix);
+
+      Vector<Number> B_prime_col(X.n);
+      for (size_type j = 0; j < Z.rkmatrix->get_formal_rank(); j++)
+        {
+          Z.rkmatrix->get_B().get_column(j, B_prime_col);
+
+          /**
+           * Solve the lower triangular \hmatrix using the forward
+           * substitution for \hmatrices, while the matrix does not have unit
+           * diagonal.
+           */
+          this->solve_by_forward_substitution(
+            B_prime_col, this->col_index_global_to_local_map, false);
+
+          /**
+           * Merge back the column vector into \p B'.
+           */
+          X.rkmatrix->get_B().fill_col(j, B_prime_col);
+        }
+    }
+  else
+    {
+      /**
+       * When the current \hmatnode of \p X or \p Z does not belong to the leaf
+       * set, perform a recursive forward substitution based on the submatrix
+       * structure of the current \hmatrix \f$U\f$.
+       */
+
+      /**
+       * The number of row blocks and column blocks of
+       * \f$L\vert_{\sigma\times\sigma}\f$ should be the same.
+       */
+      AssertDimension(
+        this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+        this->bc_node->get_data_reference().get_sigma_node()->get_child_num());
+
+      /**
+       * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+       * \f$Z\vert_{\tau\times\sigma}\f$.
+       */
+      const unsigned int n_row_blocks =
+        X.bc_node->get_data_reference().get_tau_node()->get_child_num();
+      /**
+       * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+       * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the number
+       * of row or column blocks of \f$L\vert_{\sigma\times\sigma}\f$.
+       */
+      const unsigned int n_col_blocks =
+        X.bc_node->get_data_reference().get_sigma_node()->get_child_num();
+      AssertDimension(
+        this->bc_node->get_data_reference().get_sigma_node()->get_child_num(),
+        n_col_blocks);
+
+      /**
+       * \mynote{N.B. \p n_row_blocks does not have to be equal to \p n_col_blocks,
+       * since \p X or \p Z may be rectangular.}
+       */
+      AssertDimension(
+        n_row_blocks,
+        Z.bc_node->get_data_reference().get_tau_node()->get_child_num());
+      AssertDimension(
+        n_col_blocks,
+        Z.bc_node->get_data_reference().get_sigma_node()->get_child_num());
+
+      /**
+       * Iterate over each block column of \f$U\vert_{\sigma\times\sigma}\f$.
+       */
+      for (size_type j = 0; j < n_col_blocks; j++)
+        {
+          /**
+           * Iterate over each child cluster node of the cluster \f$\tau\f$,
+           * i.e. each block row of \f$X\vert_{\tau\times\sigma}\f$ or
+           * \f$Z\vert_{\tau\times\sigma}\f$.
+           */
+          for (size_type i = 0; i < n_row_blocks; i++)
+            {
+              /**
+               * Iterate over each block row before the j'th row in
+               * \f$U\vert_{\sigma\times\sigma}\f$.
+               */
+              for (size_type k = 0; k < j; k++)
+                {
+                  X.submatrices[i * n_col_blocks + k]->mTmult_level_conserving(
+                    *(Z.submatrices[i * n_col_blocks + j]),
+                    -1.0,
+                    *(this->submatrices[j * n_col_blocks + k]),
+                    fixed_rank);
+                }
+
+              /**
+               * Go down one level of recursion and solve the current diagonal
+               * block matrix \f$U\vert_{\sigma_i \times \sigma_i}\f$.
+               */
+              this->submatrices[j * n_col_blocks + j]
+                ->solve_cholesky_transpose_by_forward_substitution_matrix_valued(
+                  *(X.submatrices[i * n_col_blocks + j]),
+                  *(Z.submatrices[i * n_col_blocks + j]),
+                  fixed_rank);
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_block_triangular_by_forward_substitution(
+  Vector<Number> &b,
+  const bool      is_unit_block_diagonal) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and can be solved via LU factorization.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      if (is_unit_block_diagonal)
+        {
+          /**
+           * In this case, the diagonal block in the leaf set should be an
+           * identity matrix, the solution \p x is the same as the right hand
+           * side vector \p b, so here we do nothing.
+           */
+        }
+      else
+        {
+          /**
+           * In this case, the diagonal block in the leaf set should be
+           * general full matrix and forward substitution cannot be applied
+           * any more. Instead, LU factorization is adopted.
+           */
+          Vector<Number> local_b(n);
+
+          /**
+           * Restrict vector \p b to the column cluster of the current
+           * \hmatnode.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_b(j) = b(col_indices->at(j));
+            }
+
+          /**
+           * Solve the full matrix using LU factorization.
+           */
+          fullmatrix->compute_lu_factorization();
+          fullmatrix->solve(local_b);
+
+          /**
+           * Copy back the restricted vector \p local_b to the original vector
+           * \p b.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              b(row_indices->at(i)) = local_b(i);
+            }
+        }
+    }
+  else
+    {
+      /**
+       * Iterate over each block row of the matrix.
+       */
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      for (size_type i = 0; i < n_row_blocks; i++)
+        {
+          /**
+           * Iterate each block column before the i'th column, i.e. before the
+           * diagonal submatrix block.
+           */
+          for (size_type j = 0; j < i; j++)
+            {
+              submatrices[i * n_col_blocks + j]->vmult(b, -1.0, b);
+            }
+
+          /**
+           * Solve the current diagonal block using forward substitution.
+           */
+          submatrices[i * n_col_blocks + i]
+            ->solve_block_triangular_by_forward_substitution(
+              b, is_unit_block_diagonal);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_block_triangular_by_forward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const bool            is_unit_block_diagonal) const
+{
+  x = b;
+  solve_block_triangular_by_forward_substitution(x, is_unit_block_diagonal);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
+  Vector<Number> &b) const
+{
+  solve_by_forward_substitution(b, false);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b) const
+{
+  solve_by_forward_substitution(x, b, false);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
+  Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &vector_index_global_to_local_map) const
+{
+  solve_by_forward_substitution(b, vector_index_global_to_local_map, false);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &vector_index_global_to_local_map) const
+{
+  solve_by_forward_substitution(x, b, vector_index_global_to_local_map, false);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_by_backward_substitution(
+  Vector<Number> &b,
+  const bool      is_unit_diagonal) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and can be directly solved via backward substitution.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      Vector<Number> local_b(n);
+
+      /**
+       * Restrict vector \p b to the column cluster of the current \hmatnode.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          local_b(j) = b(col_indices->at(j));
+        }
+
+      /**
+       * Perform backward substitution for the full matrix.
+       */
+      fullmatrix->solve_by_backward_substitution(local_b,
+                                                 false,
+                                                 is_unit_diagonal);
+
+      /**
+       * Copy back the restricted vector \p local_b to the original vector \p b.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          b(row_indices->at(i)) = local_b(i);
+        }
+    }
+  else
+    {
+      /**
+       * Iterate over each block row of the matrix.
+       */
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      for (int i = n_row_blocks - 1; i >= 0; i--)
+        {
+          /**
+           * Iterate each block column after the i'th column, i.e. after the
+           * diagonal submatrix block.
+           */
+          for (size_type j = i + 1; j < n_col_blocks; j++)
+            {
+              submatrices[i * n_col_blocks + j]->vmult(b, -1.0, b);
+            }
+
+          /**
+           * Solve the current diagonal block using backward substitution.
+           */
+          submatrices[i * n_col_blocks + i]->solve_by_backward_substitution(
+            b, is_unit_diagonal);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_by_backward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const bool            is_unit_diagonal) const
+{
+  x = b;
+  solve_by_backward_substitution(x, is_unit_diagonal);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_by_backward_substitution(
+  Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &        vector_index_global_to_local_map,
+  const bool is_unit_diagonal) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and can be directly solved via backward substitution.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      Vector<Number> local_b(n);
+
+      /**
+       * Restrict vector \p b to the column cluster of the current \hmatnode.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          local_b(j) =
+            b(vector_index_global_to_local_map.at(col_indices->at(j)));
+        }
+
+      /**
+       * Perform backward substitution for the full matrix.
+       */
+      fullmatrix->solve_by_backward_substitution(local_b,
+                                                 false,
+                                                 is_unit_diagonal);
+
+      /**
+       * Copy back the restricted vector \p local_b to the original vector \p b.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          b(vector_index_global_to_local_map.at(row_indices->at(i))) =
+            local_b(i);
+        }
+    }
+  else
+    {
+      /**
+       * Iterate over each block row of the matrix.
+       */
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      for (int i = n_row_blocks - 1; i >= 0; i--)
+        {
+          /**
+           * Iterate each block column after the i'th column, i.e. after the
+           * diagonal submatrix block.
+           */
+          for (size_type j = i + 1; j < n_col_blocks; j++)
+            {
+              submatrices[i * n_col_blocks + j]->vmult(
+                b,
+                vector_index_global_to_local_map,
+                -1.0,
+                b,
+                vector_index_global_to_local_map);
+            }
+
+          /**
+           * Solve the current diagonal block using backward substitution.
+           */
+          submatrices[i * n_col_blocks + i]->solve_by_backward_substitution(
+            b, vector_index_global_to_local_map, is_unit_diagonal);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_by_backward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &        vector_index_global_to_local_map,
+  const bool is_unit_diagonal) const
+{
+  x = b;
+  solve_by_backward_substitution(x,
+                                 vector_index_global_to_local_map,
+                                 is_unit_diagonal);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_block_triangular_by_backward_substitution(
+  Vector<Number> &b,
+  const bool      is_unit_block_diagonal) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and can be solved via LU factorization.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      if (is_unit_block_diagonal)
+        {
+          /**
+           * In this case, the diagonal block in the leaf set should be an
+           * identity matrix, the solution \p x is the same as the right hand
+           * side vector \p b, so here we do nothing.
+           */
+        }
+      else
+        {
+          /**
+           * In this case, the diagonal block in the leaf set should be
+           * general full matrix and forward substitution cannot be applied
+           * any more. Instead, LU factorization is adopted.
+           */
+          Vector<Number> local_b(n);
+
+          /**
+           * Restrict vector \p b to the column cluster of the current
+           * \hmatnode.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_b(j) = b(col_indices->at(j));
+            }
+
+          /**
+           * Solve the full matrix using LU factorization.
+           */
+          fullmatrix->compute_lu_factorization();
+          fullmatrix->solve(local_b);
+
+          /**
+           * Copy back the restricted vector \p local_b to the original vector
+           * \p b.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              b(row_indices->at(i)) = local_b(i);
+            }
+        }
+    }
+  else
+    {
+      /**
+       * Iterate over each block row of the matrix.
+       */
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      for (int i = n_row_blocks - 1; i >= 0; i--)
+        {
+          /**
+           * Iterate each block column after the i'th column, i.e. after the
+           * diagonal submatrix block.
+           */
+          for (size_type j = i + 1; j < n_col_blocks; j++)
+            {
+              submatrices[i * n_col_blocks + j]->vmult(b, -1.0, b);
+            }
+
+          /**
+           * Solve the current diagonal block using backward substitution.
+           */
+          submatrices[i * n_col_blocks + i]
+            ->solve_block_triangular_by_backward_substitution(
+              b, is_unit_block_diagonal);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_block_triangular_by_backward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const bool            is_unit_block_diagonal) const
+{
+  x = b;
+  solve_block_triangular_by_backward_substitution(x, is_unit_block_diagonal);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
+  Vector<Number> &b) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and can be directly solved via backward substitution.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      Vector<Number> local_b(m);
+
+      /**
+       * Restrict vector \p b to the \alert{row} cluster of the current
+       * \hmatnode, since the actual matrix to be solved is the transposition
+       * of the current matrix.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          local_b(i) = b(row_indices->at(i));
+        }
+
+      /**
+       * Perform backward substitution for the full matrix, where the
+       * transposed matrix is solved.
+       */
+      fullmatrix->solve_by_backward_substitution(local_b, true, false);
+
+      /**
+       * Copy back the restricted vector \p local_b to the original vector \p b.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          b(col_indices->at(j)) = local_b(j);
+        }
+    }
+  else
+    {
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      /**
+       * Iterate over each block column of the matrix.
+       */
+      for (int j = n_col_blocks - 1; j >= 0; j--)
+        {
+          /**
+           * Iterate each row column after the j'th row, i.e. after the
+           * diagonal submatrix block.
+           */
+          for (size_type i = j + 1; i < n_row_blocks; i++)
+            {
+              /**
+               * Since the transpose of the current matrix is to be solved, \p
+               * Tvmult is used here instead of \p vmult.
+               */
+              submatrices[i * n_col_blocks + j]->Tvmult(b, -1.0, b);
+            }
+
+          /**
+           * Solve the current diagonal block using backward substitution.
+           */
+          submatrices[j * n_col_blocks + j]
+            ->solve_cholesky_by_backward_substitution(b);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b) const
+{
+  x = b;
+  solve_cholesky_by_backward_substitution(x);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
+  Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &vector_index_global_to_local_map) const
+{
+  /**
+   * The current \hmatnode should be square.
+   */
+  AssertDimension(m, n);
+
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and can be directly solved via backward substitution.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      Vector<Number> local_b(m);
+
+      /**
+       * Restrict vector \p b to the \alert{row} cluster of the current
+       * \hmatnode, since the actual matrix to be solved is the transposition
+       * of the current matrix.
+       */
+      for (size_type i = 0; i < m; i++)
+        {
+          local_b(i) =
+            b(vector_index_global_to_local_map.at(row_indices->at(i)));
+        }
+
+      /**
+       * Perform backward substitution for the full matrix, where the
+       * transposed matrix is solved.
+       */
+      fullmatrix->solve_by_backward_substitution(local_b, true, false);
+
+      /**
+       * Copy back the restricted vector \p local_b to the original vector \p b.
+       */
+      for (size_type j = 0; j < n; j++)
+        {
+          b(vector_index_global_to_local_map.at(col_indices->at(j))) =
+            local_b(j);
+        }
+    }
+  else
+    {
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      /**
+       * Iterate over each block column of the matrix.
+       */
+      for (int j = n_col_blocks - 1; j >= 0; j--)
+        {
+          /**
+           * Iterate each row column after the j'th row, i.e. after the
+           * diagonal submatrix block.
+           */
+          for (size_type i = j + 1; i < n_row_blocks; i++)
+            {
+              /**
+               * Since the transpose of the current matrix is to be solved, \p
+               * Tvmult is used here instead of \p vmult.
+               */
+              submatrices[i * n_col_blocks + j]->Tvmult(
+                b,
+                vector_index_global_to_local_map,
+                -1.0,
+                b,
+                vector_index_global_to_local_map);
+            }
+
+          /**
+           * Solve the current diagonal block using backward substitution.
+           */
+          submatrices[j * n_col_blocks + j]
+            ->solve_cholesky_by_backward_substitution(
+              b, vector_index_global_to_local_map);
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const std::map<types::global_dof_index, size_t>
+    &vector_index_global_to_local_map) const
+{
+  x = b;
+  solve_cholesky_by_backward_substitution(x, vector_index_global_to_local_map);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::compute_lu_factorization(
+  HMatrix<spacedim, Number> &LU,
+  const unsigned int         fixed_rank) const
+{
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and the LU factorization can be directly applied to it using
+       * LAPACK.
+       *
+       * N.B. The LU factorization performed by LAPACK has row partial
+       * pivoting.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+      Assert(LU.fullmatrix != nullptr, ExcInternalError());
+
+      /**
+       * Copy the full matrix from the source matrix to the result matrix \p LU.
+       */
+      *(LU.fullmatrix) = *fullmatrix;
+
+      /**
+       * After the LU factorization, L and U matrices are stored in the same
+       * full matrix. Hence, this operation is in situ.
+       */
+      LU.fullmatrix->compute_lu_factorization();
+    }
+  else
+    {
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      /**
+       * At present, LU factorization is only to be applied to square
+       * matrix and block square matrix.
+       */
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      /**
+       * When the current \hmatnode is not a leaf, iterate over each block
+       * row.
+       */
+      for (size_type i = 0; i < n_row_blocks; i++)
+        {
+          /**
+           * Iterate over each block column.
+           */
+          for (size_type j = 0; j < n_col_blocks; j++)
+            {
+              /**
+               * Iterate over each block column before the \f$\min\{i, j\}\f$-th
+               * column using the loop counter \f$k\f$. The corresponding
+               * submatrix product \f$L_{i,k}U_{k,j}\f$ needs to be subtracted
+               * from the RHS submatrix \f$M_{ij}\f$.
+               */
+              const size_type min_ij = std::min(i, j);
+              /**
+               * Create a local \hmatrix \f$Z_{ij}\f$ as the new RHS matrix.
+               */
+              HMatrix<spacedim, Number> Z(*(submatrices[i * n_col_blocks + j]));
+              for (size_type k = 0; k < min_ij; k++)
+                {
+                  LU.submatrices[i * n_col_blocks + k]->mmult_level_conserving(
+                    Z,
+                    -1.0,
+                    *(LU.submatrices[k * n_col_blocks + j]),
+                    fixed_rank);
+                }
+
+              if (j < i)
+                {
+                  /**
+                   * When the current block column is before the
+                   * i'th column, solve \f$L_{ij} U_{jj}=M_{ij}\f$ to get
+                   * \f$L_{ij}\f$ using the matrix-valued transposed forward
+                   * substitution.
+                   */
+                  LU.submatrices[j * n_col_blocks + j]
+                    ->solve_transpose_by_forward_substitution_matrix_valued(
+                      *(LU.submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                }
+              else if (j == i)
+                {
+                  /**
+                   * When the current block column is i, go down one level of
+                   * recursion for LU factorization.
+                   */
+                  Z.compute_lu_factorization(
+                    *(LU.submatrices[i * n_col_blocks + i]), fixed_rank);
+                }
+              else if (j > i)
+                {
+                  /**
+                   * Solve \f$L_{ii}U_{ij}=M_{ij}\f$ for \f$L_{ii}\f$.
+                   */
+                  LU.submatrices[i * n_col_blocks + i]
+                    ->solve_by_forward_substitution_matrix_valued(
+                      *(LU.submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::compute_lu_factorization(
+  const unsigned int fixed_rank)
+{
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and the LU factorization can be directly applied to it using
+       * LAPACK.
+       *
+       * N.B. The LU factorization performed by LAPACK has row partial
+       * pivoting.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      /**
+       * After the LU factorization, L and U matrices are stored in the same
+       * full matrix. Hence, this operation is in situ.
+       */
+      fullmatrix->compute_lu_factorization();
+    }
+  else
+    {
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      /**
+       * At present, LU factorization is only to be applied to square
+       * matrix and block square matrix.
+       */
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      /**
+       * When the current \hmatnode is not a leaf, iterate over each block
+       * row.
+       */
+      for (size_type i = 0; i < n_row_blocks; i++)
+        {
+          /**
+           * Iterate over each block column.
+           */
+          for (size_type j = 0; j < n_col_blocks; j++)
+            {
+              /**
+               * Iterate over each block column before the \f$\min\{i, j\}\f$-th
+               * column using the loop counter \f$k\f$. The corresponding
+               * submatrix product \f$L_{i,k}U_{k,j}\f$ needs to be subtracted
+               * from the RHS submatrix \f$M_{ij}\f$.
+               */
+              const size_type min_ij = std::min(i, j);
+              /**
+               * Create a local \hmatrix \f$Z_{ij}\f$ as the new RHS matrix.
+               */
+              HMatrix<spacedim, Number> Z(*(submatrices[i * n_col_blocks + j]));
+              for (size_type k = 0; k < min_ij; k++)
+                {
+                  submatrices[i * n_col_blocks + k]->mmult_level_conserving(
+                    Z, -1.0, *(submatrices[k * n_col_blocks + j]), fixed_rank);
+                }
+
+              if (j < i)
+                {
+                  /**
+                   * When the current block column is before the
+                   * i'th column, solve \f$L_{ij} U_{jj}=M_{ij}\f$ to get
+                   * \f$L_{ij}\f$ using the matrix-valued transposed forward
+                   * substitution.
+                   */
+                  submatrices[j * n_col_blocks + j]
+                    ->solve_transpose_by_forward_substitution_matrix_valued(
+                      *(submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                }
+              else if (j == i)
+                {
+                  /**
+                   * When the current block column is i, go down one level of
+                   * recursion for LU factorization.
+                   */
+                  Z.compute_lu_factorization(
+                    *(submatrices[i * n_col_blocks + i]), fixed_rank);
+                }
+              else if (j > i)
+                {
+                  /**
+                   * Solve \f$L_{ii}U_{ij}=M_{ij}\f$ for \f$L_{ii}\f$.
+                   */
+                  submatrices[i * n_col_blocks + i]
+                    ->solve_by_forward_substitution_matrix_valued(
+                      *(submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::compute_cholesky_factorization(
+  HMatrix<spacedim, Number> &L,
+  const unsigned int         fixed_rank) const
+{
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and the Cholesky factorization can be directly applied to it
+       * using LAPACK.
+       *
+       * N.B. Unlike the LU factorization, the Cholesky factorization
+       * performed by LAPACK has no pivoting.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+      Assert(L.fullmatrix != nullptr, ExcInternalError());
+
+      /**
+       * Copy the full matrix from the source matrix to the result matrix \p L.
+       */
+      *(L.fullmatrix) = *fullmatrix;
+
+      /**
+       * After the Cholesky factorization, the matrix \p L is stored in the same
+       * full matrix. Hence, this operation is in situ.
+       */
+      L.fullmatrix->compute_cholesky_factorization();
+    }
+  else
+    {
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      /**
+       * At present, Cholesky factorization is only to be applied to square
+       * matrix and block square matrix.
+       */
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      /**
+       * When the current \hmatnode is not a leaf, iterate over each block
+       * row.
+       */
+      for (size_type i = 0; i < n_row_blocks; i++)
+        {
+          /**
+           * Iterate over each block column from beginning to the diagonal
+           * block.
+           */
+          for (size_type j = 0; j <= i; j++)
+            {
+              /**
+               * Create a local \hmatrix \f$Z_{ij}\f$ as the new RHS matrix.
+               */
+              HMatrix<spacedim, Number> Z(*(submatrices[i * n_col_blocks + j]));
+
+              /**
+               * Iterate over each block column before the \f$j\f$-th column.
+               */
+              for (size_type k = 0; k < j; k++)
+                {
+                  L.submatrices[i * n_col_blocks + k]->mTmult_level_conserving(
+                    Z,
+                    -1.0,
+                    *(L.submatrices[j * n_col_blocks + k]),
+                    fixed_rank);
+                }
+
+              if (j < i)
+                {
+                  /**
+                   * When the current block column is before the i'th column,
+                   * solve \f$L_{ij} L_{jj}^T = M_{ij}\f$ using the
+                   * matrix-valued Cholesky transposed forward substitution.
+                   */
+                  L.submatrices[j * n_col_blocks + j]
+                    ->solve_cholesky_transpose_by_forward_substitution_matrix_valued(
+                      *(L.submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                }
+              else if (j == i)
+                {
+                  /**
+                   * When coming to the diagonal block, go down one level of
+                   * recursion for Cholesky factorization.
+                   */
+                  Z.compute_cholesky_factorization(
+                    *(L.submatrices[i * n_col_blocks + i]), fixed_rank);
+                }
+              else
+                {
+                  Assert(false, ExcInternalError());
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::compute_cholesky_factorization(
+  const unsigned int fixed_rank)
+{
+  if (type != HierarchicalMatrixType)
+    {
+      /**
+       * When the current \hmatnode belongs to the leaf set, it must be a full
+       * matrix and the Cholesky factorization can be directly applied to it
+       * using LAPACK.
+       *
+       * N.B. Unlike the LU factorization, the Cholesky factorization
+       * performed by LAPACK has no pivoting.
+       */
+      Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+      Assert(fullmatrix != nullptr, ExcInternalError());
+
+      /**
+       * After the Cholesky factorization, the matrix \p L is stored in the same
+       * full matrix. Hence, this operation is in situ.
+       */
+      fullmatrix->compute_cholesky_factorization();
+    }
+  else
+    {
+      const unsigned int n_row_blocks =
+        bc_node->get_data_reference().get_tau_node()->get_child_num();
+      const unsigned int n_col_blocks =
+        bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+      /**
+       * At present, Cholesky factorization is only to be applied to square
+       * matrix and block square matrix.
+       */
+      AssertDimension(n_row_blocks, n_col_blocks);
+
+      /**
+       * When the current \hmatnode is not a leaf, iterate over each block
+       * row.
+       */
+      for (size_type i = 0; i < n_row_blocks; i++)
+        {
+          /**
+           * Iterate over each block column from beginning to the diagonal
+           * block.
+           */
+          for (size_type j = 0; j <= i; j++)
+            {
+              /**
+               * Create a local \hmatrix \f$Z_{ij}\f$ as the new RHS matrix.
+               */
+              HMatrix<spacedim, Number> Z(*(submatrices[i * n_col_blocks + j]));
+
+              /**
+               * Iterate over each block column before the \f$j\f$-th column.
+               */
+              for (size_type k = 0; k < j; k++)
+                {
+                  submatrices[i * n_col_blocks + k]->mTmult_level_conserving(
+                    Z, -1.0, *(submatrices[j * n_col_blocks + k]), fixed_rank);
+                }
+
+              if (j < i)
+                {
+                  /**
+                   * When the current block column is before the i'th column,
+                   * solve \f$L_{ij} L_{jj}^T = M_{ij}\f$ using the
+                   * matrix-valued Cholesky transposed forward substitution.
+                   */
+                  submatrices[j * n_col_blocks + j]
+                    ->solve_cholesky_transpose_by_forward_substitution_matrix_valued(
+                      *(submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                }
+              else if (j == i)
+                {
+                  /**
+                   * When coming to the diagonal block, go down one level of
+                   * recursion for Cholesky factorization.
+                   */
+                  Z.compute_cholesky_factorization(
+                    *(submatrices[i * n_col_blocks + i]), fixed_rank);
+                }
+              else
+                {
+                  Assert(false, ExcInternalError());
+                }
+            }
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_lu(Vector<Number> &      x,
+                                    const Vector<Number> &b) const
+{
+  x = b;
+  solve_by_forward_substitution(x, true);
+  solve_by_backward_substitution(x, false);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::solve_cholesky(Vector<Number> &      x,
+                                          const Vector<Number> &b) const
+{
+  x = b;
+  solve_cholesky_by_forward_substitution(x);
+  solve_cholesky_by_backward_substitution(x);
+}
+
+
+template <int spacedim, typename Number>
+void
 HMatrix<spacedim, Number>::_invert_by_gauss_elim(
   HMatrix<spacedim, Number> &M_inv,
   const size_type            fixed_rank_k)
@@ -6564,7 +13311,7 @@ HMatrix<spacedim, Number>::_invert_by_gauss_elim(
    * \alert{2021-10-05 At present, we assume the \hmatrix hierarchy is
    * completely the same as the associated \bct, or rather, the \bct is not
    * finer than the \hmatrix. Therefore, whether the \bcn is a leaf is
-   * equivalent to whether the \hmatrix node is a leaf. In a more generalized
+   * equivalent to whether the \hmatnode is a leaf. In a more generalized
    * implementation, the \bct can be finer than the \hmatrix hierarchy.}
    */
   if (*(bc_node->get_data_reference().get_tau_node()) ==
@@ -6598,7 +13345,7 @@ HMatrix<spacedim, Number>::_invert_by_gauss_elim(
            * \vert_{\tau[l]\times\tau[l]}\f$. The formula \f$l + l \cdot k\f$
            * calculates the 1D index of the diagonal block in \p submatrices.
            * This is because the submatrices of the current
-           * \hmatrix node is stored in the following order:
+           * \hmatnode is stored in the following order:
            *
            * <code>
            * submatrices = {tau[0]*sigma[0], tau[0]*sigma[1], tau[1]*sigma[0],
@@ -6614,8 +13361,8 @@ HMatrix<spacedim, Number>::_invert_by_gauss_elim(
            *
            * Hence, the index of \p tau[0]*tau[0] in \p submatrices is 0 and the
            * index of \p tau[1]*tau[1] in \p submatrices is 3. The former
-           * index is calculated as <code>0 + 0 * 2 = 0</code>, while the latter
-           * index is calculated as <code>1 + 1 * 2 = 3</code>.
+           * index is calculated as <code>0 + 0 * 2 = 0</code>, while the
+           * latter index is calculated as <code>1 + 1 * 2 = 3</code>.
            */
           const size_type diag_block_index_in_submatrices = l + l * k;
           submatrices[diag_block_index_in_submatrices]->_invert_by_gauss_elim(
@@ -6625,7 +13372,8 @@ HMatrix<spacedim, Number>::_invert_by_gauss_elim(
           /**
            * Iterate over the columns from \f$l + 1\f$ to \f$k\f$ in the source
            * matrix and scale each matrix block with the factor \p
-           * M_inv.submatrices[diag_block_index_in_submatrices]. Also note that
+           * M_inv.submatrices[diag_block_index_in_submatrices]. Also note
+           * that
            * the column index starts from zero, therefore the loop variable \f$j
            * \in [l+1, k)\f$.
            */
@@ -6755,18 +13503,18 @@ HMatrix<spacedim, Number>::coarsen_to_partition(
 {
   /**
    * N.B. The function call \p find_pointer_data here involves the comparison of
-   * two block cluster nodes, which internally compares the contained two block
-   * clusters, which further compares the contained tau node and sigma node
-   * pointers. Therefore, at the moment, the inner most comparison is shallow
-   * comparison.
+   * two block cluster nodes, which internally compares the contained two
+   * block clusters, which further compares the contained tau node and sigma
+   * node pointers. Therefore, at the moment, the inner most comparison is
+   * shallow comparison.
    */
   if (find_pointer_data(partition.begin(), partition.end(), this->bc_node) !=
       partition.end())
     {
       /**
-       * The block cluster node associated with the current \hmatrix node
+       * The block cluster node associated with the current \hmatnode
        * belongs to the given \p partition. Then \f$\mathcal{T}_r^{\mathcal{R}
-       * \leftarrow \mathcal{H}}\f$ will be applied to this \hmatrix node.
+       * \leftarrow \mathcal{H}}\f$ will be applied to this \hmatnode.
        */
       convertHMatBlockToRkMatrix(this, fixed_rank_k);
     }
@@ -6774,7 +13522,7 @@ HMatrix<spacedim, Number>::coarsen_to_partition(
     {
       /**
        * When the block cluster node associated with the current
-       * \hmatrix node does not belong to the \p partition,
+       * \hmatnode does not belong to the \p partition,
        * recursively call this same member function of its each child.
        */
       for (HMatrix *submatrix : submatrices)
@@ -6824,10 +13572,10 @@ HMatrix<spacedim, Number>::find_block_cluster_in_leaf_set(
        *
        * <dl class="section note">
        *   <dt>Note</dt>
-       *   <dd>The data held by those previously found leaf nodes of the source
-       * \hmatrix have already been migrated to the leaf nodes
-       * of the new \hmatrix, which will make the data fields in
-       * these leaf nodes being empty. Hence, we will bypass them.</dd>
+       *   <dd>The data held by those previously found leaf nodes of the
+       * source \hmatrix have already been migrated to the leaf nodes of the
+       * new \hmatrix, which will make the data fields in these leaf nodes
+       * being empty. Hence, we will bypass them.</dd>
        * </dl>
        */
       if ((*iter)->bc_node != nullptr)
@@ -6859,10 +13607,10 @@ HMatrix<spacedim, Number>::find_block_cluster_in_leaf_set(
        *
        * <dl class="section note">
        *   <dt>Note</dt>
-       *   <dd>The data held by those previously found leaf nodes of the source
-       * \hmatrix have already been migrated to the leaf nodes
-       * of the new \hmatrix, which will make the data fields in
-       * these leaf nodes being empty. Hence, we will bypass them.</dd>
+       *   <dd>The data held by those previously found leaf nodes of the
+       * source \hmatrix have already been migrated to the leaf nodes of the
+       * new \hmatrix, which will make the data fields in these leaf nodes
+       * being empty. Hence, we will bypass them.</dd>
        * </dl>
        */
       if ((*iter)->bc_node != nullptr)
@@ -6918,9 +13666,9 @@ HMatrix<spacedim, Number>::refine_to_supertree()
         {
           /**
            * If the current \hmatrix leaf node has a non-empty
-           * collection of submatrices, it has really been refined. Then delete
-           * its originally associated matrix data, either a full matrix or a
-           * rank-k matrix, and modify its matrix type as \p
+           * collection of submatrices, it has really been refined. Then
+           * delete its originally associated matrix data, either a full
+           * matrix or a rank-k matrix, and modify its matrix type as \p
            * HierarchicalMatrixType.
            */
           switch (hmat_leaf_node->type)
@@ -6973,8 +13721,8 @@ HMatrix<spacedim, Number>::convert_between_different_block_cluster_trees(
   const unsigned int                  fixed_rank_k2)
 {
   /**
-   * Make a copy of the leaf set of the target block cluster tree, which will be
-   * used for the final coarsening.
+   * Make a copy of the leaf set of the target block cluster tree, which will
+   * be used for the final coarsening.
    */
   std::vector<typename BlockClusterTree<spacedim, Number>::node_pointer_type>
     target_leaf_set(bct2.get_leaf_set());
@@ -7037,7 +13785,8 @@ HMatrix<spacedim, Number>::convert_between_different_block_cluster_trees(
       //      std::cout << "=== bct2 with extension ===\n";
       //      std::cout << "Number of nodes: " << bct2.get_node_num()
       //                << "\nDepth: " << bct2.get_depth()
-      //                << "\nMax level: " << bct2.get_max_level() << std::endl;
+      //                << "\nMax level: " << bct2.get_max_level() <<
+      //                std::endl;
       bct2.prune_to_partition(target_leaf_set, true);
       //      std::ofstream out2("target_bct_after_pruning.dat");
       //      bct2.write_leaf_set(out2);
@@ -7045,7 +13794,8 @@ HMatrix<spacedim, Number>::convert_between_different_block_cluster_trees(
       //      std::cout << "=== bct2 after pruning ===\n";
       //      std::cout << "Number of nodes: " << bct2.get_node_num()
       //                << "\nDepth: " << bct2.get_depth()
-      //                << "\nMax level: " << bct2.get_max_level() << std::endl;
+      //                << "\nMax level: " << bct2.get_max_level() <<
+      //                std::endl;
     }
 
   /**

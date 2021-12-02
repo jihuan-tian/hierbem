@@ -1,11 +1,7 @@
 var searchData=
 [
-  ['sigma_5ff',['Sigma_F',['../classHMatrix.html#aa659b6df63d533432ec1a24435cd9c40',1,'HMatrix']]],
-  ['sigma_5fnode',['sigma_node',['../classBlockCluster.html#ae1005ec7feedbdb990b27d845b24bad2',1,'BlockCluster']]],
-  ['sigma_5fp',['Sigma_P',['../classHMatrix.html#a3d96d0252ef8c873ae06cf87874acaf3',1,'HMatrix']]],
-  ['sigma_5fr',['Sigma_R',['../classHMatrix.html#a04d341b4e606d1be2d71b8ea636efe7b',1,'HMatrix']]],
-  ['submatrices',['submatrices',['../classHMatrix.html#a4bd1b9a32f2c7693e603a7c6ea916e4f',1,'HMatrix']]],
-  ['system_5fmatrix',['system_matrix',['../classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2.html#a9c76773c78cc3a09eb1f7e4f9d44d0c8',1,'LaplaceBEM::Erichsen1996Efficient::Example2']]],
-  ['system_5frhs',['system_rhs',['../classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2.html#a7de5f9e1f110ec7f842577a54dddd267',1,'LaplaceBEM::Erichsen1996Efficient::Example2']]],
-  ['system_5frhs_5fmatrix',['system_rhs_matrix',['../classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2.html#a13e4add9320ecede8e53b7a633805740',1,'LaplaceBEM::Erichsen1996Efficient::Example2']]]
+  ['rank',['rank',['../classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256',1,'RkMatrix']]],
+  ['rkmatrix',['rkmatrix',['../classHMatrix.html#aa97a8f5e42aba0f1d5faf41f35a27819',1,'HMatrix']]],
+  ['row_5findex_5fglobal_5fto_5flocal_5fmap',['row_index_global_to_local_map',['../classHMatrix.html#a4d64145335fc0521603b206a22a67578',1,'HMatrix']]],
+  ['row_5findices',['row_indices',['../classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae',1,'HMatrix']]]
 ];

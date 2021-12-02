@@ -10,9 +10,13 @@
 
 #include <limits>
 #include <map>
+#include <regex>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "general_exceptions.h"
+#include "generic_functors.h"
 #include "lapack_helpers.h"
 
 using namespace dealii;
@@ -106,6 +110,8 @@ public:
    * Perform SVD on the product of two component matrices \f$A\f$ and \f$B^T\f$
    * without rank truncation. If the matrix is not of full rank, truncate it to
    * the effective rank. It returns the effective rank.
+   *
+   * \alert{The operation of this function has no accuracy loss.}
    * @param A
    * @param B
    * @param U
@@ -125,9 +131,12 @@ public:
    * Perform SVD on the product of two component matrices \f$A\f$ and \f$B^T\f$
    * with truncation by a specified rank.
    *
+   * \alert{The operation of this function may have accuracy loss when the
+   * specified rank is less than the actual rank of the matrix.}
+   *
    * N.B. If the actual rank of the matrix is less than the specified \p
    * truncation_rank, i.e. rank deficient, the matrix will be truncated to its
-   * actual rank.
+   * actual rank. Then, this function has no accuracy loss.
    * @param A
    * @param B
    * @param U
@@ -142,6 +151,39 @@ public:
     LAPACKFullMatrixExt<Number> &                                   U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
     LAPACKFullMatrixExt<Number> &                                   VT,
+    size_type truncation_rank,
+    Number    singular_value_threshold = 0.);
+
+  /**
+   * Perform SVD on the product of two component matrices \f$A\f$ and \f$B^T\f$
+   * with truncation by a specified rank. In addition, the components \f$C\f$
+   * and \f$D\f$ of the error matrix due to rank truncation are returned. The
+   * error matrix \f$E = CD^T\f$.
+   *
+   * \alert{The operation of this function may have accuracy loss when the
+   * specified rank is less than the actual rank of the matrix.}
+   *
+   * N.B. If the actual rank of the matrix is less than the specified \p
+   * truncation_rank, i.e. rank deficient, the matrix will be truncated to its
+   * actual rank. Then, this function has no accuracy loss.
+   * @param A
+   * @param B
+   * @param U
+   * @param Sigma_r
+   * @param VT
+   * @param C
+   * @param D
+   * @param truncation_rank
+   */
+  static size_type
+  reduced_svd_on_AxBT(
+    LAPACKFullMatrixExt<Number> &                                   A,
+    LAPACKFullMatrixExt<Number> &                                   B,
+    LAPACKFullMatrixExt<Number> &                                   U,
+    std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
+    LAPACKFullMatrixExt<Number> &                                   VT,
+    LAPACKFullMatrixExt<Number> &                                   C,
+    LAPACKFullMatrixExt<Number> &                                   D,
     size_type truncation_rank,
     Number    singular_value_threshold = 0.);
 
@@ -430,6 +472,7 @@ public:
 
   /**
    * Perform the standard singular value decomposition (SVD).
+   *
    * @param U with a dimension \f$m \times m\f$.
    * @param Sigma_r the list of singular values, with a dimension \f$\min(m,n)\f$.
    * @param VT with a dimension \f$n \times n\f$
@@ -486,6 +529,78 @@ public:
     Number    singular_value_threshold = 0.);
 
   /**
+   * Perform the reduced singular value decomposition (SVD) with rank
+   * truncation. In addition, the components \f$C\f$ and \f$D\f$ of the error
+   * matrix due to rank truncation are returned. The error matrix \f$E = CD^T\f$.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>Even though an explicit truncation rank is specified, inside this
+   * function, after SVD, the effective rank of the matrix is obtained. Because
+   * any given truncation rank value larger than the effective matrix rank is
+   * meaningless, it will be limited to be the effective rank.</dd>
+   * </dl>
+   *
+   * @param U
+   * @param Sigma_r
+   * @param VT
+   * @param C
+   * @param D
+   * @param truncation_rank Truncation rank specified by the user.
+   * @param singular_value_threshold
+   * @return Effective rank.
+   */
+  size_type
+  reduced_svd(
+    LAPACKFullMatrixExt<Number> &                                   U,
+    std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
+    LAPACKFullMatrixExt<Number> &                                   VT,
+    LAPACKFullMatrixExt<Number> &                                   C,
+    LAPACKFullMatrixExt<Number> &                                   D,
+    size_type truncation_rank,
+    Number    singular_value_threshold = 0.);
+
+  /**
+   * Compute the LU factorization of the full matrix.
+   *
+   * \mynote{This is a copy of the same function in \p LAPACKFullMatrix<Number>
+   * in order that the permutation vector \p ipiv can be accessed, sincie \p
+   * ipiv is private in \p LAPACKFullMatrix<Number>.}
+   */
+  void
+  compute_lu_factorization();
+
+  /**
+   * Compute the Cholesky factorization of the full matrix.
+   *
+   * \mynote{This is a wrapper of the same function in \p LAPACKFullMatrix<Number>
+   * in order that the \p state of the current \p LAPACKFullMatrixExt<Number>
+   * object can be updated.}
+   */
+  void
+  compute_cholesky_factorization();
+
+  /**
+   * Get the reference to the vector which stores the row permutation relation
+   * obtained from an LU factorization.
+   *
+   * @return The vector storing the row permutation relation. Its i'th element
+   * stores the row index of the matrix to which the i'th row migrates.
+   */
+  std::vector<types::blas_int> &
+  get_lu_permutation();
+
+  /**
+   * Get the const reference to the vector which stores the row permutation
+   * relation obtained from an LU factorization.
+   *
+   * @return The vector storing the row permutation relation. Its i'th element
+   * stores the row index of the matrix to which the i'th row migrates.
+   */
+  const std::vector<types::blas_int> &
+  get_lu_permutation() const;
+
+  /**
    * Get the rank of the matrix using SVD.
    *
    * A copy will be made at first for SVD to operate on.
@@ -513,8 +628,9 @@ public:
   reduced_qr(LAPACKFullMatrixExt<Number> &Q, LAPACKFullMatrixExt<Number> &R);
 
   /**
-   * Left multiply the matrix with a diagonal matrix \p V, which is stored in a
-   * std::vector.
+   * Left multiply the current matrix with a diagonal matrix \p V, which is
+   * equivalent to scale the rows of the current matrix with the corresponding
+   * scalar elements in @p V. The result is stored in a @p std::vector.
    *
    * @param V
    */
@@ -523,8 +639,10 @@ public:
     const std::vector<typename numbers::NumberTraits<Number>::real_type> &V);
 
   /**
-   * Left multiply the matrix with a diagonal matrix \p V, which is stored in a
-   * std::vector. The results are stored in a new matrix.
+   * Left multiply the current matrix with a diagonal matrix \p V, which is
+   * equivalent to scale the rows of the current matrix with the corresponding
+   * scalar elements in @p V. The result is stored in a new matrix @p A.
+   *
    * @param A
    * @param V
    */
@@ -535,8 +653,11 @@ public:
     const;
 
   /**
-   * Right multiply the matrix with a diagonal matrix \p V, which is stored in a
-   * std::vector.
+   * Right multiply the current matrix with a diagonal matrix \p V, which is
+   * equivalent to scale the columns of the current matrix with the
+   * corresponding scalar elements in @p V. The result is stored in a
+   * @p std::vector.
+   *
    * @param V
    */
   void
@@ -544,8 +665,11 @@ public:
     const std::vector<typename numbers::NumberTraits<Number>::real_type> &V);
 
   /**
-   * Right multiply the matrix with a diagonal matrix \p V, which is stored in a
-   * std::vector. The results are stored in a new matrix.
+   * Right multiply the current matrix with a diagonal matrix \p V, which is
+   * equivalent to scale the columns of the current matrix with the
+   * corresponding scalar elements in @p V. The result is stored in a new
+   * matrix @p A.
+   *
    * @param A
    * @param V
    */
@@ -556,8 +680,11 @@ public:
     const;
 
   /**
-   * Right multiply the matrix with a diagonal matrix \p V, which is stored in a
-   * Vector.
+   * Right multiply the current matrix with a diagonal matrix \p V, which is
+   * equivalent to scale the columns of the current matrix with the
+   * corresponding scalar elements in @p V. The result is stored in a
+   * @p Vector.
+   *
    * @param V
    */
   void
@@ -649,6 +776,23 @@ public:
            const bool            is_adding = false);
 
   /**
+   * Fill a specified row in the destination matrix with a row extracted from
+   * the source matrix.
+   *
+   * @param dst_row_index
+   * @param src_row_index
+   * @param M
+   * @param factor
+   * @param is_adding
+   */
+  void
+  fill_row(const size_type                    dst_row_index,
+           const size_type                    src_row_index,
+           const LAPACKFullMatrixExt<Number> &M,
+           const Number                       factor    = 1.,
+           const bool                         is_adding = false);
+
+  /**
    * Fill the data in \p M by columns into the current matrix based on the
    * global cluster indices.
    * @param col_index_global_to_local_map
@@ -715,6 +859,32 @@ public:
   /**
    * Decompose the full matrix into the two components of its rank-k
    * representation, the associativity of triple-matrix multiplication is
+   * automatically detected. The error matrices are returned.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>This method will be used for converting a full matrix to a rank-k
+   * matrix, which underlies the operator \f$\mathcal{T}_{r}^{\mathcal{R}
+   * \leftarrow \mathcal{F}}\f$ in (7.2) in Hackbusch's \f$\mathcal{H}\f$-matrix
+   * book.</dd>
+   * </dl>
+   * @param k
+   * @param A
+   * @param B
+   * @param C
+   * @param D
+   * @return
+   */
+  size_type
+  rank_k_decompose(const unsigned int           k,
+                   LAPACKFullMatrixExt<Number> &A,
+                   LAPACKFullMatrixExt<Number> &B,
+                   LAPACKFullMatrixExt<Number> &C,
+                   LAPACKFullMatrixExt<Number> &D);
+
+  /**
+   * Decompose the full matrix into the two components of its rank-k
+   * representation, the associativity of triple-matrix multiplication is
    * automatically detected. This version does not have an actual rank
    * truncation but sets the truncation rank to be the minimum matrix dimension
    * \f$\min\{m, n\}\f$.
@@ -758,6 +928,33 @@ public:
                    bool                         is_left_associative);
 
   /**
+   * Decompose the full matrix into the two components of its rank-k
+   * representation, while the error matrices are returned.
+   *
+   * <dl class="section note">
+   *   <dt>Note</dt>
+   *   <dd>Because the \p reduced_svd member function is called by \p
+   * rank_k_decompose, the effective rank of the matrix will be returned, which
+   * can be smaller than the specified fixed rank \p k.</dd>
+   * </dl>
+   *
+   * @param k User specified truncation rank.
+   * @param is_left_associative
+   * @param A
+   * @param B
+   * @param C
+   * @param D
+   * @return Effective rank.
+   */
+  size_type
+  rank_k_decompose(const unsigned int           k,
+                   LAPACKFullMatrixExt<Number> &A,
+                   LAPACKFullMatrixExt<Number> &B,
+                   LAPACKFullMatrixExt<Number> &C,
+                   LAPACKFullMatrixExt<Number> &D,
+                   bool                         is_left_associative);
+
+  /**
    * Add two matrix into a new matrix \f$C = A + B\f$, where \f$A\f$ is the
    * current matrix.
    */
@@ -790,9 +987,11 @@ public:
   add(const Number b, const LAPACKFullMatrixExt<Number> &B);
 
   /**
-   * Multiply two matrices: \f$C = A \cdot B\f$
+   * Multiply two matrices, i.e. \f$C = AB\f$ or \f$C = C + AB\f$.
+   *
    * @param C
    * @param B
+   * @param adding
    */
   void
   mmult(LAPACKFullMatrixExt<Number> &      C,
@@ -800,11 +999,139 @@ public:
         const bool                         adding = false) const;
 
   /**
+   * Multiply two matrices with the product scaled by a factor, i.e. \f$C =
+   * \alpha \cdot AB\f$ or \f$C = C + \alpha \cdot AB\f$.
+   *
+   * @param C
+   * @param alpha
+   * @param B
+   * @param adding
+   */
+  void
+  mmult(LAPACKFullMatrixExt<Number> &      C,
+        const Number                       alpha,
+        const LAPACKFullMatrixExt<Number> &B,
+        const bool                         adding = false) const;
+
+  /**
+   * Multiply two matrices with the second operand transposed, i.e. \f$C =
+   * AB^T\f$ or \f$C = C + AB^T\f$.
+   *
+   * @param C
+   * @param B
+   * @param adding
+   */
+  void
+  mTmult(LAPACKFullMatrixExt<Number> &      C,
+         const LAPACKFullMatrixExt<Number> &B,
+         const bool                         adding = false) const;
+
+  /**
+   * Multiply two matrices with the second operand transposed and with the
+   * product scaled by a factor, i.e. \f$C = \alpha \cdot AB^T\f$ or \f$C = C +
+   * \alpha \cdot AB^T\f$.
+   *
+   * @param C
+   * @param alpha
+   * @param B
+   * @param adding
+   */
+  void
+  mTmult(LAPACKFullMatrixExt<Number> &      C,
+         const Number                       alpha,
+         const LAPACKFullMatrixExt<Number> &B,
+         const bool                         adding = false) const;
+
+  /**
    * Calculate the inverse of the matrix using Gauss elimination.
    * @param M_inv
    */
   void
   invert_by_gauss_elim(LAPACKFullMatrixExt<Number> &M_inv);
+
+  /**
+   * Set the matrix property of type \p LAPACKSupport::Property for the matrix.
+   *
+   * \comment{The property should be explicitly set by the caller and the
+   * algorithm will not check its validity, since in most cases, this is
+   * difficult or expensive to achieve.}
+   *
+   * @param property
+   */
+  void
+  set_property(const LAPACKSupport::Property property);
+
+  /**
+   * Solve the unit lower triangular matrix \f$Lx=b\f$ by forward substitution.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * \comment{When the forward substitution procedure is applied to the matrix
+   * factorized by LU, the right hand side vector \p b should be permuted
+   * according to the \p ipiv vector, which is obtained from the LAPACK LU
+   * factorization with row pivoting. Remember that we have this relation
+   * \f$PA=LU\f$.
+   *
+   * However, when the lower triangular matrix to be solved is the transpose of
+   * an upper triangular matrix, there is no need to permute the right hand side
+   * vector \p b anymore, because permutation has been or will be performed
+   * during the solution of matrix blocks related to the lower triangulation
+   * matrix. For short, the permutation of the right hand side vector should
+   * only be performed once.
+   *
+   * By the way, no permutation is needed when calling backward substitution or
+   * solving Cholesky related matrices.}
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   * @param transposed
+   * @param permute_rhs_vector
+   */
+  void
+  solve_by_forward_substitution(Vector<Number> &b,
+                                const bool      transposed       = false,
+                                const bool      is_unit_diagonal = true,
+                                const bool permute_rhs_vector    = false) const;
+
+  /**
+   * Solve the unit lower triangular matrix \f$Lx=b\f$ by forward substitution.
+   *
+   * @param x Result vector.
+   * @param b Right hand side vector.
+   * @param transposed
+   */
+  void
+  solve_by_forward_substitution(Vector<Number> &      x,
+                                const Vector<Number> &b,
+                                const bool            transposed = false,
+                                const bool is_unit_diagonal      = true) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
+   *
+   * The right hand side vector \f$b\f$ will be overwritten by the solution
+   * vector \f$x\f$.
+   *
+   * @param b Right hand side vector and after execution, it stores the result vector.
+   * @param transposed
+   */
+  void
+  solve_by_backward_substitution(Vector<Number> &b,
+                                 const bool      transposed  = false,
+                                 const bool is_unit_diagonal = false) const;
+
+  /**
+   * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
+   *
+   * @param x Result vector.
+   * @param b Right hand side vector.
+   * @param transposed
+   */
+  void
+  solve_by_backward_substitution(Vector<Number> &      x,
+                                 const Vector<Number> &b,
+                                 const bool            transposed = false,
+                                 const bool is_unit_diagonal = false) const;
 
   /**
    * Print a LAPACKFullMatrixExt to Octave mat format.
@@ -827,8 +1154,19 @@ public:
                          const double       denominator = 1.,
                          const double       threshold   = 0.) const;
 
+  /**
+   * Read the data of a full matrix with the specified variable name from a file
+   * saved by Octave using the option \p -text.
+   *
+   * @param in Input file stream
+   * @param name Variable name
+   */
+  void
+  read_from_mat(std::ifstream &in, const std::string &name);
+
 private:
-  LAPACKSupport::State state;
+  LAPACKSupport::State    state;
+  LAPACKSupport::Property property;
 
   /**
    * The scalar factors of the elementary reflectors.
@@ -844,6 +1182,12 @@ private:
    * Integer work array used by LAPACK routines.
    */
   std::vector<types::blas_int> iwork;
+
+  /**
+   * The vector storing the permutations applied for pivoting in the
+   * LU-factorization.
+   */
+  std::vector<types::blas_int> ipiv;
 };
 
 
@@ -1073,10 +1417,10 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
           /**
            * When QR decomposition has been used, if \p M has a dimension \f$m
            * \times n\f$, the dimensions of all matrices are:
-           * * \f$U \in \mathbb{R}^{m \times {\rm representation rank}}\f$
-           * * \f$\Sigma_r \in \mathbb{R}^{{\rm representation rank} \times {\rm
-           * representation rank}}\f$
-           * * \f$V \in \mathbb{R}^{n \times {\rm representation rank}}\f$
+           * * \f$U \in \mathbb{R}^{m \times {\rm formal rank}}\f$
+           * * \f$\Sigma_r \in \mathbb{R}^{{\rm formal rank} \times {\rm
+           * formal rank}}\f$
+           * * \f$V \in \mathbb{R}^{n \times {\rm formal rank}}\f$
            */
           if (rank < formal_rank)
             {
@@ -1185,8 +1529,8 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
 
   /**
    * N.B. The number of columns in the component matrix \p A or \p B is the
-   * representation rank of the rank-k matrix, which means the rank-k matrix may
-   * not be of full rank and the actual rank is less than this representation
+   * formal rank of the rank-k matrix, which means the rank-k matrix may
+   * not be of full rank and the actual rank is less than this formal
    * rank.
    */
   const size_type formal_rank = A.n();
@@ -1302,8 +1646,13 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
         }
       else
         {
+          /**
+           * When the truncation rank is zero, clear the SVD result matrix and
+           * singular value vector.
+           */
           U.reinit(0, 0);
           VT.reinit(0, 0);
+          Sigma_r.clear();
         }
     }
   else
@@ -1319,10 +1668,10 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
            * In this case, the results \p U, \p Sigma_r and \p VT are obtained
            * via QR decomposition. And if \p M has a dimension \f$m \times n\f$,
            * the dimensions of all matrices are:
-           * * \f$U \in \mathbb{R}^{m \times {\rm representation rank}}\f$
-           * * \f$\Sigma_r \in \mathbb{R}^{{\rm representation rank} \times {\rm
-           * representation rank}}\f$
-           * * \f$V \in \mathbb{R}^{n \times {\rm representation rank}}\f$
+           * * \f$U \in \mathbb{R}^{m \times {\rm formal rank}}\f$
+           * * \f$\Sigma_r \in \mathbb{R}^{{\rm formal rank} \times {\rm
+           * formal rank}}\f$
+           * * \f$V \in \mathbb{R}^{n \times {\rm formal rank}}\f$
            */
           if (truncation_rank < formal_rank)
             {
@@ -1398,13 +1747,331 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
 
 
 template <typename Number>
+typename LAPACKFullMatrixExt<Number>::size_type
+LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
+  LAPACKFullMatrixExt<Number> &                                   A,
+  LAPACKFullMatrixExt<Number> &                                   B,
+  LAPACKFullMatrixExt<Number> &                                   U,
+  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
+  LAPACKFullMatrixExt<Number> &                                   VT,
+  LAPACKFullMatrixExt<Number> &                                   C,
+  LAPACKFullMatrixExt<Number> &                                   D,
+  size_type truncation_rank,
+  Number    singular_value_threshold)
+{
+  /**
+   * In a rank-k matrix, the number of columns in the component matrix \p A
+   * should match that of \p B.
+   */
+  AssertDimension(A.n(), B.n());
+
+  const size_type mm      = A.m();
+  const size_type nn      = B.m();
+  const size_type min_dim = std::min(mm, nn);
+
+  bool is_qr_used;
+
+  /**
+   * N.B. The number of columns in the component matrix \p A or \p B is the
+   * formal rank of the rank-k matrix, which means the rank-k matrix may
+   * not be of full rank and the actual rank is less than this formal
+   * rank.
+   */
+  const size_type formal_rank = A.n();
+
+  if (A.m() > formal_rank && B.m() > formal_rank)
+    {
+      is_qr_used = true;
+
+      /**
+       * When both \p A and \p B are long matrices, i.e. they have more rows
+       * than columns, i.e. the formal rank, perform reduced QR decomposition to
+       * component matrix \p A, which has a dimension of \f$m \times r\f$.
+       */
+      LAPACKFullMatrixExt<Number> QA, RA;
+      A.reduced_qr(QA, RA);
+
+      /**
+       * Perform reduced QR decomposition to component matrix \p B, which
+       * has a dimension of \f$n \times r\f$.
+       */
+      LAPACKFullMatrixExt<Number> QB, RB;
+      B.reduced_qr(QB, RB);
+
+      /**
+       * Perform SVD to the product \f$R\f$ of the two upper triangular
+       * matrices, i.e. \f$R = R_A R_B^T\f$.
+       */
+      LAPACKFullMatrixExt<Number> R, U_hat, VT_hat;
+      /**
+       * N.B. Before LAPACK matrix multiplication, the memory of the result
+       * matrix should be reinitialized.
+       */
+      R.reinit(RA.m(), RB.m());
+      RA.mTmult(R, RB);
+      R.svd(U_hat, Sigma_r, VT_hat);
+
+      U.reinit(QA.m(), formal_rank);
+      QA.mmult(U, U_hat);
+      VT.reinit(formal_rank, QB.m());
+      VT_hat.mTmult(VT, QB);
+    }
+  else
+    {
+      is_qr_used = false;
+
+      /**
+       * When \p A and \p B are not all long matrices, firstly convert the
+       * rank-k matrix to a full matrix, then perform SVD on this full matrix.
+       */
+      LAPACKFullMatrixExt<Number> fullmatrix(A.m(), B.m());
+      A.mTmult(fullmatrix, B);
+      fullmatrix.svd(U, Sigma_r, VT);
+    }
+
+  if (singular_value_threshold == 0.)
+    {
+      /**
+       * If the singular value threshold is perfect zero, calculate a threshold
+       * value instead.
+       */
+      singular_value_threshold = calc_singular_value_threshold(mm, nn, Sigma_r);
+    }
+
+  /**
+   * Get the actual rank of the matrix by counting the total number of singular
+   * values which are larger than the given threshold \p
+   * singular_value_threshold. The actual rank should always be less than or
+   * equal to \p min_dim.
+   */
+  size_type rank = 0;
+  for (size_t i = 0; i < Sigma_r.size(); i++)
+    {
+      if (Sigma_r[i] > singular_value_threshold)
+        {
+          rank++;
+        }
+    }
+  AssertIndexRange(rank, min_dim + 1);
+
+  /**
+   * Limit the value of \p truncation_rank not larger than the actual
+   * rank just obtained by counting effective singular values.
+   */
+  if (truncation_rank > rank)
+    {
+      truncation_rank = rank;
+    }
+
+  if (truncation_rank < min_dim)
+    {
+      if (truncation_rank > 0)
+        {
+          /**
+           * Keep the first \p truncation_rank singular values, while discarding
+           * others.
+           */
+          std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
+            std::move(Sigma_r));
+          Sigma_r.resize(truncation_rank);
+          for (size_type i = 0; i < truncation_rank; i++)
+            {
+              Sigma_r.at(i) = copy.at(i);
+            }
+
+          const size_type Sigma_r_error_size = copy.size() - truncation_rank;
+          if (Sigma_r_error_size > 0)
+            {
+              /**
+               * Copy the remaining singular values for constructing the error
+               * matrices.
+               */
+              std::vector<typename numbers::NumberTraits<Number>::real_type>
+                Sigma_r_error(Sigma_r_error_size);
+              for (size_type i = 0; i < Sigma_r_error_size; i++)
+                {
+                  Sigma_r_error.at(i) = copy.at(i + truncation_rank);
+                }
+
+              /**
+               * Allocate memory for the error matrices. At the moment, \f$D\f$
+               * stores its transpose.
+               */
+              C.reinit(mm, Sigma_r_error_size);
+              D.reinit(Sigma_r_error_size, nn);
+
+              C.fill(U, 0, 0, 0, truncation_rank);
+              D.fill(VT, 0, 0, truncation_rank, 0);
+
+              if (mm > nn)
+                {
+                  /**
+                   * When the original full matrix \f$AB^T\f$ is a long matrix,
+                   * perform right association.
+                   */
+                  D.scale_rows(Sigma_r_error);
+                  D.transpose();
+                }
+              else
+                {
+                  /**
+                   * When the original full matrix \f$AB^T\f$ is a wide matrix,
+                   * perform left association.
+                   */
+                  C.scale_columns(Sigma_r_error);
+                  D.transpose();
+                }
+            }
+          else
+            {
+              C.reinit(0, 0);
+              D.reinit(0, 0);
+            }
+
+          /**
+           * Keep the first \p truncation_rank columns of \p U, while deleting
+           * others.
+           */
+          U.keep_first_n_columns(truncation_rank, true);
+
+          /**
+           * Keep the first \p truncation_rank rows of \p VT, while deleting
+           * others.
+           */
+          VT.keep_first_n_rows(truncation_rank, true);
+        }
+      else
+        {
+          /**
+           * When the truncation rank is zero, the error matrices should be
+           * directly copied from the original component matrices.
+           */
+          C = A;
+          D = B;
+
+          /**
+           * Then, clear the SVD result matrix and singular value vector.
+           */
+          U.reinit(0, 0);
+          VT.reinit(0, 0);
+          Sigma_r.clear();
+        }
+    }
+  else
+    {
+      /**
+       * In this case, it could only be that \p truncation_rank == \p min_dim.
+       */
+      AssertDimension(truncation_rank, min_dim);
+
+      /**
+       * There is no effective rank truncation and thus no accuracy loss.
+       * Therefore, the error matrix components \f$C\f$ and \f$D\f$ are set to
+       * zero dimension.
+       */
+      C.reinit(0, 0);
+      D.reinit(0, 0);
+
+      if (is_qr_used)
+        {
+          /**
+           * In this case, the results \p U, \p Sigma_r and \p VT are obtained
+           * via QR decomposition. And if \p M has a dimension \f$m \times n\f$,
+           * the dimensions of all matrices are:
+           * * \f$U \in \mathbb{R}^{m \times {\rm formal rank}}\f$
+           * * \f$\Sigma_r \in \mathbb{R}^{{\rm formal rank} \times {\rm
+           * formal rank}}\f$
+           * * \f$V \in \mathbb{R}^{n \times {\rm formal rank}}\f$
+           */
+          if (truncation_rank < formal_rank)
+            {
+              /**
+               * Keep the first \p truncation_rank singular values, while
+               * discarding others.
+               */
+              std::vector<typename numbers::NumberTraits<Number>::real_type>
+                copy(std::move(Sigma_r));
+              Sigma_r.resize(truncation_rank);
+              for (size_type i = 0; i < truncation_rank; i++)
+                {
+                  Sigma_r.at(i) = copy.at(i);
+                }
+
+              /**
+               * Keep the first \p truncation_rank columns of \p U, while
+               * deleting others.
+               */
+              U.keep_first_n_columns(truncation_rank, true);
+
+              /**
+               * Keep the first \p truncation_rank rows of \p VT, while deleting
+               * others.
+               */
+              VT.keep_first_n_rows(truncation_rank, true);
+            }
+        }
+      else
+        {
+          /**
+           * In this case, the results \p U, \p Sigma_r and \p VT are obtained
+           * from full matrix SVD. And if \p M has a dimension \f$m \times
+           * n\f$, the dimensions of all matrices obtained from SVD are:
+           * * \f$U \in \mathbb{R}^{m \times m}\f$
+           * * \f$\Sigma_r \in \mathbb{R}^{m \times n}\f$
+           * * \f$V \in \mathbb{R}^{n \times n}\f$
+           */
+          if (mm > nn)
+            {
+              /**
+               * When the original matrix is long, \f$\Sigma_r =
+               * \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}\f$. Therefore, we
+               * keep the first \p min_dim columns of \p U, while deleting
+               * others. \p VT is kept intact.
+               */
+              U.keep_first_n_columns(min_dim, true);
+            }
+          else if (mm < nn)
+            {
+              /**
+               * When the original matrix is wide, \f$\Sigma_r = \begin{pmatrix}
+               * \Sigma_r' & 0 \end{pmatrix}\f$. Therefore, we keep the first \p
+               * min_dim rows of \p VT, while deleting others. \p U is kept
+               * intact.
+               */
+              VT.keep_first_n_rows(min_dim, true);
+            }
+          else
+            {
+              /**
+               * When the original matrix is square, we do nothing, since
+               * the truncation rank is the same as the matrix dimension.
+               */
+            }
+        }
+    }
+
+  AssertDimension(U.n(), Sigma_r.size());
+  AssertDimension(VT.m(), Sigma_r.size());
+
+  return truncation_rank;
+}
+
+
+template <typename Number>
 LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const size_type size)
   : LAPACKFullMatrix<Number>(size)
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
-{}
+  , ipiv()
+{
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+}
 
 
 template <typename Number>
@@ -1412,20 +2079,34 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const size_type rows,
                                                  const size_type cols)
   : LAPACKFullMatrix<Number>(rows, cols)
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
-{}
+  , ipiv()
+{
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+}
 
 
 template <typename Number>
 LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &mat)
   : LAPACKFullMatrix<Number>(mat)
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
-{}
+  , ipiv()
+{
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+}
 
 
 template <typename Number>
@@ -1433,10 +2114,17 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
   const LAPACKFullMatrix<Number> &mat)
   : LAPACKFullMatrix<Number>(mat)
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
-{}
+  , ipiv()
+{
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+}
 
 
 template <typename Number>
@@ -1446,10 +2134,17 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
   const LAPACKFullMatrixExt<Number> &         M)
   : LAPACKFullMatrix<Number>(tau_index_set.size(), sigma_index_set.size())
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
+  , ipiv()
 {
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+
   /**
    * Extract the data for the submatrix defined on the block cluster \f$\tau
    * \times \sigma\f$ from the full global matrix \p M.
@@ -1479,10 +2174,17 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
     &col_index_global_to_local_map_for_M)
   : LAPACKFullMatrix<Number>(tau_index_set.size(), sigma_index_set.size())
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
+  , ipiv()
 {
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+
   /**
    * Extract the data for the submatrix block \f$b = \tau \times \sigma\f$ in
    * the original matrix \p M.
@@ -1505,10 +2207,17 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M1,
                                                  bool is_horizontal_split)
   : LAPACKFullMatrix<Number>()
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
+  , ipiv()
 {
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+
   if (is_horizontal_split)
     {
       M1.vstack((*this), M2);
@@ -1535,10 +2244,17 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
   bool                                        is_horizontal_split)
   : LAPACKFullMatrix<Number>()
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
+  , ipiv()
 {
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+
   /**
    * Make assertions about the submatrix sizes and corresponding index sets.
    */
@@ -1595,14 +2311,21 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M11,
                                                  const LAPACKFullMatrixExt &M22)
   : LAPACKFullMatrix<Number>(M11.m() + M21.m(), M11.n() + M12.n())
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
+  , ipiv()
 {
   AssertDimension(M11.m(), M12.m());
   AssertDimension(M21.m(), M22.m());
   AssertDimension(M11.n(), M21.n());
   AssertDimension(M12.n(), M22.n());
+
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
 
   this->fill(M11, 0, 0);
   this->fill(M12, 0, M11.n());
@@ -1631,9 +2354,11 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
   const std::vector<types::global_dof_index> &M22_sigma_index_set)
   : LAPACKFullMatrix<Number>(M11.m() + M21.m(), M11.n() + M12.n())
   , state(LAPACKSupport::matrix)
+  , property(LAPACKSupport::general)
   , tau(0)
   , work()
   , iwork()
+  , ipiv()
 {
   /**
    * Make assertions about the compatibility of row and column numbers of
@@ -1672,6 +2397,11 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
   AssertDimension(M22.m(), M22_tau_index_set.size());
   AssertDimension(M22.n(), M22_sigma_index_set.size());
 
+  /**
+   * Set the property of the parent class as well.
+   */
+  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+
   this->fill(row_index_global_to_local_map_for_M,
              col_index_global_to_local_map_for_M,
              M11,
@@ -1705,6 +2435,12 @@ operator=(const LAPACKFullMatrixExt<Number> &matrix)
 {
   LAPACKFullMatrix<Number>::operator=(matrix);
   state                             = matrix.state;
+  property                          = matrix.property;
+  /**
+   * Since \p ipiv contains the crucial permutation data if the matrix has been
+   * factorized by LU, it needs to be copied.
+   */
+  ipiv = matrix.ipiv;
 
   return (*this);
 }
@@ -1715,7 +2451,15 @@ LAPACKFullMatrixExt<Number> &
 LAPACKFullMatrixExt<Number>::operator=(const LAPACKFullMatrix<Number> &matrix)
 {
   LAPACKFullMatrix<Number>::operator=(matrix);
-  state                             = LAPACKSupport::matrix;
+
+  /**
+   * Because \p state and \p property are private members of \p
+   * LAPACKFullMatrix<Number>, they cannot be copied from the given \p matrix.
+   * Hence, they are assigned with the default values \p LAPACKSupport::matrix
+   * and \p LAPACKSupport::general.
+   */
+  state    = LAPACKSupport::matrix;
+  property = LAPACKSupport::general;
 
   return (*this);
 }
@@ -2275,33 +3019,45 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
 
   if (truncation_rank < min_dim)
     {
-      /**
-       * Perform singular value truncation when the given \p truncation_rank
-       * (after value limiting wrt. the actual rank) is less than the minimum
-       * matrix dimension. The procedures are as below.
-       *
-       * 1. Keep the first \p truncation_rank singular values, while discarding
-       * the others.
-       */
-      std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
-        std::move(Sigma_r));
-      Sigma_r.resize(truncation_rank);
-      for (size_type i = 0; i < truncation_rank; i++)
+      if (truncation_rank > 0)
         {
-          Sigma_r.at(i) = copy.at(i);
+          /**
+           * Perform singular value truncation when the given \p truncation_rank
+           * (after value limiting wrt. the actual rank) is less than the
+           * minimum matrix dimension. The procedures are as below.
+           *
+           * 1. Keep the first \p truncation_rank singular values, while discarding
+           * the others.
+           */
+          std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
+            std::move(Sigma_r));
+          Sigma_r.resize(truncation_rank);
+          for (size_type i = 0; i < truncation_rank; i++)
+            {
+              Sigma_r.at(i) = copy.at(i);
+            }
+
+          /**
+           * 2. Keep the first \p truncation_rank columns of \p U, while discarding
+           * the others.
+           */
+          U.keep_first_n_columns(truncation_rank, true);
+
+          /**
+           * 3. Keep the first \p truncation_rank rows of \p VT, while discarding
+           * the others.
+           */
+          VT.keep_first_n_rows(truncation_rank, true);
         }
-
-      /**
-       * 2. Keep the first \p truncation_rank columns of \p U, while discarding
-       * the others.
-       */
-      U.keep_first_n_columns(truncation_rank, true);
-
-      /**
-       * 3. Keep the first \p truncation_rank rows of \p VT, while discarding
-       * the others.
-       */
-      VT.keep_first_n_rows(truncation_rank, true);
+      else
+        {
+          /**
+           * Clear the SVD result matrix and singular value vector.
+           */
+          U.reinit(0, 0);
+          VT.reinit(0, 0);
+          Sigma_r.clear();
+        }
     }
   else
     {
@@ -2366,30 +3122,343 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
-LAPACKFullMatrixExt<Number>::rank(Number threshold) const
+LAPACKFullMatrixExt<Number>::reduced_svd(
+  LAPACKFullMatrixExt<Number> &                                   U,
+  std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
+  LAPACKFullMatrixExt<Number> &                                   VT,
+  LAPACKFullMatrixExt<Number> &                                   C,
+  LAPACKFullMatrixExt<Number> &                                   D,
+  size_type truncation_rank,
+  Number    singular_value_threshold)
 {
-  LAPACKFullMatrixExt<Number>                                    copy(*this);
-  LAPACKFullMatrixExt<Number>                                    U, VT;
-  std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
+  const size_type mm      = this->m();
+  const size_type nn      = this->n();
+  const size_type min_dim = std::min(mm, nn);
 
-  copy.svd(U, Sigma_r, VT);
+  /**
+   * <dl class="section">
+   *   <dt>Work flow</dt>
+   *   <dd>
+   */
 
-  if (threshold == 0.)
+  /**
+   * Perform the full SVD.
+   */
+  svd(U, Sigma_r, VT);
+
+  if (singular_value_threshold == 0.)
     {
       /**
        * If the singular value threshold is perfect zero, calculate a threshold
        * value instead.
        */
-      threshold = calc_singular_value_threshold(this->m(), this->n(), Sigma_r);
+      singular_value_threshold = calc_singular_value_threshold(mm, nn, Sigma_r);
     }
 
+  /**
+   * Get the actual rank of the matrix by counting the total number of singular
+   * values which are larger than the given threshold \p
+   * singular_value_threshold. The actual rank should always be less than or
+   * equal to \p min_dim.
+   */
   size_type rank = 0;
   for (size_t i = 0; i < Sigma_r.size(); i++)
     {
-      if (Sigma_r[i] > threshold)
+      if (Sigma_r[i] > singular_value_threshold)
         {
           rank++;
         }
+    }
+  AssertIndexRange(rank, min_dim + 1);
+
+  /**
+   * Limit the value of \p truncation_rank not larger than the actual
+   * rank just obtained by counting effective singular values.
+   */
+  if (truncation_rank > rank)
+    {
+      truncation_rank = rank;
+    }
+
+  if (truncation_rank < min_dim)
+    {
+      if (truncation_rank > 0)
+        {
+          /**
+           * Perform singular value truncation when the given \p truncation_rank
+           * (after value limiting wrt. the actual rank) is less than the
+           * minimum matrix dimension. The procedures are as below.
+           *
+           * 1. Keep the first \p truncation_rank singular values, while discarding
+           * the others.
+           */
+          std::vector<typename numbers::NumberTraits<Number>::real_type> copy(
+            std::move(Sigma_r));
+          Sigma_r.resize(truncation_rank);
+          for (size_type i = 0; i < truncation_rank; i++)
+            {
+              Sigma_r.at(i) = copy.at(i);
+            }
+
+          const size_type Sigma_r_error_size = copy.size() - truncation_rank;
+          if (Sigma_r_error_size > 0)
+            {
+              /**
+               * Copy the remaining singular values for constructing the error
+               * matrices.
+               */
+              std::vector<typename numbers::NumberTraits<Number>::real_type>
+                Sigma_r_error(Sigma_r_error_size);
+              for (size_type i = 0; i < Sigma_r_error_size; i++)
+                {
+                  Sigma_r_error.at(i) = copy.at(i + truncation_rank);
+                }
+
+              /**
+               * Allocate memory for the error matrices. At the moment, \f$D\f$
+               * stores its transpose.
+               */
+              C.reinit(mm, Sigma_r_error_size);
+              D.reinit(Sigma_r_error_size, nn);
+
+              C.fill(U, 0, 0, 0, truncation_rank);
+              D.fill(VT, 0, 0, truncation_rank, 0);
+
+              if (mm > nn)
+                {
+                  /**
+                   * When the original full matrix \f$AB^T\f$ is a long matrix,
+                   * perform right association.
+                   */
+                  D.scale_rows(Sigma_r_error);
+                  D.transpose();
+                }
+              else
+                {
+                  /**
+                   * When the original full matrix \f$AB^T\f$ is a wide matrix,
+                   * perform left association.
+                   */
+                  C.scale_columns(Sigma_r_error);
+                  D.transpose();
+                }
+            }
+          else
+            {
+              C.reinit(0, 0);
+              D.reinit(0, 0);
+            }
+
+          /**
+           * 2. Keep the first \p truncation_rank columns of \p U, while discarding
+           * the others.
+           */
+          U.keep_first_n_columns(truncation_rank, true);
+
+          /**
+           * 3. Keep the first \p truncation_rank rows of \p VT, while discarding
+           * the others.
+           */
+          VT.keep_first_n_rows(truncation_rank, true);
+        }
+      else
+        {
+          /**
+           * When the truncation rank is zero, the error matrices should be
+           * directly obtained from the SVD results.
+           */
+          C = U;
+          D = VT;
+
+          if (mm > nn)
+            {
+              /**
+               * When the original full matrix \f$AB^T\f$ is a long matrix,
+               * perform right association.
+               */
+              D.scale_rows(Sigma_r);
+              D.transpose();
+            }
+          else
+            {
+              /**
+               * When the original full matrix \f$AB^T\f$ is a wide matrix,
+               * perform left association.
+               */
+              C.scale_columns(Sigma_r);
+              D.transpose();
+            }
+
+          /**
+           * Then, clear the SVD result matrix and singular value vector.
+           */
+          U.reinit(0, 0);
+          VT.reinit(0, 0);
+          Sigma_r.clear();
+        }
+    }
+  else
+    {
+      /**
+       * When \p truncation_rank (after value limiting wrt. the actual rank) is
+       * equal to the minimum matrix dimension, we only need to adjust the
+       * columns of \f$U\f$ or the rows of \f$V^T\f$ depending on the shape of
+       * the matrix \f$M\f$.
+       */
+      AssertDimension(truncation_rank, min_dim);
+
+      /**
+       * There is no effective rank truncation and thus no accuracy loss.
+       * Therefore, the error matrix components \f$C\f$ and \f$D\f$ are set to
+       * zero dimension.
+       */
+      C.reinit(0, 0);
+      D.reinit(0, 0);
+
+      /**
+       * For details, if \f$M\f$ has a dimension \f$m \times n\f$, the
+       * dimensions of all matrices obtained from SVD are:
+       * * \f$U \in \mathbb{R}^{m \times m}\f$
+       * * \f$\Sigma_r \in \mathbb{R}^{m \times n}\f$
+       * * \f$V \in \mathbb{R}^{n \times n}\f$
+       */
+      if (mm > nn)
+        {
+          /**
+           * When \f$M\f$ is long, \f$\Sigma_r =
+           * \begin{pmatrix}\Sigma_r' \\ 0 \end{pmatrix}\f$. Therefore, we keep
+           * the first \p min_dim columns of \f$U\f$, while deleting others.
+           * \f$V^T\f$ is kept intact.
+           */
+          U.keep_first_n_columns(min_dim, true);
+        }
+      else if (mm < nn)
+        {
+          /**
+           * When \f$M\f$ is wide, \f$\Sigma_r = \begin{pmatrix}
+           * \Sigma_r' & 0 \end{pmatrix}\f$. Therefore, we keep the first \p
+           * min_dim rows of \f$V^T\f$, while deleting others. \f$U\f$ is kept
+           * intact.
+           */
+          VT.keep_first_n_rows(min_dim, true);
+        }
+      else
+        {
+          /**
+           * When \f$M\f$ is square, do nothing.
+           */
+        }
+    }
+
+  AssertDimension(U.n(), Sigma_r.size());
+  AssertDimension(VT.m(), Sigma_r.size());
+
+  /**
+   * Return the value of \p truncation_rank. Instead of its original specified
+   * value, it now contains the actual rank of the matrix after truncation.
+   */
+  return truncation_rank;
+
+  /**
+   *   </dd>
+   * </dl>
+   */
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::compute_lu_factorization()
+{
+  Assert(state == matrix, ExcState(state));
+  state = LAPACKSupport::unusable;
+
+  const types::blas_int mm     = this->m();
+  const types::blas_int nn     = this->n();
+  Number *const         values = this->values.data();
+  ipiv.resize(mm);
+  types::blas_int info = 0;
+  getrf(&mm, &nn, values, &mm, ipiv.data(), &info);
+
+  Assert(info >= 0, ExcInternalError());
+
+  // if info >= 0, the factorization has been completed
+  state = lu;
+
+  AssertThrow(info == 0, LACExceptions::ExcSingular());
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::compute_cholesky_factorization()
+{
+  Assert(state == matrix, ExcState(state));
+  state = LAPACKSupport::unusable;
+
+  /**
+   * Explicitly set the matrix property to be \p symmetric, which is required
+   * by \p LAPACKFullMatrix<Number>::compute_cholesky_factorization().
+   */
+  set_property(LAPACKSupport::symmetric);
+  LAPACKFullMatrix<Number>::compute_cholesky_factorization();
+
+  state = LAPACKSupport::cholesky;
+}
+
+
+template <typename Number>
+std::vector<types::blas_int> &
+LAPACKFullMatrixExt<Number>::get_lu_permutation()
+{
+  return ipiv;
+}
+
+
+template <typename Number>
+const std::vector<types::blas_int> &
+LAPACKFullMatrixExt<Number>::get_lu_permutation() const
+{
+  return ipiv;
+}
+
+
+template <typename Number>
+typename LAPACKFullMatrixExt<Number>::size_type
+LAPACKFullMatrixExt<Number>::rank(Number threshold) const
+{
+  size_type rank;
+
+  if (this->m() != 0 && this->n() != 0)
+    {
+      LAPACKFullMatrixExt<Number> copy(*this);
+      LAPACKFullMatrixExt<Number> U, VT;
+      std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
+
+      copy.svd(U, Sigma_r, VT);
+
+      if (threshold == 0.)
+        {
+          /**
+           * If the singular value threshold is perfect zero, calculate a
+           * threshold value instead.
+           */
+          threshold =
+            calc_singular_value_threshold(this->m(), this->n(), Sigma_r);
+        }
+
+      rank = 0;
+      for (size_t i = 0; i < Sigma_r.size(); i++)
+        {
+          if (Sigma_r[i] > threshold)
+            {
+              rank++;
+            }
+        }
+    }
+  else
+    {
+      rank = 0;
     }
 
   return rank;
@@ -2874,6 +3943,35 @@ LAPACKFullMatrixExt<Number>::fill_row(const size_type       row_index,
 
 template <typename Number>
 void
+LAPACKFullMatrixExt<Number>::fill_row(const size_type dst_row_index,
+                                      const size_type src_row_index,
+                                      const LAPACKFullMatrixExt<Number> &M,
+                                      const Number                       factor,
+                                      const bool is_adding)
+{
+  const size_type n_rows = this->m();
+  const size_type n_cols = this->n();
+
+  AssertIndexRange(dst_row_index, n_rows);
+  AssertIndexRange(src_row_index, M.m());
+  AssertDimension(M.n(), n_cols);
+
+  for (size_type j = 0; j < n_cols; j++)
+    {
+      if (is_adding)
+        {
+          (*this)(dst_row_index, j) += M(src_row_index, j) * factor;
+        }
+      else
+        {
+          (*this)(dst_row_index, j) = M(src_row_index, j) * factor;
+        }
+    }
+}
+
+
+template <typename Number>
+void
 LAPACKFullMatrixExt<Number>::fill_cols(
   const std::map<types::global_dof_index, size_t>
     &                                         col_index_global_to_local_map,
@@ -2991,6 +4089,31 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
 
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
+LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
+                                              LAPACKFullMatrixExt<Number> &A,
+                                              LAPACKFullMatrixExt<Number> &B,
+                                              LAPACKFullMatrixExt<Number> &C,
+                                              LAPACKFullMatrixExt<Number> &D)
+{
+  if (this->n() < this->m())
+    {
+      /**
+       * When the matrix is long, apply right associativity.
+       */
+      return rank_k_decompose(k, A, B, C, D, false);
+    }
+  else
+    {
+      /**
+       * When the matrix is wide, apply left associativity.
+       */
+      return rank_k_decompose(k, A, B, C, D, true);
+    }
+}
+
+
+template <typename Number>
+typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::rank_k_decompose(LAPACKFullMatrixExt<Number> &A,
                                               LAPACKFullMatrixExt<Number> &B)
 {
@@ -3025,6 +4148,48 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
    * itself at the moment.
    */
   const size_type effective_rank = this->reduced_svd(A, Sigma_r, B, k);
+
+  if (effective_rank > 0)
+    {
+      if (is_left_associative)
+        {
+          /**
+           * Let A = A*Sigma_r and B = B^T.
+           */
+          A.scale_columns(Sigma_r);
+          B.transpose();
+        }
+      else
+        {
+          /**
+           * Let A = A and B = (Sigma_r * B)^T.
+           */
+          B.scale_rows(Sigma_r);
+          B.transpose();
+        }
+    }
+
+  return effective_rank;
+}
+
+
+template <typename Number>
+typename LAPACKFullMatrixExt<Number>::size_type
+LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
+                                              LAPACKFullMatrixExt<Number> &A,
+                                              LAPACKFullMatrixExt<Number> &B,
+                                              LAPACKFullMatrixExt<Number> &C,
+                                              LAPACKFullMatrixExt<Number> &D,
+                                              bool is_left_associative)
+{
+  std::vector<typename numbers::NumberTraits<Number>::real_type> Sigma_r;
+
+  /**
+   * Perform RSVD for the matrix and return U and VT into A and B respectively.
+   * N.B. After running this function, B actually holds the transposition of
+   * itself at the moment.
+   */
+  const size_type effective_rank = this->reduced_svd(A, Sigma_r, B, C, D, k);
 
   if (effective_rank > 0)
     {
@@ -3162,6 +4327,90 @@ LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
+LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number> &      C,
+                                   const Number                       alpha,
+                                   const LAPACKFullMatrixExt<Number> &B,
+                                   const bool adding) const
+{
+  AssertDimension(this->n(), B.m());
+
+  const size_type nrows = this->m();
+  const size_type ncols = B.n();
+
+  if (C.m() != nrows || C.n() != ncols)
+    {
+      C.reinit(nrows, ncols);
+    }
+
+  /**
+   * Make a local copy of the matrix \p B and scale it.
+   */
+  LAPACKFullMatrixExt<Number> B_scaled(B);
+  B_scaled *= alpha;
+
+  // Call the \p mmult function in the parent class which operates on \p
+  // LAPACKFullMatrix<Number>.
+  LAPACKFullMatrix<Number>::mmult(C,
+                                  (LAPACKFullMatrix<Number>)B_scaled,
+                                  adding);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number> &      C,
+                                    const LAPACKFullMatrixExt<Number> &B,
+                                    const bool adding) const
+{
+  AssertDimension(this->n(), B.n());
+
+  const size_type nrows = this->m();
+  const size_type ncols = B.m();
+
+  if (C.m() != nrows || C.n() != ncols)
+    {
+      C.reinit(nrows, ncols);
+    }
+
+  // Call the \p mmult function in the parent class which operates on \p
+  // LAPACKFullMatrix<Number>.
+  LAPACKFullMatrix<Number>::mTmult(C, (LAPACKFullMatrix<Number>)B, adding);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number> &      C,
+                                    const Number                       alpha,
+                                    const LAPACKFullMatrixExt<Number> &B,
+                                    const bool adding) const
+{
+  AssertDimension(this->n(), B.n());
+
+  const size_type nrows = this->m();
+  const size_type ncols = B.m();
+
+  if (C.m() != nrows || C.n() != ncols)
+    {
+      C.reinit(nrows, ncols);
+    }
+
+  /**
+   * Make a local copy of the matrix \p B and scale it.
+   */
+  LAPACKFullMatrixExt<Number> B_scaled(B);
+  B_scaled *= alpha;
+
+  // Call the \p mmult function in the parent class which operates on \p
+  // LAPACKFullMatrix<Number>.
+  LAPACKFullMatrix<Number>::mTmult(C,
+                                   (LAPACKFullMatrix<Number>)B_scaled,
+                                   adding);
+}
+
+
+template <typename Number>
+void
 LAPACKFullMatrixExt<Number>::invert_by_gauss_elim(
   LAPACKFullMatrixExt<Number> &M_inv)
 {
@@ -3286,6 +4535,116 @@ LAPACKFullMatrixExt<Number>::invert_by_gauss_elim(
 
 template <typename Number>
 void
+LAPACKFullMatrixExt<Number>::set_property(
+  const LAPACKSupport::Property property)
+{
+  this->property = property;
+  this->LAPACKFullMatrix<Number>::set_property(property);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::solve_by_forward_substitution(
+  Vector<Number> &b,
+  const bool      transposed,
+  const bool      is_unit_diagonal,
+  const bool      permute_rhs_vector) const
+{
+  // The matrix should be square.
+  AssertDimension(this->m(), this->n());
+  AssertDimension(this->n(), b.size());
+
+  char uplo;
+
+  if (transposed)
+    {
+      uplo = 'U';
+    }
+  else
+    {
+      uplo = 'L';
+    }
+
+  /**
+   * Permute RHS vector if the current matrix is obtained from LU factorization.
+   */
+  if (state == lu && permute_rhs_vector)
+    {
+      Assert(ipiv.size() > 0, ExcInternalError());
+
+      permute_vector_by_ipiv(b, ipiv);
+    }
+
+  /**
+   * \alert{The member variable \p values of \p b is private, which cannot be
+   * directly accessed. Therefore, the function \p trsv_helper is designed to
+   * accept the data pointer of \p b, which can be obtained via \p b.data().}
+   */
+  internal::LAPACKFullMatrixImplementation::trsv_helper(
+    uplo, transposed, is_unit_diagonal, this->m(), this->values, b.data());
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::solve_by_forward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const bool            transposed,
+  const bool            is_unit_diagonal) const
+{
+  x = b;
+  solve_by_forward_substitution(x, transposed, is_unit_diagonal);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::solve_by_backward_substitution(
+  Vector<Number> &b,
+  const bool      transposed,
+  const bool      is_unit_diagonal) const
+{
+  // The matrix should be square.
+  AssertDimension(this->m(), this->n());
+
+  char uplo;
+
+  if (transposed)
+    {
+      uplo = 'L';
+    }
+  else
+    {
+      uplo = 'U';
+    }
+
+  /**
+   * \alert{The member variable \p values of \p b is private, which cannot be
+   * directly accessed. Therefore, the function \p trsv_helper is designed to
+   * accept the data pointer of \p b, which can be obtained via \p b.data().}
+   */
+  internal::LAPACKFullMatrixImplementation::trsv_helper(
+    uplo, transposed, is_unit_diagonal, this->m(), this->values, b.data());
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::solve_by_backward_substitution(
+  Vector<Number> &      x,
+  const Vector<Number> &b,
+  const bool            transposed,
+  const bool            is_unit_diagonal) const
+{
+  x = b;
+  solve_by_backward_substitution(x, transposed, is_unit_diagonal);
+}
+
+
+template <typename Number>
+void
 LAPACKFullMatrixExt<Number>::print_formatted_to_mat(
   std::ostream &     out,
   const std::string &name,
@@ -3305,6 +4664,77 @@ LAPACKFullMatrixExt<Number>::print_formatted_to_mat(
     out, precision, scientific, width, zero_string, denominator, threshold);
 
   out << "\n\n";
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::read_from_mat(std::ifstream &    in,
+                                           const std::string &name)
+{
+  std::string line_buf;
+
+  /**
+   * Iterate over each line of the file to search the desired variable.
+   */
+  while (std::getline(in, line_buf))
+    {
+      if (line_buf.compare(std::string("# name: ") + name) == 0)
+        {
+          /**
+           * When the desired variable is found, read the next line to check the
+           * data type is \p matrix.
+           */
+          std::getline(in, line_buf);
+          Assert(line_buf.compare("# type: matrix") == 0,
+                 ExcMessage(
+                   "Data type for the matrix to be read should be 'matrix'"));
+
+          /**
+           * Read a new line to extract the number of rows.
+           */
+          std::getline(in, line_buf);
+          std::smatch sm;
+          bool        found =
+            std::regex_match(line_buf, sm, std::regex("# rows: (\\d+)"));
+          Assert(found, ExcMessage("Cannot get n_rows of the matrix!"));
+          const unsigned int n_rows = std::stoi(sm.str(1));
+
+          /**
+           * Read a new line to extract the number of columns.
+           */
+          std::getline(in, line_buf);
+          found =
+            std::regex_match(line_buf, sm, std::regex("# columns: (\\d+)"));
+          Assert(found, ExcMessage("Cannot get n_cols of the matrix!"));
+          const unsigned int n_cols = std::stoi(sm.str(1));
+
+          Assert(n_rows > 0, ExcMessage("Matrix to be read has no rows!"));
+          Assert(n_cols > 0, ExcMessage("Matrix to be read has no columns!"));
+
+          reinit(n_rows, n_cols);
+          /**
+           * Get each row of the matrix.
+           */
+          for (size_type i = 0; i < n_rows; i++)
+            {
+              std::getline(in, line_buf);
+              std::istringstream line_buf_stream(line_buf);
+              /**
+               * Get each matrix element in a row.
+               */
+              for (size_type j = 0; j < n_cols; j++)
+                {
+                  line_buf_stream >> (*this)(i, j);
+                }
+            }
+
+          /**
+           * After reading all matrix data, exit from the loop.
+           */
+          break;
+        }
+    }
 }
 
 #endif /* INCLUDE_LAPACK_FULL_MATRIX_EXT_H_ */

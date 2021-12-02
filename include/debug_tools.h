@@ -111,12 +111,21 @@ template <typename VectorType>
 void
 print_vector_to_mat(std::ostream &     out,
                     const std::string &name,
-                    const VectorType & values)
+                    const VectorType & values,
+                    bool               is_row_vector = false)
 {
   out << "# name: " << name << "\n";
   out << "# type: matrix\n";
-  out << "# rows: " << values.size() << "\n";
-  out << "# columns: 1\n";
+  if (is_row_vector)
+    {
+      out << "# rows: 1\n";
+      out << "# columns: " << values.size() << "\n";
+    }
+  else
+    {
+      out << "# rows: " << values.size() << "\n";
+      out << "# columns: 1\n";
+    }
 
   for (auto iter = values.begin(); iter != values.end(); iter++)
     {

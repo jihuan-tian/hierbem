@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sauter_20quadrature',['Sauter quadrature',['../group__sauter__quadrature.html',1,'']]]
+  ['rank_2dk_20matrices',['Rank-k matrices',['../group__rkmatrices.html',1,'']]]
 ];

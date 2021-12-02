@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['rkmatrixtype',['RkMatrixType',['../hmatrix_8h.html#ac04719e202c88f36e4533fe1d326a494a2cf6ea273987e941519349b7c4b0b88c',1,'hmatrix.h']]]
+  ['general',['general',['../hmatrix__support_8h.html#a2651831f827cb8204df1771cf48301a2aba63e3c4296d85c3fcc9a5c1c64a27e6',1,'HMatrixSupport']]]
 ];

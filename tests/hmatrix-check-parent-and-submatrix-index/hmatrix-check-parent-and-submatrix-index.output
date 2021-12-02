@@ -1,0 +1,366 @@
+H-matrix address: 0x7ffdfe627850
+Parent H-matrix address: 0
+Submatrix addresses: (0x55c0d4f8cd90,0x55c0d4f927b0,0x55c0d4f96210,0x55c0d4f99710)
+Submatrix index wrt. the parent H-matrix: 9
+M([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(0,0,0,0)
+H-matrix address: 0x55c0d4f8cd90
+Parent H-matrix address: 0x7ffdfe627850
+Submatrix addresses: (0x55c0d4f8cf30,0x55c0d4f8e590,0x55c0d4f8fb70,0x55c0d4f911d0)
+Submatrix index wrt. the parent H-matrix: 0
+M([0,1,2,3,4,5,6,7],[0,1,2,3,4,5,6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(1,0,0,0)
+H-matrix address: 0x55c0d4f8cf30
+Parent H-matrix address: 0x55c0d4f8cd90
+Submatrix addresses: (0x55c0d4f8d0d0,0x55c0d4f8d5d0,0x55c0d4f8db10,0x55c0d4f8e050)
+Submatrix index wrt. the parent H-matrix: 0
+M([0,1,2,3],[0,1,2,3])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f8d0d0
+Parent H-matrix address: 0x55c0d4f8cf30
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([0,1],[0,1])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f8d5d0
+Parent H-matrix address: 0x55c0d4f8cf30
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([0,1],[2,3])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f8db10
+Parent H-matrix address: 0x55c0d4f8cf30
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([2,3],[0,1])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f8e050
+Parent H-matrix address: 0x55c0d4f8cf30
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([2,3],[2,3])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f8e590
+Parent H-matrix address: 0x55c0d4f8cd90
+Submatrix addresses: (0x55c0d4f8e730,0x55c0d4f8ec70,0x55c0d4f8f170,0x55c0d4f8f670)
+Submatrix index wrt. the parent H-matrix: 1
+M([0,1,2,3],[4,5,6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f8e730
+Parent H-matrix address: 0x55c0d4f8e590
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([0,1],[4,5])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f8ec70
+Parent H-matrix address: 0x55c0d4f8e590
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([0,1],[6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f8f170
+Parent H-matrix address: 0x55c0d4f8e590
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([2,3],[4,5])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f8f670
+Parent H-matrix address: 0x55c0d4f8e590
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([2,3],[6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f8fb70
+Parent H-matrix address: 0x55c0d4f8cd90
+Submatrix addresses: (0x55c0d4f8fd10,0x55c0d4f90210,0x55c0d4f90750,0x55c0d4f90c90)
+Submatrix index wrt. the parent H-matrix: 2
+M([4,5,6,7],[0,1,2,3])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f8fd10
+Parent H-matrix address: 0x55c0d4f8fb70
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([4,5],[0,1])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f90210
+Parent H-matrix address: 0x55c0d4f8fb70
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([4,5],[2,3])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f90750
+Parent H-matrix address: 0x55c0d4f8fb70
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([6,7],[0,1])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f90c90
+Parent H-matrix address: 0x55c0d4f8fb70
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([6,7],[2,3])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f911d0
+Parent H-matrix address: 0x55c0d4f8cd90
+Submatrix addresses: (0x55c0d4f91370,0x55c0d4f918b0,0x55c0d4f91db0,0x55c0d4f922b0)
+Submatrix index wrt. the parent H-matrix: 3
+M([4,5,6,7],[4,5,6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f91370
+Parent H-matrix address: 0x55c0d4f911d0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([4,5],[4,5])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f918b0
+Parent H-matrix address: 0x55c0d4f911d0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([4,5],[6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f91db0
+Parent H-matrix address: 0x55c0d4f911d0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([6,7],[4,5])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f922b0
+Parent H-matrix address: 0x55c0d4f911d0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([6,7],[6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f927b0
+Parent H-matrix address: 0x7ffdfe627850
+Submatrix addresses: (0x55c0d4f92950,0x55c0d4f935f0,0x55c0d4f941d0,0x55c0d4f95570)
+Submatrix index wrt. the parent H-matrix: 1
+M([0,1,2,3,4,5,6,7],[8,9,10,11,12,13,14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(1,0,0,0)
+H-matrix address: 0x55c0d4f92950
+Parent H-matrix address: 0x55c0d4f927b0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([0,1,2,3],[8,9,10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f935f0
+Parent H-matrix address: 0x55c0d4f927b0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([0,1,2,3],[12,13,14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f941d0
+Parent H-matrix address: 0x55c0d4f927b0
+Submatrix addresses: (0x55c0d4f94370,0x55c0d4f947b0,0x55c0d4f94bf0,0x55c0d4f95070)
+Submatrix index wrt. the parent H-matrix: 2
+M([4,5,6,7],[8,9,10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f94370
+Parent H-matrix address: 0x55c0d4f941d0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([4,5],[8,9])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f947b0
+Parent H-matrix address: 0x55c0d4f941d0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([4,5],[10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f94bf0
+Parent H-matrix address: 0x55c0d4f941d0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([6,7],[8,9])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f95070
+Parent H-matrix address: 0x55c0d4f941d0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([6,7],[10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f95570
+Parent H-matrix address: 0x55c0d4f927b0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([4,5,6,7],[12,13,14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f96210
+Parent H-matrix address: 0x7ffdfe627850
+Submatrix addresses: (0x55c0d4f963b0,0x55c0d4f96c50,0x55c0d4f98010,0x55c0d4f98bf0)
+Submatrix index wrt. the parent H-matrix: 2
+M([8,9,10,11,12,13,14,15],[0,1,2,3,4,5,6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(1,0,0,0)
+H-matrix address: 0x55c0d4f963b0
+Parent H-matrix address: 0x55c0d4f96210
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([8,9,10,11],[0,1,2,3])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f96c50
+Parent H-matrix address: 0x55c0d4f96210
+Submatrix addresses: (0x55c0d4f96df0,0x55c0d4f97190,0x55c0d4f975d0,0x55c0d4f97ad0)
+Submatrix index wrt. the parent H-matrix: 1
+M([8,9,10,11],[4,5,6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f96df0
+Parent H-matrix address: 0x55c0d4f96c50
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([8,9],[4,5])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f97190
+Parent H-matrix address: 0x55c0d4f96c50
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([8,9],[6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f975d0
+Parent H-matrix address: 0x55c0d4f96c50
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([10,11],[4,5])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f97ad0
+Parent H-matrix address: 0x55c0d4f96c50
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([10,11],[6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f98010
+Parent H-matrix address: 0x55c0d4f96210
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([12,13,14,15],[0,1,2,3])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f98bf0
+Parent H-matrix address: 0x55c0d4f96210
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([12,13,14,15],[4,5,6,7])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f99710
+Parent H-matrix address: 0x7ffdfe627850
+Submatrix addresses: (0x55c0d4f998b0,0x55c0d4f9ac10,0x55c0d4f9c1f0,0x55c0d4f9d850)
+Submatrix index wrt. the parent H-matrix: 3
+M([8,9,10,11,12,13,14,15],[8,9,10,11,12,13,14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(1,0,0,0)
+H-matrix address: 0x55c0d4f998b0
+Parent H-matrix address: 0x55c0d4f99710
+Submatrix addresses: (0x55c0d4f99a50,0x55c0d4f99e90,0x55c0d4f9a2d0,0x55c0d4f9a710)
+Submatrix index wrt. the parent H-matrix: 0
+M([8,9,10,11],[8,9,10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f99a50
+Parent H-matrix address: 0x55c0d4f998b0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([8,9],[8,9])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f99e90
+Parent H-matrix address: 0x55c0d4f998b0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([8,9],[10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9a2d0
+Parent H-matrix address: 0x55c0d4f998b0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([10,11],[8,9])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9a710
+Parent H-matrix address: 0x55c0d4f998b0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([10,11],[10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9ac10
+Parent H-matrix address: 0x55c0d4f99710
+Submatrix addresses: (0x55c0d4f9adb0,0x55c0d4f9b2f0,0x55c0d4f9b7f0,0x55c0d4f9bcf0)
+Submatrix index wrt. the parent H-matrix: 1
+M([8,9,10,11],[12,13,14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f9adb0
+Parent H-matrix address: 0x55c0d4f9ac10
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([8,9],[12,13])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9b2f0
+Parent H-matrix address: 0x55c0d4f9ac10
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([8,9],[14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9b7f0
+Parent H-matrix address: 0x55c0d4f9ac10
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([10,11],[12,13])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9bcf0
+Parent H-matrix address: 0x55c0d4f9ac10
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([10,11],[14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9c1f0
+Parent H-matrix address: 0x55c0d4f99710
+Submatrix addresses: (0x55c0d4f9c390,0x55c0d4f9c890,0x55c0d4f9cdd0,0x55c0d4f9d310)
+Submatrix index wrt. the parent H-matrix: 2
+M([12,13,14,15],[8,9,10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f9c390
+Parent H-matrix address: 0x55c0d4f9c1f0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([12,13],[8,9])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9c890
+Parent H-matrix address: 0x55c0d4f9c1f0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([12,13],[10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9cdd0
+Parent H-matrix address: 0x55c0d4f9c1f0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([14,15],[8,9])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9d310
+Parent H-matrix address: 0x55c0d4f9c1f0
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([14,15],[10,11])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9d850
+Parent H-matrix address: 0x55c0d4f99710
+Submatrix addresses: (0x55c0d4f9d9f0,0x55c0d4f9df30,0x55c0d4f9e430,0x55c0d4f9e930)
+Submatrix index wrt. the parent H-matrix: 3
+M([12,13,14,15],[12,13,14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(2,0,0,0)
+H-matrix address: 0x55c0d4f9d9f0
+Parent H-matrix address: 0x55c0d4f9d850
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 0
+M([12,13],[12,13])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9df30
+Parent H-matrix address: 0x55c0d4f9d850
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 1
+M([12,13],[14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9e430
+Parent H-matrix address: 0x55c0d4f9d850
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 2
+M([14,15],[12,13])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)
+H-matrix address: 0x55c0d4f9e930
+Parent H-matrix address: 0x55c0d4f9d850
+Submatrix addresses: ()
+Submatrix index wrt. the parent H-matrix: 3
+M([14,15],[14,15])
+(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=(3,0,0,0)

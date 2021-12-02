@@ -7,7 +7,10 @@
 #ifndef INCLUDE_GENERIC_FUNCTORS_H_
 #define INCLUDE_GENERIC_FUNCTORS_H_
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/types.h>
+
+#include <deal.II/lac/lapack_support.h>
 
 #include <map>
 #include <vector>
@@ -54,5 +57,31 @@ build_index_set_global_to_local_map(
   const std::vector<dealii::types::global_dof_index>
     &index_set_as_local_to_global_map,
   std::map<dealii::types::global_dof_index, size_t> &global_to_local_map);
+
+
+/**
+ * Permute a vector according to the permutation vector \p ipiv obtained from an
+ * LU factorization.
+ *
+ * @param v
+ * @param ipiv The vector storing the row permutation obtained from an LU
+ * factorization. \alert{The row indices stored in \p ipiv starts from 1 instead
+ * of 0.}
+ */
+template <typename VectorType>
+void
+permute_vector_by_ipiv(VectorType &                                v,
+                       const std::vector<dealii::types::blas_int> &ipiv)
+{
+  AssertDimension(v.size(), ipiv.size());
+
+  typename VectorType::value_type temp;
+  for (std::size_t i = 0; i < ipiv.size(); i++)
+    {
+      temp           = v[i];
+      v[i]           = v[ipiv[i] - 1];
+      v[ipiv[i] - 1] = temp;
+    }
+}
 
 #endif /* INCLUDE_GENERIC_FUNCTORS_H_ */

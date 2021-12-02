@@ -14,6 +14,7 @@ var searchData=
   ['depth',['depth',['../classBlockClusterTree.html#a77349ec9ccb36d45af3f176a93516897',1,'BlockClusterTree::depth()'],['../classClusterTree.html#a051df20340ed3f0e4bc0ee1fb1119f9f',1,'ClusterTree::depth()']]],
   ['determine_5fmm_5fsplit_5fmode_5ffrom_5fsigma_5fp',['determine_mm_split_mode_from_Sigma_P',['../classHMatrix.html#a6f24998c7de1d0e336577be41c6281e3',1,'HMatrix']]],
   ['diagmatrix',['DiagMatrix',['../classLAPACKFullMatrixExt.html#a2b8a0c3f7ef1c4ff97b8d16ce96084e5',1,'LAPACKFullMatrixExt']]],
+  ['diagonal',['diagonal',['../hmatrix__support_8h.html#a2651831f827cb8204df1771cf48301a2a84912705e6a0095e329202650c5c0780',1,'HMatrixSupport']]],
   ['distance_5fto_5fcluster',['distance_to_cluster',['../classCluster.html#aba84e3743344f360ccdb855037e1b45e',1,'Cluster::distance_to_cluster(const Cluster &amp;cluster, const std::vector&lt; Point&lt; spacedim, Number &gt;&gt; &amp;all_support_points) const'],['../classCluster.html#a1eeffaea84b84d0288544dd4ff007d7b',1,'Cluster::distance_to_cluster(const Cluster &amp;cluster, const std::vector&lt; Point&lt; spacedim, Number &gt;&gt; &amp;all_support_points, const std::vector&lt; Number &gt; &amp;cell_size_at_dofs) const']]],
   ['distribute_5fall_5fnon_5fleaf_5fnodes_5fsigma_5fr_5fand_5ff_5fto_5fleaves',['distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves',['../classHMatrix.html#a66979dbdf56155c63f0706649e8545b9',1,'HMatrix']]],
   ['divide_5fgeometrically',['divide_geometrically',['../classSimpleBoundingBox.html#a0b8bef0a9504e22a7e2c4cc3d4ed04c4',1,'SimpleBoundingBox']]],

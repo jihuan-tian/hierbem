@@ -1,15 +1,16 @@
 <map id="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/tests/hmatrix&#45;coarsening/hmatrix&#45;coarsening.cc" name="/home/jihuan/Projects/deal.ii/program/dealii&#45;9.1.1/examples/laplace&#45;bem/tests/hmatrix&#45;coarsening/hmatrix&#45;coarsening.cc">
-<area shape="rect" id="node4" href="$block__cluster__tree_8h.html" title="Implementation of the class BlockClusterTree. " alt="" coords="899,213,1038,240"/>
-<area shape="rect" id="node18" href="$debug__tools_8h.html" title="This file includes a bunch of helper functions for printing out and visualizing information about gri..." alt="" coords="372,459,475,486"/>
-<area shape="rect" id="node43" href="$hmatrix_8h.html" title="Definition of hierarchical matrix. " alt="" coords="1168,139,1244,165"/>
-<area shape="rect" id="node5" href="$block__cluster_8h.html" title="Implementation of the class BlockCluster. " alt="" coords="1007,295,1117,322"/>
-<area shape="rect" id="node17" href="$cluster__tree_8h_source.html" title="cluster_tree.h" alt="" coords="955,377,1057,404"/>
-<area shape="rect" id="node22" href="$tree_8h.html" title="Implementation of the classes for binary tree node, general tree node and functions for manipulating ..." alt="" coords="896,459,951,486"/>
-<area shape="rect" id="node28" href="$lapack__full__matrix__ext_8h_source.html" title="lapack_full_matrix\l_ext.h" alt="" coords="1795,288,1921,329"/>
-<area shape="rect" id="node6" href="$cluster_8h.html" title="Implementation of the class Cluster. " alt="" coords="1266,459,1338,486"/>
-<area shape="rect" id="node11" href="$simple__bounding__box_8h_source.html" title="simple_bounding_box.h" alt="" coords="987,541,1145,568"/>
-<area shape="rect" id="node31" href="$general__exceptions_8h.html" title="Definition of self&#45;defined general exceptions. " alt="" coords="1764,377,1909,404"/>
-<area shape="rect" id="node32" href="$lapack__helpers_8h.html" title="Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following the..." alt="" coords="2149,377,2269,404"/>
-<area shape="rect" id="node45" href="$generic__functors_8h.html" title="This header file contains a set of self&#45;defined generic functors. " alt="" coords="3157,295,3287,322"/>
-<area shape="rect" id="node46" href="$rkmatrix_8h.html" title="Definition of rank&#45;k matrix. " alt="" coords="1743,213,1823,240"/>
+<area shape="rect" id="node4" href="$block__cluster__tree_8h.html" title="Implementation of the class BlockClusterTree. " alt="" coords="866,213,1005,240"/>
+<area shape="rect" id="node18" href="$debug__tools_8h.html" title="This file includes a bunch of helper functions for printing out and visualizing information about gri..." alt="" coords="389,452,492,479"/>
+<area shape="rect" id="node47" href="$hmatrix_8h.html" title="Definition of hierarchical matrix. " alt="" coords="1445,139,1521,165"/>
+<area shape="rect" id="node5" href="$block__cluster_8h.html" title="Implementation of the class BlockCluster. " alt="" coords="973,288,1084,315"/>
+<area shape="rect" id="node17" href="$cluster__tree_8h_source.html" title="cluster_tree.h" alt="" coords="914,370,1015,397"/>
+<area shape="rect" id="node22" href="$tree_8h.html" title="Implementation of the classes for binary tree node, general tree node and functions for manipulating ..." alt="" coords="845,452,900,479"/>
+<area shape="rect" id="node28" href="$lapack__full__matrix__ext_8h_source.html" title="lapack_full_matrix\l_ext.h" alt="" coords="1912,363,2039,404"/>
+<area shape="rect" id="node6" href="$cluster_8h.html" title="Implementation of the class Cluster. " alt="" coords="1210,452,1282,479"/>
+<area shape="rect" id="node11" href="$simple__bounding__box_8h_source.html" title="simple_bounding_box.h" alt="" coords="1004,534,1163,561"/>
+<area shape="rect" id="node33" href="$general__exceptions_8h.html" title="Definition of self&#45;defined general exceptions. " alt="" coords="1903,452,2048,479"/>
+<area shape="rect" id="node34" href="$generic__functors_8h.html" title="This header file contains a set of self&#45;defined generic functors. " alt="" coords="1749,452,1879,479"/>
+<area shape="rect" id="node36" href="$lapack__helpers_8h.html" title="Exposes LAPACK helper functions defined in lapack_full_matrix.cc and define new ones by following the..." alt="" coords="2987,452,3107,479"/>
+<area shape="rect" id="node46" href="$lapack__templates__ext_8h.html" title="Append more template based LAPACK functions to those existing in deal.ii. " alt="" coords="3815,534,3975,561"/>
+<area shape="rect" id="node49" href="$rkmatrix_8h.html" title="Definition of rank&#45;k matrix. " alt="" coords="1994,288,2074,315"/>
 </map>

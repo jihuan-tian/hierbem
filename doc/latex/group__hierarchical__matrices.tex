@@ -41,14 +41,74 @@ file \hyperlink{hmatrix-add-rkmatrix-into-new-hmatrix_8cc}{hmatrix-\/add-\/rkmat
 \begin{DoxyCompactList}\small\item\em Verify the addition of a rank-\/k matrix and an $\mathcal{H}$-\/matrix into a new $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-add-rkmatrix-into-new-hmatrix-with-factor_8cc}{hmatrix-\/add-\/rkmatrix-\/into-\/new-\/hmatrix-\/with-\/factor.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the addition of a rank-\/k matrix multiplied by a factor and an $\mathcal{H}$-\/matrix into a new $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-backward-substitution_8cc}{hmatrix-\/backward-\/substitution.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify backward substitution of an upper triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is fine non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-backward-substitution-coarse-ntp_8cc}{hmatrix-\/backward-\/substitution-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify backward substitution of an upper triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is coarse non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-backward-substitution-unit-diag_8cc}{hmatrix-\/backward-\/substitution-\/unit-\/diag.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify backward substitution of an unit upper triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is fine non-\/tensor product. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-bct-struct-with-rank_8cc}{hmatrix-\/bct-\/struct-\/with-\/rank.\+cc}
 \begin{DoxyCompactList}\small\item\em Visualize the block cluster tree structure of an H-\/matrix with displayed rank. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-block-triangular-backward-substitution_8cc}{hmatrix-\/block-\/triangular-\/backward-\/substitution.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify backward substitution of an upper block triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is fine non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-block-triangular-backward-substitution-unit-diag_8cc}{hmatrix-\/block-\/triangular-\/backward-\/substitution-\/unit-\/diag.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify backward substitution of an unit upper block triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is fine non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-check-parent-and-submatrix-index_8cc}{hmatrix-\/check-\/parent-\/and-\/submatrix-\/index.\+cc}
+\begin{DoxyCompactList}\small\item\em Check the {\ttfamily parent} and {\ttfamily submatrix\+\_\+index} member variables of $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-cholesky-backward-substitution_8cc}{hmatrix-\/cholesky-\/backward-\/substitution.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify backward substitution for the lower triangle $\mathcal{H}$-\/matrix obtained from Cholesky decomposition. The block cluster tree partition structure is fine non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-cholesky-transpose-forward-substitution-matrix-valued_8cc}{hmatrix-\/cholesky-\/transpose-\/forward-\/substitution-\/matrix-\/valued.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify matrix-\/valued forward substitution of the transpose of a upper triangular $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-coarsening_8cc}{hmatrix-\/coarsening.\+cc}
 \begin{DoxyCompactList}\small\item\em Coarsen a H-\/matrix to its subtree. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-find-diagonal-blocks_8cc}{hmatrix-\/find-\/diagonal-\/blocks.\+cc}
+\begin{DoxyCompactList}\small\item\em Find the diagonal blocks related to the current $\mathcal{H}$-\/matrix node. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-fine-ntp-to-tp_8cc}{hmatrix-\/fine-\/ntp-\/to-\/tp.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the conversion of an $\mathcal{H}$-\/matrix from fine non-\/tensor product structure to tensor product structure. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-forward-substitution_8cc}{hmatrix-\/forward-\/substitution.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify forward substitution of a lower triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is fine non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-forward-substitution-coarse-ntp_8cc}{hmatrix-\/forward-\/substitution-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify forward substitution of a lower triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is coarse non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-forward-substitution-unit-diag_8cc}{hmatrix-\/forward-\/substitution-\/unit-\/diag.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify forward substitution of a unit lower triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is fine non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-alpha-mmult-level-conserving-all-fine-ntp-member-function-call_8cc}{hmatrix-\/hmatrix-\/alpha-\/mmult-\/level-\/conserving-\/all-\/fine-\/ntp-\/member-\/function-\/call.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices with the result scaled by a factor, i.\+e. $M = M + \alpha \cdot M_1 M_2$. Both operands and the result matrices have the fine non-\/tensor product partitions. This version uses the member function call of multiplication. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-alpha-mTmult-level-conserving-all-fine-ntp-member-function-call_8cc}{hmatrix-\/hmatrix-\/alpha-\/m\+Tmult-\/level-\/conserving-\/all-\/fine-\/ntp-\/member-\/function-\/call.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices with the second operand transposed and with the result scaled by a factor, i.\+e. $M = M + \alpha \cdot M_1 M_2$. Both operands and the result matrices have the fine non-\/tensor product partitions. This version uses the member function call of multiplication. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/all-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. Both operands and the result matrices have the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-coarse-coarse-fine-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/coarse-\/coarse-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. Both operands have the coarse non-\/tensor product partitions, while the result matrix has the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-coarse-fine-coarse-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/coarse-\/fine-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. The first operand and the result matrix have the coarse non-\/tensor product partitions, while the second operand has the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-fine-coarse-fine-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/fine-\/coarse-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. The first operand and the result matrix have the fine non-\/tensor product partitions, while the second operand has the coarse non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mmult-level-conserving-fine-fine-coarse-ntp_8cc}{hmatrix-\/hmatrix-\/mmult-\/level-\/conserving-\/fine-\/fine-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices. Both operands have the fine non-\/tensor product partitions, while the result matrix has the coarse non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mTmult-level-conserving-all-fine-ntp_8cc}{hmatrix-\/hmatrix-\/m\+Tmult-\/level-\/conserving-\/all-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices with the second operand transposed. Both operands and the result matrices have the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mTmult-level-conserving-coarse-coarse-fine-ntp_8cc}{hmatrix-\/hmatrix-\/m\+Tmult-\/level-\/conserving-\/coarse-\/coarse-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices with the second operand transposed. Both operands have the coarse non-\/tensor product partitions, while the result matrix has the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mTmult-level-conserving-coarse-fine-coarse-ntp_8cc}{hmatrix-\/hmatrix-\/m\+Tmult-\/level-\/conserving-\/coarse-\/fine-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices with the second operand transposed. The first operand and the result matrix have the coarse non-\/tensor product partitions, while the second operand has the fine non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mTmult-level-conserving-fine-coarse-fine-ntp_8cc}{hmatrix-\/hmatrix-\/m\+Tmult-\/level-\/conserving-\/fine-\/coarse-\/fine-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices with the second operand transposed. The first operand and the result matrix have the fine non-\/tensor product partitions, while the second operand has the coarse non-\/tensor product partitions. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-hmatrix-mTmult-level-conserving-fine-fine-coarse-ntp_8cc}{hmatrix-\/hmatrix-\/m\+Tmult-\/level-\/conserving-\/fine-\/fine-\/coarse-\/ntp.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify the multiplication of two level-\/conserving $\mathcal{H}$-\/matrices with the second operand transposed. Both operands have the fine non-\/tensor product partitions, while the result matrix has the coarse non-\/tensor product partitions. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-rkmatrix-conversion_8cc}{hmatrix-\/rkmatrix-\/conversion.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the conversion from an H-\/matrix to a rank-\/k matrix. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-solve-cholesky_8cc}{hmatrix-\/solve-\/cholesky.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify Cholesky factorization of a positive definite and symmetric $\mathcal{H}$-\/matrix and solve this matrix using forward and backward substitution. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-solve-cholesky-in-situ_8cc}{hmatrix-\/solve-\/cholesky-\/in-\/situ.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify in situ Cholesky factorization of a positive definite and symmetric $\mathcal{H}$-\/matrix and solve this matrix using forward and backward substitution. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-solve-lu_8cc}{hmatrix-\/solve-\/lu.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify LU factorization of an $\mathcal{H}$-\/matrix and solve this matrix using forward and backward substitution. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-solve-lu-in-situ_8cc}{hmatrix-\/solve-\/lu-\/in-\/situ.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify LU factorization (in-\/situ) of an $\mathcal{H}$-\/matrix and solve this matrix using forward and backward substitution. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-transpose-forward-substitution_8cc}{hmatrix-\/transpose-\/forward-\/substitution.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify forward substitution of the transpose of an upper triangle $\mathcal{H}$-\/matrix. The block cluster tree partition structure is fine non-\/tensor product. \end{DoxyCompactList}\item 
+file \hyperlink{hmatrix-transpose-forward-substitution-matrix-valued_8cc}{hmatrix-\/transpose-\/forward-\/substitution-\/matrix-\/valued.\+cc}
+\begin{DoxyCompactList}\small\item\em Verify matrix-\/valued forward substitution of the transpose of a upper triangular $\mathcal{H}$-\/matrix. \end{DoxyCompactList}\item 
 file \hyperlink{hmatrix-truncate-to-fixed-rank_8cc}{hmatrix-\/truncate-\/to-\/fixed-\/rank.\+cc}
 \begin{DoxyCompactList}\small\item\em Verify the truncation of an \hyperlink{classHMatrix}{H\+Matrix} to an \hyperlink{classRkMatrix}{Rk\+Matrix}. \end{DoxyCompactList}\item 
 file \hyperlink{hp-matrix_8cc}{hp-\/matrix.\+cc}

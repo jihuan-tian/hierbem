@@ -146,19 +146,20 @@ $(function() {
 
 <p>This header file contains a set of self-defined generic functors.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;deal.II/base/types.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;deal.II/base/exceptions.h&gt;</code><br />
+<code>#include &lt;deal.II/base/types.h&gt;</code><br />
+<code>#include &lt;deal.II/lac/lapack_support.h&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for generic_functors.h:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="generic__functors_8h__incl.svg" width="303" height="156"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="generic__functors_8h__incl.svg" width="640" height="171"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="generic__functors_8h__dep__incl.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-</div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="generic__functors_8h__dep__incl.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 </div>
 <p><a href="generic__functors_8h_source.html">Go to the source code of this file.</a></p>
@@ -170,6 +171,9 @@ Functions</h2></td></tr>
 <tr class="separator:ad741e5fc6f9f2d7acafe6e5530b1f52e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45ed12a09686ebca5400b5161a186c09"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="generic__functors_8h.html#a45ed12a09686ebca5400b5161a186c09">build_index_set_global_to_local_map</a> (const std::vector&lt; dealii::types::global_dof_index &gt; &amp;index_set_as_local_to_global_map, std::map&lt; dealii::types::global_dof_index, size_t &gt; &amp;global_to_local_map)</td></tr>
 <tr class="separator:a45ed12a09686ebca5400b5161a186c09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab23e18e8bbc85673ecd9d4c80b406973"><td class="memTemplParams" colspan="2">template&lt;typename VectorType &gt; </td></tr>
+<tr class="memitem:ab23e18e8bbc85673ecd9d4c80b406973"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="generic__functors_8h.html#ab23e18e8bbc85673ecd9d4c80b406973">permute_vector_by_ipiv</a> (VectorType &amp;v, const std::vector&lt; dealii::types::blas_int &gt; &amp;ipiv)</td></tr>
+<tr class="separator:ab23e18e8bbc85673ecd9d4c80b406973"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This header file contains a set of self-defined generic functors. </p>
@@ -209,7 +213,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p class="reference">Referenced by <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="generic__functors_8h.html#ad741e5fc6f9f2d7acafe6e5530b1f52e">find_pointer_data()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="lapack-matrix-agglomeration-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, and <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="hmatrix_8h.html#a13b0f4d71b52952d99ee7ecb0eb033cb">convertHMatBlockToRkMatrix()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, <a class="el" href="hmatrix_8h.html#acf140473681cc5ea3ab57fafdc986357">f_h_mTmult()</a>, <a class="el" href="generic__functors_8h.html#ad741e5fc6f9f2d7acafe6e5530b1f52e">find_pointer_data()</a>, <a class="el" href="hmatrix_8h.html#ae495fd6b480f203cf797e7e86e996313">h_f_mmult()</a>, <a class="el" href="hmatrix_8h.html#a8c5bc5080b3c7e065e70fdba10faae55">h_f_mTmult()</a>, <a class="el" href="hmatrix_8h.html#afee9050ba0b224929bcbf99484385a59">h_rk_mmult()</a>, <a class="el" href="hmatrix_8h.html#a4d0d61778a104b7e1452c3b9be60b5e4">h_rk_mTmult()</a>, <a class="el" href="hmatrix_8h.html#a317e4841d6bb5b60883a7e21027a8893">InitAndCreateHMatrixChildren()</a>, <a class="el" href="hmatrix_8h.html#a65e47eb35744c93b8955b6d564e5bf9a">InitAndCreateHMatrixChildrenWithoutAlloc()</a>, <a class="el" href="lapack-matrix-agglomeration-interwoven-indices_8cc.html#ae66f6b31b5ad750f1fe042a706a4e3d4">main()</a>, <a class="el" href="hmatrix_8h.html#a5d344d3d2c8db0c93690bf7cbd4a4459">rk_h_mmult()</a>, and <a class="el" href="hmatrix_8h.html#aca19ab9519b7b1aa1b9660dbfa8fe604">rk_h_mTmult()</a>.</p>
 
 </div>
 </div>
@@ -260,6 +264,46 @@ template&lt;typename InputIterator , typename T &gt; </div>
 <p class="reference">References <a class="el" href="generic__functors_8h.html#a45ed12a09686ebca5400b5161a186c09">build_index_set_global_to_local_map()</a>.</p>
 
 <p class="reference">Referenced by <a class="el" href="classHMatrix.html#a525ad4d453f4f496b98cccb341c8b60b">HMatrix&lt; spacedim, Number &gt;::coarsen_to_partition()</a>, and <a class="el" href="block__cluster__tree_8h.html#a3b2f90afbf0d192ac657f6fab5a87294">prune_to_partition_recursion()</a>.</p>
+
+</div>
+</div>
+<a id="ab23e18e8bbc85673ecd9d4c80b406973"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab23e18e8bbc85673ecd9d4c80b406973">&#9670;&nbsp;</a></span>permute_vector_by_ipiv()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename VectorType &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void permute_vector_by_ipiv </td>
+          <td>(</td>
+          <td class="paramtype">VectorType &amp;&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; dealii::types::blas_int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>ipiv</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Permute a vector according to the permutation vector <code>ipiv</code> obtained from an LU factorization.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">v</td><td></td></tr>
+    <tr><td class="paramname">ipiv</td><td>The vector storing the row permutation obtained from an LU factorization. <b>The row indices stored in <code>ipiv</code> starts from 1 instead of 0.</b> </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#a72a5ead3fac2a7c37a9d5a14a9d6b286">LAPACKFullMatrixExt&lt; Number &gt;::solve_by_forward_substitution()</a>.</p>
 
 </div>
 </div>

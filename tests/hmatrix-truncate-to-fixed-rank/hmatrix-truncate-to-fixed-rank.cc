@@ -1,6 +1,7 @@
 /**
  * \file hmatrix-truncate-to-fixed-rank.cc
- * \brief Verify the truncation of an HMatrix to an RkMatrix.
+ * \brief Verify the rank truncation of an \hmatrix.
+ *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-06-24
@@ -27,7 +28,7 @@ main()
   M.print_formatted_to_mat(std::cout, "M");
 
   /**
-   * Create an HMatrix of fixed rank 2 using the fine non-tensor product
+   * Create an \hmatrix of fixed rank 2 using the fine non-tensor product
    * partition. In practice, the rank may not be a constant but a block
    * dependent distribution or map.
    */
