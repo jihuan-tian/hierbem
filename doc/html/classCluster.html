@@ -147,6 +147,11 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="cluster_8h_source.html">cluster.h</a>&gt;</code></p>
 <div class="dynheader">
+Inheritance diagram for Cluster&lt; spacedim, Number &gt;:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classCluster__inherit__graph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+</div>
+<div class="dynheader">
 Collaboration diagram for Cluster&lt; spacedim, Number &gt;:</div>
 <div class="dyncontent">
 <div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classCluster__coll__graph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
@@ -293,7 +298,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::<a class="el" href="classCluster.html">Cluster</a> </td>
@@ -331,7 +336,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::<a class="el" href="classCluster.html">Cluster</a> </td>
@@ -375,7 +380,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::<a class="el" href="classCluster.html">Cluster</a> </td>
@@ -419,7 +424,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::<a class="el" href="classCluster.html">Cluster</a> </td>
@@ -469,7 +474,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::<a class="el" href="classCluster.html">Cluster</a> </td>
@@ -491,7 +496,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">Number <a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::calc_diameter </td>
@@ -506,7 +511,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <p>Calculate the number of point pairs in the cluster. Let \([0, 1, 2, 3, 4, 5]\) be the indices of support points in the cluster, whose pairwise inter-distance will be calculated. The calculation is only needed for the marked pairs of points as shown below.</p>
 <div class="fragment"><div class="line">  0 1 2 3 4 5</div><div class="line">0   - - - - -</div><div class="line">1     - - - -</div><div class="line">2       - - -</div><div class="line">3         - -</div><div class="line">4           -</div><div class="line">5</div></div><!-- fragment --><p>Therefore, the total number of effective point pairs is \(\frac{n^2 - n}{2}\).</p>
 
-<p class="reference">Referenced by <a class="el" href="classCluster.html#ab9900a870bdd05d4638b820716e03293">Cluster&lt; spacedim, Number &gt;::calc_diameter()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classCluster.html#ab9900a870bdd05d4638b820716e03293">Cluster&lt; spacedim, double &gt;::calc_diameter()</a>.</p>
 
 </div>
 </div>
@@ -516,7 +521,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">Number <a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::calc_diameter </td>
@@ -550,8 +555,6 @@ template&lt;int spacedim, typename Number &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="reference">References <a class="el" href="classCluster.html#a2204e6b5cf593d9e93a56f9269d74b4c">Cluster&lt; spacedim, Number &gt;::calc_diameter()</a>.</p>
-
 </div>
 </div>
 <a id="aba84e3743344f360ccdb855037e1b45e"></a>
@@ -560,7 +563,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">Number <a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::distance_to_cluster </td>
@@ -591,7 +594,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int spacedim, typename Number &gt; </div>
+template&lt;int spacedim, typename Number&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">Number <a class="el" href="classCluster.html">Cluster</a>&lt; spacedim, Number &gt;::distance_to_cluster </td>
@@ -639,6 +642,8 @@ template&lt;int spacedim, typename Number &gt; </div>
       </table>
 </div><div class="memdoc">
 <p>Get the reference to the bounding box. </p>
+
+<p class="reference">Referenced by <a class="el" href="classClusterTree.html#a6d3636b1686d72909611a6d516f5ee47">ClusterTree&lt; spacedim, double &gt;::partition_from_cluster_node()</a>.</p>
 
 </div>
 </div>
@@ -720,7 +725,7 @@ template&lt;int spacedim, typename Number &gt; </div>
 </div><div class="memdoc">
 <p>Get the reference to the index set. </p>
 
-<p class="reference">Referenced by <a class="el" href="group__hierarchical__matrices.html#gab6b0a51fb1b117f29902d220df72420a">calc_cluster_distance()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="group__hierarchical__matrices.html#gab6b0a51fb1b117f29902d220df72420a">calc_cluster_distance()</a>, and <a class="el" href="classClusterTree.html#a8b650f0c7cc83adbde5aad9556a57ac3">ClusterTree&lt; spacedim, double &gt;::partition_from_cluster_node()</a>.</p>
 
 </div>
 </div>
@@ -774,8 +779,6 @@ template&lt;int spacedim, typename Number &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="reference">References <a class="el" href="classCluster.html#a47961c1b0a34b58266aa3bd87fd36b32">Cluster&lt; spacedim, Number &gt;::intersect()</a>.</p>
-
 </div>
 </div>
 <a id="a47961c1b0a34b58266aa3bd87fd36b32"></a>
@@ -818,7 +821,7 @@ template&lt;int spacedim, typename Number &gt; </div>
   </dd>
 </dl>
 
-<p class="reference">Referenced by <a class="el" href="classCluster.html#ad70ce1f046bb3b47fff585eaf6ec4856">Cluster&lt; spacedim, Number &gt;::has_intersection()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classCluster.html#ad70ce1f046bb3b47fff585eaf6ec4856">Cluster&lt; spacedim, double &gt;::has_intersection()</a>.</p>
 
 </div>
 </div>
@@ -847,8 +850,6 @@ template&lt;int spacedim, typename Number &gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
-
-<p class="reference">References <a class="el" href="classCluster.html#a930aea4a53249004429d28f9631e495f">Cluster&lt; spacedim, Number &gt;::operator==</a>.</p>
 
 </div>
 </div>
@@ -1029,7 +1030,7 @@ template&lt;int spacedim1, typename Number1 &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="reference">Referenced by <a class="el" href="classCluster.html#a55c608dd38d185c394e516d106fea02a">Cluster&lt; spacedim, Number &gt;::is_large()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classCluster.html#a55c608dd38d185c394e516d106fea02a">Cluster&lt; spacedim, double &gt;::is_large()</a>.</p>
 
 </div>
 </div>

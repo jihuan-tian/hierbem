@@ -24,9 +24,9 @@ SET(TARGET_SRC
 DEAL_II_INVOKE_AUTOPILOT()
 
 # Add my own library which includes a series of generic tools.
-ADD_LIBRARY(generic_tools generic_functors.cc)
+ADD_LIBRARY(generic_tools generic_functors.cc sauter_quadrature.cc)
 # Because my library generic_tools has included deal.ii header files,
-# dependent inlucde paths and library paths need to be imported by
+# dependent include paths and library paths need to be imported by
 # calling this macro DEAL_II_SETUP_TARGET.
 DEAL_II_SETUP_TARGET(generic_tools)
 

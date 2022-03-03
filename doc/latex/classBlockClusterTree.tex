@@ -11,6 +11,15 @@ Class for block cluster tree.
 
 
 
+Inheritance diagram for Block\+Cluster\+Tree$<$ spacedim, Number $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classBlockClusterTree__inherit__graph}
+\end{center}
+\end{figure}
+
+
 Collaboration diagram for Block\+Cluster\+Tree$<$ spacedim, Number $>$\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
@@ -249,7 +258,7 @@ Default constructor, which initializes an empty quad-\/tree. \mbox{\Hypertarget{
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Block\+Cluster\+Tree()}{BlockClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [2/8]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} (\begin{DoxyParamCaption}\item[{const \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{TI,  }\item[{const \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{TJ,  }\item[{const unsigned int}]{n\+\_\+min = {\ttfamily 0} }\end{DoxyParamCaption})}
 
 Construct from two cluster trees built from pure cardinality based partition, which has no admissibility condition.
@@ -265,15 +274,11 @@ After construction, there is only one node in the block cluster tree, i.\+e. tre
 {\em n\+\_\+min} & \\
 \hline
 \end{DoxyParams}
-
-
-References Create\+Tree\+Node(), Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+n\+\_\+min(), and Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root().
-
 \mbox{\Hypertarget{classBlockClusterTree_a3073c9b5669e356c9c37ccd0a13ed8b3}\label{classBlockClusterTree_a3073c9b5669e356c9c37ccd0a13ed8b3}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Block\+Cluster\+Tree()}{BlockClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [3/8]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} (\begin{DoxyParamCaption}\item[{typename \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classTreeNode}{node\+\_\+pointer\+\_\+type}}]{tau\+\_\+root\+\_\+node,  }\item[{typename \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classTreeNode}{node\+\_\+pointer\+\_\+type}}]{sigma\+\_\+root\+\_\+node,  }\item[{const unsigned int}]{n\+\_\+min = {\ttfamily 1} }\end{DoxyParamCaption})}
 
 Construct from two cluster nodes, whose Cartesian product is the root node of the block cluster tree.
@@ -287,15 +292,11 @@ After construction, there is only one node in the block cluster tree, i.\+e. tre
 {\em sigma\+\_\+root\+\_\+node} & \\
 \hline
 \end{DoxyParams}
-
-
-References Create\+Tree\+Node().
-
 \mbox{\Hypertarget{classBlockClusterTree_ace6087e8fe7dc3d737ff6b4cd97070fc}\label{classBlockClusterTree_ace6087e8fe7dc3d737ff6b4cd97070fc}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Block\+Cluster\+Tree()}{BlockClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [4/8]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} (\begin{DoxyParamCaption}\item[{\hyperlink{classTreeNode}{node\+\_\+pointer\+\_\+type}}]{bc\+\_\+node,  }\item[{const unsigned int}]{n\+\_\+min }\end{DoxyParamCaption})}
 
 Construct a block cluster subtree by initializing from a block cluster node.
@@ -309,15 +310,11 @@ The constructed block cluster subtree simply takes over an existing block cluste
 {\em n\+\_\+min} & \\
 \hline
 \end{DoxyParams}
-
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), Count\+Tree\+Nodes(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
 \mbox{\Hypertarget{classBlockClusterTree_a522ad51298f5b58b948e435a9e2d2a40}\label{classBlockClusterTree_a522ad51298f5b58b948e435a9e2d2a40}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Block\+Cluster\+Tree()}{BlockClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [5/8]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} (\begin{DoxyParamCaption}\item[{\hyperlink{classTreeNode}{node\+\_\+pointer\+\_\+type}}]{bc\+\_\+node,  }\item[{const Number}]{eta,  }\item[{const unsigned int}]{n\+\_\+min }\end{DoxyParamCaption})}
 
 Construct a block cluster subtree by initializing from a block cluster node. This version has the admissibility condition.
@@ -329,30 +326,22 @@ The constructed block cluster subtree simply takes over an existing block cluste
 {\em bc\+\_\+node} & \\
 \hline
 \end{DoxyParams}
-
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), Count\+Tree\+Nodes(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
 \mbox{\Hypertarget{classBlockClusterTree_aefb93288ece0e153eb5843d1df21a2a6}\label{classBlockClusterTree_aefb93288ece0e153eb5843d1df21a2a6}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Block\+Cluster\+Tree()}{BlockClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [6/8]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} (\begin{DoxyParamCaption}\item[{const \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{TI,  }\item[{const \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{TJ,  }\item[{const Number}]{eta,  }\item[{const unsigned int}]{n\+\_\+min }\end{DoxyParamCaption})}
 
 Construct from two cluster trees and admissibility condition.
 
 The Cartesian product of the two clusters in the root nodes of $T(I)$ and $T(J)$ becomes the data in the root node of the block cluster tree.
 
-After construction, there is only one node in the block cluster tree, i.\+e. tree hierarchy is not built. 
-
-References Create\+Tree\+Node(), Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+n\+\_\+min(), and Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root().
-
-\mbox{\Hypertarget{classBlockClusterTree_a1c31aecfd91383f8b96601fd2b63dd62}\label{classBlockClusterTree_a1c31aecfd91383f8b96601fd2b63dd62}} 
+After construction, there is only one node in the block cluster tree, i.\+e. tree hierarchy is not built. \mbox{\Hypertarget{classBlockClusterTree_a1c31aecfd91383f8b96601fd2b63dd62}\label{classBlockClusterTree_a1c31aecfd91383f8b96601fd2b63dd62}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Block\+Cluster\+Tree()}{BlockClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [7/8]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct }\end{DoxyParamCaption})}
 
 Copy constructor for {\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}}, which realizes deep copy internally.
@@ -367,15 +356,11 @@ Copy constructor for {\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster
 {\em bct} & \\
 \hline
 \end{DoxyParams}
-
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), Copy\+Tree(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root().
-
 \mbox{\Hypertarget{classBlockClusterTree_ae3bb67cdcb7868237063c8003d4079ab}\label{classBlockClusterTree_ae3bb67cdcb7868237063c8003d4079ab}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Block\+Cluster\+Tree()}{BlockClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [8/8]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} (\begin{DoxyParamCaption}\item[{\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&\&}]{bct }\end{DoxyParamCaption})}
 
 Copy constructor via shallow copy.
@@ -393,10 +378,6 @@ Copy constructor via shallow copy.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=().
-
 \mbox{\Hypertarget{classBlockClusterTree_a43b969867200b06f3416647c3e4f9f61}\label{classBlockClusterTree_a43b969867200b06f3416647c3e4f9f61}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!````~Block\+Cluster\+Tree@{$\sim$\+Block\+Cluster\+Tree}}
 \index{````~Block\+Cluster\+Tree@{$\sim$\+Block\+Cluster\+Tree}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
@@ -405,10 +386,6 @@ References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=().
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::$\sim$\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
 Destructor which recursively destroys every node in the block cluster tree. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::is\+\_\+subtree, and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::release().
-
-
 
 \subsection{Member Function Documentation}
 \mbox{\Hypertarget{classBlockClusterTree_a1b3396fbedf6ec07cce9c23a62b2c30b}\label{classBlockClusterTree_a1b3396fbedf6ec07cce9c23a62b2c30b}} 
@@ -420,11 +397,7 @@ void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number
 
 Build the leaf set by tree recursion. 
 
-References Get\+Tree\+Leaves().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+to\+\_\+partition().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::\+Block\+Cluster\+Tree(), Block\+Cluster\+Tree$<$ 3 $>$\+::operator=(), and Block\+Cluster\+Tree$<$ 3 $>$\+::prune\+\_\+to\+\_\+partition().
 
 \mbox{\Hypertarget{classBlockClusterTree_a7f9dbea25751771830c72d09efacacb2}\label{classBlockClusterTree_a7f9dbea25751771830c72d09efacacb2}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level@{calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level}}
@@ -435,11 +408,7 @@ void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number
 
 Calculate the depth. 
 
-References calc\+\_\+depth(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::depth, and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level.
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+to\+\_\+partition().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::\+Block\+Cluster\+Tree(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+tensor\+\_\+product(), and Block\+Cluster\+Tree$<$ 3 $>$\+::prune\+\_\+to\+\_\+partition().
 
 \mbox{\Hypertarget{classBlockClusterTree_a286bd48cc863cbba7c9ad53b6bdb12ca}\label{classBlockClusterTree_a286bd48cc863cbba7c9ad53b6bdb12ca}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets@{categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets}}
@@ -450,7 +419,7 @@ void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number
 
 Categorize the leaf set into near field set and far field set. 
 
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+to\+\_\+partition().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::\+Block\+Cluster\+Tree(), Block\+Cluster\+Tree$<$ 3 $>$\+::operator=(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+tensor\+\_\+product(), and Block\+Cluster\+Tree$<$ 3 $>$\+::prune\+\_\+to\+\_\+partition().
 
 \mbox{\Hypertarget{classBlockClusterTree_ab4227d666cd2872fbbfb4eec69e66313}\label{classBlockClusterTree_ab4227d666cd2872fbbfb4eec69e66313}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!clear@{clear}}
@@ -461,11 +430,7 @@ void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number
 
 Clear the data field of the block cluster tree because its memory has been migrated to another object via shallow copy. 
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::is\+\_\+subtree, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::release(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::$\sim$\+Block\+Cluster\+Tree().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::operator=(), Block\+Cluster\+Tree$<$ 3 $>$\+::release(), and Block\+Cluster\+Tree$<$ 3 $>$\+::$\sim$\+Block\+Cluster\+Tree().
 
 \mbox{\Hypertarget{classBlockClusterTree_ae0e55e3ac56bffa31f251d4f07ae7e51}\label{classBlockClusterTree_ae0e55e3ac56bffa31f251d4f07ae7e51}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!decrease\+\_\+node\+\_\+num@{decrease\+\_\+node\+\_\+num}}
@@ -476,11 +441,7 @@ unsigned int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim
 
 Decrease the total number of nodes in the tree. 
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+descendants\+\_\+from\+\_\+node().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::prune\+\_\+descendants\+\_\+from\+\_\+node().
 
 \mbox{\Hypertarget{classBlockClusterTree_a3c4a4da89b964559cc02ecbf13ad4a4b}\label{classBlockClusterTree_a3c4a4da89b964559cc02ecbf13ad4a4b}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!extend\+\_\+finer\+\_\+than\+\_\+partition@{extend\+\_\+finer\+\_\+than\+\_\+partition}}
@@ -528,10 +489,6 @@ Update the maximum level and depth of the current tree if necessary.
 
 After block cluster tree extension, re-\/categorize the near field set and far field set based on the new leaf set. N.\+B. The value of {\ttfamily n\+\_\+min} and {\ttfamily eta} does not change. Meanwhile, {\ttfamily depth} and {\ttfamily max\+\_\+level} have been updated during previous procedures.
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::find\+\_\+leaf\+\_\+bc\+\_\+node\+\_\+not\+\_\+subset\+\_\+of\+\_\+bc\+\_\+nodes\+\_\+in\+\_\+partition(), and Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+reference().
-
-
-
 Referenced by H\+Matrix$<$ spacedim, Number $>$\+::convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees(), and main().
 
 \mbox{\Hypertarget{classBlockClusterTree_adfe18d32a3c05a9209a5cdc9270b47d7}\label{classBlockClusterTree_adfe18d32a3c05a9209a5cdc9270b47d7}} 
@@ -572,10 +529,6 @@ Update the maximum level and depth of the current tree if necessary.
 
 After block cluster tree extension, re-\/categorize the near field set and far field set based on the new leaf set. N.\+B. The value of {\ttfamily n\+\_\+min} and {\ttfamily eta} does not change. Meanwhile, {\ttfamily depth} and {\ttfamily max\+\_\+level} have been updated during previous procedures.
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::find\+\_\+leaf\+\_\+bc\+\_\+node\+\_\+not\+\_\+in\+\_\+partition(), and Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+reference().
-
-
-
 Referenced by H\+Matrix$<$ spacedim, Number $>$\+::convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees(), and main().
 
 \mbox{\Hypertarget{classBlockClusterTree_a4782e1e817b6e6265bff43baf2b1dbaa}\label{classBlockClusterTree_a4782e1e817b6e6265bff43baf2b1dbaa}} 
@@ -610,11 +563,7 @@ Here the desired block cluster node in the leaf set is found. Then exist the out
 
 \end{DoxyDescription}
 
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+reference(), and is\+\_\+equal().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::extend\+\_\+to\+\_\+finer\+\_\+partition().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::extend\+\_\+to\+\_\+finer\+\_\+partition().
 
 \mbox{\Hypertarget{classBlockClusterTree_a97a99684ebd9ed470a79e56b73374068}\label{classBlockClusterTree_a97a99684ebd9ed470a79e56b73374068}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!find\+\_\+leaf\+\_\+bc\+\_\+node\+\_\+not\+\_\+subset\+\_\+of\+\_\+bc\+\_\+nodes\+\_\+in\+\_\+partition@{find\+\_\+leaf\+\_\+bc\+\_\+node\+\_\+not\+\_\+subset\+\_\+of\+\_\+bc\+\_\+nodes\+\_\+in\+\_\+partition}}
@@ -648,11 +597,7 @@ Here the desired block cluster node in the leaf set is found. Then exist the out
 
 \end{DoxyDescription}
 
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+reference().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::extend\+\_\+finer\+\_\+than\+\_\+partition().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::extend\+\_\+finer\+\_\+than\+\_\+partition().
 
 \mbox{\Hypertarget{classBlockClusterTree_ab6c57acfcc5dfbbef04f028e6b9c749d}\label{classBlockClusterTree_ab6c57acfcc5dfbbef04f028e6b9c749d}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!get\+\_\+depth@{get\+\_\+depth}}
@@ -661,11 +606,7 @@ Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::extend\+\_\+finer\
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 unsigned int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::get\+\_\+depth (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-Get the tree depth. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::depth.
-
-\mbox{\Hypertarget{classBlockClusterTree_a312d01ddb6cf5560d84abf7d254fa2c3}\label{classBlockClusterTree_a312d01ddb6cf5560d84abf7d254fa2c3}} 
+Get the tree depth. \mbox{\Hypertarget{classBlockClusterTree_a312d01ddb6cf5560d84abf7d254fa2c3}\label{classBlockClusterTree_a312d01ddb6cf5560d84abf7d254fa2c3}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!get\+\_\+eta@{get\+\_\+eta}}
 \index{get\+\_\+eta@{get\+\_\+eta}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{get\+\_\+eta()}{get\_eta()}}
@@ -714,11 +655,7 @@ Get the reference to the block cluster list (const version). \mbox{\Hypertarget{
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::get\+\_\+max\+\_\+level (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-Get the maximum level of the tree. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level.
-
-\mbox{\Hypertarget{classBlockClusterTree_ab00acda5e8fd4c3e381637d8d9322923}\label{classBlockClusterTree_ab00acda5e8fd4c3e381637d8d9322923}} 
+Get the maximum level of the tree. \mbox{\Hypertarget{classBlockClusterTree_ab00acda5e8fd4c3e381637d8d9322923}\label{classBlockClusterTree_ab00acda5e8fd4c3e381637d8d9322923}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!get\+\_\+n\+\_\+min@{get\+\_\+n\+\_\+min}}
 \index{get\+\_\+n\+\_\+min@{get\+\_\+n\+\_\+min}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{get\+\_\+n\+\_\+min()}{get\_n\_min()}}
@@ -750,11 +687,7 @@ Get the reference to the block cluster list which belongs to the near field (con
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 unsigned int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::get\+\_\+node\+\_\+num (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-Get the total number of clusters in the tree. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
-\mbox{\Hypertarget{classBlockClusterTree_a4a4f3b893380d1d7f53b772589a847d2}\label{classBlockClusterTree_a4a4f3b893380d1d7f53b772589a847d2}} 
+Get the total number of clusters in the tree. \mbox{\Hypertarget{classBlockClusterTree_a4a4f3b893380d1d7f53b772589a847d2}\label{classBlockClusterTree_a4a4f3b893380d1d7f53b772589a847d2}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!get\+\_\+root@{get\+\_\+root}}
 \index{get\+\_\+root@{get\+\_\+root}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{get\+\_\+root()}{get\_root()}}
@@ -766,11 +699,7 @@ Get the pointer to the root node of the block cluster tree. \begin{DoxyReturn}{R
 \end{DoxyReturn}
 
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::\+H\+Matrix(), main(), H\+Matrix$<$ spacedim, Number $>$\+::mmult(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and H\+Matrix$<$ spacedim, Number $>$\+::reinit().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::\+Block\+Cluster\+Tree(), H\+Matrix$<$ spacedim, Number $>$\+::\+H\+Matrix(), main(), H\+Matrix$<$ spacedim, Number $>$\+::mmult(), Block\+Cluster\+Tree$<$ 3 $>$\+::operator=(), and H\+Matrix$<$ spacedim, Number $>$\+::reinit().
 
 \mbox{\Hypertarget{classBlockClusterTree_aec9920e5b215fbfe2aa9f54980d3b30a}\label{classBlockClusterTree_aec9920e5b215fbfe2aa9f54980d3b30a}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!increase\+\_\+node\+\_\+num@{increase\+\_\+node\+\_\+num}}
@@ -779,15 +708,11 @@ Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 unsigned int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::increase\+\_\+node\+\_\+num (\begin{DoxyParamCaption}\item[{unsigned int}]{increased\+\_\+node\+\_\+num = {\ttfamily 1} }\end{DoxyParamCaption})}
 
-Increase the total number of nodes in the tree. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
-\mbox{\Hypertarget{classBlockClusterTree_a85553cc442e419b8d707720312118328}\label{classBlockClusterTree_a85553cc442e419b8d707720312118328}} 
+Increase the total number of nodes in the tree. \mbox{\Hypertarget{classBlockClusterTree_a85553cc442e419b8d707720312118328}\label{classBlockClusterTree_a85553cc442e419b8d707720312118328}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!operator=@{operator=}}
 \index{operator=@{operator=}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \& \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::operator= (\begin{DoxyParamCaption}\item[{const \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{bct }\end{DoxyParamCaption})}
 
 Overloaded assignment operator with deep copy. 
@@ -800,17 +725,13 @@ Overloaded assignment operator with deep copy.
 \end{DoxyReturn}
 If the current block cluster tree is a subtree of an existing block cluster tree, clear its data members instead of releasing their memory.
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), Copy\+Tree(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::is\+\_\+subtree, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num, and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::release().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::\+Block\+Cluster\+Tree(), and Block\+Cluster\+Tree$<$ 3 $>$\+::operator=().
 
 \mbox{\Hypertarget{classBlockClusterTree_aa635be81dfabed3ba455a17de3b65c2e}\label{classBlockClusterTree_aa635be81dfabed3ba455a17de3b65c2e}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!operator=@{operator=}}
 \index{operator=@{operator=}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \& \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::operator= (\begin{DoxyParamCaption}\item[{\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$ \&\&}]{bct }\end{DoxyParamCaption})}
 
 Overloaded assignment operator with shallow copy. 
@@ -821,10 +742,6 @@ Overloaded assignment operator with shallow copy.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::is\+\_\+subtree, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num, and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::release().
-
 \mbox{\Hypertarget{classBlockClusterTree_a3ca42421f732c20fc07bdf5d5ab94319}\label{classBlockClusterTree_a3ca42421f732c20fc07bdf5d5ab94319}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition@{partition}}
 \index{partition@{partition}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
@@ -841,17 +758,13 @@ Perform a recursive partition by starting from the root node. The evaluation of 
 \end{DoxyParams}
 
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
-
-
-
-Referenced by find\+\_\+bc\+\_\+node\+\_\+in\+\_\+partition\+\_\+intersect\+\_\+current\+\_\+bc\+\_\+node(), main(), and prune\+\_\+to\+\_\+partition\+\_\+recursion().
+Referenced by Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::build\+\_\+slp\+\_\+only(), find\+\_\+bc\+\_\+node\+\_\+in\+\_\+partition\+\_\+intersect\+\_\+current\+\_\+bc\+\_\+node(), main(), and prune\+\_\+to\+\_\+partition\+\_\+recursion().
 
 \mbox{\Hypertarget{classBlockClusterTree_a075983197c805c6451aa00502dc30e76}\label{classBlockClusterTree_a075983197c805c6451aa00502dc30e76}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition@{partition}}
 \index{partition@{partition}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{partition()}{partition()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::partition (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs }\end{DoxyParamCaption})}
 
 Perform a recursive partition by starting from the root node. The evaluation of the admissibility condition has mesh cell size correction.
@@ -861,10 +774,6 @@ Perform a recursive partition by starting from the root node. The evaluation of 
 {\em all\+\_\+support\+\_\+points} & All the support points. \\
 \hline
 \end{DoxyParams}
-
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
-
 \mbox{\Hypertarget{classBlockClusterTree_a0e40b3884535eae57d00c078ec782459}\label{classBlockClusterTree_a0e40b3884535eae57d00c078ec782459}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product@{partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product}}
 \index{partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product@{partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
@@ -873,10 +782,6 @@ References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+
 void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
 Perform a recursive partition in coarse non-\/tensor product form without the admissibility condition because the two comprising cluster trees are built from pure cardinality based partition. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
-
-
 
 Referenced by main().
 
@@ -921,11 +826,7 @@ Make sure the current block cluster have four children, which is ensured by the 
 
 Set the split mode of the current block cluster node as cross.
 
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer(), and Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product().
 
 \mbox{\Hypertarget{classBlockClusterTree_ac6d23af20c52c7b32eb080bd54556206}\label{classBlockClusterTree_ac6d23af20c52c7b32eb080bd54556206}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product@{partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product}}
@@ -935,10 +836,6 @@ Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+coa
 void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
 Perform a recursive partition in fine non-\/tensor product form without the admissibility condition because the two comprising cluster trees are built from pure cardinality based partition. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
-
-
 
 Referenced by main().
 
@@ -991,11 +888,7 @@ Make sure the current block cluster have four children, which is ensured by the 
 \item[Note ]{\bfseries The second argument {\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$spacedim}, Number$>$\+::child\+\_\+num should be wrapped between the brackets, otherwise, the program cannot be compiled.} 
 \end{DoxyDescription}
 
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer(), and Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product().
 
 \mbox{\Hypertarget{classBlockClusterTree_aafad0fae48bf7c462e8e943b76893fc0}\label{classBlockClusterTree_aafad0fae48bf7c462e8e943b76893fc0}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+N@{partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+N}}
@@ -1036,11 +929,7 @@ Make sure the current block cluster have four children, which is ensured by the 
 \item[Note ]The second argument {\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$spacedim}, Number$>$\+::child\+\_\+num should be wrapped between the brackets, otherwise, the program cannot be compiled. 
 \end{DoxyDescription}
 
-Set the split mode of the current block cluster node as cross.
-
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer(), and Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
-
-\mbox{\Hypertarget{classBlockClusterTree_afdeb6723e01b5eaf11281e2c1c1cf566}\label{classBlockClusterTree_afdeb6723e01b5eaf11281e2c1c1cf566}} 
+Set the split mode of the current block cluster node as cross.\mbox{\Hypertarget{classBlockClusterTree_afdeb6723e01b5eaf11281e2c1c1cf566}\label{classBlockClusterTree_afdeb6723e01b5eaf11281e2c1c1cf566}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+Nstar@{partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+Nstar}}
 \index{partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+Nstar@{partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+Nstar}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+Nstar()}{partition\_fine\_non\_tensor\_product\_from\_block\_cluster\_node\_Nstar()}}
@@ -1079,11 +968,7 @@ Make sure the current block cluster have four children, which is ensured by the 
 \item[Note ]The second argument {\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$spacedim}, Number$>$\+::child\+\_\+num should be wrapped between the brackets, otherwise, the program cannot be compiled. 
 \end{DoxyDescription}
 
-Set the split mode of the current block cluster node as cross.
-
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer(), and Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
-
-\mbox{\Hypertarget{classBlockClusterTree_ad11fb277e43c33f2a399dc6b1c14b998}\label{classBlockClusterTree_ad11fb277e43c33f2a399dc6b1c14b998}} 
+Set the split mode of the current block cluster node as cross.\mbox{\Hypertarget{classBlockClusterTree_ad11fb277e43c33f2a399dc6b1c14b998}\label{classBlockClusterTree_ad11fb277e43c33f2a399dc6b1c14b998}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node}}
 \index{partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node()}{partition\_from\_block\_cluster\_node()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
@@ -1126,17 +1011,13 @@ Make sure the current block cluster have four children, which is ensured by the 
 
 Set the split mode of the current block cluster node as cross.
 
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer(), and Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::partition().
 
 \mbox{\Hypertarget{classBlockClusterTree_a425583a70d63ddbf9341a31b736bd0fe}\label{classBlockClusterTree_a425583a70d63ddbf9341a31b736bd0fe}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node}}
 \index{partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node()}{partition\_from\_block\_cluster\_node()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node (\begin{DoxyParamCaption}\item[{\hyperlink{classTreeNode}{node\+\_\+pointer\+\_\+type}}]{current\+\_\+block\+\_\+cluster\+\_\+node,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs,  }\item[{std\+::vector$<$ \hyperlink{classTreeNode}{node\+\_\+pointer\+\_\+type} $>$ \&}]{leaf\+\_\+set\+\_\+wrt\+\_\+current\+\_\+node }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
 
 Same as above but the evaluation of the admissibility condition has mesh cell size correction. Push back the current cluster node, which is small, to the leaf set and set its split mode as {\ttfamily Unsplit\+Mode}.
@@ -1156,11 +1037,7 @@ Make sure the current block cluster have four children, which is ensured by the 
 \item[Note ]The second argument {\ttfamily \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$spacedim}, Number$>$\+::child\+\_\+num should be wrapped between the brackets, otherwise, the program cannot be compiled. 
 \end{DoxyDescription}
 
-Set the split mode of the current block cluster node as cross.
-
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer(), and Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
-
-\mbox{\Hypertarget{classBlockClusterTree_ab10f54639969bc4aacd6aa27cf315610}\label{classBlockClusterTree_ab10f54639969bc4aacd6aa27cf315610}} 
+Set the split mode of the current block cluster node as cross.\mbox{\Hypertarget{classBlockClusterTree_ab10f54639969bc4aacd6aa27cf315610}\label{classBlockClusterTree_ab10f54639969bc4aacd6aa27cf315610}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!partition\+\_\+tensor\+\_\+product@{partition\+\_\+tensor\+\_\+product}}
 \index{partition\+\_\+tensor\+\_\+product@{partition\+\_\+tensor\+\_\+product}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{partition\+\_\+tensor\+\_\+product()}{partition\_tensor\_product()}}
@@ -1168,10 +1045,6 @@ References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer(), and Tree\+Nod
 void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
 Perform a recursive partition in tensor product form without the admissibility condition because the two comprising cluster trees are built from pure cardinality based partition. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
-
-
 
 Referenced by main().
 
@@ -1210,11 +1083,7 @@ Make sure the current block cluster have four children, which is ensured by the 
 
 Set the split mode of the current block cluster node as cross.
 
-References Tree\+Node$<$ T, N $>$\+::get\+\_\+data\+\_\+pointer(), and Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+tensor\+\_\+product().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::get\+\_\+root(), and Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+tensor\+\_\+product().
 
 \mbox{\Hypertarget{classBlockClusterTree_a6fd771b68a4c7195151f6dc02e8ec7e9}\label{classBlockClusterTree_a6fd771b68a4c7195151f6dc02e8ec7e9}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!prune\+\_\+descendants\+\_\+from\+\_\+node@{prune\+\_\+descendants\+\_\+from\+\_\+node}}
@@ -1235,11 +1104,7 @@ Delete the subtree emanating from each child node of the current block cluster n
 
 Update the block cluster node status including number of children and split mode.
 
-References Count\+Tree\+Nodes(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::decrease\+\_\+node\+\_\+num(), Delete\+Tree(), Tree\+Node$<$ T, N $>$\+::get\+\_\+child\+\_\+num(), Tree\+Node$<$ T, N $>$\+::get\+\_\+child\+\_\+pointer(), Tree\+Node$<$ T, N $>$\+::set\+\_\+child\+\_\+num(), Tree\+Node$<$ T, N $>$\+::set\+\_\+child\+\_\+pointer(), and Tree\+Node$<$ T, N $>$\+::set\+\_\+split\+\_\+mode().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+to\+\_\+partition(), and prune\+\_\+to\+\_\+partition\+\_\+recursion().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::prune\+\_\+to\+\_\+partition(), and prune\+\_\+to\+\_\+partition\+\_\+recursion().
 
 \mbox{\Hypertarget{classBlockClusterTree_af1663a109b6fd5c67c85e9bb88a54a13}\label{classBlockClusterTree_af1663a109b6fd5c67c85e9bb88a54a13}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!prune\+\_\+to\+\_\+partition@{prune\+\_\+to\+\_\+partition}}
@@ -1259,10 +1124,6 @@ Prune all those block cluster nodes which are descendants of the block cluster n
 \end{DoxyParams}
 If the block cluster nodes in the given {\ttfamily partition} are contained in this block cluster tree, we directly prune their descendants.
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::categorize\+\_\+near\+\_\+and\+\_\+far\+\_\+field\+\_\+sets(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::prune\+\_\+descendants\+\_\+from\+\_\+node().
-
-
-
 Referenced by H\+Matrix$<$ spacedim, Number $>$\+::convert\+\_\+between\+\_\+different\+\_\+block\+\_\+cluster\+\_\+trees().
 
 \mbox{\Hypertarget{classBlockClusterTree_a0415fe94fd480bbb985a45dc691e2bed}\label{classBlockClusterTree_a0415fe94fd480bbb985a45dc691e2bed}} 
@@ -1274,11 +1135,7 @@ void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number
 
 Release the memory of the block cluster tree. 
 
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), and Delete\+Tree().
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::$\sim$\+Block\+Cluster\+Tree().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::operator=(), and Block\+Cluster\+Tree$<$ 3 $>$\+::$\sim$\+Block\+Cluster\+Tree().
 
 \mbox{\Hypertarget{classBlockClusterTree_a02be4a882acca918386ad024769925bc}\label{classBlockClusterTree_a02be4a882acca918386ad024769925bc}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!set\+\_\+node\+\_\+num@{set\+\_\+node\+\_\+num}}
@@ -1287,11 +1144,7 @@ Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and B
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 void \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number $>$\+::set\+\_\+node\+\_\+num (\begin{DoxyParamCaption}\item[{unsigned int}]{node\+\_\+num }\end{DoxyParamCaption})}
 
-Set the total number of nodes in the tree. 
-
-References Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
-\mbox{\Hypertarget{classBlockClusterTree_aef01b51b0530536bc5481492d4719375}\label{classBlockClusterTree_aef01b51b0530536bc5481492d4719375}} 
+Set the total number of nodes in the tree. \mbox{\Hypertarget{classBlockClusterTree_aef01b51b0530536bc5481492d4719375}\label{classBlockClusterTree_aef01b51b0530536bc5481492d4719375}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!write\+\_\+leaf\+\_\+set@{write\+\_\+leaf\+\_\+set}}
 \index{write\+\_\+leaf\+\_\+set@{write\+\_\+leaf\+\_\+set}!Block\+Cluster\+Tree@{Block\+Cluster\+Tree}}
 \subsubsection{\texorpdfstring{write\+\_\+leaf\+\_\+set()}{write\_leaf\_set()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
@@ -1402,7 +1255,7 @@ unsigned int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim
 
 Depth of the tree, which is the maximum level plus one. 
 
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+depth(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ 3 $>$\+::clear(), Block\+Cluster\+Tree$<$ 3 $>$\+::get\+\_\+depth(), and Block\+Cluster\+Tree$<$ 3 $>$\+::operator=().
 
 \mbox{\Hypertarget{classBlockClusterTree_a8dc01af98989bb71246fa2cd4d7307da}\label{classBlockClusterTree_a8dc01af98989bb71246fa2cd4d7307da}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!is\+\_\+subtree@{is\+\_\+subtree}}
@@ -1413,7 +1266,7 @@ bool \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number
 
 Whether the current block cluster tree is a subtree of an existing tree. 
 
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::$\sim$\+Block\+Cluster\+Tree().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::clear(), Block\+Cluster\+Tree$<$ 3 $>$\+::operator=(), and Block\+Cluster\+Tree$<$ 3 $>$\+::$\sim$\+Block\+Cluster\+Tree().
 
 \mbox{\Hypertarget{classBlockClusterTree_a9151f138713d01c53ac17f004c7e6b62}\label{classBlockClusterTree_a9151f138713d01c53ac17f004c7e6b62}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!max\+\_\+level@{max\+\_\+level}}
@@ -1424,7 +1277,7 @@ int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim, Number 
 
 Maximum node level in the tree, which is {\ttfamily depth} -\/ 1. 
 
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+max\+\_\+level(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::calc\+\_\+depth\+\_\+and\+\_\+max\+\_\+level(), Block\+Cluster\+Tree$<$ 3 $>$\+::clear(), Block\+Cluster\+Tree$<$ 3 $>$\+::get\+\_\+max\+\_\+level(), and Block\+Cluster\+Tree$<$ 3 $>$\+::operator=().
 
 \mbox{\Hypertarget{classBlockClusterTree_a75757146cea0aa0e9271b760b1d76307}\label{classBlockClusterTree_a75757146cea0aa0e9271b760b1d76307}} 
 \index{Block\+Cluster\+Tree@{Block\+Cluster\+Tree}!node\+\_\+num@{node\+\_\+num}}
@@ -1435,7 +1288,7 @@ unsigned int \hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ spacedim
 
 Total number of block clusters in the tree. 
 
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::clear(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::decrease\+\_\+node\+\_\+num(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+node\+\_\+num(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::increase\+\_\+node\+\_\+num(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::operator=(), and Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::set\+\_\+node\+\_\+num().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::\+Block\+Cluster\+Tree(), Block\+Cluster\+Tree$<$ 3 $>$\+::clear(), Block\+Cluster\+Tree$<$ 3 $>$\+::decrease\+\_\+node\+\_\+num(), Block\+Cluster\+Tree$<$ 3 $>$\+::get\+\_\+node\+\_\+num(), Block\+Cluster\+Tree$<$ 3 $>$\+::increase\+\_\+node\+\_\+num(), Block\+Cluster\+Tree$<$ 3 $>$\+::operator=(), and Block\+Cluster\+Tree$<$ 3 $>$\+::set\+\_\+node\+\_\+num().
 
 
 

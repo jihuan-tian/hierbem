@@ -8,9 +8,9 @@
  viewBox="0.00 0.00 181.00 699.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 695)">
 <title>TreeNode&lt; T, N &gt;</title>
-<!-- Node2 -->
+<!-- Node3 -->
 <g id="node1" class="node">
-<title>Node2</title>
+<title>Node3</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-.5 0,-585.5 121,-585.5 121,-.5 0,-.5"/>
 <text text-anchor="middle" x="60.5" y="-573.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">TreeNode&lt; T, N &gt;</text>
 <polyline fill="none" stroke="#000000" points="0,-566.5 121,-566.5 "/>
@@ -66,16 +66,16 @@
 <text text-anchor="start" x="8" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">* set_split_mode()</text>
 <text text-anchor="start" x="8" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">* operator==()</text>
 </g>
-<!-- Node2&#45;&gt;Node2 -->
+<!-- Node3&#45;&gt;Node3 -->
 <g id="edge1" class="edge">
-<title>Node2&#45;&gt;Node2</title>
+<title>Node3&#45;&gt;Node3</title>
 <path fill="none" stroke="#404040" d="M121.0615,-348.5469C131.6406,-341.1406 139,-322.625 139,-293 139,-271.707 135.1981,-256.1532 129.1315,-246.3385"/>
 <polygon fill="none" stroke="#404040" points="129.1295,-246.3362 122.1345,-244.584 121.0615,-237.4531 128.0565,-239.2054 129.1295,-246.3362"/>
 <text text-anchor="middle" x="156" y="-290.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> &#45;parent</text>
 </g>
-<!-- Node3 -->
+<!-- Node4 -->
 <g id="node2" class="node">
-<title>Node3</title>
+<title>Node4</title>
 <polygon fill="none" stroke="#bfbfbf" points="46,-633.5 46,-690.5 75,-690.5 75,-633.5 46,-633.5"/>
 <text text-anchor="middle" x="60.5" y="-678.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">T</text>
 <polyline fill="none" stroke="#bfbfbf" points="46,-671.5 75,-671.5 "/>
@@ -83,9 +83,9 @@
 <polyline fill="none" stroke="#bfbfbf" points="46,-652.5 75,-652.5 "/>
 <text text-anchor="middle" x="60.5" y="-640.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
 </g>
-<!-- Node3&#45;&gt;Node2 -->
+<!-- Node4&#45;&gt;Node3 -->
 <g id="edge2" class="edge">
-<title>Node3&#45;&gt;Node2</title>
+<title>Node4&#45;&gt;Node3</title>
 <path fill="none" stroke="#404040" d="M60.5,-633.3522C60.5,-623.5296 60.5,-611.564 60.5,-598.0669"/>
 <polygon fill="none" stroke="#404040" points="60.5001,-597.8271 56.5,-591.8271 60.5,-585.8271 64.5,-591.827 60.5001,-597.8271"/>
 <text text-anchor="middle" x="73" y="-607" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> &#45;data</text>

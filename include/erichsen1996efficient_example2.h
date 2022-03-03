@@ -47,19 +47,23 @@
 
 // Linear algebra related
 #include <deal.II/lac/full_matrix.h>
+#include <deal.II/lac/lapack_full_matrix.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/vector.h>
 
 #include <boost/progress.hpp>
 
-#include <laplace_bem.h>
-
 #include <fstream>
 #include <functional>
 
+#include "block_cluster_tree.h"
+#include "cluster_tree.h"
+#include "debug_tools.h"
+#include "lapack_full_matrix_ext.h"
+#include "laplace_bem.h"
+#include "simple_bounding_box.h"
 
-#define RUN_SMP_PARALLEL
 //#define GRAPH_COLORING
 
 using namespace dealii;
@@ -139,18 +143,43 @@ namespace LaplaceBEM
       };
 
       Example2();
-      Example2(const std::string &mesh_file_name, unsigned int fe_order = 2);
+      Example2(const std::string &mesh_file_name,
+               unsigned int       fe_order = 2,
+               unsigned int       proc_num = 4);
       ~Example2();
 
       void
       run();
 
+      // DEBUG
+      void
+      build_slp_only(bool is_build_matrix);
+
       void
       output_results();
+
+      FullMatrix<double> &
+      get_system_matrix();
+
+      FullMatrix<double> &
+      get_system_rhs_slp_matrix();
+
+      Vector<double> &
+      get_system_rhs();
+
+      ClusterTree<3> &
+      get_cluster_tree();
+
+      BlockClusterTree<3> &
+      get_block_cluster_tree();
 
     private:
       std::string  mesh_file_name;
       unsigned int fe_order;
+      /**
+       * Number of processors
+       */
+      unsigned int proc_num;
 
       // Generate the quadrangular surface mesh on the model sphere.
       void
@@ -162,7 +191,6 @@ namespace LaplaceBEM
       void
       read_mesh();
 
-
       /**
        * Calculate the neighboring type for each pair of cells.
        */
@@ -172,18 +200,31 @@ namespace LaplaceBEM
       void
       setup_system();
 
+      /**
+       * For handling FEM related cell wise integral.
+       *
+       * @param cell_iter
+       * @param scratch
+       * @param data
+       */
       void
       assemble_on_one_cell(
         const typename DoFHandler<2, 3>::active_cell_iterator &cell_iter,
         CellWiseScratchData &                                  scratch,
         CellWisePerTaskData &                                  data);
 
+      /**
+       * For handling FEM related cell wise matrix assembly.
+       *
+       * @param data
+       */
       void
       copy_cell_local_to_global(const CellWisePerTaskData &data);
 
       /**
-       * Assemble BEM matrices on a pair of cells, i.e. $K_x$ as the field cell
-       * and $K_y$ as the source cell.
+       * Assemble BEM matrices on a pair of cells, i.e. \f$K_x\f$ as the field cell
+       * and \f$K_y\f$ as the source cell.
+       *
        * @param kx_cell_iter
        * @param ky_cell_iter
        * @param scratch
@@ -197,11 +238,34 @@ namespace LaplaceBEM
         PairCellWiseScratchData &                              scratch,
         PairCellWisePerTaskData &                              data);
 
+      // DEBUG
+      void
+      assemble_on_one_pair_of_cells_for_slp(
+        const typename DoFHandler<2, 3>::active_cell_iterator &kx_cell_iter,
+        const typename DoFHandler<2, 3>::active_cell_iterator &ky_cell_iter,
+        const BEMValues<2, 3> &                                bem_values,
+        PairCellWiseScratchData &                              scratch,
+        PairCellWisePerTaskData &                              data);
+
       void
       copy_pair_of_cells_local_to_global(const PairCellWisePerTaskData &data);
 
+      // #region: DEBUG
+      void
+      copy_pair_of_cells_local_to_global_for_slp(
+        const PairCellWisePerTaskData &data);
+      // #end-region
+
       void
       assemble_system_smp();
+
+      // #region: DEBUG
+      /**
+       * Build SLP matrix only using SMP parallelization.
+       */
+      void
+      assemble_slp_smp();
+      // #end-region
 
       void
       assemble_system_serial();
@@ -246,29 +310,55 @@ namespace LaplaceBEM
 
       Vector<double> analytical_solution;
       Vector<double> solution;
+
+      /**
+       * The sequence of all DoF indices with the values \f$0, 1, \cdots\f$.
+       */
+      std::vector<types::global_dof_index> dof_indices;
+      /**
+       * The list of all support points associated with @p dof_indices.
+       */
+      std::vector<Point<3>> all_support_points;
+      /**
+       * Estimated average cell size values associated with @p dof_indices.
+       */
+      std::vector<double> dof_average_cell_size;
+
+      unsigned int        n_min_for_ct;
+      double              eta;
+      ClusterTree<3>      ct;
+      BlockClusterTree<3> bct;
     };
 
     Example2::Example2()
       : mesh_file_name("mesh.msh")
       , fe_order(1)
+      , proc_num(4)
       , fe(fe_order)
       , dof_handler(triangulation)
       , mapping(fe_order)
       , x0(0.25, 0.25, 0.25)
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
+      , n_min_for_ct(8)
+      , eta(10.)
     {}
 
 
-    Example2::Example2(const std::string &mesh_file_name, unsigned int fe_order)
+    Example2::Example2(const std::string &mesh_file_name,
+                       unsigned int       fe_order,
+                       unsigned int       proc_num)
       : mesh_file_name(mesh_file_name)
       , fe_order(fe_order)
+      , proc_num(proc_num)
       , fe(fe_order)
       , dof_handler(triangulation)
       , mapping(fe_order)
       , x0(0.25, 0.25, 0.25)
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
+      , n_min_for_ct(8)
+      , eta(10.)
     {}
 
 
@@ -370,6 +460,11 @@ namespace LaplaceBEM
 
       // Interpolate analytical solution values.
       AnalyticalSolution analytical_solution_function(x0);
+      /**
+       * \mynote{Because @p dof_handler is associated with both the
+       * FiniteElement and the Triangulation, the following interpolation
+       * operation is feasible.}
+       */
       VectorTools::interpolate(dof_handler,
                                analytical_solution_function,
                                analytical_solution);
@@ -388,9 +483,11 @@ namespace LaplaceBEM
       CellWiseScratchData &                                  scratch,
       CellWisePerTaskData &                                  data)
     {
-      // Clear the local matrix in case that it is reused from another finished
-      // task. N.B. Its memory has already been allocated in the constructor of
-      // <code>CellWisePerTaskData</code>.
+      /**
+       * Clear the local matrix in case that it is reused from another finished
+       * task. N.B. Its memory has already been allocated in the constructor of
+       * @p CellWisePerTaskData.
+       */
       data.local_matrix = 0.;
       // N.B. The construction of the object <code>scratch.fe_values</code> is
       // carried out in the constructor of <code>CellWiseScratchData</code>
@@ -473,14 +570,14 @@ namespace LaplaceBEM
       const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
       const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
 
-      // Support points of $K_x$ and $K_y$ in the default
+      // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
       // hierarchical order.
-      hierarchical_support_points_in_real_cell(
+      get_hierarchic_support_points_in_real_cell(
         kx_cell_iter,
         kx_fe,
         this->mapping,
         scratch.kx_support_points_hierarchical);
-      hierarchical_support_points_in_real_cell(
+      get_hierarchic_support_points_in_real_cell(
         ky_cell_iter,
         ky_fe,
         this->mapping,
@@ -505,7 +602,9 @@ namespace LaplaceBEM
                            vertices_per_cell,
                          ExcInternalError());
 
-                  // Get support points in tensor product oder.
+                  /**
+                   * Get support points in the lexicographic order.
+                   */
                   permute_vector(scratch.kx_support_points_hierarchical,
                                  scratch.kx_fe_poly_space_numbering_inverse,
                                  scratch.kx_support_points_permuted);
@@ -513,7 +612,9 @@ namespace LaplaceBEM
                                  scratch.ky_fe_poly_space_numbering_inverse,
                                  scratch.ky_support_points_permuted);
 
-                  // Get permuted local DoF indices.
+                  /**
+                   * Get permuted local DoF indices in the lexicographic order.
+                   */
                   permute_vector(scratch.kx_local_dof_indices_hierarchical,
                                  scratch.kx_fe_poly_space_numbering_inverse,
                                  data.kx_local_dof_indices_permuted);
@@ -521,9 +622,16 @@ namespace LaplaceBEM
                                  scratch.ky_fe_poly_space_numbering_inverse,
                                  data.ky_local_dof_indices_permuted);
 
+                  /**
+                   * Select the quadrature rule.
+                   */
                   active_quad_rule = &(bem_values.quad_rule_for_same_panel);
 
-                  // Precalculate surface Jacobians and normal vectors.
+                  /**
+                   * Precalculate surface Jacobians and normal vectors at each
+                   * quadrature point in the current pair of cells.
+                   * \mynote{They are stored in the @p scratch data.}
+                   */
                   for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
                     {
                       for (unsigned int q = 0; q < active_quad_rule->size();
@@ -569,11 +677,11 @@ namespace LaplaceBEM
                 {
                   // This part handles the common edge case of Sauter's
                   // quadrature rule.
-                  // 1. Get the DoF indices in tensor product order for $K_x$.
-                  // 2. Get the DoF indices in reversed tensor product order for
-                  // $K_x$.
-                  // 3. Extract DoF indices only for cell vertices in $K_x$ and
-                  // $K_y$. N.B. The DoF indices for the last two vertices are
+                  // 1. Get the DoF indices in the lexicographic order for \f$K_x\f$.
+                  // 2. Get the DoF indices in the reversed lexicographic order
+                  // for \f$K_y\f$.
+                  // 3. Extract DoF indices only for cell vertices in \f$K_x\f$ and
+                  // \f$K_y\f$. N.B. The DoF indices for the last two vertices are
                   // swapped, such that the four vertices are in clockwise or
                   // counter clockwise order.
                   // 4. Determine the starting vertex.
@@ -604,7 +712,7 @@ namespace LaplaceBEM
                     data.ky_local_dof_indices_permuted,
                     ky_local_vertex_dof_indices_swapped);
 
-                  // Determine the starting vertex index in $K_x$ and $K_y$.
+                  // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
                   unsigned int kx_starting_vertex_index =
                     get_start_vertex_dof_index<vertices_per_cell>(
                       scratch.vertex_dof_index_intersection,
@@ -618,7 +726,7 @@ namespace LaplaceBEM
                   Assert(ky_starting_vertex_index < vertices_per_cell,
                          ExcInternalError());
 
-                  // Generate the permutation of DoFs in $K_x$ and $K_y$ by
+                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
                   // starting from <code>kx_starting_vertex_index</code> or
                   // <code>ky_starting_vertex_index</code>.
                   generate_forward_dof_permutation(
@@ -714,7 +822,7 @@ namespace LaplaceBEM
                     data.ky_local_dof_indices_permuted,
                     ky_local_vertex_dof_indices_swapped);
 
-                  // Determine the starting vertex index in $K_x$ and $K_y$.
+                  // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
                   unsigned int kx_starting_vertex_index =
                     get_start_vertex_dof_index<vertices_per_cell>(
                       scratch.vertex_dof_index_intersection,
@@ -728,7 +836,501 @@ namespace LaplaceBEM
                   Assert(ky_starting_vertex_index < vertices_per_cell,
                          ExcInternalError());
 
-                  // Generate the permutation of DoFs in $K_x$ and $K_y$ by
+                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
+                  // starting from <code>kx_starting_vertex_index</code> or
+                  // <code>ky_starting_vertex_index</code>.
+                  generate_forward_dof_permutation(
+                    kx_fe,
+                    kx_starting_vertex_index,
+                    scratch.kx_local_dof_permutation);
+                  generate_forward_dof_permutation(
+                    ky_fe,
+                    ky_starting_vertex_index,
+                    scratch.ky_local_dof_permutation);
+
+                  permute_vector(scratch.kx_support_points_hierarchical,
+                                 scratch.kx_local_dof_permutation,
+                                 scratch.kx_support_points_permuted);
+                  permute_vector(scratch.ky_support_points_hierarchical,
+                                 scratch.ky_local_dof_permutation,
+                                 scratch.ky_support_points_permuted);
+
+                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
+                                 scratch.kx_local_dof_permutation,
+                                 data.kx_local_dof_indices_permuted);
+                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
+                                 scratch.ky_local_dof_permutation,
+                                 data.ky_local_dof_indices_permuted);
+
+                  active_quad_rule = &(bem_values.quad_rule_for_common_vertex);
+
+                  // Precalculate surface Jacobians and normal vectors.
+                  for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
+                    {
+                      for (unsigned int q = 0; q < active_quad_rule->size();
+                           q++)
+                        {
+                          scratch.kx_jacobians_common_vertex(k3_index, q) =
+                            surface_jacobian_det_and_normal_vector(
+                              k3_index,
+                              q,
+                              bem_values
+                                .kx_shape_grad_matrix_table_for_common_vertex,
+                              scratch.kx_support_points_permuted,
+                              scratch.kx_normals_common_vertex(k3_index, q));
+
+                          scratch.ky_jacobians_common_vertex(k3_index, q) =
+                            surface_jacobian_det_and_normal_vector(
+                              k3_index,
+                              q,
+                              bem_values
+                                .ky_shape_grad_matrix_table_for_common_vertex,
+                              scratch.ky_support_points_permuted,
+                              scratch.ky_normals_common_vertex(k3_index, q));
+
+                          scratch.kx_quad_points_common_vertex(k3_index, q) =
+                            transform_unit_to_permuted_real_cell(
+                              k3_index,
+                              q,
+                              bem_values.kx_shape_value_table_for_common_vertex,
+                              scratch.kx_support_points_permuted);
+
+                          scratch.ky_quad_points_common_vertex(k3_index, q) =
+                            transform_unit_to_permuted_real_cell(
+                              k3_index,
+                              q,
+                              bem_values.ky_shape_value_table_for_common_vertex,
+                              scratch.ky_support_points_permuted);
+                        }
+                    }
+
+                  break;
+                }
+              case Regular:
+                {
+                  Assert(scratch.vertex_dof_index_intersection.size() == 0,
+                         ExcInternalError());
+
+                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
+                                 scratch.kx_fe_poly_space_numbering_inverse,
+                                 data.kx_local_dof_indices_permuted);
+
+                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
+                                 scratch.ky_fe_poly_space_numbering_inverse,
+                                 data.ky_local_dof_indices_permuted);
+
+                  permute_vector(scratch.kx_support_points_hierarchical,
+                                 scratch.kx_fe_poly_space_numbering_inverse,
+                                 scratch.kx_support_points_permuted);
+                  permute_vector(scratch.ky_support_points_hierarchical,
+                                 scratch.ky_fe_poly_space_numbering_inverse,
+                                 scratch.ky_support_points_permuted);
+
+                  active_quad_rule = &(bem_values.quad_rule_for_regular);
+
+                  // Precalculate surface Jacobians and normal vectors.
+                  for (unsigned int q = 0; q < active_quad_rule->size(); q++)
+                    {
+                      scratch.kx_jacobians_regular(0, q) =
+                        surface_jacobian_det_and_normal_vector(
+                          0,
+                          q,
+                          bem_values.kx_shape_grad_matrix_table_for_regular,
+                          scratch.kx_support_points_permuted,
+                          scratch.kx_normals_regular(0, q));
+
+                      scratch.ky_jacobians_regular(0, q) =
+                        surface_jacobian_det_and_normal_vector(
+                          0,
+                          q,
+                          bem_values.ky_shape_grad_matrix_table_for_regular,
+                          scratch.ky_support_points_permuted,
+                          scratch.ky_normals_regular(0, q));
+
+                      scratch.kx_quad_points_regular(0, q) =
+                        transform_unit_to_permuted_real_cell(
+                          0,
+                          q,
+                          bem_values.kx_shape_value_table_for_regular,
+                          scratch.kx_support_points_permuted);
+
+                      scratch.ky_quad_points_regular(0, q) =
+                        transform_unit_to_permuted_real_cell(
+                          0,
+                          q,
+                          bem_values.ky_shape_value_table_for_regular,
+                          scratch.ky_support_points_permuted);
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+                  active_quad_rule = nullptr;
+                }
+            }
+
+          /**
+           *  Clear the local matrix in case that it is reused from another
+           *  finished task. N.B. Its memory has already been allocated in the
+           *  constructor of @p CellPairWisePerTaskData.
+           */
+          data.dlp_matrix = 0.;
+          data.slp_matrix = 0.;
+
+          // Iterate over DoFs for test function space in \f$K_x\f$.
+          for (unsigned int i = 0; i < kx_n_dofs; i++)
+            {
+              // Iterate over DoFs for ansatz function space in \f$K_y\f$.
+              for (unsigned int j = 0; j < ky_n_dofs; j++)
+                {
+                  // Pullback the DLP kernel function to unit cell.
+                  KernelPulledbackToUnitCell<2, 3, double>
+                    dlp_kernel_pullback_on_unit(
+                      this->dlp,
+                      cell_neighboring_type,
+                      scratch.kx_support_points_permuted,
+                      scratch.ky_support_points_permuted,
+                      kx_fe,
+                      ky_fe,
+                      &bem_values,
+                      &scratch,
+                      i,
+                      j);
+
+                  // Pullback the DLP kernel function to Sauter parameter
+                  // space.
+                  KernelPulledbackToSauterSpace<2, 3, double>
+                    dlp_kernel_pullback_on_sauter(dlp_kernel_pullback_on_unit,
+                                                  cell_neighboring_type,
+                                                  &bem_values);
+
+                  // Apply 4d Sauter numerical quadrature.
+                  data.dlp_matrix(i, j) = ApplyQuadratureUsingBEMValues(
+                    *active_quad_rule, dlp_kernel_pullback_on_sauter);
+
+                  // Pullback the SLP kernel function to unit cell.
+                  KernelPulledbackToUnitCell<2, 3, double>
+                    slp_kernel_pullback_on_unit(
+                      this->slp,
+                      cell_neighboring_type,
+                      scratch.kx_support_points_permuted,
+                      scratch.ky_support_points_permuted,
+                      kx_fe,
+                      ky_fe,
+                      &bem_values,
+                      &scratch,
+                      i,
+                      j);
+
+                  // Pullback the SLP kernel function to Sauter parameter
+                  // space.
+                  KernelPulledbackToSauterSpace<2, 3, double>
+                    slp_kernel_pullback_on_sauter(slp_kernel_pullback_on_unit,
+                                                  cell_neighboring_type,
+                                                  &bem_values);
+
+                  // Apply 4d Sauter numerical quadrature.
+                  data.slp_matrix(i, j) = ApplyQuadratureUsingBEMValues(
+                    *active_quad_rule, slp_kernel_pullback_on_sauter);
+                }
+            }
+        }
+      catch (const std::bad_cast &e)
+        {
+          Assert(false, ExcInternalError());
+        }
+    }
+
+
+    void
+    Example2::assemble_on_one_pair_of_cells_for_slp(
+      const typename DoFHandler<2, 3>::active_cell_iterator &kx_cell_iter,
+      const typename DoFHandler<2, 3>::active_cell_iterator &ky_cell_iter,
+      const BEMValues<2, 3> &                                bem_values,
+      PairCellWiseScratchData &                              scratch,
+      PairCellWisePerTaskData &                              data)
+    {
+      // Geometry information.
+      const unsigned int vertices_per_cell = GeometryInfo<2>::vertices_per_cell;
+
+      // Determine the cell neighboring type based on the vertex dof indices.
+      // The common dof indices will be stored into the vector
+      // <code>vertex_dof_index_intersection</code> if there is any.
+      std::array<types::global_dof_index, vertices_per_cell>
+        kx_vertex_dof_indices(get_vertex_dof_indices<2, 3>(kx_cell_iter));
+      std::array<types::global_dof_index, vertices_per_cell>
+        ky_vertex_dof_indices(get_vertex_dof_indices<2, 3>(ky_cell_iter));
+
+      scratch.vertex_dof_index_intersection.clear();
+      CellNeighboringType cell_neighboring_type =
+        detect_cell_neighboring_type<2>(kx_vertex_dof_indices,
+                                        ky_vertex_dof_indices,
+                                        scratch.vertex_dof_index_intersection);
+
+      const FiniteElement<2, 3> &kx_fe = kx_cell_iter->get_fe();
+      const FiniteElement<2, 3> &ky_fe = ky_cell_iter->get_fe();
+
+      const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+      const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+
+      // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
+      // hierarchical order.
+      get_hierarchic_support_points_in_real_cell(
+        kx_cell_iter,
+        kx_fe,
+        this->mapping,
+        scratch.kx_support_points_hierarchical);
+      get_hierarchic_support_points_in_real_cell(
+        ky_cell_iter,
+        ky_fe,
+        this->mapping,
+        scratch.ky_support_points_hierarchical);
+
+      // N.B. The vector holding local DoF indices has to have the right size
+      // before being passed to the function <code>get_dof_indices</code>.
+      kx_cell_iter->get_dof_indices(scratch.kx_local_dof_indices_hierarchical);
+      ky_cell_iter->get_dof_indices(scratch.ky_local_dof_indices_hierarchical);
+
+      try
+        {
+          // Quadrature rule to be adopted depending on the cell neighboring
+          // type.
+          const QGauss<4> *active_quad_rule = nullptr;
+
+          switch (cell_neighboring_type)
+            {
+              case SamePanel:
+                {
+                  Assert(scratch.vertex_dof_index_intersection.size() ==
+                           vertices_per_cell,
+                         ExcInternalError());
+
+                  // Get support points in the lexicographic order.
+                  permute_vector(scratch.kx_support_points_hierarchical,
+                                 scratch.kx_fe_poly_space_numbering_inverse,
+                                 scratch.kx_support_points_permuted);
+                  permute_vector(scratch.ky_support_points_hierarchical,
+                                 scratch.ky_fe_poly_space_numbering_inverse,
+                                 scratch.ky_support_points_permuted);
+
+                  // Get permuted local DoF indices.
+                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
+                                 scratch.kx_fe_poly_space_numbering_inverse,
+                                 data.kx_local_dof_indices_permuted);
+                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
+                                 scratch.ky_fe_poly_space_numbering_inverse,
+                                 data.ky_local_dof_indices_permuted);
+
+                  active_quad_rule = &(bem_values.quad_rule_for_same_panel);
+
+                  // Precalculate surface Jacobians and normal vectors.
+                  for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
+                    {
+                      for (unsigned int q = 0; q < active_quad_rule->size();
+                           q++)
+                        {
+                          scratch.kx_jacobians_same_panel(k3_index, q) =
+                            surface_jacobian_det_and_normal_vector(
+                              k3_index,
+                              q,
+                              bem_values
+                                .kx_shape_grad_matrix_table_for_same_panel,
+                              scratch.kx_support_points_permuted,
+                              scratch.kx_normals_same_panel(k3_index, q));
+
+                          scratch.ky_jacobians_same_panel(k3_index, q) =
+                            surface_jacobian_det_and_normal_vector(
+                              k3_index,
+                              q,
+                              bem_values
+                                .ky_shape_grad_matrix_table_for_same_panel,
+                              scratch.ky_support_points_permuted,
+                              scratch.ky_normals_same_panel(k3_index, q));
+
+                          scratch.kx_quad_points_same_panel(k3_index, q) =
+                            transform_unit_to_permuted_real_cell(
+                              k3_index,
+                              q,
+                              bem_values.kx_shape_value_table_for_same_panel,
+                              scratch.kx_support_points_permuted);
+
+                          scratch.ky_quad_points_same_panel(k3_index, q) =
+                            transform_unit_to_permuted_real_cell(
+                              k3_index,
+                              q,
+                              bem_values.ky_shape_value_table_for_same_panel,
+                              scratch.ky_support_points_permuted);
+                        }
+                    }
+
+                  break;
+                }
+              case CommonEdge:
+                {
+                  // This part handles the common edge case of Sauter's
+                  // quadrature rule.
+                  // 1. Get the DoF indices in the lexicographic order for \f$K_x\f$.
+                  // 2. Get the DoF indices in the reversed lexicographic order
+                  // for \f$K_x\f$.
+                  // 3. Extract DoF indices only for cell vertices in \f$K_x\f$ and
+                  // \f$K_y\f$. N.B. The DoF indices for the last two vertices are
+                  // swapped, such that the four vertices are in clockwise or
+                  // counter clockwise order.
+                  // 4. Determine the starting vertex.
+
+                  Assert(scratch.vertex_dof_index_intersection.size() ==
+                           GeometryInfo<2>::vertices_per_face,
+                         ExcInternalError());
+
+                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
+                                 scratch.kx_fe_poly_space_numbering_inverse,
+                                 data.kx_local_dof_indices_permuted);
+
+                  permute_vector(
+                    scratch.ky_local_dof_indices_hierarchical,
+                    scratch.ky_fe_reversed_poly_space_numbering_inverse,
+                    data.ky_local_dof_indices_permuted);
+
+                  std::array<types::global_dof_index, vertices_per_cell>
+                    kx_local_vertex_dof_indices_swapped;
+                  get_vertex_dof_indices_swapped<2, 3>(
+                    kx_fe,
+                    data.kx_local_dof_indices_permuted,
+                    kx_local_vertex_dof_indices_swapped);
+                  std::array<types::global_dof_index, vertices_per_cell>
+                    ky_local_vertex_dof_indices_swapped;
+                  get_vertex_dof_indices_swapped<2, 3>(
+                    ky_fe,
+                    data.ky_local_dof_indices_permuted,
+                    ky_local_vertex_dof_indices_swapped);
+
+                  // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+                  unsigned int kx_starting_vertex_index =
+                    get_start_vertex_dof_index<vertices_per_cell>(
+                      scratch.vertex_dof_index_intersection,
+                      kx_local_vertex_dof_indices_swapped);
+                  Assert(kx_starting_vertex_index < vertices_per_cell,
+                         ExcInternalError());
+                  unsigned int ky_starting_vertex_index =
+                    get_start_vertex_dof_index<vertices_per_cell>(
+                      scratch.vertex_dof_index_intersection,
+                      ky_local_vertex_dof_indices_swapped);
+                  Assert(ky_starting_vertex_index < vertices_per_cell,
+                         ExcInternalError());
+
+                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
+                  // starting from <code>kx_starting_vertex_index</code> or
+                  // <code>ky_starting_vertex_index</code>.
+                  generate_forward_dof_permutation(
+                    kx_fe,
+                    kx_starting_vertex_index,
+                    scratch.kx_local_dof_permutation);
+                  generate_backward_dof_permutation(
+                    ky_fe,
+                    ky_starting_vertex_index,
+                    scratch.ky_local_dof_permutation);
+
+                  permute_vector(scratch.kx_support_points_hierarchical,
+                                 scratch.kx_local_dof_permutation,
+                                 scratch.kx_support_points_permuted);
+                  permute_vector(scratch.ky_support_points_hierarchical,
+                                 scratch.ky_local_dof_permutation,
+                                 scratch.ky_support_points_permuted);
+
+                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
+                                 scratch.kx_local_dof_permutation,
+                                 data.kx_local_dof_indices_permuted);
+                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
+                                 scratch.ky_local_dof_permutation,
+                                 data.ky_local_dof_indices_permuted);
+
+                  active_quad_rule = &(bem_values.quad_rule_for_common_edge);
+
+                  // Precalculate surface Jacobians and normal vectors.
+                  for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
+                    {
+                      for (unsigned int q = 0; q < active_quad_rule->size();
+                           q++)
+                        {
+                          scratch.kx_jacobians_common_edge(k3_index, q) =
+                            surface_jacobian_det_and_normal_vector(
+                              k3_index,
+                              q,
+                              bem_values
+                                .kx_shape_grad_matrix_table_for_common_edge,
+                              scratch.kx_support_points_permuted,
+                              scratch.kx_normals_common_edge(k3_index, q));
+
+                          scratch.ky_jacobians_common_edge(k3_index, q) =
+                            surface_jacobian_det_and_normal_vector(
+                              k3_index,
+                              q,
+                              bem_values
+                                .ky_shape_grad_matrix_table_for_common_edge,
+                              scratch.ky_support_points_permuted,
+                              scratch.ky_normals_common_edge(k3_index, q));
+
+                          scratch.kx_quad_points_common_edge(k3_index, q) =
+                            transform_unit_to_permuted_real_cell(
+                              k3_index,
+                              q,
+                              bem_values.kx_shape_value_table_for_common_edge,
+                              scratch.kx_support_points_permuted);
+
+                          scratch.ky_quad_points_common_edge(k3_index, q) =
+                            transform_unit_to_permuted_real_cell(
+                              k3_index,
+                              q,
+                              bem_values.ky_shape_value_table_for_common_edge,
+                              scratch.ky_support_points_permuted);
+                        }
+                    }
+
+                  break;
+                }
+              case CommonVertex:
+                {
+                  Assert(scratch.vertex_dof_index_intersection.size() == 1,
+                         ExcInternalError());
+
+                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
+                                 scratch.kx_fe_poly_space_numbering_inverse,
+                                 data.kx_local_dof_indices_permuted);
+
+                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
+                                 scratch.ky_fe_poly_space_numbering_inverse,
+                                 data.ky_local_dof_indices_permuted);
+
+                  std::array<types::global_dof_index, vertices_per_cell>
+                    kx_local_vertex_dof_indices_swapped;
+                  get_vertex_dof_indices_swapped<2, 3>(
+                    kx_fe,
+                    data.kx_local_dof_indices_permuted,
+                    kx_local_vertex_dof_indices_swapped);
+                  std::array<types::global_dof_index, vertices_per_cell>
+                    ky_local_vertex_dof_indices_swapped;
+                  get_vertex_dof_indices_swapped<2, 3>(
+                    ky_fe,
+                    data.ky_local_dof_indices_permuted,
+                    ky_local_vertex_dof_indices_swapped);
+
+                  // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+                  unsigned int kx_starting_vertex_index =
+                    get_start_vertex_dof_index<vertices_per_cell>(
+                      scratch.vertex_dof_index_intersection,
+                      kx_local_vertex_dof_indices_swapped);
+                  Assert(kx_starting_vertex_index < vertices_per_cell,
+                         ExcInternalError());
+                  unsigned int ky_starting_vertex_index =
+                    get_start_vertex_dof_index<vertices_per_cell>(
+                      scratch.vertex_dof_index_intersection,
+                      ky_local_vertex_dof_indices_swapped);
+                  Assert(ky_starting_vertex_index < vertices_per_cell,
+                         ExcInternalError());
+
+                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
                   // starting from <code>kx_starting_vertex_index</code> or
                   // <code>ky_starting_vertex_index</code>.
                   generate_forward_dof_permutation(
@@ -866,42 +1468,16 @@ namespace LaplaceBEM
           // Clear the local matrix in case that it is reused from another
           // finished task. N.B. Its memory has already been allocated in the
           // constructor of <code>CellPairWisePerTaskData</code>.
-          data.dlp_matrix = 0.;
           data.slp_matrix = 0.;
 
           // Iterate over DoFs for test function space in tensor product
-          // order in $K_x$.
+          // order in \f$K_x\f$.
           for (unsigned int i = 0; i < kx_n_dofs; i++)
             {
               // Iterate over DoFs for ansatz function space in tensor
-              // product order in $K_y$.
+              // product order in \f$K_y\f$.
               for (unsigned int j = 0; j < ky_n_dofs; j++)
                 {
-                  // Pullback the kernel function to unit cell.
-                  KernelPulledbackToUnitCell<2, 3, double>
-                    dlp_kernel_pullback_on_unit(
-                      this->dlp,
-                      cell_neighboring_type,
-                      scratch.kx_support_points_permuted,
-                      scratch.ky_support_points_permuted,
-                      kx_fe,
-                      ky_fe,
-                      &bem_values,
-                      &scratch,
-                      i,
-                      j);
-
-                  // Pullback the kernel function to Sauter parameter
-                  // space.
-                  KernelPulledbackToSauterSpace<2, 3, double>
-                    dlp_kernel_pullback_on_sauter(dlp_kernel_pullback_on_unit,
-                                                  cell_neighboring_type,
-                                                  &bem_values);
-
-                  // Apply 4d Sauter numerical quadrature.
-                  data.dlp_matrix(i, j) = ApplyQuadratureUsingBEMValues(
-                    *active_quad_rule, dlp_kernel_pullback_on_sauter);
-
                   // Pullback the kernel function to unit cell.
                   KernelPulledbackToUnitCell<2, 3, double>
                     slp_kernel_pullback_on_unit(
@@ -935,6 +1511,7 @@ namespace LaplaceBEM
         }
     }
 
+
     void
     Example2::copy_pair_of_cells_local_to_global(
       const PairCellWisePerTaskData &data)
@@ -958,10 +1535,30 @@ namespace LaplaceBEM
         }
     }
 
+
+    void
+    Example2::copy_pair_of_cells_local_to_global_for_slp(
+      const PairCellWisePerTaskData &data)
+    {
+      const unsigned int kx_dofs_per_cell = data.slp_matrix.m();
+      const unsigned int ky_dofs_per_cell = data.slp_matrix.n();
+
+      // Assemble the local matrix to system matrix.
+      for (unsigned int i = 0; i < kx_dofs_per_cell; i++)
+        {
+          for (unsigned int j = 0; j < ky_dofs_per_cell; j++)
+            {
+              system_rhs_matrix.add(data.kx_local_dof_indices_permuted[i],
+                                    data.ky_local_dof_indices_permuted[j],
+                                    data.slp_matrix(i, j));
+            }
+        }
+    }
+
     void
     Example2::assemble_system_smp()
     {
-      MultithreadInfo::set_thread_limit(4);
+      MultithreadInfo::set_thread_limit(proc_num);
 
       // Generate normal Gauss-Legendre quadrature rule for FEM integration.
       QGauss<2> quadrature_formula_2d(fe.degree + 1);
@@ -1007,22 +1604,10 @@ namespace LaplaceBEM
 #endif
 
 
-
-      // Precalculate shape function values and their gradient
-      // values at each quadrature point. N.B.
-      // 1. The data tables for shape function values and their gradient values
-      // should be calculated for both function space on $K_x$ and function
-      // space on $K_y$.
-      // 2. Being different from the integral in FEM, the integral in BEM
-      // handled by Sauter's quadrature rule has multiple parts of $k_3$ (except
-      // the regular cell neighboring type), each of which should be evaluated
-      // at a different set of quadrature points in the unit cell after
-      // coordinate transformation from the parametric space. Therefore, a
-      // dimension with respect to $k_3$ term index should be added to the data
-      // table compared to the usual FEValues.
-
-      // Generate 4D Gauss-Legendre quadrature rules for various cell
-      // neighboring types.
+      /**
+       * Generate 4D Gauss-Legendre quadrature rules for various cell
+       * neighboring types.
+       */
       const unsigned int quad_order_for_same_panel    = 5;
       const unsigned int quad_order_for_common_edge   = 4;
       const unsigned int quad_order_for_common_vertex = 4;
@@ -1033,7 +1618,24 @@ namespace LaplaceBEM
       QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
       QGauss<4> quad_rule_for_regular(quad_order_for_regular);
 
-      // Precalculate data tables for shape values at quadrature points.
+
+      /**
+       * Precalculate data tables for shape values at quadrature points.
+       *
+       * \mynote{Precalculate shape function values and their gradient values
+       * at each quadrature point. N.B.
+       * 1. The data tables for shape function values and their gradient values
+       * should be calculated for both function space on \f$K_x\f$ and function
+       * space on \f$K_y\f$.
+       * 2. Being different from the integral in FEM, the integral in BEM
+       * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+       * (except the regular cell neighboring type), each of which should be
+       * evaluated at a different set of quadrature points in the unit cell
+       * after coordinate transformation from the parametric space. Therefore,
+       * a dimension with respect to \f$k_3\f$ term index should be added to
+       * the data table compared to the usual FEValues and this brings about
+       * the class @p BEMValues.}
+       */
       BEMValues<2, 3> bem_values(fe,
                                  fe,
                                  quad_rule_for_same_panel,
@@ -1044,8 +1646,7 @@ namespace LaplaceBEM
       bem_values.fill_shape_grad_matrix_tables();
 
       // Initialize the progress display.
-      boost::progress_display pd(triangulation.n_active_cells(),
-                                 deallog.get_console());
+      boost::progress_display pd(triangulation.n_active_cells(), std::cerr);
 
       PairCellWiseScratchData scratch_data(fe, fe, bem_values);
       PairCellWisePerTaskData per_task_data(fe, fe);
@@ -1080,6 +1681,96 @@ namespace LaplaceBEM
                       std::placeholders::_2,
                       std::placeholders::_3),
             std::bind(&Example2::copy_pair_of_cells_local_to_global,
+                      this,
+                      std::placeholders::_1),
+            scratch_data,
+            per_task_data);
+#endif
+
+          ++pd;
+        }
+
+      // Calculate the right-hand side vector.
+      system_rhs_matrix.vmult(system_rhs, neumann_bc);
+    }
+
+
+    void
+    Example2::assemble_slp_smp()
+    {
+      MultithreadInfo::set_thread_limit(4);
+
+      // Precalculate shape function values and their gradient
+      // values at each quadrature point. N.B.
+      // 1. The data tables for shape function values and their gradient values
+      // should be calculated for both function space on \f$K_x\f$ and function
+      // space on \f$K_y\f$.
+      // 2. Being different from the integral in FEM, the integral in BEM
+      // handled by Sauter's quadrature rule has multiple parts of $k_3$ (except
+      // the regular cell neighboring type), each of which should be evaluated
+      // at a different set of quadrature points in the unit cell after
+      // coordinate transformation from the parametric space. Therefore, a
+      // dimension with respect to $k_3$ term index should be added to the data
+      // table compared to the usual FEValues.
+
+      // Generate 4D Gauss-Legendre quadrature rules for various cell
+      // neighboring types.
+      const unsigned int quad_order_for_same_panel    = 5;
+      const unsigned int quad_order_for_common_edge   = 4;
+      const unsigned int quad_order_for_common_vertex = 4;
+      const unsigned int quad_order_for_regular       = 4;
+
+      QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
+      QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
+      QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
+      QGauss<4> quad_rule_for_regular(quad_order_for_regular);
+
+      // Precalculate data tables for shape values at quadrature points.
+      BEMValues<2, 3> bem_values(fe,
+                                 fe,
+                                 quad_rule_for_same_panel,
+                                 quad_rule_for_common_edge,
+                                 quad_rule_for_common_vertex,
+                                 quad_rule_for_regular);
+      bem_values.fill_shape_value_tables();
+      bem_values.fill_shape_grad_matrix_tables();
+
+      // Initialize the progress display.
+      boost::progress_display pd(triangulation.n_active_cells(), std::cerr);
+
+      PairCellWiseScratchData scratch_data(fe, fe, bem_values);
+      PairCellWisePerTaskData per_task_data(fe, fe);
+
+      // Calculate the term \f$(v, V(u))\f$.
+      for (const auto &e : dof_handler.active_cell_iterators())
+        {
+#ifdef GRAPH_COLORING
+          WorkStream::run(
+            colored_cells,
+            std::bind(&Example2::assemble_on_one_pair_of_cells,
+                      this,
+                      e,
+                      std::placeholders::_1,
+                      bem_values,
+                      std::placeholders::_2,
+                      std::placeholders::_3),
+            std::bind(&Example2::copy_pair_of_cells_local_to_global,
+                      this,
+                      std::placeholders::_1),
+            scratch_data,
+            per_task_data);
+#else
+          WorkStream::run(
+            dof_handler.begin_active(),
+            dof_handler.end(),
+            std::bind(&Example2::assemble_on_one_pair_of_cells_for_slp,
+                      this,
+                      e,
+                      std::placeholders::_1,
+                      bem_values,
+                      std::placeholders::_2,
+                      std::placeholders::_3),
+            std::bind(&Example2::copy_pair_of_cells_local_to_global_for_slp,
                       this,
                       std::placeholders::_1),
             scratch_data,
@@ -1154,18 +1845,22 @@ namespace LaplaceBEM
             }
         }
 
-      // Precalculate shape function values and their gradient
-      // values at each quadrature point. N.B.
-      // 1. The data tables for shape function values and their gradient values
-      // should be calculated for both function space on $K_x$ and function
-      // space on $K_y$.
-      // 2. Being different from the integral in FEM, the integral in BEM
-      // handled by Sauter's quadrature rule has multiple parts of $k_3$ (except
-      // the regular cell neighboring type), each of which should be evaluated
-      // at a different set of quadrature points in the unit cell after
-      // coordinate transformation from the parametric space. Therefore, a
-      // dimension with respect to $k_3$ term index should be added to the data
-      // table compared to the usual FEValues.
+      /**
+       * Precalculate shape function values and their gradient values at each
+       * quadrature point. N.B.
+       *
+       * 1. The data tables for shape function values and their gradient values
+       * should be calculated for both function space on \f$K_x\f$ and function
+       * space on \f$K_y\f$.
+       *
+       * 2. Being different from the integral in FEM, the integral in
+       * Galerkin-BEM handled by Sauter's quadrature rule has multiple parts of
+       * \f$k_3\f$ (except the regular cell neighboring type), each of which
+       * should be evaluated at a different set of quadrature points in the unit
+       * cell after coordinate transformation from the parametric space.
+       * Therefore, a dimension with respect to \f$k_3\f$ term index should be
+       * added to the data table compared to the usual @p FEValues.
+       */
 
       // Generate 4D Gauss-Legendre quadrature rules for various cell
       // neighboring types.
@@ -1224,6 +1919,7 @@ namespace LaplaceBEM
       system_rhs_matrix.vmult(system_rhs, neumann_bc);
     }
 
+
     void
     Example2::solve()
     {
@@ -1233,6 +1929,7 @@ namespace LaplaceBEM
 
       solver.solve(system_matrix, solution, system_rhs, PreconditionIdentity());
     }
+
 
     void
     Example2::output_results()
@@ -1252,6 +1949,41 @@ namespace LaplaceBEM
       data_out.write_vtk(output);
     }
 
+
+    FullMatrix<double> &
+    Example2::get_system_matrix()
+    {
+      return system_matrix;
+    }
+
+
+    FullMatrix<double> &
+    Example2::get_system_rhs_slp_matrix()
+    {
+      return system_rhs_matrix;
+    }
+
+
+    Vector<double> &
+    Example2::get_system_rhs()
+    {
+      return system_rhs;
+    }
+
+
+    ClusterTree<3> &
+    Example2::get_cluster_tree()
+    {
+      return ct;
+    }
+
+    BlockClusterTree<3> &
+    Example2::get_block_cluster_tree()
+    {
+      return bct;
+    }
+
+
     void
     Example2::run()
     {
@@ -1259,13 +1991,103 @@ namespace LaplaceBEM
       read_mesh();
       calc_cell_neighboring_types();
       setup_system();
-#ifdef RUN_SMP_PARALLEL
-      assemble_system_smp();
-#else
-      assemble_system_serial();
-#endif
+
+      if (proc_num > 1)
+        {
+          assemble_system_smp();
+        }
+      else
+        {
+          assemble_system_serial();
+        }
+
       solve();
       output_results();
+    }
+
+
+    void
+    Example2::build_slp_only(bool is_build_matrix)
+    {
+      // generate_mesh(1);
+      read_mesh();
+      calc_cell_neighboring_types();
+      setup_system();
+
+      /**
+       * Generate the sequence of all DoF indices with the values \f$0, 1, \cdots\f$.
+       */
+      dof_indices.resize(dof_handler.n_dofs());
+      types::global_dof_index counter = 0;
+      for (auto &dof_index : dof_indices)
+        {
+          dof_index = counter;
+          counter++;
+        }
+
+      /**
+       * Get the spatial coordinates of the support points associated with DoF
+       * indices. The used @p mapping object here should be consistent with the
+       * FinteElement space adopted.
+       */
+      all_support_points.resize(dof_handler.n_dofs());
+      DoFTools::map_dofs_to_support_points(mapping,
+                                           dof_handler,
+                                           all_support_points);
+
+      // #region: DEBUG
+      /**
+       * Calculate the distance between each pair of support points associated
+       * with DoFs.
+       */
+      LAPACKFullMatrixExt<double> dof_distance_matrix(dof_handler.n_dofs(),
+                                                      dof_handler.n_dofs());
+      for (unsigned int i = 1; i < dof_handler.n_dofs(); i++)
+        {
+          for (unsigned int j = 0; j < i; j++)
+            {
+              dof_distance_matrix(i, j) =
+                all_support_points[i].distance(all_support_points[j]);
+              dof_distance_matrix(j, i) = dof_distance_matrix(i, j);
+            }
+        }
+
+      dof_distance_matrix.print_formatted_to_mat(
+        std::cout, "dof_distance_matrix", 15, false, 25, "0");
+      // #end-region
+
+      /**
+       * Calculate the average mesh cell size at each support point.
+       */
+      dof_average_cell_size.resize(dof_handler.n_dofs(), 0);
+      map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
+
+      /**
+       * Create the cluster tree.
+       */
+      ct = ClusterTree<3>(dof_indices,
+                          all_support_points,
+                          dof_average_cell_size,
+                          n_min_for_ct);
+      ct.partition(all_support_points, dof_average_cell_size);
+
+      /**
+       * Create the block cluster tree.
+       */
+      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_ct);
+      bct.partition(all_support_points);
+
+#ifdef RUN_SMP_PARALLEL
+      if (is_build_matrix)
+        {
+          assemble_slp_smp();
+        }
+#else
+      if (is_build_matrix)
+        {
+          assemble_system_serial();
+        }
+#endif
     }
   } // namespace Erichsen1996Efficient
 } // namespace LaplaceBEM

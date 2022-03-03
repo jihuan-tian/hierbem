@@ -25,8 +25,7 @@ Collaboration diagram for Laplace\+B\+EM\+:\+:Laplace\+Kernel\+:\+:Double\+Layer
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel_a44836d10e150f631a40d16dc2092fdad}\label{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel_a44836d10e150f631a40d16dc2092fdad}} 
-virtual Range\+Number\+Type {\bfseries value} (const Point$<$ dim $>$ \&x, const Point$<$ dim $>$ \&y, const Tensor$<$ 1, dim $>$ \&nx, const Tensor$<$ 1, dim $>$ \&ny, const unsigned int component=0) const override
+virtual Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel_a44836d10e150f631a40d16dc2092fdad}{value} (const Point$<$ dim $>$ \&x, const Point$<$ dim $>$ \&y, const Tensor$<$ 1, dim $>$ \&nx, const Tensor$<$ 1, dim $>$ \&ny, const unsigned int component=0) const override
 \end{DoxyCompactItemize}
 \subsection*{Additional Inherited Members}
 
@@ -36,6 +35,38 @@ virtual Range\+Number\+Type {\bfseries value} (const Point$<$ dim $>$ \&x, const
 class Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel$<$ dim, Range\+Number\+Type $>$}
 
 Double layer kernel. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel_a44836d10e150f631a40d16dc2092fdad}\label{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel_a44836d10e150f631a40d16dc2092fdad}} 
+\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel}!value@{value}}
+\index{value@{value}!Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel}}
+\subsubsection{\texorpdfstring{value()}{value()}}
+{\footnotesize\ttfamily template$<$int dim, typename Range\+Number\+Type $>$ \\
+Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel}$<$ dim, Range\+Number\+Type $>$\+::value (\begin{DoxyParamCaption}\item[{const Point$<$ dim $>$ \&}]{x,  }\item[{const Point$<$ dim $>$ \&}]{y,  }\item[{const Tensor$<$ 1, dim $>$ \&}]{nx,  }\item[{const Tensor$<$ 1, dim $>$ \&}]{ny,  }\item[{const unsigned int}]{component = {\ttfamily 0} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Evaluate the kernel function at the specified point pair $(x, y)$ associated with their normal vectors $(n_x, n_y)$. In case the kernel function is vector-\/valued, this function only returns the required {\ttfamily component} in the result vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & \\
+\hline
+{\em y} & \\
+\hline
+{\em nx} & \\
+\hline
+{\em ny} & \\
+\hline
+{\em component} & Component index in the result vector, if the kernel function is vector-\/valued. If the kernel function is scalar-\/valued, there is no such issue and {\ttfamily component} is 0 by default. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+This function should never be called, since as a member function of the abstract class, it has no literal definition of the function. Hence, we throw an error here.
+
+Reimplemented from \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function$<$ dim, Range\+Number\+Type $>$}.
+
+
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 

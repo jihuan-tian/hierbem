@@ -1,0 +1,166 @@
+/**
+ * \file hmatrix-solve-cholesky-in-situ-for-erichsen1996efficient-example2.cc
+ * \brief Verify in situ Cholesky factorization of a positive definite and
+ * symmetric \hmatrix and solve this matrix using forward and backward
+ * substitution. This \hmatrix is generated from a discretization of Example 2
+ * in Erichsen1996Efficient paper.
+ *
+ * For testing purpose, run with the following arguments
+ *
+ * 1. Perform SLP matrix computation and output the full matrix.
+ *
+ * <code>
+ * ./progname gen_input_matrices
+ * </code>
+ *
+ * 2. Perform H-matrix construction by reading the SLP matrix data. Truncation
+ * of the \hmatrix is carried out directly.
+ *
+ * <code>
+ * ./progname build_hmat [truncation_rank] normal
+ * </code>
+ *
+ * 3. Perform H-matrix construction by reading the SLP matrix data. Truncation
+ * of the \hmatrix is carried out preserving positive definteness.
+ *
+ * <code>
+ * ./progname build_hmat [truncation_rank] spd
+ * </code>
+ *
+ * \ingroup testers hierarchical_matrices
+ * \author Jihuan Tian
+ * \date 2021-12-03
+ */
+
+#include <fstream>
+#include <iostream>
+
+#include "debug_tools.h"
+#include "erichsen1996efficient_example2.h"
+#include "hmatrix.h"
+#include "lapack_full_matrix_ext.h"
+#include "read_octave_data.h"
+
+int
+main(int argc, char *argv[])
+{
+  (void)argc;
+
+  /**
+   * Create the test case object for Example 2 in Erichsen1996Efficient.
+   */
+  const unsigned int                          fe_order = 1;
+  LaplaceBEM::Erichsen1996Efficient::Example2 testcase(
+    "sphere-from-gmsh_hex.msh", fe_order);
+
+  std::string run_type(argv[1]);
+  if (run_type == std::string("gen_input_matrices"))
+    {
+      testcase.build_slp_only(true);
+
+      /**
+       * Calculate the system matrices.
+       */
+      LAPACKFullMatrix<double> system_rhs_slp_matrix(
+        testcase.get_system_rhs_slp_matrix().m(),
+        testcase.get_system_rhs_slp_matrix().n());
+      system_rhs_slp_matrix = testcase.get_system_rhs_slp_matrix();
+      LAPACKFullMatrixExt<double> system_rhs_slp_matrix_ext(
+        system_rhs_slp_matrix);
+      system_rhs_slp_matrix_ext.print_formatted_to_mat(
+        std::cout, "M", 15, false, 25, "0");
+      Vector<double> &system_rhs = testcase.get_system_rhs();
+      print_vector_to_mat(std::cout, "b", system_rhs, false);
+
+      return 0;
+    }
+  else if (run_type == std::string("build_hmat"))
+    {
+      testcase.build_slp_only(false);
+
+      /**
+       * Read the system matrices from previous saved data.
+       */
+      LAPACKFullMatrixExt<double> system_rhs_slp_matrix_ext;
+      std::ifstream               in("input_matrices.dat");
+      read_matrix_from_octave(in, "M", system_rhs_slp_matrix_ext);
+      Vector<double> system_rhs;
+      in.close();
+      in.open("input_matrices.dat");
+      read_vector_from_octave(in, "b", system_rhs);
+
+      BlockClusterTree<3> &bct = testcase.get_block_cluster_tree();
+
+      const unsigned int fixed_rank = std::atoi(argv[2]);
+      HMatrix<3, double> H(bct, system_rhs_slp_matrix_ext);
+
+      std::string truncation_method(argv[3]);
+      if (truncation_method == std::string("normal"))
+        {
+          H.truncate_to_rank(fixed_rank);
+        }
+      else if (truncation_method == std::string("spd"))
+        {
+          /**
+           * Perform rank truncation to both lower and upper triangular parts of
+           * the matrix.
+           */
+          H.truncate_to_rank_preserve_positive_definite(fixed_rank, false);
+        }
+      else
+        {
+          Assert(false, ExcInternalError());
+        }
+
+      LAPACKFullMatrixExt<double> H_full;
+      H.convertToFullMatrix(H_full);
+      H_full.print_formatted_to_mat(std::cout, "H_full", 15, false, 25, "0");
+
+      std::ofstream H_bct("H_bct.dat");
+      H.write_leaf_set_by_iteration(H_bct);
+      H_bct.close();
+
+      /**
+       * Perform Cholesky factorization.
+       */
+      H.compute_cholesky_factorization(fixed_rank);
+      /**
+       * Recalculate the rank values (upper bound only) for all rank-k
+       matrices in
+       * the resulted \hmatrix.
+       */
+      H.calc_rank_upper_bound_for_rkmatrices();
+
+      /**
+       * Print the \bct structure of the Cholesky \hmatrix.
+       */
+      H_bct.open("LLT_bct.dat");
+      H.write_leaf_set_by_iteration(H_bct);
+      H_bct.close();
+
+      /**
+       * Convert the \Hcal-Cholesky factor to full matrix.
+       */
+      LAPACKFullMatrixExt<double> LLT_full;
+      H.convertToFullMatrix(LLT_full);
+      LLT_full.print_formatted_to_mat(
+        std::cout, "LLT_full", 15, false, 25, "0");
+
+      /**
+       * Solve the matrix.
+       */
+      Vector<double> x;
+      H.solve_cholesky(x, system_rhs);
+
+      /**
+       * Print the result vector.
+       */
+      print_vector_to_mat(std::cout, "x", x);
+
+      return 0;
+    }
+  else
+    {
+      Assert(false, ExcInternalError());
+    }
+}

@@ -927,7 +927,9 @@ public:
    * @param new_rank
    */
   void
-  truncate_to_rank_preserve_positive_definite(size_type new_rank);
+  truncate_to_rank_preserve_positive_definite(
+    size_type  new_rank,
+    const bool is_only_handle_tril = true);
 
   /**
    * Truncate all rank-k matrices in the leaf set of the
@@ -938,7 +940,9 @@ public:
    * @param new_rank
    */
   void
-  truncate_to_rank_diag_preserve_positive_definite(size_type new_rank);
+  truncate_to_rank_diag_preserve_positive_definite(
+    size_type  new_rank,
+    const bool is_only_handle_tril = true);
 
   /**
    * Truncate all rank-k matrices in the leaf set of the
@@ -950,7 +954,9 @@ public:
    * @param new_rank
    */
   void
-  truncate_to_rank_off_diag_preserve_positive_definite(size_type new_rank);
+  truncate_to_rank_off_diag_preserve_positive_definite(
+    size_type  new_rank,
+    const bool is_compensate_diag_blocks = true);
 
   /**
    * Calculate matrix-vector multiplication as \f$y = y +
@@ -8867,7 +8873,7 @@ HMatrix<spacedim, Number>::write_rkmatrix_leaf_node(std::ostream &out) const
   out << rkmatrix->get_rank() << "\n";
 
   // DEBUG: Print out the rkmatrix.
-  rkmatrix->print_formatted(out, 8, false, 16, "0");
+  // rkmatrix->print_formatted(out, 8, false, 16, "0");
 }
 
 
@@ -9334,16 +9340,19 @@ HMatrix<spacedim, Number>::truncate_to_rank(size_type new_rank)
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::truncate_to_rank_preserve_positive_definite(
-  size_type new_rank)
+  size_type  new_rank,
+  const bool is_only_handle_tril)
 {
-  truncate_to_rank_diag_preserve_positive_definite(new_rank);
+  truncate_to_rank_diag_preserve_positive_definite(new_rank,
+                                                   is_only_handle_tril);
 }
 
 
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
-  size_type new_rank)
+  size_type  new_rank,
+  const bool is_only_handle_tril)
 {
   /**
    * At present, it is prescribed that the \bct should be a quad
@@ -9369,16 +9378,12 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
     ExcMessage(
       "The last submatrix of the current H-matrix node is not a diagonal block!"));
 
-  /**
-   * Only handle the two diagonal blocks and one off-diagonal block in the lower
-   * triangular part.
-   */
   switch (submatrices[0]->type)
     {
       case HierarchicalMatrixType:
         {
           submatrices[0]->truncate_to_rank_diag_preserve_positive_definite(
-            new_rank);
+            new_rank, is_only_handle_tril);
 
           break;
         }
@@ -9405,7 +9410,7 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
       case HierarchicalMatrixType:
         {
           submatrices[3]->truncate_to_rank_diag_preserve_positive_definite(
-            new_rank);
+            new_rank, is_only_handle_tril);
 
           break;
         }
@@ -9427,12 +9432,56 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
         }
     }
 
+  if (!is_only_handle_tril)
+    {
+      switch (submatrices[1]->type)
+        {
+          case HierarchicalMatrixType:
+            {
+              submatrices[1]
+                ->truncate_to_rank_off_diag_preserve_positive_definite(new_rank,
+                                                                       false);
+
+              break;
+            }
+          case RkMatrixType:
+            {
+              LAPACKFullMatrixExt<double> C, D;
+              submatrices[1]->rkmatrix->truncate_to_rank(new_rank, D, C);
+
+              // DEBUG
+              std::cout << "||D||_2=" << D.frobenius_norm()
+                        << ",||C||_2=" << C.frobenius_norm() << std::endl;
+
+              /**
+               * The error matrices will be added to the diagonal blocks when
+               * handling the bottom left block, i.e. @p submatrices[2]. So
+               * here we do nothing after rank truncation of the rank-k matrix.
+               */
+
+              break;
+            }
+          case FullMatrixType:
+            {
+              /**
+               * Do nothing.
+               */
+              break;
+            }
+          case UndefinedMatrixType:
+            {
+              Assert(false, ExcInvalidHMatrixType(type));
+              break;
+            }
+        }
+    }
+
   switch (submatrices[2]->type)
     {
       case HierarchicalMatrixType:
         {
           submatrices[2]->truncate_to_rank_off_diag_preserve_positive_definite(
-            new_rank);
+            new_rank, true);
 
           break;
         }
@@ -9447,6 +9496,10 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
            */
           submatrices[0]->addsym_diag(C);
           submatrices[3]->addsym_diag(D);
+
+          // DEBUG
+          std::cout << "||D||_2=" << D.frobenius_norm()
+                    << ",||C||_2=" << C.frobenius_norm() << std::endl;
 
           break;
         }
@@ -9469,7 +9522,8 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::truncate_to_rank_off_diag_preserve_positive_definite(
-  size_type new_rank)
+  size_type  new_rank,
+  const bool is_compensate_diag_blocks)
 {
   /**
    * At present, it is prescribed that the \bct should be a quad
@@ -9488,7 +9542,7 @@ HMatrix<spacedim, Number>::truncate_to_rank_off_diag_preserve_positive_definite(
           case HierarchicalMatrixType:
             {
               submatrix->truncate_to_rank_off_diag_preserve_positive_definite(
-                new_rank);
+                new_rank, is_compensate_diag_blocks);
 
               break;
             }
@@ -9504,29 +9558,36 @@ HMatrix<spacedim, Number>::truncate_to_rank_off_diag_preserve_positive_definite(
               LAPACKFullMatrixExt<double> C, D;
               submatrix->rkmatrix->truncate_to_rank(new_rank, D, C);
 
-              /**
-               * Find the diagonal \hmatnode having the same column cluster as
-               * the current \hmatnode.
-               */
-              HMatrix<spacedim, Number> *diag_upper_left =
-                submatrix->find_col_diag_block_for_offdiag_block();
-              Assert(diag_upper_left != submatrix, ExcInternalError());
-              Assert(diag_upper_left != nullptr, ExcInternalError());
-              /**
-               * Find the diagonal \hmatnode having the same row cluster as
-               * the current \hmatnode.
-               */
-              HMatrix<spacedim, Number> *diag_bottom_right =
-                submatrix->find_row_diag_block_for_offdiag_block();
-              Assert(diag_bottom_right != submatrix, ExcInternalError());
-              Assert(diag_bottom_right != nullptr, ExcInternalError());
+              if (is_compensate_diag_blocks)
+                {
+                  /**
+                   * Find the diagonal \hmatnode having the same column cluster
+                   * as the current \hmatnode.
+                   */
+                  HMatrix<spacedim, Number> *diag_upper_left =
+                    submatrix->find_col_diag_block_for_offdiag_block();
+                  Assert(diag_upper_left != submatrix, ExcInternalError());
+                  Assert(diag_upper_left != nullptr, ExcInternalError());
+                  /**
+                   * Find the diagonal \hmatnode having the same row cluster as
+                   * the current \hmatnode.
+                   */
+                  HMatrix<spacedim, Number> *diag_bottom_right =
+                    submatrix->find_row_diag_block_for_offdiag_block();
+                  Assert(diag_bottom_right != submatrix, ExcInternalError());
+                  Assert(diag_bottom_right != nullptr, ExcInternalError());
 
-              /**
-               * Perform error compensation for preserving the positive
-               * definiteness.
-               */
-              diag_upper_left->addsym_diag(C);
-              diag_bottom_right->addsym_diag(D);
+                  /**
+                   * Perform error compensation for preserving the positive
+                   * definiteness.
+                   */
+                  diag_upper_left->addsym_diag(C);
+                  diag_bottom_right->addsym_diag(D);
+
+                  // DEBUG
+                  std::cout << "||D||_2=" << D.frobenius_norm()
+                            << ",||C||_2=" << C.frobenius_norm() << std::endl;
+                }
 
               break;
             }

@@ -11,6 +11,15 @@ Class for block cluster.
 
 
 
+Inheritance diagram for Block\+Cluster$<$ spacedim, Number $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classBlockCluster__inherit__graph}
+\end{center}
+\end{figure}
+
+
 Collaboration diagram for Block\+Cluster$<$ spacedim, Number $>$\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
@@ -116,7 +125,7 @@ Default constructor. \mbox{\Hypertarget{classBlockCluster_a63fdb3f4bea6a446b34cb
 \index{Block\+Cluster@{Block\+Cluster}!Block\+Cluster@{Block\+Cluster}}
 \index{Block\+Cluster@{Block\+Cluster}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{Block\+Cluster()}{BlockCluster()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::\hyperlink{classBlockCluster}{Block\+Cluster} (\begin{DoxyParamCaption}\item[{typename \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+pointer\+\_\+type}]{tau\+\_\+node,  }\item[{typename \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::node\+\_\+pointer\+\_\+type}]{sigma\+\_\+node }\end{DoxyParamCaption})}
 
 Construct from two pointers associated with the nodes in the cluster trees $T(I)$ and $T(J)$.
@@ -135,7 +144,7 @@ Construct from two pointers associated with the nodes in the cluster trees $T(I)
 \index{Block\+Cluster@{Block\+Cluster}!check\+\_\+is\+\_\+admissible@{check\+\_\+is\+\_\+admissible}}
 \index{check\+\_\+is\+\_\+admissible@{check\+\_\+is\+\_\+admissible}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{check\+\_\+is\+\_\+admissible()}{check\_is\_admissible()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 void \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible (\begin{DoxyParamCaption}\item[{Number}]{eta,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points }\end{DoxyParamCaption})}
 
 Determine if the block cluster is admissible. The admissibility condition is evaluated without mesh cell size correction.
@@ -150,17 +159,13 @@ Determine if the block cluster is admissible. The admissibility condition is eva
 \end{DoxyReturn}
 
 
-References Block\+Cluster$<$ spacedim, Number $>$\+::cluster\+\_\+distance, Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible, Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
-
-
-
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small().
+Referenced by Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small().
 
 \mbox{\Hypertarget{classBlockCluster_a79e83ccbdb52032b6b2d83e7d095e62d}\label{classBlockCluster_a79e83ccbdb52032b6b2d83e7d095e62d}} 
 \index{Block\+Cluster@{Block\+Cluster}!check\+\_\+is\+\_\+admissible@{check\+\_\+is\+\_\+admissible}}
 \index{check\+\_\+is\+\_\+admissible@{check\+\_\+is\+\_\+admissible}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{check\+\_\+is\+\_\+admissible()}{check\_is\_admissible()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 void \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible (\begin{DoxyParamCaption}\item[{Number}]{eta,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs }\end{DoxyParamCaption})}
 
 Determine if the block cluster is admissible. The admissibility condition is evaluated with mesh cell size correction.
@@ -173,11 +178,7 @@ Determine if the block cluster is admissible. The admissibility condition is eva
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-N.\+B. The contained clusters $\tau$ and $\sigma$ in the block cluster should be created with the parameter {\ttfamily cell\+\_\+size\+\_\+at\+\_\+dofs}. In this way, the returned cluster diameter is calculated with mesh cell size correction. This is achieved when creating the two cluster trees.
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::cluster\+\_\+distance, Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible, Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
-
-\mbox{\Hypertarget{classBlockCluster_a44900c760eac0578f700fa678ef4e416}\label{classBlockCluster_a44900c760eac0578f700fa678ef4e416}} 
+N.\+B. The contained clusters $\tau$ and $\sigma$ in the block cluster should be created with the parameter {\ttfamily cell\+\_\+size\+\_\+at\+\_\+dofs}. In this way, the returned cluster diameter is calculated with mesh cell size correction. This is achieved when creating the two cluster trees.\mbox{\Hypertarget{classBlockCluster_a44900c760eac0578f700fa678ef4e416}\label{classBlockCluster_a44900c760eac0578f700fa678ef4e416}} 
 \index{Block\+Cluster@{Block\+Cluster}!check\+\_\+is\+\_\+near\+\_\+field@{check\+\_\+is\+\_\+near\+\_\+field}}
 \index{check\+\_\+is\+\_\+near\+\_\+field@{check\+\_\+is\+\_\+near\+\_\+field}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{check\+\_\+is\+\_\+near\+\_\+field()}{check\_is\_near\_field()}}
@@ -196,11 +197,7 @@ When both contained clusters are large, the block cluster is considered as large
 \end{DoxyReturn}
 
 
-References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+near\+\_\+field, Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
-
-
-
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), and Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+small().
+Referenced by Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), and Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+small().
 
 \mbox{\Hypertarget{classBlockCluster_a792554d843db2dfb996a1d1086e9178b}\label{classBlockCluster_a792554d843db2dfb996a1d1086e9178b}} 
 \index{Block\+Cluster@{Block\+Cluster}!get\+\_\+is\+\_\+admissible@{get\+\_\+is\+\_\+admissible}}
@@ -209,22 +206,14 @@ Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+admissible (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-Get the boolean value whether the block cluster is admissible. 
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible.
-
-\mbox{\Hypertarget{classBlockCluster_ac263721e28921a6177a025139745fe8d}\label{classBlockCluster_ac263721e28921a6177a025139745fe8d}} 
+Get the boolean value whether the block cluster is admissible. \mbox{\Hypertarget{classBlockCluster_ac263721e28921a6177a025139745fe8d}\label{classBlockCluster_ac263721e28921a6177a025139745fe8d}} 
 \index{Block\+Cluster@{Block\+Cluster}!get\+\_\+is\+\_\+near\+\_\+field@{get\+\_\+is\+\_\+near\+\_\+field}}
 \index{get\+\_\+is\+\_\+near\+\_\+field@{get\+\_\+is\+\_\+near\+\_\+field}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{get\+\_\+is\+\_\+near\+\_\+field()}{get\_is\_near\_field()}}
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+near\+\_\+field (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-Get the boolean value whether the block cluster is near field. 
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+near\+\_\+field.
-
-\mbox{\Hypertarget{classBlockCluster_adf556b6483f3a81a39d3625c15e9787d}\label{classBlockCluster_adf556b6483f3a81a39d3625c15e9787d}} 
+Get the boolean value whether the block cluster is near field. \mbox{\Hypertarget{classBlockCluster_adf556b6483f3a81a39d3625c15e9787d}\label{classBlockCluster_adf556b6483f3a81a39d3625c15e9787d}} 
 \index{Block\+Cluster@{Block\+Cluster}!has\+\_\+intersection@{has\+\_\+intersection}}
 \index{has\+\_\+intersection@{has\+\_\+intersection}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{has\+\_\+intersection()}{has\_intersection()}}
@@ -234,10 +223,6 @@ bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::ha
 Determine if the index set of the current block cluster has a nonempty intersection with the index set of the given block cluster. \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::intersect().
-
 \mbox{\Hypertarget{classBlockCluster_a361efceed1f584db66a518007b5af633}\label{classBlockCluster_a361efceed1f584db66a518007b5af633}} 
 \index{Block\+Cluster@{Block\+Cluster}!intersect@{intersect}}
 \index{intersect@{intersect}!Block\+Cluster@{Block\+Cluster}}
@@ -247,17 +232,13 @@ void \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::in
 
 Calculate the intersection of the index sets of the current and the given block clusters. 
 
-References Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
-
-
-
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::has\+\_\+intersection().
+Referenced by Block\+Cluster$<$ spacedim, double $>$\+::has\+\_\+intersection().
 
 \mbox{\Hypertarget{classBlockCluster_a3d1d12357cac0ff4df90fd576c5f2aa0}\label{classBlockCluster_a3d1d12357cac0ff4df90fd576c5f2aa0}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+admissible\+\_\+or\+\_\+small@{is\+\_\+admissible\+\_\+or\+\_\+small}}
 \index{is\+\_\+admissible\+\_\+or\+\_\+small@{is\+\_\+admissible\+\_\+or\+\_\+small}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{is\+\_\+admissible\+\_\+or\+\_\+small()}{is\_admissible\_or\_small()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small (\begin{DoxyParamCaption}\item[{Number}]{eta,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{unsigned int}]{n\+\_\+min }\end{DoxyParamCaption})}
 
 Determine if the block cluster is either admissible or small. The admissibility condition is evaluated without mesh cell size correction.
@@ -274,13 +255,13 @@ Determine if the block cluster is either admissible or small. The admissibility 
 \end{DoxyReturn}
 
 
-References Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible, and Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+near\+\_\+field.
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
 
 \mbox{\Hypertarget{classBlockCluster_a620554d7d66beaf4dc38f166bc6dceed}\label{classBlockCluster_a620554d7d66beaf4dc38f166bc6dceed}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+admissible\+\_\+or\+\_\+small@{is\+\_\+admissible\+\_\+or\+\_\+small}}
 \index{is\+\_\+admissible\+\_\+or\+\_\+small@{is\+\_\+admissible\+\_\+or\+\_\+small}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{is\+\_\+admissible\+\_\+or\+\_\+small()}{is\_admissible\_or\_small()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small (\begin{DoxyParamCaption}\item[{Number}]{eta,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs,  }\item[{unsigned int}]{n\+\_\+min }\end{DoxyParamCaption})}
 
 Determine if the block cluster is either admissible or small. The admissibility condition is evaluated with mesh cell size correction.
@@ -295,10 +276,6 @@ Determine if the block cluster is either admissible or small. The admissibility 
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible, and Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+near\+\_\+field.
-
 \mbox{\Hypertarget{classBlockCluster_a9963a6320591f82824398667bcb9cdf8}\label{classBlockCluster_a9963a6320591f82824398667bcb9cdf8}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+proper\+\_\+subset@{is\+\_\+proper\+\_\+subset}}
 \index{is\+\_\+proper\+\_\+subset@{is\+\_\+proper\+\_\+subset}!Block\+Cluster@{Block\+Cluster}}
@@ -314,10 +291,6 @@ Check if the index set of the current block cluster is a proper subset of that o
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
-
 \mbox{\Hypertarget{classBlockCluster_ad81d5a494f48b16662ef471966899b65}\label{classBlockCluster_ad81d5a494f48b16662ef471966899b65}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+proper\+\_\+superset@{is\+\_\+proper\+\_\+superset}}
 \index{is\+\_\+proper\+\_\+superset@{is\+\_\+proper\+\_\+superset}!Block\+Cluster@{Block\+Cluster}}
@@ -333,10 +306,6 @@ Check if the index set of the current block cluster is a proper superset of that
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
-
 \mbox{\Hypertarget{classBlockCluster_adb6edc09ec2c579677e0532644b9f57d}\label{classBlockCluster_adb6edc09ec2c579677e0532644b9f57d}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+small@{is\+\_\+small}}
 \index{is\+\_\+small@{is\+\_\+small}!Block\+Cluster@{Block\+Cluster}}
@@ -354,7 +323,7 @@ Determine if the block cluster belongs to the near field set.
 \end{DoxyReturn}
 
 
-References Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), and Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+near\+\_\+field.
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+coarse\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+N(), Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+fine\+\_\+non\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node\+\_\+\+Nstar(), and Block\+Cluster\+Tree$<$ 3 $>$\+::partition\+\_\+tensor\+\_\+product\+\_\+from\+\_\+block\+\_\+cluster\+\_\+node().
 
 \mbox{\Hypertarget{classBlockCluster_af479a9471d056baa51a3f300bd0a5a27}\label{classBlockCluster_af479a9471d056baa51a3f300bd0a5a27}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+subset@{is\+\_\+subset}}
@@ -373,7 +342,7 @@ Check if the index set of the current block cluster is a subset of that of the g
 \end{DoxyReturn}
 
 
-References Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::find\+\_\+leaf\+\_\+bc\+\_\+node\+\_\+not\+\_\+subset\+\_\+of\+\_\+bc\+\_\+nodes\+\_\+in\+\_\+partition().
 
 \mbox{\Hypertarget{classBlockCluster_a445fc9afc9a246f7d3832c9c96c16d21}\label{classBlockCluster_a445fc9afc9a246f7d3832c9c96c16d21}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+superset@{is\+\_\+superset}}
@@ -390,10 +359,6 @@ Check if the index set of the current block cluster is a superset of that of the
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
-
 \mbox{\Hypertarget{classBlockCluster_a598050ab9a4340c3cd02f678788f5bb0}\label{classBlockCluster_a598050ab9a4340c3cd02f678788f5bb0}} 
 \index{Block\+Cluster@{Block\+Cluster}!set\+\_\+is\+\_\+admissible@{set\+\_\+is\+\_\+admissible}}
 \index{set\+\_\+is\+\_\+admissible@{set\+\_\+is\+\_\+admissible}!Block\+Cluster@{Block\+Cluster}}
@@ -401,11 +366,7 @@ References Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 void \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+admissible (\begin{DoxyParamCaption}\item[{const bool}]{is\+\_\+admissible }\end{DoxyParamCaption})}
 
-Set the boolean value whether the block cluster is admissible. 
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible, Block\+Cluster$<$ spacedim, Number $>$\+::sigma\+\_\+node, and Block\+Cluster$<$ spacedim, Number $>$\+::tau\+\_\+node.
-
-\mbox{\Hypertarget{classBlockCluster_a89063f39db2c5868abb54650108623dc}\label{classBlockCluster_a89063f39db2c5868abb54650108623dc}} 
+Set the boolean value whether the block cluster is admissible. \mbox{\Hypertarget{classBlockCluster_a89063f39db2c5868abb54650108623dc}\label{classBlockCluster_a89063f39db2c5868abb54650108623dc}} 
 \index{Block\+Cluster@{Block\+Cluster}!set\+\_\+is\+\_\+near\+\_\+field@{set\+\_\+is\+\_\+near\+\_\+field}}
 \index{set\+\_\+is\+\_\+near\+\_\+field@{set\+\_\+is\+\_\+near\+\_\+field}!Block\+Cluster@{Block\+Cluster}}
 \subsubsection{\texorpdfstring{set\+\_\+is\+\_\+near\+\_\+field()}{set\_is\_near\_field()}}
@@ -413,10 +374,6 @@ References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible, Block\+
 void \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+near\+\_\+field (\begin{DoxyParamCaption}\item[{const bool}]{is\+\_\+near\+\_\+field }\end{DoxyParamCaption})}
 
 Set the boolean value whether the block cluster is near field. 
-
-References Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+near\+\_\+field.
-
-
 
 \subsection{Friends And Related Function Documentation}
 \mbox{\Hypertarget{classBlockCluster_a770daa1c7399aa72cfb7e1e7dc65b6bb}\label{classBlockCluster_a770daa1c7399aa72cfb7e1e7dc65b6bb}} 
@@ -469,7 +426,7 @@ Number \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::
 
 The distance between cluster $\tau$ and cluster $\sigma$. Its value is computed when evaluating the admissibility condition. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible().
+Referenced by Block\+Cluster$<$ spacedim, double $>$\+::check\+\_\+is\+\_\+admissible().
 
 \mbox{\Hypertarget{classBlockCluster_ae85d165894d10b7e58fbe20edd506abe}\label{classBlockCluster_ae85d165894d10b7e58fbe20edd506abe}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+admissible@{is\+\_\+admissible}}
@@ -480,7 +437,7 @@ bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::is
 
 Is admissible. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), and Block\+Cluster$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+admissible().
+Referenced by Block\+Cluster$<$ spacedim, double $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, double $>$\+::get\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), and Block\+Cluster$<$ spacedim, double $>$\+::set\+\_\+is\+\_\+admissible().
 
 \mbox{\Hypertarget{classBlockCluster_a6f719cbd6a646328f8128355c857745a}\label{classBlockCluster_a6f719cbd6a646328f8128355c857745a}} 
 \index{Block\+Cluster@{Block\+Cluster}!is\+\_\+near\+\_\+field@{is\+\_\+near\+\_\+field}}
@@ -491,7 +448,7 @@ bool \hyperlink{classBlockCluster}{Block\+Cluster}$<$ spacedim, Number $>$\+::is
 
 Whether the block cluster is of near-\/field, so that it needs a full matrix representation. Otherwise, it requires a rank-\/r matrix representation. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::get\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+small(), and Block\+Cluster$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+near\+\_\+field().
+Referenced by Block\+Cluster$<$ spacedim, double $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, double $>$\+::get\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+admissible\+\_\+or\+\_\+small(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+small(), and Block\+Cluster$<$ spacedim, double $>$\+::set\+\_\+is\+\_\+near\+\_\+field().
 
 \mbox{\Hypertarget{classBlockCluster_ae1005ec7feedbdb990b27d845b24bad2}\label{classBlockCluster_ae1005ec7feedbdb990b27d845b24bad2}} 
 \index{Block\+Cluster@{Block\+Cluster}!sigma\+\_\+node@{sigma\+\_\+node}}
@@ -502,7 +459,7 @@ Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\
 
 Pointer to a node in the binary tree which holds the cluster $\sigma$. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::intersect(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+superset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+superset(), operator==(), and Block\+Cluster$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+admissible().
+Referenced by Block\+Cluster$<$ spacedim, double $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, double $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, double $>$\+::intersect(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+proper\+\_\+subset(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+proper\+\_\+superset(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+subset(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+superset(), operator==(), and Block\+Cluster$<$ spacedim, double $>$\+::set\+\_\+is\+\_\+admissible().
 
 \mbox{\Hypertarget{classBlockCluster_aac88834478cb4e409596e58100a5e9de}\label{classBlockCluster_aac88834478cb4e409596e58100a5e9de}} 
 \index{Block\+Cluster@{Block\+Cluster}!tau\+\_\+node@{tau\+\_\+node}}
@@ -513,7 +470,7 @@ Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admis
 
 Pointer to a node in the binary tree which holds the cluster $\tau$. 
 
-Referenced by Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, Number $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, Number $>$\+::intersect(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+proper\+\_\+superset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+subset(), Block\+Cluster$<$ spacedim, Number $>$\+::is\+\_\+superset(), operator==(), and Block\+Cluster$<$ spacedim, Number $>$\+::set\+\_\+is\+\_\+admissible().
+Referenced by Block\+Cluster$<$ spacedim, double $>$\+::check\+\_\+is\+\_\+admissible(), Block\+Cluster$<$ spacedim, double $>$\+::check\+\_\+is\+\_\+near\+\_\+field(), Block\+Cluster$<$ spacedim, double $>$\+::intersect(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+proper\+\_\+subset(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+proper\+\_\+superset(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+subset(), Block\+Cluster$<$ spacedim, double $>$\+::is\+\_\+superset(), operator==(), and Block\+Cluster$<$ spacedim, double $>$\+::set\+\_\+is\+\_\+admissible().
 
 
 

@@ -128,6 +128,30 @@ public:
   ~ClusterTree();
 
   /**
+   * Release the memory and status of the cluster tree hierarchy.
+   */
+  void
+  release();
+
+  /**
+   * Deep assignment operator.
+   *
+   * @param cluster_tree
+   * @return
+   */
+  ClusterTree<spacedim, Number> &
+  operator=(const ClusterTree<spacedim, Number> &cluster_tree);
+
+  /**
+   * Shallow assignment operator.
+   *
+   * @param cluster_tree
+   * @return
+   */
+  ClusterTree<spacedim, Number> &
+  operator=(ClusterTree<spacedim, Number> &&cluster_tree);
+
+  /**
    * Perform a pure cardinality based recursive partition, which will ultimately
    * be used in constructing an \f$\mathcal{H}^p\f$ matrix for example.
    *
@@ -344,7 +368,7 @@ private:
    * Minimum cluster size, which is used as the condition for stopping box
    * division.
    */
-  const unsigned int n_min;
+  unsigned int n_min;
 
   /**
    * Total number of clusters in the tree.
@@ -483,6 +507,68 @@ template <int spacedim, typename Number>
 ClusterTree<spacedim, Number>::~ClusterTree()
 {
   DeleteTree(root_node);
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::release()
+{
+  DeleteTree(root_node);
+
+  root_node = nullptr;
+  leaf_set.clear();
+
+  depth     = 0;
+  max_level = -1;
+  n_min     = 2;
+  node_num  = 0;
+}
+
+
+template <int spacedim, typename Number>
+ClusterTree<spacedim, Number> &
+ClusterTree<spacedim, Number>::
+operator=(const ClusterTree<spacedim, Number> &cluster_tree)
+{
+  release();
+
+  root_node = CopyTree(cluster_tree.get_root());
+  build_leaf_set();
+
+  depth     = cluster_tree.depth;
+  max_level = cluster_tree.max_level;
+  n_min     = cluster_tree.n_min;
+  node_num  = cluster_tree.node_num;
+
+  return (*this);
+}
+
+
+template <int spacedim, typename Number>
+ClusterTree<spacedim, Number> &
+ClusterTree<spacedim, Number>::
+operator=(ClusterTree<spacedim, Number> &&cluster_tree)
+{
+  release();
+
+  root_node = cluster_tree.get_root();
+  leaf_set  = cluster_tree.leaf_set;
+
+  depth     = cluster_tree.depth;
+  max_level = cluster_tree.max_level;
+  n_min     = cluster_tree.n_min;
+  node_num  = cluster_tree.node_num;
+
+  cluster_tree.root_node = nullptr;
+  cluster_tree.leaf_set.clear();
+
+  cluster_tree.depth     = 0;
+  cluster_tree.max_level = -1;
+  cluster_tree.n_min     = 2;
+  cluster_tree.node_num  = 0;
+
+  return (*this);
 }
 
 

@@ -8,6 +8,7 @@ var searchData=
   ['bct_2doverloaded_2dassignment_2ecc',['bct-overloaded-assignment.cc',['../bct-overloaded-assignment_8cc.html',1,'']]],
   ['bct_2dsubtree_2ecc',['bct-subtree.cc',['../bct-subtree_8cc.html',1,'']]],
   ['bct_2dvisualize_2dwith_2drank_2ecc',['bct-visualize-with-rank.cc',['../bct-visualize-with-rank_8cc.html',1,'']]],
+  ['bem_5fvalues_2eh',['bem_values.h',['../bem__values_8h.html',1,'']]],
   ['binary_2dtree_2dcopy_2ecc',['binary-tree-copy.cc',['../binary-tree-copy_8cc.html',1,'']]],
   ['binary_2dtree_2dget_2dleaves_2ecc',['binary-tree-get-leaves.cc',['../binary-tree-get-leaves_8cc.html',1,'']]],
   ['block_2dcluster_2dtree_2dhp_2ecc',['block-cluster-tree-hp.cc',['../block-cluster-tree-hp_8cc.html',1,'']]],

@@ -25,8 +25,25 @@ class \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_1_1Neumann
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a05c16fcb30b3c88360ebd13a0e046c9e}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a05c16fcb30b3c88360ebd13a0e046c9e}} 
 void {\bfseries run} ()
 \item 
+void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a4eda45fd98684daa5f951e74c27f0d84}{build\+\_\+slp\+\_\+only} (bool is\+\_\+build\+\_\+matrix)
+\item 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a77575ff8da117097f342daa9e949f9e5}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a77575ff8da117097f342daa9e949f9e5}} 
 void {\bfseries output\+\_\+results} ()
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a34f1e4246d2330a0915890f0aef89447}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a34f1e4246d2330a0915890f0aef89447}} 
+Full\+Matrix$<$ double $>$ \& {\bfseries get\+\_\+system\+\_\+matrix} ()
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aa29d813b54f41c70f187ae97b665e532}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aa29d813b54f41c70f187ae97b665e532}} 
+Full\+Matrix$<$ double $>$ \& {\bfseries get\+\_\+system\+\_\+rhs\+\_\+slp\+\_\+matrix} ()
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a699c1e5eaa19496d464f3b9479489846}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a699c1e5eaa19496d464f3b9479489846}} 
+Vector$<$ double $>$ \& {\bfseries get\+\_\+system\+\_\+rhs} ()
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a87cd1c586622395b63d85a0d93a59815}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a87cd1c586622395b63d85a0d93a59815}} 
+\hyperlink{classClusterTree}{Cluster\+Tree}$<$ 3 $>$ \& {\bfseries get\+\_\+cluster\+\_\+tree} ()
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_af712484fb8f5e371304c3e0f799e669e}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_af712484fb8f5e371304c3e0f799e669e}} 
+\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ 3 $>$ \& {\bfseries get\+\_\+block\+\_\+cluster\+\_\+tree} ()
 \end{DoxyCompactItemize}
 \subsection*{Private Member Functions}
 \begin{DoxyCompactItemize}
@@ -38,25 +55,29 @@ void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a0d5abae56e
 \item 
 void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a6a47dc2d39a4a3ff6b446e43e520bde7}{calc\+\_\+cell\+\_\+neighboring\+\_\+types} ()
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7bece202baddc2ff307f19d973f744fa}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7bece202baddc2ff307f19d973f744fa}} 
-void {\bfseries setup\+\_\+system} ()
+void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7bece202baddc2ff307f19d973f744fa}{setup\+\_\+system} ()
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a8fd1e4be1faa412424e1ee521c597d37}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a8fd1e4be1faa412424e1ee521c597d37}} 
-void {\bfseries assemble\+\_\+on\+\_\+one\+\_\+cell} (const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&cell\+\_\+iter, \hyperlink{structLaplaceBEM_1_1CellWiseScratchData}{Cell\+Wise\+Scratch\+Data} \&scratch, \hyperlink{structLaplaceBEM_1_1CellWisePerTaskData}{Cell\+Wise\+Per\+Task\+Data} \&data)
+void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a8fd1e4be1faa412424e1ee521c597d37}{assemble\+\_\+on\+\_\+one\+\_\+cell} (const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&cell\+\_\+iter, \hyperlink{structLaplaceBEM_1_1CellWiseScratchData}{Cell\+Wise\+Scratch\+Data} \&scratch, \hyperlink{structLaplaceBEM_1_1CellWisePerTaskData}{Cell\+Wise\+Per\+Task\+Data} \&data)
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aafff0bc1b7690a0150ba69991d37ef26}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aafff0bc1b7690a0150ba69991d37ef26}} 
-void {\bfseries copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global} (const \hyperlink{structLaplaceBEM_1_1CellWisePerTaskData}{Cell\+Wise\+Per\+Task\+Data} \&data)
+void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aafff0bc1b7690a0150ba69991d37ef26}{copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global} (const \hyperlink{structLaplaceBEM_1_1CellWisePerTaskData}{Cell\+Wise\+Per\+Task\+Data} \&data)
 \item 
 void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_afe943d5681aaef439208f51dc463f173}{assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells} (const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&kx\+\_\+cell\+\_\+iter, const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&ky\+\_\+cell\+\_\+iter, const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ 2, 3 $>$ \&bem\+\_\+values, \hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData}{Pair\+Cell\+Wise\+Scratch\+Data} \&scratch, \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData}{Pair\+Cell\+Wise\+Per\+Task\+Data} \&data)
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a9db729e8ccddf18dc156357679ea30e8}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a9db729e8ccddf18dc156357679ea30e8}} 
+void {\bfseries assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells\+\_\+for\+\_\+slp} (const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&kx\+\_\+cell\+\_\+iter, const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&ky\+\_\+cell\+\_\+iter, const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ 2, 3 $>$ \&bem\+\_\+values, \hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData}{Pair\+Cell\+Wise\+Scratch\+Data} \&scratch, \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData}{Pair\+Cell\+Wise\+Per\+Task\+Data} \&data)
 \item 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a8844ffa9db41c840eb02dbb6eefed24d}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a8844ffa9db41c840eb02dbb6eefed24d}} 
 void {\bfseries copy\+\_\+pair\+\_\+of\+\_\+cells\+\_\+local\+\_\+to\+\_\+global} (const \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData}{Pair\+Cell\+Wise\+Per\+Task\+Data} \&data)
 \item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7ea82599971fb83e30322affa0606f55}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7ea82599971fb83e30322affa0606f55}} 
+void {\bfseries copy\+\_\+pair\+\_\+of\+\_\+cells\+\_\+local\+\_\+to\+\_\+global\+\_\+for\+\_\+slp} (const \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData}{Pair\+Cell\+Wise\+Per\+Task\+Data} \&data)
+\item 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a316947cbda2c520f03d8a703e909380f}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a316947cbda2c520f03d8a703e909380f}} 
 void {\bfseries assemble\+\_\+system\+\_\+smp} ()
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a3e11e091f5fe741e19e72ad0cdc9c0c5}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a3e11e091f5fe741e19e72ad0cdc9c0c5}} 
-void {\bfseries assemble\+\_\+system\+\_\+serial} ()
+void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a418130545bf95b1f331284810956d43e}{assemble\+\_\+slp\+\_\+smp} ()
+\item 
+void \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a3e11e091f5fe741e19e72ad0cdc9c0c5}{assemble\+\_\+system\+\_\+serial} ()
 \item 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_ae9e8baae33e3e331b84969b1315f0108}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_ae9e8baae33e3e331b84969b1315f0108}} 
 void {\bfseries solve} ()
@@ -110,17 +131,54 @@ Vector$<$ double $>$ {\bfseries analytical\+\_\+solution}
 \item 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a2cbc38adde4b9fdf2cd1bf322b046b6c}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a2cbc38adde4b9fdf2cd1bf322b046b6c}} 
 Vector$<$ double $>$ {\bfseries solution}
+\item 
+std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aeab9b4719f0dfe0086b51ce909f056fb}{dof\+\_\+indices}
+\item 
+std\+::vector$<$ Point$<$ 3 $>$ $>$ \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a80f5db5e8f9f1705f4580d3005adbcef}{all\+\_\+support\+\_\+points}
+\item 
+std\+::vector$<$ double $>$ \hyperlink{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a39146546262134939101501a5de42ab7}{dof\+\_\+average\+\_\+cell\+\_\+size}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_ac434cc1126b375fbc113d34cc4623fef}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_ac434cc1126b375fbc113d34cc4623fef}} 
+unsigned int {\bfseries n\+\_\+min\+\_\+for\+\_\+ct}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a82b82c6c8852bf61b20a4e773853ef88}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a82b82c6c8852bf61b20a4e773853ef88}} 
+double {\bfseries eta}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a4f0541afa68eab38b9673cf89092ab91}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a4f0541afa68eab38b9673cf89092ab91}} 
+\hyperlink{classClusterTree}{Cluster\+Tree}$<$ 3 $>$ {\bfseries ct}
+\item 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a618d3388cbc35b477216c8e321c5a176}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a618d3388cbc35b477216c8e321c5a176}} 
+\hyperlink{classBlockClusterTree}{Block\+Cluster\+Tree}$<$ 3 $>$ {\bfseries bct}
 \end{DoxyCompactItemize}
 
 
 \subsection{Member Function Documentation}
-\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_afe943d5681aaef439208f51dc463f173}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_afe943d5681aaef439208f51dc463f173}} 
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a8fd1e4be1faa412424e1ee521c597d37}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a8fd1e4be1faa412424e1ee521c597d37}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!assemble\+\_\+on\+\_\+one\+\_\+cell@{assemble\+\_\+on\+\_\+one\+\_\+cell}}
+\index{assemble\+\_\+on\+\_\+one\+\_\+cell@{assemble\+\_\+on\+\_\+one\+\_\+cell}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{assemble\+\_\+on\+\_\+one\+\_\+cell()}{assemble\_on\_one\_cell()}}
+{\footnotesize\ttfamily void Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::assemble\+\_\+on\+\_\+one\+\_\+cell (\begin{DoxyParamCaption}\item[{const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&}]{cell\+\_\+iter,  }\item[{\hyperlink{structLaplaceBEM_1_1CellWiseScratchData}{Cell\+Wise\+Scratch\+Data} \&}]{scratch,  }\item[{\hyperlink{structLaplaceBEM_1_1CellWisePerTaskData}{Cell\+Wise\+Per\+Task\+Data} \&}]{data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+For handling F\+EM related cell wise integral.
+
+
+\begin{DoxyParams}{Parameters}
+{\em cell\+\_\+iter} & \\
+\hline
+{\em scratch} & \\
+\hline
+{\em data} & \\
+\hline
+\end{DoxyParams}
+Clear the local matrix in case that it is reused from another finished task. N.\+B. Its memory has already been allocated in the constructor of {\ttfamily \hyperlink{structLaplaceBEM_1_1CellWisePerTaskData}{Cell\+Wise\+Per\+Task\+Data}}.\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_afe943d5681aaef439208f51dc463f173}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_afe943d5681aaef439208f51dc463f173}} 
 \index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells@{assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells}}
 \index{assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells@{assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
 \subsubsection{\texorpdfstring{assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells()}{assemble\_on\_one\_pair\_of\_cells()}}
 {\footnotesize\ttfamily void Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells (\begin{DoxyParamCaption}\item[{const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&}]{kx\+\_\+cell\+\_\+iter,  }\item[{const typename Do\+F\+Handler$<$ 2, 3 $>$\+::active\+\_\+cell\+\_\+iterator \&}]{ky\+\_\+cell\+\_\+iter,  }\item[{const \hyperlink{classLaplaceBEM_1_1BEMValues}{B\+E\+M\+Values}$<$ 2, 3 $>$ \&}]{bem\+\_\+values,  }\item[{\hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData}{Pair\+Cell\+Wise\+Scratch\+Data} \&}]{scratch,  }\item[{\hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData}{Pair\+Cell\+Wise\+Per\+Task\+Data} \&}]{data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
 
-Assemble B\+EM matrices on a pair of cells, i.\+e. \$\+K\+\_\+x\$ as the field cell and \$\+K\+\_\+y\$ as the source cell. 
+Assemble B\+EM matrices on a pair of cells, i.\+e. $K_x$ as the field cell and $K_y$ as the source cell.
+
+
 \begin{DoxyParams}{Parameters}
 {\em kx\+\_\+cell\+\_\+iter} & \\
 \hline
@@ -131,9 +189,77 @@ Assemble B\+EM matrices on a pair of cells, i.\+e. \$\+K\+\_\+x\$ as the field c
 {\em data} & \\
 \hline
 \end{DoxyParams}
+Get support points in the lexicographic order.
+
+Get permuted local DoF indices in the lexicographic order.
+
+Select the quadrature rule.
+
+Precalculate surface Jacobians and normal vectors at each quadrature point in the current pair of cells.
+
+References Laplace\+B\+E\+M\+::get\+\_\+hierarchic\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell(), Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Scratch\+Data\+::kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+hierarchical, Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Scratch\+Data\+::kx\+\_\+support\+\_\+points\+\_\+hierarchical, Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Scratch\+Data\+::ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+hierarchical, Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Scratch\+Data\+::ky\+\_\+support\+\_\+points\+\_\+hierarchical, and Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Scratch\+Data\+::vertex\+\_\+dof\+\_\+index\+\_\+intersection.
 
 
-References Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_\+real\+\_\+cell().
+
+Referenced by assemble\+\_\+slp\+\_\+smp().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a418130545bf95b1f331284810956d43e}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a418130545bf95b1f331284810956d43e}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!assemble\+\_\+slp\+\_\+smp@{assemble\+\_\+slp\+\_\+smp}}
+\index{assemble\+\_\+slp\+\_\+smp@{assemble\+\_\+slp\+\_\+smp}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{assemble\+\_\+slp\+\_\+smp()}{assemble\_slp\_smp()}}
+{\footnotesize\ttfamily void Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::assemble\+\_\+slp\+\_\+smp (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+Build S\+LP matrix only using S\+MP parallelization. 
+
+References assemble\+\_\+on\+\_\+one\+\_\+pair\+\_\+of\+\_\+cells(), Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::fill\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+tables(), Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::fill\+\_\+shape\+\_\+value\+\_\+tables(), neumann\+\_\+bc, system\+\_\+rhs, and system\+\_\+rhs\+\_\+matrix.
+
+
+
+Referenced by build\+\_\+slp\+\_\+only().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a3e11e091f5fe741e19e72ad0cdc9c0c5}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a3e11e091f5fe741e19e72ad0cdc9c0c5}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!assemble\+\_\+system\+\_\+serial@{assemble\+\_\+system\+\_\+serial}}
+\index{assemble\+\_\+system\+\_\+serial@{assemble\+\_\+system\+\_\+serial}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{assemble\+\_\+system\+\_\+serial()}{assemble\_system\_serial()}}
+{\footnotesize\ttfamily void Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::assemble\+\_\+system\+\_\+serial (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+Precalculate shape function values and their gradient values at each quadrature point. N.\+B.
+
+
+\begin{DoxyEnumerate}
+\item The data tables for shape function values and their gradient values should be calculated for both function space on $K_x$ and function space on $K_y$.
+\item Being different from the integral in F\+EM, the integral in Galerkin-\/\+B\+EM handled by Sauter\textquotesingle{}s quadrature rule has multiple parts of $k_3$ (except the regular cell neighboring type), each of which should be evaluated at a different set of quadrature points in the unit cell after coordinate transformation from the parametric space. Therefore, a dimension with respect to $k_3$ term index should be added to the data table compared to the usual {\ttfamily F\+E\+Values}.
+\end{DoxyEnumerate}
+
+References calc\+\_\+cell\+\_\+neighboring\+\_\+types(), Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::fill\+\_\+shape\+\_\+grad\+\_\+matrix\+\_\+tables(), Laplace\+B\+E\+M\+::\+B\+E\+M\+Values$<$ dim, spacedim, Range\+Number\+Type $>$\+::fill\+\_\+shape\+\_\+value\+\_\+tables(), neumann\+\_\+bc, read\+\_\+mesh(), setup\+\_\+system(), system\+\_\+matrix, system\+\_\+rhs, and system\+\_\+rhs\+\_\+matrix.
+
+
+
+Referenced by build\+\_\+slp\+\_\+only().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a4eda45fd98684daa5f951e74c27f0d84}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a4eda45fd98684daa5f951e74c27f0d84}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!build\+\_\+slp\+\_\+only@{build\+\_\+slp\+\_\+only}}
+\index{build\+\_\+slp\+\_\+only@{build\+\_\+slp\+\_\+only}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{build\+\_\+slp\+\_\+only()}{build\_slp\_only()}}
+{\footnotesize\ttfamily void Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::build\+\_\+slp\+\_\+only (\begin{DoxyParamCaption}\item[{bool}]{is\+\_\+build\+\_\+matrix }\end{DoxyParamCaption})}
+
+Generate the sequence of all DoF indices with the values $0, 1, \cdots$.
+
+Get the spatial coordinates of the support points associated with DoF indices. The used {\ttfamily mapping} object here should be consistent with the Finte\+Element space adopted.
+
+Calculate the distance between each pair of support points associated with Do\+Fs.
+
+Calculate the average mesh cell size at each support point.
+
+Create the cluster tree.
+
+Create the block cluster tree.
+
+References all\+\_\+support\+\_\+points, assemble\+\_\+slp\+\_\+smp(), assemble\+\_\+system\+\_\+serial(), calc\+\_\+cell\+\_\+neighboring\+\_\+types(), dof\+\_\+average\+\_\+cell\+\_\+size, dof\+\_\+indices, map\+\_\+dofs\+\_\+to\+\_\+average\+\_\+cell\+\_\+size(), Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), read\+\_\+mesh(), and setup\+\_\+system().
+
+
+
+Referenced by main().
 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a6a47dc2d39a4a3ff6b446e43e520bde7}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a6a47dc2d39a4a3ff6b446e43e520bde7}} 
 \index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!calc\+\_\+cell\+\_\+neighboring\+\_\+types@{calc\+\_\+cell\+\_\+neighboring\+\_\+types}}
@@ -143,7 +269,24 @@ References Laplace\+B\+E\+M\+::hierarchical\+\_\+support\+\_\+points\+\_\+in\+\_
 
 Calculate the neighboring type for each pair of cells. 
 
-References neumann\+\_\+bc, system\+\_\+matrix, system\+\_\+rhs, and system\+\_\+rhs\+\_\+matrix.
+Referenced by assemble\+\_\+system\+\_\+serial(), and build\+\_\+slp\+\_\+only().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aafff0bc1b7690a0150ba69991d37ef26}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aafff0bc1b7690a0150ba69991d37ef26}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global@{copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global}}
+\index{copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global@{copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global()}{copy\_cell\_local\_to\_global()}}
+{\footnotesize\ttfamily void Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global (\begin{DoxyParamCaption}\item[{const \hyperlink{structLaplaceBEM_1_1CellWisePerTaskData}{Cell\+Wise\+Per\+Task\+Data} \&}]{data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+For handling F\+EM related cell wise matrix assembly.
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & \\
+\hline
+\end{DoxyParams}
+
+
+References system\+\_\+matrix.
 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a0d5abae56e8da05aad9ade216126109a}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a0d5abae56e8da05aad9ade216126109a}} 
 \index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!read\+\_\+mesh@{read\+\_\+mesh}}
@@ -153,7 +296,58 @@ References neumann\+\_\+bc, system\+\_\+matrix, system\+\_\+rhs, and system\+\_\
 
 Read the mesh from a file, which abandons the manifold description. 
 
+Referenced by assemble\+\_\+system\+\_\+serial(), and build\+\_\+slp\+\_\+only().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7bece202baddc2ff307f19d973f744fa}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7bece202baddc2ff307f19d973f744fa}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!setup\+\_\+system@{setup\+\_\+system}}
+\index{setup\+\_\+system@{setup\+\_\+system}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{setup\+\_\+system()}{setup\_system()}}
+{\footnotesize\ttfamily void Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::setup\+\_\+system (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+\begin{DoxyDescription}
+\item[Note ]Because {\ttfamily dof\+\_\+handler} is associated with both the Finite\+Element and the Triangulation, the following interpolation operation is feasible. 
+\end{DoxyDescription}
+
+References neumann\+\_\+bc, system\+\_\+matrix, system\+\_\+rhs, and system\+\_\+rhs\+\_\+matrix.
+
+
+
+Referenced by assemble\+\_\+system\+\_\+serial(), and build\+\_\+slp\+\_\+only().
+
+
+
 \subsection{Member Data Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a80f5db5e8f9f1705f4580d3005adbcef}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a80f5db5e8f9f1705f4580d3005adbcef}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!all\+\_\+support\+\_\+points@{all\+\_\+support\+\_\+points}}
+\index{all\+\_\+support\+\_\+points@{all\+\_\+support\+\_\+points}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{all\+\_\+support\+\_\+points}{all\_support\_points}}
+{\footnotesize\ttfamily std\+::vector$<$Point$<$3$>$ $>$ Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::all\+\_\+support\+\_\+points\hspace{0.3cm}{\ttfamily [private]}}
+
+The list of all support points associated with {\ttfamily dof\+\_\+indices}. 
+
+Referenced by build\+\_\+slp\+\_\+only().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a39146546262134939101501a5de42ab7}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a39146546262134939101501a5de42ab7}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!dof\+\_\+average\+\_\+cell\+\_\+size@{dof\+\_\+average\+\_\+cell\+\_\+size}}
+\index{dof\+\_\+average\+\_\+cell\+\_\+size@{dof\+\_\+average\+\_\+cell\+\_\+size}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{dof\+\_\+average\+\_\+cell\+\_\+size}{dof\_average\_cell\_size}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::dof\+\_\+average\+\_\+cell\+\_\+size\hspace{0.3cm}{\ttfamily [private]}}
+
+Estimated average cell size values associated with {\ttfamily dof\+\_\+indices}. 
+
+Referenced by build\+\_\+slp\+\_\+only().
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aeab9b4719f0dfe0086b51ce909f056fb}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_aeab9b4719f0dfe0086b51ce909f056fb}} 
+\index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!dof\+\_\+indices@{dof\+\_\+indices}}
+\index{dof\+\_\+indices@{dof\+\_\+indices}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
+\subsubsection{\texorpdfstring{dof\+\_\+indices}{dof\_indices}}
+{\footnotesize\ttfamily std\+::vector$<$types\+::global\+\_\+dof\+\_\+index$>$ Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::dof\+\_\+indices\hspace{0.3cm}{\ttfamily [private]}}
+
+The sequence of all DoF indices with the values $0, 1, \cdots$. 
+
+Referenced by build\+\_\+slp\+\_\+only().
+
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a52203aaab49947b16cf4f1a46f245375}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a52203aaab49947b16cf4f1a46f245375}} 
 \index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!neumann\+\_\+bc@{neumann\+\_\+bc}}
 \index{neumann\+\_\+bc@{neumann\+\_\+bc}!Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}}
@@ -162,7 +356,7 @@ Read the mesh from a file, which abandons the manifold description.
 
 Neumann boundary condition data at each DoF support point. 
 
-Referenced by calc\+\_\+cell\+\_\+neighboring\+\_\+types().
+Referenced by assemble\+\_\+slp\+\_\+smp(), assemble\+\_\+system\+\_\+serial(), and setup\+\_\+system().
 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a9c76773c78cc3a09eb1f7e4f9d44d0c8}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a9c76773c78cc3a09eb1f7e4f9d44d0c8}} 
 \index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!system\+\_\+matrix@{system\+\_\+matrix}}
@@ -172,7 +366,7 @@ Referenced by calc\+\_\+cell\+\_\+neighboring\+\_\+types().
 
 System matrix obtained from \$(v, \{1\}\{2\}u) + (v, Ku)\$. The first integral term in the sum is carried on each cell, while the second integral term is carried out on each pair of cells. 
 
-Referenced by calc\+\_\+cell\+\_\+neighboring\+\_\+types().
+Referenced by assemble\+\_\+system\+\_\+serial(), copy\+\_\+cell\+\_\+local\+\_\+to\+\_\+global(), and setup\+\_\+system().
 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7de5f9e1f110ec7f842577a54dddd267}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a7de5f9e1f110ec7f842577a54dddd267}} 
 \index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!system\+\_\+rhs@{system\+\_\+rhs}}
@@ -182,7 +376,7 @@ Referenced by calc\+\_\+cell\+\_\+neighboring\+\_\+types().
 
 Right hand side vector for the problem obtained from the product of {\ttfamily system\+\_\+rhs\+\_\+matrix} and {\ttfamily neumann\+\_\+bc} 
 
-Referenced by calc\+\_\+cell\+\_\+neighboring\+\_\+types().
+Referenced by assemble\+\_\+slp\+\_\+smp(), assemble\+\_\+system\+\_\+serial(), and setup\+\_\+system().
 
 \mbox{\Hypertarget{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a13e4add9320ecede8e53b7a633805740}\label{classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_a13e4add9320ecede8e53b7a633805740}} 
 \index{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2@{Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2}!system\+\_\+rhs\+\_\+matrix@{system\+\_\+rhs\+\_\+matrix}}
@@ -192,7 +386,7 @@ Referenced by calc\+\_\+cell\+\_\+neighboring\+\_\+types().
 
 The right hand side matrix obtained from \$(v, Vu)\$. 
 
-Referenced by calc\+\_\+cell\+\_\+neighboring\+\_\+types().
+Referenced by assemble\+\_\+slp\+\_\+smp(), assemble\+\_\+system\+\_\+serial(), and setup\+\_\+system().
 
 
 

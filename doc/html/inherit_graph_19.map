@@ -1,3 +1,12 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classTreeNode.html" title="Class for general tree node. " alt="" coords="5,5,135,32"/>
+<area shape="rect" id="node2" href="$classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction.html" title="LaplaceBEM::LaplaceKernel\l::KernelFunction\&lt; dim,\l double \&gt;" alt="" coords="151,41,337,97"/>
+<area shape="rect" id="node5" href="$classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction.html" title="LaplaceBEM::LaplaceKernel\l::KernelFunction\&lt; spacedim,\l RangeNumberType \&gt;" alt="" coords="149,121,339,177"/>
+<area shape="rect" id="node6" href="$classLaplaceBEM_1_1KernelPulledbackToUnitCell.html" title="LaplaceBEM::KernelPulledback\lToUnitCell\&lt; dim, spacedim,\l RangeNumberType \&gt;" alt="" coords="141,201,347,257"/>
+<area shape="rect" id="node7" href="$classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction.html" title="LaplaceBEM::LaplaceKernel\l::KernelFunction\&lt; dim,\l RangeNumberType \&gt;" alt="" coords="151,281,337,337"/>
+<area shape="rect" id="node3" href="$classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel.html" title="LaplaceBEM::LaplaceKernel\l::DoubleLayerKernel\&lt; 3 \&gt;" alt="" coords="395,5,582,47"/>
+<area shape="rect" id="node4" href="$classLaplaceBEM_1_1LaplaceKernel_1_1SingleLayerKernel.html" title="LaplaceBEM::LaplaceKernel\l::SingleLayerKernel\&lt; 3 \&gt;" alt="" coords="395,71,582,112"/>
+<area shape="rect" id="node8" href="$classLaplaceBEM_1_1LaplaceKernel_1_1AdjointDoubleLayerKernel.html" title="LaplaceBEM::LaplaceKernel\l::AdjointDoubleLayerKernel\l\&lt; dim, RangeNumberType \&gt;" alt="" coords="395,161,583,217"/>
+<area shape="rect" id="node9" href="$classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel.html" title="LaplaceBEM::LaplaceKernel\l::DoubleLayerKernel\&lt; dim,\l RangeNumberType \&gt;" alt="" coords="395,241,582,297"/>
+<area shape="rect" id="node10" href="$classLaplaceBEM_1_1LaplaceKernel_1_1HyperSingularKernel.html" title="LaplaceBEM::LaplaceKernel\l::HyperSingularKernel\&lt;\l dim, RangeNumberType \&gt;" alt="" coords="395,321,582,377"/>
+<area shape="rect" id="node11" href="$classLaplaceBEM_1_1LaplaceKernel_1_1SingleLayerKernel.html" title="LaplaceBEM::LaplaceKernel\l::SingleLayerKernel\&lt; dim,\l RangeNumberType \&gt;" alt="" coords="395,401,582,457"/>
 </map>

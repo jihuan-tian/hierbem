@@ -3097,6 +3097,11 @@ RkMatrix<Number>::truncate_to_rank(size_type                    new_rank,
            */
           C = A;
           D = B;
+
+          /**
+           * Balance the Frobenius norm of @p C and @p D.
+           */
+          balance_frobenius_norm(C, D);
         }
 
       A.reinit(0, 0);

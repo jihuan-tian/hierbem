@@ -18,19 +18,42 @@ Collaboration diagram for Laplace\+B\+EM\+:\+:Pair\+Cell\+Wise\+Per\+Task\+Data\
 \subsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{structLaplaceBEM_1_1PairCellWisePerTaskData_a35b4a45b92bf0c8c36107fdc80c966cb}\label{structLaplaceBEM_1_1PairCellWisePerTaskData_a35b4a45b92bf0c8c36107fdc80c966cb}} 
-Full\+Matrix$<$ double $>$ {\bfseries dlp\+\_\+matrix}
+Full\+Matrix$<$ double $>$ \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData_a35b4a45b92bf0c8c36107fdc80c966cb}{dlp\+\_\+matrix}
 \item 
-\mbox{\Hypertarget{structLaplaceBEM_1_1PairCellWisePerTaskData_aa96b7a6991e47201c7f1f6a9fdfa8680}\label{structLaplaceBEM_1_1PairCellWisePerTaskData_aa96b7a6991e47201c7f1f6a9fdfa8680}} 
-Full\+Matrix$<$ double $>$ {\bfseries slp\+\_\+matrix}
+Full\+Matrix$<$ double $>$ \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData_aa96b7a6991e47201c7f1f6a9fdfa8680}{slp\+\_\+matrix}
 \item 
-\mbox{\Hypertarget{structLaplaceBEM_1_1PairCellWisePerTaskData_ad258060f7c6dfce99a40508320bb54bc}\label{structLaplaceBEM_1_1PairCellWisePerTaskData_ad258060f7c6dfce99a40508320bb54bc}} 
-std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ {\bfseries kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}
+std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData_ad258060f7c6dfce99a40508320bb54bc}{kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}
 \item 
-\mbox{\Hypertarget{structLaplaceBEM_1_1PairCellWisePerTaskData_a4ebad8073a36303fd26b67acd9a0d9b8}\label{structLaplaceBEM_1_1PairCellWisePerTaskData_a4ebad8073a36303fd26b67acd9a0d9b8}} 
-std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ {\bfseries ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}
+std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \hyperlink{structLaplaceBEM_1_1PairCellWisePerTaskData_a4ebad8073a36303fd26b67acd9a0d9b8}{ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}
 \end{DoxyCompactItemize}
 
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{structLaplaceBEM_1_1PairCellWisePerTaskData_a35b4a45b92bf0c8c36107fdc80c966cb}\label{structLaplaceBEM_1_1PairCellWisePerTaskData_a35b4a45b92bf0c8c36107fdc80c966cb}} 
+\index{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data@{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}!dlp\+\_\+matrix@{dlp\+\_\+matrix}}
+\index{dlp\+\_\+matrix@{dlp\+\_\+matrix}!Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data@{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}}
+\subsubsection{\texorpdfstring{dlp\+\_\+matrix}{dlp\_matrix}}
+{\footnotesize\ttfamily Full\+Matrix$<$double$>$ Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data\+::dlp\+\_\+matrix}
+
+Local matrix for the pair of cells for the D\+LP kernel. \mbox{\Hypertarget{structLaplaceBEM_1_1PairCellWisePerTaskData_ad258060f7c6dfce99a40508320bb54bc}\label{structLaplaceBEM_1_1PairCellWisePerTaskData_ad258060f7c6dfce99a40508320bb54bc}} 
+\index{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data@{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}!kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted@{kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}}
+\index{kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted@{kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}!Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data@{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}}
+\subsubsection{\texorpdfstring{kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}{kx\_local\_dof\_indices\_permuted}}
+{\footnotesize\ttfamily std\+::vector$<$types\+::global\+\_\+dof\+\_\+index$>$ Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data\+::kx\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}
+
+Permuted list of DoF indices in the cell $K_x$, each element of which is associated with the corresponding element in {\ttfamily \hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData_a32b2da930b6ad0488446e5b28da7565d}{Pair\+Cell\+Wise\+Scratch\+Data\+::kx\+\_\+support\+\_\+points\+\_\+permuted}}. \mbox{\Hypertarget{structLaplaceBEM_1_1PairCellWisePerTaskData_a4ebad8073a36303fd26b67acd9a0d9b8}\label{structLaplaceBEM_1_1PairCellWisePerTaskData_a4ebad8073a36303fd26b67acd9a0d9b8}} 
+\index{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data@{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}!ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted@{ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}}
+\index{ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted@{ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}!Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data@{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}}
+\subsubsection{\texorpdfstring{ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}{ky\_local\_dof\_indices\_permuted}}
+{\footnotesize\ttfamily std\+::vector$<$types\+::global\+\_\+dof\+\_\+index$>$ Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data\+::ky\+\_\+local\+\_\+dof\+\_\+indices\+\_\+permuted}
+
+Permuted list of DoF indices in the cell $K_y$, each element of which is associated with the corresponding element in {\ttfamily \hyperlink{structLaplaceBEM_1_1PairCellWiseScratchData_a998570a30f2cf4069e2e08430b253ead}{Pair\+Cell\+Wise\+Scratch\+Data\+::ky\+\_\+support\+\_\+points\+\_\+permuted}}. \mbox{\Hypertarget{structLaplaceBEM_1_1PairCellWisePerTaskData_aa96b7a6991e47201c7f1f6a9fdfa8680}\label{structLaplaceBEM_1_1PairCellWisePerTaskData_aa96b7a6991e47201c7f1f6a9fdfa8680}} 
+\index{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data@{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}!slp\+\_\+matrix@{slp\+\_\+matrix}}
+\index{slp\+\_\+matrix@{slp\+\_\+matrix}!Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data@{Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data}}
+\subsubsection{\texorpdfstring{slp\+\_\+matrix}{slp\_matrix}}
+{\footnotesize\ttfamily Full\+Matrix$<$double$>$ Laplace\+B\+E\+M\+::\+Pair\+Cell\+Wise\+Per\+Task\+Data\+::slp\+\_\+matrix}
+
+Local matrix for the pair of cells for the S\+LP kernel. 
 
 The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 

@@ -2,6 +2,10 @@
 \label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function$<$ dim, Range\+Number\+Type $>$@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function$<$ dim, Range\+Number\+Type $>$}}
 
 
+{\ttfamily \#include $<$laplace\+\_\+bem.\+h$>$}
+
+
+
 Inheritance diagram for Laplace\+B\+EM\+:\+:Laplace\+Kernel\+:\+:Kernel\+Function$<$ dim, Range\+Number\+Type $>$\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
@@ -24,20 +28,17 @@ Collaboration diagram for Laplace\+B\+EM\+:\+:Laplace\+Kernel\+:\+:Kernel\+Funct
 \mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a1f10a1886e4b9aed7d60c036ccc81ee6}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a1f10a1886e4b9aed7d60c036ccc81ee6}} 
 {\bfseries Kernel\+Function} (const Kernel\+Type kernel\+\_\+type=None\+Type, const unsigned int n\+\_\+components=1)
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2a9a7e11aca4e52ece2d721e60a4bf56}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2a9a7e11aca4e52ece2d721e60a4bf56}} 
-\hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function} \& {\bfseries operator=} (const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function} \&f)
+virtual \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2611849d182d0869c6f07026416305b3}{$\sim$\+Kernel\+Function} () override=0
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}} 
-virtual Range\+Number\+Type {\bfseries value} (const Point$<$ dim $>$ \&x, const Point$<$ dim $>$ \&y, const Tensor$<$ 1, dim $>$ \&nx, const Tensor$<$ 1, dim $>$ \&ny, const unsigned int component=0) const
+\hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function} \& \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2a9a7e11aca4e52ece2d721e60a4bf56}{operator=} (const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function} \&f)
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aa8110379ffcda0d7aabeb1b9229fa8db}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aa8110379ffcda0d7aabeb1b9229fa8db}} 
-virtual void {\bfseries vector\+\_\+value} (const Point$<$ dim $>$ \&x, const Point$<$ dim $>$ \&y, const Tensor$<$ 1, dim $>$ \&nx, const Tensor$<$ 1, dim $>$ \&ny, Vector$<$ Range\+Number\+Type $>$ \&values) const
+virtual Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}{value} (const Point$<$ dim $>$ \&x, const Point$<$ dim $>$ \&y, const Tensor$<$ 1, dim $>$ \&nx, const Tensor$<$ 1, dim $>$ \&ny, const unsigned int component=0) const
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a8ba5755bf65478154209736c001f2f2a}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a8ba5755bf65478154209736c001f2f2a}} 
-virtual void {\bfseries value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $>$$>$ \&x\+\_\+points, const std\+::vector$<$ Point$<$ dim $>$$>$ \&y\+\_\+points, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&nx\+\_\+list, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&ny\+\_\+list, std\+::vector$<$ Range\+Number\+Type $>$ \&values, const unsigned int component=0) const
+virtual void \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aa8110379ffcda0d7aabeb1b9229fa8db}{vector\+\_\+value} (const Point$<$ dim $>$ \&x, const Point$<$ dim $>$ \&y, const Tensor$<$ 1, dim $>$ \&nx, const Tensor$<$ 1, dim $>$ \&ny, Vector$<$ Range\+Number\+Type $>$ \&values) const
 \item 
-\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ae906434f76ac27668ab4ddf91e3cd7fb}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ae906434f76ac27668ab4ddf91e3cd7fb}} 
-virtual void {\bfseries vector\+\_\+value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $>$$>$ \&x\+\_\+points, const std\+::vector$<$ Point$<$ dim $>$$>$ \&y\+\_\+points, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&nx\+\_\+list, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&ny\+\_\+list, std\+::vector$<$ Vector$<$ Range\+Number\+Type $>$$>$ \&values) const
+virtual void \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a8ba5755bf65478154209736c001f2f2a}{value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $>$$>$ \&x\+\_\+points, const std\+::vector$<$ Point$<$ dim $>$$>$ \&y\+\_\+points, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&nx\+\_\+list, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&ny\+\_\+list, std\+::vector$<$ Range\+Number\+Type $>$ \&values, const unsigned int component=0) const
+\item 
+virtual void \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ae906434f76ac27668ab4ddf91e3cd7fb}{vector\+\_\+value\+\_\+list} (const std\+::vector$<$ Point$<$ dim $>$$>$ \&x\+\_\+points, const std\+::vector$<$ Point$<$ dim $>$$>$ \&y\+\_\+points, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&nx\+\_\+list, const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&ny\+\_\+list, std\+::vector$<$ Vector$<$ Range\+Number\+Type $>$$>$ \&values) const
 \end{DoxyCompactItemize}
 \subsection*{Public Attributes}
 \begin{DoxyCompactItemize}
@@ -54,6 +55,159 @@ const unsigned int {\bfseries n\+\_\+components}
 \mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ad4cf29ad18c345f5d6d781a1b4aad15a}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ad4cf29ad18c345f5d6d781a1b4aad15a}} 
 static const unsigned int {\bfseries dimension} = dim
 \end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$int dim, typename Range\+Number\+Type = double$>$\newline
+class Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function$<$ dim, Range\+Number\+Type $>$}
+
+Base class for a B\+EM Laplace kernel function.
+
+
+\begin{DoxyDescription}
+\item[Note ]The template argument {\ttfamily dim} is the spatial dimension instead of the manifold dimension. 
+\end{DoxyDescription}
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2611849d182d0869c6f07026416305b3}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2611849d182d0869c6f07026416305b3}} 
+\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}!````~Kernel\+Function@{$\sim$\+Kernel\+Function}}
+\index{````~Kernel\+Function@{$\sim$\+Kernel\+Function}!Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}}
+\subsubsection{\texorpdfstring{$\sim$\+Kernel\+Function()}{~KernelFunction()}}
+{\footnotesize\ttfamily template$<$int dim, typename Range\+Number\+Type $>$ \\
+\hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}$<$ dim, Range\+Number\+Type $>$\+::$\sim$\hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [pure virtual]}, {\ttfamily [default]}}
+
+Default destructor provided by the compiler. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2a9a7e11aca4e52ece2d721e60a4bf56}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a2a9a7e11aca4e52ece2d721e60a4bf56}} 
+\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}!operator=@{operator=}}
+\index{operator=@{operator=}!Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily template$<$int dim, typename Range\+Number\+Type $>$ \\
+\hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function}$<$ dim, Range\+Number\+Type $>$ \& \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}$<$ dim, Range\+Number\+Type $>$\+::operator= (\begin{DoxyParamCaption}\item[{const \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function}$<$ dim, Range\+Number\+Type $>$ \&}]{f }\end{DoxyParamCaption})}
+
+Assignment operator
+
+
+\begin{DoxyParams}{Parameters}
+{\em f} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+As a pure base class, it does nothing here but only assert the number of components. The following sentence suppresses compiler warnings about the unused input argument f.\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}} 
+\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}!value@{value}}
+\index{value@{value}!Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}}
+\subsubsection{\texorpdfstring{value()}{value()}}
+{\footnotesize\ttfamily template$<$int dim, typename Range\+Number\+Type $>$ \\
+Range\+Number\+Type \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}$<$ dim, Range\+Number\+Type $>$\+::value (\begin{DoxyParamCaption}\item[{const Point$<$ dim $>$ \&}]{x,  }\item[{const Point$<$ dim $>$ \&}]{y,  }\item[{const Tensor$<$ 1, dim $>$ \&}]{nx,  }\item[{const Tensor$<$ 1, dim $>$ \&}]{ny,  }\item[{const unsigned int}]{component = {\ttfamily 0} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Evaluate the kernel function at the specified point pair $(x, y)$ associated with their normal vectors $(n_x, n_y)$. In case the kernel function is vector-\/valued, this function only returns the required {\ttfamily component} in the result vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & \\
+\hline
+{\em y} & \\
+\hline
+{\em nx} & \\
+\hline
+{\em ny} & \\
+\hline
+{\em component} & Component index in the result vector, if the kernel function is vector-\/valued. If the kernel function is scalar-\/valued, there is no such issue and {\ttfamily component} is 0 by default. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+This function should never be called, since as a member function of the abstract class, it has no literal definition of the function. Hence, we throw an error here.
+
+Reimplemented in \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1HyperSingularKernel_a02811fc623d2bb605c5eeb22712bdfd6}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Hyper\+Singular\+Kernel$<$ dim, Range\+Number\+Type $>$}, \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1AdjointDoubleLayerKernel_acfa06279ea767680f2fbefee07a34304}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Adjoint\+Double\+Layer\+Kernel$<$ dim, Range\+Number\+Type $>$}, \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel_a44836d10e150f631a40d16dc2092fdad}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel$<$ dim, Range\+Number\+Type $>$}, \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1DoubleLayerKernel_a44836d10e150f631a40d16dc2092fdad}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Double\+Layer\+Kernel$<$ 3 $>$}, \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1SingleLayerKernel_a657e04bd67d8c33adeea1b9d282d6136}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Single\+Layer\+Kernel$<$ dim, Range\+Number\+Type $>$}, and \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1SingleLayerKernel_a657e04bd67d8c33adeea1b9d282d6136}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Single\+Layer\+Kernel$<$ 3 $>$}.
+
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a8ba5755bf65478154209736c001f2f2a}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_a8ba5755bf65478154209736c001f2f2a}} 
+\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}!value\+\_\+list@{value\+\_\+list}}
+\index{value\+\_\+list@{value\+\_\+list}!Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}}
+\subsubsection{\texorpdfstring{value\+\_\+list()}{value\_list()}}
+{\footnotesize\ttfamily template$<$int dim, typename Range\+Number\+Type$>$ \\
+void \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}$<$ dim, Range\+Number\+Type $>$\+::value\+\_\+list (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point$<$ dim $>$$>$ \&}]{x\+\_\+points,  }\item[{const std\+::vector$<$ Point$<$ dim $>$$>$ \&}]{y\+\_\+points,  }\item[{const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&}]{nx\+\_\+list,  }\item[{const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&}]{ny\+\_\+list,  }\item[{std\+::vector$<$ Range\+Number\+Type $>$ \&}]{values,  }\item[{const unsigned int}]{component = {\ttfamily 0} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Define the default behavior for evaluation of {\ttfamily \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}{Kernel\+Function\+::value}} at a list of points with associated normal vectors $(n_x, n_y)$. Only the required {\ttfamily component} in the result vector will be returned, if the kernel function is vector-\/valued.
+
+
+\begin{DoxyDescription}
+\item[Note ]Even though {\ttfamily \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function}} is an abstract class which cannot be instantiated and its member functions will never be called, the definition of this function will reduce the burden of redefining such function in each child class. 
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em x\+\_\+points} & \\
+\hline
+{\em y\+\_\+points} & \\
+\hline
+{\em nx\+\_\+list} & \\
+\hline
+{\em ny\+\_\+list} & \\
+\hline
+{\em values} & \\
+\hline
+{\em component} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aa8110379ffcda0d7aabeb1b9229fa8db}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aa8110379ffcda0d7aabeb1b9229fa8db}} 
+\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}!vector\+\_\+value@{vector\+\_\+value}}
+\index{vector\+\_\+value@{vector\+\_\+value}!Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}}
+\subsubsection{\texorpdfstring{vector\+\_\+value()}{vector\_value()}}
+{\footnotesize\ttfamily template$<$int dim, typename Range\+Number\+Type$>$ \\
+void \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}$<$ dim, Range\+Number\+Type $>$\+::vector\+\_\+value (\begin{DoxyParamCaption}\item[{const Point$<$ dim $>$ \&}]{x,  }\item[{const Point$<$ dim $>$ \&}]{y,  }\item[{const Tensor$<$ 1, dim $>$ \&}]{nx,  }\item[{const Tensor$<$ 1, dim $>$ \&}]{ny,  }\item[{Vector$<$ Range\+Number\+Type $>$ \&}]{values }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Define the default behavior for evaluation of {\ttfamily \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aee6c638a4392616e89784d7b6558dd24}{Kernel\+Function\+::value}} at the specified point pair $(x, y)$ associated with their normal vectors $(n_x, n_y)$ and all of its components will be retrieved into the result vector {\ttfamily values}.
+
+
+\begin{DoxyDescription}
+\item[Note ]Even though {\ttfamily \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function}} is an abstract class which cannot be instantiated and its member functions will never be called, the definition of this function will reduce the burden of redefining such function in each child class. 
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & \\
+\hline
+{\em y} & \\
+\hline
+{\em nx} & \\
+\hline
+{\em ny} & \\
+\hline
+{\em values} & The vector holding all components of the function result. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ae906434f76ac27668ab4ddf91e3cd7fb}\label{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_ae906434f76ac27668ab4ddf91e3cd7fb}} 
+\index{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}!vector\+\_\+value\+\_\+list@{vector\+\_\+value\+\_\+list}}
+\index{vector\+\_\+value\+\_\+list@{vector\+\_\+value\+\_\+list}!Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function@{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}}
+\subsubsection{\texorpdfstring{vector\+\_\+value\+\_\+list()}{vector\_value\_list()}}
+{\footnotesize\ttfamily template$<$int dim, typename Range\+Number\+Type$>$ \\
+void \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Laplace\+B\+E\+M\+::\+Laplace\+Kernel\+::\+Kernel\+Function}$<$ dim, Range\+Number\+Type $>$\+::vector\+\_\+value\+\_\+list (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point$<$ dim $>$$>$ \&}]{x\+\_\+points,  }\item[{const std\+::vector$<$ Point$<$ dim $>$$>$ \&}]{y\+\_\+points,  }\item[{const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&}]{nx\+\_\+list,  }\item[{const std\+::vector$<$ Tensor$<$ 1, dim $>$$>$ \&}]{ny\+\_\+list,  }\item[{std\+::vector$<$ Vector$<$ Range\+Number\+Type $>$$>$ \&}]{values }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Define the default behavior for evaluation of {\ttfamily \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction_aa8110379ffcda0d7aabeb1b9229fa8db}{Kernel\+Function\+::vector\+\_\+value}} at a list of points with associated normal vectors $(n_x, n_y)$.
+
+
+\begin{DoxyDescription}
+\item[Note ]Even though {\ttfamily \hyperlink{classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction}{Kernel\+Function}} is an abstract class which cannot be instantiated and its member functions will never be called, the definition of this function will reduce the burden of redefining such function in each child class. 
+\end{DoxyDescription}
+
+
+\begin{DoxyParams}{Parameters}
+{\em x\+\_\+points} & \\
+\hline
+{\em y\+\_\+points} & \\
+\hline
+{\em nx\+\_\+list} & \\
+\hline
+{\em ny\+\_\+list} & \\
+\hline
+{\em values} & \\
+\hline
+\end{DoxyParams}
 
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}

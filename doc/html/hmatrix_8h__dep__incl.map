@@ -57,17 +57,19 @@
 <area shape="rect" id="node57" href="$hmatrix-shallow-copy-constructor_8cc.html" title="Verify the deep copy constructor of &#45;matrix. " alt="" coords="12896,146,13085,246"/>
 <area shape="rect" id="node58" href="$hmatrix-solve-cholesky_8cc.html" title="Verify Cholesky factorization of a positive definite and symmetric &#45;matrix and solve this matrix usin..." alt="" coords="13109,153,13344,239"/>
 <area shape="rect" id="node59" href="$hmatrix-solve-cholesky-in-situ_8cc.html" title="Verify in situ Cholesky factorization of a positive definite and symmetric &#45;matrix and solve this mat..." alt="" coords="13368,146,13539,246"/>
-<area shape="rect" id="node60" href="$hmatrix-solve-lu_8cc.html" title="Verify LU factorization of an &#45;matrix and solve this matrix using forward and backward substitution..." alt="" coords="13563,153,13730,239"/>
-<area shape="rect" id="node61" href="$hmatrix-solve-lu-in-situ_8cc.html" title="Verify LU factorization (in&#45;situ) of an &#45;matrix and solve this matrix using forward and backward subs..." alt="" coords="13754,146,13921,246"/>
-<area shape="rect" id="node62" href="$hmatrix-transpose-forward-substitution_8cc.html" title="Verify forward substitution of the transpose of an upper triangle &#45;matrix. The block cluster tree par..." alt="" coords="13945,146,14164,246"/>
-<area shape="rect" id="node63" href="$hmatrix-transpose-forward-substitution-matrix-valued_8cc.html" title="Verify matrix&#45;valued forward substitution of the transpose of a upper triangular &#45;matrix. " alt="" coords="14188,139,14407,253"/>
-<area shape="rect" id="node64" href="$hmatrix-truncate-to-fixed-rank_8cc.html" title="Verify the truncation of an HMatrix to an RkMatrix. " alt="" coords="14431,146,14627,246"/>
-<area shape="rect" id="node65" href="$hmatrix-vmult_8cc.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/tests/hmatrix&#45;vmult\l/hmatrix&#45;vmult.cc" alt="" coords="14651,153,14818,239"/>
-<area shape="rect" id="node66" href="$hmatrix-write-leaf-set-by-iteration_8cc.html" title="Verify the method for write out leaf set by iteration over the constructed leaf set instead of recurs..." alt="" coords="14843,146,15029,246"/>
-<area shape="rect" id="node67" href="$hp-matrix_8cc.html" title="Test the &#160;matrix. " alt="" coords="15053,153,15213,239"/>
-<area shape="rect" id="node68" href="$lapack-matrix-local-to-rkmatrix_8cc.html" title="Verify the restriction of a local full matrix to a rank&#45;k submatrix. " alt="" coords="15238,146,15415,246"/>
-<area shape="rect" id="node69" href="$lapack-matrix-local-to-submatrix_8cc.html" title="Verify the restriction of a local full matrix to sub full matrix. " alt="" coords="15440,146,15627,246"/>
-<area shape="rect" id="node70" href="$rkmatrix-hmatrix-mmult_8cc.html" title="Verify the rank&#45;k/H&#45;matrix matrix multiplication. " alt="" coords="15651,153,15869,239"/>
-<area shape="rect" id="node71" href="$rkmatrix-local-to-rkmatrix_8cc.html" title="Verify the restriction of a local rank&#45;k matrix to a rank&#45;k submatrix. " alt="" coords="15893,146,16064,246"/>
-<area shape="rect" id="node72" href="$rkmatrix-local-to-submatrix_8cc.html" title="Verify the restriction of a local rank&#45;k matrix to a full submatrix. " alt="" coords="16089,146,16269,246"/>
+<area shape="rect" id="node60" href="$hmatrix-solve-cholesky-in-situ-for-erichsen1996efficient-example2_8cc.html" title="Verify in situ Cholesky factorization of a positive definite and symmetric &#45;matrix and solve this mat..." alt="" coords="13563,139,13834,253"/>
+<area shape="rect" id="node61" href="$hmatrix-solve-lu_8cc.html" title="Verify LU factorization of an &#45;matrix and solve this matrix using forward and backward substitution..." alt="" coords="13858,153,14025,239"/>
+<area shape="rect" id="node62" href="$hmatrix-solve-lu-in-situ_8cc.html" title="Verify LU factorization (in&#45;situ) of an &#45;matrix and solve this matrix using forward and backward subs..." alt="" coords="14049,146,14215,246"/>
+<area shape="rect" id="node63" href="$hmatrix-transpose-forward-substitution_8cc.html" title="Verify forward substitution of the transpose of an upper triangle &#45;matrix. The block cluster tree par..." alt="" coords="14240,146,14459,246"/>
+<area shape="rect" id="node64" href="$hmatrix-transpose-forward-substitution-matrix-valued_8cc.html" title="Verify matrix&#45;valued forward substitution of the transpose of a upper triangular &#45;matrix. " alt="" coords="14483,139,14701,253"/>
+<area shape="rect" id="node65" href="$hmatrix-truncate-to-fixed-rank_8cc.html" title="Verify the rank truncation of an &#45;matrix. " alt="" coords="14726,146,14922,246"/>
+<area shape="rect" id="node66" href="$hmatrix-truncate-to-fixed-rank-preserve-spd_8cc.html" title="Verify the rank truncation of an &#45;matrix, while preserving its symmetric positive definiteness (SPD) ..." alt="" coords="14946,139,15142,253"/>
+<area shape="rect" id="node67" href="$hmatrix-vmult_8cc.html" title="/home/jihuan/Projects\l/deal.ii/program/dealii\l&#45;9.1.1/examples/laplace\l&#45;bem/tests/hmatrix&#45;vmult\l/hmatrix&#45;vmult.cc" alt="" coords="15166,153,15333,239"/>
+<area shape="rect" id="node68" href="$hmatrix-write-leaf-set-by-iteration_8cc.html" title="Verify the method for write out leaf set by iteration over the constructed leaf set instead of recurs..." alt="" coords="15357,146,15544,246"/>
+<area shape="rect" id="node69" href="$hp-matrix_8cc.html" title="Test the &#160;matrix. " alt="" coords="15568,153,15728,239"/>
+<area shape="rect" id="node70" href="$lapack-matrix-local-to-rkmatrix_8cc.html" title="Verify the restriction of a local full matrix to a rank&#45;k submatrix. " alt="" coords="15753,146,15930,246"/>
+<area shape="rect" id="node71" href="$lapack-matrix-local-to-submatrix_8cc.html" title="Verify the restriction of a local full matrix to sub full matrix. " alt="" coords="15955,146,16141,246"/>
+<area shape="rect" id="node72" href="$rkmatrix-hmatrix-mmult_8cc.html" title="Verify the rank&#45;k/H&#45;matrix matrix multiplication. " alt="" coords="16165,153,16384,239"/>
+<area shape="rect" id="node73" href="$rkmatrix-local-to-rkmatrix_8cc.html" title="Verify the restriction of a local rank&#45;k matrix to a rank&#45;k submatrix. " alt="" coords="16408,146,16579,246"/>
+<area shape="rect" id="node74" href="$rkmatrix-local-to-submatrix_8cc.html" title="Verify the restriction of a local rank&#45;k matrix to a full submatrix. " alt="" coords="16603,146,16783,246"/>
 </map>

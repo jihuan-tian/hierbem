@@ -1,7 +1,7 @@
 var searchData=
 [
   ['n',['n',['../classHMatrix.html#ab5ae2eb472f81f80653ed4411629c2d1',1,'HMatrix::n()'],['../classRkMatrix.html#a06d3b6636bb423c391c66e4ccc722687',1,'RkMatrix::n()']]],
-  ['n_5fmin',['n_min',['../classClusterTree.html#a2c1aa1755a2c06056b4d6b32ec35dba5',1,'ClusterTree']]],
+  ['n_5fmin',['n_min',['../classClusterTree.html#a5af4448800c4ddc98121706754bfe3f9',1,'ClusterTree']]],
   ['neumann_5fbc',['neumann_bc',['../classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2.html#a52203aaab49947b16cf4f1a46f245375',1,'LaplaceBEM::Erichsen1996Efficient::Example2']]],
   ['neumannbc',['NeumannBC',['../classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_1_1NeumannBC.html',1,'LaplaceBEM::Erichsen1996Efficient::Example2']]],
   ['node_5fconst_5fpointer_5ftype',['node_const_pointer_type',['../classClusterTree.html#acb805fbc20c01a71fa6a00adc959542c',1,'ClusterTree']]],

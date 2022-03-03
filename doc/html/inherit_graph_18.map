@@ -1,3 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classTreeNode.html" title="TreeNode\&lt; BlockCluster\l\&lt; spacedim, Number \&gt;,\l BlockClusterTree\&lt; spacedim,\l Number \&gt;::child_num \&gt;" alt="" coords="5,5,204,76"/>
+<area shape="rect" id="node2" href="$classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_1_1AnalyticalSolution.html" title="LaplaceBEM::Erichsen1996\lEfficient::Example2::Analytical\lSolution" alt="" coords="134,5,335,61"/>
+<area shape="rect" id="node3" href="$classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2_1_1NeumannBC.html" title="LaplaceBEM::Erichsen1996\lEfficient::Example2::NeumannBC" alt="" coords="125,86,344,127"/>
 </map>

@@ -11,6 +11,15 @@ Class for cluster tree.
 
 
 
+Inheritance diagram for Cluster\+Tree$<$ spacedim, Number $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classClusterTree__inherit__graph}
+\end{center}
+\end{figure}
+
+
 Collaboration diagram for Cluster\+Tree$<$ spacedim, Number $>$\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
@@ -46,15 +55,21 @@ typedef const \hyperlink{classCluster}{Cluster}$<$ spacedim, Number $>$ \& \hype
 \item 
 \hyperlink{classClusterTree_a28b31e2fbe58c74eff89a1a8e2124e10}{Cluster\+Tree} ()
 \item 
-\hyperlink{classClusterTree_ae21fda96c7d405825a853f8759c0cc4c}{Cluster\+Tree} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const unsigned int \hyperlink{classClusterTree_a2c1aa1755a2c06056b4d6b32ec35dba5}{n\+\_\+min})
+\hyperlink{classClusterTree_ae21fda96c7d405825a853f8759c0cc4c}{Cluster\+Tree} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const unsigned int \hyperlink{classClusterTree_a5af4448800c4ddc98121706754bfe3f9}{n\+\_\+min})
 \item 
-\hyperlink{classClusterTree_a587c465f14f7fa0e0e6a82aa8733452f}{Cluster\+Tree} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&all\+\_\+support\+\_\+points, const unsigned int \hyperlink{classClusterTree_a2c1aa1755a2c06056b4d6b32ec35dba5}{n\+\_\+min})
+\hyperlink{classClusterTree_a587c465f14f7fa0e0e6a82aa8733452f}{Cluster\+Tree} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&all\+\_\+support\+\_\+points, const unsigned int \hyperlink{classClusterTree_a5af4448800c4ddc98121706754bfe3f9}{n\+\_\+min})
 \item 
-\hyperlink{classClusterTree_a3fd518db632c62cfafb61e9ef56097c7}{Cluster\+Tree} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs, const unsigned int \hyperlink{classClusterTree_a2c1aa1755a2c06056b4d6b32ec35dba5}{n\+\_\+min})
+\hyperlink{classClusterTree_a3fd518db632c62cfafb61e9ef56097c7}{Cluster\+Tree} (const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set, const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&all\+\_\+support\+\_\+points, const std\+::vector$<$ Number $>$ \&cell\+\_\+size\+\_\+at\+\_\+dofs, const unsigned int \hyperlink{classClusterTree_a5af4448800c4ddc98121706754bfe3f9}{n\+\_\+min})
 \item 
 \hyperlink{classClusterTree_a40d41a3a87bee15fe2d0b39a42f705d2}{Cluster\+Tree} (const \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&cluster\+\_\+tree)
 \item 
 \hyperlink{classClusterTree_ad1b0ac0f6474de90d4fb528b6ed28db6}{$\sim$\+Cluster\+Tree} ()
+\item 
+void \hyperlink{classClusterTree_a2dc8b94ebdc4e5efb885940204f614e1}{release} ()
+\item 
+\hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \& \hyperlink{classClusterTree_a3a4e51a1a09f759f085ab140db914af9}{operator=} (const \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&cluster\+\_\+tree)
+\item 
+\hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \& \hyperlink{classClusterTree_a9700796d8fb849b3171c0c7d461a2380}{operator=} (\hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&\&cluster\+\_\+tree)
 \item 
 void \hyperlink{classClusterTree_aa514c3b75864d5f7be72315a30079cfe}{partition} ()
 \item 
@@ -105,7 +120,7 @@ unsigned int \hyperlink{classClusterTree_a051df20340ed3f0e4bc0ee1fb1119f9f}{dept
 \item 
 int \hyperlink{classClusterTree_a77800bb9f86c689821ba4d549ce97a58}{max\+\_\+level}
 \item 
-const unsigned int \hyperlink{classClusterTree_a2c1aa1755a2c06056b4d6b32ec35dba5}{n\+\_\+min}
+unsigned int \hyperlink{classClusterTree_a5af4448800c4ddc98121706754bfe3f9}{n\+\_\+min}
 \item 
 unsigned int \hyperlink{classClusterTree_a6b352489be3ca9217d31966c24ee02a1}{node\+\_\+num}
 \end{DoxyCompactItemize}
@@ -219,10 +234,6 @@ Construct from only an index set without support point and the partition will be
 {\em n\+\_\+min} & \\
 \hline
 \end{DoxyParams}
-
-
-References Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, and Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
 \mbox{\Hypertarget{classClusterTree_a587c465f14f7fa0e0e6a82aa8733452f}\label{classClusterTree_a587c465f14f7fa0e0e6a82aa8733452f}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!Cluster\+Tree@{Cluster\+Tree}}
 \index{Cluster\+Tree@{Cluster\+Tree}!Cluster\+Tree@{Cluster\+Tree}}
@@ -239,15 +250,11 @@ This constructor will create the root node of the cluster tree based on the give
 {\em all\+\_\+support\+\_\+points} & All the support points. \\
 \hline
 \end{DoxyParams}
-
-
-References Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, and Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
 \mbox{\Hypertarget{classClusterTree_a3fd518db632c62cfafb61e9ef56097c7}\label{classClusterTree_a3fd518db632c62cfafb61e9ef56097c7}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!Cluster\+Tree@{Cluster\+Tree}}
 \index{Cluster\+Tree@{Cluster\+Tree}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Cluster\+Tree()}{ClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [4/5]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classClusterTree}{Cluster\+Tree} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{index\+\_\+set,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs,  }\item[{const unsigned int}]{n\+\_\+min }\end{DoxyParamCaption})}
 
 Constructor from a full index set and associated support point coordinates.
@@ -259,15 +266,11 @@ This constructor will create the root node of the cluster tree based on the give
 {\em all\+\_\+support\+\_\+points} & All the support points. \\
 \hline
 \end{DoxyParams}
-
-
-References Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, and Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
 \mbox{\Hypertarget{classClusterTree_a40d41a3a87bee15fe2d0b39a42f705d2}\label{classClusterTree_a40d41a3a87bee15fe2d0b39a42f705d2}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!Cluster\+Tree@{Cluster\+Tree}}
 \index{Cluster\+Tree@{Cluster\+Tree}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{Cluster\+Tree()}{ClusterTree()}\hspace{0.1cm}{\footnotesize\ttfamily [5/5]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::\hyperlink{classClusterTree}{Cluster\+Tree} (\begin{DoxyParamCaption}\item[{const \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{cluster\+\_\+tree }\end{DoxyParamCaption})}
 
 Copy constructor. 
@@ -275,10 +278,6 @@ Copy constructor.
 {\em cluster\+\_\+tree} & \\
 \hline
 \end{DoxyParams}
-
-
-References Cluster\+Tree$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), Copy\+Tree(), and Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+root().
-
 \mbox{\Hypertarget{classClusterTree_ad1b0ac0f6474de90d4fb528b6ed28db6}\label{classClusterTree_ad1b0ac0f6474de90d4fb528b6ed28db6}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!````~Cluster\+Tree@{$\sim$\+Cluster\+Tree}}
 \index{````~Cluster\+Tree@{$\sim$\+Cluster\+Tree}!Cluster\+Tree@{Cluster\+Tree}}
@@ -287,10 +286,6 @@ References Cluster\+Tree$<$ spacedim, Number $>$\+::build\+\_\+leaf\+\_\+set(), 
 \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::$\sim$\hyperlink{classClusterTree}{Cluster\+Tree} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
 Destructor which recursively destroys every node in the cluster tree. 
-
-References Delete\+Tree().
-
-
 
 \subsection{Member Function Documentation}
 \mbox{\Hypertarget{classClusterTree_a1e7dc037d01b3e15f1d6b4eacac59cb1}\label{classClusterTree_a1e7dc037d01b3e15f1d6b4eacac59cb1}} 
@@ -302,11 +297,7 @@ void \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::buil
 
 Build the leaf set by tree recursion. 
 
-References Get\+Tree\+Leaves().
-
-
-
-Referenced by Cluster\+Tree$<$ spacedim, Number $>$\+::\+Cluster\+Tree().
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::\+Cluster\+Tree(), and Cluster\+Tree$<$ spacedim, double $>$\+::operator=().
 
 \mbox{\Hypertarget{classClusterTree_a2bd8dd175c4459338d76a8cb879afccf}\label{classClusterTree_a2bd8dd175c4459338d76a8cb879afccf}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!get\+\_\+depth@{get\+\_\+depth}}
@@ -315,11 +306,7 @@ Referenced by Cluster\+Tree$<$ spacedim, Number $>$\+::\+Cluster\+Tree().
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 unsigned int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::get\+\_\+depth (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-Get the tree depth. 
-
-References Cluster\+Tree$<$ spacedim, Number $>$\+::depth.
-
-\mbox{\Hypertarget{classClusterTree_af17a96da7f2e5391d3e49028b2aba894}\label{classClusterTree_af17a96da7f2e5391d3e49028b2aba894}} 
+Get the tree depth. \mbox{\Hypertarget{classClusterTree_af17a96da7f2e5391d3e49028b2aba894}\label{classClusterTree_af17a96da7f2e5391d3e49028b2aba894}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!get\+\_\+leaf\+\_\+set@{get\+\_\+leaf\+\_\+set}}
 \index{get\+\_\+leaf\+\_\+set@{get\+\_\+leaf\+\_\+set}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{get\+\_\+leaf\+\_\+set()}{get\_leaf\_set()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
@@ -344,11 +331,7 @@ Get the reference to the block cluster list (const version). \mbox{\Hypertarget{
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 unsigned int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::get\+\_\+max\+\_\+level (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-Get the maximum tree level. 
-
-References Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level.
-
-\mbox{\Hypertarget{classClusterTree_a403e59575a89a3e86e8d7092a8815aa5}\label{classClusterTree_a403e59575a89a3e86e8d7092a8815aa5}} 
+Get the maximum tree level. \mbox{\Hypertarget{classClusterTree_a403e59575a89a3e86e8d7092a8815aa5}\label{classClusterTree_a403e59575a89a3e86e8d7092a8815aa5}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!get\+\_\+n\+\_\+min@{get\+\_\+n\+\_\+min}}
 \index{get\+\_\+n\+\_\+min@{get\+\_\+n\+\_\+min}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{get\+\_\+n\+\_\+min()}{get\_n\_min()}}
@@ -357,11 +340,7 @@ unsigned int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$
 
 Get the minimum cluster size. 
 
-References Cluster\+Tree$<$ spacedim, Number $>$\+::n\+\_\+min.
-
-
-
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::\+Block\+Cluster\+Tree().
 
 \mbox{\Hypertarget{classClusterTree_af80051449b7324121fb0a27d5ce7c9a1}\label{classClusterTree_af80051449b7324121fb0a27d5ce7c9a1}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!get\+\_\+node\+\_\+num@{get\+\_\+node\+\_\+num}}
@@ -370,11 +349,7 @@ Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+
 {\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
 unsigned int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::get\+\_\+node\+\_\+num (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-Get the total number of clusters in the tree. 
-
-References Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
-
-\mbox{\Hypertarget{classClusterTree_a13132bfc3ca8b70af8c80066565b0adb}\label{classClusterTree_a13132bfc3ca8b70af8c80066565b0adb}} 
+Get the total number of clusters in the tree. \mbox{\Hypertarget{classClusterTree_a13132bfc3ca8b70af8c80066565b0adb}\label{classClusterTree_a13132bfc3ca8b70af8c80066565b0adb}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!get\+\_\+root@{get\+\_\+root}}
 \index{get\+\_\+root@{get\+\_\+root}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{get\+\_\+root()}{get\_root()}}
@@ -383,8 +358,46 @@ References Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num.
 
 Get the pointer to the root node of the cluster tree. 
 
-Referenced by Block\+Cluster\+Tree$<$ spacedim, Number $>$\+::\+Block\+Cluster\+Tree(), and Cluster\+Tree$<$ spacedim, Number $>$\+::\+Cluster\+Tree().
+Referenced by Block\+Cluster\+Tree$<$ 3 $>$\+::\+Block\+Cluster\+Tree(), Cluster\+Tree$<$ spacedim, double $>$\+::\+Cluster\+Tree(), and Cluster\+Tree$<$ spacedim, double $>$\+::operator=().
 
+\mbox{\Hypertarget{classClusterTree_a3a4e51a1a09f759f085ab140db914af9}\label{classClusterTree_a3a4e51a1a09f759f085ab140db914af9}} 
+\index{Cluster\+Tree@{Cluster\+Tree}!operator=@{operator=}}
+\index{operator=@{operator=}!Cluster\+Tree@{Cluster\+Tree}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
+\hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \& \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::operator= (\begin{DoxyParamCaption}\item[{const \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&}]{cluster\+\_\+tree }\end{DoxyParamCaption})}
+
+Deep assignment operator.
+
+
+\begin{DoxyParams}{Parameters}
+{\em cluster\+\_\+tree} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::operator=(), and Cluster\+Tree$<$ spacedim, double $>$\+::release().
+
+\mbox{\Hypertarget{classClusterTree_a9700796d8fb849b3171c0c7d461a2380}\label{classClusterTree_a9700796d8fb849b3171c0c7d461a2380}} 
+\index{Cluster\+Tree@{Cluster\+Tree}!operator=@{operator=}}
+\index{operator=@{operator=}!Cluster\+Tree@{Cluster\+Tree}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
+\hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \& \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::operator= (\begin{DoxyParamCaption}\item[{\hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$ \&\&}]{cluster\+\_\+tree }\end{DoxyParamCaption})}
+
+Shallow assignment operator.
+
+
+\begin{DoxyParams}{Parameters}
+{\em cluster\+\_\+tree} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
 \mbox{\Hypertarget{classClusterTree_aa514c3b75864d5f7be72315a30079cfe}\label{classClusterTree_aa514c3b75864d5f7be72315a30079cfe}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!partition@{partition}}
 \index{partition@{partition}!Cluster\+Tree@{Cluster\+Tree}}
@@ -403,11 +416,7 @@ Perform a pure cardinality based recursive partition, which will ultimately be u
 \end{DoxyEnumerate}
 \end{DoxyDescription}
 
-References calc\+\_\+depth(), Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, and Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node().
-
-
-
-Referenced by main().
+Referenced by Laplace\+B\+E\+M\+::\+Erichsen1996\+Efficient\+::\+Example2\+::build\+\_\+slp\+\_\+only(), and main().
 
 \mbox{\Hypertarget{classClusterTree_a5657415b4b0519f045f3139d1d63e85d}\label{classClusterTree_a5657415b4b0519f045f3139d1d63e85d}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!partition@{partition}}
@@ -427,15 +436,11 @@ In this version, there is no mesh cell size correction to the cluster diameter a
 \item If the initial complete cluster index set $I$ is sorted, which is usually $[0, 1, \cdots, N]$, the support point coordinates based partition is also order preserving. This is because the two child clusters of the current cluster are built by scanning the index set of the current cluster from beginning to end.
 \item The support point coordinates based partition is not continuity preserving.  
 \end{DoxyEnumerate}
-\end{DoxyDescription}
-
-References calc\+\_\+depth(), Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, and Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node().
-
-\mbox{\Hypertarget{classClusterTree_a4d2682986352bb1e44bc73ebfc5a9fdf}\label{classClusterTree_a4d2682986352bb1e44bc73ebfc5a9fdf}} 
+\end{DoxyDescription}\mbox{\Hypertarget{classClusterTree_a4d2682986352bb1e44bc73ebfc5a9fdf}\label{classClusterTree_a4d2682986352bb1e44bc73ebfc5a9fdf}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!partition@{partition}}
 \index{partition@{partition}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{partition()}{partition()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 void \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::partition (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs }\end{DoxyParamCaption})}
 
 Perform a recursive partition dependent on the coordinates of DoF support points by starting from the root node.
@@ -449,11 +454,7 @@ In this version, there is mesh cell size correction to the cluster diameter and 
 \item If the initial complete cluster index set $I$ is sorted, which is usually $[0, 1, \cdots, N]$, the support point coordinates based partition is also order preserving. This is because the two child clusters of the current cluster are built by scanning the index set of the current cluster from beginning to end.
 \item The support point coordinates based partition is not continuity preserving.  
 \end{DoxyEnumerate}
-\end{DoxyDescription}
-
-References calc\+\_\+depth(), Cluster\+Tree$<$ spacedim, Number $>$\+::depth, Cluster\+Tree$<$ spacedim, Number $>$\+::max\+\_\+level, and Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node().
-
-\mbox{\Hypertarget{classClusterTree_a8b650f0c7cc83adbde5aad9556a57ac3}\label{classClusterTree_a8b650f0c7cc83adbde5aad9556a57ac3}} 
+\end{DoxyDescription}\mbox{\Hypertarget{classClusterTree_a8b650f0c7cc83adbde5aad9556a57ac3}\label{classClusterTree_a8b650f0c7cc83adbde5aad9556a57ac3}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!partition\+\_\+from\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+cluster\+\_\+node}}
 \index{partition\+\_\+from\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+cluster\+\_\+node}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{partition\+\_\+from\+\_\+cluster\+\_\+node()}{partition\_from\_cluster\_node()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
@@ -502,11 +503,7 @@ Continue the recursive partition by starting from this child node.
 
 Merge the leaf set wrt. the child cluster node into the leaf set of the current cluster node.
 
-References Binary\+Tree\+Node$<$ T $>$\+::get\+\_\+data\+\_\+pointer(), Binary\+Tree\+Node$<$ T $>$\+::get\+\_\+level(), Binary\+Tree\+Node$<$ T $>$\+::\+Left(), Cluster\+Tree$<$ spacedim, Number $>$\+::n\+\_\+min, Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num, and Binary\+Tree\+Node$<$ T $>$\+::\+Right().
-
-
-
-Referenced by Cluster\+Tree$<$ spacedim, Number $>$\+::partition(), and Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node().
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::partition(), and Cluster\+Tree$<$ spacedim, double $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node().
 
 \mbox{\Hypertarget{classClusterTree_a6d3636b1686d72909611a6d516f5ee47}\label{classClusterTree_a6d3636b1686d72909611a6d516f5ee47}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!partition\+\_\+from\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+cluster\+\_\+node}}
@@ -559,15 +556,11 @@ Append this new node as the right child of the current cluster node.
 
 Continue the recursive partition by starting from this child node.
 
-Merge the leaf set wrt. the child cluster node into the leaf set of the current cluster node.
-
-References Binary\+Tree\+Node$<$ T $>$\+::get\+\_\+data\+\_\+pointer(), Binary\+Tree\+Node$<$ T $>$\+::get\+\_\+level(), Binary\+Tree\+Node$<$ T $>$\+::\+Left(), Cluster\+Tree$<$ spacedim, Number $>$\+::n\+\_\+min, Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num, Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node(), and Binary\+Tree\+Node$<$ T $>$\+::\+Right().
-
-\mbox{\Hypertarget{classClusterTree_a8b853c36834044df5283fca9e03d39d2}\label{classClusterTree_a8b853c36834044df5283fca9e03d39d2}} 
+Merge the leaf set wrt. the child cluster node into the leaf set of the current cluster node.\mbox{\Hypertarget{classClusterTree_a8b853c36834044df5283fca9e03d39d2}\label{classClusterTree_a8b853c36834044df5283fca9e03d39d2}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!partition\+\_\+from\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+cluster\+\_\+node}}
 \index{partition\+\_\+from\+\_\+cluster\+\_\+node@{partition\+\_\+from\+\_\+cluster\+\_\+node}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{partition\+\_\+from\+\_\+cluster\+\_\+node()}{partition\_from\_cluster\_node()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 void \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node (\begin{DoxyParamCaption}\item[{\hyperlink{classClusterTree_ae4bb0fdc7ac559d7844d04a00ab3e9de}{node\+\_\+pointer\+\_\+type}}]{current\+\_\+cluster\+\_\+node,  }\item[{const std\+::vector$<$ Point$<$ spacedim $>$$>$ \&}]{all\+\_\+support\+\_\+points,  }\item[{const std\+::vector$<$ Number $>$ \&}]{cell\+\_\+size\+\_\+at\+\_\+dofs,  }\item[{std\+::vector$<$ \hyperlink{classClusterTree_ae4bb0fdc7ac559d7844d04a00ab3e9de}{node\+\_\+pointer\+\_\+type} $>$ \&}]{leaf\+\_\+set\+\_\+wrt\+\_\+current\+\_\+node }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
 
 Perform a recursive partition dependent on the coordinates of DoF support points by starting from a cluster node.
@@ -614,9 +607,16 @@ Append this new node as the right child of the current cluster node.
 
 Continue the recursive partition by starting from this child node.
 
-Merge the leaf set wrt. the child cluster node into the leaf set of the current cluster node.
+Merge the leaf set wrt. the child cluster node into the leaf set of the current cluster node.\mbox{\Hypertarget{classClusterTree_a2dc8b94ebdc4e5efb885940204f614e1}\label{classClusterTree_a2dc8b94ebdc4e5efb885940204f614e1}} 
+\index{Cluster\+Tree@{Cluster\+Tree}!release@{release}}
+\index{release@{release}!Cluster\+Tree@{Cluster\+Tree}}
+\subsubsection{\texorpdfstring{release()}{release()}}
+{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+void \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::release (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
-References Binary\+Tree\+Node$<$ T $>$\+::get\+\_\+data\+\_\+pointer(), Binary\+Tree\+Node$<$ T $>$\+::get\+\_\+level(), Binary\+Tree\+Node$<$ T $>$\+::\+Left(), Cluster\+Tree$<$ spacedim, Number $>$\+::n\+\_\+min, Cluster\+Tree$<$ spacedim, Number $>$\+::node\+\_\+num, Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node(), and Binary\+Tree\+Node$<$ T $>$\+::\+Right().
+Release the memory and status of the cluster tree hierarchy. 
+
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::operator=().
 
 
 
@@ -660,7 +660,7 @@ unsigned int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$
 
 Depth of the tree, which is the maximum level plus one. 
 
-Referenced by Cluster\+Tree$<$ spacedim, Number $>$\+::\+Cluster\+Tree(), Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+depth(), and Cluster\+Tree$<$ spacedim, Number $>$\+::partition().
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::\+Cluster\+Tree(), Cluster\+Tree$<$ spacedim, double $>$\+::get\+\_\+depth(), Cluster\+Tree$<$ spacedim, double $>$\+::operator=(), Cluster\+Tree$<$ spacedim, double $>$\+::partition(), and Cluster\+Tree$<$ spacedim, double $>$\+::release().
 
 \mbox{\Hypertarget{classClusterTree_a77800bb9f86c689821ba4d549ce97a58}\label{classClusterTree_a77800bb9f86c689821ba4d549ce97a58}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!max\+\_\+level@{max\+\_\+level}}
@@ -671,18 +671,18 @@ int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::max\+
 
 Maximum level of the cluster tree, which is {\ttfamily depth} -\/ 1. 
 
-Referenced by Cluster\+Tree$<$ spacedim, Number $>$\+::\+Cluster\+Tree(), Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+max\+\_\+level(), and Cluster\+Tree$<$ spacedim, Number $>$\+::partition().
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::\+Cluster\+Tree(), Cluster\+Tree$<$ spacedim, double $>$\+::get\+\_\+max\+\_\+level(), Cluster\+Tree$<$ spacedim, double $>$\+::operator=(), Cluster\+Tree$<$ spacedim, double $>$\+::partition(), and Cluster\+Tree$<$ spacedim, double $>$\+::release().
 
-\mbox{\Hypertarget{classClusterTree_a2c1aa1755a2c06056b4d6b32ec35dba5}\label{classClusterTree_a2c1aa1755a2c06056b4d6b32ec35dba5}} 
+\mbox{\Hypertarget{classClusterTree_a5af4448800c4ddc98121706754bfe3f9}\label{classClusterTree_a5af4448800c4ddc98121706754bfe3f9}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!n\+\_\+min@{n\+\_\+min}}
 \index{n\+\_\+min@{n\+\_\+min}!Cluster\+Tree@{Cluster\+Tree}}
 \subsubsection{\texorpdfstring{n\+\_\+min}{n\_min}}
 {\footnotesize\ttfamily template$<$int spacedim, typename Number = double$>$ \\
-const unsigned int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::n\+\_\+min\hspace{0.3cm}{\ttfamily [private]}}
+unsigned int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$\+::n\+\_\+min\hspace{0.3cm}{\ttfamily [private]}}
 
 Minimum cluster size, which is used as the condition for stopping box division. 
 
-Referenced by Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+n\+\_\+min(), and Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node().
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::get\+\_\+n\+\_\+min(), Cluster\+Tree$<$ spacedim, double $>$\+::operator=(), Cluster\+Tree$<$ spacedim, double $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node(), and Cluster\+Tree$<$ spacedim, double $>$\+::release().
 
 \mbox{\Hypertarget{classClusterTree_a6b352489be3ca9217d31966c24ee02a1}\label{classClusterTree_a6b352489be3ca9217d31966c24ee02a1}} 
 \index{Cluster\+Tree@{Cluster\+Tree}!node\+\_\+num@{node\+\_\+num}}
@@ -693,7 +693,7 @@ unsigned int \hyperlink{classClusterTree}{Cluster\+Tree}$<$ spacedim, Number $>$
 
 Total number of clusters in the tree. 
 
-Referenced by Cluster\+Tree$<$ spacedim, Number $>$\+::\+Cluster\+Tree(), Cluster\+Tree$<$ spacedim, Number $>$\+::get\+\_\+node\+\_\+num(), and Cluster\+Tree$<$ spacedim, Number $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node().
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::\+Cluster\+Tree(), Cluster\+Tree$<$ spacedim, double $>$\+::get\+\_\+node\+\_\+num(), Cluster\+Tree$<$ spacedim, double $>$\+::operator=(), Cluster\+Tree$<$ spacedim, double $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node(), and Cluster\+Tree$<$ spacedim, double $>$\+::release().
 
 
 

@@ -157,6 +157,7 @@ $(function() {
 <code>#include &lt;deal.II/fe/fe.h&gt;</code><br />
 <code>#include &lt;deal.II/fe/fe_base.h&gt;</code><br />
 <code>#include &lt;deal.II/fe/fe_q.h&gt;</code><br />
+<code>#include &lt;deal.II/fe/fe_tools.h&gt;</code><br />
 <code>#include &lt;deal.II/fe/fe_values.h&gt;</code><br />
 <code>#include &lt;deal.II/fe/mapping_q_generic.h&gt;</code><br />
 <code>#include &lt;deal.II/lac/full_matrix.templates.h&gt;</code><br />
@@ -174,7 +175,7 @@ Include dependency graph for laplace_bem.h:</div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="laplace__bem_8h__dep__incl.svg" width="234" height="215"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="laplace__bem_8h__dep__incl.svg" width="282" height="378"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 <p><a href="laplace__bem_8h_source.html">Go to the source code of this file.</a></p>
@@ -205,8 +206,6 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLaplaceBEM_1_1KernelPulledbackToUnitCell.html">LaplaceBEM::KernelPulledbackToUnitCell&lt; dim, spacedim, RangeNumberType &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLaplaceBEM_1_1KernelPulledbackToSauterSpace.html">LaplaceBEM::KernelPulledbackToSauterSpace&lt; dim, spacedim, RangeNumberType &gt;</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -233,108 +232,99 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a5497786c0b39fdb049b9c8fc5988bdcb"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a5497786c0b39fdb049b9c8fc5988bdcb"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a5497786c0b39fdb049b9c8fc5988bdcb">LaplaceBEM::bem_shape_values_same_panel</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 3, RangeNumberType &gt; &amp;kx_shape_value_table, Table&lt; 3, RangeNumberType &gt; &amp;ky_shape_value_table)</td></tr>
+<tr class="memitem:a5497786c0b39fdb049b9c8fc5988bdcb"><td class="memTemplParams" colspan="2"><a id="a5497786c0b39fdb049b9c8fc5988bdcb"></a>
+template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
+<tr class="memitem:a5497786c0b39fdb049b9c8fc5988bdcb"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::bem_shape_values_same_panel</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 3, RangeNumberType &gt; &amp;kx_shape_value_table, Table&lt; 3, RangeNumberType &gt; &amp;ky_shape_value_table)</td></tr>
 <tr class="separator:a5497786c0b39fdb049b9c8fc5988bdcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adacab8988c77e9127210826684684cd7"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:adacab8988c77e9127210826684684cd7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#adacab8988c77e9127210826684684cd7">LaplaceBEM::bem_shape_values_common_edge</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 3, RangeNumberType &gt; &amp;kx_shape_value_table, Table&lt; 3, RangeNumberType &gt; &amp;ky_shape_value_table)</td></tr>
+<tr class="memitem:adacab8988c77e9127210826684684cd7"><td class="memTemplParams" colspan="2"><a id="adacab8988c77e9127210826684684cd7"></a>
+template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
+<tr class="memitem:adacab8988c77e9127210826684684cd7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::bem_shape_values_common_edge</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 3, RangeNumberType &gt; &amp;kx_shape_value_table, Table&lt; 3, RangeNumberType &gt; &amp;ky_shape_value_table)</td></tr>
 <tr class="separator:adacab8988c77e9127210826684684cd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad1b3205a29e5aef857857b6e1a533f36"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:ad1b3205a29e5aef857857b6e1a533f36"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ad1b3205a29e5aef857857b6e1a533f36">LaplaceBEM::bem_shape_values_common_vertex</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 3, RangeNumberType &gt; &amp;kx_shape_value_table, Table&lt; 3, RangeNumberType &gt; &amp;ky_shape_value_table)</td></tr>
+<tr class="memitem:ad1b3205a29e5aef857857b6e1a533f36"><td class="memTemplParams" colspan="2"><a id="ad1b3205a29e5aef857857b6e1a533f36"></a>
+template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
+<tr class="memitem:ad1b3205a29e5aef857857b6e1a533f36"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::bem_shape_values_common_vertex</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 3, RangeNumberType &gt; &amp;kx_shape_value_table, Table&lt; 3, RangeNumberType &gt; &amp;ky_shape_value_table)</td></tr>
 <tr class="separator:ad1b3205a29e5aef857857b6e1a533f36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9ba750c1de1ccb7c7f091efdd2a720fe"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a9ba750c1de1ccb7c7f091efdd2a720fe"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a9ba750c1de1ccb7c7f091efdd2a720fe">LaplaceBEM::bem_shape_values_regular</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 3, RangeNumberType &gt; &amp;kx_shape_value_table, Table&lt; 3, RangeNumberType &gt; &amp;ky_shape_value_table)</td></tr>
+<tr class="memitem:a9ba750c1de1ccb7c7f091efdd2a720fe"><td class="memTemplParams" colspan="2"><a id="a9ba750c1de1ccb7c7f091efdd2a720fe"></a>
+template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
+<tr class="memitem:a9ba750c1de1ccb7c7f091efdd2a720fe"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::bem_shape_values_regular</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 3, RangeNumberType &gt; &amp;kx_shape_value_table, Table&lt; 3, RangeNumberType &gt; &amp;ky_shape_value_table)</td></tr>
 <tr class="separator:a9ba750c1de1ccb7c7f091efdd2a720fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ce86dd0bd3b5c4bf591ae0128205416"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a1ce86dd0bd3b5c4bf591ae0128205416"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a1ce86dd0bd3b5c4bf591ae0128205416">LaplaceBEM::bem_shape_grad_matrices_same_panel</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;kx_shape_grad_matrix_table, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;ky_shape_grad_matrix_table)</td></tr>
+<tr class="memitem:a1ce86dd0bd3b5c4bf591ae0128205416"><td class="memTemplParams" colspan="2"><a id="a1ce86dd0bd3b5c4bf591ae0128205416"></a>
+template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
+<tr class="memitem:a1ce86dd0bd3b5c4bf591ae0128205416"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::bem_shape_grad_matrices_same_panel</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;kx_shape_grad_matrix_table, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;ky_shape_grad_matrix_table)</td></tr>
 <tr class="separator:a1ce86dd0bd3b5c4bf591ae0128205416"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4df239900849c6aa0875c8bdeaab0aa0"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a4df239900849c6aa0875c8bdeaab0aa0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a4df239900849c6aa0875c8bdeaab0aa0">LaplaceBEM::bem_shape_grad_matrices_common_edge</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;kx_shape_grad_matrix_table, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;ky_shape_grad_matrix_table)</td></tr>
+<tr class="memitem:a4df239900849c6aa0875c8bdeaab0aa0"><td class="memTemplParams" colspan="2"><a id="a4df239900849c6aa0875c8bdeaab0aa0"></a>
+template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
+<tr class="memitem:a4df239900849c6aa0875c8bdeaab0aa0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::bem_shape_grad_matrices_common_edge</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;kx_shape_grad_matrix_table, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;ky_shape_grad_matrix_table)</td></tr>
 <tr class="separator:a4df239900849c6aa0875c8bdeaab0aa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abaca697a3eb40d422b9f26c63ff47670"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:abaca697a3eb40d422b9f26c63ff47670"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#abaca697a3eb40d422b9f26c63ff47670">LaplaceBEM::bem_shape_grad_matrices_common_vertex</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;kx_shape_grad_matrix_table, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;ky_shape_grad_matrix_table)</td></tr>
+<tr class="memitem:abaca697a3eb40d422b9f26c63ff47670"><td class="memTemplParams" colspan="2"><a id="abaca697a3eb40d422b9f26c63ff47670"></a>
+template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
+<tr class="memitem:abaca697a3eb40d422b9f26c63ff47670"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::bem_shape_grad_matrices_common_vertex</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;kx_shape_grad_matrix_table, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;ky_shape_grad_matrix_table)</td></tr>
 <tr class="separator:abaca697a3eb40d422b9f26c63ff47670"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe59b85b94a356ba18b578090d708090"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:abe59b85b94a356ba18b578090d708090"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#abe59b85b94a356ba18b578090d708090">LaplaceBEM::bem_shape_grad_matrices_regular</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;kx_shape_grad_matrix_table, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;ky_shape_grad_matrix_table)</td></tr>
+<tr class="memitem:abe59b85b94a356ba18b578090d708090"><td class="memTemplParams" colspan="2"><a id="abe59b85b94a356ba18b578090d708090"></a>
+template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
+<tr class="memitem:abe59b85b94a356ba18b578090d708090"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::bem_shape_grad_matrices_regular</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;kx_fe, const FiniteElement&lt; dim, spacedim &gt; &amp;ky_fe, const QGauss&lt; 4 &gt; &amp;sauter_quad_rule, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;kx_shape_grad_matrix_table, Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;ky_shape_grad_matrix_table)</td></tr>
 <tr class="separator:abe59b85b94a356ba18b578090d708090"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe"><td class="memTemplParams" colspan="2"><a id="ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; types::global_dof_index &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::get_conflict_indices</b> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell)</td></tr>
+<tr class="memitem:ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; types::global_dof_index &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe">LaplaceBEM::get_conflict_indices</a> (const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;cell)</td></tr>
 <tr class="separator:ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac077b7401dee40cdf3d7bd38e1e8ad2c"><td class="memTemplParams" colspan="2"><a id="ac077b7401dee40cdf3d7bd38e1e8ad2c"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:ac077b7401dee40cdf3d7bd38e1e8ad2c"><td class="memTemplItemLeft" align="right" valign="top">std::array&lt; types::global_vertex_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::get_vertex_indices</b> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell)</td></tr>
+<tr class="memitem:ac077b7401dee40cdf3d7bd38e1e8ad2c"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:ac077b7401dee40cdf3d7bd38e1e8ad2c"><td class="memTemplItemLeft" align="right" valign="top">std::array&lt; types::global_vertex_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ac077b7401dee40cdf3d7bd38e1e8ad2c">LaplaceBEM::get_vertex_indices</a> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell)</td></tr>
 <tr class="separator:ac077b7401dee40cdf3d7bd38e1e8ad2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af2ba8d6b088c9eba188839b91ecb0d49"><td class="memTemplParams" colspan="2"><a id="af2ba8d6b088c9eba188839b91ecb0d49"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:af2ba8d6b088c9eba188839b91ecb0d49"><td class="memTemplItemLeft" align="right" valign="top">std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::get_vertex_dof_indices</b> (const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;cell)</td></tr>
+<tr class="memitem:af2ba8d6b088c9eba188839b91ecb0d49"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:af2ba8d6b088c9eba188839b91ecb0d49"><td class="memTemplItemLeft" align="right" valign="top">std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#af2ba8d6b088c9eba188839b91ecb0d49">LaplaceBEM::get_vertex_dof_indices</a> (const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;cell)</td></tr>
 <tr class="separator:af2ba8d6b088c9eba188839b91ecb0d49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8aa43c53ab43532df0868cd98f87b92"><td class="memTemplParams" colspan="2"><a id="ac8aa43c53ab43532df0868cd98f87b92"></a>
-template&lt;int dim&gt; </td></tr>
-<tr class="memitem:ac8aa43c53ab43532df0868cd98f87b92"><td class="memTemplItemLeft" align="right" valign="top">CellNeighboringType&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::detect_cell_neighboring_type</b> (const std::array&lt; types::global_vertex_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;first_cell_vertex_indices, const std::array&lt; types::global_vertex_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;second_cell_vertex_indices, std::vector&lt; types::global_vertex_index &gt; &amp;vertex_index_intersection)</td></tr>
+<tr class="memitem:ac8aa43c53ab43532df0868cd98f87b92"><td class="memTemplParams" colspan="2">template&lt;int dim&gt; </td></tr>
+<tr class="memitem:ac8aa43c53ab43532df0868cd98f87b92"><td class="memTemplItemLeft" align="right" valign="top">CellNeighboringType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ac8aa43c53ab43532df0868cd98f87b92">LaplaceBEM::detect_cell_neighboring_type</a> (const std::array&lt; types::global_vertex_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;first_cell_vertex_indices, const std::array&lt; types::global_vertex_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;second_cell_vertex_indices, std::vector&lt; types::global_vertex_index &gt; &amp;vertex_index_intersection)</td></tr>
 <tr class="separator:ac8aa43c53ab43532df0868cd98f87b92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a15e76c006e919b90b11b630701890b"><td class="memTemplParams" colspan="2"><a id="a9a15e76c006e919b90b11b630701890b"></a>
-template&lt;int dim&gt; </td></tr>
-<tr class="memitem:a9a15e76c006e919b90b11b630701890b"><td class="memTemplItemLeft" align="right" valign="top">CellNeighboringType&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::detect_cell_neighboring_type</b> (const std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;first_cell_vertex_dof_indices, const std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;second_cell_vertex_dof_indices, std::vector&lt; types::global_dof_index &gt; &amp;vertex_dof_index_intersection)</td></tr>
+<tr class="memitem:a9a15e76c006e919b90b11b630701890b"><td class="memTemplParams" colspan="2">template&lt;int dim&gt; </td></tr>
+<tr class="memitem:a9a15e76c006e919b90b11b630701890b"><td class="memTemplItemLeft" align="right" valign="top">CellNeighboringType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a9a15e76c006e919b90b11b630701890b">LaplaceBEM::detect_cell_neighboring_type</a> (const std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;first_cell_vertex_dof_indices, const std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;second_cell_vertex_dof_indices, std::vector&lt; types::global_dof_index &gt; &amp;vertex_dof_index_intersection)</td></tr>
 <tr class="separator:a9a15e76c006e919b90b11b630701890b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0b332116e96aadcbd90ea160741d51a"><td class="memTemplParams" colspan="2"><a id="ac0b332116e96aadcbd90ea160741d51a"></a>
-template&lt;int dim, int spacedim, typename Number  = double&gt; </td></tr>
-<tr class="memitem:ac0b332116e96aadcbd90ea160741d51a"><td class="memTemplItemLeft" align="right" valign="top">Number&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::cell_distance</b> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator first_cell, const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator second_cell)</td></tr>
+<tr class="memitem:ac0b332116e96aadcbd90ea160741d51a"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename Number  = double&gt; </td></tr>
+<tr class="memitem:ac0b332116e96aadcbd90ea160741d51a"><td class="memTemplItemLeft" align="right" valign="top">Number&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ac0b332116e96aadcbd90ea160741d51a">LaplaceBEM::cell_distance</a> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator first_cell, const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator second_cell)</td></tr>
 <tr class="separator:ac0b332116e96aadcbd90ea160741d51a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e5d06792ddf349f07ab29bdbbf05c4c"><td class="memTemplParams" colspan="2"><a id="a4e5d06792ddf349f07ab29bdbbf05c4c"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a4e5d06792ddf349f07ab29bdbbf05c4c"><td class="memTemplItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::shape_grad_matrix</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; unsigned int &gt; &amp;dof_permutation, const Point&lt; dim &gt; &amp;p)</td></tr>
+<tr class="memitem:a4e5d06792ddf349f07ab29bdbbf05c4c"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:a4e5d06792ddf349f07ab29bdbbf05c4c"><td class="memTemplItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a4e5d06792ddf349f07ab29bdbbf05c4c">LaplaceBEM::shape_grad_matrix</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; unsigned int &gt; &amp;dof_permutation, const Point&lt; dim &gt; &amp;p)</td></tr>
 <tr class="separator:a4e5d06792ddf349f07ab29bdbbf05c4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41bd6ffd4c524471ef881ff97a5ad9e4"><td class="memTemplParams" colspan="2"><a id="a41bd6ffd4c524471ef881ff97a5ad9e4"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a41bd6ffd4c524471ef881ff97a5ad9e4"><td class="memTemplItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::shape_grad_matrix_in_hierarchical_order</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const Point&lt; dim &gt; &amp;p)</td></tr>
+<tr class="memitem:a41bd6ffd4c524471ef881ff97a5ad9e4"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:a41bd6ffd4c524471ef881ff97a5ad9e4"><td class="memTemplItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a41bd6ffd4c524471ef881ff97a5ad9e4">LaplaceBEM::shape_grad_matrix_in_hierarchical_order</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const Point&lt; dim &gt; &amp;p)</td></tr>
 <tr class="separator:a41bd6ffd4c524471ef881ff97a5ad9e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5db325a3f5dcfaa491ddab6a220eea92"><td class="memTemplParams" colspan="2"><a id="a5db325a3f5dcfaa491ddab6a220eea92"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a5db325a3f5dcfaa491ddab6a220eea92"><td class="memTemplItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::shape_grad_matrix_in_tensor_product_order</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const Point&lt; dim &gt; &amp;p)</td></tr>
-<tr class="separator:a5db325a3f5dcfaa491ddab6a220eea92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9c78b15a41037e7779f59b92c889fb5"><td class="memTemplParams" colspan="2"><a id="ac9c78b15a41037e7779f59b92c889fb5"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:ac9c78b15a41037e7779f59b92c889fb5"><td class="memTemplItemLeft" align="right" valign="top">Vector&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::shape_values</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; unsigned int &gt; &amp;dof_permutation, const Point&lt; dim &gt; &amp;p)</td></tr>
+<tr class="memitem:a29c671f2632d76cf0600c0cb03cb39ab"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:a29c671f2632d76cf0600c0cb03cb39ab"><td class="memTemplItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a29c671f2632d76cf0600c0cb03cb39ab">LaplaceBEM::shape_grad_matrix_in_lexicographic_order</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const Point&lt; dim &gt; &amp;p)</td></tr>
+<tr class="separator:a29c671f2632d76cf0600c0cb03cb39ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9c78b15a41037e7779f59b92c889fb5"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:ac9c78b15a41037e7779f59b92c889fb5"><td class="memTemplItemLeft" align="right" valign="top">Vector&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ac9c78b15a41037e7779f59b92c889fb5">LaplaceBEM::shape_values</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; unsigned int &gt; &amp;dof_permutation, const Point&lt; dim &gt; &amp;p)</td></tr>
 <tr class="separator:ac9c78b15a41037e7779f59b92c889fb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae304b08c855fbdb02aee8d431618494a"><td class="memTemplParams" colspan="2"><a id="ae304b08c855fbdb02aee8d431618494a"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:ae304b08c855fbdb02aee8d431618494a"><td class="memTemplItemLeft" align="right" valign="top">Vector&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::shape_values_in_hierarchical_order</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const Point&lt; dim &gt; &amp;p)</td></tr>
+<tr class="memitem:ae304b08c855fbdb02aee8d431618494a"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:ae304b08c855fbdb02aee8d431618494a"><td class="memTemplItemLeft" align="right" valign="top">Vector&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ae304b08c855fbdb02aee8d431618494a">LaplaceBEM::shape_values_in_hierarchical_order</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const Point&lt; dim &gt; &amp;p)</td></tr>
 <tr class="separator:ae304b08c855fbdb02aee8d431618494a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5bb6ba468d7700fa95b2c4a542d71c9"><td class="memTemplParams" colspan="2"><a id="ae5bb6ba468d7700fa95b2c4a542d71c9"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:ae5bb6ba468d7700fa95b2c4a542d71c9"><td class="memTemplItemLeft" align="right" valign="top">Vector&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::shape_values_in_tensor_product_order</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const Point&lt; dim &gt; &amp;p)</td></tr>
-<tr class="separator:ae5bb6ba468d7700fa95b2c4a542d71c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a140b1d9466900efd8477068336ae23ec"><td class="memItemLeft" align="right" valign="top"><a id="a140b1d9466900efd8477068336ae23ec"></a>
-FullMatrix&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>LaplaceBEM::collect_two_components_from_point3</b> (const std::vector&lt; Point&lt; 3 &gt;&gt; &amp;points, const unsigned int first_component, const unsigned int second_component)</td></tr>
+<tr class="memitem:a1cab663f2ee8dfa77f6d91503f09e1fe"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:a1cab663f2ee8dfa77f6d91503f09e1fe"><td class="memTemplItemLeft" align="right" valign="top">Vector&lt; double &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a1cab663f2ee8dfa77f6d91503f09e1fe">LaplaceBEM::shape_values_in_lexicographic_order</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const Point&lt; dim &gt; &amp;p)</td></tr>
+<tr class="separator:a1cab663f2ee8dfa77f6d91503f09e1fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a140b1d9466900efd8477068336ae23ec"><td class="memItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a140b1d9466900efd8477068336ae23ec">LaplaceBEM::collect_two_components_from_point3</a> (const std::vector&lt; Point&lt; 3 &gt;&gt; &amp;points, const unsigned int first_component, const unsigned int second_component)</td></tr>
 <tr class="separator:a140b1d9466900efd8477068336ae23ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a690f744925b6d3ec84bddf1aa6e00c43"><td class="memTemplParams" colspan="2"><a id="a690f744925b6d3ec84bddf1aa6e00c43"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a690f744925b6d3ec84bddf1aa6e00c43"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; Point&lt; spacedim &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::support_points_in_real_cell</b> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell, const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const MappingQGeneric&lt; dim, spacedim &gt; &amp;mapping, const std::vector&lt; unsigned int &gt; &amp;dof_permutation)</td></tr>
-<tr class="separator:a690f744925b6d3ec84bddf1aa6e00c43"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a58ca7458aac9f0ea79fd8a44d1eec5c7"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a58ca7458aac9f0ea79fd8a44d1eec5c7"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; Point&lt; spacedim &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a58ca7458aac9f0ea79fd8a44d1eec5c7">LaplaceBEM::hierarchical_support_points_in_real_cell</a> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell, const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const MappingQGeneric&lt; dim, spacedim &gt; &amp;mapping)</td></tr>
-<tr class="separator:a58ca7458aac9f0ea79fd8a44d1eec5c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44908e3e85a467a7e49f8393dec6d36f"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a44908e3e85a467a7e49f8393dec6d36f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a44908e3e85a467a7e49f8393dec6d36f">LaplaceBEM::hierarchical_support_points_in_real_cell</a> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell, const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const MappingQGeneric&lt; dim, spacedim &gt; &amp;mapping, std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;real_support_points)</td></tr>
-<tr class="separator:a44908e3e85a467a7e49f8393dec6d36f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f878fc1994275b708f9bc453b577a9b"><td class="memTemplParams" colspan="2"><a id="a0f878fc1994275b708f9bc453b577a9b"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a0f878fc1994275b708f9bc453b577a9b"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; Point&lt; spacedim &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::tensor_product_support_points_in_real_cell</b> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell, const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const MappingQGeneric&lt; dim, spacedim &gt; &amp;mapping)</td></tr>
-<tr class="separator:a0f878fc1994275b708f9bc453b577a9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11e2ebdafcfd581632e89cea11c503cd"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:a11e2ebdafcfd581632e89cea11c503cd"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; Point&lt; spacedim &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a11e2ebdafcfd581632e89cea11c503cd">LaplaceBEM::get_support_points_in_real_cell</a> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell, const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const MappingQGeneric&lt; dim, spacedim &gt; &amp;mapping, const std::vector&lt; unsigned int &gt; &amp;dof_permutation)</td></tr>
+<tr class="separator:a11e2ebdafcfd581632e89cea11c503cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7537199856a6a93ca3820c106bc8e771"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:a7537199856a6a93ca3820c106bc8e771"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; Point&lt; spacedim &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a7537199856a6a93ca3820c106bc8e771">LaplaceBEM::get_hierarchic_support_points_in_real_cell</a> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell, const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const MappingQGeneric&lt; dim, spacedim &gt; &amp;mapping)</td></tr>
+<tr class="separator:a7537199856a6a93ca3820c106bc8e771"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9537e897bb81275f10fcbcb126c75cb1"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:a9537e897bb81275f10fcbcb126c75cb1"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a9537e897bb81275f10fcbcb126c75cb1">LaplaceBEM::get_hierarchic_support_points_in_real_cell</a> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell, const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const MappingQGeneric&lt; dim, spacedim &gt; &amp;mapping, std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;support_points_in_reall_cell)</td></tr>
+<tr class="separator:a9537e897bb81275f10fcbcb126c75cb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac40ce6c420aab2bf460d5dff9da89e8c"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:ac40ce6c420aab2bf460d5dff9da89e8c"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; Point&lt; spacedim &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ac40ce6c420aab2bf460d5dff9da89e8c">LaplaceBEM::get_lexicographic_support_points_in_real_cell</a> (const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;cell, const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const MappingQGeneric&lt; dim, spacedim &gt; &amp;mapping)</td></tr>
+<tr class="separator:ac40ce6c420aab2bf460d5dff9da89e8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cb672f44c56d77166719e4cda5905f8"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
 <tr class="memitem:a4cb672f44c56d77166719e4cda5905f8"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;support_points_in_real_cell, const Point&lt; dim &gt; &amp;p)</td></tr>
 <tr class="separator:a4cb672f44c56d77166719e4cda5905f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aabebdaea9005cf7ab54a54a0aaf356ae"><td class="memTemplParams" colspan="2">template&lt;int spacedim&gt; </td></tr>
 <tr class="memitem:aabebdaea9005cf7ab54a54a0aaf356ae"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#aabebdaea9005cf7ab54a54a0aaf356ae">LaplaceBEM::surface_jacobian_det</a> (const unsigned int k3_index, const unsigned int quad_no, const Table&lt; 2, FullMatrix&lt; double &gt;&gt; &amp;shape_grad_matrix_table, const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;support_points_in_real_cell)</td></tr>
 <tr class="separator:aabebdaea9005cf7ab54a54a0aaf356ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2052f990d3acafd1b2ffb9f82b483c3e"><td class="memTemplParams" colspan="2"><a id="a2052f990d3acafd1b2ffb9f82b483c3e"></a>
-template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a2052f990d3acafd1b2ffb9f82b483c3e"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::surface_jacobian_det_and_normal_vector</b> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;support_points_in_real_cell, const Point&lt; dim &gt; &amp;p, Tensor&lt; 1, spacedim &gt; &amp;normal_vector)</td></tr>
+<tr class="memitem:a2052f990d3acafd1b2ffb9f82b483c3e"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
+<tr class="memitem:a2052f990d3acafd1b2ffb9f82b483c3e"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a2052f990d3acafd1b2ffb9f82b483c3e">LaplaceBEM::surface_jacobian_det_and_normal_vector</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;support_points_in_real_cell, const Point&lt; dim &gt; &amp;p, Tensor&lt; 1, spacedim &gt; &amp;normal_vector)</td></tr>
 <tr class="separator:a2052f990d3acafd1b2ffb9f82b483c3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a742573bbe50d9acfd17fc6cbbed90aef"><td class="memTemplParams" colspan="2"><a id="a742573bbe50d9acfd17fc6cbbed90aef"></a>
-template&lt;int spacedim&gt; </td></tr>
-<tr class="memitem:a742573bbe50d9acfd17fc6cbbed90aef"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::surface_jacobian_det_and_normal_vector</b> (const unsigned int k3_index, const unsigned int quad_no, const Table&lt; 2, FullMatrix&lt; double &gt;&gt; &amp;shape_grad_matrix_table, const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;support_points_in_real_cell, Tensor&lt; 1, spacedim &gt; &amp;normal_vector)</td></tr>
+<tr class="memitem:a742573bbe50d9acfd17fc6cbbed90aef"><td class="memTemplParams" colspan="2">template&lt;int spacedim&gt; </td></tr>
+<tr class="memitem:a742573bbe50d9acfd17fc6cbbed90aef"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a742573bbe50d9acfd17fc6cbbed90aef">LaplaceBEM::surface_jacobian_det_and_normal_vector</a> (const unsigned int k3_index, const unsigned int quad_no, const Table&lt; 2, FullMatrix&lt; double &gt;&gt; &amp;shape_grad_matrix_table, const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;support_points_in_real_cell, Tensor&lt; 1, spacedim &gt; &amp;normal_vector)</td></tr>
 <tr class="separator:a742573bbe50d9acfd17fc6cbbed90aef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acfc06d01b90d55585ff2f84662e51993"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
 <tr class="memitem:acfc06d01b90d55585ff2f84662e51993"><td class="memTemplItemLeft" align="right" valign="top">Point&lt; spacedim &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#acfc06d01b90d55585ff2f84662e51993">LaplaceBEM::transform_unit_to_permuted_real_cell</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;support_points_in_real_cell, const Point&lt; dim &gt; &amp;area_coords)</td></tr>
@@ -354,98 +344,37 @@ template&lt;int spacedim&gt; </td></tr>
 <tr class="memitem:ad30d62ea43231cc3bebc2fc9eb2bad2f"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
 <tr class="memitem:ad30d62ea43231cc3bebc2fc9eb2bad2f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ad30d62ea43231cc3bebc2fc9eb2bad2f">LaplaceBEM::generate_backward_dof_permutation</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, unsigned int starting_corner, std::vector&lt; unsigned int &gt; &amp;dof_permutation)</td></tr>
 <tr class="separator:ad30d62ea43231cc3bebc2fc9eb2bad2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa9719659576d52ba03a26e8b1af26b7"><td class="memTemplParams" colspan="2"><a id="aaa9719659576d52ba03a26e8b1af26b7"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aaa9719659576d52ba03a26e8b1af26b7"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::permute_vector</b> (const std::vector&lt; T &gt; &amp;input_vector, const std::vector&lt; unsigned int &gt; &amp;permutation_indices)</td></tr>
+<tr class="memitem:aaa9719659576d52ba03a26e8b1af26b7"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aaa9719659576d52ba03a26e8b1af26b7"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#aaa9719659576d52ba03a26e8b1af26b7">LaplaceBEM::permute_vector</a> (const std::vector&lt; T &gt; &amp;input_vector, const std::vector&lt; unsigned int &gt; &amp;permutation_indices)</td></tr>
 <tr class="separator:aaa9719659576d52ba03a26e8b1af26b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5eb8039d9a9632adb5601a1af8e3b7ea"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a5eb8039d9a9632adb5601a1af8e3b7ea"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a5eb8039d9a9632adb5601a1af8e3b7ea">LaplaceBEM::permute_vector</a> (const std::vector&lt; T &gt; &amp;input_vector, const std::vector&lt; unsigned int &gt; &amp;permutation_indices, std::vector&lt; T &gt; &amp;permuted_vector)</td></tr>
 <tr class="separator:a5eb8039d9a9632adb5601a1af8e3b7ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47b799bf69bc9deffe4765212e27a403"><td class="memTemplParams" colspan="2"><a id="a47b799bf69bc9deffe4765212e27a403"></a>
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a47b799bf69bc9deffe4765212e27a403"><td class="memTemplItemLeft" align="right" valign="top">RangeNumberType&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::ApplyQuadrature</b> (const Quadrature&lt; dim *2 &gt; &amp;quad_rule, const KernelPulledbackToSauterSpace&lt; dim, spacedim, RangeNumberType &gt; &amp;f, unsigned int component=0)</td></tr>
-<tr class="separator:a47b799bf69bc9deffe4765212e27a403"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb2e37992a98384b0aa558e0808db2c5"><td class="memTemplParams" colspan="2"><a id="afb2e37992a98384b0aa558e0808db2c5"></a>
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:afb2e37992a98384b0aa558e0808db2c5"><td class="memTemplItemLeft" align="right" valign="top">RangeNumberType&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::ApplyQuadratureUsingBEMValues</b> (const Quadrature&lt; dim *2 &gt; &amp;quad_rule, const KernelPulledbackToSauterSpace&lt; dim, spacedim, RangeNumberType &gt; &amp;f, unsigned int component=0)</td></tr>
-<tr class="separator:afb2e37992a98384b0aa558e0808db2c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72b6938c9d185beb1a59d7540590b26c"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:a72b6938c9d185beb1a59d7540590b26c"><td class="memTemplItemLeft" align="right" valign="top">std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a72b6938c9d185beb1a59d7540590b26c">LaplaceBEM::get_vertex_dof_indices_swapped</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; types::global_dof_index &gt; &amp;dof_indices)</td></tr>
-<tr class="separator:a72b6938c9d185beb1a59d7540590b26c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad532d0415e3bf57d950f84eeb81f9186"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim&gt; </td></tr>
-<tr class="memitem:ad532d0415e3bf57d950f84eeb81f9186"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#ad532d0415e3bf57d950f84eeb81f9186">LaplaceBEM::get_vertex_dof_indices_swapped</a> (const FiniteElement&lt; dim, spacedim &gt; &amp;fe, const std::vector&lt; types::global_dof_index &gt; &amp;dof_indices, std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;vertex_dof_indices)</td></tr>
-<tr class="separator:ad532d0415e3bf57d950f84eeb81f9186"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64395996e0f4c36f7bf3be3088c24aa3"><td class="memTemplParams" colspan="2">template&lt;int vertices_per_cell&gt; </td></tr>
-<tr class="memitem:a64395996e0f4c36f7bf3be3088c24aa3"><td class="memTemplItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a64395996e0f4c36f7bf3be3088c24aa3">LaplaceBEM::get_start_vertex_dof_index</a> (const std::vector&lt; types::global_dof_index &gt; &amp;vertex_dof_index_intersection, const std::array&lt; types::global_dof_index, vertices_per_cell &gt; &amp;local_vertex_dof_indices_swapped)</td></tr>
-<tr class="separator:a64395996e0f4c36f7bf3be3088c24aa3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a57e551241347af592ddedca98e85feba"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a57e551241347af592ddedca98e85feba"><td class="memTemplItemLeft" align="right" valign="top">FullMatrix&lt; RangeNumberType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a57e551241347af592ddedca98e85feba">LaplaceBEM::SauterQuadRule</a> (const LaplaceKernel::KernelFunction&lt; spacedim, RangeNumberType &gt; &amp;kernel_function, const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;kx_cell_iter, const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;ky_cell_iter, const MappingQGeneric&lt; dim, spacedim &gt; &amp;kx_mapping=MappingQGeneric&lt; dim, spacedim &gt;(1), const MappingQGeneric&lt; dim, spacedim &gt; &amp;ky_mapping=MappingQGeneric&lt; dim, spacedim &gt;(1))</td></tr>
-<tr class="separator:a57e551241347af592ddedca98e85feba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b409a66c9385085d6566e29b27f86dc"><td class="memTemplParams" colspan="2"><a id="a0b409a66c9385085d6566e29b27f86dc"></a>
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a0b409a66c9385085d6566e29b27f86dc"><td class="memTemplItemLeft" align="right" valign="top">FullMatrix&lt; RangeNumberType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>LaplaceBEM::SauterQuadRule</b> (const LaplaceKernel::KernelFunction&lt; spacedim, RangeNumberType &gt; &amp;kernel_function, const BEMValues&lt; dim, spacedim &gt; &amp;bem_values, const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;kx_cell_iter, const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;ky_cell_iter, const MappingQGeneric&lt; dim, spacedim &gt; &amp;kx_mapping=MappingQGeneric&lt; dim, spacedim &gt;(1), const MappingQGeneric&lt; dim, spacedim &gt; &amp;ky_mapping=MappingQGeneric&lt; dim, spacedim &gt;(1))</td></tr>
-<tr class="separator:a0b409a66c9385085d6566e29b27f86dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b2f253b060b009aac6b9692d7984ff9"><td class="memTemplParams" colspan="2">template&lt;int dim&gt; </td></tr>
-<tr class="memitem:a4b2f253b060b009aac6b9692d7984ff9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a4b2f253b060b009aac6b9692d7984ff9">LaplaceBEM::sauter_same_panel_parametric_coords_to_unit_cells</a> (const Point&lt; dim *2 &gt; &amp;parametric_coords, const unsigned int k3_index, Point&lt; dim &gt; &amp;kx_unit_cell_coords, Point&lt; dim &gt; &amp;ky_unit_cell_coords)</td></tr>
-<tr class="separator:a4b2f253b060b009aac6b9692d7984ff9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4454a50d4f28d8995e20489110cf6eb1"><td class="memTemplParams" colspan="2">template&lt;int dim&gt; </td></tr>
-<tr class="memitem:a4454a50d4f28d8995e20489110cf6eb1"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a4454a50d4f28d8995e20489110cf6eb1">LaplaceBEM::sauter_common_edge_parametric_coords_to_unit_cells</a> (const Point&lt; dim *2 &gt; &amp;parametric_coords, const unsigned int k3_index, Point&lt; dim &gt; &amp;kx_unit_cell_coords, Point&lt; dim &gt; &amp;ky_unit_cell_coords)</td></tr>
-<tr class="separator:a4454a50d4f28d8995e20489110cf6eb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4fa27663bc3ea1525bb2535d003580c"><td class="memTemplParams" colspan="2">template&lt;int dim&gt; </td></tr>
-<tr class="memitem:aa4fa27663bc3ea1525bb2535d003580c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#aa4fa27663bc3ea1525bb2535d003580c">LaplaceBEM::sauter_common_vertex_parametric_coords_to_unit_cells</a> (const Point&lt; dim *2 &gt; &amp;parametric_coords, const unsigned int k3_index, Point&lt; dim &gt; &amp;kx_unit_cell_coords, Point&lt; dim &gt; &amp;ky_unit_cell_coords)</td></tr>
-<tr class="separator:aa4fa27663bc3ea1525bb2535d003580c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5bbec4d9bc5055de16e293c2ef7cfab2"><td class="memTemplParams" colspan="2">template&lt;int dim&gt; </td></tr>
-<tr class="memitem:a5bbec4d9bc5055de16e293c2ef7cfab2"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a5bbec4d9bc5055de16e293c2ef7cfab2">LaplaceBEM::sauter_regular_parametric_coords_to_unit_cells</a> (const Point&lt; dim *2 &gt; &amp;parametric_coords, Point&lt; dim &gt; &amp;kx_unit_cell_coords, Point&lt; dim &gt; &amp;ky_unit_cell_coords)</td></tr>
-<tr class="separator:a5bbec4d9bc5055de16e293c2ef7cfab2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1cb24336d96c36bd50973a35b3e42b6a"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a1cb24336d96c36bd50973a35b3e42b6a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a1cb24336d96c36bd50973a35b3e42b6a">LaplaceBEM::SauterQuadRule</a> (FullMatrix&lt; RangeNumberType &gt; &amp;system_matrix, const LaplaceKernel::KernelFunction&lt; spacedim, RangeNumberType &gt; &amp;kernel_function, const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;kx_cell_iter, const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;ky_cell_iter, const MappingQGeneric&lt; dim, spacedim &gt; &amp;kx_mapping=MappingQGeneric&lt; dim, spacedim &gt;(1), const MappingQGeneric&lt; dim, spacedim &gt; &amp;ky_mapping=MappingQGeneric&lt; dim, spacedim &gt;(1))</td></tr>
-<tr class="separator:a1cb24336d96c36bd50973a35b3e42b6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27c3f20fa27d5afdba1ad53ab47f9ed9"><td class="memTemplParams" colspan="2">template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </td></tr>
-<tr class="memitem:a27c3f20fa27d5afdba1ad53ab47f9ed9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="laplace__bem_8h.html#a27c3f20fa27d5afdba1ad53ab47f9ed9">LaplaceBEM::SauterQuadRule</a> (FullMatrix&lt; RangeNumberType &gt; &amp;system_matrix, const LaplaceKernel::KernelFunction&lt; spacedim, RangeNumberType &gt; &amp;kernel_function, const BEMValues&lt; dim, spacedim &gt; &amp;bem_values, const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;kx_cell_iter, const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;ky_cell_iter, const MappingQGeneric&lt; dim, spacedim &gt; &amp;kx_mapping=MappingQGeneric&lt; dim, spacedim &gt;(1), const MappingQGeneric&lt; dim, spacedim &gt; &amp;ky_mapping=MappingQGeneric&lt; dim, spacedim &gt;(1))</td></tr>
-<tr class="separator:a27c3f20fa27d5afdba1ad53ab47f9ed9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implementation of BEM involving kernel functions and singular numerical quadratures. </p>
 <dl class="section date"><dt>Date</dt><dd>2020-11-02 </dd></dl>
 <dl class="section author"><dt>Author</dt><dd>Jihuan Tian </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="file_a4df239900849c6aa0875c8bdeaab0aa0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a4df239900849c6aa0875c8bdeaab0aa0">&#9670;&nbsp;</a></span>bem_shape_grad_matrices_common_edge()</h2>
+<a id="file_ac0b332116e96aadcbd90ea160741d51a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_ac0b332116e96aadcbd90ea160741d51a">&#9670;&nbsp;</a></span>cell_distance()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
+template&lt;int dim, int spacedim, typename Number  = double&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::bem_shape_grad_matrices_common_edge </td>
+          <td class="memname">Number LaplaceBEM::cell_distance </td>
           <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_fe</em>, </td>
+          <td class="paramtype">const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator&#160;</td>
+          <td class="paramname"><em>first_cell</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const QGauss&lt; 4 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>sauter_quad_rule</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_shape_grad_matrix_table</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_shape_grad_matrix_table</em>&#160;</td>
+          <td class="paramtype">const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator&#160;</td>
+          <td class="paramname"><em>second_cell</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -454,60 +383,45 @@ template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the table storing shape function gradient matrices at Sauter quadrature points for the common edge case. N.B. The shape functions are in the tensor product order and each row of the gradient matrix corresponds to a shape function. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Calculate the distance between the centers of two cells.</p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">kx_fe</td><td>finite element for $K_x$ </td></tr>
-    <tr><td class="paramname">ky_fe</td><td>finite element for $K_y$ </td></tr>
-    <tr><td class="paramname">sauter_quad_rule</td><td></td></tr>
-    <tr><td class="paramname">kx_shape_grad_matrix_table</td><td>the 1st dimension is the index for $k_3$ terms; the 2nd dimension is the quadrature point number. </td></tr>
-    <tr><td class="paramname">ky_shape_grad_matrix_table</td><td>the 1st dimension is the index for $k_3$ terms; the 2nd dimension is the quadrature point number. </td></tr>
+    <tr><td class="paramname">first_cell</td><td></td></tr>
+    <tr><td class="paramname">second_cell</td><td></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a4df239900849c6aa0875c8bdeaab0aa0">LaplaceBEM::bem_shape_grad_matrices_common_edge()</a>, and <a class="el" href="laplace__bem_8h.html#a4454a50d4f28d8995e20489110cf6eb1">LaplaceBEM::sauter_common_edge_parametric_coords_to_unit_cells()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ac0b332116e96aadcbd90ea160741d51a">LaplaceBEM::cell_distance()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a4df239900849c6aa0875c8bdeaab0aa0">LaplaceBEM::bem_shape_grad_matrices_common_edge()</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac40a849631e782f840a927e68bc2f9f6">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::BEMValues()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ac0b332116e96aadcbd90ea160741d51a">LaplaceBEM::cell_distance()</a>.</p>
 
 </div>
 </div>
-<a id="file_abaca697a3eb40d422b9f26c63ff47670"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_abaca697a3eb40d422b9f26c63ff47670">&#9670;&nbsp;</a></span>bem_shape_grad_matrices_common_vertex()</h2>
+<a id="file_a140b1d9466900efd8477068336ae23ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a140b1d9466900efd8477068336ae23ec">&#9670;&nbsp;</a></span>collect_two_components_from_point3()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::bem_shape_grad_matrices_common_vertex </td>
+          <td class="memname">FullMatrix&lt;double&gt; LaplaceBEM::collect_two_components_from_point3 </td>
           <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_fe</em>, </td>
+          <td class="paramtype">const std::vector&lt; Point&lt; 3 &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>points</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_fe</em>, </td>
+          <td class="paramtype">const unsigned int&#160;</td>
+          <td class="paramname"><em>first_component</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const QGauss&lt; 4 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>sauter_quad_rule</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_shape_grad_matrix_table</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_shape_grad_matrix_table</em>&#160;</td>
+          <td class="paramtype">const unsigned int&#160;</td>
+          <td class="paramname"><em>second_component</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -516,60 +430,52 @@ template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the table storing shape function gradient matrices at Sauter quadrature points for the common vertex case. N.B. The shape functions are in the tensor product order and each row of the gradient matrix corresponds to a shape function. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Collect two coordinate components from the list of points in 3D space.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>This function is useful in constructing the surface metric tensor or surface normal vector. </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">kx_fe</td><td>finite element for $K_x$ </td></tr>
-    <tr><td class="paramname">ky_fe</td><td>finite element for $K_y$ </td></tr>
-    <tr><td class="paramname">sauter_quad_rule</td><td></td></tr>
-    <tr><td class="paramname">kx_shape_grad_matrix_table</td><td>the 1st dimension is the index for $k_3$ terms; the 2nd dimension is the quadrature point number. </td></tr>
-    <tr><td class="paramname">ky_shape_grad_matrix_table</td><td>the 1st dimension is the index for $k_3$ terms; the 2nd dimension is the quadrature point number. </td></tr>
+    <tr><td class="paramname">points</td><td>A list of points in 3D space </td></tr>
+    <tr><td class="paramname">first_component</td><td>Index for the first coordinate component to be collected </td></tr>
+    <tr><td class="paramname">second_component</td><td>Index for the second coordinate component to be collected </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>A matrix storing the two coordinate components for all points. It has a dimension <code>2*points</code>.size(). </dd></dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#abaca697a3eb40d422b9f26c63ff47670">LaplaceBEM::bem_shape_grad_matrices_common_vertex()</a>, and <a class="el" href="laplace__bem_8h.html#aa4fa27663bc3ea1525bb2535d003580c">LaplaceBEM::sauter_common_vertex_parametric_coords_to_unit_cells()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a140b1d9466900efd8477068336ae23ec">LaplaceBEM::collect_two_components_from_point3()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#abaca697a3eb40d422b9f26c63ff47670">LaplaceBEM::bem_shape_grad_matrices_common_vertex()</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac40a849631e782f840a927e68bc2f9f6">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::BEMValues()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a140b1d9466900efd8477068336ae23ec">LaplaceBEM::collect_two_components_from_point3()</a>, <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>, and <a class="el" href="laplace__bem_8h.html#a2052f990d3acafd1b2ffb9f82b483c3e">LaplaceBEM::surface_jacobian_det_and_normal_vector()</a>.</p>
 
 </div>
 </div>
-<a id="file_abe59b85b94a356ba18b578090d708090"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_abe59b85b94a356ba18b578090d708090">&#9670;&nbsp;</a></span>bem_shape_grad_matrices_regular()</h2>
+<a id="file_ac8aa43c53ab43532df0868cd98f87b92"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_ac8aa43c53ab43532df0868cd98f87b92">&#9670;&nbsp;</a></span>detect_cell_neighboring_type() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
+template&lt;int dim&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::bem_shape_grad_matrices_regular </td>
+          <td class="memname">CellNeighboringType LaplaceBEM::detect_cell_neighboring_type </td>
           <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_fe</em>, </td>
+          <td class="paramtype">const std::array&lt; types::global_vertex_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;&#160;</td>
+          <td class="paramname"><em>first_cell_vertex_indices</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_fe</em>, </td>
+          <td class="paramtype">const std::array&lt; types::global_vertex_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;&#160;</td>
+          <td class="paramname"><em>second_cell_vertex_indices</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const QGauss&lt; 4 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>sauter_quad_rule</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_shape_grad_matrix_table</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_shape_grad_matrix_table</em>&#160;</td>
+          <td class="paramtype">std::vector&lt; types::global_vertex_index &gt; &amp;&#160;</td>
+          <td class="paramname"><em>vertex_index_intersection</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -578,60 +484,52 @@ template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the table storing shape function gradient matrices at Sauter quadrature points for the regular case. N.B. The shape functions are in the tensor product order and each row of the gradient matrix corresponds to a shape function. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Detect the cell neighboring type for two cells by checking the intersection of their vertex indices.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>N.B. The template argument <code>dim</code> of this function cannot be automatically inducted by the compiler from its input arguments, since even though the template argument <code>GeometryInfo&lt;dim&gt;::vertices_per_cell</code> of the two input arguments <code>first_cell_vertex_indices</code> and <code>second_cell_vertex_indices</code> contains <code>dim</code>, the whole <code>GeometryInfo&lt;dim&gt;::vertices_per_cell</code> will be evaluated into an integer by the compiler with <code>dim</code> discarded. </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">kx_fe</td><td>finite element for $K_x$ </td></tr>
-    <tr><td class="paramname">ky_fe</td><td>finite element for $K_y$ </td></tr>
-    <tr><td class="paramname">sauter_quad_rule</td><td></td></tr>
-    <tr><td class="paramname">kx_shape_grad_matrix_table</td><td>the 1st dimension is the quadrature point number. </td></tr>
-    <tr><td class="paramname">ky_shape_grad_matrix_table</td><td>the 1st dimension is the quadrature point number. </td></tr>
+    <tr><td class="paramname">first_cell_vertex_indices</td><td></td></tr>
+    <tr><td class="paramname">second_cell_vertex_indices</td><td></td></tr>
+    <tr><td class="paramname">vertex_index_intersection</td><td></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#abe59b85b94a356ba18b578090d708090">LaplaceBEM::bem_shape_grad_matrices_regular()</a>, and <a class="el" href="laplace__bem_8h.html#a5bbec4d9bc5055de16e293c2ef7cfab2">LaplaceBEM::sauter_regular_parametric_coords_to_unit_cells()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ac8aa43c53ab43532df0868cd98f87b92">LaplaceBEM::detect_cell_neighboring_type()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#abe59b85b94a356ba18b578090d708090">LaplaceBEM::bem_shape_grad_matrices_regular()</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac40a849631e782f840a927e68bc2f9f6">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::BEMValues()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ac8aa43c53ab43532df0868cd98f87b92">LaplaceBEM::detect_cell_neighboring_type()</a>.</p>
 
 </div>
 </div>
-<a id="file_a1ce86dd0bd3b5c4bf591ae0128205416"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a1ce86dd0bd3b5c4bf591ae0128205416">&#9670;&nbsp;</a></span>bem_shape_grad_matrices_same_panel()</h2>
+<a id="file_a9a15e76c006e919b90b11b630701890b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a9a15e76c006e919b90b11b630701890b">&#9670;&nbsp;</a></span>detect_cell_neighboring_type() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
+template&lt;int dim&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::bem_shape_grad_matrices_same_panel </td>
+          <td class="memname">CellNeighboringType LaplaceBEM::detect_cell_neighboring_type </td>
           <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_fe</em>, </td>
+          <td class="paramtype">const std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;&#160;</td>
+          <td class="paramname"><em>first_cell_vertex_dof_indices</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_fe</em>, </td>
+          <td class="paramtype">const std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;&#160;</td>
+          <td class="paramname"><em>second_cell_vertex_dof_indices</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const QGauss&lt; 4 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>sauter_quad_rule</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_shape_grad_matrix_table</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 2, FullMatrix&lt; RangeNumberType &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_shape_grad_matrix_table</em>&#160;</td>
+          <td class="paramtype">std::vector&lt; types::global_dof_index &gt; &amp;&#160;</td>
+          <td class="paramname"><em>vertex_dof_index_intersection</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -640,268 +538,22 @@ template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the table storing shape function gradient matrices at Sauter quadrature points for the same panel case. N.B. The shape functions are in the tensor product order and each row of the gradient matrix corresponds to a shape function. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Detect the cell neighboring type for two cells by checking the intersection of the DoF indices associated with their vertices.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>N.B. The template argument <code>dim</code> of this function cannot be automatically inducted by the compiler from its input arguments, since even though the template argument <code>GeometryInfo&lt;dim&gt;::vertices_per_cell</code> of the two input arguments <code>first_cell_vertex_dof_indices</code> and <code>second_cell_vertex_dof_indices</code> contains <code>dim</code>, the whole <code>GeometryInfo&lt;dim&gt;::vertices_per_cell</code> will be evaluated into an integer by the compiler with <code>dim</code> discarded. </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">kx_fe</td><td>finite element for $K_x$ </td></tr>
-    <tr><td class="paramname">ky_fe</td><td>finite element for $K_y$ </td></tr>
-    <tr><td class="paramname">sauter_quad_rule</td><td></td></tr>
-    <tr><td class="paramname">kx_shape_grad_matrix_table</td><td>the 1st dimension is the index for $k_3$ terms; the 2nd dimension is the quadrature point number. </td></tr>
-    <tr><td class="paramname">ky_shape_grad_matrix_table</td><td>the 1st dimension is the index for $k_3$ terms; the 2nd dimension is the quadrature point number. </td></tr>
+    <tr><td class="paramname">first_cell_vertex_dof_indices</td><td></td></tr>
+    <tr><td class="paramname">second_cell_vertex_dof_indices</td><td></td></tr>
+    <tr><td class="paramname">vertex_dof_index_intersection</td><td></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a1ce86dd0bd3b5c4bf591ae0128205416">LaplaceBEM::bem_shape_grad_matrices_same_panel()</a>, and <a class="el" href="laplace__bem_8h.html#a4b2f253b060b009aac6b9692d7984ff9">LaplaceBEM::sauter_same_panel_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a1ce86dd0bd3b5c4bf591ae0128205416">LaplaceBEM::bem_shape_grad_matrices_same_panel()</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac40a849631e782f840a927e68bc2f9f6">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::BEMValues()</a>.</p>
-
-</div>
-</div>
-<a id="file_adacab8988c77e9127210826684684cd7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_adacab8988c77e9127210826684684cd7">&#9670;&nbsp;</a></span>bem_shape_values_common_edge()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void LaplaceBEM::bem_shape_values_common_edge </td>
-          <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const QGauss&lt; 4 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>sauter_quad_rule</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 3, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_shape_value_table</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 3, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_shape_value_table</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Calculate the table storing shape function values at Sauter quadrature points for the common edge case. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">kx_fe</td><td>finite element for $K_x$ </td></tr>
-    <tr><td class="paramname">ky_fe</td><td>finite element for $K_y$ </td></tr>
-    <tr><td class="paramname">sauter_quad_rule</td><td></td></tr>
-    <tr><td class="paramname">kx_shape_value_table</td><td>the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the quadrature point number. </td></tr>
-    <tr><td class="paramname">ky_shape_value_table</td><td>the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the quadrature point number. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#adacab8988c77e9127210826684684cd7">LaplaceBEM::bem_shape_values_common_edge()</a>, and <a class="el" href="laplace__bem_8h.html#a4454a50d4f28d8995e20489110cf6eb1">LaplaceBEM::sauter_common_edge_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#adacab8988c77e9127210826684684cd7">LaplaceBEM::bem_shape_values_common_edge()</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac40a849631e782f840a927e68bc2f9f6">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::BEMValues()</a>.</p>
-
-</div>
-</div>
-<a id="file_ad1b3205a29e5aef857857b6e1a533f36"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_ad1b3205a29e5aef857857b6e1a533f36">&#9670;&nbsp;</a></span>bem_shape_values_common_vertex()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void LaplaceBEM::bem_shape_values_common_vertex </td>
-          <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const QGauss&lt; 4 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>sauter_quad_rule</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 3, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_shape_value_table</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 3, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_shape_value_table</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Calculate the table storing shape function values at Sauter quadrature points for the common vertex case. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">kx_fe</td><td>finite element for $K_x$ </td></tr>
-    <tr><td class="paramname">ky_fe</td><td>finite element for $K_y$ </td></tr>
-    <tr><td class="paramname">sauter_quad_rule</td><td></td></tr>
-    <tr><td class="paramname">kx_shape_value_table</td><td>the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the quadrature point number. </td></tr>
-    <tr><td class="paramname">ky_shape_value_table</td><td>the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the quadrature point number. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#ad1b3205a29e5aef857857b6e1a533f36">LaplaceBEM::bem_shape_values_common_vertex()</a>, and <a class="el" href="laplace__bem_8h.html#aa4fa27663bc3ea1525bb2535d003580c">LaplaceBEM::sauter_common_vertex_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ad1b3205a29e5aef857857b6e1a533f36">LaplaceBEM::bem_shape_values_common_vertex()</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac40a849631e782f840a927e68bc2f9f6">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::BEMValues()</a>.</p>
-
-</div>
-</div>
-<a id="file_a9ba750c1de1ccb7c7f091efdd2a720fe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a9ba750c1de1ccb7c7f091efdd2a720fe">&#9670;&nbsp;</a></span>bem_shape_values_regular()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void LaplaceBEM::bem_shape_values_regular </td>
-          <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const QGauss&lt; 4 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>sauter_quad_rule</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 3, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_shape_value_table</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 3, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_shape_value_table</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Calculate the table storing shape function values at Sauter quadrature points for the regular case. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">kx_fe</td><td>finite element for $K_x$ </td></tr>
-    <tr><td class="paramname">ky_fe</td><td>finite element for $K_y$ </td></tr>
-    <tr><td class="paramname">sauter_quad_rule</td><td></td></tr>
-    <tr><td class="paramname">kx_shape_value_table</td><td>the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the quadrature point number. </td></tr>
-    <tr><td class="paramname">ky_shape_value_table</td><td>the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the quadrature point number. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a9ba750c1de1ccb7c7f091efdd2a720fe">LaplaceBEM::bem_shape_values_regular()</a>, and <a class="el" href="laplace__bem_8h.html#a5bbec4d9bc5055de16e293c2ef7cfab2">LaplaceBEM::sauter_regular_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a9ba750c1de1ccb7c7f091efdd2a720fe">LaplaceBEM::bem_shape_values_regular()</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac40a849631e782f840a927e68bc2f9f6">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::BEMValues()</a>.</p>
-
-</div>
-</div>
-<a id="file_a5497786c0b39fdb049b9c8fc5988bdcb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a5497786c0b39fdb049b9c8fc5988bdcb">&#9670;&nbsp;</a></span>bem_shape_values_same_panel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void LaplaceBEM::bem_shape_values_same_panel </td>
-          <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const QGauss&lt; 4 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>sauter_quad_rule</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 3, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_shape_value_table</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Table&lt; 3, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_shape_value_table</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Calculate the table storing shape function values at Sauter quadrature points for the same panel case. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">kx_fe</td><td>finite element for $K_x$ </td></tr>
-    <tr><td class="paramname">ky_fe</td><td>finite element for $K_y$ </td></tr>
-    <tr><td class="paramname">sauter_quad_rule</td><td></td></tr>
-    <tr><td class="paramname">kx_shape_value_table</td><td>the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the quadrature point number. </td></tr>
-    <tr><td class="paramname">ky_shape_value_table</td><td>the 1st dimension is the shape function hierarchical numbering; the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the quadrature point number. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a5497786c0b39fdb049b9c8fc5988bdcb">LaplaceBEM::bem_shape_values_same_panel()</a>, and <a class="el" href="laplace__bem_8h.html#a4b2f253b060b009aac6b9692d7984ff9">LaplaceBEM::sauter_same_panel_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a5497786c0b39fdb049b9c8fc5988bdcb">LaplaceBEM::bem_shape_values_same_panel()</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac40a849631e782f840a927e68bc2f9f6">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::BEMValues()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ac8aa43c53ab43532df0868cd98f87b92">LaplaceBEM::detect_cell_neighboring_type()</a>.</p>
 
 </div>
 </div>
@@ -932,7 +584,15 @@ template&lt;int dim, int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate the permutation of polynomial space inverse numbering by starting from the specified corner in the backward direction. The index for starting_corner starts from zero. </p>
+<p>Generate the permutation of the polynomial space inverse numbering by starting from the specified corner in the backward direction. The numbering is returned from this function via the return value.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">starting_corner</td><td>Index of the starting corner point. Because there are only four corners in a cell, its value belongs to \([0,1,2,3]\). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Numbering of the permuted DoFs </dd></dl>
 
 <p class="reference">References <a class="el" href="laplace__bem_8h.html#a0a9a48d24bdb3beab608ccc3c0599603">LaplaceBEM::generate_backward_dof_permutation()</a>.</p>
 
@@ -973,7 +633,14 @@ template&lt;int dim, int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate the permutation of polynomial space inverse numbering by starting from the specified corner in the backward direction. The index for starting_corner starts from zero. This overloaded version has the returned vector as its argument. </p>
+<p>Generate the permutation of the polynomial space inverse numbering by starting from the specified corner in the backward direction. This overloaded version has the returned vector as its argument.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">starting_corner</td><td>Index of the starting corner point. Because there are only four corners in a cell, its value belongs to \([0,1,2,3]\).  Numbering of the permuted DoFs. Its memory should be pre-allocated. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 <p class="reference">References <a class="el" href="laplace__bem_8h.html#a0a9a48d24bdb3beab608ccc3c0599603">LaplaceBEM::generate_backward_dof_permutation()</a>.</p>
 
@@ -1006,7 +673,15 @@ template&lt;int dim, int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate the permutation of polynomial space inverse numbering by starting from the specified corner in the forward direction. </p>
+<p>Generate the permutation of the polynomial space inverse numbering by starting from the specified corner in the forward direction. The numbering is returned from the function as the return value.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">starting_corner</td><td>Index of the starting corner point. Because there are only four corners in a cell, its value belongs to \([0,1,2,3]\). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Numbering of the permuted DoFs </dd></dl>
 
 <p class="reference">References <a class="el" href="laplace__bem_8h.html#a62077b076db4179e8be8f6d56d08afb7">LaplaceBEM::generate_forward_dof_permutation()</a>.</p>
 
@@ -1047,49 +722,22 @@ template&lt;int dim, int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate the permutation of polynomial space inverse numbering by starting from the specified corner in the forward direction. This overloaded version has the returned vector as its argument. </p>
+<p>Generate the permutation of the polynomial space inverse numbering by starting from the specified corner in the forward direction. This overloaded version has the returned vector as its argument.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">starting_corner</td><td>Index of the starting corner point. Because there are only four corners in a cell, its value belongs to \([0,1,2,3]\). </td></tr>
+    <tr><td class="paramname">dof_permutation</td><td>Numbering of the permuted DoFs. Its memory should be pre-allocated. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 <p class="reference">References <a class="el" href="laplace__bem_8h.html#a62077b076db4179e8be8f6d56d08afb7">LaplaceBEM::generate_forward_dof_permutation()</a>.</p>
 
 </div>
 </div>
-<a id="file_a64395996e0f4c36f7bf3be3088c24aa3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a64395996e0f4c36f7bf3be3088c24aa3">&#9670;&nbsp;</a></span>get_start_vertex_dof_index()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int vertices_per_cell&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned int LaplaceBEM::get_start_vertex_dof_index </td>
-          <td>(</td>
-          <td class="paramtype">const std::vector&lt; types::global_dof_index &gt; &amp;&#160;</td>
-          <td class="paramname"><em>vertex_dof_index_intersection</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::array&lt; types::global_dof_index, vertices_per_cell &gt; &amp;&#160;</td>
-          <td class="paramname"><em>local_vertex_dof_indices_swapped</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Get the starting vertex DoF index. </p>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a64395996e0f4c36f7bf3be3088c24aa3">LaplaceBEM::get_start_vertex_dof_index()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a64395996e0f4c36f7bf3be3088c24aa3">LaplaceBEM::get_start_vertex_dof_index()</a>.</p>
-
-</div>
-</div>
-<a id="file_a72b6938c9d185beb1a59d7540590b26c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a72b6938c9d185beb1a59d7540590b26c">&#9670;&nbsp;</a></span>get_vertex_dof_indices_swapped() <span class="overload">[1/2]</span></h2>
+<a id="file_ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe">&#9670;&nbsp;</a></span>get_conflict_indices()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1097,34 +745,32 @@ template&lt;int vertices_per_cell&gt; </div>
 template&lt;int dim, int spacedim&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">std::array&lt;types::global_dof_index, GeometryInfo&lt;dim&gt;::vertices_per_cell&gt; LaplaceBEM::get_vertex_dof_indices_swapped </td>
+          <td class="memname">std::vector&lt;types::global_dof_index&gt; LaplaceBEM::get_conflict_indices </td>
           <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::active_cell_iterator &amp;&#160;</td>
+          <td class="paramname"><em>cell</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; types::global_dof_index &gt; &amp;&#160;</td>
-          <td class="paramname"><em>dof_indices</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Get the DoF vertex indices from a list of DoF indices which have been arranged in forward or backward tensor product ordering. N.B. There are <code>GeometryInfo&lt;dim&gt;::vertices_per_cell</code> vertices in the returned array, among which the last two DoF vertex indices have been swapped so that the vertex DoFs are arranged in clockwise or counter clockwise order instead of the zigzag order. </p>
+<p>This function returns a list of DoF indices in the given cell iterator, which is used for checking if two cells associated the iterators have interaction. This function is called by <code>GraphColoring::make_graph_coloring</code>.</p>
+<p>Reference: <a href="http://localhost/dealii-9.1.1-doc/namespaceGraphColoring.html#a670720d11f544a762592112ae5213876">http://localhost/dealii-9.1.1-doc/namespaceGraphColoring.html#a670720d11f544a762592112ae5213876</a></p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cell</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a72b6938c9d185beb1a59d7540590b26c">LaplaceBEM::get_vertex_dof_indices_swapped()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe">LaplaceBEM::get_conflict_indices()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a72b6938c9d185beb1a59d7540590b26c">LaplaceBEM::get_vertex_dof_indices_swapped()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ac9fb7fb1c073a1c5dd0cad9ed9b7ccfe">LaplaceBEM::get_conflict_indices()</a>.</p>
 
 </div>
 </div>
-<a id="file_ad532d0415e3bf57d950f84eeb81f9186"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_ad532d0415e3bf57d950f84eeb81f9186">&#9670;&nbsp;</a></span>get_vertex_dof_indices_swapped() <span class="overload">[2/2]</span></h2>
+<a id="file_a7537199856a6a93ca3820c106bc8e771"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a7537199856a6a93ca3820c106bc8e771">&#9670;&nbsp;</a></span>get_hierarchic_support_points_in_real_cell() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1132,46 +778,7 @@ template&lt;int dim, int spacedim&gt; </div>
 template&lt;int dim, int spacedim&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::get_vertex_dof_indices_swapped </td>
-          <td>(</td>
-          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>fe</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; types::global_dof_index &gt; &amp;&#160;</td>
-          <td class="paramname"><em>dof_indices</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::array&lt; types::global_dof_index, GeometryInfo&lt; dim &gt;::vertices_per_cell &gt; &amp;&#160;</td>
-          <td class="paramname"><em>vertex_dof_indices</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Get the DoF vertex indices from a list of DoF indices which have been arranged in forward or backward tensor product ordering. N.B. There are <code>GeometryInfo&lt;dim&gt;::vertices_per_cell</code> vertices in the returned array, among which the last two DoF vertex indices have been swapped so that the vertex DoFs are arranged in clockwise or counter clockwise order instead of the zigzag order. </p>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a72b6938c9d185beb1a59d7540590b26c">LaplaceBEM::get_vertex_dof_indices_swapped()</a>.</p>
-
-</div>
-</div>
-<a id="file_a58ca7458aac9f0ea79fd8a44d1eec5c7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a58ca7458aac9f0ea79fd8a44d1eec5c7">&#9670;&nbsp;</a></span>hierarchical_support_points_in_real_cell() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim, int spacedim&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;Point&lt;spacedim&gt; &gt; LaplaceBEM::hierarchical_support_points_in_real_cell </td>
+          <td class="memname">std::vector&lt;Point&lt;spacedim&gt; &gt; LaplaceBEM::get_hierarchic_support_points_in_real_cell </td>
           <td>(</td>
           <td class="paramtype">const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
@@ -1195,16 +802,29 @@ template&lt;int dim, int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate support points in real cell in the default hierarchical ordering. </p>
+<p>Calculate a list of support points in the real cell in the default hierarchic order.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cell</td><td></td></tr>
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">mapping</td><td>Geometric mapping object used for transforming support points from the unit cell to the real cell. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A list of support points in the real cell in the hierarchic order.</dd></dl>
+<dl class="section note">
+<dt>Note </dt>
+<dd>N.B. Each support point in the real cell has the space dimension <code>spacedim</code>, while each support point in the unit cell has the manifold dimension <code>dim</code>. </dd>
+</dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a58ca7458aac9f0ea79fd8a44d1eec5c7">LaplaceBEM::hierarchical_support_points_in_real_cell()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a7537199856a6a93ca3820c106bc8e771">LaplaceBEM::get_hierarchic_support_points_in_real_cell()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2.html#afe943d5681aaef439208f51dc463f173">LaplaceBEM::Erichsen1996Efficient::Example2::assemble_on_one_pair_of_cells()</a>, <a class="el" href="laplace__bem_8h.html#a58ca7458aac9f0ea79fd8a44d1eec5c7">LaplaceBEM::hierarchical_support_points_in_real_cell()</a>, and <a class="el" href="laplace__bem_8h.html#a57e551241347af592ddedca98e85feba">LaplaceBEM::SauterQuadRule()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classLaplaceBEM_1_1Erichsen1996Efficient_1_1Example2.html#afe943d5681aaef439208f51dc463f173">LaplaceBEM::Erichsen1996Efficient::Example2::assemble_on_one_pair_of_cells()</a>, and <a class="el" href="laplace__bem_8h.html#a7537199856a6a93ca3820c106bc8e771">LaplaceBEM::get_hierarchic_support_points_in_real_cell()</a>.</p>
 
 </div>
 </div>
-<a id="file_a44908e3e85a467a7e49f8393dec6d36f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a44908e3e85a467a7e49f8393dec6d36f">&#9670;&nbsp;</a></span>hierarchical_support_points_in_real_cell() <span class="overload">[2/2]</span></h2>
+<a id="file_a9537e897bb81275f10fcbcb126c75cb1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a9537e897bb81275f10fcbcb126c75cb1">&#9670;&nbsp;</a></span>get_hierarchic_support_points_in_real_cell() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1212,7 +832,7 @@ template&lt;int dim, int spacedim&gt; </div>
 template&lt;int dim, int spacedim&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::hierarchical_support_points_in_real_cell </td>
+          <td class="memname">void LaplaceBEM::get_hierarchic_support_points_in_real_cell </td>
           <td>(</td>
           <td class="paramtype">const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
           <td class="paramname"><em>cell</em>, </td>
@@ -1233,7 +853,7 @@ template&lt;int dim, int spacedim&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>real_support_points</em>&#160;</td>
+          <td class="paramname"><em>support_points_in_reall_cell</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1242,14 +862,249 @@ template&lt;int dim, int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate support points in real cell in the default hierarchical ordering. The memory for storing these support points is pre-allocated. </p>
+<p>Calculate a list of support points in the real cell in the default hierarchic order.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cell</td><td></td></tr>
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">mapping</td><td>Geometric mapping object used for transforming support points from the unit cell to the real cell. </td></tr>
+    <tr><td class="paramname">support_points_in_real_cell</td><td>A list of support points in the real cell in the hierarchic order, the memory of which should be preallocated.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note">
+<dt>Note </dt>
+<dd>N.B. Each support point in the real cell has the space dimension <code>spacedim</code>, while each support point in the unit cell has the manifold dimension <code>dim</code>. </dd>
+</dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a58ca7458aac9f0ea79fd8a44d1eec5c7">LaplaceBEM::hierarchical_support_points_in_real_cell()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a7537199856a6a93ca3820c106bc8e771">LaplaceBEM::get_hierarchic_support_points_in_real_cell()</a>.</p>
+
+</div>
+</div>
+<a id="file_ac40ce6c420aab2bf460d5dff9da89e8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_ac40ce6c420aab2bf460d5dff9da89e8c">&#9670;&nbsp;</a></span>get_lexicographic_support_points_in_real_cell()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;Point&lt;spacedim&gt; &gt; LaplaceBEM::get_lexicographic_support_points_in_real_cell </td>
+          <td>(</td>
+          <td class="paramtype">const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
+          <td class="paramname"><em>cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const MappingQGeneric&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>mapping</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calculate a list of support points in the real cell in the lexicographic order.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cell</td><td></td></tr>
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">mapping</td><td>Geometric mapping object used for transforming support points from the unit cell to the real cell. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A list of support points in the real cell in the lexicographic order.</dd></dl>
+<dl class="section note">
+<dt>Note </dt>
+<dd>N.B. Each support point in the real cell has the space dimension <code>spacedim</code>, while each support point in the unit cell has the manifold dimension <code>dim</code>. </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ac40ce6c420aab2bf460d5dff9da89e8c">LaplaceBEM::get_lexicographic_support_points_in_real_cell()</a>, and <a class="el" href="laplace__bem_8h.html#a11e2ebdafcfd581632e89cea11c503cd">LaplaceBEM::get_support_points_in_real_cell()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ac40ce6c420aab2bf460d5dff9da89e8c">LaplaceBEM::get_lexicographic_support_points_in_real_cell()</a>.</p>
+
+</div>
+</div>
+<a id="file_a11e2ebdafcfd581632e89cea11c503cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a11e2ebdafcfd581632e89cea11c503cd">&#9670;&nbsp;</a></span>get_support_points_in_real_cell()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;Point&lt;spacedim&gt; &gt; LaplaceBEM::get_support_points_in_real_cell </td>
+          <td>(</td>
+          <td class="paramtype">const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
+          <td class="paramname"><em>cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const MappingQGeneric&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>mapping</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; unsigned int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>dof_permutation</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calculate a list of support points in the real cell in the order required by the given numbering.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cell</td><td></td></tr>
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">mapping</td><td>Geometric mapping object used for transforming support points from the unit cell to the real cell. </td></tr>
+    <tr><td class="paramname">dof_permutation</td><td>The numbering for accessing the support points in the specified order. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A list of support points in the real cell.</dd></dl>
+<dl class="section note">
+<dt>Note </dt>
+<dd>N.B. Each support point in the real cell has the space dimension <code>spacedim</code>, while each support point in the unit cell has the manifold dimension <code>dim</code>. </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a11e2ebdafcfd581632e89cea11c503cd">LaplaceBEM::get_support_points_in_real_cell()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ac40ce6c420aab2bf460d5dff9da89e8c">LaplaceBEM::get_lexicographic_support_points_in_real_cell()</a>, and <a class="el" href="laplace__bem_8h.html#a11e2ebdafcfd581632e89cea11c503cd">LaplaceBEM::get_support_points_in_real_cell()</a>.</p>
+
+</div>
+</div>
+<a id="file_af2ba8d6b088c9eba188839b91ecb0d49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_af2ba8d6b088c9eba188839b91ecb0d49">&#9670;&nbsp;</a></span>get_vertex_dof_indices()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::array&lt;types::global_dof_index, GeometryInfo&lt;dim&gt;::vertices_per_cell&gt; LaplaceBEM::get_vertex_dof_indices </td>
+          <td>(</td>
+          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
+          <td class="paramname"><em>cell</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Return a list of global DoF indices associated with all the vertices in the given cell.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cell</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#af2ba8d6b088c9eba188839b91ecb0d49">LaplaceBEM::get_vertex_dof_indices()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#af2ba8d6b088c9eba188839b91ecb0d49">LaplaceBEM::get_vertex_dof_indices()</a>.</p>
+
+</div>
+</div>
+<a id="file_ac077b7401dee40cdf3d7bd38e1e8ad2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_ac077b7401dee40cdf3d7bd38e1e8ad2c">&#9670;&nbsp;</a></span>get_vertex_indices()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::array&lt;types::global_vertex_index, GeometryInfo&lt;dim&gt;::vertices_per_cell&gt; LaplaceBEM::get_vertex_indices </td>
+          <td>(</td>
+          <td class="paramtype">const typename Triangulation&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
+          <td class="paramname"><em>cell</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Return a list of global vertex indices for all the vertices in the given cell.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cell</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ac077b7401dee40cdf3d7bd38e1e8ad2c">LaplaceBEM::get_vertex_indices()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ac077b7401dee40cdf3d7bd38e1e8ad2c">LaplaceBEM::get_vertex_indices()</a>.</p>
+
+</div>
+</div>
+<a id="file_aaa9719659576d52ba03a26e8b1af26b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_aaa9719659576d52ba03a26e8b1af26b7">&#9670;&nbsp;</a></span>permute_vector() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;T&gt; LaplaceBEM::permute_vector </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>input_vector</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; unsigned int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>permutation_indices</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Permute a vector by using the given permutation indices to access its elements.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">input_vector</td><td></td></tr>
+    <tr><td class="paramname">permutation_indices</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Permuted vector </dd></dl>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#aaa9719659576d52ba03a26e8b1af26b7">LaplaceBEM::permute_vector()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#aaa9719659576d52ba03a26e8b1af26b7">LaplaceBEM::permute_vector()</a>.</p>
 
 </div>
 </div>
 <a id="file_a5eb8039d9a9632adb5601a1af8e3b7ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a5eb8039d9a9632adb5601a1af8e3b7ea">&#9670;&nbsp;</a></span>permute_vector()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a5eb8039d9a9632adb5601a1af8e3b7ea">&#9670;&nbsp;</a></span>permute_vector() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1281,48 +1136,45 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Permute a vector according to the specified permutation indices. The memory for the output vector should be pre-allocated. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Permute a vector by using the given permutation indices to access its elements. The result vector is returned as argument.</p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input_vector</td><td></td></tr>
     <tr><td class="paramname">permutation_indices</td><td></td></tr>
-    <tr><td class="paramname">permuted_vector</td><td></td></tr>
+    <tr><td class="paramname">permuted_vector</td><td>Permuted vector, the memory of which should be pre-allocated. </td></tr>
   </table>
   </dd>
 </dl>
 
+<p class="reference">References <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a9107fb87f456e86caa04ba3348982189">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_fe</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#af4356394bc832b8a4ff732885916384b">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_shape_grad_matrix_table_for_common_edge</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ab899ed26e3876de83d8fe09d8579b1ee">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_shape_grad_matrix_table_for_common_vertex</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ab8c54d091a90e46854f782cb390fd176">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_shape_grad_matrix_table_for_regular</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a19d5b2247953a84c2974e2f2ff118810">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_shape_grad_matrix_table_for_same_panel</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a45a3db6a8850b758849542c0c2f9d48e">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_shape_value_table_for_common_edge</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a84bdf210acf62ae9ba68326a98e3d306">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_shape_value_table_for_common_vertex</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a8bc399c98420015f7f7f50185da924e1">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_shape_value_table_for_regular</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#af837344cd836aa6ed93fcf6307157174">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::kx_shape_value_table_for_same_panel</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a30eaa0b6f1e587c5b8d95a04d80fa9a8">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_fe</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a8b8a0368ac2b1b7c2ac17a2a4b95f997">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_shape_grad_matrix_table_for_common_edge</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac9cf75ccfd80b75decfa4e36d4de3f73">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_shape_grad_matrix_table_for_common_vertex</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a83e4f5a68a6f8f7c522ca3e441d0e681">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_shape_grad_matrix_table_for_regular</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ab42688bec1d85d6f09f45d419839278f">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_shape_grad_matrix_table_for_same_panel</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ab4fdc0a5ff8c0aa63e4901436e29598b">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_shape_value_table_for_common_edge</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a83243ee09e5105eaa81b5d622e3be3ce">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_shape_value_table_for_common_vertex</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac627ae572f0006b87b0b3a48d9fefb12">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_shape_value_table_for_regular</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a10f53c8eacb5d445c5289ca6b7ca3bfe">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::ky_shape_value_table_for_same_panel</a>, <a class="el" href="laplace__bem_8h.html#aaa9719659576d52ba03a26e8b1af26b7">LaplaceBEM::permute_vector()</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#ac1cdb156deba4802692ca916d40bacda">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::quad_rule_for_common_edge</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a2b964d73a6d9bd80fe1ef419e1cebd4f">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::quad_rule_for_common_vertex</a>, <a class="el" href="classLaplaceBEM_1_1BEMValues.html#a65083f9822aa923512c775d0d9986939">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::quad_rule_for_regular</a>, and <a class="el" href="classLaplaceBEM_1_1BEMValues.html#aabf571f3c530ff65274122e468c3c987">LaplaceBEM::BEMValues&lt; dim, spacedim, RangeNumberType &gt;::quad_rule_for_same_panel</a>.</p>
+
 </div>
 </div>
-<a id="file_a4454a50d4f28d8995e20489110cf6eb1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a4454a50d4f28d8995e20489110cf6eb1">&#9670;&nbsp;</a></span>sauter_common_edge_parametric_coords_to_unit_cells()</h2>
+<a id="file_a4e5d06792ddf349f07ab29bdbbf05c4c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a4e5d06792ddf349f07ab29bdbbf05c4c">&#9670;&nbsp;</a></span>shape_grad_matrix()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim&gt; </div>
+template&lt;int dim, int spacedim&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::sauter_common_edge_parametric_coords_to_unit_cells </td>
+          <td class="memname">FullMatrix&lt;double&gt; LaplaceBEM::shape_grad_matrix </td>
           <td>(</td>
-          <td class="paramtype">const Point&lt; dim *2 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>parametric_coords</em>, </td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const unsigned int&#160;</td>
-          <td class="paramname"><em>k3_index</em>, </td>
+          <td class="paramtype">const std::vector&lt; unsigned int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>dof_permutation</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">Point&lt; dim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_unit_cell_coords</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Point&lt; dim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_unit_cell_coords</em>&#160;</td>
+          <td class="paramtype">const Point&lt; dim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1331,287 +1183,46 @@ template&lt;int dim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Transform parametric coordinates in Sauter's quadrature rule for the common edge case to unit cell coordinates for $K_x$ and $K_y$ respectively. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">parametric_coords</td><td></td></tr>
-    <tr><td class="paramname">k3_index</td><td></td></tr>
-    <tr><td class="paramname">kx_unit_cell_coords</td><td></td></tr>
-    <tr><td class="paramname">ky_unit_cell_coords</td><td></td></tr>
-  </table>
-  </dd>
+<p>Calculates the matrix which stores shape function gradient values with respect to area coordinates. Each row of the matrix is the gradient of one of the shape functions. The order of the matrix rows corresponding to the shape function gradients is determined by the given numbering <code>dof_permuation</code>.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>The support points, shape functions and DoFs in the finite element are enumerated in the hierarchic order by default. </dd>
 </dl>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a4454a50d4f28d8995e20489110cf6eb1">LaplaceBEM::sauter_common_edge_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a4df239900849c6aa0875c8bdeaab0aa0">LaplaceBEM::bem_shape_grad_matrices_common_edge()</a>, <a class="el" href="laplace__bem_8h.html#adacab8988c77e9127210826684684cd7">LaplaceBEM::bem_shape_values_common_edge()</a>, and <a class="el" href="laplace__bem_8h.html#a4454a50d4f28d8995e20489110cf6eb1">LaplaceBEM::sauter_common_edge_parametric_coords_to_unit_cells()</a>.</p>
-
-</div>
-</div>
-<a id="file_aa4fa27663bc3ea1525bb2535d003580c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_aa4fa27663bc3ea1525bb2535d003580c">&#9670;&nbsp;</a></span>sauter_common_vertex_parametric_coords_to_unit_cells()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void LaplaceBEM::sauter_common_vertex_parametric_coords_to_unit_cells </td>
-          <td>(</td>
-          <td class="paramtype">const Point&lt; dim *2 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>parametric_coords</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const unsigned int&#160;</td>
-          <td class="paramname"><em>k3_index</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Point&lt; dim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_unit_cell_coords</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Point&lt; dim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_unit_cell_coords</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Transform parametric coordinates in Sauter's quadrature rule for the common vertex case to unit cell coordinates for $K_x$ and $K_y$ respectively. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">parametric_coords</td><td></td></tr>
-    <tr><td class="paramname">k3_index</td><td></td></tr>
-    <tr><td class="paramname">kx_unit_cell_coords</td><td></td></tr>
-    <tr><td class="paramname">ky_unit_cell_coords</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#aa4fa27663bc3ea1525bb2535d003580c">LaplaceBEM::sauter_common_vertex_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#abaca697a3eb40d422b9f26c63ff47670">LaplaceBEM::bem_shape_grad_matrices_common_vertex()</a>, <a class="el" href="laplace__bem_8h.html#ad1b3205a29e5aef857857b6e1a533f36">LaplaceBEM::bem_shape_values_common_vertex()</a>, and <a class="el" href="laplace__bem_8h.html#aa4fa27663bc3ea1525bb2535d003580c">LaplaceBEM::sauter_common_vertex_parametric_coords_to_unit_cells()</a>.</p>
-
-</div>
-</div>
-<a id="file_a5bbec4d9bc5055de16e293c2ef7cfab2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a5bbec4d9bc5055de16e293c2ef7cfab2">&#9670;&nbsp;</a></span>sauter_regular_parametric_coords_to_unit_cells()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void LaplaceBEM::sauter_regular_parametric_coords_to_unit_cells </td>
-          <td>(</td>
-          <td class="paramtype">const Point&lt; dim *2 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>parametric_coords</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Point&lt; dim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_unit_cell_coords</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Point&lt; dim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_unit_cell_coords</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Transform parametric coordinates in Sauter's quadrature rule for the regular case to unit cell coordinates for $K_x$ and $K_y$ respectively. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">parametric_coords</td><td></td></tr>
-    <tr><td class="paramname">k3_index</td><td></td></tr>
-    <tr><td class="paramname">kx_unit_cell_coords</td><td></td></tr>
-    <tr><td class="paramname">ky_unit_cell_coords</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a5bbec4d9bc5055de16e293c2ef7cfab2">LaplaceBEM::sauter_regular_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#abe59b85b94a356ba18b578090d708090">LaplaceBEM::bem_shape_grad_matrices_regular()</a>, <a class="el" href="laplace__bem_8h.html#a9ba750c1de1ccb7c7f091efdd2a720fe">LaplaceBEM::bem_shape_values_regular()</a>, and <a class="el" href="laplace__bem_8h.html#a5bbec4d9bc5055de16e293c2ef7cfab2">LaplaceBEM::sauter_regular_parametric_coords_to_unit_cells()</a>.</p>
-
-</div>
-</div>
-<a id="file_a4b2f253b060b009aac6b9692d7984ff9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a4b2f253b060b009aac6b9692d7984ff9">&#9670;&nbsp;</a></span>sauter_same_panel_parametric_coords_to_unit_cells()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void LaplaceBEM::sauter_same_panel_parametric_coords_to_unit_cells </td>
-          <td>(</td>
-          <td class="paramtype">const Point&lt; dim *2 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>parametric_coords</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const unsigned int&#160;</td>
-          <td class="paramname"><em>k3_index</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Point&lt; dim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_unit_cell_coords</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Point&lt; dim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_unit_cell_coords</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Transform parametric coordinates in Sauter's quadrature rule for the same panel case to unit cell coordinates for $K_x$ and $K_y$ respectively. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">parametric_coords</td><td></td></tr>
-    <tr><td class="paramname">k3_index</td><td></td></tr>
-    <tr><td class="paramname">kx_unit_cell_coords</td><td></td></tr>
-    <tr><td class="paramname">ky_unit_cell_coords</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a4b2f253b060b009aac6b9692d7984ff9">LaplaceBEM::sauter_same_panel_parametric_coords_to_unit_cells()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a1ce86dd0bd3b5c4bf591ae0128205416">LaplaceBEM::bem_shape_grad_matrices_same_panel()</a>, <a class="el" href="laplace__bem_8h.html#a5497786c0b39fdb049b9c8fc5988bdcb">LaplaceBEM::bem_shape_values_same_panel()</a>, and <a class="el" href="laplace__bem_8h.html#a4b2f253b060b009aac6b9692d7984ff9">LaplaceBEM::sauter_same_panel_parametric_coords_to_unit_cells()</a>.</p>
-
-</div>
-</div>
-<a id="file_a57e551241347af592ddedca98e85feba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a57e551241347af592ddedca98e85feba">&#9670;&nbsp;</a></span>SauterQuadRule() <span class="overload">[1/3]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">FullMatrix&lt;RangeNumberType&gt; LaplaceBEM::SauterQuadRule </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction.html">LaplaceKernel::KernelFunction</a>&lt; spacedim, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kernel_function</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
-          <td class="paramname"><em>kx_cell_iter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
-          <td class="paramname"><em>ky_cell_iter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const MappingQGeneric&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_mapping</em> = <code>MappingQGeneric&lt;dim,&#160;spacedim&gt;(1)</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const MappingQGeneric&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_mapping</em> = <code>MappingQGeneric&lt;dim,&#160;spacedim&gt;(1)</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>This function implements Sauter's quadrature rule on quadrangular mesh. It handles various cases including same panel, common edge, common vertex and regular cell neighboring types.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">kernel_function</td><td>Laplace kernel function. </td></tr>
-    <tr><td class="paramname">kx_cell_iter</td><td>Iterator pointing to $K_x$. </td></tr>
-    <tr><td class="paramname">kx_cell_iter</td><td>Iterator pointing to $K_y$. </td></tr>
-    <tr><td class="paramname">kx_mapping</td><td>Mapping used for $K_x$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. </td></tr>
-    <tr><td class="paramname">kx_mapping</td><td>Mapping used for $K_y$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. </td></tr>
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">dof_permutation</td><td>The numbering for accessing the shape functions in the specified order. </td></tr>
+    <tr><td class="paramname">p</td><td>The area coordinates at which the shape function's gradient is to be evaluated. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>The matrix storing the gradient of each shape function. Its dimension is <code>dofs_per_cell*dim</code>. </dd></dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a58ca7458aac9f0ea79fd8a44d1eec5c7">LaplaceBEM::hierarchical_support_points_in_real_cell()</a>, and <a class="el" href="laplace__bem_8h.html#a57e551241347af592ddedca98e85feba">LaplaceBEM::SauterQuadRule()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a4e5d06792ddf349f07ab29bdbbf05c4c">LaplaceBEM::shape_grad_matrix()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a57e551241347af592ddedca98e85feba">LaplaceBEM::SauterQuadRule()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a4e5d06792ddf349f07ab29bdbbf05c4c">LaplaceBEM::shape_grad_matrix()</a>, <a class="el" href="laplace__bem_8h.html#a41bd6ffd4c524471ef881ff97a5ad9e4">LaplaceBEM::shape_grad_matrix_in_hierarchical_order()</a>, and <a class="el" href="laplace__bem_8h.html#a29c671f2632d76cf0600c0cb03cb39ab">LaplaceBEM::shape_grad_matrix_in_lexicographic_order()</a>.</p>
 
 </div>
 </div>
-<a id="file_a1cb24336d96c36bd50973a35b3e42b6a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a1cb24336d96c36bd50973a35b3e42b6a">&#9670;&nbsp;</a></span>SauterQuadRule() <span class="overload">[2/3]</span></h2>
+<a id="file_a41bd6ffd4c524471ef881ff97a5ad9e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a41bd6ffd4c524471ef881ff97a5ad9e4">&#9670;&nbsp;</a></span>shape_grad_matrix_in_hierarchical_order()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
+template&lt;int dim, int spacedim&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::SauterQuadRule </td>
+          <td class="memname">FullMatrix&lt;double&gt; LaplaceBEM::shape_grad_matrix_in_hierarchical_order </td>
           <td>(</td>
-          <td class="paramtype">FullMatrix&lt; RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>system_matrix</em>, </td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction.html">LaplaceKernel::KernelFunction</a>&lt; spacedim, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kernel_function</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
-          <td class="paramname"><em>kx_cell_iter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
-          <td class="paramname"><em>ky_cell_iter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const MappingQGeneric&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_mapping</em> = <code>MappingQGeneric&lt;dim,&#160;spacedim&gt;(1)</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const MappingQGeneric&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_mapping</em> = <code>MappingQGeneric&lt;dim,&#160;spacedim&gt;(1)</code>&#160;</td>
+          <td class="paramtype">const Point&lt; dim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1620,71 +1231,41 @@ template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>This function implements Sauter's quadrature rule on quadrangular mesh. It handles various cases including same panel, common edge, common vertex and regular cell neighboring types.</p>
+<p>Calculate the matrix which stores shape function gradient values with respect to area coordinates. Each row of the matrix is the gradient of one of the shape functions. The matrix rows corresponding to the shape function gradients are arranged in the default hierarchic order.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">kernel_function</td><td>Laplace kernel function. </td></tr>
-    <tr><td class="paramname">kx_cell_iter</td><td>Iterator pointing to $K_x$. </td></tr>
-    <tr><td class="paramname">kx_cell_iter</td><td>Iterator pointing to $K_y$. </td></tr>
-    <tr><td class="paramname">kx_mapping</td><td>Mapping used for $K_x$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. </td></tr>
-    <tr><td class="paramname">kx_mapping</td><td>Mapping used for $K_y$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. </td></tr>
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">p</td><td>The area coordinates at which the shape function's gradient is to be evaluated. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>The matrix storing the gradient of each shape function. Its dimension is <code>dofs_per_cell*dim</code>. </dd></dl>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a58ca7458aac9f0ea79fd8a44d1eec5c7">LaplaceBEM::hierarchical_support_points_in_real_cell()</a>, and <a class="el" href="laplace__bem_8h.html#a57e551241347af592ddedca98e85feba">LaplaceBEM::SauterQuadRule()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a4e5d06792ddf349f07ab29bdbbf05c4c">LaplaceBEM::shape_grad_matrix()</a>, and <a class="el" href="laplace__bem_8h.html#a41bd6ffd4c524471ef881ff97a5ad9e4">LaplaceBEM::shape_grad_matrix_in_hierarchical_order()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a41bd6ffd4c524471ef881ff97a5ad9e4">LaplaceBEM::shape_grad_matrix_in_hierarchical_order()</a>.</p>
 
 </div>
 </div>
-<a id="file_a27c3f20fa27d5afdba1ad53ab47f9ed9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a27c3f20fa27d5afdba1ad53ab47f9ed9">&#9670;&nbsp;</a></span>SauterQuadRule() <span class="overload">[3/3]</span></h2>
+<a id="file_a29c671f2632d76cf0600c0cb03cb39ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a29c671f2632d76cf0600c0cb03cb39ab">&#9670;&nbsp;</a></span>shape_grad_matrix_in_lexicographic_order()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
+template&lt;int dim, int spacedim&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void LaplaceBEM::SauterQuadRule </td>
+          <td class="memname">FullMatrix&lt;double&gt; LaplaceBEM::shape_grad_matrix_in_lexicographic_order </td>
           <td>(</td>
-          <td class="paramtype">FullMatrix&lt; RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>system_matrix</em>, </td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classLaplaceBEM_1_1LaplaceKernel_1_1KernelFunction.html">LaplaceKernel::KernelFunction</a>&lt; spacedim, RangeNumberType &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kernel_function</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classLaplaceBEM_1_1BEMValues.html">BEMValues</a>&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>bem_values</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
-          <td class="paramname"><em>kx_cell_iter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const typename DoFHandler&lt; dim, spacedim &gt;::cell_iterator &amp;&#160;</td>
-          <td class="paramname"><em>ky_cell_iter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const MappingQGeneric&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>kx_mapping</em> = <code>MappingQGeneric&lt;dim,&#160;spacedim&gt;(1)</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const MappingQGeneric&lt; dim, spacedim &gt; &amp;&#160;</td>
-          <td class="paramname"><em>ky_mapping</em> = <code>MappingQGeneric&lt;dim,&#160;spacedim&gt;(1)</code>&#160;</td>
+          <td class="paramtype">const Point&lt; dim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1693,19 +1274,160 @@ template&lt;int dim, int spacedim, typename RangeNumberType  = double&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>This function implements Sauter's quadrature rule on quadrangular mesh. It handles various cases including same panel, common edge, common vertex and regular cell neighboring types.</p>
+<p>Calculate the matrix which stores shape function gradient values with respect to area coordinates. Each row of the matrix is the gradient of one of the shape functions. The matrix rows corresponding to the shape function gradients are arranged in the lexicographic order.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>The support points, shape functions and DoFs in the finite element are enumerated in the hierarchic order by default. </dd>
+</dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">kernel_function</td><td>Laplace kernel function. </td></tr>
-    <tr><td class="paramname">kx_cell_iter</td><td>Iterator pointing to $K_x$. </td></tr>
-    <tr><td class="paramname">kx_cell_iter</td><td>Iterator pointing to $K_y$. </td></tr>
-    <tr><td class="paramname">kx_mapping</td><td>Mapping used for $K_x$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. </td></tr>
-    <tr><td class="paramname">kx_mapping</td><td>Mapping used for $K_y$. Because a mesher usually generates 1st order grid, if there is no additional manifold specification, the mapping should be 1st order. </td></tr>
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">p</td><td>The area coordinates at which the shape function's gradient is to be evaluated. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>The matrix storing the gradient of each shape function. Its dimension is <code>dofs_per_cell*dim</code>. </dd></dl>
+<p>Get the lexicographic numbering from <code>FE_Poly&lt;PolynomialType,dim,spacedim&gt;::get_poly_space_numbering_inverse</code>. An alternative is to call <code>FETools::lexicographic_to_hierarchic_numbering</code>.</p>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a58ca7458aac9f0ea79fd8a44d1eec5c7">LaplaceBEM::hierarchical_support_points_in_real_cell()</a>, and <a class="el" href="laplace__bem_8h.html#a57e551241347af592ddedca98e85feba">LaplaceBEM::SauterQuadRule()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a4e5d06792ddf349f07ab29bdbbf05c4c">LaplaceBEM::shape_grad_matrix()</a>, and <a class="el" href="laplace__bem_8h.html#a29c671f2632d76cf0600c0cb03cb39ab">LaplaceBEM::shape_grad_matrix_in_lexicographic_order()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a29c671f2632d76cf0600c0cb03cb39ab">LaplaceBEM::shape_grad_matrix_in_lexicographic_order()</a>, <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>, and <a class="el" href="laplace__bem_8h.html#a2052f990d3acafd1b2ffb9f82b483c3e">LaplaceBEM::surface_jacobian_det_and_normal_vector()</a>.</p>
+
+</div>
+</div>
+<a id="file_ac9c78b15a41037e7779f59b92c889fb5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_ac9c78b15a41037e7779f59b92c889fb5">&#9670;&nbsp;</a></span>shape_values()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">Vector&lt;double&gt; LaplaceBEM::shape_values </td>
+          <td>(</td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; unsigned int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>dof_permutation</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Point&lt; dim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Evaluate a list of shape functions at the specified area coordinates. The shape functions are arranged in the required order.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">dof_permutation</td><td>The numbering for accessing the shape functions in the specified order. </td></tr>
+    <tr><td class="paramname">p</td><td>The area coordinates at which the shape functions are to be evaluated. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A list of shape function values. </dd></dl>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ac9c78b15a41037e7779f59b92c889fb5">LaplaceBEM::shape_values()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ac9c78b15a41037e7779f59b92c889fb5">LaplaceBEM::shape_values()</a>, and <a class="el" href="laplace__bem_8h.html#a1cab663f2ee8dfa77f6d91503f09e1fe">LaplaceBEM::shape_values_in_lexicographic_order()</a>.</p>
+
+</div>
+</div>
+<a id="file_ae304b08c855fbdb02aee8d431618494a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_ae304b08c855fbdb02aee8d431618494a">&#9670;&nbsp;</a></span>shape_values_in_hierarchical_order()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">Vector&lt;double&gt; LaplaceBEM::shape_values_in_hierarchical_order </td>
+          <td>(</td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Point&lt; dim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Evaluate a list of shape functions at the specified area coordinates in the default hierarchic order.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">p</td><td>The area coordinates at which the shape functions are to be evaluated. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A list of shape function values. </dd></dl>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ae304b08c855fbdb02aee8d431618494a">LaplaceBEM::shape_values_in_hierarchical_order()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#ae304b08c855fbdb02aee8d431618494a">LaplaceBEM::shape_values_in_hierarchical_order()</a>.</p>
+
+</div>
+</div>
+<a id="file_a1cab663f2ee8dfa77f6d91503f09e1fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a1cab663f2ee8dfa77f6d91503f09e1fe">&#9670;&nbsp;</a></span>shape_values_in_lexicographic_order()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">Vector&lt;double&gt; LaplaceBEM::shape_values_in_lexicographic_order </td>
+          <td>(</td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Point&lt; dim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Evaluate a list of shape functions at the specified area coordinates in the lexicographic order.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">p</td><td>The area coordinates at which the shape functions are to be evaluated. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A list of shape function values. </dd></dl>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#ac9c78b15a41037e7779f59b92c889fb5">LaplaceBEM::shape_values()</a>, and <a class="el" href="laplace__bem_8h.html#a1cab663f2ee8dfa77f6d91503f09e1fe">LaplaceBEM::shape_values_in_lexicographic_order()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a1cab663f2ee8dfa77f6d91503f09e1fe">LaplaceBEM::shape_values_in_lexicographic_order()</a>, and <a class="el" href="laplace__bem_8h.html#acfc06d01b90d55585ff2f84662e51993">LaplaceBEM::transform_unit_to_permuted_real_cell()</a>.</p>
 
 </div>
 </div>
@@ -1742,11 +1464,26 @@ template&lt;int dim, int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the surface Jacobian determinant at specified area coordinates. Shape functions and support points in the real cell have been reordered to the tensor product ordering before the calculation. </p>
+<p>Calculate the surface Jacobian determinant at the specified area coordinates. Support points in the real cell should have been reordered to the lexicographic order before the calculation.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">support_points_in_real_cell</td><td>A list of support points in the real cell in the lexicographic order. </td></tr>
+    <tr><td class="paramname">p</td><td>The area coordinates of the point in the unit cell. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Surface Jacobian determinant or surface metric tensor </dd></dl>
+<dl class="section note">
+<dt>Note </dt>
+<dd>Currently, only <code>dim=2</code> and <code>spacedim=3</code> are supported. </dd>
+</dl>
+<p>Calculate the shape function's gradient matrix, the rows of which are in the lexicographic order.</p>
+<p>Calculate those 2x2 Jacobian determinants appearing in the surface metric tensor, namely, \(J_{01}\), \(J_{12}\) and \(J_{20}\).</p>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a140b1d9466900efd8477068336ae23ec">LaplaceBEM::collect_two_components_from_point3()</a>, <a class="el" href="laplace__bem_8h.html#a29c671f2632d76cf0600c0cb03cb39ab">LaplaceBEM::shape_grad_matrix_in_lexicographic_order()</a>, and <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>.</p>
 
-<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>, and <a class="el" href="laplace__bem_8h.html#a2052f990d3acafd1b2ffb9f82b483c3e">LaplaceBEM::surface_jacobian_det_and_normal_vector()</a>.</p>
 
 </div>
 </div>
@@ -1789,9 +1526,152 @@ template&lt;int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the surface Jacobian determinant at specified area coordinates. Shape functions and support points in the real cell have been reordered to the tensor product ordering before the calculation. </p>
+<p>Calculate the surface Jacobian determinant at the quadrature point specified by its index.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">k3_index</td><td>\(k_3\) term index </td></tr>
+    <tr><td class="paramname">quad_no</td><td>Quadrature point index </td></tr>
+    <tr><td class="paramname">shape_grad_matrix_table</td><td>The data table storing the gradient values of the shape functions. Refer to <code>BEMValues::kx_shape_grad_matrix_table_for_same_panel</code>. </td></tr>
+    <tr><td class="paramname">support_points_in_real_cell</td><td>A list of support points in the real cell in the lexicographic order. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Surface Jacobian determinant or surface metric tensor </dd></dl>
+<p>Extract the shape function's gradient matrix under the specified \(k_3\) index and quadrature point.</p>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a140b1d9466900efd8477068336ae23ec">LaplaceBEM::collect_two_components_from_point3()</a>, and <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>.</p>
+
+</div>
+</div>
+<a id="file_a2052f990d3acafd1b2ffb9f82b483c3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a2052f990d3acafd1b2ffb9f82b483c3e">&#9670;&nbsp;</a></span>surface_jacobian_det_and_normal_vector() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int dim, int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">double LaplaceBEM::surface_jacobian_det_and_normal_vector </td>
+          <td>(</td>
+          <td class="paramtype">const FiniteElement&lt; dim, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>support_points_in_real_cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Point&lt; dim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Tensor&lt; 1, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>normal_vector</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calculate the surface Jacobian determinant and the normal vector at the specified coordinates in the unit cell. Support points in the real cell should have been reordered to the lexicographic or reversed lexicographic order before the calculation.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>N.B. The reversed lexicographic order appears for \(K_y\) when the cell neighboring type is common edge. Then the calculated normal vector \(n_y\) has the opposite direction of the real one, which should be negated in the subsequent calculation. </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fe</td><td></td></tr>
+    <tr><td class="paramname">support_points_in_real_cell</td><td>A list of support points in the real cell in the lexicographic or reversed lexicographic order. </td></tr>
+    <tr><td class="paramname">p</td><td>The area coordinates of the point in the unit cell. </td></tr>
+    <tr><td class="paramname">normal_vector</td><td>[out] The calculated normal vector. If it belongs to \(K_y\) and the cell neighboring type is common edge, it should be negated in the subsequent calculation. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Surface Jacobian determinant or surface metric tensor </dd></dl>
+<dl class="section note">
+<dt>Note </dt>
+<dd>Currently, only <code>dim=2</code> and <code>spacedim=3</code> are supported. </dd>
+</dl>
+<p>Calculate the shape function's gradient matrix, the rows of which are in the lexicographic order.</p>
+<p>Calculate those 2x2 Jacobian determinants appearing in the surface metric tensor, namely, \(J_{01}\), \(J_{12}\) and \(J_{20}\). These components are stored in the array <code>surface_jacobian_det_components</code>.</p>
+<p>This loop transform the vector \([J_{01}, J_{12}, J_{20}]/\abs{J}\) to \([J_{12}, J_{20}, J_{01}]/\abs{J}\), which is the normal vector.</p>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a140b1d9466900efd8477068336ae23ec">LaplaceBEM::collect_two_components_from_point3()</a>, <a class="el" href="laplace__bem_8h.html#a29c671f2632d76cf0600c0cb03cb39ab">LaplaceBEM::shape_grad_matrix_in_lexicographic_order()</a>, <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>, and <a class="el" href="laplace__bem_8h.html#a2052f990d3acafd1b2ffb9f82b483c3e">LaplaceBEM::surface_jacobian_det_and_normal_vector()</a>.</p>
+
+<p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#a2052f990d3acafd1b2ffb9f82b483c3e">LaplaceBEM::surface_jacobian_det_and_normal_vector()</a>.</p>
+
+</div>
+</div>
+<a id="file_a742573bbe50d9acfd17fc6cbbed90aef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#file_a742573bbe50d9acfd17fc6cbbed90aef">&#9670;&nbsp;</a></span>surface_jacobian_det_and_normal_vector() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int spacedim&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">double LaplaceBEM::surface_jacobian_det_and_normal_vector </td>
+          <td>(</td>
+          <td class="paramtype">const unsigned int&#160;</td>
+          <td class="paramname"><em>k3_index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const unsigned int&#160;</td>
+          <td class="paramname"><em>quad_no</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Table&lt; 2, FullMatrix&lt; double &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>shape_grad_matrix_table</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; Point&lt; spacedim &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>support_points_in_real_cell</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Tensor&lt; 1, spacedim &gt; &amp;&#160;</td>
+          <td class="paramname"><em>normal_vector</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Calculate the surface Jacobian determinant and the normal vector at the quadrature point specified by its index.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">k3_index</td><td>\(k_3\) term index </td></tr>
+    <tr><td class="paramname">quad_no</td><td>Quadrature point index </td></tr>
+    <tr><td class="paramname">shape_grad_matrix_table</td><td>The data table storing the gradient values of the shape functions. Refer to <code>BEMValues::kx_shape_grad_matrix_table_for_same_panel</code>. </td></tr>
+    <tr><td class="paramname">support_points_in_real_cell</td><td>A list of support points in the real cell in the lexicographic order. </td></tr>
+    <tr><td class="paramname">normal_vector</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Surface Jacobian determinant or surface metric tensor </dd></dl>
+<p>Extract the shape function's gradient matrix under the specified \(k_3\) index and quadrature point.</p>
+<p>This loop transform the vector \([J_{01}, J_{12}, J_{20}]/\abs{J}\) to \([J_{12}, J_{20}, J_{01}]/\abs{J}\), which is the normal vector.</p>
+
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a140b1d9466900efd8477068336ae23ec">LaplaceBEM::collect_two_components_from_point3()</a>, <a class="el" href="laplace__bem_8h.html#a4cb672f44c56d77166719e4cda5905f8">LaplaceBEM::surface_jacobian_det()</a>, and <a class="el" href="laplace__bem_8h.html#a2052f990d3acafd1b2ffb9f82b483c3e">LaplaceBEM::surface_jacobian_det_and_normal_vector()</a>.</p>
 
 </div>
 </div>
@@ -1828,17 +1708,24 @@ template&lt;int dim, int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the coordinate transformation from a unit cell to real cell for Qp element. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Coordinate transformation from the unit cell to the real cell based on a list of support points in the real cell.</p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fe</td><td></td></tr>
-    <tr><td class="paramname">support_points_in_real_cell</td><td>coordinates of the support points in the real cell, which are in the tensor product order. </td></tr>
-    <tr><td class="paramname">area_coords</td><td></td></tr>
+    <tr><td class="paramname">support_points_in_real_cell</td><td>A list of permuted support points in the real cell in the lexicographic order </td></tr>
+    <tr><td class="paramname">area_coords</td><td>Area coordinates in the unit cell, which has the manifold dimension <code>dim</code>. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Point coordinates in the real cell, which has the spatial dimension <code>spacedim</code>. </dd></dl>
+<p>Since iso-parametric finite element is assumed, we check the equality between the number of DoFs and the number of support points.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>DoFs are related to the basis functions for spanning the solution function space, while support points are related to the shape functions for representing the geometry. </dd>
+</dl>
+<p>Linear combination of support point coordinates and evaluation of shape functions at the specified area coordinates.</p>
 
-<p class="reference">References <a class="el" href="laplace__bem_8h.html#acfc06d01b90d55585ff2f84662e51993">LaplaceBEM::transform_unit_to_permuted_real_cell()</a>.</p>
+<p class="reference">References <a class="el" href="laplace__bem_8h.html#a1cab663f2ee8dfa77f6d91503f09e1fe">LaplaceBEM::shape_values_in_lexicographic_order()</a>, and <a class="el" href="laplace__bem_8h.html#acfc06d01b90d55585ff2f84662e51993">LaplaceBEM::transform_unit_to_permuted_real_cell()</a>.</p>
 
 <p class="reference">Referenced by <a class="el" href="laplace__bem_8h.html#acfc06d01b90d55585ff2f84662e51993">LaplaceBEM::transform_unit_to_permuted_real_cell()</a>, and <a class="el" href="classLaplaceBEM_1_1KernelPulledbackToUnitCell.html#ac55bd556acba999c6d71c322eff33cd9">LaplaceBEM::KernelPulledbackToUnitCell&lt; dim, spacedim, RangeNumberType &gt;::value()</a>.</p>
 
@@ -1883,16 +1770,23 @@ template&lt;int spacedim&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate the coordinate transformation from a unit cell to real cell for Qp element. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Coordinate transformation of the specified quadrature point in the unit cell to the real cell based on a list of support points in the real cell.</p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">k3_index</td><td></td></tr>
-    <tr><td class="paramname">quad_no</td><td></td></tr>
-    <tr><td class="paramname">shape_value_table</td><td></td></tr>
-    <tr><td class="paramname">support_points_in_real_cell</td><td>coordinates of the support points in the real cell, which are in the tensor product order. </td></tr>
+    <tr><td class="paramname">quad_no</td><td>Quadrature point index </td></tr>
+    <tr><td class="paramname">shape_value_table</td><td>Data table for the shape function values. Refer to <code>BEMValues::kx_shape_value_table_for_same_panel</code>. </td></tr>
+    <tr><td class="paramname">support_points_in_real_cell</td><td>A list of support points in the real cell in the lexicographic order. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Point coordinates in the real cell, which has the spatial dimension <code>spacedim</code>. </dd></dl>
+<p>Since iso-parametric finite element is assumed, we check the equality between the number of DoFs and the number of support points. The latter is equal to the size of the first dimension of the data table.</p>
+<dl class="section note">
+<dt>Note </dt>
+<dd>DoFs are related to the basis functions for spanning the solution function space, while support points are related to the shape functions for representing the geometry. </dd>
+</dl>
+<p>Linear combination of support point coordinates and evaluation of shape functions at the specified area coordinates.</p>
 
 <p class="reference">References <a class="el" href="laplace__bem_8h.html#acfc06d01b90d55585ff2f84662e51993">LaplaceBEM::transform_unit_to_permuted_real_cell()</a>.</p>
 

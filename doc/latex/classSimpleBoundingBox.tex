@@ -6,6 +6,15 @@
 
 
 
+Inheritance diagram for Simple\+Bounding\+Box$<$ spacedim, Number $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classSimpleBoundingBox__inherit__graph}
+\end{center}
+\end{figure}
+
+
 Collaboration diagram for Simple\+Bounding\+Box$<$ spacedim, Number $>$\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
@@ -80,14 +89,14 @@ Default constructor with two boundary points being both zeros. \mbox{\Hypertarge
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{Simple\+Bounding\+Box()}{SimpleBoundingBox()}\hspace{0.1cm}{\footnotesize\ttfamily [2/7]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box} (\begin{DoxyParamCaption}\item[{const Point$<$ spacedim, Number $>$ \&}]{corner1,  }\item[{const Point$<$ spacedim, Number $>$ \&}]{corner2 }\end{DoxyParamCaption})}
 
 Constructor from two corner points. \mbox{\Hypertarget{classSimpleBoundingBox_a75acd8fd3479b814c7e146d6948c1366}\label{classSimpleBoundingBox_a75acd8fd3479b814c7e146d6948c1366}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{Simple\+Bounding\+Box()}{SimpleBoundingBox()}\hspace{0.1cm}{\footnotesize\ttfamily [3/7]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box} (\begin{DoxyParamCaption}\item[{const std\+::pair$<$ Point$<$ spacedim, Number $>$, Point$<$ spacedim, Number $>$$>$ \&}]{point\+\_\+pair }\end{DoxyParamCaption})}
 
 Constructor from a pair of corner points. 
@@ -99,14 +108,10 @@ Constructor from a pair of corner points.
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{Simple\+Bounding\+Box()}{SimpleBoundingBox()}\hspace{0.1cm}{\footnotesize\ttfamily [4/7]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{points }\end{DoxyParamCaption})}
 
-Constructor from a vector of points. 
-
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::calculate\+\_\+bounding\+\_\+box().
-
-\mbox{\Hypertarget{classSimpleBoundingBox_a41f4805f49de9e15c82063927dd7ef10}\label{classSimpleBoundingBox_a41f4805f49de9e15c82063927dd7ef10}} 
+Constructor from a vector of points. \mbox{\Hypertarget{classSimpleBoundingBox_a41f4805f49de9e15c82063927dd7ef10}\label{classSimpleBoundingBox_a41f4805f49de9e15c82063927dd7ef10}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{Simple\+Bounding\+Box()}{SimpleBoundingBox()}\hspace{0.1cm}{\footnotesize\ttfamily [5/7]}}
@@ -114,15 +119,11 @@ References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::calculate\+\_\+bound
 template$<$int dim$>$ \\
 \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box} (\begin{DoxyParamCaption}\item[{const Mapping$<$ dim, spacedim $>$ \&}]{mapping,  }\item[{const Do\+F\+Handler$<$ dim, spacedim $>$ \&}]{dof\+\_\+handler }\end{DoxyParamCaption})}
 
-Constructor from a {\ttfamily Mapping} and a {\ttfamily Do\+F\+Handler}. N.\+B. This is a template constructor with the argument dim as manifold dimension. The resulted bounding box contains the support points associated with all Do\+Fs within the Do\+F\+Handler. 
-
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::calculate\+\_\+bounding\+\_\+box().
-
-\mbox{\Hypertarget{classSimpleBoundingBox_ab2568fcda9400b730d326574fa6ef58c}\label{classSimpleBoundingBox_ab2568fcda9400b730d326574fa6ef58c}} 
+Constructor from a {\ttfamily Mapping} and a {\ttfamily Do\+F\+Handler}. N.\+B. This is a template constructor with the argument dim as manifold dimension. The resulted bounding box contains the support points associated with all Do\+Fs within the Do\+F\+Handler. \mbox{\Hypertarget{classSimpleBoundingBox_ab2568fcda9400b730d326574fa6ef58c}\label{classSimpleBoundingBox_ab2568fcda9400b730d326574fa6ef58c}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{Simple\+Bounding\+Box()}{SimpleBoundingBox()}\hspace{0.1cm}{\footnotesize\ttfamily [6/7]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{dof\+\_\+indices,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points }\end{DoxyParamCaption})}
 
 Constructor from a specified DoF index set. The support point coordinates for all Do\+Fs have been placed into {\ttfamily all\+\_\+support\+\_\+points}. 
@@ -132,15 +133,11 @@ Constructor from a specified DoF index set. The support point coordinates for al
 {\em all\+\_\+support\+\_\+points} & The const reference to the list of all support points associated with a Do\+F\+Handler. \\
 \hline
 \end{DoxyParams}
-
-
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::calculate\+\_\+bounding\+\_\+box().
-
 \mbox{\Hypertarget{classSimpleBoundingBox_adb50933d0b5a524cfa98f79fd231d557}\label{classSimpleBoundingBox_adb50933d0b5a524cfa98f79fd231d557}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{Simple\+Bounding\+Box()}{SimpleBoundingBox()}\hspace{0.1cm}{\footnotesize\ttfamily [7/7]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::\hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box} (\begin{DoxyParamCaption}\item[{const \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$ \&}]{bbox }\end{DoxyParamCaption})}
 
 Copy constructor 
@@ -150,24 +147,20 @@ Copy constructor
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!calculate\+\_\+bounding\+\_\+box@{calculate\+\_\+bounding\+\_\+box}}
 \index{calculate\+\_\+bounding\+\_\+box@{calculate\+\_\+bounding\+\_\+box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{calculate\+\_\+bounding\+\_\+box()}{calculate\_bounding\_box()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 void \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::calculate\+\_\+bounding\+\_\+box (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{points }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
 
 Calculate the bounding box from a list of points. Initialize the two boundary points to be the first point in the list.
 
 Calculate the minimum and the maximum coordinate for each dimension.
 
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::boundary\+\_\+points.
-
-
-
-Referenced by Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::\+Simple\+Bounding\+Box().
+Referenced by Simple\+Bounding\+Box$<$ spacedim, double $>$\+::\+Simple\+Bounding\+Box().
 
 \mbox{\Hypertarget{classSimpleBoundingBox_aafff59e6c56578638d58ca6095024bac}\label{classSimpleBoundingBox_aafff59e6c56578638d58ca6095024bac}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!calculate\+\_\+bounding\+\_\+box@{calculate\+\_\+bounding\+\_\+box}}
 \index{calculate\+\_\+bounding\+\_\+box@{calculate\+\_\+bounding\+\_\+box}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{calculate\+\_\+bounding\+\_\+box()}{calculate\_bounding\_box()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 void \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::calculate\+\_\+bounding\+\_\+box (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&}]{dof\+\_\+indices,  }\item[{const std\+::vector$<$ Point$<$ spacedim, Number $>$$>$ \&}]{all\+\_\+support\+\_\+points }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
 
 Calculate the bounding box from a list of DoF indices. 
@@ -179,11 +172,7 @@ Calculate the bounding box from a list of DoF indices.
 \end{DoxyParams}
 Initialize the two boundary points to be the point associated with the first DoF index.
 
-Calculate the minimum and the maximum coordinate for each dimension.
-
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::boundary\+\_\+points.
-
-\mbox{\Hypertarget{classSimpleBoundingBox_abc665d7750573194c9c449ef67c40113}\label{classSimpleBoundingBox_abc665d7750573194c9c449ef67c40113}} 
+Calculate the minimum and the maximum coordinate for each dimension.\mbox{\Hypertarget{classSimpleBoundingBox_abc665d7750573194c9c449ef67c40113}\label{classSimpleBoundingBox_abc665d7750573194c9c449ef67c40113}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!coordinate\+\_\+index\+\_\+with\+\_\+longest\+\_\+dimension@{coordinate\+\_\+index\+\_\+with\+\_\+longest\+\_\+dimension}}
 \index{coordinate\+\_\+index\+\_\+with\+\_\+longest\+\_\+dimension@{coordinate\+\_\+index\+\_\+with\+\_\+longest\+\_\+dimension}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{coordinate\+\_\+index\+\_\+with\+\_\+longest\+\_\+dimension()}{coordinate\_index\_with\_longest\_dimension()}}
@@ -195,11 +184,7 @@ Index to the coordinate component, which should be in the range $[0, {\rm spaced
 \end{DoxyReturn}
 
 
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::boundary\+\_\+points.
-
-
-
-Referenced by Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::divide\+\_\+geometrically().
+Referenced by Simple\+Bounding\+Box$<$ spacedim, double $>$\+::divide\+\_\+geometrically().
 
 \mbox{\Hypertarget{classSimpleBoundingBox_a0b8bef0a9504e22a7e2c4cc3d4ed04c4}\label{classSimpleBoundingBox_a0b8bef0a9504e22a7e2c4cc3d4ed04c4}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!divide\+\_\+geometrically@{divide\+\_\+geometrically}}
@@ -217,7 +202,7 @@ Modify the {\ttfamily coordinate\+\_\+index} \textquotesingle{}th coordinate of 
 
 Modify the {\ttfamily coordinate\+\_\+index} \textquotesingle{}th coordinate of the bottom corner point in the second box.
 
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::coordinate\+\_\+index\+\_\+with\+\_\+longest\+\_\+dimension(), and Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::get\+\_\+boundary\+\_\+points().
+Referenced by Cluster\+Tree$<$ spacedim, double $>$\+::partition\+\_\+from\+\_\+cluster\+\_\+node().
 
 \mbox{\Hypertarget{classSimpleBoundingBox_a1cccc2f8ebc6b5f406738f04e145b598}\label{classSimpleBoundingBox_a1cccc2f8ebc6b5f406738f04e145b598}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!get\+\_\+boundary\+\_\+points@{get\+\_\+boundary\+\_\+points}}
@@ -231,11 +216,7 @@ The reference to the pair of corner points. The point with a smaller coordinate 
 \end{DoxyReturn}
 
 
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::boundary\+\_\+points.
-
-
-
-Referenced by Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::divide\+\_\+geometrically().
+Referenced by Simple\+Bounding\+Box$<$ spacedim, double $>$\+::divide\+\_\+geometrically().
 
 \mbox{\Hypertarget{classSimpleBoundingBox_a7c1af5d42bfc12cd3d0c955863fe0d75}\label{classSimpleBoundingBox_a7c1af5d42bfc12cd3d0c955863fe0d75}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!get\+\_\+boundary\+\_\+points@{get\+\_\+boundary\+\_\+points}}
@@ -247,22 +228,14 @@ const std\+::pair$<$ Point$<$ spacedim, Number $>$, Point$<$ spacedim, Number $>
 Get the two corner points of the bounding box (const version). \begin{DoxyReturn}{Returns}
 The const reference to the pair of corner points. The point with a smaller coordinate in each dimension is the first. 
 \end{DoxyReturn}
-
-
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::boundary\+\_\+points.
-
 \mbox{\Hypertarget{classSimpleBoundingBox_af58f37fb60a09a61730797850886c39f}\label{classSimpleBoundingBox_af58f37fb60a09a61730797850886c39f}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!point\+\_\+inside@{point\+\_\+inside}}
 \index{point\+\_\+inside@{point\+\_\+inside}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{point\+\_\+inside()}{point\_inside()}}
-{\footnotesize\ttfamily template$<$int spacedim, typename Number $>$ \\
+{\footnotesize\ttfamily template$<$int spacedim, typename Number$>$ \\
 bool \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Number $>$\+::point\+\_\+inside (\begin{DoxyParamCaption}\item[{const Point$<$ spacedim, Number $>$ \&}]{p }\end{DoxyParamCaption}) const}
 
-Determine if a given point lies within the bounding box. Make a predicate on if the point lies outside the bounding box.
-
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::boundary\+\_\+points.
-
-\mbox{\Hypertarget{classSimpleBoundingBox_a44340fd2ab10e9c05c1a88719958fee5}\label{classSimpleBoundingBox_a44340fd2ab10e9c05c1a88719958fee5}} 
+Determine if a given point lies within the bounding box. Make a predicate on if the point lies outside the bounding box.\mbox{\Hypertarget{classSimpleBoundingBox_a44340fd2ab10e9c05c1a88719958fee5}\label{classSimpleBoundingBox_a44340fd2ab10e9c05c1a88719958fee5}} 
 \index{Simple\+Bounding\+Box@{Simple\+Bounding\+Box}!volume@{volume}}
 \index{volume@{volume}!Simple\+Bounding\+Box@{Simple\+Bounding\+Box}}
 \subsubsection{\texorpdfstring{volume()}{volume()}}
@@ -272,10 +245,6 @@ Number \hyperlink{classSimpleBoundingBox}{Simple\+Bounding\+Box}$<$ spacedim, Nu
 Calculate the volume of the bounding box. \begin{DoxyReturn}{Returns}
 Volume of the bounding box. 
 \end{DoxyReturn}
-
-
-References Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::boundary\+\_\+points.
-
 
 
 \subsection{Member Data Documentation}
@@ -288,7 +257,7 @@ std\+::pair$<$Point$<$spacedim, Number$>$, Point$<$spacedim, Number$>$ $>$ \hype
 
 Two corner points of the bounding box. The point in the pair is the bottom corner, i.\+e. it has a smaller component coordinate in each dimension; while the second point is the top corner. 
 
-Referenced by Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::calculate\+\_\+bounding\+\_\+box(), Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::coordinate\+\_\+index\+\_\+with\+\_\+longest\+\_\+dimension(), Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::get\+\_\+boundary\+\_\+points(), Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::point\+\_\+inside(), and Simple\+Bounding\+Box$<$ spacedim, Number $>$\+::volume().
+Referenced by Simple\+Bounding\+Box$<$ spacedim, double $>$\+::calculate\+\_\+bounding\+\_\+box(), Simple\+Bounding\+Box$<$ spacedim, double $>$\+::coordinate\+\_\+index\+\_\+with\+\_\+longest\+\_\+dimension(), Simple\+Bounding\+Box$<$ spacedim, double $>$\+::get\+\_\+boundary\+\_\+points(), Simple\+Bounding\+Box$<$ spacedim, double $>$\+::point\+\_\+inside(), and Simple\+Bounding\+Box$<$ spacedim, double $>$\+::volume().
 
 
 

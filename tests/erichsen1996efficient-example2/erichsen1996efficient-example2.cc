@@ -6,6 +6,7 @@
 // Copyright (C) 2020 Jihuan Tian <jihuan_tian@hotmail.com>
 
 #include <deal.II/base/logstream.h>
+
 #include <erichsen1996efficient_example2.h>
 
 using namespace dealii;
@@ -18,15 +19,14 @@ main(int argc, char *argv[])
   deallog.depth_console(2);
   deallog.pop();
 
-  // TODO N.B. If we simply write
-  // LaplaceBEM::Erichsen1996Efficient::Example2 testcase(std::string(argv[1]));
-  // instead of the following two separated lines, compiler will generates an
-  // error.
   std::string        mesh_file_name(argv[1]);
   std::string        fe_order_str(argv[2]);
+  std::string        proc_num_str(argv[3]);
   const unsigned int fe_order = std::stoi(fe_order_str);
+  const unsigned int proc_num = std::stoi(proc_num_str);
   LaplaceBEM::Erichsen1996Efficient::Example2 testcase(mesh_file_name,
-                                                       fe_order);
+                                                       fe_order,
+                                                       proc_num);
   testcase.run();
 
   return 0;

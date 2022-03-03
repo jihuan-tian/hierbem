@@ -22,13 +22,12 @@
 
 #include <deal.II/numerics/data_out.h>
 
-#include <simple_bounding_box.h>
-
 #include <fstream>
 
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 #include "debug_tools.h"
+#include "simple_bounding_box.h"
 
 int
 main()

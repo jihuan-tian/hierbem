@@ -138,6 +138,7 @@ $(function() {
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classLAPACKFullMatrixExt-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">LAPACKFullMatrixExt&lt; Number &gt; Class Template Reference</div>  </div>
@@ -255,6 +256,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>reinit</b> (const <a 
 <tr class="separator:a73e9ad59ab56c377edc852d8ba16995c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a74d566120461e1a2437b9fd9a070633f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a74d566120461e1a2437b9fd9a070633f">fill_row</a> (const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> row_index, const Vector&lt; Number &gt; &amp;values, const bool is_adding=false)</td></tr>
 <tr class="separator:a74d566120461e1a2437b9fd9a070633f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4e5746bbd700aac4a9830b8b051bbb3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#ad4e5746bbd700aac4a9830b8b051bbb3">fill_row</a> (const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> dst_row_index, const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> src_row_index, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;M, const Number factor=1., const bool is_adding=false)</td></tr>
+<tr class="separator:ad4e5746bbd700aac4a9830b8b051bbb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af988edbf2f192f0eddf542178755eb91"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#af988edbf2f192f0eddf542178755eb91">fill_cols</a> (const std::map&lt; types::global_dof_index, size_t &gt; &amp;col_index_global_to_local_map, const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a> &amp;M, const std::vector&lt; types::global_dof_index &gt; &amp;M_col_global_index_set, const bool is_adding=false)</td></tr>
 <tr class="separator:af988edbf2f192f0eddf542178755eb91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a497a2e73b69f5b07cedb729330e95667"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a497a2e73b69f5b07cedb729330e95667">fill_col</a> (const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a> col_index, const Vector&lt; Number &gt; &amp;values, const bool is_adding=false)</td></tr>
@@ -341,6 +344,12 @@ LAPACKSupport::Property&#160;</td><td class="memItemRight" valign="bottom"><b>pr
 <tr class="separator:ac091f1f6af485b451c4c9398abb67230"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a436d7290d5b2b17c0691b5b63cca36fa"><td class="memItemLeft" align="right" valign="top">std::vector&lt; types::blas_int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a436d7290d5b2b17c0691b5b63cca36fa">ipiv</a></td></tr>
 <tr class="separator:a436d7290d5b2b17c0691b5b63cca36fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a09f6d1d28781651841b905d663e733fc"><td class="memTemplParams" colspan="2">template&lt;typename Number1 &gt; </td></tr>
+<tr class="memitem:a09f6d1d28781651841b905d663e733fc"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classLAPACKFullMatrixExt.html#a09f6d1d28781651841b905d663e733fc">balance_frobenius_norm</a> (<a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;A, <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;B)</td></tr>
+<tr class="separator:a09f6d1d28781651841b905d663e733fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Number&gt;<br />
@@ -1459,7 +1468,7 @@ template&lt;typename Number &gt; </div>
 </div>
 </div>
 <a id="a74d566120461e1a2437b9fd9a070633f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a74d566120461e1a2437b9fd9a070633f">&#9670;&nbsp;</a></span>fill_row()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a74d566120461e1a2437b9fd9a070633f">&#9670;&nbsp;</a></span>fill_row() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1499,7 +1508,66 @@ template&lt;typename Number &gt; </div>
   </dd>
 </dl>
 
-<p class="reference">Referenced by <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, and <a class="el" href="hmatrix_8h.html#acf140473681cc5ea3ab57fafdc986357">f_h_mTmult()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ac72668962dbad336f0c289bbd060e6ce">HMatrix&lt; spacedim, Number &gt;::addsym_diag()</a>, <a class="el" href="hmatrix_8h.html#a37b25e6262a25b27f374cab704407437">f_h_mmult()</a>, and <a class="el" href="hmatrix_8h.html#acf140473681cc5ea3ab57fafdc986357">f_h_mTmult()</a>.</p>
+
+</div>
+</div>
+<a id="ad4e5746bbd700aac4a9830b8b051bbb3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4e5746bbd700aac4a9830b8b051bbb3">&#9670;&nbsp;</a></span>fill_row() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Number &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt;::fill_row </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a>&#160;</td>
+          <td class="paramname"><em>dst_row_index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classLAPACKFullMatrixExt.html#a5cf5f4a6104dc17029210b5ca52bf574">size_type</a>&#160;</td>
+          <td class="paramname"><em>src_row_index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number &gt; &amp;&#160;</td>
+          <td class="paramname"><em>M</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Number&#160;</td>
+          <td class="paramname"><em>factor</em> = <code>1.</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>is_adding</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Fill a specified row in the destination matrix with a row extracted from the source matrix.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">dst_row_index</td><td></td></tr>
+    <tr><td class="paramname">src_row_index</td><td></td></tr>
+    <tr><td class="paramname">M</td><td></td></tr>
+    <tr><td class="paramname">factor</td><td></td></tr>
+    <tr><td class="paramname">is_adding</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -2034,7 +2102,7 @@ template&lt;typename Number &gt; </div>
   </dd>
 </dl>
 
-<p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#a355ed6360b21081b6e86e09833bf95db">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd_on_AxBT()</a>.</p>
+<p class="reference">Referenced by <a class="el" href="classHMatrix.html#ac72668962dbad336f0c289bbd060e6ce">HMatrix&lt; spacedim, Number &gt;::addsym_diag()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#a355ed6360b21081b6e86e09833bf95db">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd_on_AxBT()</a>.</p>
 
 </div>
 </div>
@@ -2899,6 +2967,7 @@ template&lt;typename Number &gt; </div>
 <p>Allocate memory for the error matrices. At the moment, \(D\) stores its transpose.</p>
 <p>When the original full matrix \(AB^T\) is a long matrix, perform right association.</p>
 <p>When the original full matrix \(AB^T\) is a wide matrix, perform left association.</p>
+<p>Balance the Frobenius norm of <code>C</code> and <code>D</code>.</p>
 <ol type="1">
 <li>Keep the first <code>truncation_rank</code> columns of <code>U</code>, while discarding the others.</li>
 <li>Keep the first <code>truncation_rank</code> rows of <code>VT</code>, while discarding the others.</li>
@@ -2906,6 +2975,7 @@ template&lt;typename Number &gt; </div>
 <p>When the truncation rank is zero, the error matrices should be directly obtained from the SVD results.</p>
 <p>When the original full matrix \(AB^T\) is a long matrix, perform right association.</p>
 <p>When the original full matrix \(AB^T\) is a wide matrix, perform left association.</p>
+<p>Balance the Frobenius norm of <code>C</code> and <code>D</code>.</p>
 <p>Then, clear the SVD result matrix and singular value vector.</p>
 <p>When <code>truncation_rank</code> (after value limiting wrt. the actual rank) is equal to the minimum matrix dimension, we only need to adjust the columns of \(U\) or the rows of \(V^T\) depending on the shape of the matrix \(M\).</p>
 <p>There is no effective rank truncation and thus no accuracy loss. Therefore, the error matrix components \(C\) and \(D\) are set to zero dimension.</p>
@@ -2922,7 +2992,7 @@ template&lt;typename Number &gt; </div>
 </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#ada3ff3d40049aca2c4d554baa701d613">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a9c94fd182607dca5b2aa56bca4eb0523">LAPACKFullMatrixExt&lt; Number &gt;::keep_first_n_columns()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a6cb733ec47cbcb9fed535362616d7e07">LAPACKFullMatrixExt&lt; Number &gt;::keep_first_n_rows()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a94f6a6df2b48201549f58bcbadcc6053">LAPACKFullMatrixExt&lt; Number &gt;::rank()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a75b2bb9434eb015f756747b943669fd7">LAPACKFullMatrixExt&lt; Number &gt;::scale_columns()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#aae9a6124afe70d17335d6338f323f22a">LAPACKFullMatrixExt&lt; Number &gt;::scale_rows()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a5be14a4d7f9c615f940e870b85d09ecd">LAPACKFullMatrixExt&lt; Number &gt;::svd()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#ac46d71bc1b0288fce7ad44b222e9210b">LAPACKFullMatrixExt&lt; Number &gt;::transpose()</a>.</p>
+<p class="reference">References <a class="el" href="classLAPACKFullMatrixExt.html#a09f6d1d28781651841b905d663e733fc">LAPACKFullMatrixExt&lt; Number &gt;::balance_frobenius_norm</a>, <a class="el" href="classLAPACKFullMatrixExt.html#ada3ff3d40049aca2c4d554baa701d613">LAPACKFullMatrixExt&lt; Number &gt;::fill()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a9c94fd182607dca5b2aa56bca4eb0523">LAPACKFullMatrixExt&lt; Number &gt;::keep_first_n_columns()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a6cb733ec47cbcb9fed535362616d7e07">LAPACKFullMatrixExt&lt; Number &gt;::keep_first_n_rows()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a94f6a6df2b48201549f58bcbadcc6053">LAPACKFullMatrixExt&lt; Number &gt;::rank()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a75b2bb9434eb015f756747b943669fd7">LAPACKFullMatrixExt&lt; Number &gt;::scale_columns()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#aae9a6124afe70d17335d6338f323f22a">LAPACKFullMatrixExt&lt; Number &gt;::scale_rows()</a>, <a class="el" href="classLAPACKFullMatrixExt.html#a5be14a4d7f9c615f940e870b85d09ecd">LAPACKFullMatrixExt&lt; Number &gt;::svd()</a>, and <a class="el" href="classLAPACKFullMatrixExt.html#ac46d71bc1b0288fce7ad44b222e9210b">LAPACKFullMatrixExt&lt; Number &gt;::transpose()</a>.</p>
 
 </div>
 </div>
@@ -3260,9 +3330,11 @@ template&lt;typename Number &gt; </div>
 <p>Allocate memory for the error matrices. At the moment, \(D\) stores its transpose.</p>
 <p>When the original full matrix \(AB^T\) is a long matrix, perform right association.</p>
 <p>When the original full matrix \(AB^T\) is a wide matrix, perform left association.</p>
+<p>Balance the Frobenius norm of <code>C</code> and <code>D</code>.</p>
 <p>Keep the first <code>truncation_rank</code> columns of <code>U</code>, while deleting others.</p>
 <p>Keep the first <code>truncation_rank</code> rows of <code>VT</code>, while deleting others.</p>
 <p>When the truncation rank is zero, the error matrices should be directly copied from the original component matrices.</p>
+<p>Balance the Frobenius norm of <code>C</code> and <code>D</code>.</p>
 <p>Then, clear the SVD result matrix and singular value vector.</p>
 <p>In this case, it could only be that <code>truncation_rank</code> == <code>min_dim</code>.</p>
 <p>There is no effective rank truncation and thus no accuracy loss. Therefore, the error matrix components \(C\) and \(D\) are set to zero dimension.</p>
@@ -4156,6 +4228,57 @@ template&lt;typename Number &gt; </div>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<h2 class="groupheader">Friends And Related Function Documentation</h2>
+<a id="a09f6d1d28781651841b905d663e733fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09f6d1d28781651841b905d663e733fc">&#9670;&nbsp;</a></span>balance_frobenius_norm</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Number&gt; </div>
+<div class="memtemplate">
+template&lt;typename Number1 &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void balance_frobenius_norm </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classLAPACKFullMatrixExt.html">LAPACKFullMatrixExt</a>&lt; Number1 &gt; &amp;&#160;</td>
+          <td class="paramname"><em>B</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Balance the Frobenius norm of the two matrices.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">A</td><td></td></tr>
+    <tr><td class="paramname">B</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">Referenced by <a class="el" href="classLAPACKFullMatrixExt.html#aeafd1f1aca169f4b9164f0a5e521e8cb">LAPACKFullMatrixExt&lt; Number &gt;::reduced_svd()</a>.</p>
 
 </div>
 </div>

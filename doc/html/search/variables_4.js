@@ -1,8 +1,5 @@
 var searchData=
 [
-  ['ipiv',['ipiv',['../classLAPACKFullMatrixExt.html#a436d7290d5b2b17c0691b5b63cca36fa',1,'LAPACKFullMatrixExt']]],
-  ['is_5fadmissible',['is_admissible',['../classBlockCluster.html#ae85d165894d10b7e58fbe20edd506abe',1,'BlockCluster']]],
-  ['is_5fnear_5ffield',['is_near_field',['../classBlockCluster.html#a6f719cbd6a646328f8128355c857745a',1,'BlockCluster']]],
-  ['is_5fsubtree',['is_subtree',['../classBlockClusterTree.html#a8dc01af98989bb71246fa2cd4d7307da',1,'BlockClusterTree']]],
-  ['iwork',['iwork',['../classLAPACKFullMatrixExt.html#ac091f1f6af485b451c4c9398abb67230',1,'LAPACKFullMatrixExt']]]
+  ['formal_5frank',['formal_rank',['../classRkMatrix.html#a7e4a8f0500daba627665c6a5ed8888d9',1,'RkMatrix']]],
+  ['fullmatrix',['fullmatrix',['../classHMatrix.html#a328134c9e9cb2c4b05d5431c0ca8a533',1,'HMatrix']]]
 ];

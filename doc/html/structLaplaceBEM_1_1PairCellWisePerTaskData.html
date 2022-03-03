@@ -159,19 +159,76 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a35b4a45b92bf0c8c36107fdc80c966cb"><td class="memItemLeft" align="right" valign="top"><a id="a35b4a45b92bf0c8c36107fdc80c966cb"></a>
-FullMatrix&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dlp_matrix</b></td></tr>
+<tr class="memitem:a35b4a45b92bf0c8c36107fdc80c966cb"><td class="memItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLaplaceBEM_1_1PairCellWisePerTaskData.html#a35b4a45b92bf0c8c36107fdc80c966cb">dlp_matrix</a></td></tr>
 <tr class="separator:a35b4a45b92bf0c8c36107fdc80c966cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa96b7a6991e47201c7f1f6a9fdfa8680"><td class="memItemLeft" align="right" valign="top"><a id="aa96b7a6991e47201c7f1f6a9fdfa8680"></a>
-FullMatrix&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>slp_matrix</b></td></tr>
+<tr class="memitem:aa96b7a6991e47201c7f1f6a9fdfa8680"><td class="memItemLeft" align="right" valign="top">FullMatrix&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLaplaceBEM_1_1PairCellWisePerTaskData.html#aa96b7a6991e47201c7f1f6a9fdfa8680">slp_matrix</a></td></tr>
 <tr class="separator:aa96b7a6991e47201c7f1f6a9fdfa8680"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad258060f7c6dfce99a40508320bb54bc"><td class="memItemLeft" align="right" valign="top"><a id="ad258060f7c6dfce99a40508320bb54bc"></a>
-std::vector&lt; types::global_dof_index &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>kx_local_dof_indices_permuted</b></td></tr>
+<tr class="memitem:ad258060f7c6dfce99a40508320bb54bc"><td class="memItemLeft" align="right" valign="top">std::vector&lt; types::global_dof_index &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLaplaceBEM_1_1PairCellWisePerTaskData.html#ad258060f7c6dfce99a40508320bb54bc">kx_local_dof_indices_permuted</a></td></tr>
 <tr class="separator:ad258060f7c6dfce99a40508320bb54bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ebad8073a36303fd26b67acd9a0d9b8"><td class="memItemLeft" align="right" valign="top"><a id="a4ebad8073a36303fd26b67acd9a0d9b8"></a>
-std::vector&lt; types::global_dof_index &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ky_local_dof_indices_permuted</b></td></tr>
+<tr class="memitem:a4ebad8073a36303fd26b67acd9a0d9b8"><td class="memItemLeft" align="right" valign="top">std::vector&lt; types::global_dof_index &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLaplaceBEM_1_1PairCellWisePerTaskData.html#a4ebad8073a36303fd26b67acd9a0d9b8">ky_local_dof_indices_permuted</a></td></tr>
 <tr class="separator:a4ebad8073a36303fd26b67acd9a0d9b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="a35b4a45b92bf0c8c36107fdc80c966cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a35b4a45b92bf0c8c36107fdc80c966cb">&#9670;&nbsp;</a></span>dlp_matrix</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FullMatrix&lt;double&gt; LaplaceBEM::PairCellWisePerTaskData::dlp_matrix</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Local matrix for the pair of cells for the DLP kernel. </p>
+
+</div>
+</div>
+<a id="ad258060f7c6dfce99a40508320bb54bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad258060f7c6dfce99a40508320bb54bc">&#9670;&nbsp;</a></span>kx_local_dof_indices_permuted</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;types::global_dof_index&gt; LaplaceBEM::PairCellWisePerTaskData::kx_local_dof_indices_permuted</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Permuted list of DoF indices in the cell \(K_x\), each element of which is associated with the corresponding element in <code><a class="el" href="structLaplaceBEM_1_1PairCellWiseScratchData.html#a32b2da930b6ad0488446e5b28da7565d">PairCellWiseScratchData::kx_support_points_permuted</a></code>. </p>
+
+</div>
+</div>
+<a id="a4ebad8073a36303fd26b67acd9a0d9b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ebad8073a36303fd26b67acd9a0d9b8">&#9670;&nbsp;</a></span>ky_local_dof_indices_permuted</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;types::global_dof_index&gt; LaplaceBEM::PairCellWisePerTaskData::ky_local_dof_indices_permuted</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Permuted list of DoF indices in the cell \(K_y\), each element of which is associated with the corresponding element in <code><a class="el" href="structLaplaceBEM_1_1PairCellWiseScratchData.html#a998570a30f2cf4069e2e08430b253ead">PairCellWiseScratchData::ky_support_points_permuted</a></code>. </p>
+
+</div>
+</div>
+<a id="aa96b7a6991e47201c7f1f6a9fdfa8680"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa96b7a6991e47201c7f1f6a9fdfa8680">&#9670;&nbsp;</a></span>slp_matrix</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FullMatrix&lt;double&gt; LaplaceBEM::PairCellWisePerTaskData::slp_matrix</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Local matrix for the pair of cells for the SLP kernel. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>/home/jihuan/Projects/deal.ii/program/dealii-9.1.1/examples/laplace-bem/include/<a class="el" href="laplace__bem_8h_source.html">laplace_bem.h</a></li>
 </ul>

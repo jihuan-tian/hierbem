@@ -15,11 +15,11 @@ This files verifies the admissible block cluster partition.
 {\ttfamily \#include $<$deal.\+I\+I/lac/full\+\_\+matrix.\+h$>$}\newline
 {\ttfamily \#include $<$deal.\+I\+I/lac/vector.\+h$>$}\newline
 {\ttfamily \#include $<$deal.\+I\+I/numerics/data\+\_\+out.\+h$>$}\newline
-{\ttfamily \#include $<$simple\+\_\+bounding\+\_\+box.\+h$>$}\newline
 {\ttfamily \#include $<$fstream$>$}\newline
 {\ttfamily \#include \char`\"{}block\+\_\+cluster\+\_\+tree.\+h\char`\"{}}\newline
 {\ttfamily \#include \char`\"{}cluster\+\_\+tree.\+h\char`\"{}}\newline
 {\ttfamily \#include \char`\"{}debug\+\_\+tools.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}simple\+\_\+bounding\+\_\+box.\+h\char`\"{}}\newline
 Include dependency graph for block-\/cluster-\/tree.cc\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
@@ -86,7 +86,7 @@ Print the block cluster tree, even though there is only a root node.
 
 Create a deal.\+ii vector storing the block cluster levels for all Do\+Fs.
 
-\begin{DoxyVerb}     Iterate through the \form#0 component of each block cluster and get
+\begin{DoxyVerb}     Iterate through the \form#5 component of each block cluster and get
 \end{DoxyVerb}
  the level of each DoF in $\tau$. Then assign the level value to all Do\+Fs contained in the cluster $\tau$.
 

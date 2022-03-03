@@ -121,6 +121,8 @@ void \hyperlink{classLAPACKFullMatrixExt_a73e9ad59ab56c377edc852d8ba16995c}{fill
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_a74d566120461e1a2437b9fd9a070633f}{fill\+\_\+row} (const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} row\+\_\+index, const Vector$<$ Number $>$ \&values, const bool is\+\_\+adding=false)
 \item 
+void \hyperlink{classLAPACKFullMatrixExt_ad4e5746bbd700aac4a9830b8b051bbb3}{fill\+\_\+row} (const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} dst\+\_\+row\+\_\+index, const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} src\+\_\+row\+\_\+index, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&M, const Number factor=1., const bool is\+\_\+adding=false)
+\item 
 void \hyperlink{classLAPACKFullMatrixExt_af988edbf2f192f0eddf542178755eb91}{fill\+\_\+cols} (const std\+::map$<$ types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&col\+\_\+index\+\_\+global\+\_\+to\+\_\+local\+\_\+map, const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext} \&M, const std\+::vector$<$ types\+::global\+\_\+dof\+\_\+index $>$ \&M\+\_\+col\+\_\+global\+\_\+index\+\_\+set, const bool is\+\_\+adding=false)
 \item 
 void \hyperlink{classLAPACKFullMatrixExt_a497a2e73b69f5b07cedb729330e95667}{fill\+\_\+col} (const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type} col\+\_\+index, const Vector$<$ Number $>$ \&values, const bool is\+\_\+adding=false)
@@ -206,6 +208,11 @@ std\+::vector$<$ Number $>$ \hyperlink{classLAPACKFullMatrixExt_a971d29c6d7664fc
 std\+::vector$<$ types\+::blas\+\_\+int $>$ \hyperlink{classLAPACKFullMatrixExt_ac091f1f6af485b451c4c9398abb67230}{iwork}
 \item 
 std\+::vector$<$ types\+::blas\+\_\+int $>$ \hyperlink{classLAPACKFullMatrixExt_a436d7290d5b2b17c0691b5b63cca36fa}{ipiv}
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$typename Number1 $>$ }\\void \hyperlink{classLAPACKFullMatrixExt_a09f6d1d28781651841b905d663e733fc}{balance\+\_\+frobenius\+\_\+norm} (\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&A, \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&B)
 \end{DoxyCompactItemize}
 
 
@@ -648,7 +655,7 @@ Fill the data in {\ttfamily M} by columns into the current matrix based on the g
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a74d566120461e1a2437b9fd9a070633f}\label{classLAPACKFullMatrixExt_a74d566120461e1a2437b9fd9a070633f}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+row@{fill\+\_\+row}}
 \index{fill\+\_\+row@{fill\+\_\+row}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
-\subsubsection{\texorpdfstring{fill\+\_\+row()}{fill\_row()}}
+\subsubsection{\texorpdfstring{fill\+\_\+row()}{fill\_row()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily template$<$typename Number $>$ \\
 void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+row (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{row\+\_\+index,  }\item[{const Vector$<$ Number $>$ \&}]{values,  }\item[{const bool}]{is\+\_\+adding = {\ttfamily false} }\end{DoxyParamCaption})}
 
@@ -661,8 +668,30 @@ Fill the {\ttfamily values} to the {\ttfamily row\+\_\+index\textquotesingle{}th
 \end{DoxyParams}
 
 
-Referenced by f\+\_\+h\+\_\+mmult(), and f\+\_\+h\+\_\+m\+Tmult().
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::addsym\+\_\+diag(), f\+\_\+h\+\_\+mmult(), and f\+\_\+h\+\_\+m\+Tmult().
 
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_ad4e5746bbd700aac4a9830b8b051bbb3}\label{classLAPACKFullMatrixExt_ad4e5746bbd700aac4a9830b8b051bbb3}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+row@{fill\+\_\+row}}
+\index{fill\+\_\+row@{fill\+\_\+row}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{fill\+\_\+row()}{fill\_row()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename Number $>$ \\
+void \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$\+::fill\+\_\+row (\begin{DoxyParamCaption}\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{dst\+\_\+row\+\_\+index,  }\item[{const \hyperlink{classLAPACKFullMatrixExt_a5cf5f4a6104dc17029210b5ca52bf574}{size\+\_\+type}}]{src\+\_\+row\+\_\+index,  }\item[{const \hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number $>$ \&}]{M,  }\item[{const Number}]{factor = {\ttfamily 1.},  }\item[{const bool}]{is\+\_\+adding = {\ttfamily false} }\end{DoxyParamCaption})}
+
+Fill a specified row in the destination matrix with a row extracted from the source matrix.
+
+
+\begin{DoxyParams}{Parameters}
+{\em dst\+\_\+row\+\_\+index} & \\
+\hline
+{\em src\+\_\+row\+\_\+index} & \\
+\hline
+{\em M} & \\
+\hline
+{\em factor} & \\
+\hline
+{\em is\+\_\+adding} & \\
+\hline
+\end{DoxyParams}
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a73e9ad59ab56c377edc852d8ba16995c}\label{classLAPACKFullMatrixExt_a73e9ad59ab56c377edc852d8ba16995c}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!fill\+\_\+rows@{fill\+\_\+rows}}
 \index{fill\+\_\+rows@{fill\+\_\+rows}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
@@ -934,7 +963,7 @@ Multiply two matrices with the second operand transposed, i.\+e. $C = AB^T$ or $
 \end{DoxyParams}
 
 
-Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T().
+Referenced by H\+Matrix$<$ spacedim, Number $>$\+::addsym\+\_\+diag(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+B\+T().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a051726629042a908eafc057587a1b601}\label{classLAPACKFullMatrixExt_a051726629042a908eafc057587a1b601}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!m\+Tmult@{m\+Tmult}}
@@ -1449,6 +1478,8 @@ When the original full matrix $AB^T$ is a long matrix, perform right association
 
 When the original full matrix $AB^T$ is a wide matrix, perform left association.
 
+Balance the Frobenius norm of {\ttfamily C} and {\ttfamily D}.
+
 
 \begin{DoxyEnumerate}
 \item Keep the first {\ttfamily truncation\+\_\+rank} columns of {\ttfamily U}, while discarding the others.
@@ -1460,6 +1491,8 @@ When the truncation rank is zero, the error matrices should be directly obtained
 When the original full matrix $AB^T$ is a long matrix, perform right association.
 
 When the original full matrix $AB^T$ is a wide matrix, perform left association.
+
+Balance the Frobenius norm of {\ttfamily C} and {\ttfamily D}.
 
 Then, clear the S\+VD result matrix and singular value vector.
 
@@ -1485,7 +1518,7 @@ Return the value of {\ttfamily truncation\+\_\+rank}. Instead of its original sp
 
 \end{DoxyDescription}
 
-References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::fill(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::transpose().
+References L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::balance\+\_\+frobenius\+\_\+norm, L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::fill(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::keep\+\_\+first\+\_\+n\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::rank(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+columns(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::scale\+\_\+rows(), L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::svd(), and L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::transpose().
 
 \mbox{\Hypertarget{classLAPACKFullMatrixExt_a355ed6360b21081b6e86e09833bf95db}\label{classLAPACKFullMatrixExt_a355ed6360b21081b6e86e09833bf95db}} 
 \index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT@{reduced\+\_\+svd\+\_\+on\+\_\+\+Ax\+BT}}
@@ -1720,11 +1753,15 @@ When the original full matrix $AB^T$ is a long matrix, perform right association
 
 When the original full matrix $AB^T$ is a wide matrix, perform left association.
 
+Balance the Frobenius norm of {\ttfamily C} and {\ttfamily D}.
+
 Keep the first {\ttfamily truncation\+\_\+rank} columns of {\ttfamily U}, while deleting others.
 
 Keep the first {\ttfamily truncation\+\_\+rank} rows of {\ttfamily VT}, while deleting others.
 
 When the truncation rank is zero, the error matrices should be directly copied from the original component matrices.
+
+Balance the Frobenius norm of {\ttfamily C} and {\ttfamily D}.
 
 Then, clear the S\+VD result matrix and singular value vector.
 
@@ -2182,6 +2219,30 @@ Create a zero valued matrix.
 {\em matrix} & \\
 \hline
 \end{DoxyParams}
+
+
+\subsection{Friends And Related Function Documentation}
+\mbox{\Hypertarget{classLAPACKFullMatrixExt_a09f6d1d28781651841b905d663e733fc}\label{classLAPACKFullMatrixExt_a09f6d1d28781651841b905d663e733fc}} 
+\index{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}!balance\+\_\+frobenius\+\_\+norm@{balance\+\_\+frobenius\+\_\+norm}}
+\index{balance\+\_\+frobenius\+\_\+norm@{balance\+\_\+frobenius\+\_\+norm}!L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext@{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}}
+\subsubsection{\texorpdfstring{balance\+\_\+frobenius\+\_\+norm}{balance\_frobenius\_norm}}
+{\footnotesize\ttfamily template$<$typename Number$>$ \\
+template$<$typename Number1 $>$ \\
+void balance\+\_\+frobenius\+\_\+norm (\begin{DoxyParamCaption}\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&}]{A,  }\item[{\hyperlink{classLAPACKFullMatrixExt}{L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext}$<$ Number1 $>$ \&}]{B }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [friend]}}
+
+Balance the Frobenius norm of the two matrices.
+
+
+\begin{DoxyParams}{Parameters}
+{\em A} & \\
+\hline
+{\em B} & \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::reduced\+\_\+svd().
+
 
 
 \subsection{Member Data Documentation}

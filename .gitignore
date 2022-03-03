@@ -1,0 +1,46 @@
+# Ignore temporary CMake files
+CTestTestfile.cmake
+Makefile
+cmake_install.cmake
+CMakeFiles/
+Testing/
+fontconfig/
+
+# Ignore binary directory
+*.debug
+*.release
+
+# Ignore backup files
+*.bak
+*.output.new
+
+# Ignore data files
+*.dat
+*.png
+*.jpg
+*.eps
+*.gif
+*.vtk
+*.geo
+*.msh
+*.msh.opt
+*.mat
+*.txt
+*.ods
+*.puml
+*.csv
+*.log
+*.tm
+octave-workspace
+
+# Ignore binary files
+*.a
+
+# Ignore Valgrind files
+callgrind.out.*
+core
+*.bin
+
+# Ignore generated documentation
+latex/
+html/

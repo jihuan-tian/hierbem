@@ -53,6 +53,18 @@ public:
    */
   using size_type = std::make_unsigned<types::blas_int>::type;
 
+  // Friend function declaration.
+  /**
+   * Balance the Frobenius norm of the two matrices.
+   *
+   * @param A
+   * @param B
+   */
+  template <typename Number1>
+  friend void
+  balance_frobenius_norm(LAPACKFullMatrixExt<Number1> &A,
+                         LAPACKFullMatrixExt<Number1> &B);
+
   /**
    * Create a zero valued matrix.
    *
@@ -1193,6 +1205,30 @@ private:
 
 template <typename Number>
 void
+balance_frobenius_norm(LAPACKFullMatrixExt<Number> &A,
+                       LAPACKFullMatrixExt<Number> &B)
+{
+  Number norm_A = A.frobenius_norm();
+  Number norm_B = B.frobenius_norm();
+  Number factor = std::sqrt(norm_A / norm_B);
+
+  if (factor < std::numeric_limits<double>::epsilon())
+    {
+      /**
+       * The factor is almost zero, do nothing to the matrix @p A.
+       */
+    }
+  else
+    {
+      A /= factor;
+    }
+
+  B *= factor;
+}
+
+
+template <typename Number>
+void
 LAPACKFullMatrixExt<Number>::ZeroMatrix(const size_type              rows,
                                         const size_type              cols,
                                         LAPACKFullMatrixExt<Number> &matrix)
@@ -1921,6 +1957,11 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
                   C.scale_columns(Sigma_r_error);
                   D.transpose();
                 }
+
+              /**
+               * Balance the Frobenius norm of @p C and @p D.
+               */
+              balance_frobenius_norm(C, D);
             }
           else
             {
@@ -1948,6 +1989,11 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
            */
           C = A;
           D = B;
+
+          /**
+           * Balance the Frobenius norm of @p C and @p D.
+           */
+          balance_frobenius_norm(C, D);
 
           /**
            * Then, clear the SVD result matrix and singular value vector.
@@ -3242,6 +3288,11 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
                   C.scale_columns(Sigma_r_error);
                   D.transpose();
                 }
+
+              /**
+               * Balance the Frobenius norm of @p C and @p D.
+               */
+              balance_frobenius_norm(C, D);
             }
           else
             {
@@ -3288,6 +3339,11 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
               C.scale_columns(Sigma_r);
               D.transpose();
             }
+
+          /**
+           * Balance the Frobenius norm of @p C and @p D.
+           */
+          balance_frobenius_norm(C, D);
 
           /**
            * Then, clear the SVD result matrix and singular value vector.
