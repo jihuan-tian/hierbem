@@ -50,7 +50,7 @@ main(int argc, char *argv[])
    * Create the test case object for Example 2 in Erichsen1996Efficient.
    */
   const unsigned int                          fe_order = 1;
-  LaplaceBEM::Erichsen1996Efficient::Example2 testcase(
+  IdeoBEM::Erichsen1996Efficient::Example2 testcase(
     "sphere-from-gmsh_hex.msh", fe_order);
 
   std::string run_type(argv[1]);

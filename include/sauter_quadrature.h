@@ -14,308 +14,2439 @@
 
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_base.h>
+#include <deal.II/fe/mapping_q_generic.h>
 
 #include <deal.II/grid/tria_accessor.h>
 
+#include <deal.II/lac/full_matrix.h>
+
 #include <vector>
 
-using namespace dealii;
+#include "bem_kernels.h"
+#include "bem_values.h"
+#include "sauter_quadrature_tools.h"
 
-/**
- * Build the topology for "DoF support point to cell" relation.
- *
- * @param dof_to_cell_topo
- * @param dof_handler
- * @param fe_index
- */
-template <int dim, int spacedim>
-void
-build_dof_to_cell_topology(
-  std::vector<std::vector<unsigned int>> &dof_to_cell_topo,
-  const DoFHandler<dim, spacedim> &       dof_handler,
-  const unsigned int                      fe_index = 0)
+namespace IdeoBEM
 {
-  const types::global_dof_index        n_dofs = dof_handler.n_dofs();
-  const FiniteElement<dim, spacedim> & fe     = dof_handler.get_fe(fe_index);
-  const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
-  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-  dof_to_cell_topo.resize(n_dofs);
+  using namespace dealii;
 
   /**
-   * Iterate over each active cell in the triangulation and extract the DoF
-   * indices.
+   * Build the topology for "DoF support point to cell" relation.
+   *
+   * @param dof_to_cell_topo
+   * @param dof_handler
+   * @param fe_index
    */
-  for (const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell :
-       dof_handler.active_cell_iterators())
-    {
-      cell->get_dof_indices(local_dof_indices);
-      for (auto dof_index : local_dof_indices)
-        {
-          dof_to_cell_topo[dof_index].push_back(cell->active_cell_index());
-        }
-    }
-}
+  template <int dim, int spacedim>
+  void
+  build_dof_to_cell_topology(
+    std::vector<std::vector<unsigned int>> &dof_to_cell_topo,
+    const DoFHandler<dim, spacedim> &       dof_handler,
+    const unsigned int                      fe_index = 0)
+  {
+    const types::global_dof_index        n_dofs = dof_handler.n_dofs();
+    const FiniteElement<dim, spacedim> & fe     = dof_handler.get_fe(fe_index);
+    const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+    dof_to_cell_topo.resize(n_dofs);
+
+    /**
+     * Iterate over each active cell in the triangulation and extract the DoF
+     * indices.
+     */
+    for (const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell :
+         dof_handler.active_cell_iterators())
+      {
+        cell->get_dof_indices(local_dof_indices);
+        for (auto dof_index : local_dof_indices)
+          {
+            dof_to_cell_topo[dof_index].push_back(cell->active_cell_index());
+          }
+      }
+  }
 
 
-/**
- * Print out the topological information about DoF support point to cell
- * relation.
- *
- * @param dof_to_cell_topo
- */
-void
-print_dof_to_cell_topology(
-  const std::vector<std::vector<unsigned int>> &dof_to_cell_topo);
+  /**
+   * Print out the topological information about DoF support point to cell
+   * relation.
+   *
+   * @param dof_to_cell_topo
+   */
+  void
+  print_dof_to_cell_topology(
+    const std::vector<std::vector<unsigned int>> &dof_to_cell_topo);
 
 
-/**
- * Transform parametric coordinates in Sauter's quadrature rule for the same
- * panel case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$ respectively.
- *
- * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
- * @param k3_index
- * @param kx_unit_cell_coords [out]
- * @param ky_unit_cell_coords [out]
- */
-template <int dim>
-void
-sauter_same_panel_parametric_coords_to_unit_cells(
-  const Point<dim * 2> &parametric_coords,
-  const unsigned int    k3_index,
-  Point<dim> &          kx_unit_cell_coords,
-  Point<dim> &          ky_unit_cell_coords)
-{
-  double unit_coords[4] = {
-    (1 - parametric_coords(0)) * parametric_coords(3),
-    (1 - parametric_coords(0) * parametric_coords(1)) * parametric_coords(2),
-    parametric_coords(0) + (1 - parametric_coords(0)) * parametric_coords(3),
-    parametric_coords(0) * parametric_coords(1) +
-      (1 - parametric_coords(0) * parametric_coords(1)) * parametric_coords(2)};
+  /**
+   * Get the DoF indices associated with the cell vertices or corners from a
+   * list of DoF indices which have been arranged in either the forward or
+   * backward lexicographic order. The results are returned in an array as the
+   * function's return value.
+   *
+   * \mynote{There are <code>GeometryInfo<dim>::vertices_per_cell</code>
+   * vertices in the returned array, among which the last two vertex DoF indices
+   * have been swapped in this function so that the whole list of vertex DoF
+   * indices in the returned array are arranged in either the clockwise or
+   * counter clockwise order instead of the original zigzag order.}
+   *
+   * @param fe
+   * @param dof_indices List of DoF indices in either the forward or backward
+   * lexicographic order.
+   * @return List of DoF indices for the cell vertices or corners with the last
+   * two swapped.
+   */
+  template <int dim, int spacedim>
+  std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
+  get_vertex_dof_indices_swapped(
+    const FiniteElement<dim, spacedim> &        fe,
+    const std::vector<types::global_dof_index> &dof_indices)
+  {
+    Assert(dim == 2, ExcNotImplemented());
 
-  switch (k3_index)
-    {
-      case 0:
-        kx_unit_cell_coords(0) = unit_coords[0];
-        kx_unit_cell_coords(1) = unit_coords[1];
-        ky_unit_cell_coords(0) = unit_coords[2];
-        ky_unit_cell_coords(1) = unit_coords[3];
+    std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
+      vertex_dof_indices;
 
-        break;
-      case 1:
-        kx_unit_cell_coords(0) = unit_coords[1];
-        kx_unit_cell_coords(1) = unit_coords[0];
-        ky_unit_cell_coords(0) = unit_coords[3];
-        ky_unit_cell_coords(1) = unit_coords[2];
+    vertex_dof_indices[0] = dof_indices[0];
+    vertex_dof_indices[1] = dof_indices[fe.dofs_per_face - 1];
+    vertex_dof_indices[2] = dof_indices[dof_indices.size() - 1];
+    vertex_dof_indices[3] =
+      dof_indices[dof_indices.size() - 1 - (fe.dofs_per_face - 1)];
 
-        break;
-      case 2:
-        kx_unit_cell_coords(0) = unit_coords[0];
-        kx_unit_cell_coords(1) = unit_coords[3];
-        ky_unit_cell_coords(0) = unit_coords[2];
-        ky_unit_cell_coords(1) = unit_coords[1];
-
-        break;
-      case 3:
-        kx_unit_cell_coords(0) = unit_coords[1];
-        kx_unit_cell_coords(1) = unit_coords[2];
-        ky_unit_cell_coords(0) = unit_coords[3];
-        ky_unit_cell_coords(1) = unit_coords[0];
-
-        break;
-      case 4:
-        kx_unit_cell_coords(0) = unit_coords[2];
-        kx_unit_cell_coords(1) = unit_coords[1];
-        ky_unit_cell_coords(0) = unit_coords[0];
-        ky_unit_cell_coords(1) = unit_coords[3];
-
-        break;
-      case 5:
-        kx_unit_cell_coords(0) = unit_coords[3];
-        kx_unit_cell_coords(1) = unit_coords[0];
-        ky_unit_cell_coords(0) = unit_coords[1];
-        ky_unit_cell_coords(1) = unit_coords[2];
-
-        break;
-      case 6:
-        kx_unit_cell_coords(0) = unit_coords[2];
-        kx_unit_cell_coords(1) = unit_coords[3];
-        ky_unit_cell_coords(0) = unit_coords[0];
-        ky_unit_cell_coords(1) = unit_coords[1];
-
-        break;
-      case 7:
-        kx_unit_cell_coords(0) = unit_coords[3];
-        kx_unit_cell_coords(1) = unit_coords[2];
-        ky_unit_cell_coords(0) = unit_coords[1];
-        ky_unit_cell_coords(1) = unit_coords[0];
-
-        break;
-      default:
-        Assert(false, ExcInternalError());
-    }
-}
+    return vertex_dof_indices;
+  }
 
 
-/**
- * Transform parametric coordinates in Sauter's quadrature rule for the
- * common edge case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$
- * respectively.
- *
- * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
- * @param k3_index
- * @param kx_unit_cell_coords [out]
- * @param ky_unit_cell_coords [out]
- */
-template <int dim>
-void
-sauter_common_edge_parametric_coords_to_unit_cells(
-  const Point<dim * 2> &parametric_coords,
-  const unsigned int    k3_index,
-  Point<dim> &          kx_unit_cell_coords,
-  Point<dim> &          ky_unit_cell_coords)
-{
-  double unit_coords1[4] = {(1 - parametric_coords(0)) * parametric_coords(3) +
-                              parametric_coords(0),
-                            parametric_coords(0) * parametric_coords(2),
-                            (1 - parametric_coords(0)) * parametric_coords(3),
-                            parametric_coords(0) * parametric_coords(1)};
-  double unit_coords2[4] = {(1 - parametric_coords(0) * parametric_coords(1)) *
-                                parametric_coords(3) +
-                              parametric_coords(0) * parametric_coords(1),
-                            parametric_coords(0) * parametric_coords(2),
-                            (1 - parametric_coords(0) * parametric_coords(1)) *
-                              parametric_coords(3),
-                            parametric_coords(0)};
+  /**
+   * Get the DoF indices associated with the cell vertices or corners from a
+   * list of DoF indices which have been arranged in either the forward or
+   * backward lexicographic order. The results are returned in an array as the
+   * last argument of this function.
+   *
+   * \mynote{There are <code>GeometryInfo<dim>::vertices_per_cell</code>
+   * vertices in the returned array, among which the last two vertex DoF indices
+   * have been swapped in this function so that the whole list of vertex DoF
+   * indices in the returned array are arranged in either the clockwise or
+   * counter clockwise order instead of the original zigzag order.}
+   *
+   * @param fe
+   * @param dof_indices List of DoF indices in either the forward or backward
+   * lexicographic order.
+   * @param vertex_dof_indices [out] List of DoF indices for the cell vertices
+   * or corners with the last two swapped.
+   */
+  template <int dim, int spacedim>
+  void
+  get_vertex_dof_indices_swapped(
+    const FiniteElement<dim, spacedim> &        fe,
+    const std::vector<types::global_dof_index> &dof_indices,
+    std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
+      &vertex_dof_indices)
+  {
+    Assert(dim == 2, ExcNotImplemented());
 
-  switch (k3_index)
-    {
-      case 0:
-        kx_unit_cell_coords(0) = unit_coords1[0];
-        kx_unit_cell_coords(1) = unit_coords1[1];
-        ky_unit_cell_coords(0) = unit_coords1[2];
-        ky_unit_cell_coords(1) = unit_coords1[3];
-
-        break;
-      case 1:
-        kx_unit_cell_coords(0) = unit_coords1[2];
-        kx_unit_cell_coords(1) = unit_coords1[1];
-        ky_unit_cell_coords(0) = unit_coords1[0];
-        ky_unit_cell_coords(1) = unit_coords1[3];
-
-        break;
-      case 2:
-        kx_unit_cell_coords(0) = unit_coords2[0];
-        kx_unit_cell_coords(1) = unit_coords2[1];
-        ky_unit_cell_coords(0) = unit_coords2[2];
-        ky_unit_cell_coords(1) = unit_coords2[3];
-
-        break;
-      case 3:
-        kx_unit_cell_coords(0) = unit_coords2[0];
-        kx_unit_cell_coords(1) = unit_coords2[3];
-        ky_unit_cell_coords(0) = unit_coords2[2];
-        ky_unit_cell_coords(1) = unit_coords2[1];
-
-        break;
-      case 4:
-        kx_unit_cell_coords(0) = unit_coords2[2];
-        kx_unit_cell_coords(1) = unit_coords2[1];
-        ky_unit_cell_coords(0) = unit_coords2[0];
-        ky_unit_cell_coords(1) = unit_coords2[3];
-
-        break;
-      case 5:
-        kx_unit_cell_coords(0) = unit_coords2[2];
-        kx_unit_cell_coords(1) = unit_coords2[3];
-        ky_unit_cell_coords(0) = unit_coords2[0];
-        ky_unit_cell_coords(1) = unit_coords2[1];
-
-        break;
-      default:
-        Assert(false, ExcInternalError());
-    }
-}
+    vertex_dof_indices[0] = dof_indices[0];
+    vertex_dof_indices[1] = dof_indices[fe.dofs_per_face - 1];
+    vertex_dof_indices[2] = dof_indices[dof_indices.size() - 1];
+    vertex_dof_indices[3] =
+      dof_indices[dof_indices.size() - 1 - (fe.dofs_per_face - 1)];
+  }
 
 
-/**
- * Transform parametric coordinates in Sauter's quadrature rule for the
- * common vertex case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$
- * respectively.
- *
- * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
- * @param k3_index
- * @param kx_unit_cell_coords [out]
- * @param ky_unit_cell_coords [out]
- */
-template <int dim>
-void
-sauter_common_vertex_parametric_coords_to_unit_cells(
-  const Point<dim * 2> &parametric_coords,
-  const unsigned int    k3_index,
-  Point<dim> &          kx_unit_cell_coords,
-  Point<dim> &          ky_unit_cell_coords)
-{
-  double unit_coords[4] = {parametric_coords(0),
-                           parametric_coords(0) * parametric_coords(1),
-                           parametric_coords(0) * parametric_coords(2),
-                           parametric_coords(0) * parametric_coords(3)};
+  /**
+   * Get the DoF index for the starting vertex in the standard configuration of
+   * the cell pair aimed for the Galerkin BEM double integration using the
+   * Sauter's method.
+   *
+   * \mynote{There are two cases to be processed here, common edge and common
+   * vertex.
+   * 1. In the common edge case, there are two DoF indices in the vector
+   * <code>vertex_dof_index_intersection</code>. Then their array indices wrt.
+   * the vector <code>local_vertex_dof_indices_swapped</code> will be
+   * searched. By considering this vector as a closed loop list, the two DoF
+   * indices in this vector are successively located and the first one of which
+   * is the vertex to start subsequent DoF traversing.
+   * 2. In the common vertex case, since there is only one DoF index in the
+   * vector @p vertex_dof_index_intersection, this vertex is the starting point.}
+   *
+   * @param vertex_dof_index_intersection The vector storing the intersection
+   * of vertex DoF indices for \f$K_x\f$ and \f$K_y\f$.
+   * @param local_vertex_dof_indices_swapped Vertex DoF indices with the last
+   * two swapped, which have been obtained from the function
+   * @p get_vertex_dof_indices_swapped.
+   * @return The array index for the starting vertex, wrt. the original list of
+   * vertex DoF indices, i.e. the last two elements of which are not swapped.
+   */
+  template <int vertices_per_cell>
+  unsigned int
+  get_start_vertex_dof_index(
+    const std::vector<types::global_dof_index> &vertex_dof_index_intersection,
+    const std::array<types::global_dof_index, vertices_per_cell>
+      &local_vertex_dof_indices_swapped)
+  {
+    unsigned int starting_vertex_index = 9999;
 
-  switch (k3_index)
-    {
-      case 0:
-        kx_unit_cell_coords(0) = unit_coords[0];
-        kx_unit_cell_coords(1) = unit_coords[1];
-        ky_unit_cell_coords(0) = unit_coords[2];
-        ky_unit_cell_coords(1) = unit_coords[3];
+    switch (vertex_dof_index_intersection.size())
+      {
+        case 2: // Common edge case
+          {
+            typename std::array<types::global_dof_index,
+                                vertices_per_cell>::const_iterator
+              first_common_vertex_iterator =
+                std::find(local_vertex_dof_indices_swapped.cbegin(),
+                          local_vertex_dof_indices_swapped.cend(),
+                          vertex_dof_index_intersection[0]);
+            typename std::array<types::global_dof_index,
+                                vertices_per_cell>::const_iterator
+              second_common_vertex_iterator =
+                std::find(local_vertex_dof_indices_swapped.cbegin(),
+                          local_vertex_dof_indices_swapped.cend(),
+                          vertex_dof_index_intersection[1]);
 
-        break;
-      case 1:
-        kx_unit_cell_coords(0) = unit_coords[1];
-        kx_unit_cell_coords(1) = unit_coords[0];
-        ky_unit_cell_coords(0) = unit_coords[2];
-        ky_unit_cell_coords(1) = unit_coords[3];
+            if ((first_common_vertex_iterator + 1) !=
+                local_vertex_dof_indices_swapped.cend())
+              {
+                if (*(first_common_vertex_iterator + 1) ==
+                    vertex_dof_index_intersection[1])
+                  {
+                    starting_vertex_index =
+                      first_common_vertex_iterator -
+                      local_vertex_dof_indices_swapped.cbegin();
+                  }
+                else
+                  {
+                    starting_vertex_index =
+                      second_common_vertex_iterator -
+                      local_vertex_dof_indices_swapped.cbegin();
+                  }
+              }
+            else
+              {
+                if ((*local_vertex_dof_indices_swapped.cbegin()) ==
+                    vertex_dof_index_intersection[1])
+                  {
+                    starting_vertex_index =
+                      first_common_vertex_iterator -
+                      local_vertex_dof_indices_swapped.cbegin();
+                  }
+                else
+                  {
+                    starting_vertex_index =
+                      second_common_vertex_iterator -
+                      local_vertex_dof_indices_swapped.cbegin();
+                  }
+              }
 
-        break;
-      case 2:
-        kx_unit_cell_coords(0) = unit_coords[1];
-        kx_unit_cell_coords(1) = unit_coords[2];
-        ky_unit_cell_coords(0) = unit_coords[0];
-        ky_unit_cell_coords(1) = unit_coords[3];
+            break;
+          }
+        case 1: // Common vertex case
+          {
+            typename std::array<types::global_dof_index,
+                                vertices_per_cell>::const_iterator
+              first_common_vertex_iterator =
+                std::find(local_vertex_dof_indices_swapped.cbegin(),
+                          local_vertex_dof_indices_swapped.cend(),
+                          vertex_dof_index_intersection[0]);
+            Assert(first_common_vertex_iterator !=
+                     local_vertex_dof_indices_swapped.cend(),
+                   ExcInternalError());
 
-        break;
-      case 3:
-        kx_unit_cell_coords(0) = unit_coords[1];
-        kx_unit_cell_coords(1) = unit_coords[2];
-        ky_unit_cell_coords(0) = unit_coords[3];
-        ky_unit_cell_coords(1) = unit_coords[0];
+            starting_vertex_index = first_common_vertex_iterator -
+                                    local_vertex_dof_indices_swapped.cbegin();
 
-        break;
-      default:
-        Assert(false, ExcInternalError());
-    }
-}
+            break;
+          }
+        default:
+          Assert(false, ExcInternalError());
+          break;
+      }
+
+    /**
+     * Because the last two elements in the original list of vertex DoF indices
+     * have been swapped, we need to correct the starting vertex index when it
+     * is one of the last two elements.
+     */
+    if (starting_vertex_index == 2)
+      {
+        starting_vertex_index = 3;
+      }
+    else if (starting_vertex_index == 3)
+      {
+        starting_vertex_index = 2;
+      }
+
+    return starting_vertex_index;
+  }
 
 
-/**
- * Transform parametric coordinates in Sauter's quadrature rule for the
- * regular case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$ respectively.
- *
- * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
- * @param kx_unit_cell_coords [out]
- * @param ky_unit_cell_coords [out]
- */
-template <int dim>
-void
-sauter_regular_parametric_coords_to_unit_cells(
-  const Point<dim * 2> &parametric_coords,
-  Point<dim> &          kx_unit_cell_coords,
-  Point<dim> &          ky_unit_cell_coords)
-{
-  kx_unit_cell_coords(0) = parametric_coords(0);
-  kx_unit_cell_coords(1) = parametric_coords(1);
-  ky_unit_cell_coords(0) = parametric_coords(2);
-  ky_unit_cell_coords(1) = parametric_coords(3);
-}
+  /**
+   * Perform Sauter's quadrature rule on a pair of quadrangular cells, which
+   * handles various cases including same panel, common edge, common vertex and
+   * regular cell neighboring types. This functions returns the computed local
+   * matrix without assembling it to the global matrix.
+   *
+   * \mynote{In this version, shape function values and their gradient values
+   * are not precalculated.}
+   *
+   * @param kernel_function Laplace kernel function.
+   * @param kx_cell_iter Iterator pointing to \f$K_x\f$.
+   * @param kx_cell_iter Iterator pointing to \f$K_y\f$.
+   * @param kx_mapping Mapping used for \f$K_x\f$. Because a mesher usually generates
+   * 1st order grid, if there is no additional manifold specification, the
+   * mapping should be 1st order.
+   * @param kx_mapping Mapping used for \f$K_y\f$. Because a mesher usually generates
+   * 1st order grid, if there is no additional manifold specification, the
+   * mapping should be 1st order.
+   * @return Local matrix
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  FullMatrix<RangeNumberType>
+  SauterQuadRule(
+    const KernelFunction<spacedim, RangeNumberType> &        kernel_function,
+    const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
+    const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    // Geometry information.
+    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
+
+    // Determine the cell neighboring type based on the vertex dof indices.
+    // The common dof indices will be stored into the vector
+    // <code>vertex_dof_index_intersection</code> if there is any.
+    std::array<types::global_dof_index, vertices_per_cell>
+      kx_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
+    std::array<types::global_dof_index, vertices_per_cell>
+      ky_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+
+    std::vector<types::global_dof_index> vertex_dof_index_intersection;
+    vertex_dof_index_intersection.reserve(vertices_per_cell);
+    CellNeighboringType cell_neighboring_type =
+      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
+                                        ky_vertex_dof_indices,
+                                        vertex_dof_index_intersection);
+
+    const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
+    const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+
+    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+
+    // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
+    // hierarchical order.
+    std::vector<Point<spacedim>> kx_support_points_hierarchical =
+      hierarchical_support_points_in_real_cell(kx_cell_iter, kx_fe, kx_mapping);
+    std::vector<Point<spacedim>> ky_support_points_hierarchical =
+      hierarchical_support_points_in_real_cell(ky_cell_iter, ky_fe, ky_mapping);
+
+    // Permuted support points to be used in the common edge and common vertex
+    // cases instead of the original support points in hierarchical order.
+    std::vector<Point<spacedim>> kx_support_points_permuted;
+    std::vector<Point<spacedim>> ky_support_points_permuted;
+    kx_support_points_permuted.reserve(kx_n_dofs);
+    ky_support_points_permuted.reserve(ky_n_dofs);
+
+    // Global indices for the local DoFs in the default hierarchical order.
+    std::vector<types::global_dof_index> kx_local_dof_indices_hierarchical(
+      kx_n_dofs);
+    std::vector<types::global_dof_index> ky_local_dof_indices_hierarchical(
+      ky_n_dofs);
+    // N.B. The vector holding local DoF indices has to have the right size
+    // before being passed to the function <code>get_dof_indices</code>.
+    kx_cell_iter->get_dof_indices(kx_local_dof_indices_hierarchical);
+    ky_cell_iter->get_dof_indices(ky_local_dof_indices_hierarchical);
+
+    // Permuted local DoF indices, which has the same permutation as that
+    // applied to support points.
+    std::vector<types::global_dof_index> kx_local_dof_indices_permuted;
+    std::vector<types::global_dof_index> ky_local_dof_indices_permuted;
+    kx_local_dof_indices_permuted.reserve(kx_n_dofs);
+    ky_local_dof_indices_permuted.reserve(ky_n_dofs);
+
+    // Generate 4D Gauss-Legendre quadrature rules for various cell
+    // neighboring types.
+    const unsigned int quad_order_for_same_panel    = 5;
+    const unsigned int quad_order_for_common_edge   = 4;
+    const unsigned int quad_order_for_common_vertex = 4;
+    const unsigned int quad_order_for_regular       = 3;
+
+    QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
+    QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
+    QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
+    QGauss<4> quad_rule_for_regular(quad_order_for_regular);
+
+    // Local matrix
+    FullMatrix<RangeNumberType> cell_matrix(kx_n_dofs, ky_n_dofs);
+
+    // Polynomial space inverse numbering for recovering the lexicographic
+    // order.
+    std::vector<unsigned int> kx_fe_poly_space_numbering_inverse =
+      FETools::lexicographic_to_hierarchic_numbering(kx_fe);
+    std::vector<unsigned int> ky_fe_poly_space_numbering_inverse =
+      FETools::lexicographic_to_hierarchic_numbering(ky_fe);
+
+    switch (cell_neighboring_type)
+      {
+        case SamePanel:
+          {
+            Assert(vertex_dof_index_intersection.size() == vertices_per_cell,
+                   ExcInternalError());
+
+            // Get support points in lexicographic order.
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            // Get permuted local DoF indices.
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+
+            // Iterate over DoFs for test function space in lexicographic
+            // order in \f$K_x\f$.
+            for (unsigned int i = 0; i < kx_n_dofs; i++)
+              {
+                // Iterate over DoFs for ansatz function space in tensor
+                // product order in \f$K_y\f$.
+                for (unsigned int j = 0; j < ky_n_dofs; j++)
+                  {
+                    // Pullback the kernel function to unit cell.
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(kernel_function,
+                                              cell_neighboring_type,
+                                              kx_support_points_permuted,
+                                              ky_support_points_permuted,
+                                              kx_fe,
+                                              ky_fe,
+                                              i,
+                                              j);
+
+                    // Pullback the kernel function to Sauter parameter
+                    // space.
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type);
+
+                    // Apply 4d Sauter numerical quadrature.
+                    cell_matrix(i, j) =
+                      ApplyQuadrature(quad_rule_for_same_panel,
+                                      kernel_pullback_on_sauter);
+                  }
+              }
+
+            break;
+          }
+        case CommonEdge:
+          {
+            // This part handles the common edge case of Sauter's
+            // quadrature rule.
+            // 1. Get the DoF indices in lexicographic order for \f$K_x\f$.
+            // 2. Get the DoF indices in reversed lexicographic order for
+            // \f$K_x\f$.
+            // 3. Extract DoF indices only for cell vertices in \f$K_x\f$ and
+            // \f$K_y\f$. N.B. The DoF indices for the last two vertices are
+            // swapped, such that the four vertices are in clockwise or
+            // counter clockwise order.
+            // 4. Determine the starting vertex.
+
+            Assert(vertex_dof_index_intersection.size() ==
+                     GeometryInfo<dim>::vertices_per_face,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            std::vector<unsigned int>
+              ky_fe_reversed_poly_space_numbering_inverse =
+                generate_backward_dof_permutation(ky_fe, 0);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_reversed_poly_space_numbering_inverse);
+
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(kx_fe,
+                                               kx_local_dof_indices_permuted);
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(ky_fe,
+                                               ky_local_dof_indices_permuted);
+
+            // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+            unsigned int kx_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                kx_local_vertex_dof_indices_swapped);
+            Assert(kx_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+            unsigned int ky_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                ky_local_vertex_dof_indices_swapped);
+            Assert(ky_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
+            // starting from <code>kx_starting_vertex_index</code> or
+            // <code>ky_starting_vertex_index</code>.
+            std::vector<unsigned int> kx_local_dof_permutation =
+              generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
+            std::vector<unsigned int> ky_local_dof_permutation =
+              generate_backward_dof_permutation(ky_fe,
+                                                ky_starting_vertex_index);
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_local_dof_permutation);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_local_dof_permutation);
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_local_dof_permutation);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_local_dof_permutation);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+
+            // Iterate over DoFs for test function space in lexicographic
+            // order in \f$K_x\f$.
+            for (unsigned int i = 0; i < kx_n_dofs; i++)
+              {
+                // Iterate over DoFs for ansatz function space in tensor
+                // product order in \f$K_y\f$.
+                for (unsigned int j = 0; j < ky_n_dofs; j++)
+                  {
+                    // Pullback the kernel function to unit cell.
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(kernel_function,
+                                              cell_neighboring_type,
+                                              kx_support_points_permuted,
+                                              ky_support_points_permuted,
+                                              kx_fe,
+                                              ky_fe,
+                                              i,
+                                              j);
+
+                    // Pullback the kernel function to Sauter parameter
+                    // space.
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type);
+
+                    // Apply 4d Sauter numerical quadrature.
+                    cell_matrix(i, j) =
+                      ApplyQuadrature(quad_rule_for_common_edge,
+                                      kernel_pullback_on_sauter);
+                  }
+              }
+
+            break;
+          }
+        case CommonVertex:
+          {
+            Assert(vertex_dof_index_intersection.size() == 1,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(kx_fe,
+                                               kx_local_dof_indices_permuted);
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(ky_fe,
+                                               ky_local_dof_indices_permuted);
+
+            // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+            unsigned int kx_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                kx_local_vertex_dof_indices_swapped);
+            Assert(kx_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+            unsigned int ky_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                ky_local_vertex_dof_indices_swapped);
+            Assert(ky_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
+            // starting from <code>kx_starting_vertex_index</code> or
+            // <code>ky_starting_vertex_index</code>.
+            std::vector<unsigned int> kx_local_dof_permutation =
+              generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
+            std::vector<unsigned int> ky_local_dof_permutation =
+              generate_forward_dof_permutation(ky_fe, ky_starting_vertex_index);
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_local_dof_permutation);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_local_dof_permutation);
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_local_dof_permutation);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_local_dof_permutation);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+
+            // Iterate over DoFs for test function space in lexicographic
+            // order in \f$K_x\f$.
+            for (unsigned int i = 0; i < kx_n_dofs; i++)
+              {
+                // Iterate over DoFs for ansatz function space in tensor
+                // product order in \f$K_y\f$.
+                for (unsigned int j = 0; j < ky_n_dofs; j++)
+                  {
+                    // Pullback the kernel function to unit cell.
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(kernel_function,
+                                              cell_neighboring_type,
+                                              kx_support_points_permuted,
+                                              ky_support_points_permuted,
+                                              kx_fe,
+                                              ky_fe,
+                                              i,
+                                              j);
+
+                    // Pullback the kernel function to Sauter parameter
+                    // space.
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type);
+
+                    // Apply 4d Sauter numerical quadrature.
+                    cell_matrix(i, j) =
+                      ApplyQuadrature(quad_rule_for_common_vertex,
+                                      kernel_pullback_on_sauter);
+                  }
+              }
+
+            break;
+          }
+        case Regular:
+          {
+            Assert(vertex_dof_index_intersection.size() == 0,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+
+            // Iterate over DoFs for test function space in lexicographic
+            // order in \f$K_x\f$.
+            for (unsigned int i = 0; i < kx_n_dofs; i++)
+              {
+                // Iterate over DoFs for ansatz function space in tensor
+                // product order in \f$K_y\f$.
+                for (unsigned int j = 0; j < ky_n_dofs; j++)
+                  {
+                    // Pullback the kernel function to unit cell.
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(kernel_function,
+                                              cell_neighboring_type,
+                                              kx_support_points_permuted,
+                                              ky_support_points_permuted,
+                                              kx_fe,
+                                              ky_fe,
+                                              i,
+                                              j);
+
+                    // Pullback the kernel function to Sauter parameter
+                    // space.
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type);
+
+                    // Apply 4d Sauter numerical quadrature.
+                    cell_matrix(i, j) =
+                      ApplyQuadrature(quad_rule_for_regular,
+                                      kernel_pullback_on_sauter);
+                  }
+              }
+
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcNotImplemented());
+          }
+      }
+
+    return cell_matrix;
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  FullMatrix<RangeNumberType>
+  SauterQuadRule(
+    const KernelFunction<spacedim, RangeNumberType> &        kernel_function,
+    const BEMValues<dim, spacedim> &                         bem_values,
+    const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
+    const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    // Geometry information.
+    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
+
+    // Determine the cell neighboring type based on the vertex dof indices.
+    // The common dof indices will be stored into the vector
+    // <code>vertex_dof_index_intersection</code> if there is any.
+    std::array<types::global_dof_index, vertices_per_cell>
+      kx_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
+    std::array<types::global_dof_index, vertices_per_cell>
+      ky_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+
+    std::vector<types::global_dof_index> vertex_dof_index_intersection;
+    vertex_dof_index_intersection.reserve(vertices_per_cell);
+    CellNeighboringType cell_neighboring_type =
+      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
+                                        ky_vertex_dof_indices,
+                                        vertex_dof_index_intersection);
+
+    const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
+    const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+
+    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+
+    // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
+    // hierarchical order.
+    std::vector<Point<spacedim>> kx_support_points_hierarchical =
+      hierarchical_support_points_in_real_cell(kx_cell_iter, kx_fe, kx_mapping);
+    std::vector<Point<spacedim>> ky_support_points_hierarchical =
+      hierarchical_support_points_in_real_cell(ky_cell_iter, ky_fe, ky_mapping);
+
+    // Permuted support points to be used in the common edge and common vertex
+    // cases instead of the original support points in hierarchical order.
+    std::vector<Point<spacedim>> kx_support_points_permuted;
+    std::vector<Point<spacedim>> ky_support_points_permuted;
+    kx_support_points_permuted.reserve(kx_n_dofs);
+    ky_support_points_permuted.reserve(ky_n_dofs);
+
+    // Global indices for the local DoFs in the default hierarchical order.
+    std::vector<types::global_dof_index> kx_local_dof_indices_hierarchical(
+      kx_n_dofs);
+    std::vector<types::global_dof_index> ky_local_dof_indices_hierarchical(
+      ky_n_dofs);
+    // N.B. The vector holding local DoF indices has to have the right size
+    // before being passed to the function <code>get_dof_indices</code>.
+    kx_cell_iter->get_dof_indices(kx_local_dof_indices_hierarchical);
+    ky_cell_iter->get_dof_indices(ky_local_dof_indices_hierarchical);
+
+    // Permuted local DoF indices, which has the same permutation as that
+    // applied to support points.
+    std::vector<types::global_dof_index> kx_local_dof_indices_permuted;
+    std::vector<types::global_dof_index> ky_local_dof_indices_permuted;
+    kx_local_dof_indices_permuted.reserve(kx_n_dofs);
+    ky_local_dof_indices_permuted.reserve(ky_n_dofs);
+
+    FullMatrix<RangeNumberType> cell_matrix(kx_n_dofs, ky_n_dofs);
+
+    // Polynomial space inverse numbering for recovering the tensor
+    // product ordering.
+    std::vector<unsigned int> kx_fe_poly_space_numbering_inverse =
+      FETools::lexicographic_to_hierarchic_numbering(kx_fe);
+    std::vector<unsigned int> ky_fe_poly_space_numbering_inverse =
+      FETools::lexicographic_to_hierarchic_numbering(ky_fe);
+
+    // Quadrature rule to be adopted depending on the cell neighboring
+    // type.
+    const QGauss<4> *active_quad_rule;
+
+    switch (cell_neighboring_type)
+      {
+        case SamePanel:
+          {
+            Assert(vertex_dof_index_intersection.size() == vertices_per_cell,
+                   ExcInternalError());
+
+            // Get support points in lexicographic order.
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            // Get permuted local DoF indices.
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            active_quad_rule = &(bem_values.quad_rule_for_same_panel);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+            break;
+          }
+        case CommonEdge:
+          {
+            // This part handles the common edge case of Sauter's
+            // quadrature rule.
+            // 1. Get the DoF indices in lexicographic order for \f$K_x\f$.
+            // 2. Get the DoF indices in reversed lexicographic order for
+            // \f$K_x\f$.
+            // 3. Extract DoF indices only for cell vertices in \f$K_x\f$ and
+            // \f$K_y\f$. N.B. The DoF indices for the last two vertices are
+            // swapped, such that the four vertices are in clockwise or
+            // counter clockwise order.
+            // 4. Determine the starting vertex.
+
+            Assert(vertex_dof_index_intersection.size() ==
+                     GeometryInfo<dim>::vertices_per_face,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            std::vector<unsigned int>
+              ky_fe_reversed_poly_space_numbering_inverse =
+                generate_backward_dof_permutation(ky_fe, 0);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_reversed_poly_space_numbering_inverse);
+
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(kx_fe,
+                                               kx_local_dof_indices_permuted);
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(ky_fe,
+                                               ky_local_dof_indices_permuted);
+
+            // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+            unsigned int kx_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                kx_local_vertex_dof_indices_swapped);
+            Assert(kx_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+            unsigned int ky_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                ky_local_vertex_dof_indices_swapped);
+            Assert(ky_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
+            // starting from <code>kx_starting_vertex_index</code> or
+            // <code>ky_starting_vertex_index</code>.
+            std::vector<unsigned int> kx_local_dof_permutation =
+              generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
+            std::vector<unsigned int> ky_local_dof_permutation =
+              generate_backward_dof_permutation(ky_fe,
+                                                ky_starting_vertex_index);
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_local_dof_permutation);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_local_dof_permutation);
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_local_dof_permutation);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_local_dof_permutation);
+
+            active_quad_rule = &(bem_values.quad_rule_for_common_edge);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+            break;
+          }
+        case CommonVertex:
+          {
+            Assert(vertex_dof_index_intersection.size() == 1,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(kx_fe,
+                                               kx_local_dof_indices_permuted);
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(ky_fe,
+                                               ky_local_dof_indices_permuted);
+
+            // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+            unsigned int kx_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                kx_local_vertex_dof_indices_swapped);
+            Assert(kx_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+            unsigned int ky_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                ky_local_vertex_dof_indices_swapped);
+            Assert(ky_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
+            // starting from <code>kx_starting_vertex_index</code> or
+            // <code>ky_starting_vertex_index</code>.
+            std::vector<unsigned int> kx_local_dof_permutation =
+              generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
+            std::vector<unsigned int> ky_local_dof_permutation =
+              generate_forward_dof_permutation(ky_fe, ky_starting_vertex_index);
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_local_dof_permutation);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_local_dof_permutation);
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_local_dof_permutation);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_local_dof_permutation);
+
+            active_quad_rule = &(bem_values.quad_rule_for_common_vertex);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+            break;
+          }
+        case Regular:
+          {
+            Assert(vertex_dof_index_intersection.size() == 0,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            active_quad_rule = &(bem_values.quad_rule_for_regular);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcNotImplemented());
+          }
+      }
+
+    // Iterate over DoFs for test function space in lexicographic
+    // order in \f$K_x\f$.
+    for (unsigned int i = 0; i < kx_n_dofs; i++)
+      {
+        // Iterate over DoFs for ansatz function space in tensor
+        // product order in \f$K_y\f$.
+        for (unsigned int j = 0; j < ky_n_dofs; j++)
+          {
+            // Pullback the kernel function to unit cell.
+            KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+              kernel_pullback_on_unit(kernel_function,
+                                      cell_neighboring_type,
+                                      kx_support_points_permuted,
+                                      ky_support_points_permuted,
+                                      kx_fe,
+                                      ky_fe,
+                                      &bem_values,
+                                      i,
+                                      j);
+
+            // Pullback the kernel function to Sauter parameter
+            // space.
+            KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
+              kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                        cell_neighboring_type,
+                                        &bem_values);
+
+            // Apply 4d Sauter numerical quadrature.
+            cell_matrix(i, j) =
+              ApplyQuadratureUsingBEMValues(*active_quad_rule,
+                                            kernel_pullback_on_sauter);
+          }
+      }
+
+    return cell_matrix;
+  }
+
+
+  /**
+   * Perform Sauter's quadrature rule on a pair of quadrangular cells, which
+   * handles various cases including same panel, common edge, common vertex and
+   * regular cell neighboring types. The computed local matrix values will be
+   * assembled into the system matrix, which is passed as the first argument.
+   *
+   * \mynote{In this version, shape function values and their gradient values
+   * are not precalculated.}
+   *
+   * @param system_matrix The global full matrix to which the local matrix will
+   * be assembled.
+   * @param kernel_function Laplace kernel function.
+   * @param kx_cell_iter Iterator pointing to \f$K_x\f$.
+   * @param kx_cell_iter Iterator pointing to \f$K_y\f$.
+   * @param kx_mapping Mapping used for \f$K_x\f$. Because a mesher usually generates
+   * 1st order grid, if there is no additional manifold specification, the
+   * mapping should be 1st order.
+   * @param ky_mapping Mapping used for \f$K_y\f$. Because a mesher usually generates
+   * 1st order grid, if there is no additional manifold specification, the
+   * mapping should be 1st order.
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  SauterQuadRule(
+    FullMatrix<RangeNumberType> &                            system_matrix,
+    const KernelFunction<spacedim, RangeNumberType> &        kernel_function,
+    const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
+    const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    // Geometry information.
+    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
+
+    // Determine the cell neighboring type based on the vertex dof indices.
+    // The common dof indices will be stored into the vector
+    // <code>vertex_dof_index_intersection</code> if there is any.
+    std::array<types::global_dof_index, vertices_per_cell>
+      kx_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
+    std::array<types::global_dof_index, vertices_per_cell>
+      ky_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+
+    std::vector<types::global_dof_index> vertex_dof_index_intersection;
+    vertex_dof_index_intersection.reserve(vertices_per_cell);
+    CellNeighboringType cell_neighboring_type =
+      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
+                                        ky_vertex_dof_indices,
+                                        vertex_dof_index_intersection);
+
+
+    const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
+    const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+
+    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+
+    // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
+    // hierarchical order.
+    std::vector<Point<spacedim>> kx_support_points_hierarchical =
+      hierarchical_support_points_in_real_cell(kx_cell_iter, kx_fe, kx_mapping);
+    std::vector<Point<spacedim>> ky_support_points_hierarchical =
+      hierarchical_support_points_in_real_cell(ky_cell_iter, ky_fe, ky_mapping);
+
+    // Permuted support points to be used in the common edge and common vertex
+    // cases instead of the original support points in hierarchical order.
+    std::vector<Point<spacedim>> kx_support_points_permuted;
+    std::vector<Point<spacedim>> ky_support_points_permuted;
+    kx_support_points_permuted.reserve(kx_n_dofs);
+    ky_support_points_permuted.reserve(ky_n_dofs);
+
+    // Global indices for the local DoFs in the default hierarchical order.
+    // N.B. These vectors should have the right size before being passed to
+    // the function <code>get_dof_indices</code>.
+    std::vector<types::global_dof_index> kx_local_dof_indices_hierarchical(
+      kx_n_dofs);
+    std::vector<types::global_dof_index> ky_local_dof_indices_hierarchical(
+      ky_n_dofs);
+    kx_cell_iter->get_dof_indices(kx_local_dof_indices_hierarchical);
+    ky_cell_iter->get_dof_indices(ky_local_dof_indices_hierarchical);
+
+    // Permuted local DoF indices, which has the same permutation as that
+    // applied to support points.
+    std::vector<types::global_dof_index> kx_local_dof_indices_permuted;
+    std::vector<types::global_dof_index> ky_local_dof_indices_permuted;
+    kx_local_dof_indices_permuted.reserve(kx_n_dofs);
+    ky_local_dof_indices_permuted.reserve(ky_n_dofs);
+
+    // Generate 4D Gauss-Legendre quadrature rules for various cell
+    // neighboring types.
+    const unsigned int quad_order_for_same_panel    = 5;
+    const unsigned int quad_order_for_common_edge   = 4;
+    const unsigned int quad_order_for_common_vertex = 4;
+    const unsigned int quad_order_for_regular       = 3;
+
+    QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
+    QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
+    QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
+    QGauss<4> quad_rule_for_regular(quad_order_for_regular);
+
+    // Local matrix
+    FullMatrix<RangeNumberType> cell_matrix(kx_n_dofs, ky_n_dofs);
+
+    // Polynomial space inverse numbering for recovering the lexicographic
+    // order.
+    std::vector<unsigned int> kx_fe_poly_space_numbering_inverse =
+      FETools::lexicographic_to_hierarchic_numbering(kx_fe);
+    std::vector<unsigned int> ky_fe_poly_space_numbering_inverse =
+      FETools::lexicographic_to_hierarchic_numbering(ky_fe);
+
+    switch (cell_neighboring_type)
+      {
+        case SamePanel:
+          {
+            Assert(vertex_dof_index_intersection.size() == vertices_per_cell,
+                   ExcInternalError());
+
+            // Get support points in lexicographic order.
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            // Get permuted local DoF indices.
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+
+            // Iterate over DoFs for test function space in lexicographic
+            // order in \f$K_x\f$.
+            for (unsigned int i = 0; i < kx_n_dofs; i++)
+              {
+                // Iterate over DoFs for ansatz function space in tensor
+                // product order in \f$K_y\f$.
+                for (unsigned int j = 0; j < ky_n_dofs; j++)
+                  {
+                    // Pullback the kernel function to unit cell.
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(kernel_function,
+                                              cell_neighboring_type,
+                                              kx_support_points_permuted,
+                                              ky_support_points_permuted,
+                                              kx_fe,
+                                              ky_fe,
+                                              i,
+                                              j);
+
+                    // Pullback the kernel function to Sauter parameter
+                    // space.
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type);
+
+                    // Apply 4d Sauter numerical quadrature.
+                    cell_matrix(i, j) =
+                      ApplyQuadrature(quad_rule_for_same_panel,
+                                      kernel_pullback_on_sauter);
+                  }
+              }
+
+            break;
+          }
+        case CommonEdge:
+          {
+            // This part handles the common edge case of Sauter's
+            // quadrature rule.
+            // 1. Get the DoF indices in lexicographic order for \f$K_x\f$.
+            // 2. Get the DoF indices in reversed lexicographic order for
+            // \f$K_x\f$.
+            // 3. Extract DoF indices only for cell vertices in \f$K_x\f$ and
+            // \f$K_y\f$. N.B. The DoF indices for the last two vertices are
+            // swapped, such that the four vertices are in clockwise or
+            // counter clockwise order.
+            // 4. Determine the starting vertex.
+
+            Assert(vertex_dof_index_intersection.size() ==
+                     GeometryInfo<dim>::vertices_per_face,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            std::vector<unsigned int>
+              ky_fe_reversed_poly_space_numbering_inverse =
+                generate_backward_dof_permutation(ky_fe, 0);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_reversed_poly_space_numbering_inverse);
+
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(kx_fe,
+                                               kx_local_dof_indices_permuted);
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(ky_fe,
+                                               ky_local_dof_indices_permuted);
+
+            // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+            unsigned int kx_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                kx_local_vertex_dof_indices_swapped);
+            Assert(kx_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+            unsigned int ky_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                ky_local_vertex_dof_indices_swapped);
+            Assert(ky_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
+            // starting from <code>kx_starting_vertex_index</code> or
+            // <code>ky_starting_vertex_index</code>.
+            std::vector<unsigned int> kx_local_dof_permutation =
+              generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
+            std::vector<unsigned int> ky_local_dof_permutation =
+              generate_backward_dof_permutation(ky_fe,
+                                                ky_starting_vertex_index);
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_local_dof_permutation);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_local_dof_permutation);
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_local_dof_permutation);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_local_dof_permutation);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+
+            // Iterate over DoFs for test function space in lexicographic
+            // order in \f$K_x\f$.
+            for (unsigned int i = 0; i < kx_n_dofs; i++)
+              {
+                // Iterate over DoFs for ansatz function space in tensor
+                // product order in \f$K_y\f$.
+                for (unsigned int j = 0; j < ky_n_dofs; j++)
+                  {
+                    // Pullback the kernel function to unit cell.
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(kernel_function,
+                                              cell_neighboring_type,
+                                              kx_support_points_permuted,
+                                              ky_support_points_permuted,
+                                              kx_fe,
+                                              ky_fe,
+                                              i,
+                                              j);
+
+                    // Pullback the kernel function to Sauter parameter
+                    // space.
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type);
+
+                    // Apply 4d Sauter numerical quadrature.
+                    cell_matrix(i, j) =
+                      ApplyQuadrature(quad_rule_for_common_edge,
+                                      kernel_pullback_on_sauter);
+                  }
+              }
+
+            break;
+          }
+        case CommonVertex:
+          {
+            Assert(vertex_dof_index_intersection.size() == 1,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(kx_fe,
+                                               kx_local_dof_indices_permuted);
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(ky_fe,
+                                               ky_local_dof_indices_permuted);
+
+            // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+            unsigned int kx_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                kx_local_vertex_dof_indices_swapped);
+            Assert(kx_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+            unsigned int ky_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                ky_local_vertex_dof_indices_swapped);
+            Assert(ky_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
+            // starting from <code>kx_starting_vertex_index</code> or
+            // <code>ky_starting_vertex_index</code>.
+            std::vector<unsigned int> kx_local_dof_permutation =
+              generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
+            std::vector<unsigned int> ky_local_dof_permutation =
+              generate_forward_dof_permutation(ky_fe, ky_starting_vertex_index);
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_local_dof_permutation);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_local_dof_permutation);
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_local_dof_permutation);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_local_dof_permutation);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+
+            // Iterate over DoFs for test function space in lexicographic
+            // order in \f$K_x\f$.
+            for (unsigned int i = 0; i < kx_n_dofs; i++)
+              {
+                // Iterate over DoFs for ansatz function space in tensor
+                // product order in \f$K_y\f$.
+                for (unsigned int j = 0; j < ky_n_dofs; j++)
+                  {
+                    // Pullback the kernel function to unit cell.
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(kernel_function,
+                                              cell_neighboring_type,
+                                              kx_support_points_permuted,
+                                              ky_support_points_permuted,
+                                              kx_fe,
+                                              ky_fe,
+                                              i,
+                                              j);
+
+                    // Pullback the kernel function to Sauter parameter
+                    // space.
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type);
+
+                    // Apply 4d Sauter numerical quadrature.
+                    cell_matrix(i, j) =
+                      ApplyQuadrature(quad_rule_for_common_vertex,
+                                      kernel_pullback_on_sauter);
+                  }
+              }
+
+            break;
+          }
+        case Regular:
+          {
+            Assert(vertex_dof_index_intersection.size() == 0,
+                   ExcInternalError());
+
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+
+            // Iterate over DoFs for test function space in lexicographic
+            // order in \f$K_x\f$.
+            for (unsigned int i = 0; i < kx_n_dofs; i++)
+              {
+                // Iterate over DoFs for ansatz function space in tensor
+                // product order in \f$K_y\f$.
+                for (unsigned int j = 0; j < ky_n_dofs; j++)
+                  {
+                    // Pullback the kernel function to unit cell.
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(kernel_function,
+                                              cell_neighboring_type,
+                                              kx_support_points_permuted,
+                                              ky_support_points_permuted,
+                                              kx_fe,
+                                              ky_fe,
+                                              i,
+                                              j);
+
+                    // Pullback the kernel function to Sauter parameter
+                    // space.
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type);
+
+                    // Apply 4d Sauter numerical quadrature.
+                    cell_matrix(i, j) =
+                      ApplyQuadrature(quad_rule_for_regular,
+                                      kernel_pullback_on_sauter);
+                  }
+              }
+
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcNotImplemented());
+          }
+      }
+
+    // Assemble the cell matrix to system matrix.
+    for (unsigned int i = 0; i < kx_n_dofs; i++)
+      {
+        for (unsigned int j = 0; j < ky_n_dofs; j++)
+          {
+            system_matrix.add(kx_local_dof_indices_permuted[i],
+                              ky_local_dof_indices_permuted[j],
+                              cell_matrix(i, j));
+          }
+      }
+  }
+
+
+  /**
+   * This function implements Sauter's quadrature rule on quadrangular mesh.
+   * It handles various cases including same panel, common edge, common vertex
+   * and regular cell neighboring types.
+   *
+   * @param kernel_function Laplace kernel function.
+   * @param bem_values
+   * @param kx_cell_iter Iterator pointing to \f$K_x\f$.
+   * @param kx_cell_iter Iterator pointing to \f$K_y\f$.
+   * @param kx_mapping Mapping used for \f$K_x\f$. Because a mesher usually generates
+   * 1st order grid, if there is no additional manifold specification, the
+   * mapping should be 1st order.
+   * @param ky_mapping Mapping used for \f$K_y\f$. Because a mesher usually generates
+   * 1st order grid, if there is no additional manifold specification, the
+   * mapping should be 1st order.
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  SauterQuadRule(
+    FullMatrix<RangeNumberType> &                            system_matrix,
+    const KernelFunction<spacedim, RangeNumberType> &        kernel_function,
+    const BEMValues<dim, spacedim> &                         bem_values,
+    const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
+    const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    // Geometry information.
+    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
+
+    // Determine the cell neighboring type based on the vertex dof indices.
+    // The common dof indices will be stored into the vector
+    // <code>vertex_dof_index_intersection</code> if there is any.
+    std::array<types::global_dof_index, vertices_per_cell>
+      kx_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
+    std::array<types::global_dof_index, vertices_per_cell>
+      ky_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+
+    std::vector<types::global_dof_index> vertex_dof_index_intersection;
+    vertex_dof_index_intersection.reserve(vertices_per_cell);
+    CellNeighboringType cell_neighboring_type =
+      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
+                                        ky_vertex_dof_indices,
+                                        vertex_dof_index_intersection);
+
+
+    const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
+    const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+
+    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+
+    // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
+    // hierarchical order.
+    std::vector<Point<spacedim>> kx_support_points_hierarchical =
+      get_hierarchic_support_points_in_real_cell(kx_cell_iter,
+                                                 kx_fe,
+                                                 kx_mapping);
+    std::vector<Point<spacedim>> ky_support_points_hierarchical =
+      get_hierarchic_support_points_in_real_cell(ky_cell_iter,
+                                                 ky_fe,
+                                                 ky_mapping);
+
+    // Permuted support points to be used in the common edge and common vertex
+    // cases instead of the original support points in hierarchical order.
+    std::vector<Point<spacedim>> kx_support_points_permuted;
+    std::vector<Point<spacedim>> ky_support_points_permuted;
+    kx_support_points_permuted.reserve(kx_n_dofs);
+    ky_support_points_permuted.reserve(ky_n_dofs);
+
+    // Global indices for the local DoFs in the default hierarchical order.
+    // N.B. These vectors should have the right size before being passed to
+    // the function <code>get_dof_indices</code>.
+    std::vector<types::global_dof_index> kx_local_dof_indices_hierarchical(
+      kx_n_dofs);
+    std::vector<types::global_dof_index> ky_local_dof_indices_hierarchical(
+      ky_n_dofs);
+    kx_cell_iter->get_dof_indices(kx_local_dof_indices_hierarchical);
+    ky_cell_iter->get_dof_indices(ky_local_dof_indices_hierarchical);
+
+    // Permuted local DoF indices, which has the same permutation as that
+    // applied to support points.
+    std::vector<types::global_dof_index> kx_local_dof_indices_permuted;
+    std::vector<types::global_dof_index> ky_local_dof_indices_permuted;
+    kx_local_dof_indices_permuted.reserve(kx_n_dofs);
+    ky_local_dof_indices_permuted.reserve(ky_n_dofs);
+
+    FullMatrix<RangeNumberType> cell_matrix(kx_n_dofs, ky_n_dofs);
+
+    // Polynomial space inverse numbering for recovering the tensor
+    // product ordering.
+    std::vector<unsigned int> kx_fe_poly_space_numbering_inverse =
+      FETools::lexicographic_to_hierarchic_numbering(kx_fe);
+    std::vector<unsigned int> ky_fe_poly_space_numbering_inverse =
+      FETools::lexicographic_to_hierarchic_numbering(ky_fe);
+
+    // Quadrature rule to be adopted depending on the cell neighboring
+    // type.
+    const QGauss<4> *active_quad_rule = nullptr;
+
+    switch (cell_neighboring_type)
+      {
+        case SamePanel:
+          {
+            Assert(vertex_dof_index_intersection.size() == vertices_per_cell,
+                   ExcInternalError());
+
+            // Get support points in the lexicographic order.
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            // Get permuted local DoF indices in the lexicographic order.
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            active_quad_rule = &(bem_values.quad_rule_for_same_panel);
+
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+            break;
+          }
+        case CommonEdge:
+          {
+            /**
+             * This part handles the common edge case of Sauter's quadrature
+             * rule.
+             *
+             * 1. Get the DoF indices in the lexicographic order for \f$K_x\f$.
+             * 2. Get the DoF indices in the reversed lexicographic order for
+             * \f$K_y\f$. Hence, the orientation determined from these DoF
+             * indices is opposite to that of \f$K_x\f$.
+             * 3. Extract DoF indices only for cell vertices or corners in
+             * \f$K_x\f$ and \f$K_y\f$.
+             * \mynote{Because the four cell vertices or corners retrieved from
+             * the list of DoFs either in the lexicographic or the reversed
+             * lexicographic order are in the zigzag form as shown below,
+             * @verbatim
+             * 2 ----- 3
+             * |  Kx   |
+             * 0 ----- 1
+             * |  Ky   |
+             * 2 ----- 3
+             * @endverbatim
+             * the DoF indices for the last two vertices should be swapped, such
+             * that the four vertices in the cell are either in the clockwise or
+             * counter clockwise order, as shown below.
+             * @verbatim
+             * 3 ----- 2
+             * |  Kx   |
+             * 0 ----- 1
+             * |  Ky   |
+             * 3 ----- 2
+             * @endverbatim
+             * 4. Determine the starting vertex on the common edge.
+             *
+             * Finally, we should keep in mind that the orientation of the cell
+             * \f$K_y\f$ is reversed due to the above operation, so the normal
+             * vector \f$n_y\f$ calculated from such permuted support points and
+             * shape functions should be negated back to the correct direction
+             * during the evaluation of the kernel function.
+             */
+            Assert(vertex_dof_index_intersection.size() ==
+                     GeometryInfo<dim>::vertices_per_face,
+                   ExcInternalError());
+
+            /**
+             * Get permuted local DoF indices in \f$K_x\f$ in the lexicographic
+             * order.
+             */
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+            /**
+             * Get permuted local DoF indices in \f$K_y\f$ in the reversed
+             * lexicographic order by starting from the first vertex.
+             */
+            std::vector<unsigned int>
+              ky_fe_reversed_poly_space_numbering_inverse =
+                generate_backward_dof_permutation(ky_fe, 0);
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_reversed_poly_space_numbering_inverse);
+
+            /**
+             * Get the DoF indices for the vertices or corners of \f$K_x\f$
+             * with the last two swapped.
+             */
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(kx_fe,
+                                               kx_local_dof_indices_permuted);
+            /**
+             * Get the DoF indices for the vertices or corners of \f$K_y\f$
+             * with the last two swapped.
+             */
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(ky_fe,
+                                               ky_local_dof_indices_permuted);
+
+            /**
+             * Determine the starting vertex index wrt. the list of vertex DoF
+             * indices in \f$K_x\f$.
+             */
+            unsigned int kx_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                kx_local_vertex_dof_indices_swapped);
+            Assert(kx_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+            /**
+             * Determine the starting vertex index wrt. the list of vertex DoF
+             * indices in \f$K_y\f$.
+             */
+            unsigned int ky_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                ky_local_vertex_dof_indices_swapped);
+            Assert(ky_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            /**
+             * Generate the permutation of DoF indices in \f$K_x\f$ by starting from
+             * the vertex <code>kx_starting_vertex_index</code> in the
+             * lexicographic order, i.e. forward traversal.
+             */
+            std::vector<unsigned int> kx_local_dof_permutation =
+              generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
+
+            /**
+             * Generate the permutation of DoF indices in \f$K_y\f$ by starting from
+             * the vertex <code>ky_starting_vertex_index</code> in the
+             * reversed lexicographic order, i.e. backward traversal.
+             */
+            std::vector<unsigned int> ky_local_dof_permutation =
+              generate_backward_dof_permutation(ky_fe,
+                                                ky_starting_vertex_index);
+
+            /**
+             * Get the list of permuted support points in \f$K_x\f$ according
+             * to the permutation @p kx_local_dof_permutation.
+             */
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_local_dof_permutation);
+
+            /**
+             * Get the list of permuted support points in \f$K_y\f$ according
+             * to the permutation @p ky_local_dof_permutation.
+             */
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_local_dof_permutation);
+
+            /**
+             * Get the list of permuted DoF indices in \f$K_x\f$ according to
+             * the permutation @p kx_local_dof_permutation.
+             */
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_local_dof_permutation);
+
+            /**
+             * Get the list of permuted DoF indices in \f$K_y\f$ according to
+             * the permutation @p ky_local_dof_permutation.
+             */
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_local_dof_permutation);
+
+            active_quad_rule = &(bem_values.quad_rule_for_common_edge);
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+            break;
+          }
+        case CommonVertex:
+          {
+            /**
+             * This part handles the common vertex case of Sauter's quadrature
+             * rule. This is simpler than that of the common edge case because
+             * the orientations of \f$K_x\f$ and \f$K_y\f$ are intact.
+             */
+            Assert(vertex_dof_index_intersection.size() == 1,
+                   ExcInternalError());
+
+            /**
+             * Get permuted local DoF indices in \f$K_x\f$ in the lexicographic
+             * order.
+             */
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            /**
+             * Get permuted local DoF indices in \f$K_y\f$ in the lexicographic
+             * order.
+             */
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            /**
+             * Get the DoF indices for the vertices or corners of \f$K_x\f$
+             * with the last two swapped.
+             */
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(kx_fe,
+                                               kx_local_dof_indices_permuted);
+
+            /**
+             * Get the DoF indices for the vertices or corners of \f$K_y\f$
+             * with the last two swapped.
+             */
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_local_vertex_dof_indices_swapped =
+                get_vertex_dof_indices_swapped(ky_fe,
+                                               ky_local_dof_indices_permuted);
+
+            /**
+             * Determine the starting vertex index wrt. the list of vertex DoF
+             * indices in \f$K_x\f$.
+             */
+            unsigned int kx_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                kx_local_vertex_dof_indices_swapped);
+            Assert(kx_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            /**
+             * Determine the starting vertex index wrt. the list of vertex DoF
+             * indices in \f$K_y\f$.
+             */
+            unsigned int ky_starting_vertex_index =
+              get_start_vertex_dof_index<vertices_per_cell>(
+                vertex_dof_index_intersection,
+                ky_local_vertex_dof_indices_swapped);
+            Assert(ky_starting_vertex_index < vertices_per_cell,
+                   ExcInternalError());
+
+            /**
+             * Generate the permutation of DoF indices in \f$K_x\f$ by starting from
+             * the vertex <code>kx_starting_vertex_index</code> in the
+             * lexicographic order, i.e. forward traversal.
+             */
+            std::vector<unsigned int> kx_local_dof_permutation =
+              generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
+
+            /**
+             * Generate the permutation of DoF indices in \f$K_y\f$ by starting from
+             * the vertex <code>ky_starting_vertex_index</code> in the
+             * lexicographic order, i.e. forward traversal.
+             */
+            std::vector<unsigned int> ky_local_dof_permutation =
+              generate_forward_dof_permutation(ky_fe, ky_starting_vertex_index);
+
+            /**
+             * Get the list of permuted support points in \f$K_x\f$ according
+             * to the permutation @p kx_local_dof_permutation.
+             */
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_local_dof_permutation);
+
+            /**
+             * Get the list of permuted support points in \f$K_y\f$ according
+             * to the permutation @p ky_local_dof_permutation.
+             */
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_local_dof_permutation);
+
+            /**
+             * Get the list of permuted DoF indices in \f$K_x\f$ according to
+             * the permutation @p kx_local_dof_permutation.
+             */
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_local_dof_permutation);
+
+            /**
+             * Get the list of permuted DoF indices in \f$K_y\f$ according to
+             * the permutation @p ky_local_dof_permutation.
+             */
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_local_dof_permutation);
+
+            active_quad_rule = &(bem_values.quad_rule_for_common_vertex);
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+            break;
+          }
+        case Regular:
+          {
+            /**
+             * This part handles the regular case of Sauter's quadrature rule.
+             */
+            Assert(vertex_dof_index_intersection.size() == 0,
+                   ExcInternalError());
+
+            /**
+             * Get permuted local DoF indices in \f$K_x\f$ in the lexicographic
+             * order.
+             */
+            kx_local_dof_indices_permuted =
+              permute_vector(kx_local_dof_indices_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            /**
+             * Get permuted local DoF indices in \f$K_y\f$ in the lexicographic
+             * order.
+             */
+            ky_local_dof_indices_permuted =
+              permute_vector(ky_local_dof_indices_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            /**
+             * Get the list of permuted support points in \f$K_x\f$ in the
+             * lexicographic order.
+             */
+            kx_support_points_permuted =
+              permute_vector(kx_support_points_hierarchical,
+                             kx_fe_poly_space_numbering_inverse);
+
+            /**
+             * Get the list of permuted support points in \f$K_y\f$ in the
+             * lexicographic order.
+             */
+            ky_support_points_permuted =
+              permute_vector(ky_support_points_hierarchical,
+                             ky_fe_poly_space_numbering_inverse);
+
+            active_quad_rule = &(bem_values.quad_rule_for_regular);
+
+            //                // DEBUG: Print out permuted support points
+            //                and DoF indices for
+            //                // debugging.
+            //                deallog << "Support points and DoF indices
+            //                in Kx:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < kx_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    kx_local_dof_indices_permuted[i] << " "
+            //                            << kx_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+            //
+            //                deallog << "Support points and DoF indices
+            //                in Ky:\n"; deallog << "DoF_index X Y Z\n";
+            //                for (unsigned int i = 0; i < ky_n_dofs; i++)
+            //                  {
+            //                    deallog <<
+            //                    ky_local_dof_indices_permuted[i] << " "
+            //                            << ky_support_points_permuted[i]
+            //                            << std::endl;
+            //                  }
+
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcNotImplemented());
+            active_quad_rule = nullptr;
+          }
+      }
+
+    /**
+     * Iterate over DoFs for test function space in \f$K_x\f$.
+     */
+    for (unsigned int i = 0; i < kx_n_dofs; i++)
+      {
+        /**
+         * Iterate over DoFs for ansatz function space in \f$K_y\f$.
+         */
+        for (unsigned int j = 0; j < ky_n_dofs; j++)
+          {
+            /**
+             * Pullback the kernel function to unit cell.
+             */
+            KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+              kernel_pullback_on_unit(kernel_function,
+                                      cell_neighboring_type,
+                                      kx_support_points_permuted,
+                                      ky_support_points_permuted,
+                                      kx_fe,
+                                      ky_fe,
+                                      &bem_values,
+                                      i,
+                                      j);
+
+            /**
+             * Pullback the kernel function to Sauter parameter space.
+             */
+            KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
+              kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                        cell_neighboring_type,
+                                        &bem_values);
+
+            /**
+             * Apply 4d Sauter numerical quadrature.
+             */
+            cell_matrix(i, j) =
+              ApplyQuadratureUsingBEMValues(*active_quad_rule,
+                                            kernel_pullback_on_sauter);
+          }
+      }
+
+    /**
+     * Assemble the cell matrix to system matrix.
+     */
+    for (unsigned int i = 0; i < kx_n_dofs; i++)
+      {
+        for (unsigned int j = 0; j < ky_n_dofs; j++)
+          {
+            system_matrix.add(kx_local_dof_indices_permuted[i],
+                              ky_local_dof_indices_permuted[j],
+                              cell_matrix(i, j));
+          }
+      }
+  }
+
+
+  /**
+   * Apply the Sauter's 4D quadrature rule to the kernel function pulled back to
+   * the Sauter's parametric space.
+   *
+   * @param quad_rule
+   * @param f
+   * @param component
+   * @return
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  RangeNumberType
+  ApplyQuadrature(
+    const Quadrature<dim * 2> &quad_rule,
+    const KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType> &f,
+    unsigned int component = 0)
+  {
+    RangeNumberType result = 0.;
+
+    const std::vector<Point<dim * 2>> &quad_points  = quad_rule.get_points();
+    const std::vector<double> &        quad_weights = quad_rule.get_weights();
+
+    for (unsigned int q = 0; q < quad_rule.size(); q++)
+      {
+        result += f.value(quad_points[q], component) * quad_weights[q];
+      }
+
+    return result;
+  }
+
+
+  /**
+   * Apply the Sauter's 4D quadrature rule to the kernel function pulled back to
+   * the Sauter's parametric space. This version uses the precalculated
+   * @p BEMValues.
+   *
+   * @param quad_rule
+   * @param f
+   * @param component
+   * @return
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  RangeNumberType
+  ApplyQuadratureUsingBEMValues(
+    const Quadrature<dim * 2> &quad_rule,
+    const KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType> &f,
+    unsigned int component = 0)
+  {
+    RangeNumberType result = 0.;
+
+    const std::vector<double> &quad_weights = quad_rule.get_weights();
+
+    for (unsigned int q = 0; q < quad_rule.size(); q++)
+      {
+        // Evaluate the integrand with precalculated shape values and shape
+        // gradient matrices.
+        result += f.value(q, component) * quad_weights[q];
+      }
+
+    return result;
+  }
+} // namespace IdeoBEM
 
 #endif /* INCLUDE_SAUTER_QUADRATURE_H_ */

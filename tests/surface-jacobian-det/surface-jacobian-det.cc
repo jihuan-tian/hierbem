@@ -53,10 +53,10 @@ int main()
   unsigned int i = 0;
   for (const auto cell : triangulation.active_cell_iterators())
   {
-    std::vector<Point<spacedim> > real_support_points(LaplaceBEM::support_points_in_real_cell(cell, fe, mapping, fe.get_poly_space_numbering_inverse()));
+    std::vector<Point<spacedim> > real_support_points(IdeoBEM::support_points_in_real_cell(cell, fe, mapping, fe.get_poly_space_numbering_inverse()));
 
     cell_surface_jacobian_det(i) =
-        LaplaceBEM::surface_jacobian_det(fe, real_support_points, unit_cell_center);
+        IdeoBEM::surface_jacobian_det(fe, real_support_points, unit_cell_center);
 
     i++;
   }

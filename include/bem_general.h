@@ -1,13 +1,12 @@
-/** \file laplace_bem.h
- * \brief Implementation of BEM involving kernel functions and singular
- * numerical quadratures.
- * \ingroup sauter_quadrature
- * \date 2020-11-02
- * \author Jihuan Tian
+/**
+ * @file bem_general.h
+ * @brief Introduction of bem_general.h
+ *
+ * @date 2022-03-04
+ * @author Jihuan Tian
  */
-
-#ifndef INCLUDE_LAPLACE_BEM_H_
-#define INCLUDE_LAPLACE_BEM_H_
+#ifndef INCLUDE_BEM_GENERAL_H_
+#define INCLUDE_BEM_GENERAL_H_
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/subscriptor.h>
@@ -33,10 +32,18 @@
 #include <cmath>
 #include <vector>
 
-#include "bem_general.h"
 #include "bem_tools.h"
-#include "laplace_kernels.h"
 #include "quadrature.templates.h"
 #include "sauter_quadrature.h"
 
-#endif /* INCLUDE_LAPLACE_BEM_H_ */
+
+namespace IdeoBEM
+{
+  using namespace dealii;
+  using namespace BEMTools;
+
+
+} // namespace IdeoBEM
+
+
+#endif /* INCLUDE_BEM_GENERAL_H_ */

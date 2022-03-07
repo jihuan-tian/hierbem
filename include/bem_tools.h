@@ -34,7 +34,7 @@
 
 using namespace dealii;
 
-namespace LaplaceBEM
+namespace IdeoBEM
 {
   namespace BEMTools
   {
@@ -1553,7 +1553,7 @@ namespace LaplaceBEM
         }
     }
   } // namespace BEMTools
-} // namespace LaplaceBEM
+} // namespace IdeoBEM
 
 
 #endif /* INCLUDE_BEM_TOOLS_H_ */

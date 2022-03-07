@@ -11,7 +11,7 @@ main()
   deallog.depth_console(2);
   deallog.pop();
 
-  LaplaceBEM::Erichsen1996Efficient::Example2::AnalyticalSolution
+  IdeoBEM::Erichsen1996Efficient::Example2::AnalyticalSolution
     analytical_solution;
 
   Point<3> p1(0.1, 0.2, 0.3);

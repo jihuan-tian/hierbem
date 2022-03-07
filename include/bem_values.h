@@ -15,13 +15,13 @@
 #include <deal.II/fe/fe_tools.h>
 
 #include "bem_tools.h"
-#include "quadrature.templates.h"
-#include "sauter_quadrature.h"
+#include "sauter_quadrature_tools.h"
 
-using namespace dealii;
-
-namespace LaplaceBEM
+namespace IdeoBEM
 {
+  using namespace dealii;
+  using namespace BEMTools;
+
   /**
    * Values related to a pair of cells (panels) used in Galerkin BEM, which can
    * be considered as a counterpart of the @p FEValues for FEM in deal.ii.
@@ -1180,6 +1180,392 @@ namespace LaplaceBEM
                                                              ky_quad_point);
       }
   }
-} // namespace LaplaceBEM
+
+  /**
+   * Structure holding cell-wise local matrix data and DoF indices,
+   * which is used for SMP parallel computation of the term $(v,
+   * \frac{1}{2}u)$.
+   */
+  struct CellWisePerTaskData
+  {
+    FullMatrix<double> local_matrix;
+    // N.B. Memory should be preallocated for this vector before calling
+    // <code>get_dof_indices</code>.
+    std::vector<types::global_dof_index> local_dof_indices;
+
+    CellWisePerTaskData(const FiniteElement<2, 3> &fe)
+      : local_matrix(fe.dofs_per_cell, fe.dofs_per_cell)
+      , local_dof_indices(fe.dofs_per_cell)
+    {}
+  };
+
+
+  /**
+   * Structure holding temporary data which are needed for cell-wise
+   * integration for the term $(v, \frac{1}{2}u)$.
+   */
+  struct CellWiseScratchData
+  {
+    FEValues<2, 3> fe_values;
+
+    /**
+     * Constructor for the structure.
+     * @param fe
+     * @param quadrature
+     * @param update_flags
+     */
+    CellWiseScratchData(const FiniteElement<2, 3> &fe,
+                        const Quadrature<2> &      quadrature,
+                        const UpdateFlags          update_flags)
+      : fe_values(fe, quadrature, update_flags)
+    {}
+
+
+    /**
+     * Copy constructor for the structure. Because <code>FEValues</code> is
+     * neither copyable nor has it copy constructor, this copy constructor
+     * is mandatory for replication into each task.
+     * @param scratch_data
+     */
+    CellWiseScratchData(const CellWiseScratchData &scratch_data)
+      : fe_values(scratch_data.fe_values.get_fe(),
+                  scratch_data.fe_values.get_quadrature(),
+                  scratch_data.fe_values.get_update_flags())
+    {}
+  };
+
+
+  struct PairCellWiseScratchData
+  {
+    /**
+     * The intersection set of the vertex DoF indices for the two cells
+     * \f$K_x\f$ and \f$K_y\f$.
+     */
+    std::vector<types::global_dof_index> vertex_dof_index_intersection;
+
+    /**
+     * List of support points in the real cell \f$K_x\f$ in the hierarchical
+     * order.
+     */
+    std::vector<Point<3>> kx_support_points_hierarchical;
+    /**
+     * List of support points in the real cell \f$K_y\f$ in the hierarchical
+     * order.
+     */
+    std::vector<Point<3>> ky_support_points_hierarchical;
+
+    /**
+     * Permuted list of support points in the real cell \f$K_x\f$ in the
+     * lexicographic order in the same panel case and regular case, and
+     * determined by @p kx_local_dof_permutation in the common edge case and
+     * common vertex case.
+     */
+    std::vector<Point<3>> kx_support_points_permuted;
+    /**
+     * Permuted list of support points in the real cell \f$K_y\f$ in the
+     * lexicographic order in the same panel case and regular case, and
+     * determined by @p ky_local_dof_permutation in the common edge case and
+     * common vertex case.
+     */
+    std::vector<Point<3>> ky_support_points_permuted;
+
+    /**
+     * The list of DoF indices in \f$K_x\f$ which are ordered in the
+     * hierarchical order. This is directly retrieved from the function
+     * @p DoFHandler::cell_iterator::get_dof_indices.
+     */
+    std::vector<types::global_dof_index> kx_local_dof_indices_hierarchical;
+    /**
+     * The list of DoF indices in \f$K_y\f$ which are ordered in the
+     * hierarchical order. This is directly retrieved from the function
+     * @p DoFHandler::cell_iterator::get_dof_indices.
+     */
+    std::vector<types::global_dof_index> ky_local_dof_indices_hierarchical;
+
+    /**
+     * The numbering used for accessing the list of DoFs in \f$K_x\f$ in the
+     * lexicographic order, where the list of DoFs are stored in the
+     * hierarchical order.
+     */
+    std::vector<unsigned int> kx_fe_poly_space_numbering_inverse;
+    /**
+     * The numbering used for accessing the list of DoFs in \f$K_y\f$ in the
+     * lexicographic order, where the list of DoFs are stored in the
+     * hierarchical order.
+     */
+    std::vector<unsigned int> ky_fe_poly_space_numbering_inverse;
+    /**
+     * The numbering used for accessing the list of DoFs in \f$K_y\f$ in the
+     * reversed lexicographic order, where the list of DoFs are stored in the
+     * hierarchical order.
+     *
+     * \mynote{This numbering occurs when \f$K_x\f$ and \f$K_y\f$ share a
+     * common edge.}
+     */
+    std::vector<unsigned int> ky_fe_reversed_poly_space_numbering_inverse;
+
+    /**
+     * The numbering used for accessing the list of support points and
+     * associated DoF indices in \f$K_x\f$ in the lexicographic order by
+     * starting from a specific vertex, where the list of support points and
+     * associated DoF indices are stored in the hierarchical order.
+     *
+     * \mynote{"By starting from a specific vertex" means:
+     * 1. In the same panel case, this numbering is not used because the first
+     * vertex is the starting point by default.
+     * 2. In the common edge case, start from the vertex which is the starting
+     * point of the common edge.
+     * 3. In the common vertex case, start from the common vertex.
+     * 4. In the regular panel case, same as the same panel case.}
+     */
+    std::vector<unsigned int> kx_local_dof_permutation;
+    /**
+     * The numbering used for accessing the list of support points and
+     * associated DoF indices in \f$K_y\f$ in the lexicographic order or the
+     * reversed lexicographic order by starting from a specific vertex, where
+     * the list of support points and associated DoF indices are stored in the
+     * hierarchical order.
+     *
+     * \mynote{"By starting from a specific vertex" means:
+     * 1. In the same panel case, this numbering is not used because the first
+     * vertex is the starting point by default.
+     * 2. In the common edge case, start from the vertex which is the starting
+     * point of the common edge. And the list of support points and associated
+     * DoF indices are accessed in the reversed lexicographic order. Then the
+     * cell orientation is reversed and the calculated normal vector should be
+     * negated.
+     * 3. In the common vertex case, start from the common vertex. And the list
+     * of support points and associated DoF indices are accessed in the
+     * lexicographic order.
+     * 4. In the regular panel case, same as the same panel case.}
+     */
+    std::vector<unsigned int> ky_local_dof_permutation;
+
+    // The first dimension of the following data tables is the \f$k_3\f$ index.
+    /**
+     * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
+     * \f$k_3\f$ term and at each quadrature point for the same panel case.
+     */
+    Table<2, double> kx_jacobians_same_panel;
+    /**
+     * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
+     * \f$k_3\f$ term and at each quadrature point for the common edge case.
+     */
+    Table<2, double> kx_jacobians_common_edge;
+    /**
+     * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
+     * \f$k_3\f$ term and at each quadrature point for the common vertex case.
+     */
+    Table<2, double> kx_jacobians_common_vertex;
+    /**
+     * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
+     * \f$k_3\f$ term and at each quadrature point for the regular case.
+     */
+    Table<2, double> kx_jacobians_regular;
+
+    /**
+     * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
+     * the same panel case.
+     */
+    Table<2, Tensor<1, 3>> kx_normals_same_panel;
+    /**
+     * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
+     * the common edge case.
+     */
+    Table<2, Tensor<1, 3>> kx_normals_common_edge;
+    /**
+     * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
+     * the common vertex case.
+     */
+    Table<2, Tensor<1, 3>> kx_normals_common_vertex;
+    /**
+     * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
+     * the regular case.
+     */
+    Table<2, Tensor<1, 3>> kx_normals_regular;
+
+    /**
+     * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
+     * quadrature point for the same panel case.
+     */
+    Table<2, Point<3>> kx_quad_points_same_panel;
+    /**
+     * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
+     * quadrature point for the common edge case.
+     */
+    Table<2, Point<3>> kx_quad_points_common_edge;
+    /**
+     * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
+     * quadrature point for the common vertex case.
+     */
+    Table<2, Point<3>> kx_quad_points_common_vertex;
+    /**
+     * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
+     * quadrature point for the regular case.
+     */
+    Table<2, Point<3>> kx_quad_points_regular;
+
+
+    /**
+     * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
+     * \f$k_3\f$ term and at each quadrature point for the same panel case.
+     */
+    Table<2, double> ky_jacobians_same_panel;
+    /**
+     * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
+     * \f$k_3\f$ term and at each quadrature point for the common edge case.
+     */
+    Table<2, double> ky_jacobians_common_edge;
+    /**
+     * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
+     * \f$k_3\f$ term and at each quadrature point for the common vertex case.
+     */
+    Table<2, double> ky_jacobians_common_vertex;
+    /**
+     * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
+     * \f$k_3\f$ term and at each quadrature point for the regular case.
+     */
+    Table<2, double> ky_jacobians_regular;
+
+    /**
+     * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
+     * the same panel case.
+     */
+    Table<2, Tensor<1, 3>> ky_normals_same_panel;
+    /**
+     * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
+     * the common edge case.
+     */
+    Table<2, Tensor<1, 3>> ky_normals_common_edge;
+    /**
+     * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
+     * the common vertex case.
+     */
+    Table<2, Tensor<1, 3>> ky_normals_common_vertex;
+    /**
+     * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
+     * the regular case.
+     */
+    Table<2, Tensor<1, 3>> ky_normals_regular;
+
+    /**
+     * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
+     * quadrature point for the same panel case.
+     */
+    Table<2, Point<3>> ky_quad_points_same_panel;
+    /**
+     * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
+     * quadrature point for the common edge case.
+     */
+    Table<2, Point<3>> ky_quad_points_common_edge;
+    /**
+     * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
+     * quadrature point for the common vertex case.
+     */
+    Table<2, Point<3>> ky_quad_points_common_vertex;
+    /**
+     * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
+     * quadrature point for the regular case.
+     */
+    Table<2, Point<3>> ky_quad_points_regular;
+
+    PairCellWiseScratchData(const FiniteElement<2, 3> &kx_fe,
+                            const FiniteElement<2, 3> &ky_fe,
+                            const BEMValues<2, 3> &    bem_values)
+      : vertex_dof_index_intersection(0)
+      , kx_support_points_hierarchical(kx_fe.dofs_per_cell)
+      , ky_support_points_hierarchical(ky_fe.dofs_per_cell)
+      , kx_support_points_permuted(kx_fe.dofs_per_cell)
+      , ky_support_points_permuted(ky_fe.dofs_per_cell)
+      , kx_local_dof_indices_hierarchical(kx_fe.dofs_per_cell)
+      , ky_local_dof_indices_hierarchical(ky_fe.dofs_per_cell)
+      , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)
+      , ky_fe_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
+      , ky_fe_reversed_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
+      , kx_local_dof_permutation(kx_fe.dofs_per_cell)
+      , ky_local_dof_permutation(ky_fe.dofs_per_cell)
+      , kx_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , kx_jacobians_common_edge(6, bem_values.quad_rule_for_common_edge.size())
+      , kx_jacobians_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , kx_jacobians_regular(1, bem_values.quad_rule_for_regular.size())
+      , kx_normals_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , kx_normals_common_edge(6, bem_values.quad_rule_for_common_edge.size())
+      , kx_normals_common_vertex(4,
+                                 bem_values.quad_rule_for_common_vertex.size())
+      , kx_normals_regular(1, bem_values.quad_rule_for_regular.size())
+      , kx_quad_points_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , kx_quad_points_common_edge(6,
+                                   bem_values.quad_rule_for_common_edge.size())
+      , kx_quad_points_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , kx_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
+      , ky_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , ky_jacobians_common_edge(6, bem_values.quad_rule_for_common_edge.size())
+      , ky_jacobians_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , ky_jacobians_regular(1, bem_values.quad_rule_for_regular.size())
+      , ky_normals_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , ky_normals_common_edge(6, bem_values.quad_rule_for_common_edge.size())
+      , ky_normals_common_vertex(4,
+                                 bem_values.quad_rule_for_common_vertex.size())
+      , ky_normals_regular(1, bem_values.quad_rule_for_regular.size())
+      , ky_quad_points_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , ky_quad_points_common_edge(6,
+                                   bem_values.quad_rule_for_common_edge.size())
+      , ky_quad_points_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
+    {
+      vertex_dof_index_intersection.reserve(GeometryInfo<2>::vertices_per_cell);
+
+      // Polynomial space inverse numbering for recovering the lexicographic
+      // order.
+      kx_fe_poly_space_numbering_inverse =
+        FETools::lexicographic_to_hierarchic_numbering(kx_fe);
+      ky_fe_poly_space_numbering_inverse =
+        FETools::lexicographic_to_hierarchic_numbering(ky_fe);
+      generate_backward_dof_permutation(
+        ky_fe, 0, ky_fe_reversed_poly_space_numbering_inverse);
+    }
+  };
+
+
+  struct PairCellWisePerTaskData
+  {
+    /**
+     * Local matrix for the pair of cells for the DLP kernel.
+     */
+    FullMatrix<double> dlp_matrix;
+    /**
+     * Local matrix for the pair of cells for the SLP kernel.
+     */
+    FullMatrix<double> slp_matrix;
+    /**
+     * Permuted list of DoF indices in the cell \f$K_x\f$, each element of
+     * which is associated with the corresponding element in
+     * @p PairCellWiseScratchData::kx_support_points_permuted.
+     */
+    std::vector<types::global_dof_index> kx_local_dof_indices_permuted;
+    /**
+     * Permuted list of DoF indices in the cell \f$K_y\f$, each element of
+     * which is associated with the corresponding element in
+     * @p PairCellWiseScratchData::ky_support_points_permuted.
+     */
+    std::vector<types::global_dof_index> ky_local_dof_indices_permuted;
+
+    PairCellWisePerTaskData(const FiniteElement<2, 3> &kx_fe,
+                            const FiniteElement<2, 3> &ky_fe)
+      : dlp_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
+      , slp_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
+      , kx_local_dof_indices_permuted(kx_fe.dofs_per_cell)
+      , ky_local_dof_indices_permuted(ky_fe.dofs_per_cell)
+    {}
+  };
+} // namespace IdeoBEM
 
 #endif /* INCLUDE_BEM_VALUES_H_ */

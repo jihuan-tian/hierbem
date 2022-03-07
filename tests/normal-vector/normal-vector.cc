@@ -38,7 +38,7 @@ main()
     {
       // Get the support points in tensor product order.
       std::vector<Point<3>> support_points =
-        LaplaceBEM::tensor_product_support_points_in_real_cell(cell,
+        IdeoBEM::tensor_product_support_points_in_real_cell(cell,
                                                                fe,
                                                                mapping);
 
@@ -50,7 +50,7 @@ main()
 
       // Calculate the normal vector is the current cell.
       Tensor<1, 3> normal_vector;
-      LaplaceBEM::surface_jacobian_det_and_normal_vector(fe,
+      IdeoBEM::surface_jacobian_det_and_normal_vector(fe,
                                                          support_points,
                                                          Point<2>(0.5, 0.5),
                                                          normal_vector);

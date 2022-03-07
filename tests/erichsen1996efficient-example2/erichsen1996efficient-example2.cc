@@ -24,7 +24,7 @@ main(int argc, char *argv[])
   std::string        proc_num_str(argv[3]);
   const unsigned int fe_order = std::stoi(fe_order_str);
   const unsigned int proc_num = std::stoi(proc_num_str);
-  LaplaceBEM::Erichsen1996Efficient::Example2 testcase(mesh_file_name,
+  IdeoBEM::Erichsen1996Efficient::Example2 testcase(mesh_file_name,
                                                        fe_order,
                                                        proc_num);
   testcase.run();

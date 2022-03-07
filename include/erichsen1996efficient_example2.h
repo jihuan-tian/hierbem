@@ -68,7 +68,7 @@
 
 using namespace dealii;
 
-namespace LaplaceBEM
+namespace IdeoBEM
 {
   namespace Erichsen1996Efficient
   {
@@ -428,7 +428,7 @@ namespace LaplaceBEM
               vertex_index_intersection.reserve(
                 GeometryInfo<2>::vertices_per_cell);
               cell_neighboring_type_matrix(i, j) =
-                LaplaceBEM::detect_cell_neighboring_type<2>(
+                IdeoBEM::detect_cell_neighboring_type<2>(
                   first_cell_vertex_indices,
                   second_cell_vertex_indices,
                   vertex_index_intersection);

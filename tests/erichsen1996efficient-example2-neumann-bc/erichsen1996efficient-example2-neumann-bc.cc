@@ -10,7 +10,7 @@ main()
   deallog.depth_console(2);
   deallog.pop();
 
-  LaplaceBEM::Erichsen1996Efficient::Example2::NeumannBC neumann_bc;
+  IdeoBEM::Erichsen1996Efficient::Example2::NeumannBC neumann_bc;
 
   double theta = 60. * numbers::PI / 180.;
   double phi   = 75. * numbers::PI / 180.;

@@ -1,0 +1,269 @@
+/**
+ * @file sauter_quadrature_tools.h
+ * @brief Introduction of sauter_quadrature_tools.h
+ *
+ * @date 2022-03-05
+ * @author Jihuan Tian
+ */
+#ifndef INCLUDE_SAUTER_QUADRATURE_TOOLS_H_
+#define INCLUDE_SAUTER_QUADRATURE_TOOLS_H_
+
+#include <deal.II/base/point.h>
+
+namespace IdeoBEM
+{
+  using namespace dealii;
+
+  /**
+   * Transform parametric coordinates in Sauter's quadrature rule for the same
+   * panel case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$ respectively.
+   *
+   * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
+   * @param k3_index
+   * @param kx_unit_cell_coords [out]
+   * @param ky_unit_cell_coords [out]
+   */
+  template <int dim>
+  void
+  sauter_same_panel_parametric_coords_to_unit_cells(
+    const Point<dim * 2> &parametric_coords,
+    const unsigned int    k3_index,
+    Point<dim> &          kx_unit_cell_coords,
+    Point<dim> &          ky_unit_cell_coords)
+  {
+    double unit_coords[4] = {
+      (1 - parametric_coords(0)) * parametric_coords(3),
+      (1 - parametric_coords(0) * parametric_coords(1)) * parametric_coords(2),
+      parametric_coords(0) + (1 - parametric_coords(0)) * parametric_coords(3),
+      parametric_coords(0) * parametric_coords(1) +
+        (1 - parametric_coords(0) * parametric_coords(1)) *
+          parametric_coords(2)};
+
+    switch (k3_index)
+      {
+        case 0:
+          kx_unit_cell_coords(0) = unit_coords[0];
+          kx_unit_cell_coords(1) = unit_coords[1];
+          ky_unit_cell_coords(0) = unit_coords[2];
+          ky_unit_cell_coords(1) = unit_coords[3];
+
+          break;
+        case 1:
+          kx_unit_cell_coords(0) = unit_coords[1];
+          kx_unit_cell_coords(1) = unit_coords[0];
+          ky_unit_cell_coords(0) = unit_coords[3];
+          ky_unit_cell_coords(1) = unit_coords[2];
+
+          break;
+        case 2:
+          kx_unit_cell_coords(0) = unit_coords[0];
+          kx_unit_cell_coords(1) = unit_coords[3];
+          ky_unit_cell_coords(0) = unit_coords[2];
+          ky_unit_cell_coords(1) = unit_coords[1];
+
+          break;
+        case 3:
+          kx_unit_cell_coords(0) = unit_coords[1];
+          kx_unit_cell_coords(1) = unit_coords[2];
+          ky_unit_cell_coords(0) = unit_coords[3];
+          ky_unit_cell_coords(1) = unit_coords[0];
+
+          break;
+        case 4:
+          kx_unit_cell_coords(0) = unit_coords[2];
+          kx_unit_cell_coords(1) = unit_coords[1];
+          ky_unit_cell_coords(0) = unit_coords[0];
+          ky_unit_cell_coords(1) = unit_coords[3];
+
+          break;
+        case 5:
+          kx_unit_cell_coords(0) = unit_coords[3];
+          kx_unit_cell_coords(1) = unit_coords[0];
+          ky_unit_cell_coords(0) = unit_coords[1];
+          ky_unit_cell_coords(1) = unit_coords[2];
+
+          break;
+        case 6:
+          kx_unit_cell_coords(0) = unit_coords[2];
+          kx_unit_cell_coords(1) = unit_coords[3];
+          ky_unit_cell_coords(0) = unit_coords[0];
+          ky_unit_cell_coords(1) = unit_coords[1];
+
+          break;
+        case 7:
+          kx_unit_cell_coords(0) = unit_coords[3];
+          kx_unit_cell_coords(1) = unit_coords[2];
+          ky_unit_cell_coords(0) = unit_coords[1];
+          ky_unit_cell_coords(1) = unit_coords[0];
+
+          break;
+        default:
+          Assert(false, ExcInternalError());
+      }
+  }
+
+
+  /**
+   * Transform parametric coordinates in Sauter's quadrature rule for the
+   * common edge case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$
+   * respectively.
+   *
+   * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
+   * @param k3_index
+   * @param kx_unit_cell_coords [out]
+   * @param ky_unit_cell_coords [out]
+   */
+  template <int dim>
+  void
+  sauter_common_edge_parametric_coords_to_unit_cells(
+    const Point<dim * 2> &parametric_coords,
+    const unsigned int    k3_index,
+    Point<dim> &          kx_unit_cell_coords,
+    Point<dim> &          ky_unit_cell_coords)
+  {
+    double unit_coords1[4] = {(1 - parametric_coords(0)) *
+                                  parametric_coords(3) +
+                                parametric_coords(0),
+                              parametric_coords(0) * parametric_coords(2),
+                              (1 - parametric_coords(0)) * parametric_coords(3),
+                              parametric_coords(0) * parametric_coords(1)};
+    double unit_coords2[4] = {
+      (1 - parametric_coords(0) * parametric_coords(1)) * parametric_coords(3) +
+        parametric_coords(0) * parametric_coords(1),
+      parametric_coords(0) * parametric_coords(2),
+      (1 - parametric_coords(0) * parametric_coords(1)) * parametric_coords(3),
+      parametric_coords(0)};
+
+    switch (k3_index)
+      {
+        case 0:
+          kx_unit_cell_coords(0) = unit_coords1[0];
+          kx_unit_cell_coords(1) = unit_coords1[1];
+          ky_unit_cell_coords(0) = unit_coords1[2];
+          ky_unit_cell_coords(1) = unit_coords1[3];
+
+          break;
+        case 1:
+          kx_unit_cell_coords(0) = unit_coords1[2];
+          kx_unit_cell_coords(1) = unit_coords1[1];
+          ky_unit_cell_coords(0) = unit_coords1[0];
+          ky_unit_cell_coords(1) = unit_coords1[3];
+
+          break;
+        case 2:
+          kx_unit_cell_coords(0) = unit_coords2[0];
+          kx_unit_cell_coords(1) = unit_coords2[1];
+          ky_unit_cell_coords(0) = unit_coords2[2];
+          ky_unit_cell_coords(1) = unit_coords2[3];
+
+          break;
+        case 3:
+          kx_unit_cell_coords(0) = unit_coords2[0];
+          kx_unit_cell_coords(1) = unit_coords2[3];
+          ky_unit_cell_coords(0) = unit_coords2[2];
+          ky_unit_cell_coords(1) = unit_coords2[1];
+
+          break;
+        case 4:
+          kx_unit_cell_coords(0) = unit_coords2[2];
+          kx_unit_cell_coords(1) = unit_coords2[1];
+          ky_unit_cell_coords(0) = unit_coords2[0];
+          ky_unit_cell_coords(1) = unit_coords2[3];
+
+          break;
+        case 5:
+          kx_unit_cell_coords(0) = unit_coords2[2];
+          kx_unit_cell_coords(1) = unit_coords2[3];
+          ky_unit_cell_coords(0) = unit_coords2[0];
+          ky_unit_cell_coords(1) = unit_coords2[1];
+
+          break;
+        default:
+          Assert(false, ExcInternalError());
+      }
+  }
+
+
+  /**
+   * Transform parametric coordinates in Sauter's quadrature rule for the
+   * common vertex case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$
+   * respectively.
+   *
+   * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
+   * @param k3_index
+   * @param kx_unit_cell_coords [out]
+   * @param ky_unit_cell_coords [out]
+   */
+  template <int dim>
+  void
+  sauter_common_vertex_parametric_coords_to_unit_cells(
+    const Point<dim * 2> &parametric_coords,
+    const unsigned int    k3_index,
+    Point<dim> &          kx_unit_cell_coords,
+    Point<dim> &          ky_unit_cell_coords)
+  {
+    double unit_coords[4] = {parametric_coords(0),
+                             parametric_coords(0) * parametric_coords(1),
+                             parametric_coords(0) * parametric_coords(2),
+                             parametric_coords(0) * parametric_coords(3)};
+
+    switch (k3_index)
+      {
+        case 0:
+          kx_unit_cell_coords(0) = unit_coords[0];
+          kx_unit_cell_coords(1) = unit_coords[1];
+          ky_unit_cell_coords(0) = unit_coords[2];
+          ky_unit_cell_coords(1) = unit_coords[3];
+
+          break;
+        case 1:
+          kx_unit_cell_coords(0) = unit_coords[1];
+          kx_unit_cell_coords(1) = unit_coords[0];
+          ky_unit_cell_coords(0) = unit_coords[2];
+          ky_unit_cell_coords(1) = unit_coords[3];
+
+          break;
+        case 2:
+          kx_unit_cell_coords(0) = unit_coords[1];
+          kx_unit_cell_coords(1) = unit_coords[2];
+          ky_unit_cell_coords(0) = unit_coords[0];
+          ky_unit_cell_coords(1) = unit_coords[3];
+
+          break;
+        case 3:
+          kx_unit_cell_coords(0) = unit_coords[1];
+          kx_unit_cell_coords(1) = unit_coords[2];
+          ky_unit_cell_coords(0) = unit_coords[3];
+          ky_unit_cell_coords(1) = unit_coords[0];
+
+          break;
+        default:
+          Assert(false, ExcInternalError());
+      }
+  }
+
+
+  /**
+   * Transform parametric coordinates in Sauter's quadrature rule for the
+   * regular case to unit cell coordinates for \f$K_x\f$ and \f$K_y\f$ respectively.
+   *
+   * @param parametric_coords Parameter coordinates in \f$\mathbb{R}^{dim*2}\f$
+   * @param kx_unit_cell_coords [out]
+   * @param ky_unit_cell_coords [out]
+   */
+  template <int dim>
+  void
+  sauter_regular_parametric_coords_to_unit_cells(
+    const Point<dim * 2> &parametric_coords,
+    Point<dim> &          kx_unit_cell_coords,
+    Point<dim> &          ky_unit_cell_coords)
+  {
+    kx_unit_cell_coords(0) = parametric_coords(0);
+    kx_unit_cell_coords(1) = parametric_coords(1);
+    ky_unit_cell_coords(0) = parametric_coords(2);
+    ky_unit_cell_coords(1) = parametric_coords(3);
+  }
+} // namespace IdeoBEM
+
+
+#endif /* INCLUDE_SAUTER_QUADRATURE_TOOLS_H_ */
