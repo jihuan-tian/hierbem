@@ -57,6 +57,7 @@
 #include <fstream>
 #include <functional>
 
+#include "bem_kernels.h"
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 #include "debug_tools.h"
@@ -258,6 +259,13 @@ namespace IdeoBEM
 
       void
       assemble_system_smp();
+
+
+      /**
+       * For debug purpose: verify the function @p sauter_assemble_on_one_pair_of_dofs.
+       */
+      void
+      assemble_system_via_pairs_of_dofs();
 
       // #region: DEBUG
       /**
@@ -1211,6 +1219,118 @@ namespace IdeoBEM
 
 
     void
+    Example2::assemble_system_via_pairs_of_dofs()
+    {
+      // Generate normal Gauss-Legendre quadrature rule for FEM integration.
+      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+
+      WorkStream::run(dof_handler.begin_active(),
+                      dof_handler.end(),
+                      std::bind(&Example2::assemble_on_one_cell,
+                                this,
+                                std::placeholders::_1,
+                                std::placeholders::_2,
+                                std::placeholders::_3),
+                      std::bind(&Example2::copy_cell_local_to_global,
+                                this,
+                                std::placeholders::_1),
+                      CellWiseScratchData(fe,
+                                          quadrature_formula_2d,
+                                          update_values | update_JxW_values),
+                      CellWisePerTaskData(fe));
+
+      /**
+       * Generate 4D Gauss-Legendre quadrature rules for various cell
+       * neighboring types.
+       */
+      const unsigned int quad_order_for_same_panel    = 5;
+      const unsigned int quad_order_for_common_edge   = 4;
+      const unsigned int quad_order_for_common_vertex = 4;
+      const unsigned int quad_order_for_regular       = 3;
+
+      QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
+      QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
+      QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
+      QGauss<4> quad_rule_for_regular(quad_order_for_regular);
+
+      /**
+       * Precalculate data tables for shape values at quadrature points.
+       *
+       * \mynote{Precalculate shape function values and their gradient values
+       * at each quadrature point. N.B.
+       * 1. The data tables for shape function values and their gradient values
+       * should be calculated for both function space on \f$K_x\f$ and function
+       * space on \f$K_y\f$.
+       * 2. Being different from the integral in FEM, the integral in BEM
+       * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+       * (except the regular cell neighboring type), each of which should be
+       * evaluated at a different set of quadrature points in the unit cell
+       * after coordinate transformation from the parametric space. Therefore,
+       * a dimension with respect to \f$k_3\f$ term index should be added to
+       * the data table compared to the usual FEValues and this brings about
+       * the class @p BEMValues.}
+       */
+      BEMValues<2, 3> bem_values(fe,
+                                 fe,
+                                 quad_rule_for_same_panel,
+                                 quad_rule_for_common_edge,
+                                 quad_rule_for_common_vertex,
+                                 quad_rule_for_regular);
+      bem_values.fill_shape_value_tables();
+      bem_values.fill_shape_grad_matrix_tables();
+
+      // Initialize the progress display.
+      boost::progress_display pd(dof_handler.n_dofs() * dof_handler.n_dofs(),
+                                 std::cerr);
+
+      PairCellWiseScratchData scratch_data(fe, fe, bem_values);
+      PairCellWisePerTaskData per_task_data(fe, fe);
+
+      /**
+       * Build the DoF-to-cell topology.
+       */
+      std::vector<std::vector<unsigned int>> dof_to_cell_topo;
+      build_dof_to_cell_topology(dof_to_cell_topo, dof_handler);
+
+      for (types::global_dof_index i = 0; i < dof_handler.n_dofs(); i++)
+        {
+          for (types::global_dof_index j = 0; j < dof_handler.n_dofs(); j++)
+            {
+              system_matrix(i, j) +=
+                sauter_assemble_on_one_pair_of_dofs(scratch_data,
+                                                    per_task_data,
+                                                    dlp,
+                                                    i,
+                                                    j,
+                                                    dof_to_cell_topo,
+                                                    bem_values,
+                                                    dof_handler,
+                                                    dof_handler,
+                                                    mapping,
+                                                    mapping);
+              system_rhs_matrix(i, j) +=
+                sauter_assemble_on_one_pair_of_dofs(scratch_data,
+                                                    per_task_data,
+                                                    slp,
+                                                    i,
+                                                    j,
+                                                    dof_to_cell_topo,
+                                                    bem_values,
+                                                    dof_handler,
+                                                    dof_handler,
+                                                    mapping,
+                                                    mapping);
+
+              ++pd;
+            }
+        }
+
+      // Calculate the right-hand side vector.
+      system_rhs_matrix.vmult(system_rhs, neumann_bc);
+    }
+
+
+    void
     Example2::assemble_slp_smp()
     {
       MultithreadInfo::set_thread_limit(4);
@@ -1504,16 +1624,33 @@ namespace IdeoBEM
     {
       // generate_mesh(1);
       read_mesh();
-      calc_cell_neighboring_types();
+      // calc_cell_neighboring_types();
       setup_system();
 
       if (proc_num > 1)
         {
           assemble_system_smp();
+
+          // DEBUG: print out the assembled matrices.
+          std::ofstream out("matrices-assemble-on-cell-pair.dat");
+          print_matrix_to_mat(
+            out, "dlp_cell_pair", system_matrix, 25, false, 15, "0");
+          print_matrix_to_mat(
+            out, "slp_cell_pair", system_rhs_matrix, 25, false, 15, "0");
+          out.close();
         }
       else
         {
-          assemble_system_serial();
+          // assemble_system_serial();
+          assemble_system_via_pairs_of_dofs();
+
+          // DEBUG: print out the assembled matrices.
+          std::ofstream out("matrices-assemble-on-dof-pair.dat");
+          print_matrix_to_mat(
+            out, "dlp_dof_pair", system_matrix, 25, false, 15, "0");
+          print_matrix_to_mat(
+            out, "slp_dof_pair", system_rhs_matrix, 25, false, 15, "0");
+          out.close();
         }
 
       solve();
