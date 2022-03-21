@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['rank',['rank',['../classRkMatrix.html#aa9e60bb24bbe3ab1750f970f296d8256',1,'RkMatrix']]],
-  ['rkmatrix',['rkmatrix',['../classHMatrix.html#aa97a8f5e42aba0f1d5faf41f35a27819',1,'HMatrix']]],
-  ['row_5findex_5fglobal_5fto_5flocal_5fmap',['row_index_global_to_local_map',['../classHMatrix.html#a4d64145335fc0521603b206a22a67578',1,'HMatrix']]],
-  ['row_5findices',['row_indices',['../classHMatrix.html#a33b3a936f1b40e320e96d47471da07ae',1,'HMatrix']]]
+  ['quad_5frule_5ffor_5fcommon_5fedge',['quad_rule_for_common_edge',['../classIdeoBEM_1_1BEMValues.html#a147ebe3b4cd75e008dd35b41f02e3347',1,'IdeoBEM::BEMValues']]],
+  ['quad_5frule_5ffor_5fcommon_5fvertex',['quad_rule_for_common_vertex',['../classIdeoBEM_1_1BEMValues.html#a2e588e3ff9264677c49888e73e7a97f4',1,'IdeoBEM::BEMValues']]],
+  ['quad_5frule_5ffor_5fregular',['quad_rule_for_regular',['../classIdeoBEM_1_1BEMValues.html#ab7e9a2c9dca84680d06538d122827a01',1,'IdeoBEM::BEMValues']]],
+  ['quad_5frule_5ffor_5fsame_5fpanel',['quad_rule_for_same_panel',['../classIdeoBEM_1_1BEMValues.html#abd6e6887e8e2e976cb9a8e4c41266239',1,'IdeoBEM::BEMValues']]]
 ];

@@ -1036,6 +1036,27 @@ public:
     LAPACKFullMatrixExt<Number> &               C,
     LAPACKFullMatrixExt<Number> &               D);
 
+  /**
+   * Calculate the Frobenius norm of the rank-k matrix.
+   *
+   * @param number_of_terms The effective number of columns in \f$A\f$ and
+   * \f$B\f$ to be included into the calculation.
+   *
+   * @return
+   */
+  Number
+  frobenius_norm(const size_type number_of_columns) const;
+
+  /**
+   * Calculate the Frobenius norm of the rank-k matrix using all the columns in
+   * the component matrices \f$A\f$ and \f$B\f$.
+   *
+   * @return
+   */
+  Number
+  frobenius_norm(void) const;
+
+
 private:
   LAPACKFullMatrixExt<Number> A;
   LAPACKFullMatrixExt<Number> B;
@@ -3516,6 +3537,48 @@ RkMatrix<Number>::assemble_from_rkmatrix(
       C.reinit(0, 0);
       D.reinit(0, 0);
     }
+}
+
+
+template <typename Number>
+Number
+RkMatrix<Number>::frobenius_norm(const size_type number_of_columns) const
+{
+  Assert(
+    number_of_columns <= formal_rank,
+    ExcMessage(
+      "The effective number of columns required for calculating the Frobenius norm should be less than or equal to the formal rank!"));
+
+  Number result = 0.0;
+
+  Vector<Number> ui(A.m());
+  Vector<Number> uj(A.m());
+  Vector<Number> vi(B.m());
+  Vector<Number> vj(B.m());
+
+  for (size_type i = 0; i < number_of_columns; i++)
+    {
+      A.get_column(i, ui);
+      B.get_column(i, vi);
+
+      for (size_type j = 0; j < number_of_columns; j++)
+        {
+          A.get_column(j, uj);
+          B.get_column(j, vj);
+
+          result += (ui * uj) * (vi * vj);
+        }
+    }
+
+  return std::sqrt(result);
+}
+
+
+template <typename Number>
+Number
+RkMatrix<Number>::frobenius_norm(void) const
+{
+  return frobenius_norm(formal_rank);
 }
 
 

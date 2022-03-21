@@ -20,6 +20,7 @@
 #include "lapack_full_matrix_ext.h"
 #include "tree.h"
 
+
 /**
  * \brief Class for block cluster tree.
  *
@@ -116,6 +117,13 @@ public:
     const std::vector<
       TreeNode<BlockCluster<spacedim1, Number1>,
                BlockClusterTree<spacedim1, Number1>::child_num> *> &partition);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  print_block_cluster_node_info_as_dot_node(
+    std::ostream &                                                   out,
+    const TreeNode<BlockCluster<spacedim1, Number1>,
+                   BlockClusterTree<spacedim1, Number1>::child_num> &tree_node);
 
   /**
    * Default constructor, which initializes an empty quad-tree.
@@ -425,6 +433,15 @@ public:
   write_leaf_set(std::ostream &                      out,
                  const LAPACKFullMatrixExt<Number1> &matrix,
                  const Number1 singular_value_threshold = 0.) const;
+
+  /**
+   * Print the \bct hierarchy information as directional graph in Graphviz
+   * dot format.
+   *
+   * @param out
+   */
+  void
+  print_bct_info_as_dot(std::ostream &out) const;
 
   /**
    * Get the reference to the block cluster list which belongs to the near
@@ -3063,6 +3080,89 @@ find_bc_node_in_partition_proper_subset_of_current_bc_node(
 
 template <int spacedim, typename Number>
 void
+print_block_cluster_node_info_as_dot_node(
+  std::ostream &out,
+  const TreeNode<BlockCluster<spacedim, Number>,
+                 BlockClusterTree<spacedim, Number>::child_num>
+    *current_bc_node)
+{
+  using node_const_pointer_type =
+    const TreeNode<BlockCluster<spacedim, Number>,
+                   BlockClusterTree<spacedim, Number>::child_num> *;
+
+  /**
+   * Create the graph node for the current \bcn. When the current \bcn
+   * belongs to the near field, use red background. When it belongs to the far
+   * field, use green background. Otherwise, use white background.
+   */
+  out << "\"" << std::hex << current_bc_node << "\""
+      << "[label=<<b>" << std::hex << current_bc_node << "</b><br/>" << std::dec
+      << "tau: [";
+  print_vector_values(out,
+                      current_bc_node->get_data_reference()
+                        .get_tau_node()
+                        ->get_data_reference()
+                        .get_index_set(),
+                      ",",
+                      false);
+  out << "]<br/>sigma: [";
+  print_vector_values(out,
+                      current_bc_node->get_data_reference()
+                        .get_sigma_node()
+                        ->get_data_reference()
+                        .get_index_set(),
+                      ",",
+                      false);
+  out << "]<br/>Level: " << current_bc_node->get_level() << "<br/>";
+  out << "Parent: " << std::hex << current_bc_node->Parent() << ">,";
+
+  std::string node_color;
+
+  if (current_bc_node->get_data_reference().get_is_near_field())
+    {
+      node_color = "red";
+    }
+  else if (current_bc_node->get_data_reference().get_is_admissible())
+    {
+      node_color = "green";
+    }
+  else
+    {
+      node_color = "white";
+    }
+  out << "fillcolor = " << node_color << "]\n\n";
+
+  /**
+   * Construct the relationship between the current node and its children.
+   */
+  for (unsigned int i = 0; i < current_bc_node->get_child_num(); i++)
+    {
+      node_const_pointer_type child_bc_node =
+        current_bc_node->get_child_pointer(i);
+      Assert(child_bc_node != nullptr, ExcInternalError());
+
+      out << "\"" << std::hex << current_bc_node << "\""
+          << "->"
+          << "\"" << std::hex << child_bc_node << "\"\n";
+    }
+  out << "\n";
+
+  /**
+   * Print each child \bcn.
+   */
+  for (unsigned int i = 0; i < current_bc_node->get_child_num(); i++)
+    {
+      node_const_pointer_type child_bc_node =
+        current_bc_node->get_child_pointer(i);
+      Assert(child_bc_node != nullptr, ExcInternalError());
+
+      print_block_cluster_node_info_as_dot_node(out, child_bc_node);
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
 BlockClusterTree<spacedim, Number>::categorize_near_and_far_field_sets()
 {
   near_field_set.clear();
@@ -3212,6 +3312,39 @@ BlockClusterTree<spacedim, Number>::write_leaf_set(
        */
       out << rank << "\n";
     }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::print_bct_info_as_dot(
+  std::ostream &out) const
+{
+  /**
+   * Write the header of the Graphviz dot file.
+   */
+  out << "#@startdot\n";
+  out << "digraph block_cluster_tree {\n";
+
+  /**
+   * Define the node style.
+   */
+  out << "node [style=filled, shape=box]\n";
+
+  /**
+   * Add comment nodes.
+   */
+  out << "\"Non-leaf block\" [fillcolor=white]\n";
+  out << "\"Near field block\" [fillcolor=red]\n";
+  out << "\"Far field block\" [fillcolor=green]\n";
+
+  print_block_cluster_node_info_as_dot_node(out, root_node);
+
+  /**
+   * Finalize the Graphviz dot file.
+   */
+  out << "}\n";
+  out << "#@enddot" << std::endl;
 }
 
 

@@ -8,22 +8,32 @@ This header file contains a set of self-\/defined generic functors.
 {\ttfamily \#include $<$deal.\+I\+I/base/exceptions.\+h$>$}\newline
 {\ttfamily \#include $<$deal.\+I\+I/base/types.\+h$>$}\newline
 {\ttfamily \#include $<$deal.\+I\+I/lac/lapack\+\_\+support.\+h$>$}\newline
+{\ttfamily \#include $<$forward\+\_\+list$>$}\newline
+{\ttfamily \#include $<$iterator$>$}\newline
 {\ttfamily \#include $<$map$>$}\newline
 {\ttfamily \#include $<$vector$>$}\newline
-Include dependency graph for generic\+\_\+functors.\+h\+:\nopagebreak
+Include dependency graph for generic\+\_\+functors.\+h\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=350pt]{generic__functors_8h__incl}
 \end{center}
 \end{figure}
-This graph shows which files directly or indirectly include this file\+:\nopagebreak
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=350pt]{generic__functors_8h__dep__incl}
 \end{center}
 \end{figure}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{generic__functors_8h_a31f3d4d24e52e94ab4a4ad115a04fd0e}\label{generic__functors_8h_a31f3d4d24e52e94ab4a4ad115a04fd0e}} 
+using {\bfseries size\+\_\+type} = std\+::make\+\_\+unsigned$<$ types\+::blas\+\_\+int $>$\+::type
+\end{DoxyCompactItemize}
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
@@ -32,6 +42,14 @@ This graph shows which files directly or indirectly include this file\+:\nopageb
 void \hyperlink{generic__functors_8h_a45ed12a09686ebca5400b5161a186c09}{build\+\_\+index\+\_\+set\+\_\+global\+\_\+to\+\_\+local\+\_\+map} (const std\+::vector$<$ dealii\+::types\+::global\+\_\+dof\+\_\+index $>$ \&index\+\_\+set\+\_\+as\+\_\+local\+\_\+to\+\_\+global\+\_\+map, std\+::map$<$ dealii\+::types\+::global\+\_\+dof\+\_\+index, size\+\_\+t $>$ \&global\+\_\+to\+\_\+local\+\_\+map)
 \item 
 {\footnotesize template$<$typename Vector\+Type $>$ }\\void \hyperlink{generic__functors_8h_ab23e18e8bbc85673ecd9d4c80b406973}{permute\+\_\+vector\+\_\+by\+\_\+ipiv} (Vector\+Type \&v, const std\+::vector$<$ dealii\+::types\+::blas\+\_\+int $>$ \&ipiv)
+\item 
+{\footnotesize template$<$typename T $>$ }\\size\+\_\+type \hyperlink{generic__functors_8h_add0dd2e12ca1b1712987b071d95d07d8}{size} (const std\+::forward\+\_\+list$<$ T $>$ \&fl)
+\item 
+{\footnotesize template$<$typename T $>$ }\\T \& \hyperlink{generic__functors_8h_a8bdac2742c5560a540a5eacc8044a446}{value\+\_\+at} (std\+::forward\+\_\+list$<$ T $>$ \&fl, const size\+\_\+type i)
+\item 
+{\footnotesize template$<$typename T $>$ }\\const T \& \hyperlink{generic__functors_8h_a04dc4914f39abf2f7c5846ca3edd45c4}{value\+\_\+at} (const std\+::forward\+\_\+list$<$ T $>$ \&fl, const size\+\_\+type i)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \hyperlink{generic__functors_8h_af1baf725b3d26a4e1b9d6c5e14009f9f}{erase\+\_\+at} (std\+::forward\+\_\+list$<$ T $>$ \&fl, const size\+\_\+type i)
 \end{DoxyCompactItemize}
 
 
@@ -63,6 +81,26 @@ Build a map from global indices to local indices based on the given index set, w
 
 
 Referenced by convert\+H\+Mat\+Block\+To\+Rk\+Matrix(), f\+\_\+h\+\_\+mmult(), f\+\_\+h\+\_\+m\+Tmult(), find\+\_\+pointer\+\_\+data(), h\+\_\+f\+\_\+mmult(), h\+\_\+f\+\_\+m\+Tmult(), h\+\_\+rk\+\_\+mmult(), h\+\_\+rk\+\_\+m\+Tmult(), Init\+And\+Create\+H\+Matrix\+Children(), Init\+And\+Create\+H\+Matrix\+Children\+Without\+Alloc(), main(), rk\+\_\+h\+\_\+mmult(), and rk\+\_\+h\+\_\+m\+Tmult().
+
+\mbox{\Hypertarget{generic__functors_8h_af1baf725b3d26a4e1b9d6c5e14009f9f}\label{generic__functors_8h_af1baf725b3d26a4e1b9d6c5e14009f9f}} 
+\index{generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}!erase\+\_\+at@{erase\+\_\+at}}
+\index{erase\+\_\+at@{erase\+\_\+at}!generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}}
+\subsubsection{\texorpdfstring{erase\+\_\+at()}{erase\_at()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void erase\+\_\+at (\begin{DoxyParamCaption}\item[{std\+::forward\+\_\+list$<$ T $>$ \&}]{fl,  }\item[{const size\+\_\+type}]{i }\end{DoxyParamCaption})}
+
+Erase the i\textquotesingle{}th element of the {\ttfamily std\+::forward\+\_\+list}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em fl} & \\
+\hline
+{\em i} & \\
+\hline
+\end{DoxyParams}
+
+
+Referenced by Ideo\+B\+E\+M\+::random\+\_\+select\+\_\+ref\+\_\+column(), and Ideo\+B\+E\+M\+::random\+\_\+select\+\_\+ref\+\_\+row().
 
 \mbox{\Hypertarget{generic__functors_8h_ad741e5fc6f9f2d7acafe6e5530b1f52e}\label{generic__functors_8h_ad741e5fc6f9f2d7acafe6e5530b1f52e}} 
 \index{generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}!find\+\_\+pointer\+\_\+data@{find\+\_\+pointer\+\_\+data}}
@@ -111,3 +149,66 @@ Permute a vector according to the permutation vector {\ttfamily ipiv} obtained f
 
 Referenced by L\+A\+P\+A\+C\+K\+Full\+Matrix\+Ext$<$ Number $>$\+::solve\+\_\+by\+\_\+forward\+\_\+substitution().
 
+\mbox{\Hypertarget{generic__functors_8h_add0dd2e12ca1b1712987b071d95d07d8}\label{generic__functors_8h_add0dd2e12ca1b1712987b071d95d07d8}} 
+\index{generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}!size@{size}}
+\index{size@{size}!generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}}
+\subsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+size\+\_\+type size (\begin{DoxyParamCaption}\item[{const std\+::forward\+\_\+list$<$ T $>$ \&}]{fl }\end{DoxyParamCaption})}
+
+Get the size of a {\ttfamily std\+::forward\+\_\+list}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em fl} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Referenced by Ideo\+B\+E\+M\+::random\+\_\+select\+\_\+ref\+\_\+column(), and Ideo\+B\+E\+M\+::random\+\_\+select\+\_\+ref\+\_\+row().
+
+\mbox{\Hypertarget{generic__functors_8h_a8bdac2742c5560a540a5eacc8044a446}\label{generic__functors_8h_a8bdac2742c5560a540a5eacc8044a446}} 
+\index{generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}!value\+\_\+at@{value\+\_\+at}}
+\index{value\+\_\+at@{value\+\_\+at}!generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}}
+\subsubsection{\texorpdfstring{value\+\_\+at()}{value\_at()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+T\& value\+\_\+at (\begin{DoxyParamCaption}\item[{std\+::forward\+\_\+list$<$ T $>$ \&}]{fl,  }\item[{const size\+\_\+type}]{i }\end{DoxyParamCaption})}
+
+Get the reference to the i\textquotesingle{}th element of the {\ttfamily std\+::forward\+\_\+list}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em fl} & \\
+\hline
+{\em index} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Referenced by Ideo\+B\+E\+M\+::random\+\_\+select\+\_\+ref\+\_\+column(), and Ideo\+B\+E\+M\+::random\+\_\+select\+\_\+ref\+\_\+row().
+
+\mbox{\Hypertarget{generic__functors_8h_a04dc4914f39abf2f7c5846ca3edd45c4}\label{generic__functors_8h_a04dc4914f39abf2f7c5846ca3edd45c4}} 
+\index{generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}!value\+\_\+at@{value\+\_\+at}}
+\index{value\+\_\+at@{value\+\_\+at}!generic\+\_\+functors.\+h@{generic\+\_\+functors.\+h}}
+\subsubsection{\texorpdfstring{value\+\_\+at()}{value\_at()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+const T\& value\+\_\+at (\begin{DoxyParamCaption}\item[{const std\+::forward\+\_\+list$<$ T $>$ \&}]{fl,  }\item[{const size\+\_\+type}]{i }\end{DoxyParamCaption})}
+
+Get the const reference to the i\textquotesingle{}th element of the {\ttfamily std\+::forward\+\_\+list}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em fl} & \\
+\hline
+{\em index} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}

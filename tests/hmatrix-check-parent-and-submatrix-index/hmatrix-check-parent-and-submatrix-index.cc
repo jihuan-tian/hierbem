@@ -1,6 +1,8 @@
 /**
  * \file hmatrix-check-parent-and-submatrix-index.cc
- * \brief Check the @p parent and @p submatrix_index member variables of \hmatrix.
+ * \brief Check the @p parent and @p submatrix_index member variables of
+ * \hmatrix by visualizing the hierarchical structure of the block cluster tree
+ * with the help of the tool @p dot in @p Graphviz.
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian

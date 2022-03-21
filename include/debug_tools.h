@@ -17,6 +17,7 @@
 #include <deal.II/fe/mapping.h>
 
 #include <iostream>
+#include <iterator>
 #include <string>
 
 using namespace dealii;
@@ -28,9 +29,15 @@ print_vector_values(std::ostream &     out,
                     const std::string &sep         = std::string(","),
                     bool               has_newline = true)
 {
-  for (auto iter = values.cbegin(); iter != values.cend(); iter++)
+  typename VectorType::const_iterator iter_copy;
+
+  for (auto iter = values.cbegin(); iter != values.cend();
+       std::advance(iter, 1))
     {
-      if ((iter + 1) == values.cend())
+      iter_copy = iter;
+      std::advance(iter_copy, 1);
+
+      if (iter_copy == values.cend())
         if (has_newline)
           {
             out << (*iter) << std::endl;
@@ -53,9 +60,15 @@ print_vector_indices(std::ostream &     out,
                      bool               index_starting_from_zero,
                      bool               has_newline = true)
 {
-  for (auto iter = values.cbegin(); iter != values.cend(); iter++)
+  typename VectorType::const_iterator iter_copy;
+
+  for (auto iter = values.cbegin(); iter != values.cend();
+       std::advance(iter, 1))
     {
-      if ((iter + 1) == values.cend())
+      iter_copy = iter;
+      std::advance(iter_copy, 1);
+
+      if (iter_copy == values.cend())
         if (has_newline)
           {
             if (index_starting_from_zero)

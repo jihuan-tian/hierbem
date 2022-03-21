@@ -508,10 +508,12 @@ namespace IdeoBEM
      * @return A matrix storing the two coordinate components for all points. It
      * has a dimension @p 2*points.size().
      */
+    template <int spacedim>
     FullMatrix<double>
-    collect_two_components_from_point3(const std::vector<Point<3>> &points,
-                                       const unsigned int first_component,
-                                       const unsigned int second_component)
+    collect_two_components_from_point3(
+      const std::vector<Point<spacedim>> &points,
+      const unsigned int                  first_component,
+      const unsigned int                  second_component)
     {
       Assert(first_component < 3, ExcInternalError());
       Assert(second_component < 3, ExcInternalError());

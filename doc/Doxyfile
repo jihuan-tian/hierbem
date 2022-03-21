@@ -242,6 +242,7 @@ TAB_SIZE               = 4
 ALIASES 	       += mynote{1}="<dl class=\"section note\">\n<dt>Note</dt>\n<dd>\1</dd>\n</dl>"
 ALIASES 	       += comment{1}="<dl class=\"section note\">\n<dt>Comment</dt>\n<dd>\1</dd>\n</dl>"
 ALIASES                += mycomment{1}="<dl class=\"section note\">\n<dt>Comment</dt>\n<dd>\1</dd>\n</dl>"
+ALIASES                += ref{1}="<dl class=\"section note\">\n<dt>References</dt>\n<dd>\1</dd>\n</dl>"
 ALIASES		       += workflow_start="<dl class=\"section\">\n<dt>Work flow</dt>\n<dd>"
 ALIASES		       += workflow_end="</dd>\n</dl>"
 ALIASES		       += alert{1}="<strong>\1</strong>"

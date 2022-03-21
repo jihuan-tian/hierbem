@@ -145,8 +145,10 @@ namespace IdeoBEM
 
       Example2();
       Example2(const std::string &mesh_file_name,
-               unsigned int       fe_order = 2,
-               unsigned int       proc_num = 4);
+               unsigned int       fe_order   = 2,
+               unsigned int       thread_num = 4,
+               unsigned int       n_min      = 2,
+               double             eta        = 1.0);
       ~Example2();
 
       void
@@ -178,9 +180,9 @@ namespace IdeoBEM
       std::string  mesh_file_name;
       unsigned int fe_order;
       /**
-       * Number of processors
+       * Number of threads
        */
-      unsigned int proc_num;
+      unsigned int thread_num;
 
       // Generate the quadrangular surface mesh on the model sphere.
       void
@@ -341,7 +343,7 @@ namespace IdeoBEM
     Example2::Example2()
       : mesh_file_name("mesh.msh")
       , fe_order(1)
-      , proc_num(4)
+      , thread_num(4)
       , fe(fe_order)
       , dof_handler(triangulation)
       , mapping(fe_order)
@@ -349,24 +351,26 @@ namespace IdeoBEM
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
       , n_min_for_ct(8)
-      , eta(10.)
+      , eta(1.0)
     {}
 
 
     Example2::Example2(const std::string &mesh_file_name,
                        unsigned int       fe_order,
-                       unsigned int       proc_num)
+                       unsigned int       thread_num,
+                       unsigned int       n_min,
+                       double             eta)
       : mesh_file_name(mesh_file_name)
       , fe_order(fe_order)
-      , proc_num(proc_num)
+      , thread_num(thread_num)
       , fe(fe_order)
       , dof_handler(triangulation)
       , mapping(fe_order)
       , x0(0.25, 0.25, 0.25)
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
-      , n_min_for_ct(8)
-      , eta(10.)
+      , n_min_for_ct(n_min)
+      , eta(eta)
     {}
 
 
@@ -1081,7 +1085,7 @@ namespace IdeoBEM
     void
     Example2::assemble_system_smp()
     {
-      MultithreadInfo::set_thread_limit(proc_num);
+      MultithreadInfo::set_thread_limit(thread_num);
 
       // Generate normal Gauss-Legendre quadrature rule for FEM integration.
       QGauss<2> quadrature_formula_2d(fe.degree + 1);
@@ -1627,7 +1631,7 @@ namespace IdeoBEM
       // calc_cell_neighboring_types();
       setup_system();
 
-      if (proc_num > 1)
+      if (thread_num > 1)
         {
           assemble_system_smp();
 
@@ -1642,6 +1646,8 @@ namespace IdeoBEM
       else
         {
           // assemble_system_serial();
+
+          // For verification of the function @p assemble_system_via_pairs_of_dofs.
           assemble_system_via_pairs_of_dofs();
 
           // DEBUG: print out the assembled matrices.

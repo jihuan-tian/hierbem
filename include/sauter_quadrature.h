@@ -567,8 +567,7 @@ namespace IdeoBEM
   /**
    * Precalculate surface Jacobians and normal vectors for Sauter quadrature.
    *
-   * \mynote{This version involves @p PairCellWiseScratchData and
-   * @p PairCellWisePerTaskData.}
+   * \mynote{This version involves @p PairCellWiseScratchData.}
    *
    * @param scratch
    * @param data
@@ -583,6 +582,9 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const QGauss<dim * 2> &                          active_quad_rule)
   {
+    // Geometry information.
+    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
+
     switch (cell_neighboring_type)
       {
         case SamePanel:

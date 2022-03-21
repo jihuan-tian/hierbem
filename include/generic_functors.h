@@ -12,8 +12,14 @@
 
 #include <deal.II/lac/lapack_support.h>
 
+#include <forward_list>
+#include <iterator>
 #include <map>
 #include <vector>
+
+using namespace dealii;
+
+using size_type = std::make_unsigned<types::blas_int>::type;
 
 /**
  * Find the pointer in a list of pointers of the same type. The comparison
@@ -81,6 +87,97 @@ permute_vector_by_ipiv(VectorType &                                v,
       temp           = v[i];
       v[i]           = v[ipiv[i] - 1];
       v[ipiv[i] - 1] = temp;
+    }
+}
+
+
+/**
+ * Get the size of a @p std::forward_list.
+ *
+ * @param fl
+ * @return
+ */
+template <typename T>
+size_type
+size(const std::forward_list<T> &fl)
+{
+  return std::distance(fl.begin(), fl.end());
+}
+
+
+/**
+ * Get the reference to the i'th element of the @p std::forward_list.
+ *
+ * @param fl
+ * @param index
+ * @return
+ */
+template <typename T>
+T &
+value_at(std::forward_list<T> &fl, const size_type i)
+{
+  typename std::forward_list<T>::iterator iter = fl.begin();
+  std::advance(iter, i);
+
+  return *iter;
+}
+
+
+/**
+ * Get the const reference to the i'th element of the @p std::forward_list.
+ *
+ * @param fl
+ * @param index
+ * @return
+ */
+template <typename T>
+const T &
+value_at(const std::forward_list<T> &fl, const size_type i)
+{
+  typename std::forward_list<T>::const_iterator iter = fl.begin();
+  std::advance(iter, i);
+
+  return *iter;
+}
+
+
+/**
+ * Erase the i'th element of the @p std::forward_list.
+ *
+ * @param fl
+ * @param i
+ */
+template <typename T>
+void
+erase_at(std::forward_list<T> &fl, const size_type i)
+{
+  typename std::forward_list<T>::iterator iter = fl.before_begin();
+  std::advance(iter, i);
+  fl.erase_after(iter);
+}
+
+
+/**
+ * Generate a list of linearized indices into a container by starting from the
+ * given value with the specified increment step.
+ *
+ * \mynote{The definition of this function adopts the <code>template
+ * template</code> and <code>alias template</code> techniques.}
+ *
+ * @param a The container holding the list of linearized indices
+ * @param starting_value The starting value to be placed into the first element of the list
+ * @param step The step value
+ */
+template <template <typename> typename Container, typename number>
+void
+gen_linear_indices(Container<number> &a,
+                   number             starting_value = 0,
+                   number             step           = 1)
+{
+  for (typename Container<number>::iterator iter = a.begin(); iter != a.end();
+       std::advance(iter, 1), starting_value += step)
+    {
+      (*iter) = starting_value;
     }
 }
 

@@ -23,17 +23,24 @@ SET(TARGET_SRC
 # variable TARGET, TARGET_SRC.
 DEAL_II_INVOKE_AUTOPILOT()
 
-# Add my own library which includes a series of generic tools.
-ADD_LIBRARY(generic_tools generic_functors.cc sauter_quadrature.cc)
+# Add additional paths to link libraries
+LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)
+
+# ##################################
+# Library target: generic_tools
+# ##################################
+ADD_LIBRARY(generic_tools aca_plus.cc generic_functors.cc sauter_quadrature.cc regex_tools.cc)
 # Because my library generic_tools has included deal.ii header files,
 # dependent include paths and library paths need to be imported by
 # calling this macro DEAL_II_SETUP_TARGET.
 DEAL_II_SETUP_TARGET(generic_tools)
 
 # Link TARGET to my generic_tools library.
-LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/src)
-TARGET_LINK_LIBRARIES(${TARGET} generic_tools)
+TARGET_LINK_LIBRARIES(${TARGET} boost_program_options generic_tools)
 
-# Link to external libraries.
-LINK_DIRECTORIES("/usr/lib/x86_64-linux-gnu")
-TARGET_LINK_LIBRARIES(${TARGET} boost_program_options)
+# ###############################################
+# Executable target: generate_block_cluster_tree
+# ###############################################
+ADD_EXECUTABLE(generate_block_cluster_tree generate_block_cluster_tree.cc)
+DEAL_II_SETUP_TARGET(generate_block_cluster_tree)
+TARGET_LINK_LIBRARIES(generate_block_cluster_tree boost_program_options generic_tools)

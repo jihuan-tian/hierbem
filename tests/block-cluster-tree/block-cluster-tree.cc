@@ -1,7 +1,9 @@
 /**
  * \file block-cluster-tree.cc
- * \brief This files verifies the admissible block cluster partition.
- * \ingroup hierarchical_matrices
+ * \brief This files verifies the admissible block cluster partition for a
+ * mesh.
+ *
+ * \ingroup testers hierarchical_matrices
  * \date 2021-04-28
  * \author Jihuan Tian
  */

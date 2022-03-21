@@ -13,7 +13,7 @@ ENDIF()
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
 # Project name
-PROJECT("laplace-bem")
+PROJECT("ideobem")
 # Folder for header files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 # Folder for source code
@@ -196,3 +196,9 @@ ADD_SUBDIRECTORY(tests/hmatrix-find-diagonal-blocks)
 ADD_SUBDIRECTORY(tests/hmatrix-truncate-to-fixed-rank-preserve-spd)
 ADD_SUBDIRECTORY(tests/hmatrix-solve-cholesky-in-situ-for-erichsen1996efficient-example2)
 ADD_SUBDIRECTORY(tests/dof-to-cell-topology)
+ADD_SUBDIRECTORY(tests/aca-random-select-ref-row)
+ADD_SUBDIRECTORY(tests/stl-gen-linear-indices)
+ADD_SUBDIRECTORY(tests/dealii-vector-argmax-argmin)
+ADD_SUBDIRECTORY(tests/rkmatrix-frobenius-norm)
+ADD_SUBDIRECTORY(tests/aca-full-matrix-approximation)
+ADD_SUBDIRECTORY(tests/regex-file-basename-and-ext)

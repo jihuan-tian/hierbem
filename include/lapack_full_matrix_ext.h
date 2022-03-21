@@ -399,6 +399,15 @@ public:
   LAPACKFullMatrixExt<Number> &
   operator=(const LAPACKFullMatrix<Number> &matrix);
 
+  /**
+   * Assign a scalar value to all elements of the matrix.
+   *
+   * @param a
+   * @return
+   */
+  LAPACKFullMatrixExt<Number> &
+  operator=(const Number d);
+
   void
   reinit(const size_type nrows, const size_type ncols);
 
@@ -2512,6 +2521,18 @@ LAPACKFullMatrixExt<Number>::operator=(const LAPACKFullMatrix<Number> &matrix)
 
 
 template <typename Number>
+LAPACKFullMatrixExt<Number> &
+LAPACKFullMatrixExt<Number>::operator=(const Number d)
+{
+  LAPACKFullMatrix<Number>::operator=(d);
+
+  state = LAPACKSupport::matrix;
+
+  return (*this);
+}
+
+
+template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::reinit(const size_type nrows,
                                     const size_type ncols)
@@ -2910,7 +2931,7 @@ LAPACKFullMatrixExt<Number>::svd(
         std::max(5 * min * min + 5 * min, 2 * max * min + 2 * min * min + min));
     }
 
-  internal::LAPACKFullMatrixImplementation::gesdd_helper(
+  LAPACKHelpers::gesdd_helper(
     LAPACKSupport::A,
     mm,
     nn,
@@ -2934,19 +2955,18 @@ LAPACKFullMatrixExt<Number>::svd(
   /**
    * Perform the real SVD.
    */
-  internal::LAPACKFullMatrixImplementation::gesdd_helper(
-    LAPACKSupport::A,
-    mm,
-    nn,
-    this->values,
-    Sigma_r,
-    U.values,
-    VT.values,
-    work,
-    real_work,
-    ipiv, //! Integer work space for pivoting.
-    lwork,
-    info);
+  LAPACKHelpers::gesdd_helper(LAPACKSupport::A,
+                              mm,
+                              nn,
+                              this->values,
+                              Sigma_r,
+                              U.values,
+                              VT.values,
+                              work,
+                              real_work,
+                              ipiv, //! Integer work space for pivoting.
+                              lwork,
+                              info);
 
   state = LAPACKSupport::svd;
 }
@@ -3546,8 +3566,7 @@ LAPACKFullMatrixExt<Number>::qr(LAPACKFullMatrixExt<Number> &Q,
   types::blas_int info = 0;
   work[0]              = Number();
 
-  internal::LAPACKFullMatrixImplementation::geqrf_helper(
-    mm, nn, this->values, tau, work, lwork, info);
+  LAPACKHelpers::geqrf_helper(mm, nn, this->values, tau, work, lwork, info);
   AssertThrow(info == 0, LAPACKSupport::ExcErrorCode("geqrf", info));
 
   /**
@@ -3560,8 +3579,7 @@ LAPACKFullMatrixExt<Number>::qr(LAPACKFullMatrixExt<Number> &Q,
   /**
    * Perform the actual QR decomposition.
    */
-  internal::LAPACKFullMatrixImplementation::geqrf_helper(
-    mm, nn, this->values, tau, work, lwork, info);
+  LAPACKHelpers::geqrf_helper(mm, nn, this->values, tau, work, lwork, info);
   AssertThrow(info == 0, LAPACKSupport::ExcErrorCode("geqrf", info));
 
   /**
@@ -4637,7 +4655,7 @@ LAPACKFullMatrixExt<Number>::solve_by_forward_substitution(
    * directly accessed. Therefore, the function \p trsv_helper is designed to
    * accept the data pointer of \p b, which can be obtained via \p b.data().}
    */
-  internal::LAPACKFullMatrixImplementation::trsv_helper(
+  LAPACKHelpers::trsv_helper(
     uplo, transposed, is_unit_diagonal, this->m(), this->values, b.data());
 }
 
@@ -4681,7 +4699,7 @@ LAPACKFullMatrixExt<Number>::solve_by_backward_substitution(
    * directly accessed. Therefore, the function \p trsv_helper is designed to
    * accept the data pointer of \p b, which can be obtained via \p b.data().}
    */
-  internal::LAPACKFullMatrixImplementation::trsv_helper(
+  LAPACKHelpers::trsv_helper(
     uplo, transposed, is_unit_diagonal, this->m(), this->values, b.data());
 }
 

@@ -11,6 +11,8 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/vector.h>
 
+#include <limits>
+
 namespace LinAlg
 {
   using namespace dealii;
@@ -53,6 +55,27 @@ namespace LinAlg
                 (matrix(2, 0) * matrix(3, 2) - matrix(2, 2) * matrix(3, 0)) +
               matrix(1, 2) *
                 (matrix(2, 0) * matrix(3, 1) - matrix(2, 1) * matrix(3, 0)));
+  }
+
+
+  /**
+   * Check if the vector is zero-valued by calculating its L1 norm.
+   *
+   * @param vec
+   * @return
+   */
+  template <typename number>
+  bool
+  is_all_zero(const Vector<number> &vec)
+  {
+    if (vec.l1_norm() > std::numeric_limits<number>::epsilon())
+      {
+        return false;
+      }
+    else
+      {
+        return true;
+      }
   }
 } // namespace LinAlg
 
