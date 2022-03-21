@@ -1,6 +1,0 @@
-<map id="Test cases" name="Test cases">
-<area shape="rect" id="node1" href="$group__lapack.html" title="LAPACK functions. " alt="" coords="340,52,472,79"/>
-<area shape="rect" id="node2" href="$group__hierarchical__matrices.html" title="Implementation of hierarchical matrix data structure and algebraic operations. " alt="" coords="333,391,479,417"/>
-<area shape="rect" id="node3" href="$group__rkmatrices.html" title="Implementation of rank&#45;k matrix data structure and algebraic operations. " alt="" coords="347,451,465,477"/>
-<area shape="rect" id="node5" href="$group__linalg.html" title="Linear algebra computation. " alt="" coords="355,731,457,757"/>
-</map>
