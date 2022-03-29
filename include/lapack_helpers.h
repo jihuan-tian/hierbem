@@ -1,7 +1,14 @@
 /**
  * \file lapack_helpers.h
- * \brief Exposes LAPACK helper functions defined in lapack_full_matrix.cc and
- * define new ones by following them as examples.
+ * \brief Exposes LAPACK helper functions defined in @p lapack_full_matrix.cc and
+ * define new ones by following them as examples. \mynote{Because helper
+ * functions in @p lapack_full_matrix.cc are template functions and they are not
+ * defined in a header file, their instantiation is limited within the
+ * translation unit @p lapack_full_matrix.cc. Therefore, the helper functions
+ * are not available in the deal.ii dynamic library compiled in Release mode.
+ * But why they are available in the Debug mode library is still a mystery.
+ * Comment on 2022-03-23 by Jihuan Tian.}
+ *
  * \ingroup linalg
  * \date 2021-06-09
  * \author Jihuan Tian

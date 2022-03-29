@@ -62,9 +62,9 @@ main(int argc, char *argv[])
        * Calculate the system matrices.
        */
       LAPACKFullMatrix<double> system_rhs_slp_matrix(
-        testcase.get_system_rhs_slp_matrix().m(),
-        testcase.get_system_rhs_slp_matrix().n());
-      system_rhs_slp_matrix = testcase.get_system_rhs_slp_matrix();
+        testcase.get_system_rhs_matrix().m(),
+        testcase.get_system_rhs_matrix().n());
+      system_rhs_slp_matrix = testcase.get_system_rhs_matrix();
       LAPACKFullMatrixExt<double> system_rhs_slp_matrix_ext(
         system_rhs_slp_matrix);
       system_rhs_slp_matrix_ext.print_formatted_to_mat(
@@ -89,7 +89,7 @@ main(int argc, char *argv[])
       in.open("input_matrices.dat");
       read_vector_from_octave(in, "b", system_rhs);
 
-      BlockClusterTree<3> &bct = testcase.get_block_cluster_tree();
+      BlockClusterTree<3> &bct = testcase.get_bct();
 
       const unsigned int fixed_rank = std::atoi(argv[2]);
       HMatrix<3, double> H(bct, system_rhs_slp_matrix_ext);

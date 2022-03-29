@@ -22,19 +22,17 @@ main(int argc, char *argv[])
 {
   (void)argc;
 
-  LAPACKFullMatrixExt<double> A;
-  std::ifstream               in("B.dat");
-  A.read_from_mat(in, "A");
-  in.close();
-
+  std::string  matrix_file_name;
+  std::string  matrix_var_name;
   unsigned int max_iter;
   double       epsilon;
   double       eta;
 
   options_description opts("aca-full-matrix-approximation options");
-  opts.add_options()("help,h", "Display this help")("max_iter,n",
-                                                    value<unsigned int>(),
-                                                    "Maximum ACA iteration")(
+  opts.add_options()("help,h", "Display this help")(
+    "input,i", value<std::string>(), "Input file for the matrix data")(
+    "var,v", value<std::string>(), "Variable name of the matrix")(
+    "max_iter,n", value<unsigned int>(), "Maximum ACA iteration")(
     "epsilon,e", value<double>(), "Relative approximation error")(
     "adm,a", value<double>(), "Admissibility condition constant");
 
@@ -53,6 +51,25 @@ main(int argc, char *argv[])
     {
       std::cout << opts << std::endl;
       return 0;
+    }
+
+  if (vm.count("input"))
+    {
+      matrix_file_name = vm["input"].as<std::string>();
+    }
+  else
+    {
+      std::cout << "Please provide the input file name!" << std::endl;
+    }
+
+  if (vm.count("var"))
+    {
+      matrix_var_name = vm["var"].as<std::string>();
+    }
+  else
+    {
+      matrix_var_name = std::string("A");
+      std::cout << "Matrix name is set to the default: A" << std::endl;
     }
 
   if (vm.count("max_iter"))
@@ -86,6 +103,11 @@ main(int argc, char *argv[])
       std::cout << "Admissibility condition constant is set to " << eta
                 << std::endl;
     }
+
+  LAPACKFullMatrixExt<double> A;
+  std::ifstream               in(matrix_file_name);
+  A.read_from_mat(in, matrix_var_name);
+  in.close();
 
   ACAConfig aca_conf(max_iter, epsilon, eta);
 

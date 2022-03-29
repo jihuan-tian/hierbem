@@ -637,11 +637,6 @@ public:
   convertToFullMatrix(MatrixType &M) const;
 
   /**
-   * TODO: Construct from a BlockClusterTree and a Sauter quadrature
-   * object/functor.
-   */
-
-  /**
    * Release the memory and status of the \hmatrix hierarchy.
    */
   void
@@ -2067,6 +2062,50 @@ public:
   get_leaf_set() const;
 
   /**
+   * Get the pointer to the list of global row indices.
+   *
+   * @return
+   */
+  std::vector<types::global_dof_index> *
+  get_row_indices();
+
+  /**
+   * Get the pointer to the list of global row indices (const version).
+   *
+   * @return
+   */
+  const std::vector<types::global_dof_index> *
+  get_row_indices() const;
+
+  /**
+   * Get the pointer to the list of global column indices.
+   *
+   * @return
+   */
+  std::vector<types::global_dof_index> *
+  get_col_indices();
+
+  /**
+   * Get the pointer to the list of global column indices (const version).
+   *
+   * @return
+   */
+  const std::vector<types::global_dof_index> *
+  get_col_indices() const;
+
+  std::map<types::global_dof_index, size_t> &
+  get_row_index_global_to_local_map();
+
+  const std::map<types::global_dof_index, size_t> &
+  get_row_index_global_to_local_map() const;
+
+  std::map<types::global_dof_index, size_t> &
+  get_col_index_global_to_local_map();
+
+  const std::map<types::global_dof_index, size_t> &
+  get_col_index_global_to_local_map() const;
+
+  /**
    * Find a block cluster in the leaf set of the current
    * \hmatrix and returns the iterator of the corresponding
    * \hmatnode in the leaf set.
@@ -2284,26 +2323,28 @@ private:
   std::vector<types::global_dof_index> *col_indices;
 
   /**
-   * Map from local row indices to global row indices for the cluster
+   * Map from global row indices to local row indices for the cluster
    * \f$\tau\f$. The set of local row indices is the range \f$[0, \#\tau -
    * 1]\f$. The corresponding set of global row indices is a subset of \f$I\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
-   *   <dd>This mapping is only constructed for H-matrices in the leaf set.</dd>
+   *   <dd>This mapping is only constructed for H-matrices in the leaf set by
+   * default.</dd>
    * </dl>
    */
   std::map<types::global_dof_index, size_t> row_index_global_to_local_map;
 
   /**
-   * Map from local column indices to global column indices for the cluster
+   * Map from global column indices to local column indices for the cluster
    * \f$\sigma\f$. The set of local column indices is the range \f$[0, \#\sigma
    * - 1]\f$. The corresponding set of global column indices is a subset of
    * \f$J\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
-   *   <dd>This mapping is only constructed for H-matrices in the leaf set.</dd>
+   *   <dd>This mapping is only constructed for H-matrices in the leaf set by
+   * default.</dd>
    * </dl>
    */
   std::map<types::global_dof_index, size_t> col_index_global_to_local_map;
@@ -13616,6 +13657,70 @@ const std::vector<HMatrix<spacedim, Number> *> &
 HMatrix<spacedim, Number>::get_leaf_set() const
 {
   return leaf_set;
+}
+
+
+template <int spacedim, typename Number>
+std::vector<types::global_dof_index> *
+HMatrix<spacedim, Number>::get_row_indices()
+{
+  return row_indices;
+}
+
+
+template <int spacedim, typename Number>
+const std::vector<types::global_dof_index> *
+HMatrix<spacedim, Number>::get_row_indices() const
+{
+  return row_indices;
+}
+
+
+template <int spacedim, typename Number>
+std::vector<types::global_dof_index> *
+HMatrix<spacedim, Number>::get_col_indices()
+{
+  return col_indices;
+}
+
+
+template <int spacedim, typename Number>
+const std::vector<types::global_dof_index> *
+HMatrix<spacedim, Number>::get_col_indices() const
+{
+  return col_indices;
+}
+
+
+template <int spacedim, typename Number>
+std::map<types::global_dof_index, size_t> &
+HMatrix<spacedim, Number>::get_row_index_global_to_local_map()
+{
+  return row_index_global_to_local_map;
+}
+
+
+template <int spacedim, typename Number>
+const std::map<types::global_dof_index, size_t> &
+HMatrix<spacedim, Number>::get_row_index_global_to_local_map() const
+{
+  return row_index_global_to_local_map;
+}
+
+
+template <int spacedim, typename Number>
+std::map<types::global_dof_index, size_t> &
+HMatrix<spacedim, Number>::get_col_index_global_to_local_map()
+{
+  return col_index_global_to_local_map;
+}
+
+
+template <int spacedim, typename Number>
+const std::map<types::global_dof_index, size_t> &
+HMatrix<spacedim, Number>::get_col_index_global_to_local_map() const
+{
+  return col_index_global_to_local_map;
 }
 
 

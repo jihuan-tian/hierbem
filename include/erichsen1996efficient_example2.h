@@ -57,13 +57,17 @@
 #include <fstream>
 #include <functional>
 
+#include "aca_plus.h"
 #include "bem_kernels.h"
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 #include "debug_tools.h"
+#include "generic_functors.h"
+#include "hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "laplace_bem.h"
 #include "simple_bounding_box.h"
+#include "unary_template_arg_containers.h"
 
 //#define GRAPH_COLORING
 
@@ -145,11 +149,29 @@ namespace IdeoBEM
 
       Example2();
       Example2(const std::string &mesh_file_name,
-               unsigned int       fe_order   = 2,
-               unsigned int       thread_num = 4,
-               unsigned int       n_min      = 2,
-               double             eta        = 1.0);
+               unsigned int       fe_order           = 2,
+               unsigned int       thread_num         = 4,
+               unsigned int       n_min_for_ct       = 2,
+               unsigned int       n_min_for_bct      = 8,
+               double             eta                = 1.0,
+               unsigned int       max_hmat_rank      = 2,
+               double             aca_relative_error = 1e-2);
       ~Example2();
+
+      /**
+       * Read the mesh from a file, which abandons the manifold description.
+       */
+      void
+      read_mesh();
+
+      void
+      setup_system();
+
+      /**
+       * Assemble the system matrices as \hmatrices.
+       */
+      void
+      assemble_system_as_hmatrices();
 
       void
       run();
@@ -164,17 +186,56 @@ namespace IdeoBEM
       FullMatrix<double> &
       get_system_matrix();
 
+      const FullMatrix<double> &
+      get_system_matrix() const;
+
       FullMatrix<double> &
-      get_system_rhs_slp_matrix();
+      get_system_rhs_matrix();
+
+      const FullMatrix<double> &
+      get_system_rhs_matrix() const;
 
       Vector<double> &
       get_system_rhs();
 
+      const Vector<double> &
+      get_system_rhs() const;
+
       ClusterTree<3> &
-      get_cluster_tree();
+      get_ct();
+
+      const ClusterTree<3> &
+      get_ct() const;
 
       BlockClusterTree<3> &
-      get_block_cluster_tree();
+      get_bct();
+
+      const BlockClusterTree<3> &
+      get_bct() const;
+
+      std::vector<Point<3>> &
+      get_all_support_points();
+
+      const std::vector<Point<3>> &
+      get_all_support_points() const;
+
+      std::vector<types::global_dof_index> &
+      get_dof_indices();
+
+      const std::vector<types::global_dof_index> &
+      get_dof_indices() const;
+
+      HMatrix<3> &
+      get_dlp_hmat();
+
+      const HMatrix<3> &
+      get_dlp_hmat() const;
+
+      HMatrix<3> &
+      get_slp_hmat();
+
+      const HMatrix<3> &
+      get_slp_hmat() const;
 
     private:
       std::string  mesh_file_name;
@@ -184,24 +245,19 @@ namespace IdeoBEM
        */
       unsigned int thread_num;
 
-      // Generate the quadrangular surface mesh on the model sphere.
-      void
-      generate_mesh(unsigned int number_of_refinements = 0);
-
       /**
-       * Read the mesh from a file, which abandons the manifold description.
+       * Generate the quadrangular surface mesh on the model sphere.
+       *
+       * @param number_of_refinements
        */
       void
-      read_mesh();
+      generate_mesh(unsigned int number_of_refinements = 0);
 
       /**
        * Calculate the neighboring type for each pair of cells.
        */
       void
       calc_cell_neighboring_types();
-
-      void
-      setup_system();
 
       /**
        * For handling FEM related cell wise integral.
@@ -260,22 +316,19 @@ namespace IdeoBEM
       // #end-region
 
       void
-      assemble_system_smp();
-
+      assemble_system_smp(bool is_assemble_fem_mat = true);
 
       /**
-       * For debug purpose: verify the function @p sauter_assemble_on_one_pair_of_dofs.
+       * For debug purpose: Verify the function @p sauter_assemble_on_one_pair_of_dofs.
        */
       void
-      assemble_system_via_pairs_of_dofs();
+      assemble_system_via_pairs_of_dofs(bool is_assemble_fem_mat = true);
 
-      // #region: DEBUG
       /**
-       * Build SLP matrix only using SMP parallelization.
+       * For debug purpose: Build SLP matrix only using SMP parallelization.
        */
       void
       assemble_slp_smp();
-      // #end-region
 
       void
       assemble_system_serial();
@@ -318,6 +371,16 @@ namespace IdeoBEM
        */
       Vector<double> system_rhs;
 
+      /**
+       * \hmatrix for the Laplace SLP kernel
+       */
+      HMatrix<3> slp_hmat;
+
+      /**
+       * \hmatrix for the Laplace DLP kernel
+       */
+      HMatrix<3> dlp_hmat;
+
       Vector<double> analytical_solution;
       Vector<double> solution;
 
@@ -334,9 +397,33 @@ namespace IdeoBEM
        */
       std::vector<double> dof_average_cell_size;
 
-      unsigned int        n_min_for_ct;
-      double              eta;
-      ClusterTree<3>      ct;
+      /**
+       * Minimum cluster size
+       */
+      unsigned int n_min_for_ct;
+      /**
+       * Minimum block cluster size
+       */
+      unsigned int n_min_for_bct;
+      /**
+       * Admissibility constant
+       */
+      double eta;
+      /**
+       * Maximum rank of the \hmatrices to be built
+       */
+      unsigned int max_hmat_rank;
+      /**
+       * Relative approximation error used in ACA+
+       */
+      double aca_relative_error;
+      /**
+       * Cluster tree
+       */
+      ClusterTree<3> ct;
+      /**
+       * Block cluster tree
+       */
       BlockClusterTree<3> bct;
     };
 
@@ -351,15 +438,22 @@ namespace IdeoBEM
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
       , n_min_for_ct(8)
+      , n_min_for_bct(
+          n_min_for_ct) // By default, it is the same as the @p n_min_for_ct
       , eta(1.0)
+      , max_hmat_rank(2)
+      , aca_relative_error(1e-2)
     {}
 
 
     Example2::Example2(const std::string &mesh_file_name,
                        unsigned int       fe_order,
                        unsigned int       thread_num,
-                       unsigned int       n_min,
-                       double             eta)
+                       unsigned int       n_min_for_ct,
+                       unsigned int       n_min_for_bct,
+                       double             eta,
+                       unsigned int       max_hmat_rank,
+                       double             aca_relative_error)
       : mesh_file_name(mesh_file_name)
       , fe_order(fe_order)
       , thread_num(thread_num)
@@ -369,8 +463,11 @@ namespace IdeoBEM
       , x0(0.25, 0.25, 0.25)
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
-      , n_min_for_ct(n_min)
+      , n_min_for_ct(n_min_for_ct)
+      , n_min_for_bct(n_min_for_bct)
       , eta(eta)
+      , max_hmat_rank(max_hmat_rank)
+      , aca_relative_error(aca_relative_error)
     {}
 
 
@@ -1083,53 +1180,58 @@ namespace IdeoBEM
     }
 
     void
-    Example2::assemble_system_smp()
+    Example2::assemble_system_smp(bool is_assemble_fem_mat)
     {
       MultithreadInfo::set_thread_limit(thread_num);
 
-      // Generate normal Gauss-Legendre quadrature rule for FEM integration.
-      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+      if (is_assemble_fem_mat)
+        {
+          // Generate normal Gauss-Legendre quadrature rule for FEM integration.
+          QGauss<2> quadrature_formula_2d(fe.degree + 1);
 
 #ifdef GRAPH_COLORING
-      // Graph coloring of the mesh for parallelizing matrix assembly.
-      std::vector<std::vector<typename DoFHandler<2, 3>::active_cell_iterator>>
-        colored_cells = GraphColoring::make_graph_coloring(
-          dof_handler.begin_active(),
-          dof_handler.end(),
-          (std::function<std::vector<types::global_dof_index>(
-             const typename DoFHandler<2, 3>::active_cell_iterator &)>)
-            get_conflict_indices<2, 3>);
+          // Graph coloring of the mesh for parallelizing matrix assembly.
+          std::vector<
+            std::vector<typename DoFHandler<2, 3>::active_cell_iterator>>
+            colored_cells = GraphColoring::make_graph_coloring(
+              dof_handler.begin_active(),
+              dof_handler.end(),
+              (std::function<std::vector<types::global_dof_index>(
+                 const typename DoFHandler<2, 3>::active_cell_iterator &)>)
+                get_conflict_indices<2, 3>);
 
-      WorkStream::run(colored_cells,
-                      std::bind(&Example2::assemble_on_one_cell,
-                                this,
-                                std::placeholders::_1,
-                                std::placeholders::_2,
-                                std::placeholders::_3),
-                      std::bind(&Example2::copy_cell_local_to_global,
-                                this,
-                                std::placeholders::_1),
-                      CellWiseScratchData(fe,
-                                          quadrature_formula_2d,
-                                          update_values | update_JxW_values),
-                      CellWisePerTaskData(fe));
+          WorkStream::run(colored_cells,
+                          std::bind(&Example2::assemble_on_one_cell,
+                                    this,
+                                    std::placeholders::_1,
+                                    std::placeholders::_2,
+                                    std::placeholders::_3),
+                          std::bind(&Example2::copy_cell_local_to_global,
+                                    this,
+                                    std::placeholders::_1),
+                          CellWiseScratchData(fe,
+                                              quadrature_formula_2d,
+                                              update_values |
+                                                update_JxW_values),
+                          CellWisePerTaskData(fe));
 #else
-      WorkStream::run(dof_handler.begin_active(),
-                      dof_handler.end(),
-                      std::bind(&Example2::assemble_on_one_cell,
-                                this,
-                                std::placeholders::_1,
-                                std::placeholders::_2,
-                                std::placeholders::_3),
-                      std::bind(&Example2::copy_cell_local_to_global,
-                                this,
-                                std::placeholders::_1),
-                      CellWiseScratchData(fe,
-                                          quadrature_formula_2d,
-                                          update_values | update_JxW_values),
-                      CellWisePerTaskData(fe));
+          WorkStream::run(dof_handler.begin_active(),
+                          dof_handler.end(),
+                          std::bind(&Example2::assemble_on_one_cell,
+                                    this,
+                                    std::placeholders::_1,
+                                    std::placeholders::_2,
+                                    std::placeholders::_3),
+                          std::bind(&Example2::copy_cell_local_to_global,
+                                    this,
+                                    std::placeholders::_1),
+                          CellWiseScratchData(fe,
+                                              quadrature_formula_2d,
+                                              update_values |
+                                                update_JxW_values),
+                          CellWisePerTaskData(fe));
 #endif
-
+        }
 
       /**
        * Generate 4D Gauss-Legendre quadrature rules for various cell
@@ -1223,25 +1325,29 @@ namespace IdeoBEM
 
 
     void
-    Example2::assemble_system_via_pairs_of_dofs()
+    Example2::assemble_system_via_pairs_of_dofs(bool is_assemble_fem_mat)
     {
-      // Generate normal Gauss-Legendre quadrature rule for FEM integration.
-      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+      if (is_assemble_fem_mat)
+        {
+          // Generate normal Gauss-Legendre quadrature rule for FEM integration.
+          QGauss<2> quadrature_formula_2d(fe.degree + 1);
 
-      WorkStream::run(dof_handler.begin_active(),
-                      dof_handler.end(),
-                      std::bind(&Example2::assemble_on_one_cell,
-                                this,
-                                std::placeholders::_1,
-                                std::placeholders::_2,
-                                std::placeholders::_3),
-                      std::bind(&Example2::copy_cell_local_to_global,
-                                this,
-                                std::placeholders::_1),
-                      CellWiseScratchData(fe,
-                                          quadrature_formula_2d,
-                                          update_values | update_JxW_values),
-                      CellWisePerTaskData(fe));
+          WorkStream::run(dof_handler.begin_active(),
+                          dof_handler.end(),
+                          std::bind(&Example2::assemble_on_one_cell,
+                                    this,
+                                    std::placeholders::_1,
+                                    std::placeholders::_2,
+                                    std::placeholders::_3),
+                          std::bind(&Example2::copy_cell_local_to_global,
+                                    this,
+                                    std::placeholders::_1),
+                          CellWiseScratchData(fe,
+                                              quadrature_formula_2d,
+                                              update_values |
+                                                update_JxW_values),
+                          CellWisePerTaskData(fe));
+        }
 
       /**
        * Generate 4D Gauss-Legendre quadrature rules for various cell
@@ -1331,6 +1437,164 @@ namespace IdeoBEM
 
       // Calculate the right-hand side vector.
       system_rhs_matrix.vmult(system_rhs, neumann_bc);
+    }
+
+
+    void
+    Example2::assemble_system_as_hmatrices()
+    {
+      // Generate normal Gauss-Legendre quadrature rule for FEM integration.
+      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+
+      WorkStream::run(dof_handler.begin_active(),
+                      dof_handler.end(),
+                      std::bind(&Example2::assemble_on_one_cell,
+                                this,
+                                std::placeholders::_1,
+                                std::placeholders::_2,
+                                std::placeholders::_3),
+                      std::bind(&Example2::copy_cell_local_to_global,
+                                this,
+                                std::placeholders::_1),
+                      CellWiseScratchData(fe,
+                                          quadrature_formula_2d,
+                                          update_values | update_JxW_values),
+                      CellWisePerTaskData(fe));
+
+      /**
+       * Generate 4D Gauss-Legendre quadrature rules for various cell
+       * neighboring types.
+       */
+      const unsigned int quad_order_for_same_panel    = 5;
+      const unsigned int quad_order_for_common_edge   = 4;
+      const unsigned int quad_order_for_common_vertex = 4;
+      const unsigned int quad_order_for_regular       = 3;
+
+      QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
+      QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
+      QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
+      QGauss<4> quad_rule_for_regular(quad_order_for_regular);
+
+      /**
+       * Precalculate data tables for shape values at quadrature points.
+       *
+       * \mynote{Precalculate shape function values and their gradient values
+       * at each quadrature point. N.B.
+       * 1. The data tables for shape function values and their gradient values
+       * should be calculated for both function space on \f$K_x\f$ and function
+       * space on \f$K_y\f$.
+       * 2. Being different from the integral in FEM, the integral in BEM
+       * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+       * (except the regular cell neighboring type), each of which should be
+       * evaluated at a different set of quadrature points in the unit cell
+       * after coordinate transformation from the parametric space. Therefore,
+       * a dimension with respect to \f$k_3\f$ term index should be added to
+       * the data table compared to the usual FEValues and this brings about
+       * the class @p BEMValues.}
+       */
+      BEMValues<2, 3> bem_values(fe,
+                                 fe,
+                                 quad_rule_for_same_panel,
+                                 quad_rule_for_common_edge,
+                                 quad_rule_for_common_vertex,
+                                 quad_rule_for_regular);
+      bem_values.fill_shape_value_tables();
+      bem_values.fill_shape_grad_matrix_tables();
+
+      PairCellWiseScratchData scratch_data(fe, fe, bem_values);
+      PairCellWisePerTaskData per_task_data(fe, fe);
+
+      /**
+       * Build the DoF-to-cell topology.
+       */
+      std::vector<std::vector<unsigned int>> dof_to_cell_topo;
+      build_dof_to_cell_topology(dof_to_cell_topo, dof_handler);
+
+      /**
+       * Generate a list of all DoF indices.
+       */
+      std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
+      gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
+
+      /**
+       * Get the spatial coordinates of the support points associated with DoF
+       * indices.
+       */
+      std::vector<Point<3>> all_support_points(dof_handler.n_dofs());
+      DoFTools::map_dofs_to_support_points(mapping,
+                                           dof_handler,
+                                           all_support_points);
+
+      /**
+       * Calculate the average mesh cell size at each support point.
+       */
+      std::vector<double> dof_average_cell_size(dof_handler.n_dofs(), 0);
+      map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
+
+      /**
+       * Initialize the cluster tree \f$T(I)\f$ and \f$T(J)\f$ for all the DoF
+       * indices.
+       */
+      ct = ClusterTree<3>(dof_indices,
+                          all_support_points,
+                          dof_average_cell_size,
+                          n_min_for_ct);
+
+      /**
+       * Partition the cluster tree.
+       */
+      ct.partition(all_support_points, dof_average_cell_size);
+
+      /**
+       * Create the block cluster tree.
+       */
+      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_bct);
+
+      /**
+       * Perform admissible partition on the block cluster tree.
+       */
+      bct.partition(all_support_points);
+
+      /**
+       * Initialize the SLP and DLP \hmatrices.
+       *
+       * \comment{既然自己已经为 @p ClusterTree, @p BlockClusterTree 以及 @p HMatrix 定义了
+       * 浅拷贝构造与赋值函数，那么自己就要在实际中大胆地使用。一开始不熟悉、不放心，多次使用且经过实践的验证就习以为常了。}
+       */
+      slp_hmat = HMatrix<3>(bct, max_hmat_rank);
+      dlp_hmat = HMatrix<3>(bct, max_hmat_rank);
+
+      /**
+       * Define the @p ACAConfig object.
+       */
+      ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
+
+      /**
+       * Fill the \hmatrices using ACA+ approximation.
+       */
+      fill_hmatrix_with_aca_plus(dlp_hmat,
+                                 scratch_data,
+                                 per_task_data,
+                                 aca_config,
+                                 dlp,
+                                 dof_to_cell_topo,
+                                 bem_values,
+                                 dof_handler,
+                                 dof_handler,
+                                 mapping,
+                                 mapping);
+
+      fill_hmatrix_with_aca_plus(slp_hmat,
+                                 scratch_data,
+                                 per_task_data,
+                                 aca_config,
+                                 slp,
+                                 dof_to_cell_topo,
+                                 bem_values,
+                                 dof_handler,
+                                 dof_handler,
+                                 mapping,
+                                 mapping);
     }
 
 
@@ -1596,8 +1860,15 @@ namespace IdeoBEM
     }
 
 
+    const FullMatrix<double> &
+    Example2::get_system_matrix() const
+    {
+      return system_matrix;
+    }
+
+
     FullMatrix<double> &
-    Example2::get_system_rhs_slp_matrix()
+    Example2::get_system_rhs_matrix()
     {
       return system_rhs_matrix;
     }
@@ -1610,16 +1881,97 @@ namespace IdeoBEM
     }
 
 
+    const Vector<double> &
+    Example2::get_system_rhs() const
+    {
+      return system_rhs;
+    }
+
+
     ClusterTree<3> &
-    Example2::get_cluster_tree()
+    Example2::get_ct()
     {
       return ct;
     }
 
     BlockClusterTree<3> &
-    Example2::get_block_cluster_tree()
+    Example2::get_bct()
     {
       return bct;
+    }
+
+
+    std::vector<Point<3>> &
+    Example2::get_all_support_points()
+    {
+      return all_support_points;
+    }
+
+
+    const std::vector<Point<3>> &
+    Example2::get_all_support_points() const
+    {
+      return all_support_points;
+    }
+
+    const BlockClusterTree<3> &
+    Example2::get_bct() const
+    {
+      return bct;
+    }
+
+    const ClusterTree<3> &
+    Example2::get_ct() const
+    {
+      return ct;
+    }
+
+
+    HMatrix<3> &
+    Example2::get_dlp_hmat()
+    {
+      return dlp_hmat;
+    }
+
+
+    const HMatrix<3> &
+    Example2::get_dlp_hmat() const
+    {
+      return dlp_hmat;
+    }
+
+
+    std::vector<types::global_dof_index> &
+    Example2::get_dof_indices()
+    {
+      return dof_indices;
+    }
+
+
+    const std::vector<types::global_dof_index> &
+    Example2::get_dof_indices() const
+    {
+      return dof_indices;
+    }
+
+
+    HMatrix<3> &
+    Example2::get_slp_hmat()
+    {
+      return slp_hmat;
+    }
+
+
+    const HMatrix<3> &
+    Example2::get_slp_hmat() const
+    {
+      return slp_hmat;
+    }
+
+    const FullMatrix<double> &
+    Example2::get_system_rhs_matrix() const
+    {
+      return system_rhs_matrix;
     }
 
 
@@ -1633,7 +1985,7 @@ namespace IdeoBEM
 
       if (thread_num > 1)
         {
-          assemble_system_smp();
+          assemble_system_smp(false);
 
           // DEBUG: print out the assembled matrices.
           std::ofstream out("matrices-assemble-on-cell-pair.dat");
@@ -1648,7 +2000,12 @@ namespace IdeoBEM
           // assemble_system_serial();
 
           // For verification of the function @p assemble_system_via_pairs_of_dofs.
-          assemble_system_via_pairs_of_dofs();
+          // assemble_system_via_pairs_of_dofs();
+
+          // For verification of the function @p fill_hmatrix_with_aca_plus in
+          // @p aca_plus.h, during which the FEM matrix will not be assembled,
+          // and only SLP and DLP full matrices are generated.
+          assemble_system_via_pairs_of_dofs(false);
 
           // DEBUG: print out the assembled matrices.
           std::ofstream out("matrices-assemble-on-dof-pair.dat");
@@ -1732,7 +2089,7 @@ namespace IdeoBEM
       /**
        * Create the block cluster tree.
        */
-      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_ct);
+      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_bct);
       bct.partition(all_support_points);
 
 #ifdef RUN_SMP_PARALLEL

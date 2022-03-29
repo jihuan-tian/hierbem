@@ -216,6 +216,10 @@ main(int argc, char *argv[])
    */
   block_cluster_tree.partition(all_support_points);
 
+  /**
+   * Write the hierarchical structure of the \bct into a file for visualization
+   * in @p PlantUML.
+   */
   std::ofstream bct_digraph(bct_file_name);
   block_cluster_tree.print_bct_info_as_dot(bct_digraph);
   bct_digraph.close();

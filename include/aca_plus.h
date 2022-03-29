@@ -9,6 +9,8 @@
 #ifndef INCLUDE_ACA_PLUS_H_
 #define INCLUDE_ACA_PLUS_H_
 
+#include <deal.II/base/parallel.h>
+
 #include <deal.II/lac/vector.h>
 
 #include <algorithm>
@@ -667,6 +669,9 @@ namespace IdeoBEM
    * \ref{Grasedyck, L. 2005. “Adaptive Recompression of
    * \f$\mathcal{H}\f$-Matrices for BEM.” Computing 74 (3): 205–23.}
    *
+   * \mynote{At present, the simple convergence condition in this paper is
+   * adopted instead of that in Bebendorf's book.}
+   *
    * @param rkmat The rank-k matrix to be constructed for the current block,
    * the memory of which should be preallocated and the formal rank of which
    * should be the same as the maximum iteration number in @p aca_config.
@@ -815,6 +820,11 @@ namespace IdeoBEM
      */
     Vector<RangeNumberType> vl(n);
     Vector<RangeNumberType> ul(m);
+
+    /**
+     * The error threshold as the stopping condition.
+     */
+    RangeNumberType error_threshold = 0.0;
 
     /**
      * Start the ACA+ iteration from \f$k=1\f$.
@@ -1011,6 +1021,14 @@ namespace IdeoBEM
         u_mat.fill_col(k - 1, uk, false);
         v_mat.fill_col(k - 1, vk, false);
 
+        if (k == 1)
+          {
+            /**
+             * Calculate the error threshold only in the first step.
+             */
+            error_threshold = aca_config.epsilon * rkmat.frobenius_norm(1);
+          }
+
         remaining_row_indices.remove(ik);
         remaining_col_indices.remove(jk);
 
@@ -1115,11 +1133,19 @@ namespace IdeoBEM
         /**
          * Check the convergence condition.
          */
-        if (uk.l2_norm() * vk.l2_norm() <=
-            aca_config.epsilon * (1.0 - aca_config.eta) /
-              (1.0 + aca_config.epsilon) * rkmat.frobenius_norm(k))
+        if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
           {
-            break;
+            if (k < aca_config.max_iter)
+              {
+                /**
+                 * If the number of ACA+ iterations is less than the allowed
+                 * maximum value, the @p rkmat should be truncated to its
+                 * actual rank.
+                 */
+                rkmat.truncate_to_rank(k);
+              }
+
+            return;
           }
         else
           {
@@ -1537,6 +1563,118 @@ namespace IdeoBEM
     // DEBUG
     std::cerr << "All columns in the rank-k matrix have been filled!"
               << std::endl;
+  }
+
+
+  /**
+   * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
+   * structure of the \hmatrix has been built with respect to a block cluster
+   * tree and the memory for the matrices in the leaf set has been allocated.
+   *
+   * For the near field matrices in the leaf set, full matrices will be built
+   * whose elements will be obtained from the evaluation of the double integral
+   * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
+   * rank-k matrices will be built using ACA+.
+   *
+   * @param hmat
+   * @param scratch
+   * @param data
+   * @param aca_config
+   * @param kernel
+   * @param dof_to_cell_topo
+   * @param bem_values
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_with_aca_plus(
+    HMatrix<spacedim, RangeNumberType> &             hmat,
+    PairCellWiseScratchData &                        scratch,
+    PairCellWisePerTaskData &                        data,
+    const ACAConfig &                                aca_config,
+    const KernelFunction<spacedim> &                 kernel,
+    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
+      {
+        const std::vector<types::global_dof_index> *row_dof_indices =
+          leaf_mat->get_row_indices();
+        const std::vector<types::global_dof_index> *col_dof_indices =
+          leaf_mat->get_col_indices();
+        const std::map<types::global_dof_index, size_t>
+          &row_index_global_to_local_map =
+            leaf_mat->get_row_index_global_to_local_map();
+        const std::map<types::global_dof_index, size_t>
+          &col_index_global_to_local_map =
+            leaf_mat->get_col_index_global_to_local_map();
+
+        switch (leaf_mat->get_type())
+          {
+            case FullMatrixType:
+              {
+                LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+                  leaf_mat->get_fullmatrix();
+
+                for (types::global_dof_index row_dof_index : (*row_dof_indices))
+                  {
+                    for (types::global_dof_index col_dof_index :
+                         (*col_dof_indices))
+                      {
+                        (*fullmat)(
+                          row_index_global_to_local_map.at(row_dof_index),
+                          col_index_global_to_local_map.at(col_dof_index)) =
+                          sauter_assemble_on_one_pair_of_dofs(scratch,
+                                                              data,
+                                                              kernel,
+                                                              row_dof_index,
+                                                              col_dof_index,
+                                                              dof_to_cell_topo,
+                                                              bem_values,
+                                                              kx_dof_handler,
+                                                              ky_dof_handler,
+                                                              kx_mapping,
+                                                              ky_mapping);
+                      }
+                  }
+
+                break;
+              }
+            case RkMatrixType:
+              {
+                RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
+
+                aca_plus((*rkmat),
+                         scratch,
+                         data,
+                         aca_config,
+                         kernel,
+                         (*row_dof_indices),
+                         (*col_dof_indices),
+                         dof_to_cell_topo,
+                         bem_values,
+                         kx_dof_handler,
+                         ky_dof_handler,
+                         kx_mapping,
+                         ky_mapping);
+
+                break;
+              }
+            default:
+              {
+                Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
+              }
+          }
+      }
   }
 } // namespace IdeoBEM
 

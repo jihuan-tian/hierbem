@@ -3,9 +3,9 @@
  * \brief Append more template based LAPACK functions to those existing in
  * deal.ii.
  *
- * In this file, LAPACK raw functions are declared as \p extern "C". C++
+ * \mynote{In this file, LAPACK raw functions are declared as @p extern "C". C++
  * overloaded functions are defined based on the four data types, float, double,
- * complex<float> and complex<double>.
+ * complex<float> and complex<double>.}
  *
  * \date 2021-10-13
  * \author Jihuan Tian

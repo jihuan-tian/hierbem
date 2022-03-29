@@ -1,15 +1,18 @@
-// File: erichsen1996efficient-example2.cc
-// Description: This program solves Laplace equation with Neumann boundary
-// condition using boundary element method.
-// @author: Jihuan Tian
-// @date: 2020-11-26
-// Copyright (C) 2020 Jihuan Tian <jihuan_tian@hotmail.com>
+/**
+ * \file hmatrix-build-from-aca.cc
+ * \brief Build \hmatrices for SLP and DLP kernels based on the mesh data from
+ * @p Erichsen1996Efficient Example 2.
+ *
+ * \ingroup testers hierarchical_matrices
+ * \author Jihuan Tian
+ * \date 2022-03-22
+ */
 
-#include <deal.II/base/logstream.h>
+#include <deal.II/base/multithread_info.h>
 
 #include <boost/program_options.hpp>
 
-#include <erichsen1996efficient_example2.h>
+#include "erichsen1996efficient_example2.h"
 
 using namespace dealii;
 using namespace boost::program_options;
@@ -19,9 +22,8 @@ main(int argc, char *argv[])
 {
   (void)argc;
 
-  deallog.depth_console(2);
-  deallog.pop();
-
+  std::string  slp_full_matrix_var_name;
+  std::string  dlp_full_matrix_var_name;
   std::string  mesh_file_name;
   unsigned int fe_order;
   unsigned int thread_num;
@@ -31,10 +33,11 @@ main(int argc, char *argv[])
   unsigned int max_hmat_rank;
   double       aca_relative_error;
 
-  options_description opts("erichsen1996efficient-example2 options");
-  opts.add_options()("help,h", "Display this help")("input,i",
-                                                    value<std::string>(),
-                                                    "Path to the mesh file")(
+  options_description opts("hmatrix-build-from-aca options");
+  opts.add_options()("help,h", "Display this help")(
+    "var_slp,s", value<std::string>(), "Variable name for the SLP full matrix")(
+    "var_dlp,d", value<std::string>(), "Variable name for the DLP full matrix")(
+    "input,i", value<std::string>(), "Path to the mesh file")(
     "fe_order,o", value<unsigned int>(), "Finite element order")(
     "threads,t", value<unsigned int>(), "Number of threads")(
     "nmin_ct,n", value<unsigned int>(), "Minimum cluster size/cardinality")(
@@ -59,6 +62,32 @@ main(int argc, char *argv[])
   if (vm.count("help"))
     {
       std::cout << opts << std::endl;
+      return 0;
+    }
+
+  if (vm.count("var_slp"))
+    {
+      slp_full_matrix_var_name = vm["var_slp"].as<std::string>();
+      std::cout << "SLP full matrix variable name: " << slp_full_matrix_var_name
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "Please provide the variable name for the SLP full matrix!"
+                << std::endl;
+      return 0;
+    }
+
+  if (vm.count("var_dlp"))
+    {
+      dlp_full_matrix_var_name = vm["var_dlp"].as<std::string>();
+      std::cout << "DLP full matrix variable name: " << dlp_full_matrix_var_name
+                << std::endl;
+    }
+  else
+    {
+      std::cout << "Please provide the variable name for the DLP full matrix!"
+                << std::endl;
       return 0;
     }
 
@@ -92,9 +121,9 @@ main(int argc, char *argv[])
     }
   else
     {
-      thread_num = 4;
-      std::cout << "Number of threads has been set to the default value: 4"
-                << std::endl;
+      thread_num = MultithreadInfo::n_cores();
+      std::cout << "Number of threads has been set to the default value: "
+                << thread_num << std::endl;
     }
 
   if (vm.count("nmin_ct"))
@@ -171,7 +200,24 @@ main(int argc, char *argv[])
                                                     eta,
                                                     max_hmat_rank,
                                                     aca_relative_error);
-  testcase.run();
+
+  testcase.read_mesh();
+  testcase.setup_system();
+  testcase.assemble_system_as_hmatrices();
+
+  /**
+   * Convert the assembled \hmatrices to full matrices and write the data into
+   * file.
+   */
+  LAPACKFullMatrixExt<double> slp_full_matrix, dlp_full_matrix;
+
+  testcase.get_slp_hmat().convertToFullMatrix(slp_full_matrix);
+  testcase.get_dlp_hmat().convertToFullMatrix(dlp_full_matrix);
+
+  slp_full_matrix.print_formatted_to_mat(
+    std::cout, slp_full_matrix_var_name, 15, false, 25, "0");
+  dlp_full_matrix.print_formatted_to_mat(
+    std::cout, dlp_full_matrix_var_name, 15, false, 25, "0");
 
   return 0;
 }
