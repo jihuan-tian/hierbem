@@ -1469,6 +1469,13 @@ namespace IdeoBEM
      */
     Table<2, Point<3>> ky_quad_points_regular;
 
+    /**
+     * Constructor
+     *
+     * @param kx_fe
+     * @param ky_fe
+     * @param bem_values
+     */
     PairCellWiseScratchData(const FiniteElement<2, 3> &kx_fe,
                             const FiniteElement<2, 3> &ky_fe,
                             const BEMValues<2, 3> &    bem_values)
@@ -1532,6 +1539,56 @@ namespace IdeoBEM
       generate_backward_dof_permutation(
         ky_fe, 0, ky_fe_reversed_poly_space_numbering_inverse);
     }
+
+
+    /**
+     * Copy constructor
+     *
+     * @param scratch
+     */
+    PairCellWiseScratchData(const PairCellWiseScratchData &scratch)
+      : vertex_dof_index_intersection(scratch.vertex_dof_index_intersection)
+      , kx_support_points_hierarchical(scratch.kx_support_points_hierarchical)
+      , ky_support_points_hierarchical(scratch.ky_support_points_hierarchical)
+      , kx_support_points_permuted(scratch.kx_support_points_permuted)
+      , ky_support_points_permuted(scratch.ky_support_points_permuted)
+      , kx_local_dof_indices_hierarchical(
+          scratch.kx_local_dof_indices_hierarchical)
+      , ky_local_dof_indices_hierarchical(
+          scratch.ky_local_dof_indices_hierarchical)
+      , kx_fe_poly_space_numbering_inverse(
+          scratch.kx_fe_poly_space_numbering_inverse)
+      , ky_fe_poly_space_numbering_inverse(
+          scratch.ky_fe_poly_space_numbering_inverse)
+      , ky_fe_reversed_poly_space_numbering_inverse(
+          scratch.ky_fe_reversed_poly_space_numbering_inverse)
+      , kx_local_dof_permutation(scratch.kx_local_dof_permutation)
+      , ky_local_dof_permutation(scratch.ky_local_dof_permutation)
+      , kx_jacobians_same_panel(scratch.kx_jacobians_same_panel)
+      , kx_jacobians_common_edge(scratch.kx_jacobians_common_edge)
+      , kx_jacobians_common_vertex(scratch.kx_jacobians_common_vertex)
+      , kx_jacobians_regular(scratch.kx_jacobians_regular)
+      , kx_normals_same_panel(scratch.kx_normals_same_panel)
+      , kx_normals_common_edge(scratch.kx_normals_common_edge)
+      , kx_normals_common_vertex(scratch.kx_normals_common_vertex)
+      , kx_normals_regular(scratch.kx_normals_regular)
+      , kx_quad_points_same_panel(scratch.kx_quad_points_same_panel)
+      , kx_quad_points_common_edge(scratch.kx_quad_points_common_edge)
+      , kx_quad_points_common_vertex(scratch.kx_quad_points_common_vertex)
+      , kx_quad_points_regular(scratch.kx_quad_points_regular)
+      , ky_jacobians_same_panel(scratch.ky_jacobians_same_panel)
+      , ky_jacobians_common_edge(scratch.ky_jacobians_common_edge)
+      , ky_jacobians_common_vertex(scratch.ky_jacobians_common_vertex)
+      , ky_jacobians_regular(scratch.ky_jacobians_regular)
+      , ky_normals_same_panel(scratch.ky_normals_same_panel)
+      , ky_normals_common_edge(scratch.ky_normals_common_edge)
+      , ky_normals_common_vertex(scratch.ky_normals_common_vertex)
+      , ky_normals_regular(scratch.ky_normals_regular)
+      , ky_quad_points_same_panel(scratch.ky_quad_points_same_panel)
+      , ky_quad_points_common_edge(scratch.ky_quad_points_common_edge)
+      , ky_quad_points_common_vertex(scratch.ky_quad_points_common_vertex)
+      , ky_quad_points_regular(scratch.ky_quad_points_regular)
+    {}
   };
 
 
@@ -1558,12 +1615,31 @@ namespace IdeoBEM
      */
     std::vector<types::global_dof_index> ky_local_dof_indices_permuted;
 
+    /**
+     * Constructor
+     *
+     * @param kx_fe
+     * @param ky_fe
+     */
     PairCellWisePerTaskData(const FiniteElement<2, 3> &kx_fe,
                             const FiniteElement<2, 3> &ky_fe)
       : dlp_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
       , slp_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
       , kx_local_dof_indices_permuted(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_permuted(ky_fe.dofs_per_cell)
+    {}
+
+
+    /**
+     * Copy constructor
+     *
+     * @param task_data
+     */
+    PairCellWisePerTaskData(const PairCellWisePerTaskData &task_data)
+      : dlp_matrix(task_data.dlp_matrix)
+      , slp_matrix(task_data.slp_matrix)
+      , kx_local_dof_indices_permuted(task_data.kx_local_dof_indices_permuted)
+      , ky_local_dof_indices_permuted(task_data.ky_local_dof_indices_permuted)
     {}
   };
 } // namespace IdeoBEM

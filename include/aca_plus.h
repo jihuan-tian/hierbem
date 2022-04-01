@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cmath>
 #include <forward_list>
+#include <functional>
 #include <iterator>
 #include <random>
 #include <vector>
@@ -1567,6 +1568,375 @@ namespace IdeoBEM
 
 
   /**
+   * Fill a single leaf node of the \hmatrix using ACA+ if the matrix type is
+   * @p RkMatrixType, the memory for the full or rank-k matrix in the leaf node
+   * has been allocated.
+   *
+   * For the near field matrix, full matrices will be built whose elements will
+   * be obtained from the evaluation of the double integral in Galerkin-BEM. For
+   * the far field admissible matrix, rank-k matrices will be built using ACA+.
+   *
+   * \mynote{This is used as the work function for parallel \hmatrix
+   * construction using ACA+.}
+   *
+   * @param leaf_mat
+   * @param scratch
+   * @param data
+   * @param aca_config
+   * @param kernel
+   * @param dof_to_cell_topo
+   * @param bem_values
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_leaf_node_with_aca_plus(
+    HMatrix<spacedim, RangeNumberType> *             leaf_mat,
+    PairCellWiseScratchData &                        scratch,
+    PairCellWisePerTaskData &                        data,
+    const ACAConfig &                                aca_config,
+    const KernelFunction<spacedim> &                 kernel,
+    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    const std::vector<types::global_dof_index> *row_dof_indices =
+      leaf_mat->get_row_indices();
+    const std::vector<types::global_dof_index> *col_dof_indices =
+      leaf_mat->get_col_indices();
+    const std::map<types::global_dof_index, size_t>
+      &row_index_global_to_local_map =
+        leaf_mat->get_row_index_global_to_local_map();
+    const std::map<types::global_dof_index, size_t>
+      &col_index_global_to_local_map =
+        leaf_mat->get_col_index_global_to_local_map();
+
+    switch (leaf_mat->get_type())
+      {
+        case FullMatrixType:
+          {
+            LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+              leaf_mat->get_fullmatrix();
+
+            for (types::global_dof_index row_dof_index : (*row_dof_indices))
+              {
+                for (types::global_dof_index col_dof_index : (*col_dof_indices))
+                  {
+                    (*fullmat)(row_index_global_to_local_map.at(row_dof_index),
+                               col_index_global_to_local_map.at(
+                                 col_dof_index)) =
+                      sauter_assemble_on_one_pair_of_dofs(scratch,
+                                                          data,
+                                                          kernel,
+                                                          row_dof_index,
+                                                          col_dof_index,
+                                                          dof_to_cell_topo,
+                                                          bem_values,
+                                                          kx_dof_handler,
+                                                          ky_dof_handler,
+                                                          kx_mapping,
+                                                          ky_mapping);
+                  }
+              }
+
+            break;
+          }
+        case RkMatrixType:
+          {
+            RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
+
+            aca_plus((*rkmat),
+                     scratch,
+                     data,
+                     aca_config,
+                     kernel,
+                     (*row_dof_indices),
+                     (*col_dof_indices),
+                     dof_to_cell_topo,
+                     bem_values,
+                     kx_dof_handler,
+                     ky_dof_handler,
+                     kx_mapping,
+                     ky_mapping);
+
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
+          }
+      }
+  }
+
+
+  /**
+   * Fill a single leaf node of the \hmatrix using ACA+ if the matrix type is
+   * @p RkMatrixType, the memory for the full or rank-k matrix in the leaf node
+   * has been allocated. This version is applied to a list of kernels.
+   *
+   * For the near field matrix, full matrices will be built whose elements will
+   * be obtained from the evaluation of the double integral in Galerkin-BEM. For
+   * the far field admissible matrix, rank-k matrices will be built using ACA+.
+   *
+   * \mynote{This is used as the work function for parallel \hmatrix
+   * construction using ACA+.}
+   *
+   * @param leaf_mat_for_kernels
+   * @param scratch
+   * @param data
+   * @param aca_config
+   * @param kernels
+   * @param dof_to_cell_topo
+   * @param bem_values
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_leaf_node_with_aca_plus(
+    std::vector<HMatrix<spacedim, RangeNumberType> *> leaf_mat_for_kernels,
+    PairCellWiseScratchData &                         scratch,
+    PairCellWisePerTaskData &                         data,
+    const ACAConfig &                                 aca_config,
+    const std::vector<KernelFunction<spacedim> *> &   kernels,
+    const std::vector<std::vector<unsigned int>> &    dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> & bem_values,
+    const DoFHandler<dim, spacedim> &                 kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                 ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &            kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    AssertDimension(leaf_mat_for_kernels.size(), kernels.size());
+
+    const unsigned int kernel_num = kernels.size();
+
+    const std::vector<types::global_dof_index> *row_dof_indices =
+      leaf_mat_for_kernels[0]->get_row_indices();
+    const std::vector<types::global_dof_index> *col_dof_indices =
+      leaf_mat_for_kernels[0]->get_col_indices();
+    const std::map<types::global_dof_index, size_t>
+      &row_index_global_to_local_map =
+        leaf_mat_for_kernels[0]->get_row_index_global_to_local_map();
+    const std::map<types::global_dof_index, size_t>
+      &col_index_global_to_local_map =
+        leaf_mat_for_kernels[0]->get_col_index_global_to_local_map();
+
+    switch (leaf_mat_for_kernels[0]->get_type())
+      {
+        case FullMatrixType:
+          {
+            Vector<RangeNumberType> fullmat_coeffs(kernel_num);
+
+            for (types::global_dof_index row_dof_index : (*row_dof_indices))
+              {
+                for (types::global_dof_index col_dof_index : (*col_dof_indices))
+                  {
+                    sauter_assemble_on_one_pair_of_dofs(fullmat_coeffs,
+                                                        scratch,
+                                                        data,
+                                                        kernels,
+                                                        row_dof_index,
+                                                        col_dof_index,
+                                                        dof_to_cell_topo,
+                                                        bem_values,
+                                                        kx_dof_handler,
+                                                        ky_dof_handler,
+                                                        kx_mapping,
+                                                        ky_mapping);
+
+                    /**
+                     * Assign values to each full matrix.
+                     */
+                    for (unsigned int i = 0; i < kernel_num; i++)
+                      {
+                        LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+                          leaf_mat_for_kernels[i]->get_fullmatrix();
+                        (*fullmat)(
+                          row_index_global_to_local_map.at(row_dof_index),
+                          col_index_global_to_local_map.at(col_dof_index)) =
+                          fullmat_coeffs(i);
+                      }
+                  }
+              }
+
+            break;
+          }
+        case RkMatrixType:
+          {
+            /**
+             * Iterate over each kernel.
+             */
+            unsigned int counter = 0;
+            for (const KernelFunction<spacedim> *kernel : kernels)
+              {
+                RkMatrix<RangeNumberType> *rkmat =
+                  leaf_mat_for_kernels[counter]->get_rkmatrix();
+
+                aca_plus((*rkmat),
+                         scratch,
+                         data,
+                         aca_config,
+                         *kernel,
+                         (*row_dof_indices),
+                         (*col_dof_indices),
+                         dof_to_cell_topo,
+                         bem_values,
+                         kx_dof_handler,
+                         ky_dof_handler,
+                         kx_mapping,
+                         ky_mapping);
+
+                counter++;
+              }
+
+            break;
+          }
+        default:
+          {
+            Assert(false,
+                   ExcInvalidHMatrixType(leaf_mat_for_kernels[0]->get_type()));
+          }
+      }
+  }
+
+
+  /**
+   * Fill the leaf nodes in a subrange of an \hmatrix using ACA+.
+   *
+   * \mynote{This function is to be used for TBB parallelization.}
+   *
+   * @param range
+   * @param scratch
+   * @param data
+   * @param aca_config
+   * @param kernel
+   * @param dof_to_cell_topo
+   * @param bem_values
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_leaf_node_subrange_with_aca_plus(
+    const tbb::blocked_range<
+      typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
+      &                                              range,
+    const ACAConfig &                                aca_config,
+    const KernelFunction<spacedim> &                 kernel,
+    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    /**
+     * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
+     * are local to the current working thread. This is mandatory because
+     * each current working thread should have its own copy of these data.
+     */
+    PairCellWiseScratchData scratch_data(kx_dof_handler.get_fe(),
+                                         ky_dof_handler.get_fe(),
+                                         bem_values);
+    PairCellWisePerTaskData per_task_data(kx_dof_handler.get_fe(),
+                                          ky_dof_handler.get_fe());
+
+    for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
+           iter = range.begin();
+         iter != range.end();
+         iter++)
+      {
+        fill_hmatrix_leaf_node_with_aca_plus((*iter),
+                                             scratch_data,
+                                             per_task_data,
+                                             aca_config,
+                                             kernel,
+                                             dof_to_cell_topo,
+                                             bem_values,
+                                             kx_dof_handler,
+                                             ky_dof_handler,
+                                             kx_mapping,
+                                             ky_mapping);
+      }
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_leaf_node_subrange_with_aca_plus_for_kernel_list(
+    const tbb::blocked_range<size_t> &range,
+    const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
+      &                                              collection_of_leaf_sets,
+    const ACAConfig &                                aca_config,
+    const std::vector<KernelFunction<spacedim> *> &  kernels,
+    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    AssertDimension(collection_of_leaf_sets.size(), kernels.size());
+
+    const unsigned int kernel_num = kernels.size();
+
+    /**
+     * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
+     * are local to the current working thread. This is mandatory because
+     * each current working thread should have its own copy of these data.
+     */
+    PairCellWiseScratchData scratch_data(kx_dof_handler.get_fe(),
+                                         ky_dof_handler.get_fe(),
+                                         bem_values);
+    PairCellWisePerTaskData per_task_data(kx_dof_handler.get_fe(),
+                                          ky_dof_handler.get_fe());
+
+    /**
+     * Generate a list of \hmatrix leaf nodes.
+     */
+    std::vector<HMatrix<spacedim, RangeNumberType> *> leaf_mat_list(kernel_num);
+
+    for (size_t i = range.begin(); i != range.end(); i++)
+      {
+        for (unsigned int k = 0; k < kernel_num; k++)
+          {
+            leaf_mat_list[k] = (*collection_of_leaf_sets[k])[i];
+          }
+
+        fill_hmatrix_leaf_node_with_aca_plus(leaf_mat_list,
+                                             scratch_data,
+                                             per_task_data,
+                                             aca_config,
+                                             kernels,
+                                             dof_to_cell_topo,
+                                             bem_values,
+                                             kx_dof_handler,
+                                             ky_dof_handler,
+                                             kx_mapping,
+                                             ky_mapping);
+      }
+  }
+
+
+  /**
    * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
    * structure of the \hmatrix has been built with respect to a block cluster
    * tree and the memory for the matrices in the leaf set has been allocated.
@@ -1607,74 +1977,252 @@ namespace IdeoBEM
   {
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
-        const std::vector<types::global_dof_index> *row_dof_indices =
-          leaf_mat->get_row_indices();
-        const std::vector<types::global_dof_index> *col_dof_indices =
-          leaf_mat->get_col_indices();
-        const std::map<types::global_dof_index, size_t>
-          &row_index_global_to_local_map =
-            leaf_mat->get_row_index_global_to_local_map();
-        const std::map<types::global_dof_index, size_t>
-          &col_index_global_to_local_map =
-            leaf_mat->get_col_index_global_to_local_map();
-
-        switch (leaf_mat->get_type())
-          {
-            case FullMatrixType:
-              {
-                LAPACKFullMatrixExt<RangeNumberType> *fullmat =
-                  leaf_mat->get_fullmatrix();
-
-                for (types::global_dof_index row_dof_index : (*row_dof_indices))
-                  {
-                    for (types::global_dof_index col_dof_index :
-                         (*col_dof_indices))
-                      {
-                        (*fullmat)(
-                          row_index_global_to_local_map.at(row_dof_index),
-                          col_index_global_to_local_map.at(col_dof_index)) =
-                          sauter_assemble_on_one_pair_of_dofs(scratch,
-                                                              data,
-                                                              kernel,
-                                                              row_dof_index,
-                                                              col_dof_index,
-                                                              dof_to_cell_topo,
-                                                              bem_values,
-                                                              kx_dof_handler,
-                                                              ky_dof_handler,
-                                                              kx_mapping,
-                                                              ky_mapping);
-                      }
-                  }
-
-                break;
-              }
-            case RkMatrixType:
-              {
-                RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
-
-                aca_plus((*rkmat),
-                         scratch,
-                         data,
-                         aca_config,
-                         kernel,
-                         (*row_dof_indices),
-                         (*col_dof_indices),
-                         dof_to_cell_topo,
-                         bem_values,
-                         kx_dof_handler,
-                         ky_dof_handler,
-                         kx_mapping,
-                         ky_mapping);
-
-                break;
-              }
-            default:
-              {
-                Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
-              }
-          }
+        fill_hmatrix_leaf_node_with_aca_plus(leaf_mat,
+                                             scratch,
+                                             data,
+                                             aca_config,
+                                             kernel,
+                                             dof_to_cell_topo,
+                                             bem_values,
+                                             kx_dof_handler,
+                                             ky_dof_handler,
+                                             kx_mapping,
+                                             ky_mapping);
       }
+  }
+
+
+  /**
+   * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
+   * structure of the \hmatrix has been built with respect to a block cluster
+   * tree and the memory for the matrices in the leaf set has been allocated.
+   *
+   * For the near field matrices in the leaf set, full matrices will be built
+   * whose elements will be obtained from the evaluation of the double integral
+   * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
+   * rank-k matrices will be built using ACA+.
+   *
+   * \mynote{This version utilizes SMP parallelization.}
+   *
+   * @param hmat
+   * @param scratch
+   * @param data
+   * @param aca_config
+   * @param kernel
+   * @param dof_to_cell_topo
+   * @param bem_values
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_with_aca_plus_smp(
+    const unsigned int                               thread_num,
+    HMatrix<spacedim, RangeNumberType> &             hmat,
+    const ACAConfig &                                aca_config,
+    const KernelFunction<spacedim> &                 kernel,
+    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
+      hmat.get_leaf_set();
+    /**
+     * Estimate the grain size.
+     */
+    unsigned int grain_size = leaf_set.size() / thread_num;
+    if (grain_size == 0)
+      {
+        grain_size = 1;
+      }
+
+    //    /**
+    //     * Implementation of the parallelism using C++ lambda.
+    //     */
+    //    auto f = [&](tbb::blocked_range<typename std::vector<
+    //                   HMatrix<spacedim, RangeNumberType> *>::iterator>
+    //                   &range) {
+    //      /**
+    //       * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
+    //       * are local to the current working thread. This is mandatory
+    //       because
+    //       * each current working thread should have its own copy of these
+    //       data.
+    //       */
+    //      PairCellWiseScratchData scratch_data(kx_dof_handler.get_fe(),
+    //                                           ky_dof_handler.get_fe(),
+    //                                           bem_values);
+    //      PairCellWisePerTaskData per_task_data(kx_dof_handler.get_fe(),
+    //                                            ky_dof_handler.get_fe());
+    //
+    //      /**
+    //       * Iterate over each \hmatrix node in the subrange.
+    //       */
+    //      for (typename std::vector<HMatrix<spacedim, RangeNumberType>
+    //      *>::iterator
+    //             iter = range.begin();
+    //           iter != range.end();
+    //           iter++)
+    //        {
+    //          fill_hmatrix_leaf_node_with_aca_plus((*iter),
+    //                                               scratch_data,
+    //                                               per_task_data,
+    //                                               aca_config,
+    //                                               kernel,
+    //                                               dof_to_cell_topo,
+    //                                               bem_values,
+    //                                               kx_dof_handler,
+    //                                               ky_dof_handler,
+    //                                               kx_mapping,
+    //                                               ky_mapping);
+    //        }
+    //    };
+    //
+    //    parallel::internal::parallel_for(leaf_set.begin(),
+    //                                     leaf_set.end(),
+    //                                     f,
+    //                                     grain_size);
+
+    /**
+     * \mynote{Local variables captured by @p std::bind are by default
+     * pass-by-value. Hence, for capturing large objects,
+     * pass-by-reference should be adopted, which is realized by adding the
+     * prefix @p std::cref or @p std::ref depending on whether const reference
+     * is required. Because @p PairCellWiseScratchData and
+     * @p PairCellWisePerTaskData will be modified in each call of the work
+     * function passed to @p std::bind, they should be captured by @p std::bind
+     * via pass-by-value.
+     *
+     * Meanwhile, in a same working thread, the work function will be
+     * called for each object specified by the index or iterator in
+     * the blocked range, during which @p PairCellWiseScratchData and
+     * @p PairCellWisePerTaskData can be reused. Therefore, they should be
+     * passed into the work function by non-const reference.
+     *
+     * For other variables to be captured like @p bem_values, @p kx_dof_handler
+     * and @p kx_mapping, since they will be not modified at all, they are
+     * captured by const reference and passed to the work function by const
+     * reference.}
+     */
+    parallel::internal::parallel_for(
+      leaf_set.begin(),
+      leaf_set.end(),
+      std::bind(static_cast<
+                  void (*)(const tbb::blocked_range<typename std::vector<
+                             HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+                           const ACAConfig &,
+                           const KernelFunction<spacedim> &,
+                           const std::vector<std::vector<unsigned int>> &,
+                           const BEMValues<dim, spacedim, RangeNumberType> &,
+                           const DoFHandler<dim, spacedim> &,
+                           const DoFHandler<dim, spacedim> &,
+                           const MappingQGeneric<dim, spacedim> &,
+                           const MappingQGeneric<dim, spacedim> &)>(
+                  fill_hmatrix_leaf_node_subrange_with_aca_plus),
+                std::placeholders::_1,
+                std::cref(aca_config),
+                std::cref(kernel),
+                std::cref(dof_to_cell_topo),
+                std::cref(bem_values),
+                std::cref(kx_dof_handler),
+                std::cref(ky_dof_handler),
+                std::cref(kx_mapping),
+                std::cref(ky_mapping)),
+      grain_size);
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_with_aca_plus_smp(
+    const unsigned int                                 thread_num,
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &hmats,
+    const ACAConfig &                                  aca_config,
+    const std::vector<KernelFunction<spacedim> *> &    kernels,
+    const std::vector<std::vector<unsigned int>> &     dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &  bem_values,
+    const DoFHandler<dim, spacedim> &                  kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                  ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &             kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    AssertDimension(hmats.size(), kernels.size());
+
+    const unsigned int kernel_num = kernels.size();
+
+    std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
+      collection_of_leaf_sets(kernel_num);
+    for (unsigned int k = 0; k < kernel_num; k++)
+      {
+        collection_of_leaf_sets[k] = &(hmats[k]->get_leaf_set());
+      }
+
+    /**
+     * Estimate the grain size.
+     */
+    const size_t leaf_set_size = collection_of_leaf_sets[0]->size();
+    unsigned int grain_size    = leaf_set_size / thread_num;
+    if (grain_size == 0)
+      {
+        grain_size = 1;
+      }
+
+    /**
+     * \mynote{Local variables captured by @p std::bind are by default
+     * pass-by-value. Hence, for capturing large objects,
+     * pass-by-reference should be adopted, which is realized by adding the
+     * prefix @p std::cref or @p std::ref depending on whether const reference
+     * is required. Because @p PairCellWiseScratchData and
+     * @p PairCellWisePerTaskData will be modified in each call of the work
+     * function passed to @p std::bind, they should be captured by @p std::bind
+     * via pass-by-value.
+     *
+     * Meanwhile, in a same working thread, the work function will be
+     * called for each object specified by the index or iterator in
+     * the blocked range, during which @p PairCellWiseScratchData and
+     * @p PairCellWisePerTaskData can be reused. Therefore, they should be
+     * passed into the work function by non-const reference.
+     *
+     * For other variables to be captured like @p bem_values, @p kx_dof_handler
+     * and @p kx_mapping, since they will be not modified at all, they are
+     * captured by const reference and passed to the work function by const
+     * reference.}
+     */
+    tbb::parallel_for(
+      tbb::blocked_range<size_t>(0, leaf_set_size, grain_size),
+      std::bind(
+        static_cast<void (*)(const tbb::blocked_range<size_t> &,
+                             const std::vector<std::vector<
+                               HMatrix<spacedim, RangeNumberType> *> *> &,
+                             const ACAConfig &,
+                             const std::vector<KernelFunction<spacedim> *> &,
+                             const std::vector<std::vector<unsigned int>> &,
+                             const BEMValues<dim, spacedim, RangeNumberType> &,
+                             const DoFHandler<dim, spacedim> &,
+                             const DoFHandler<dim, spacedim> &,
+                             const MappingQGeneric<dim, spacedim> &,
+                             const MappingQGeneric<dim, spacedim> &)>(
+          fill_hmatrix_leaf_node_subrange_with_aca_plus_for_kernel_list),
+        std::placeholders::_1,
+        std::cref(collection_of_leaf_sets),
+        std::cref(aca_config),
+        std::cref(kernels),
+        std::cref(dof_to_cell_topo),
+        std::cref(bem_values),
+        std::cref(kx_dof_handler),
+        std::cref(ky_dof_handler),
+        std::cref(kx_mapping),
+        std::cref(ky_mapping)),
+      tbb::auto_partitioner());
   }
 } // namespace IdeoBEM
 

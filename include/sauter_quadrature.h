@@ -3122,6 +3122,30 @@ namespace IdeoBEM
       }
   }
 
+
+  /**
+   * Perform Galerkin-BEM double integral with respect to a given kernel on a
+   * pair of DoFs \f$(i, j)\f$ using the Sauter quadrature.
+   *
+   * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
+   * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
+   * sharing the DoF support point \f$j\f$. Then Galerkin-BEM double integral
+   * will be over each cell pair which is comprised of an arbitrary cell in
+   * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
+   *
+   * @param scratch
+   * @param data
+   * @param kernel
+   * @param i
+   * @param j
+   * @param dof_to_cell_topo
+   * @param bem_values
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   * @return
+   */
   template <int dim, int spacedim, typename RangeNumberType = double>
   RangeNumberType
   sauter_assemble_on_one_pair_of_dofs(
@@ -3259,6 +3283,182 @@ namespace IdeoBEM
       }
 
     return double_integral;
+  }
+
+
+  /**
+   * Perform Galerkin-BEM double integral with respect to a list of kernels on
+   * a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature.
+   *
+   * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
+   * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
+   * sharing the DoF support point \f$j\f$. Then Galerkin-BEM double integral
+   * will be over each cell pair which is comprised of an arbitrary cell in
+   * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
+   *
+   * @param results
+   * @param scratch
+   * @param data
+   * @param kernels
+   * @param i
+   * @param j
+   * @param dof_to_cell_topo
+   * @param bem_values
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  sauter_assemble_on_one_pair_of_dofs(
+    Vector<RangeNumberType> &                        results,
+    PairCellWiseScratchData &                        scratch,
+    PairCellWisePerTaskData &                        data,
+    const std::vector<KernelFunction<spacedim> *> &  kernels,
+    const types::global_dof_index                    i,
+    const types::global_dof_index                    j,
+    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    /**
+     * Reinitialize the result vector to zero.
+     */
+    results.reinit(kernels.size());
+
+    // Geometry information.
+    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
+
+    /**
+     * Iterate over each cell in the support of the basis function for the i-th
+     * DoF.
+     */
+    for (unsigned int kx_cell_index : dof_to_cell_topo[i])
+      {
+        typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
+          kx_dof_handler.active_cell_iterators().begin();
+        std::advance(kx_cell_iter, kx_cell_index);
+        /**
+         * Iterate over each cell in the support of the basis function for the
+         * j-th DoF.
+         */
+        for (unsigned int ky_cell_index : dof_to_cell_topo[j])
+          {
+            typename DoFHandler<dim, spacedim>::active_cell_iterator
+              ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
+            std::advance(ky_cell_iter, ky_cell_index);
+
+            // Determine the cell neighboring type based on the vertex dof
+            // indices. The common dof indices will be stored into the vector
+            // <code>vertex_dof_index_intersection</code> if there is any.
+            std::array<types::global_dof_index, vertices_per_cell>
+              kx_vertex_dof_indices(
+                get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
+            std::array<types::global_dof_index, vertices_per_cell>
+              ky_vertex_dof_indices(
+                get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+
+            scratch.vertex_dof_index_intersection.clear();
+            CellNeighboringType cell_neighboring_type =
+              detect_cell_neighboring_type<dim>(
+                kx_vertex_dof_indices,
+                ky_vertex_dof_indices,
+                scratch.vertex_dof_index_intersection);
+            // Quadrature rule to be adopted depending on the cell neighboring
+            // type.
+            const QGauss<dim * 2> active_quad_rule =
+              select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
+                                                      bem_values);
+
+            const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
+            const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+
+            permute_dofs_for_sauter_quad(scratch,
+                                         data,
+                                         cell_neighboring_type,
+                                         kx_cell_iter,
+                                         ky_cell_iter,
+                                         kx_mapping,
+                                         ky_mapping);
+
+            calc_jacobian_normals_for_sauter_quad(scratch,
+                                                  cell_neighboring_type,
+                                                  bem_values,
+                                                  active_quad_rule);
+
+            /**
+             * Find the index of the i-th DoF in the permuted DoF indices of
+             * \f$K_x\f$.
+             */
+            typename std::vector<types::global_dof_index>::const_iterator
+              i_iter = std::find(data.kx_local_dof_indices_permuted.begin(),
+                                 data.kx_local_dof_indices_permuted.end(),
+                                 i);
+            Assert(i_iter != data.kx_local_dof_indices_permuted.end(),
+                   ExcInternalError());
+            unsigned int i_index =
+              i_iter - data.kx_local_dof_indices_permuted.begin();
+
+            /**
+             * Find the index of the j-th DoF in the permuted DoF indices of
+             * \f$K_y\f$.
+             */
+            typename std::vector<types::global_dof_index>::const_iterator
+              j_iter = std::find(data.ky_local_dof_indices_permuted.begin(),
+                                 data.ky_local_dof_indices_permuted.end(),
+                                 j);
+            Assert(j_iter != data.ky_local_dof_indices_permuted.end(),
+                   ExcInternalError());
+            unsigned int j_index =
+              j_iter - data.ky_local_dof_indices_permuted.begin();
+
+
+            /**
+             * Iterate over each kernel.
+             */
+            unsigned int counter = 0;
+            for (const KernelFunction<spacedim> *kernel : kernels)
+              {
+                /**
+                 * Pullback the kernel function to unit cell.
+                 */
+                KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                  kernel_pullback_on_unit(*kernel,
+                                          cell_neighboring_type,
+                                          scratch.kx_support_points_permuted,
+                                          scratch.ky_support_points_permuted,
+                                          kx_fe,
+                                          ky_fe,
+                                          &bem_values,
+                                          &scratch,
+                                          i_index,
+                                          j_index);
+
+                /**
+                 * Pullback the kernel function to Sauter parameter space.
+                 */
+                KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
+                  kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                            cell_neighboring_type,
+                                            &bem_values);
+
+                /**
+                 * Apply 4d Sauter numerical quadrature.
+                 */
+                results(counter) +=
+                  ApplyQuadratureUsingBEMValues(active_quad_rule,
+                                                kernel_pullback_on_sauter);
+
+                counter++;
+              }
+          }
+      }
   }
 } // namespace IdeoBEM
 
