@@ -174,10 +174,18 @@ namespace IdeoBEM
       assemble_system_as_hmatrices();
 
       /**
-       * Assemble the system matrices as \hmatrices (SMP version).
+       * Assemble the system matrices as \hmatrices (SMP version) without
+       * incorporating FEM mass matrix multiplied by the factor 0.5.
        */
       void
       assemble_system_as_hmatrices_smp();
+
+      /**
+       * Assemble the system matrices as \hmatrices (SMP version) incorporating
+       * FEM mass matrix multiplied by the factor 0.5.
+       */
+      void
+      assemble_system_as_hmatrices_with_mass_matrix_smp();
 
       void
       run();
@@ -1620,21 +1628,6 @@ namespace IdeoBEM
       // Generate normal Gauss-Legendre quadrature rule for FEM integration.
       QGauss<2> quadrature_formula_2d(fe.degree + 1);
 
-      WorkStream::run(dof_handler.begin_active(),
-                      dof_handler.end(),
-                      std::bind(&Example2::assemble_on_one_cell,
-                                this,
-                                std::placeholders::_1,
-                                std::placeholders::_2,
-                                std::placeholders::_3),
-                      std::bind(&Example2::copy_cell_local_to_global,
-                                this,
-                                std::placeholders::_1),
-                      CellWiseScratchData(fe,
-                                          quadrature_formula_2d,
-                                          update_values | update_JxW_values),
-                      CellWisePerTaskData(fe));
-
       /**
        * Generate 4D Gauss-Legendre quadrature rules for various cell
        * neighboring types.
@@ -1774,6 +1767,148 @@ namespace IdeoBEM
                                      kernels,
                                      dof_to_cell_topo,
                                      bem_values,
+                                     dof_handler,
+                                     dof_handler,
+                                     mapping,
+                                     mapping);
+    }
+
+
+    void
+    Example2::assemble_system_as_hmatrices_with_mass_matrix_smp()
+    {
+      /**
+       * Generate 4D Gauss-Legendre quadrature rules for various cell
+       * neighboring types.
+       */
+      const unsigned int quad_order_for_same_panel    = 5;
+      const unsigned int quad_order_for_common_edge   = 4;
+      const unsigned int quad_order_for_common_vertex = 4;
+      const unsigned int quad_order_for_regular       = 3;
+
+      QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
+      QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
+      QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
+      QGauss<4> quad_rule_for_regular(quad_order_for_regular);
+
+      /**
+       * Precalculate data tables for shape values at quadrature points.
+       *
+       * \mynote{Precalculate shape function values and their gradient values
+       * at each quadrature point. N.B.
+       * 1. The data tables for shape function values and their gradient values
+       * should be calculated for both function space on \f$K_x\f$ and function
+       * space on \f$K_y\f$.
+       * 2. Being different from the integral in FEM, the integral in BEM
+       * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+       * (except the regular cell neighboring type), each of which should be
+       * evaluated at a different set of quadrature points in the unit cell
+       * after coordinate transformation from the parametric space. Therefore,
+       * a dimension with respect to \f$k_3\f$ term index should be added to
+       * the data table compared to the usual FEValues and this brings about
+       * the class @p BEMValues.}
+       */
+      BEMValues<2, 3> bem_values(fe,
+                                 fe,
+                                 quad_rule_for_same_panel,
+                                 quad_rule_for_common_edge,
+                                 quad_rule_for_common_vertex,
+                                 quad_rule_for_regular);
+      bem_values.fill_shape_value_tables();
+      bem_values.fill_shape_grad_matrix_tables();
+
+      /**
+       * Build the DoF-to-cell topology.
+       */
+      std::vector<std::vector<unsigned int>> dof_to_cell_topo;
+      build_dof_to_cell_topology(dof_to_cell_topo, dof_handler);
+
+      /**
+       * Generate a list of all DoF indices.
+       */
+      std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
+      gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
+
+      /**
+       * Get the spatial coordinates of the support points associated with DoF
+       * indices.
+       */
+      std::vector<Point<3>> all_support_points(dof_handler.n_dofs());
+      DoFTools::map_dofs_to_support_points(mapping,
+                                           dof_handler,
+                                           all_support_points);
+
+      /**
+       * Calculate the average mesh cell size at each support point.
+       */
+      std::vector<double> dof_average_cell_size(dof_handler.n_dofs(), 0);
+      map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
+
+      /**
+       * Initialize the cluster tree \f$T(I)\f$ and \f$T(J)\f$ for all the DoF
+       * indices.
+       */
+      ct = ClusterTree<3>(dof_indices,
+                          all_support_points,
+                          dof_average_cell_size,
+                          n_min_for_ct);
+
+      /**
+       * Partition the cluster tree.
+       */
+      ct.partition(all_support_points, dof_average_cell_size);
+
+      /**
+       * Create the block cluster tree.
+       */
+      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_bct);
+
+      /**
+       * Perform admissible partition on the block cluster tree.
+       */
+      bct.partition(all_support_points);
+
+      /**
+       * Initialize the SLP and DLP \hmatrices.
+       *
+       * \comment{既然自己已经为 @p ClusterTree, @p BlockClusterTree 以及 @p HMatrix 定义了
+       * 浅拷贝构造与赋值函数，那么自己就要在实际中大胆地使用。一开始不熟悉、不放心，多次使用且经过实践的验证就习以为常了。}
+       */
+      slp_hmat = HMatrix<3>(bct, max_hmat_rank);
+      dlp_hmat = HMatrix<3>(bct, max_hmat_rank);
+
+      /**
+       * Define the @p ACAConfig object.
+       */
+      ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
+
+      /**
+       * Fill the \hmatrices using ACA+ approximation.
+       */
+      std::vector<HMatrix<3, double> *> hmats{&dlp_hmat, &slp_hmat};
+      std::vector<KernelFunction<3> *>  kernels{&dlp, &slp};
+
+      /**
+       * Generate normal Gauss-Legendre quadrature rule for FEM integration.
+       */
+      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+
+      /**
+       * Factors before FEM mass matrix. For Example 2 in Erichsen1996Efficient
+       * paper, the system matrix to be solved is \f$\frac{1}{2}I+K\f$.
+       * Therefore, the mass matrix scaled by 0.5 is appended to the \hmatrix
+       * associated with the DLP kernel function.
+       */
+      std::vector<double> mass_matrix_factors{0.5, 0};
+
+      fill_hmatrix_with_aca_plus_smp(thread_num,
+                                     hmats,
+                                     mass_matrix_factors,
+                                     aca_config,
+                                     kernels,
+                                     dof_to_cell_topo,
+                                     bem_values,
+                                     quadrature_formula_2d,
                                      dof_handler,
                                      dof_handler,
                                      mapping,
@@ -2168,10 +2303,13 @@ namespace IdeoBEM
 
       if (thread_num > 1)
         {
-          assemble_system_smp(false);
+          // assemble_system_smp(false);
+          assemble_system_smp(true);
 
           // DEBUG: print out the assembled matrices.
-          std::ofstream out("matrices-assemble-on-cell-pair.dat");
+          // std::ofstream out("matrices-assemble-on-cell-pair.dat");
+          std::ofstream out(
+            "matrices-assemble-on-cell-pair-with-mass-matrix.dat");
           print_matrix_to_mat(
             out, "dlp_cell_pair", system_matrix, 25, false, 15, "0");
           print_matrix_to_mat(

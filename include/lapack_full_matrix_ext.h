@@ -2600,9 +2600,7 @@ LAPACKFullMatrixExt<Number>::get_column(const size_type col_index,
                                         Vector<Number> &col_values) const
 {
   const size_type n_rows = this->m();
-  const size_type n_cols = this->n();
-
-  AssertIndexRange(col_index, n_cols);
+  AssertIndexRange(col_index, this->n());
 
   col_values.reinit(n_rows);
 
@@ -4085,9 +4083,7 @@ LAPACKFullMatrixExt<Number>::fill_col(const size_type       col_index,
                                       const bool            is_adding)
 {
   const size_type n_rows = this->m();
-  const size_type n_cols = this->n();
-
-  AssertIndexRange(col_index, n_cols);
+  AssertIndexRange(col_index, this->n());
   AssertDimension(values.size(), n_rows);
 
   for (size_type i = 0; i < n_rows; i++)

@@ -1,10 +1,10 @@
 clear all;
 ## Load SLP and DLP full matrix data that are directly evaluated from
 ## the Galerkin-BEM double integral.
-load matrices-assemble-on-cell-pair_fine-mesh.dat;
+load matrices-assemble-on-cell-pair-with-mass-matrix.dat;
 ## Load SLP and DLP full mtrix data that are converted from
 ## corresponding H-matrices.
-load hmatrix-build-from-aca_coarse-fine.output.dat;
+load hmatrix-build-from-aca-with-mass-matrix-smp_fine-mesh.output.dat;
 
 figure;
 subplot(1, 2, 1);

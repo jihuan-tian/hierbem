@@ -4,7 +4,7 @@ clear all;
 load matrices-assemble-on-cell-pair_fine-mesh.dat;
 ## Load SLP and DLP full mtrix data that are converted from
 ## corresponding H-matrices.
-load hmatrix-build-from-aca_coarse-fine.output.dat;
+load hmatrix-build-from-aca-smp_fine-mesh-02.output.dat;
 
 figure;
 subplot(1, 2, 1);
