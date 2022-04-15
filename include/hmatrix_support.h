@@ -1,15 +1,83 @@
 /**
  * \file hmatrix_support.h
- * \brief Introduction of hmatrix_support.h
+ * \brief Adapted from deal.ii/lac/lapack_support.h and define some features for
+ * an \hmatrix.
+ *
+ * \ingroup hierarchical_matrices
+ *
  * \date 2021-10-20
  * \author Jihuan Tian
  */
 #ifndef INCLUDE_HMATRIX_SUPPORT_H_
 #define INCLUDE_HMATRIX_SUPPORT_H_
 
+#include <deal.II/base/exceptions.h>
 
 namespace HMatrixSupport
 {
+  /**
+   * Most functions one can apply to an \hmatrix (e.g., by calling the member
+   * functions of this class) change its content in some ways. For example, they
+   * may invert the matrix, or may replace it by a matrix whose columns
+   * represent the eigenvectors of the original content of the matrix. The
+   * elements of this enumeration are therefore used to track what is currently
+   * being stored by this object.
+   */
+  enum State
+  {
+    /// Contents is actually a matrix.
+    matrix,
+    /// Contents is the inverse of a matrix.
+    inverse_matrix,
+    /// Contents is an LU decomposition.
+    lu,
+    /// Contents is a Cholesky decomposition.
+    cholesky,
+    /// Eigenvalue vector is filled
+    eigenvalues,
+    /// Matrix contains singular value decomposition,
+    svd,
+    /// Matrix is the inverse of a singular value decomposition
+    inverse_svd,
+    /// Contents is something useless.
+    unusable = 0x8000
+  };
+
+
+  /**
+   * Function printing the name of a State.
+   */
+  inline const char *
+  state_name(State s)
+  {
+    switch (s)
+      {
+        case matrix:
+          return "matrix";
+        case inverse_matrix:
+          return "inverse matrix";
+        case lu:
+          return "lu decomposition";
+        case cholesky:
+          return "cholesky decomposition";
+        case eigenvalues:
+          return "eigenvalues";
+        case svd:
+          return "svd";
+        case inverse_svd:
+          return "inverse_svd";
+        case unusable:
+          return "unusable";
+        default:
+          return "unknown";
+      }
+  }
+
+
+  /**
+   * A matrix can have certain features allowing for optimization, but hard to
+   * test. These are listed here.
+   */
   enum Property
   {
     /// No special properties
@@ -19,11 +87,81 @@ namespace HMatrixSupport
     /// Matrix is upper triangular
     upper_triangular = 2,
     /// Matrix is lower triangular
-    lower_triangular = 4,
-    /// Matrix is diagonal
-    diagonal = 6,
+    lower_triangular = 4
   };
-}
+
+
+  /**
+   * Function printing the name of a Property.
+   */
+  inline const char *
+  property_name(const Property s)
+  {
+    switch (s)
+      {
+        case general:
+          return "general";
+        case symmetric:
+          return "symmetric";
+        case upper_triangular:
+          return "upper triangular";
+        case lower_triangular:
+          return "lower triangular";
+      }
+
+    Assert(false, ExcNotImplemented());
+    return "invalid";
+  }
+
+
+  /**
+   * Type of the matrix block, which can be diagonal block, upper triangular
+   * block or lower triangular block.
+   *
+   * \mynote{For an \hmatrix built with respect to a quad-\bct,
+   * 1. the top level \hmatnode is a diagonal block;
+   * 2. if the current \hmatnode is a diagonal block and has submatrices, the
+   * first and last submatrices are still diagonal blocks, while the second
+   * submatrix is a upper triangular block and the third submatrix is a lower
+   * triangular block;
+   * 3. if the current \hmatnode is a upper (lower) triangular block and has
+   * submatrices, all of them are upper (lower) triangular blocks.}
+   */
+  enum BlockType
+  {
+    /// Undefined block type
+    undefined_block = 0,
+    /// Diagonal block
+    diagonal_block = 1,
+    /// Upper triangular block
+    upper_triangular_block = 2,
+    /// Lower triangular block
+    lower_triangular_block = 4
+  };
+
+
+  /**
+   * Function printing the name of the block type.
+   */
+  inline const char *
+  block_type_name(const BlockType b)
+  {
+    switch (b)
+      {
+        case undefined_block:
+          return "undefined block";
+        case diagonal_block:
+          return "diagonal block";
+        case upper_triangular_block:
+          return "upper triangular block";
+        case lower_triangular_block:
+          return "lower triangular block";
+      }
+
+    Assert(false, ExcNotImplemented());
+    return "invalid";
+  }
+} // namespace HMatrixSupport
 
 
 #endif /* INCLUDE_HMATRIX_SUPPORT_H_ */

@@ -25,6 +25,7 @@
 #include "block_cluster.h"
 #include "block_cluster_tree.h"
 #include "generic_functors.h"
+#include "hmatrix_support.h"
 #include "lapack_full_matrix_ext.h"
 #include "rkmatrix.h"
 
@@ -486,52 +487,83 @@ public:
 
   /**
    * Default constructor.
+   *
+   * \mynote{Because an empty \hmatrix is to be created, its \hmatrix type is
+   * set to @p UndefinedMatrixType and block type is set to @p undefined_block.}
    */
   HMatrix();
 
   /**
    * Construct the hierarchical structure without data from the root node of a
    * BlockClusterTree.
+   *
+   * \mynote{Because the top level \hmatnode is itself a diagonal block, its
+   * block type is set to @p HMatrixSupport::diagonal_block by default.}
    */
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
-          const unsigned int                        fixed_rank_k = 1);
+          const unsigned int                        fixed_rank_k = 1,
+          const HMatrixSupport::Property  property = HMatrixSupport::general,
+          const HMatrixSupport::BlockType block_type =
+            HMatrixSupport::undefined_block);
 
   /**
    * Construct the hierarchical structure without data from a TreeNode in a
    * BlockClusterTree.
+   *
+   * \mynote{Because the top level \hmatnode is itself a diagonal block, its
+   * block type is set to @p HMatrixSupport::diagonal_block by default.}
    */
   HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
-                             bc_node,
-          const unsigned int fixed_rank_k = 1);
+                                          bc_node,
+          const unsigned int              fixed_rank_k = 1,
+          const HMatrixSupport::Property  property = HMatrixSupport::general,
+          const HMatrixSupport::BlockType block_type =
+            HMatrixSupport::undefined_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while copying the data
-   * of a global full matrix, which is created on the complete block cluster
-   * \f$I \times J\f$.
+   * of a <strong>global</strong> full matrix, which is created on the complete
+   * block cluster \f$I \times J\f$.
+   *
+   * \mynote{Since this \hmatrix is the global matrix, its block type is set to
+   * @p HMatrixSupport::diagonal_block by default. Meanwhile, the property of
+   * the \hmatrix is determined from the full matrix.}
    */
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
           const LAPACKFullMatrixExt<Number> &       M,
-          const unsigned int                        fixed_rank_k);
+          const unsigned int                        fixed_rank_k,
+          const HMatrixSupport::BlockType           block_type =
+            HMatrixSupport::undefined_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while copying the data
-   * of a global full matrix, which is created on the complete block cluster
-   * \f$I \times J\f$.
+   * of a <strong>global</strong> full matrix, which is created on the complete
+   * block cluster \f$I \times J\f$.
    *
    * This version has no rank truncation.
+   *
+   * \mynote{Since this \hmatrix is the global matrix, its block type is set to
+   * @p HMatrixSupport::diagonal_block by default.}
    */
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
-          const LAPACKFullMatrixExt<Number> &       M);
+          const LAPACKFullMatrixExt<Number> &       M,
+          const HMatrixSupport::BlockType           block_type =
+            HMatrixSupport::undefined_block);
 
   /**
    * Construct from a TreeNode in a BlockClusterTree while copying the data of a
    * global full matrix, which is created on the complete block cluster \f$I
    * \times J\f$.
+   *
+   * \mynote{Since this \hmatrix is the global matrix, its block type is set to
+   * @p HMatrixSupport::diagonal_block by default.}
    */
   HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
                                              bc_node,
           const LAPACKFullMatrixExt<Number> &M,
-          const unsigned int                 fixed_rank_k);
+          const unsigned int                 fixed_rank_k,
+          const HMatrixSupport::BlockType    block_type =
+            HMatrixSupport::undefined_block);
 
   /**
    * Construct from a TreeNode in a BlockClusterTree while copying the data of a
@@ -539,10 +571,15 @@ public:
    * \times J\f$.
    *
    * This version has no rank truncation.
+   *
+   * \mynote{Since this \hmatrix is the global matrix, its block type is set to
+   * @p HMatrixSupport::diagonal_block by default.}
    */
   HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
                                              bc_node,
-          const LAPACKFullMatrixExt<Number> &M);
+          const LAPACKFullMatrixExt<Number> &M,
+          const HMatrixSupport::BlockType    block_type =
+            HMatrixSupport::undefined_block);
 
   /**
    * Construct from a \p TreeNode in a \p BlockClusterTree while moving the data
@@ -672,6 +709,43 @@ public:
    */
   size_type
   get_m() const;
+
+  /**
+   * Get the property of the current \hmatnode.
+   * @return
+   */
+  HMatrixSupport::Property
+  get_property() const;
+
+  /**
+   * Set the property of the current \hmatnode.
+   * @param property
+   */
+  void
+  set_property(const HMatrixSupport::Property property);
+
+  /**
+   * Set the property of the current \hmatnode according to the associated full
+   * matrix.
+   *
+   * @param M
+   */
+  void
+  set_property(const LAPACKFullMatrixExt<Number> &M);
+
+  /**
+   * Get the block type of the current \hmatnode.
+   * @return
+   */
+  HMatrixSupport::BlockType
+  get_block_type() const;
+
+  /**
+   * Set the block type of the current \hmatnode.
+   * @param block_type
+   */
+  void
+  set_block_type(const HMatrixSupport::BlockType block_type);
 
   /**
    * Get the number of columns of the current \hmatnode.
@@ -2164,8 +2238,8 @@ public:
    * 3. Get and keep a record of the leaf set of the block cluster tree
    * \f$T'\f$, which will be used for matrix coarsening in the last step.
    * 4. Extend \f$T'\f$ to the finer block cluster tree \f$T''\f$, from which we
-   * get \f$\tilde{T}'\f$.
-   * 5. Build a new \hmatrix with respect to \f$\tilde{T}'\f$
+   * get \f$\widetilde{T}'\f$.
+   * 5. Build a new \hmatrix with respect to \f$\widetilde{T}'\f$
    * with the actual data migrated from the leaf nodes of the original
    * \hmatrix.
    * 6. Coarsen the new \hmatrix to the original partition of
@@ -2264,9 +2338,27 @@ private:
                         const size_type            fixed_rank_k);
 
   /**
-   * Matrix type.
+   * Matrix type, which is one of @p FullMatrixType, @p RkMatrixType and
+   * @p HierarchicalMatrixType.
    */
   HMatrixType type;
+
+  /**
+   * State of the \hmatrix, such as @p matrix, @p lu, @p cholesky, etc.
+   */
+  HMatrixSupport::State state;
+
+  /**
+   * Property of the \hmatrix, such as @p general, @p symmetric,
+   * @p lower triangular, etc.
+   */
+  HMatrixSupport::Property property;
+
+  /**
+   * Block type for the current \hmatnode, which can be @p diagonal_block,
+   * @p upper_triangular_block or @p lower_triangular_block.
+   */
+  HMatrixSupport::BlockType block_type;
 
   /**
    * A list of submatrices of type \hmatrix.
@@ -2727,10 +2819,186 @@ InitAndCreateHMatrixChildren(
       for (unsigned int i = 0; i < bc_node_child_num; i++)
         {
           /**
-           * Create an empty HMatrix on the heap.
+           * Create an empty \hmatrix on the heap.
            */
           HMatrix<spacedim, Number> *child_hmat =
             new HMatrix<spacedim, Number>();
+
+          /**
+           * Set the state of the child \hmatrix, which is the same as its
+           * parent.
+           */
+          child_hmat->state = hmat->state;
+
+          /**
+           * Set the block type of the child \hmatrix, which depends on the
+           * block type of its parent.
+           */
+          switch (hmat->block_type)
+            {
+              case HMatrixSupport::undefined_block:
+                {
+                  /**
+                   * When the current \hmatrix block is @p undefined_block, all
+                   * child \hmatrices are @p undefined_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::diagonal_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p diagonal_block, the first and
+                   * fourth child \hmatrices are @p diagonal_block, while the second
+                   * child \hmatrix is @p upper_triangular_block and the third child
+                   * \hmatrix is @p lower_triangular_block.
+                   */
+                  switch (i)
+                    {
+                      case 0:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      case 1:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::upper_triangular_block;
+
+                          break;
+                        }
+                      case 2:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::lower_triangular_block;
+
+                          break;
+                        }
+                      case 3:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcNotImplemented());
+                        }
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p upper_triangular_block,
+                   * all child \hmatrices are @p upper_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p lower_triangular_block,
+                   * all child \hmatrices are @p lower_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix block type: " +
+                                    std::to_string(hmat->block_type)));
+                }
+            }
+
+          /**
+           * Set the property of the child \hmatrix, which depends on the
+           * property of its parent.
+           */
+          switch (hmat->property)
+            {
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p general,
+                   * all of its children have the same property @p general.
+                   */
+                  child_hmat->property = HMatrixSupport::general;
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p symmetric,
+                   * only those diagonal submatrices are @p symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p upper_triangular, only those diagonal submatrices are
+                   * @p upper_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::upper_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p lower_triangular, only those diagonal submatrices are
+                   * @p lower_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::lower_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix property: " +
+                                    std::to_string(hmat->property)));
+                }
+            }
 
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
@@ -2778,6 +3046,53 @@ InitAndCreateHMatrixChildren(
         {
           hmat->type       = FullMatrixType;
           hmat->fullmatrix = new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+          /**
+           * Set the full matrix's property according to the current \hmatnode
+           * property only when the current \hmatnode is a diagonal block.
+           *
+           * \mynote{The @p state of the full matrix will be taken care of by
+           * itself, i.e. its state will change accordingly when some specific
+           * operation is applied to it.}
+           */
+          if (hmat->block_type == HMatrixSupport::diagonal_block)
+            {
+              switch (hmat->property)
+                {
+                  case HMatrixSupport::general:
+                    {
+                      hmat->fullmatrix->set_property(LAPACKSupport::general);
+
+                      break;
+                    }
+                  case HMatrixSupport::symmetric:
+                    {
+                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular:
+                    {
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::upper_triangular);
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular:
+                    {
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::lower_triangular);
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix property: " +
+                                        std::to_string(hmat->property)));
+                    }
+                }
+            }
         }
       else
         {
@@ -3431,8 +3746,9 @@ InitAndCreateHMatrixChildren(
  * The matrices in the leaf set take the data migrated from the leaf set of the
  * given \hmatrix \p H.
  *
- * @param hmat
- * @param M
+ * @param hmat The \hmatnode to be associated with the \bcn @p bc_node.
+ * @param bc_node The \bcn to be associated with the \hmatnode @p hmat
+ * @param H
  */
 template <int spacedim, typename Number = double>
 void
@@ -3442,7 +3758,8 @@ InitAndCreateHMatrixChildren(
   HMatrix<spacedim, Number> &&                                         H)
 {
   /**
-   * Link \p hmat with \p bc_node.
+   * Link \p hmat with \p bc_node and remove the @p const feature @p bc_node by
+   * using @p const_cast.
    */
   hmat->bc_node =
     const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
@@ -7576,6 +7893,9 @@ copy_hmatrix_node(HMatrix<spacedim, Number> &      hmat_dst,
                   const HMatrix<spacedim, Number> &hmat_src)
 {
   hmat_dst.type            = hmat_src.type;
+  hmat_dst.state           = hmat_src.state;
+  hmat_dst.property        = hmat_src.property;
+  hmat_dst.block_type      = hmat_src.block_type;
   hmat_dst.submatrix_index = hmat_src.submatrix_index;
 
   /**
@@ -7628,6 +7948,9 @@ copy_hmatrix_node(HMatrix<spacedim, Number> & hmat_dst,
                   HMatrix<spacedim, Number> &&hmat_src)
 {
   hmat_dst.type            = hmat_src.type;
+  hmat_dst.state           = hmat_src.state;
+  hmat_dst.property        = hmat_src.property;
+  hmat_dst.block_type      = hmat_src.block_type;
   hmat_dst.submatrices     = hmat_src.submatrices;
   hmat_dst.submatrix_index = hmat_src.submatrix_index;
   hmat_dst.parent          = hmat_src.parent;
@@ -7741,6 +8064,9 @@ hmatrix_solve_cholesky(const HMatrix<spacedim, Number> &L,
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix()
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(HMatrixSupport::general)
+  , block_type(HMatrixSupport::undefined_block)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7764,8 +8090,13 @@ HMatrix<spacedim, Number>::HMatrix()
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   const BlockClusterTree<spacedim, Number> &bct,
-  const unsigned int                        fixed_rank_k)
+  const unsigned int                        fixed_rank_k,
+  const HMatrixSupport::Property            property,
+  const HMatrixSupport::BlockType           block_type)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(property)
+  , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7792,8 +8123,13 @@ HMatrix<spacedim, Number>::HMatrix(
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const unsigned int fixed_rank_k)
+  const unsigned int              fixed_rank_k,
+  const HMatrixSupport::Property  property,
+  const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(property)
+  , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7821,8 +8157,12 @@ template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   const BlockClusterTree<spacedim, Number> &bct,
   const LAPACKFullMatrixExt<Number> &       M,
-  const unsigned int                        fixed_rank_k)
+  const unsigned int                        fixed_rank_k,
+  const HMatrixSupport::BlockType           block_type)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(HMatrixSupport::general)
+  , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7841,6 +8181,11 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
+  /**
+   * Determine the property of the \hmatrix from the global full matrix.
+   */
+  set_property(M);
+
   InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k, M);
   build_leaf_set();
 }
@@ -7849,8 +8194,12 @@ HMatrix<spacedim, Number>::HMatrix(
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   const BlockClusterTree<spacedim, Number> &bct,
-  const LAPACKFullMatrixExt<Number> &       M)
+  const LAPACKFullMatrixExt<Number> &       M,
+  const HMatrixSupport::BlockType           block_type)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(HMatrixSupport::general)
+  , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7869,6 +8218,11 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
+  /**
+   * Determine the property of the \hmatrix from the global full matrix.
+   */
+  set_property(M);
+
   InitAndCreateHMatrixChildren(this, bct.get_root(), M);
   build_leaf_set();
 }
@@ -7878,8 +8232,12 @@ template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const LAPACKFullMatrixExt<Number> &                                  M,
-  const unsigned int fixed_rank_k)
+  const unsigned int              fixed_rank_k,
+  const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(HMatrixSupport::general)
+  , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7898,6 +8256,11 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
+  /**
+   * Determine the property of the \hmatrix from the global full matrix.
+   */
+  set_property(M);
+
   InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, M);
   build_leaf_set();
 }
@@ -7906,8 +8269,12 @@ HMatrix<spacedim, Number>::HMatrix(
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const LAPACKFullMatrixExt<Number> &                                  M)
+  const LAPACKFullMatrixExt<Number> &                                  M,
+  const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(HMatrixSupport::general)
+  , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7926,6 +8293,11 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
+  /**
+   * Determine the property of the \hmatrix from the global full matrix.
+   */
+  set_property(M);
+
   InitAndCreateHMatrixChildren(this, bc_node, M);
   build_leaf_set();
 }
@@ -7936,6 +8308,9 @@ HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   HMatrix<spacedim, Number> &&                                         H)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(HMatrixSupport::general)
+  , block_type(HMatrixSupport::undefined_block)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7964,6 +8339,9 @@ HMatrix<spacedim, Number>::HMatrix(
   const BlockClusterTree<spacedim, Number> &bct,
   HMatrix<spacedim, Number> &&              H)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(HMatrixSupport::general)
+  , block_type(HMatrixSupport::undefined_block)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -7990,6 +8368,9 @@ HMatrix<spacedim, Number>::HMatrix(
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(const HMatrix<spacedim, Number> &H)
   : type(UndefinedMatrixType)
+  , state(HMatrixSupport::matrix)
+  , property(HMatrixSupport::general)
+  , block_type(HMatrixSupport::undefined_block)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -8016,6 +8397,9 @@ HMatrix<spacedim, Number>::HMatrix(const HMatrix<spacedim, Number> &H)
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(HMatrix<spacedim, Number> &&H)
   : type(H.type)
+  , state(H.state)
+  , property(H.property)
+  , block_type(H.block_type)
   , submatrices(H.submatrices)
   , parent(H.parent)
   , submatrix_index(H.submatrix_index)
@@ -8429,6 +8813,9 @@ HMatrix<spacedim, Number>::release()
   leaf_set.clear();
 
   type            = UndefinedMatrixType;
+  state           = HMatrixSupport::matrix;
+  property        = HMatrixSupport::general,
+  block_type      = HMatrixSupport::undefined_block;
   bc_node         = nullptr;
   parent          = nullptr;
   submatrix_index = submatrix_index_invalid;
@@ -8493,7 +8880,10 @@ template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::clear_hmat_node()
 {
-  type = UndefinedMatrixType;
+  type       = UndefinedMatrixType;
+  state      = HMatrixSupport::matrix;
+  property   = HMatrixSupport::general;
+  block_type = HMatrixSupport::undefined_block;
   submatrices.clear();
   parent          = nullptr;
   submatrix_index = submatrix_index_invalid;
@@ -8534,6 +8924,77 @@ typename HMatrix<spacedim, Number>::size_type
 HMatrix<spacedim, Number>::get_m() const
 {
   return m;
+}
+
+
+template <int spacedim, typename Number>
+HMatrixSupport::Property
+HMatrix<spacedim, Number>::get_property() const
+{
+  return property;
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
+{
+  this->property = property;
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_property(const LAPACKFullMatrixExt<Number> &M)
+{
+  switch (M.get_property())
+    {
+      case LAPACKSupport::general:
+        {
+          property = HMatrixSupport::general;
+
+          break;
+        }
+      case LAPACKSupport::symmetric:
+        {
+          property = HMatrixSupport::symmetric;
+
+          break;
+        }
+      case LAPACKSupport::upper_triangular:
+        {
+          property = HMatrixSupport::upper_triangular;
+
+          break;
+        }
+      case LAPACKSupport::lower_triangular:
+        {
+          property = HMatrixSupport::lower_triangular;
+
+          break;
+        }
+      default:
+        {
+          Assert(false, ExcNotImplemented());
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+HMatrixSupport::BlockType
+HMatrix<spacedim, Number>::get_block_type() const
+{
+  return block_type;
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_block_type(
+  const HMatrixSupport::BlockType block_type)
+{
+  this->block_type = block_type;
 }
 
 
@@ -10763,12 +11224,12 @@ HMatrix<spacedim, Number>::mmult(
   C.Tind.categorize_near_and_far_field_sets();
   C.Tind.calc_depth_and_max_level();
 
-  /**
-   * DEBUG: Print the structure of the \f$T_{\rm ind}\f$ block cluster tree.
-   */
-  std::ofstream out1("Tind_after_phase1.dat");
-  C.Tind.write_leaf_set(out1);
-  out1.close();
+  //  /**
+  //   * DEBUG: Print the structure of the \f$T_{\rm ind}\f$ block cluster tree.
+  //   */
+  //  std::ofstream out1("Tind_after_phase1.dat");
+  //  C.Tind.write_leaf_set(out1);
+  //  out1.close();
 
   /**
    * <li>Build the leaf set of the result matrix.
@@ -10785,12 +11246,12 @@ HMatrix<spacedim, Number>::mmult(
   //  std::cout << "=== Product matrix info after phase 2 ===" << std::endl;
   //  C.print_matrix_info(std::cout);
 
-  /**
-   * DEBUG: Print the structure of the \f$T_{\rm ind}\f$ block cluster tree.
-   */
-  std::ofstream out2("Tind_after_phase2.dat");
-  C.Tind.write_leaf_set(out2);
-  out2.close();
+  //  /**
+  //   * DEBUG: Print the structure of the \f$T_{\rm ind}\f$ block cluster tree.
+  //   */
+  //  std::ofstream out2("Tind_after_phase2.dat");
+  //  C.Tind.write_leaf_set(out2);
+  //  out2.close();
 
   /**
    *
@@ -13887,18 +14348,18 @@ HMatrix<spacedim, Number>::convert_between_different_block_cluster_trees(
   const unsigned int                  fixed_rank_k2)
 {
   /**
-   * Make a copy of the leaf set of the target block cluster tree, which will
-   * be used for the final coarsening.
+   * Make a copy of the leaf set of the target block cluster tree @p bct2,
+   * which will be used for the final coarsening.
    */
   std::vector<typename BlockClusterTree<spacedim, Number>::node_pointer_type>
     target_leaf_set(bct2.get_leaf_set());
 
   /**
-   * Extend the block cluster tree associated with the current
-   * \hmatrix to the coarsest tree which is finer than the
-   * target block cluster tree. If the block cluster tree has really been
-   * extended, refine the \hmatrix to its extended block cluster
-   * tree.
+   * Extend the block cluster tree @p bct1 associated with the current
+   * \hmatrix to the coarsest tree which is finer than the target block cluster
+   * tree @p bct2. If the block cluster tree has really been extended (because
+   * it is possible that @p bct1 is already finer than @p bct2), refine the
+   * \hmatrix to its extended block cluster tree.
    */
   if (bct1.extend_finer_than_partition(target_leaf_set))
     {
@@ -13906,26 +14367,27 @@ HMatrix<spacedim, Number>::convert_between_different_block_cluster_trees(
     }
 
   /**
-   * Extend \p bct2 to the finer partition obtained from \p bct1 as above. N.B.
-   * Now the leaf set of \p bct1 after refinement is the same as that of \p
-   * bct2 after this extension.
+   * Extend \p bct2 to the finer partition obtained from \p bct1 as above (i.e.
+   * having been extended). N.B. Now the leaf set of \p bct1 after refinement
+   * is the same as that of \p bct2 after this extension.
    */
   bool is_bct2_extended = bct2.extend_to_finer_partition(bct1.get_leaf_set());
 
   /**
    * Create a new \hmatrix with respect to the extended \p bct2,
    * which accepts the data migrated from the leaf set of the current
-   * \hmatrix.
+   * \hmatrix. N.B. The current \hmatrix has been refined to the super tree
+   * above.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
    *   <dd><ul>
-   *   <li>This hierarchical structure of the new \hmatrix is
-   * built with respect to the extended block cluster tree \p bct2.
+   *   <li>The actual data of an \hmatrix are stored in the leaf set nodes.
+   *   <li>This hierarchical structure of the new \hmatrix is built with
+   *   respect to the extended block cluster tree \p bct2.
    *   <li>The shallow copy constructor cannot be used here because the new
-   *   \hmatrix has a different block cluster tree structure
-   *   from the current \hmatrix, even though they have the
-   *   same partition after tree extension.
+   *   \hmatrix has a different block cluster tree structure from the current
+   *   \hmatrix, even though they have the same partition after tree extension.
    *   </ul></dd>
    * </dl>
    */

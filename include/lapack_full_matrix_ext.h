@@ -1083,6 +1083,14 @@ public:
   set_property(const LAPACKSupport::Property property);
 
   /**
+   * Get the matrix property.
+   *
+   * @return
+   */
+  LAPACKSupport::Property
+  get_property() const;
+
+  /**
    * Solve the unit lower triangular matrix \f$Lx=b\f$ by forward substitution.
    *
    * The right hand side vector \f$b\f$ will be overwritten by the solution
@@ -4610,6 +4618,14 @@ LAPACKFullMatrixExt<Number>::set_property(
 {
   this->property = property;
   this->LAPACKFullMatrix<Number>::set_property(property);
+}
+
+
+template <typename Number>
+LAPACKSupport::Property
+LAPACKFullMatrixExt<Number>::get_property() const
+{
+  return property;
 }
 
 
