@@ -77,6 +77,27 @@ namespace HMatrixSupport
   /**
    * A matrix can have certain features allowing for optimization, but hard to
    * test. These are listed here.
+   *
+   * <ul>
+   * <li>@p general: the \hmatrix is general and all the \hmatnodes in the
+   * \hmatrix hierarchy are created and stored.
+   * <li>@p symmetric: the \hmatrix is symmetric and only the diagonal blocks
+   * in the near field and matrix blocks in the lower triangular part are
+   * created and stored. For the matrix blocks in the upper triangular part,
+   * basic matrix information, such as dimension, is stored but the memory is
+   * not allocated. The matrix blocks in the upper triangular part is assumed to
+   * be symmetric to those in the lower triangular part.
+   * <li>@p upper_triangular: only the matrix blocks in the upper triangular
+   * part and the diagonal blocks in the near field are created and stored.The
+   * matrix blocks in the lower triangular part are zero valued. Their basic
+   * matrix information, such as dimension, is stored but the memory is not
+   * allocated.
+   * <li>@p lower_triangular: only the matrix blocks in the lower triangular
+   * part and the diagonal blocks in the near field are created and stored.The
+   * matrix blocks in the upper triangular part are zero valued. Their basic
+   * matrix information, such as dimension, is stored but the memory is not
+   * allocated.
+   * </ul>
    */
   enum Property
   {
@@ -118,7 +139,13 @@ namespace HMatrixSupport
    * Type of the matrix block, which can be diagonal block, upper triangular
    * block or lower triangular block.
    *
-   * \mynote{For an \hmatrix built with respect to a quad-\bct,
+   * \mynote{N.B. Here the diagonal/upper-triangular/lower-triangular block does
+   * not mean the matrix block itself is a
+   * diagonal/upper-triangular/lower-triangular matrix, but means that the
+   * matrix block belongs to the diagonal/upper-triangular/lower-triangular part
+   * of the original matrix.
+   *
+   * For an \hmatrix built with respect to a quad-\bct,
    * 1. the top level \hmatnode is a diagonal block;
    * 2. if the current \hmatnode is a diagonal block and has submatrices, the
    * first and last submatrices are still diagonal blocks, while the second

@@ -219,6 +219,13 @@ public:
 
   /**
    * Copy constructor from an LAPACKFullMatrix object.
+   *
+   * \mynote{N.B. The @p state and @p property fields of @p mat is not
+   * accessible, because they are private members in the class
+   * @p LAPACKFullMatrix<Number>. Hence the @p state of the current matrix is
+   * set to the default @p matrix and its @p property is set to the default
+   * @p general.}
+   *
    * @param mat
    */
   LAPACKFullMatrixExt(const LAPACKFullMatrix<Number> &mat);
@@ -2158,8 +2165,8 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const size_type rows,
 template <typename Number>
 LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &mat)
   : LAPACKFullMatrix<Number>(mat)
-  , state(LAPACKSupport::matrix)
-  , property(LAPACKSupport::general)
+  , state(mat.state)
+  , property(mat.property)
   , tau(0)
   , work()
   , iwork()
@@ -2168,7 +2175,7 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &mat)
   /**
    * Set the property of the parent class as well.
    */
-  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
+  this->LAPACKFullMatrix<Number>::set_property(property);
 }
 
 
@@ -3476,13 +3483,17 @@ void
 LAPACKFullMatrixExt<Number>::compute_cholesky_factorization()
 {
   Assert(state == matrix, ExcState(state));
+  Assert(property == LAPACKSupport::symmetric, ExcProperty(property));
   state = LAPACKSupport::unusable;
 
-  /**
-   * Explicitly set the matrix property to be \p symmetric, which is required
-   * by \p LAPACKFullMatrix<Number>::compute_cholesky_factorization().
-   */
-  set_property(LAPACKSupport::symmetric);
+  // 2022-04-19: Comment out this manual assignment of symmetric property, since
+  // it will be set during the \hmatrix construction.
+  //  /**
+  //   * Explicitly set the matrix property to be \p symmetric, which is required
+  //   * by \p LAPACKFullMatrix<Number>::compute_cholesky_factorization().
+  //   */
+  //  set_property(LAPACKSupport::symmetric);
+
   LAPACKFullMatrix<Number>::compute_cholesky_factorization();
 
   state = LAPACKSupport::cholesky;

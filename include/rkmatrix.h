@@ -336,7 +336,7 @@ public:
            const LAPACKFullMatrixExt<Number> &         M);
 
   /**
-   * Construct a rank-k matrix from by restriction to the block cluster \f$\tau
+   * Construct a rank-k matrix by restriction to the block cluster \f$\tau
    * \times \sigma\f$ with rank truncation from the full local matrix \p M.
    *
    * <dl class="section note">
@@ -364,7 +364,7 @@ public:
              &col_index_global_to_local_map_for_M);
 
   /**
-   * Construct a rank-k matrix from by restriction to the block cluster \f$\tau
+   * Construct a rank-k matrix by restriction to the block cluster \f$\tau
    * \times \sigma\f$ without rank truncation from the full local matrix \p M.
    *
    * <dl class="section note">
@@ -697,9 +697,11 @@ public:
 
   /**
    * Convert an rank-k matrix to a full matrix.
+   *
    * @param matrix
+   * @return Return true when the full matrix is not zero-valued.
    */
-  void
+  bool
   convertToFullMatrix(LAPACKFullMatrixExt<Number> &matrix) const;
 
   /**
@@ -2832,17 +2834,21 @@ RkMatrix<Number>::get_B() const
 
 
 template <typename Number>
-void
+bool
 RkMatrix<Number>::convertToFullMatrix(LAPACKFullMatrixExt<Number> &matrix) const
 {
   if (m != 0 && n != 0 && formal_rank > 0)
     {
       matrix.reinit(m, n);
       A.mTmult(matrix, B);
+
+      return true;
     }
   else
     {
       matrix.reinit(m, n);
+
+      return false;
     }
 }
 

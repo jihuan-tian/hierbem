@@ -95,9 +95,10 @@ public:
   InitAndCreateHMatrixChildren(
     HMatrix<spacedim1, Number1> *hmat,
     typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                       bc_node,
-    const unsigned int fixed_rank_k,
-    bool               is_build_index_set_global_to_local_map);
+                                   bc_node,
+    const unsigned int             fixed_rank_k,
+    const bool                     is_build_index_set_global_to_local_map,
+    const HMatrixSupport::Property top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -107,7 +108,8 @@ public:
                                         bc_node,
     const unsigned int                  fixed_rank_k,
     const LAPACKFullMatrixExt<Number1> &M,
-    bool                                is_build_index_set_global_to_local_map);
+    const bool                          is_build_index_set_global_to_local_map,
+    const HMatrixSupport::Property      top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -116,7 +118,8 @@ public:
     typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
                                         bc_node,
     const LAPACKFullMatrixExt<Number1> &M,
-    bool                                is_build_index_set_global_to_local_map);
+    const bool                          is_build_index_set_global_to_local_map,
+    const HMatrixSupport::Property      top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -129,8 +132,9 @@ public:
     const std::map<types::global_dof_index, size_t>
       &row_index_global_to_local_map_for_M,
     const std::map<types::global_dof_index, size_t>
-      &  col_index_global_to_local_map_for_M,
-    bool is_build_index_set_global_to_local_map);
+      &                            col_index_global_to_local_map_for_M,
+    const bool                     is_build_index_set_global_to_local_map,
+    const HMatrixSupport::Property top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -142,8 +146,9 @@ public:
     const std::map<types::global_dof_index, size_t>
       &row_index_global_to_local_map_for_M,
     const std::map<types::global_dof_index, size_t>
-      &  col_index_global_to_local_map_for_M,
-    bool is_build_index_set_global_to_local_map);
+      &                            col_index_global_to_local_map_for_M,
+    const bool                     is_build_index_set_global_to_local_map,
+    const HMatrixSupport::Property top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -497,8 +502,9 @@ public:
    * Construct the hierarchical structure without data from the root node of a
    * BlockClusterTree.
    *
-   * \mynote{Because the top level \hmatnode is itself a diagonal block, its
-   * block type is set to @p HMatrixSupport::diagonal_block by default.}
+   * \mynote{In case the \bct is only a subtree and the \hmatrix to be built is
+   * just a block in the global \hmatrix, the block type is set to
+   * @p HMatrixSupport::undefined_block by default.}
    */
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
           const unsigned int                        fixed_rank_k = 1,
@@ -510,8 +516,9 @@ public:
    * Construct the hierarchical structure without data from a TreeNode in a
    * BlockClusterTree.
    *
-   * \mynote{Because the top level \hmatnode is itself a diagonal block, its
-   * block type is set to @p HMatrixSupport::diagonal_block by default.}
+   * \mynote{In case the \bcn is not the root node of the \bct and the \hmatrix
+   * to be built is just a block in the global \hmatrix, the block type is set
+   * to @p HMatrixSupport::undefined_block by default.}
    */
   HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
                                           bc_node,
@@ -525,15 +532,16 @@ public:
    * of a <strong>global</strong> full matrix, which is created on the complete
    * block cluster \f$I \times J\f$.
    *
-   * \mynote{Since this \hmatrix is the global matrix, its block type is set to
-   * @p HMatrixSupport::diagonal_block by default. Meanwhile, the property of
-   * the \hmatrix is determined from the full matrix.}
+   * \mynote{Since this \hmatrix is the global matrix, i.e. on the same level
+   * as the global full matrix @p M in the \hmatrix hierarchy, its block type
+   * is set to @p HMatrixSupport::diagonal_block by default and its property
+   * is inferred from the full matrix @p M inside this constructor's body.}
    */
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
           const LAPACKFullMatrixExt<Number> &       M,
           const unsigned int                        fixed_rank_k,
           const HMatrixSupport::BlockType           block_type =
-            HMatrixSupport::undefined_block);
+            HMatrixSupport::diagonal_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while copying the data
@@ -542,26 +550,33 @@ public:
    *
    * This version has no rank truncation.
    *
-   * \mynote{Since this \hmatrix is the global matrix, its block type is set to
-   * @p HMatrixSupport::diagonal_block by default.}
+   * \mynote{Since this \hmatrix is the global matrix, i.e. on the same level
+   * as the global full matrix @p M in the \hmatrix hierarchy, its block type
+   * is set to @p HMatrixSupport::diagonal_block by default and its property
+   * is inferred from the full matrix @p M inside this constructor's body.}
    */
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
           const LAPACKFullMatrixExt<Number> &       M,
           const HMatrixSupport::BlockType           block_type =
-            HMatrixSupport::undefined_block);
+            HMatrixSupport::diagonal_block);
 
   /**
    * Construct from a TreeNode in a BlockClusterTree while copying the data of a
    * global full matrix, which is created on the complete block cluster \f$I
    * \times J\f$.
    *
-   * \mynote{Since this \hmatrix is the global matrix, its block type is set to
-   * @p HMatrixSupport::diagonal_block by default.}
+   * \mynote{The current \hmatrix to be built may only be a matrix block in the
+   * global matrix, while the full matrix @p M is global, i.e., the \hmatrix
+   * and the full matrix @p M are not on a same level in the \hmatrix
+   * hierarchy. Therefore, the block type of this \hmatrix should be set to
+   * @p undefined_block by default and its property cannot be inferred from the
+   * global matrix.}
    */
   HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
                                              bc_node,
           const LAPACKFullMatrixExt<Number> &M,
           const unsigned int                 fixed_rank_k,
+          const HMatrixSupport::Property     property = HMatrixSupport::general,
           const HMatrixSupport::BlockType    block_type =
             HMatrixSupport::undefined_block);
 
@@ -572,12 +587,17 @@ public:
    *
    * This version has no rank truncation.
    *
-   * \mynote{Since this \hmatrix is the global matrix, its block type is set to
-   * @p HMatrixSupport::diagonal_block by default.}
+   * \mynote{The current \hmatrix to be built may only be a matrix block in the
+   * global matrix, while the full matrix @p M is global, i.e., the \hmatrix
+   * and the full matrix @p M are not on a same level in the \hmatrix
+   * hierarchy. Therefore, the block type of this \hmatrix should be set to
+   * @p undefined_block by default and its property cannot be inferred from the
+   * global matrix.}
    */
   HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
                                              bc_node,
           const LAPACKFullMatrixExt<Number> &M,
+          const HMatrixSupport::Property     property = HMatrixSupport::general,
           const HMatrixSupport::BlockType    block_type =
             HMatrixSupport::undefined_block);
 
@@ -589,18 +609,28 @@ public:
    * @param H
    */
   HMatrix(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
-                                      bc_node,
-          HMatrix<spacedim, Number> &&H);
+                                          bc_node,
+          HMatrix<spacedim, Number> &&    H,
+          const HMatrixSupport::Property  property = HMatrixSupport::general,
+          const HMatrixSupport::BlockType block_type =
+            HMatrixSupport::undefined_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while moving the data
    * from the leaf set of the \hmatrix \p H.
    *
+   * \mynote{Since this \hmatrix is the global matrix because it is construct
+   * with respect to the root node of the \bct, its block type is set to
+   * @p HMatrixSupport::diagonal_block.}
+   *
    * @param bct
    * @param H
    */
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
-          HMatrix<spacedim, Number> &&              H);
+          HMatrix<spacedim, Number> &&              H,
+          const HMatrixSupport::Property  property = HMatrixSupport::general,
+          const HMatrixSupport::BlockType block_type =
+            HMatrixSupport::diagonal_block);
 
   /**
    * Deep copy constructor.
@@ -622,12 +652,16 @@ public:
   /**
    * Reinitialize the hierarchical structure without data from the root node of
    * a BlockClusterTree.
+   *
    * @param bct
    * @param fixed_rank_k
    */
   void
   reinit(const BlockClusterTree<spacedim, Number> &bct,
-         const unsigned int                        fixed_rank_k = 1);
+         const unsigned int                        fixed_rank_k = 1,
+         const HMatrixSupport::Property  property = HMatrixSupport::general,
+         const HMatrixSupport::BlockType block_type =
+           HMatrixSupport::diagonal_block);
 
   /**
    * Reinitialize the hierarchical structure without data from a TreeNode in a
@@ -637,8 +671,11 @@ public:
    */
   void
   reinit(typename BlockClusterTree<spacedim, Number>::node_const_pointer_type
-                            bc_node,
-         const unsigned int fixed_rank_k = 1);
+                                         bc_node,
+         const unsigned int              fixed_rank_k = 1,
+         const HMatrixSupport::Property  property     = HMatrixSupport::general,
+         const HMatrixSupport::BlockType block_type =
+           HMatrixSupport::undefined_block);
 
   /**
    * Assignment via shallow copy.
@@ -722,16 +759,61 @@ public:
    * @param property
    */
   void
+  set_current_matrix_property(const HMatrixSupport::Property property);
+
+  /**
+   * Set the property of the current \hmatnode according to the property of the
+   * associated full matrix.
+   *
+   * @param M
+   */
+  void
+  set_current_matrix_property(const LAPACKFullMatrixExt<Number> &M);
+
+  /**
+   * Recursively set the property of all \hmatnodes in the \hmatrix hierarchy.
+   *
+   * \mynote{This recursive operation relies on appropriately set block types.}
+   *
+   * @param property
+   */
+  void
   set_property(const HMatrixSupport::Property property);
 
   /**
-   * Set the property of the current \hmatnode according to the associated full
-   * matrix.
+   * Set the property of all \hmatnodes in the \hmatrix hierarchy. The property
+   * of the top level \hmatnode is determined from the associated full matrix.
+   *
+   * \mynote{This recursive operation relies on appropriately set block types.}
    *
    * @param M
    */
   void
   set_property(const LAPACKFullMatrixExt<Number> &M);
+
+  /**
+   * Set the state of the current \hmatnode.
+   *
+   * @param state
+   */
+  void
+  set_current_matrix_state(const HMatrixSupport::State state);
+
+  /**
+   * Get the state of the current \hmatnode.
+   *
+   * @return
+   */
+  HMatrixSupport::State
+  get_state() const;
+
+  /**
+   * Recursively set the state of all \hmatnodes in the \hmatrix hierarchy.
+   *
+   * @param state
+   */
+  void
+  set_state(const HMatrixSupport::State state);
 
   /**
    * Get the block type of the current \hmatnode.
@@ -742,6 +824,15 @@ public:
 
   /**
    * Set the block type of the current \hmatnode.
+   *
+   * @param block_type
+   */
+  void
+  set_current_matrix_block_type(const HMatrixSupport::BlockType block_type);
+
+  /**
+   * Set the block type of all \hmatnodes in the \hmatrix hierarchy.
+   *
    * @param block_type
    */
   void
@@ -2028,6 +2119,11 @@ public:
    * The matrix \f$L\f$ should have the same hierarchical structure as the
    * original matrix.
    *
+   * \mynote{To maintain the correct \hmatrix state, after calling this
+   * function, the state of the original \hmatrix should be manually set to
+   * @p unusable, while the state of the result \hmatrix @p L should be set to
+   * @p cholesky.}
+   *
    * @param L
    * @param fixed_rank
    */
@@ -2298,12 +2394,23 @@ private:
   _print_matrix_info_as_dot_node(std::ostream &out) const;
 
   /**
+   * Set the matrix property of the converted full matrix based on the property
+   * of the current \hmatrix.
+   *
+   * @param M
+   */
+  void
+  set_property_for_converted_fullmatrix(LAPACKFullMatrixExt<Number> &M) const;
+
+  /**
    * Convert an HMatrix to a full matrix by recursion.
    * @param matrix
    */
   template <typename MatrixType>
   void
-  _convertToFullMatrix(MatrixType &M) const;
+  _convertToFullMatrix(MatrixType &                   M,
+                       const HMatrixSupport::Property top_hmat_property =
+                         HMatrixSupport::general) const;
 
   /**
    * Collect \hmatnodes in the leaf set into a vector.
@@ -2699,6 +2806,183 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
           HMatrix<spacedim, Number> *child_hmat =
             new HMatrix<spacedim, Number>();
 
+          /**
+           * Set the state of the child \hmatrix, which is the same as its
+           * parent.
+           */
+          child_hmat->state = hmat->state;
+
+          /**
+           * Set the block type of the child \hmatrix, which depends on the
+           * block type of its parent.
+           */
+          switch (hmat->block_type)
+            {
+              case HMatrixSupport::undefined_block:
+                {
+                  /**
+                   * When the current \hmatrix block is @p undefined_block, all
+                   * child \hmatrices are @p undefined_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::diagonal_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p diagonal_block, the first and
+                   * fourth child \hmatrices are @p diagonal_block, while the second
+                   * child \hmatrix is @p upper_triangular_block and the third child
+                   * \hmatrix is @p lower_triangular_block.
+                   */
+                  switch (i)
+                    {
+                      case 0:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      case 1:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::upper_triangular_block;
+
+                          break;
+                        }
+                      case 2:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::lower_triangular_block;
+
+                          break;
+                        }
+                      case 3:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcNotImplemented());
+                        }
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p upper_triangular_block,
+                   * all child \hmatrices are @p upper_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p lower_triangular_block,
+                   * all child \hmatrices are @p lower_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage(
+                           std::string("Invalid H-matrix block type: ") +
+                           std::to_string(hmat->block_type)));
+                }
+            }
+
+          /**
+           * Set the property of the child \hmatrix, which depends on the
+           * property of its parent.
+           */
+          switch (hmat->property)
+            {
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p general,
+                   * all of its children have the same property @p general.
+                   */
+                  child_hmat->property = HMatrixSupport::general;
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p symmetric,
+                   * only those diagonal submatrices are @p symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p upper_triangular, only those diagonal submatrices are
+                   * @p upper_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::upper_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p lower_triangular, only those diagonal submatrices are
+                   * @p lower_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::lower_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix property: " +
+                                    std::to_string(hmat->property)));
+                }
+            }
+
           InitAndCreateHMatrixChildrenWithoutAlloc(
             child_hmat,
             bc_node->get_child_pointer(i),
@@ -2745,6 +3029,53 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
         {
           hmat->type       = FullMatrixType;
           hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+
+          /**
+           * Set the full matrix's property according to the current \hmatnode
+           * property only when the current \hmatnode is a diagonal block.
+           *
+           * \mynote{The @p state of the full matrix will be taken care of by
+           * itself, i.e. its state will change accordingly when some specific
+           * operation is applied to it.}
+           */
+          if (hmat->block_type == HMatrixSupport::diagonal_block)
+            {
+              switch (hmat->property)
+                {
+                  case HMatrixSupport::general:
+                    {
+                      hmat->fullmatrix->set_property(LAPACKSupport::general);
+
+                      break;
+                    }
+                  case HMatrixSupport::symmetric:
+                    {
+                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular:
+                    {
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::upper_triangular);
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular:
+                    {
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::lower_triangular);
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix property: " +
+                                        std::to_string(hmat->property)));
+                    }
+                }
+            }
         }
       else
         {
@@ -2767,14 +3098,18 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
  * created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
  * associated with \p hmat.
+ * @param is_build_index_set_global_to_local_map
+ * @param top_hmat_node_property The property of the \hmatnode on the top level
  */
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildren(
   HMatrix<spacedim, Number> *                                          hmat,
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const unsigned int fixed_rank_k,
-  bool               is_build_index_set_global_to_local_map = true)
+  const unsigned int             fixed_rank_k,
+  const bool                     is_build_index_set_global_to_local_map = true,
+  const HMatrixSupport::Property top_hmat_node_property =
+    HMatrixSupport::general)
 {
   /**
    * Link \p hmat with \p bc_node.
@@ -3003,7 +3338,8 @@ InitAndCreateHMatrixChildren(
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        fixed_rank_k,
-                                       is_build_index_set_global_to_local_map);
+                                       is_build_index_set_global_to_local_map,
+                                       top_hmat_node_property);
 
           /**
            * Append the initialized child to the list of submatrices of \p hmat.
@@ -3042,72 +3378,356 @@ InitAndCreateHMatrixChildren(
        * rank-k matrix will be created on the heap and assigned to the current
        * \hmatrix.
        */
-      if (bc_node->get_data_reference().get_is_near_field())
+      switch (top_hmat_node_property)
         {
-          hmat->type       = FullMatrixType;
-          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-
-          /**
-           * Set the full matrix's property according to the current \hmatnode
-           * property only when the current \hmatnode is a diagonal block.
-           *
-           * \mynote{The @p state of the full matrix will be taken care of by
-           * itself, i.e. its state will change accordingly when some specific
-           * operation is applied to it.}
-           */
-          if (hmat->block_type == HMatrixSupport::diagonal_block)
+          case HMatrixSupport::general:
             {
-              switch (hmat->property)
+              /**
+               * When the top level \hmatnode has the @p general property, all
+               * \hmatnodes in the leaf set should be created with allocated
+               * memory.
+               */
+              if (bc_node->get_data_reference().get_is_near_field())
                 {
-                  case HMatrixSupport::general:
-                    {
-                      hmat->fullmatrix->set_property(LAPACKSupport::general);
+                  hmat->type = FullMatrixType;
+                  hmat->fullmatrix =
+                    new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                }
+              else
+                {
+                  hmat->type = RkMatrixType;
+                  hmat->rkmatrix =
+                    new RkMatrix<Number>(hmat->m, hmat->n, fixed_rank_k);
+                }
 
-                      break;
-                    }
-                  case HMatrixSupport::symmetric:
+              break;
+            }
+          case HMatrixSupport::symmetric:
+            {
+              /**
+               * When the top level \hmatnode has the @p symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original H-matrix will
+               * be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
                     {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
                       hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
 
                       break;
                     }
-                  case HMatrixSupport::upper_triangular:
+                  case HMatrixSupport::lower_triangular_block:
                     {
-                      hmat->fullmatrix->set_property(
-                        LAPACKSupport::upper_triangular);
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                        }
+                      else
+                        {
+                          hmat->type     = RkMatrixType;
+                          hmat->rkmatrix = new RkMatrix<Number>(hmat->m,
+                                                                hmat->n,
+                                                                fixed_rank_k);
+                        }
 
                       break;
                     }
-                  case HMatrixSupport::lower_triangular:
+                  case HMatrixSupport::upper_triangular_block:
                     {
-                      hmat->fullmatrix->set_property(
-                        LAPACKSupport::lower_triangular);
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is symmetric to the corresponding block in
+                       * the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
 
                       break;
                     }
                   default:
                     {
                       Assert(false,
-                             ExcMessage("Invalid H-matrix property: " +
-                                        std::to_string(hmat->property)));
+                             ExcMessage(
+                               std::string("Invalid H-matrix block type: ") +
+                               std::string(HMatrixSupport::block_type_name(
+                                 hmat->block_type))));
                     }
                 }
-            }
-        }
-      else
-        {
-          hmat->type = RkMatrixType;
 
-          if (fixed_rank_k == 0)
-            {
-              // When the given rank is zero, an empty rank-k matrix is created,
-              // whose memory is left for further allocation.
-              hmat->rkmatrix = new RkMatrix<Number>();
+              break;
             }
-          else
+          case HMatrixSupport::lower_triangular:
             {
-              hmat->rkmatrix =
-                new RkMatrix<Number>(hmat->m, hmat->n, fixed_rank_k);
+              /**
+               * When the top level \hmatnode has the @p lower_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or lower triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a lower triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p lower_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::lower_triangular);
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                        }
+                      else
+                        {
+                          hmat->type     = RkMatrixType;
+                          hmat->rkmatrix = new RkMatrix<Number>(hmat->m,
+                                                                hmat->n,
+                                                                fixed_rank_k);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage(
+                               std::string("Invalid H-matrix block type: ") +
+                               std::string(HMatrixSupport::block_type_name(
+                                 hmat->block_type))));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::upper_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p upper_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or upper triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a upper triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p upper_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::upper_triangular);
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                        }
+                      else
+                        {
+                          hmat->type     = RkMatrixType;
+                          hmat->rkmatrix = new RkMatrix<Number>(hmat->m,
+                                                                hmat->n,
+                                                                fixed_rank_k);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage(
+                               std::string("Invalid H-matrix block type: ") +
+                               std::string(HMatrixSupport::block_type_name(
+                                 hmat->block_type))));
+                    }
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false,
+                     ExcMessage(
+                       std::string(
+                         "Invalid property of the top level H-matrix node: ") +
+                       std::string(HMatrixSupport::property_name(
+                         top_hmat_node_property))));
             }
         }
     }
@@ -3128,6 +3748,10 @@ InitAndCreateHMatrixChildren(
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
  *
+ * \mynote{The full matrix @p M is global, while @p hmat may not be global, but
+ * only a block in the global matrix, and @p bc_node in this case is not the
+ * root node of the \bct.}
+ *
  * @param hmat Pointer to the current \hmatnode, <strong>which has already been
  * created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
@@ -3142,7 +3766,9 @@ InitAndCreateHMatrixChildren(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const unsigned int                 fixed_rank_k,
   const LAPACKFullMatrixExt<Number> &M,
-  bool is_build_index_set_global_to_local_map = true)
+  const bool                     is_build_index_set_global_to_local_map = true,
+  const HMatrixSupport::Property top_hmat_node_property =
+    HMatrixSupport::general)
 {
   /**
    * Link \p hmat with \p bc_node.
@@ -3190,11 +3816,188 @@ InitAndCreateHMatrixChildren(
           HMatrix<spacedim, Number> *child_hmat =
             new HMatrix<spacedim, Number>();
 
+          /**
+           * Set the state of the child \hmatrix, which is the same as its
+           * parent.
+           */
+          child_hmat->state = hmat->state;
+
+          /**
+           * Set the block type of the child \hmatrix, which depends on the
+           * block type of its parent.
+           */
+          switch (hmat->block_type)
+            {
+              case HMatrixSupport::undefined_block:
+                {
+                  /**
+                   * When the current \hmatrix block is @p undefined_block, all
+                   * child \hmatrices are @p undefined_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::diagonal_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p diagonal_block, the first and
+                   * fourth child \hmatrices are @p diagonal_block, while the second
+                   * child \hmatrix is @p upper_triangular_block and the third child
+                   * \hmatrix is @p lower_triangular_block.
+                   */
+                  switch (i)
+                    {
+                      case 0:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      case 1:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::upper_triangular_block;
+
+                          break;
+                        }
+                      case 2:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::lower_triangular_block;
+
+                          break;
+                        }
+                      case 3:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcNotImplemented());
+                        }
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p upper_triangular_block,
+                   * all child \hmatrices are @p upper_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p lower_triangular_block,
+                   * all child \hmatrices are @p lower_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix block type: " +
+                                    std::to_string(hmat->block_type)));
+                }
+            }
+
+          /**
+           * Set the property of the child \hmatrix, which depends on the
+           * property of its parent.
+           */
+          switch (hmat->property)
+            {
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p general,
+                   * all of its children have the same property @p general.
+                   */
+                  child_hmat->property = HMatrixSupport::general;
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p symmetric,
+                   * only those diagonal submatrices are @p symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p upper_triangular, only those diagonal submatrices are
+                   * @p upper_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::upper_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p lower_triangular, only those diagonal submatrices are
+                   * @p lower_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::lower_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix property: " +
+                                    std::to_string(hmat->property)));
+                }
+            }
+
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        fixed_rank_k,
                                        M,
-                                       is_build_index_set_global_to_local_map);
+                                       is_build_index_set_global_to_local_map,
+                                       top_hmat_node_property);
 
           /**
            * Append the initialized child to the list of submatrices of \p hmat.
@@ -3233,30 +4036,456 @@ InitAndCreateHMatrixChildren(
        * rank-k matrix will be created on the heap and assigned to the current
        * \hmatrix.
        */
-      if (bc_node->get_data_reference().get_is_near_field())
+      switch (top_hmat_node_property)
         {
-          hmat->type       = FullMatrixType;
-          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-
-          /**
-           * Assign matrix values from \p M to the current HMatrix.
-           */
-          for (unsigned int i = 0; i < hmat->m; i++)
+          case HMatrixSupport::general:
             {
-              for (unsigned int j = 0; j < hmat->n; j++)
+              /**
+               * When the top level \hmatnode has the @p general property, all
+               * \hmatnodes in the leaf set should be created with allocated
+               * memory.
+               */
+              if (bc_node->get_data_reference().get_is_near_field())
                 {
-                  (*hmat->fullmatrix)(i, j) =
-                    M(hmat->row_indices->at(i), hmat->col_indices->at(j));
+                  hmat->type = FullMatrixType;
+                  hmat->fullmatrix =
+                    new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                  /**
+                   * Assign matrix values from \p M to the current HMatrix.
+                   */
+                  for (unsigned int i = 0; i < hmat->m; i++)
+                    {
+                      for (unsigned int j = 0; j < hmat->n; j++)
+                        {
+                          (*hmat->fullmatrix)(i, j) =
+                            M(hmat->row_indices->at(i),
+                              hmat->col_indices->at(j));
+                        }
+                    }
                 }
+              else
+                {
+                  hmat->type     = RkMatrixType;
+                  hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
+                                                        *(hmat->col_indices),
+                                                        fixed_rank_k,
+                                                        M);
+                }
+
+              break;
             }
-        }
-      else
-        {
-          hmat->type     = RkMatrixType;
-          hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
-                                                *(hmat->col_indices),
-                                                fixed_rank_k,
-                                                M);
+          case HMatrixSupport::symmetric:
+            {
+              /**
+               * When the top level \hmatnode has the @p symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original H-matrix will
+               * be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(hmat->row_indices->at(i),
+                                  hmat->col_indices->at(j));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(hmat->row_indices->at(i),
+                                      hmat->col_indices->at(j));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 fixed_rank_k,
+                                                 M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is symmetric to the corresponding block in
+                       * the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage(
+                               std::string("Invalid H-matrix block type: ") +
+                               std::string(HMatrixSupport::block_type_name(
+                                 hmat->block_type))));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::lower_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p lower_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or lower triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a lower triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p lower_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::lower_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(hmat->row_indices->at(i),
+                                  hmat->col_indices->at(j));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(hmat->row_indices->at(i),
+                                      hmat->col_indices->at(j));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 fixed_rank_k,
+                                                 M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage(
+                               std::string("Invalid H-matrix block type: ") +
+                               std::string(HMatrixSupport::block_type_name(
+                                 hmat->block_type))));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::upper_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p upper_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or upper triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a upper triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p upper_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::upper_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(hmat->row_indices->at(i),
+                                  hmat->col_indices->at(j));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(hmat->row_indices->at(i),
+                                      hmat->col_indices->at(j));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 fixed_rank_k,
+                                                 M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage(
+                               std::string("Invalid H-matrix block type: ") +
+                               std::string(HMatrixSupport::block_type_name(
+                                 hmat->block_type))));
+                    }
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false,
+                     ExcMessage(
+                       std::string(
+                         "Invalid property of the top level H-matrix node: ") +
+                       std::string(HMatrixSupport::property_name(
+                         top_hmat_node_property))));
+            }
         }
     }
 }
@@ -3276,10 +4505,14 @@ InitAndCreateHMatrixChildren(
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
  *
+ * \mynote{The full matrix @p M is global, while @p hmat may not be global, but
+ * only a block in the global matrix, and @p bc_node in this case is not the
+ * root node of the \bct.}
+ *
  * @param hmat Pointer to the current \hmatnode, <strong>which has already been
  * created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
- * associated with \p hmat.
+ * associated with \p hmat. It is not necessarily the root node.
  * @param M The global full matrix containing all the data required to initialize the
  * \hmatrix.
  * @param is_build_index_set_global_to_local_map
@@ -3290,7 +4523,9 @@ InitAndCreateHMatrixChildren(
   HMatrix<spacedim, Number> *                                          hmat,
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const LAPACKFullMatrixExt<Number> &                                  M,
-  bool is_build_index_set_global_to_local_map = true)
+  const bool                     is_build_index_set_global_to_local_map = true,
+  const HMatrixSupport::Property top_hmat_node_property =
+    HMatrixSupport::general)
 {
   /**
    * Link \p hmat with \p bc_node.
@@ -3338,10 +4573,187 @@ InitAndCreateHMatrixChildren(
           HMatrix<spacedim, Number> *child_hmat =
             new HMatrix<spacedim, Number>();
 
+          /**
+           * Set the state of the child \hmatrix, which is the same as its
+           * parent.
+           */
+          child_hmat->state = hmat->state;
+
+          /**
+           * Set the block type of the child \hmatrix, which depends on the
+           * block type of its parent.
+           */
+          switch (hmat->block_type)
+            {
+              case HMatrixSupport::undefined_block:
+                {
+                  /**
+                   * When the current \hmatrix block is @p undefined_block, all
+                   * child \hmatrices are @p undefined_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::diagonal_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p diagonal_block, the first and
+                   * fourth child \hmatrices are @p diagonal_block, while the second
+                   * child \hmatrix is @p upper_triangular_block and the third child
+                   * \hmatrix is @p lower_triangular_block.
+                   */
+                  switch (i)
+                    {
+                      case 0:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      case 1:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::upper_triangular_block;
+
+                          break;
+                        }
+                      case 2:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::lower_triangular_block;
+
+                          break;
+                        }
+                      case 3:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcNotImplemented());
+                        }
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p upper_triangular_block,
+                   * all child \hmatrices are @p upper_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p lower_triangular_block,
+                   * all child \hmatrices are @p lower_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix block type: " +
+                                    std::to_string(hmat->block_type)));
+                }
+            }
+
+          /**
+           * Set the property of the child \hmatrix, which depends on the
+           * property of its parent.
+           */
+          switch (hmat->property)
+            {
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p general,
+                   * all of its children have the same property @p general.
+                   */
+                  child_hmat->property = HMatrixSupport::general;
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p symmetric,
+                   * only those diagonal submatrices are @p symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p upper_triangular, only those diagonal submatrices are
+                   * @p upper_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::upper_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p lower_triangular, only those diagonal submatrices are
+                   * @p lower_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::lower_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix property: " +
+                                    std::to_string(hmat->property)));
+                }
+            }
+
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        M,
-                                       is_build_index_set_global_to_local_map);
+                                       is_build_index_set_global_to_local_map,
+                                       top_hmat_node_property);
 
           /**
            * Append the initialized child to the list of submatrices of \p hmat.
@@ -3380,28 +4792,449 @@ InitAndCreateHMatrixChildren(
        * rank-k matrix will be created on the heap and assigned to the current
        * \hmatrix.
        */
-      if (bc_node->get_data_reference().get_is_near_field())
+      switch (top_hmat_node_property)
         {
-          hmat->type       = FullMatrixType;
-          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-
-          /**
-           * Assign matrix values from \p M to the current HMatrix.
-           */
-          for (unsigned int i = 0; i < hmat->m; i++)
+          case HMatrixSupport::general:
             {
-              for (unsigned int j = 0; j < hmat->n; j++)
+              /**
+               * When the top level \hmatnode has the @p general property, all
+               * \hmatnodes in the leaf set should be created with allocated
+               * memory.
+               */
+              if (bc_node->get_data_reference().get_is_near_field())
                 {
-                  (*hmat->fullmatrix)(i, j) =
-                    M(hmat->row_indices->at(i), hmat->col_indices->at(j));
+                  hmat->type = FullMatrixType;
+                  hmat->fullmatrix =
+                    new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                  /**
+                   * Assign matrix values from \p M to the current HMatrix.
+                   */
+                  for (unsigned int i = 0; i < hmat->m; i++)
+                    {
+                      for (unsigned int j = 0; j < hmat->n; j++)
+                        {
+                          (*hmat->fullmatrix)(i, j) =
+                            M(hmat->row_indices->at(i),
+                              hmat->col_indices->at(j));
+                        }
+                    }
                 }
+              else
+                {
+                  hmat->type     = RkMatrixType;
+                  hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
+                                                        *(hmat->col_indices),
+                                                        M);
+                }
+
+              break;
             }
-        }
-      else
-        {
-          hmat->type = RkMatrixType;
-          hmat->rkmatrix =
-            new RkMatrix<Number>(*(hmat->row_indices), *(hmat->col_indices), M);
+          case HMatrixSupport::symmetric:
+            {
+              /**
+               * When the top level \hmatnode has the @p symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original H-matrix will
+               * be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(hmat->row_indices->at(i),
+                                  hmat->col_indices->at(j));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(hmat->row_indices->at(i),
+                                      hmat->col_indices->at(j));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is symmetric to the corresponding block in
+                       * the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::lower_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p lower_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or lower triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a lower triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p lower_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::lower_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(hmat->row_indices->at(i),
+                                  hmat->col_indices->at(j));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(hmat->row_indices->at(i),
+                                      hmat->col_indices->at(j));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::upper_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p upper_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or upper triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a upper triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p upper_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::upper_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(hmat->row_indices->at(i),
+                                  hmat->col_indices->at(j));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(hmat->row_indices->at(i),
+                                      hmat->col_indices->at(j));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false,
+                     ExcMessage(
+                       std::string(
+                         "Invalid property of the top level H-matrix node: ") +
+                       std::string(HMatrixSupport::property_name(
+                         top_hmat_node_property))));
+            }
         }
     }
 }
@@ -3413,11 +5246,15 @@ InitAndCreateHMatrixChildren(
  * associated with the current \hmatrix.
  *
  * The matrices in the leaf set are initialized with the data in the given full
- * matrix \p M, which is created on the block cluster index set \f$\tau \times
- * \sigma\f$ associated with the current \hmatrix. Hence, this
- * full matrix is just a block of the original global full matrix created on the
- * block cluster index set \f$I \times J\f$. The rank of the far field matrices
- * are predefined fixed values.
+ * matrix \p M, which is created on the block cluster index set
+ * \f$\tau \times \sigma\f$. <strong>N.B. This block cluster should be one of
+ * the ancestors of the block cluster associated with @p hmat that has been
+ * passed to the initial call of this function (let's call it @p hmat_first).
+ * Only in this way, it is valid to restrict this full matrix @p M to each leaf
+ * node of @p hmat.</strong> Hence, this full matrix is just a block of the
+ * original global full matrix (the global full matrix is created on the block
+ * cluster index set \f$I \times J\f$). The rank of the far field matrices are
+ * predefined fixed values.
  *
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
@@ -3445,8 +5282,10 @@ InitAndCreateHMatrixChildren(
   const std::map<types::global_dof_index, size_t>
     &row_index_global_to_local_map_for_M,
   const std::map<types::global_dof_index, size_t>
-    &  col_index_global_to_local_map_for_M,
-  bool is_build_index_set_global_to_local_map = true)
+    &                            col_index_global_to_local_map_for_M,
+  const bool                     is_build_index_set_global_to_local_map = true,
+  const HMatrixSupport::Property top_hmat_node_property =
+    HMatrixSupport::general)
 {
   /**
    * Link \p hmat with \p bc_node.
@@ -3494,13 +5333,190 @@ InitAndCreateHMatrixChildren(
           HMatrix<spacedim, Number> *child_hmat =
             new HMatrix<spacedim, Number>();
 
+          /**
+           * Set the state of the child \hmatrix, which is the same as its
+           * parent.
+           */
+          child_hmat->state = hmat->state;
+
+          /**
+           * Set the block type of the child \hmatrix, which depends on the
+           * block type of its parent.
+           */
+          switch (hmat->block_type)
+            {
+              case HMatrixSupport::undefined_block:
+                {
+                  /**
+                   * When the current \hmatrix block is @p undefined_block, all
+                   * child \hmatrices are @p undefined_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::diagonal_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p diagonal_block, the first and
+                   * fourth child \hmatrices are @p diagonal_block, while the second
+                   * child \hmatrix is @p upper_triangular_block and the third child
+                   * \hmatrix is @p lower_triangular_block.
+                   */
+                  switch (i)
+                    {
+                      case 0:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      case 1:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::upper_triangular_block;
+
+                          break;
+                        }
+                      case 2:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::lower_triangular_block;
+
+                          break;
+                        }
+                      case 3:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcNotImplemented());
+                        }
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p upper_triangular_block,
+                   * all child \hmatrices are @p upper_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p lower_triangular_block,
+                   * all child \hmatrices are @p lower_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix block type: " +
+                                    std::to_string(hmat->block_type)));
+                }
+            }
+
+          /**
+           * Set the property of the child \hmatrix, which depends on the
+           * property of its parent.
+           */
+          switch (hmat->property)
+            {
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p general,
+                   * all of its children have the same property @p general.
+                   */
+                  child_hmat->property = HMatrixSupport::general;
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p symmetric,
+                   * only those diagonal submatrices are @p symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p upper_triangular, only those diagonal submatrices are
+                   * @p upper_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::upper_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p lower_triangular, only those diagonal submatrices are
+                   * @p lower_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::lower_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix property: " +
+                                    std::to_string(hmat->property)));
+                }
+            }
+
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        fixed_rank_k,
                                        M,
                                        row_index_global_to_local_map_for_M,
                                        col_index_global_to_local_map_for_M,
-                                       is_build_index_set_global_to_local_map);
+                                       is_build_index_set_global_to_local_map,
+                                       top_hmat_node_property);
 
           /**
            * Append the initialized child to the list of submatrices of \p hmat.
@@ -3539,36 +5555,474 @@ InitAndCreateHMatrixChildren(
        * rank-k matrix will be created on the heap and assigned to the current
        * \hmatrix.
        */
-      if (bc_node->get_data_reference().get_is_near_field())
+      switch (top_hmat_node_property)
         {
-          hmat->type       = FullMatrixType;
-          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-
-          /**
-           * Assign matrix values from \p M to the current HMatrix.
-           */
-          for (unsigned int i = 0; i < hmat->m; i++)
+          case HMatrixSupport::general:
             {
-              for (unsigned int j = 0; j < hmat->n; j++)
+              /**
+               * When the top level \hmatnode has the @p general property, all
+               * \hmatnodes in the leaf set should be created with allocated
+               * memory.
+               */
+              if (bc_node->get_data_reference().get_is_near_field())
                 {
-                  (*hmat->fullmatrix)(i, j) =
-                    M(row_index_global_to_local_map_for_M.at(
-                        hmat->row_indices->at(i)),
-                      col_index_global_to_local_map_for_M.at(
-                        hmat->col_indices->at(j)));
+                  hmat->type = FullMatrixType;
+                  hmat->fullmatrix =
+                    new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                  /**
+                   * Assign matrix values from \p M to the current HMatrix.
+                   */
+                  for (unsigned int i = 0; i < hmat->m; i++)
+                    {
+                      for (unsigned int j = 0; j < hmat->n; j++)
+                        {
+                          (*hmat->fullmatrix)(i, j) =
+                            M(row_index_global_to_local_map_for_M.at(
+                                hmat->row_indices->at(i)),
+                              col_index_global_to_local_map_for_M.at(
+                                hmat->col_indices->at(j)));
+                        }
+                    }
                 }
+              else
+                {
+                  hmat->rkmatrix =
+                    new RkMatrix<Number>(*(hmat->row_indices),
+                                         *(hmat->col_indices),
+                                         fixed_rank_k,
+                                         M,
+                                         row_index_global_to_local_map_for_M,
+                                         col_index_global_to_local_map_for_M);
+                }
+
+              break;
             }
-        }
-      else
-        {
-          hmat->type = RkMatrixType;
-          hmat->rkmatrix =
-            new RkMatrix<Number>(*(hmat->row_indices),
-                                 *(hmat->col_indices),
-                                 fixed_rank_k,
-                                 M,
-                                 row_index_global_to_local_map_for_M,
-                                 col_index_global_to_local_map_for_M);
+          case HMatrixSupport::symmetric:
+            {
+              /**
+               * When the top level \hmatnode has the @p symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original H-matrix will
+               * be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(row_index_global_to_local_map_for_M.at(
+                                    hmat->row_indices->at(i)),
+                                  col_index_global_to_local_map_for_M.at(
+                                    hmat->col_indices->at(j)));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(row_index_global_to_local_map_for_M.at(
+                                        hmat->row_indices->at(i)),
+                                      col_index_global_to_local_map_for_M.at(
+                                        hmat->col_indices->at(j)));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            *(hmat->row_indices),
+                            *(hmat->col_indices),
+                            fixed_rank_k,
+                            M,
+                            row_index_global_to_local_map_for_M,
+                            col_index_global_to_local_map_for_M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is symmetric to the corresponding block in
+                       * the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::lower_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p lower_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or lower triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a lower triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p lower_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::lower_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(row_index_global_to_local_map_for_M.at(
+                                    hmat->row_indices->at(i)),
+                                  col_index_global_to_local_map_for_M.at(
+                                    hmat->col_indices->at(j)));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(row_index_global_to_local_map_for_M.at(
+                                        hmat->row_indices->at(i)),
+                                      col_index_global_to_local_map_for_M.at(
+                                        hmat->col_indices->at(j)));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type     = RkMatrixType;
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            *(hmat->row_indices),
+                            *(hmat->col_indices),
+                            fixed_rank_k,
+                            M,
+                            row_index_global_to_local_map_for_M,
+                            col_index_global_to_local_map_for_M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::upper_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p upper_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or upper triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a upper triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p upper_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::upper_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(row_index_global_to_local_map_for_M.at(
+                                    hmat->row_indices->at(i)),
+                                  col_index_global_to_local_map_for_M.at(
+                                    hmat->col_indices->at(j)));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(row_index_global_to_local_map_for_M.at(
+                                        hmat->row_indices->at(i)),
+                                      col_index_global_to_local_map_for_M.at(
+                                        hmat->col_indices->at(j)));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type     = RkMatrixType;
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            *(hmat->row_indices),
+                            *(hmat->col_indices),
+                            fixed_rank_k,
+                            M,
+                            row_index_global_to_local_map_for_M,
+                            col_index_global_to_local_map_for_M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false,
+                     ExcMessage(
+                       std::string(
+                         "Invalid property of the top level H-matrix node: ") +
+                       std::string(HMatrixSupport::property_name(
+                         top_hmat_node_property))));
+            }
         }
     }
 }
@@ -3611,8 +6065,10 @@ InitAndCreateHMatrixChildren(
   const std::map<types::global_dof_index, size_t>
     &row_index_global_to_local_map_for_M,
   const std::map<types::global_dof_index, size_t>
-    &  col_index_global_to_local_map_for_M,
-  bool is_build_index_set_global_to_local_map = true)
+    &                            col_index_global_to_local_map_for_M,
+  const bool                     is_build_index_set_global_to_local_map = true,
+  const HMatrixSupport::Property top_hmat_node_property =
+    HMatrixSupport::general)
 {
   /**
    * Link \p hmat with \p bc_node.
@@ -3660,12 +6116,189 @@ InitAndCreateHMatrixChildren(
           HMatrix<spacedim, Number> *child_hmat =
             new HMatrix<spacedim, Number>();
 
+          /**
+           * Set the state of the child \hmatrix, which is the same as its
+           * parent.
+           */
+          child_hmat->state = hmat->state;
+
+          /**
+           * Set the block type of the child \hmatrix, which depends on the
+           * block type of its parent.
+           */
+          switch (hmat->block_type)
+            {
+              case HMatrixSupport::undefined_block:
+                {
+                  /**
+                   * When the current \hmatrix block is @p undefined_block, all
+                   * child \hmatrices are @p undefined_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::diagonal_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p diagonal_block, the first and
+                   * fourth child \hmatrices are @p diagonal_block, while the second
+                   * child \hmatrix is @p upper_triangular_block and the third child
+                   * \hmatrix is @p lower_triangular_block.
+                   */
+                  switch (i)
+                    {
+                      case 0:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      case 1:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::upper_triangular_block;
+
+                          break;
+                        }
+                      case 2:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::lower_triangular_block;
+
+                          break;
+                        }
+                      case 3:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcNotImplemented());
+                        }
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p upper_triangular_block,
+                   * all child \hmatrices are @p upper_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p lower_triangular_block,
+                   * all child \hmatrices are @p lower_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix block type: " +
+                                    std::to_string(hmat->block_type)));
+                }
+            }
+
+          /**
+           * Set the property of the child \hmatrix, which depends on the
+           * property of its parent.
+           */
+          switch (hmat->property)
+            {
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p general,
+                   * all of its children have the same property @p general.
+                   */
+                  child_hmat->property = HMatrixSupport::general;
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p symmetric,
+                   * only those diagonal submatrices are @p symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p upper_triangular, only those diagonal submatrices are
+                   * @p upper_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::upper_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p lower_triangular, only those diagonal submatrices are
+                   * @p lower_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::lower_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix property: " +
+                                    std::to_string(hmat->property)));
+                }
+            }
+
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        M,
                                        row_index_global_to_local_map_for_M,
                                        col_index_global_to_local_map_for_M,
-                                       is_build_index_set_global_to_local_map);
+                                       is_build_index_set_global_to_local_map,
+                                       top_hmat_node_property);
 
           /**
            * Append the initialized child to the list of submatrices of \p hmat.
@@ -3704,35 +6337,470 @@ InitAndCreateHMatrixChildren(
        * rank-k matrix will be created on the heap and assigned to the current
        * \hmatrix.
        */
-      if (bc_node->get_data_reference().get_is_near_field())
+      switch (top_hmat_node_property)
         {
-          hmat->type       = FullMatrixType;
-          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
-
-          /**
-           * Assign matrix values from \p M to the current HMatrix.
-           */
-          for (unsigned int i = 0; i < hmat->m; i++)
+          case HMatrixSupport::general:
             {
-              for (unsigned int j = 0; j < hmat->n; j++)
+              /**
+               * When the top level \hmatnode has the @p general property, all
+               * \hmatnodes in the leaf set should be created with allocated
+               * memory.
+               */
+              if (bc_node->get_data_reference().get_is_near_field())
                 {
-                  (*hmat->fullmatrix)(i, j) =
-                    M(row_index_global_to_local_map_for_M.at(
-                        hmat->row_indices->at(i)),
-                      col_index_global_to_local_map_for_M.at(
-                        hmat->col_indices->at(j)));
+                  hmat->type = FullMatrixType;
+                  hmat->fullmatrix =
+                    new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                  /**
+                   * Assign matrix values from \p M to the current HMatrix.
+                   */
+                  for (unsigned int i = 0; i < hmat->m; i++)
+                    {
+                      for (unsigned int j = 0; j < hmat->n; j++)
+                        {
+                          (*hmat->fullmatrix)(i, j) =
+                            M(row_index_global_to_local_map_for_M.at(
+                                hmat->row_indices->at(i)),
+                              col_index_global_to_local_map_for_M.at(
+                                hmat->col_indices->at(j)));
+                        }
+                    }
                 }
+              else
+                {
+                  hmat->rkmatrix =
+                    new RkMatrix<Number>(*(hmat->row_indices),
+                                         *(hmat->col_indices),
+                                         M,
+                                         row_index_global_to_local_map_for_M,
+                                         col_index_global_to_local_map_for_M);
+                }
+
+              break;
             }
-        }
-      else
-        {
-          hmat->type = RkMatrixType;
-          hmat->rkmatrix =
-            new RkMatrix<Number>(*(hmat->row_indices),
-                                 *(hmat->col_indices),
-                                 M,
-                                 row_index_global_to_local_map_for_M,
-                                 col_index_global_to_local_map_for_M);
+          case HMatrixSupport::symmetric:
+            {
+              /**
+               * When the top level \hmatnode has the @p symmetric property,
+               * only those \hmatnodes in the leaf set that belong to the
+               * diagonal or lower triangular part of the original H-matrix will
+               * be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a symmetric full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p symmetric.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(LAPACKSupport::symmetric);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(row_index_global_to_local_map_for_M.at(
+                                    hmat->row_indices->at(i)),
+                                  col_index_global_to_local_map_for_M.at(
+                                    hmat->col_indices->at(j)));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(row_index_global_to_local_map_for_M.at(
+                                        hmat->row_indices->at(i)),
+                                      col_index_global_to_local_map_for_M.at(
+                                        hmat->col_indices->at(j)));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            *(hmat->row_indices),
+                            *(hmat->col_indices),
+                            M,
+                            row_index_global_to_local_map_for_M,
+                            col_index_global_to_local_map_for_M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is symmetric to the corresponding block in
+                       * the lower triangular part.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::lower_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p lower_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or lower triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a lower triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p lower_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::lower_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(row_index_global_to_local_map_for_M.at(
+                                    hmat->row_indices->at(i)),
+                                  col_index_global_to_local_map_for_M.at(
+                                    hmat->col_indices->at(j)));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(row_index_global_to_local_map_for_M.at(
+                                        hmat->row_indices->at(i)),
+                                      col_index_global_to_local_map_for_M.at(
+                                        hmat->col_indices->at(j)));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type     = RkMatrixType;
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            *(hmat->row_indices),
+                            *(hmat->col_indices),
+                            M,
+                            row_index_global_to_local_map_for_M,
+                            col_index_global_to_local_map_for_M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::upper_triangular:
+            {
+              /**
+               * When the top level \hmatnode has the @p upper_triangular
+               * property, only those \hmatnodes in the leaf set that belong to
+               * the diagonal or upper triangular part in the top level \hmatrix
+               * will be created with allocated memory.
+               */
+              switch (hmat->block_type)
+                {
+                  case HMatrixSupport::diagonal_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set is a
+                       * diagonal block in the top level \hmatrix, it can only
+                       * be a upper triangular full matrix. Its memory will be
+                       * allocated and its
+                       * @p LAPACKFullMatrix type will be set to @p upper_triangular.
+                       */
+
+                      /**
+                       * Here we make an assertion about the fact that a
+                       * diagonal \hmatrix block in the leaf set should belong
+                       * to the near field.
+                       */
+                      Assert(
+                        bc_node->get_data_reference().get_is_near_field(),
+                        ExcMessage(
+                          "H-matrix node in the leaf set should belong to the near field if it is a diagonal block!"));
+                      /**
+                       * And we further make an assertion about the fact that
+                       * the diagonal \hmatrix block should have the same
+                       * property as the top level \hmatnode.
+                       */
+                      Assert(
+                        hmat->property == top_hmat_node_property,
+                        ExcMessage(
+                          "A diagonal block should have the same property as that of the top level H-matrix node!"));
+
+                      hmat->type = FullMatrixType;
+                      hmat->fullmatrix =
+                        new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+                      hmat->fullmatrix->set_property(
+                        LAPACKSupport::upper_triangular);
+
+                      /**
+                       * Assign matrix values from \p M to the current HMatrix.
+                       */
+                      for (unsigned int i = 0; i < hmat->m; i++)
+                        {
+                          for (unsigned int j = 0; j < hmat->n; j++)
+                            {
+                              (*hmat->fullmatrix)(i, j) =
+                                M(row_index_global_to_local_map_for_M.at(
+                                    hmat->row_indices->at(i)),
+                                  col_index_global_to_local_map_for_M.at(
+                                    hmat->col_indices->at(j)));
+                            }
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::upper_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the upper triangular part in the top level \hmatrix, it
+                       * can be either a full matrix or a rank-k matrix. Its
+                       * memory will be allocated because it contains effective
+                       * data.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type = FullMatrixType;
+                          hmat->fullmatrix =
+                            new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
+
+                          /**
+                           * Assign matrix values from \p M to the current HMatrix.
+                           */
+                          for (unsigned int i = 0; i < hmat->m; i++)
+                            {
+                              for (unsigned int j = 0; j < hmat->n; j++)
+                                {
+                                  (*hmat->fullmatrix)(i, j) =
+                                    M(row_index_global_to_local_map_for_M.at(
+                                        hmat->row_indices->at(i)),
+                                      col_index_global_to_local_map_for_M.at(
+                                        hmat->col_indices->at(j)));
+                                }
+                            }
+                        }
+                      else
+                        {
+                          hmat->type     = RkMatrixType;
+                          hmat->rkmatrix = new RkMatrix<Number>(
+                            *(hmat->row_indices),
+                            *(hmat->col_indices),
+                            M,
+                            row_index_global_to_local_map_for_M,
+                            col_index_global_to_local_map_for_M);
+                        }
+
+                      break;
+                    }
+                  case HMatrixSupport::lower_triangular_block:
+                    {
+                      /**
+                       * When the current \hmatnode in the leaf set belongs to
+                       * the lower triangular part in the top level \hmatrix,
+                       * only set its \hmatrix type without allocating memory
+                       * because it is zero-valued.
+                       */
+                      if (bc_node->get_data_reference().get_is_near_field())
+                        {
+                          hmat->type       = FullMatrixType;
+                          hmat->fullmatrix = new LAPACKFullMatrixExt<Number>();
+                        }
+                      else
+                        {
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(hmat->m, hmat->n, 0);
+                        }
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false,
+                             ExcMessage("Invalid H-matrix block type: " +
+                                        HMatrixSupport::block_type_name(
+                                          hmat->block_type)));
+                    }
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false,
+                     ExcMessage(
+                       std::string(
+                         "Invalid property of the top level H-matrix node: ") +
+                       std::string(HMatrixSupport::property_name(
+                         top_hmat_node_property))));
+            }
         }
     }
 }
@@ -3807,6 +6875,182 @@ InitAndCreateHMatrixChildren(
           HMatrix<spacedim, Number> *child_hmat =
             new HMatrix<spacedim, Number>();
 
+          /**
+           * Set the state of the child \hmatrix, which is the same as its
+           * parent.
+           */
+          child_hmat->state = hmat->state;
+
+          /**
+           * Set the block type of the child \hmatrix, which depends on the
+           * block type of its parent.
+           */
+          switch (hmat->block_type)
+            {
+              case HMatrixSupport::undefined_block:
+                {
+                  /**
+                   * When the current \hmatrix block is @p undefined_block, all
+                   * child \hmatrices are @p undefined_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::diagonal_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p diagonal_block, the first and
+                   * fourth child \hmatrices are @p diagonal_block, while the second
+                   * child \hmatrix is @p upper_triangular_block and the third child
+                   * \hmatrix is @p lower_triangular_block.
+                   */
+                  switch (i)
+                    {
+                      case 0:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      case 1:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::upper_triangular_block;
+
+                          break;
+                        }
+                      case 2:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::lower_triangular_block;
+
+                          break;
+                        }
+                      case 3:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcNotImplemented());
+                        }
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p upper_triangular_block,
+                   * all child \hmatrices are @p upper_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p lower_triangular_block,
+                   * all child \hmatrices are @p lower_triangular_block.
+                   */
+                  child_hmat->block_type = hmat->block_type;
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix block type: " +
+                                    std::to_string(hmat->block_type)));
+                }
+            }
+
+          /**
+           * Set the property of the child \hmatrix, which depends on the
+           * property of its parent.
+           */
+          switch (hmat->property)
+            {
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p general,
+                   * all of its children have the same property @p general.
+                   */
+                  child_hmat->property = HMatrixSupport::general;
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p symmetric,
+                   * only those diagonal submatrices are @p symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p upper_triangular, only those diagonal submatrices are
+                   * @p upper_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::upper_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p lower_triangular, only those diagonal submatrices are
+                   * @p lower_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::lower_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix property: " +
+                                    std::to_string(hmat->property)));
+                }
+            }
+
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        std::move(H));
@@ -3875,25 +7119,29 @@ RefineHMatrixWrtExtendedBlockClusterTree(
          ExcInvalidHMatrixType(starting_hmat->type));
 
   /**
-   * Determine the total number of children of the current
-   * \hmatnode by querying its associated block cluster
-   * node. We do it like this is because the block cluster tree has already been
-   * extended which contains a set of child node, while the hierarchy of
-   * H-matrices has still not been extended yet.
+   * Determine the total number of children of the current \hmatnode by
+   * querying its associated block cluster node. We do it like this is because
+   * the block cluster tree has already been extended which contains a set of
+   * child node, while the hierarchy of H-matrices has still not been extended
+   * yet.
    */
   const unsigned int bc_node_child_num = current_hmat->bc_node->get_child_num();
 
   if (bc_node_child_num > 0)
     {
       /**
-       * If the associated block cluster node of the current
-       * \hmatnode has children, we firstly update the
-       * \hmatrix type for the current \hmatrix
+       * If the associated block cluster node of the current \hmatnode has
+       * children, we firstly update the \hmatrix type for the current \hmatrix
        * node as \p HierarchicalMatrix and this is only performed when the
-       * current \hmatnode is not the starting
-       * \hmatnode, because the original matrix type of the
-       * starting \hmatnode will be used later during
-       * restriction operations to the current block cluster.
+       * current \hmatnode is <strong>not</strong> the starting \hmatnode,
+       * because the original matrix type of the starting \hmatnode will be
+       * used later during restriction operations to the current block cluster.
+       * When the whole recursive call of this function
+       * @p RefineHMatrixWrtExtendedBlockClusterTree is complete, the \hmatrix
+       * type of @p starting_hmat will be corrected if this \hmatnode has
+       * literally been refined. And this operation should be performed in the
+       * caller function of @p RefineHMatrixWrtExtendedBlockClusterTree, such
+       * as @p HMatrix<spacedim, Number>::refine_to_supertree.
        */
       if (current_hmat != starting_hmat)
         {
@@ -3909,6 +7157,182 @@ RefineHMatrixWrtExtendedBlockClusterTree(
            */
           HMatrix<spacedim, Number> *child_hmat =
             new HMatrix<spacedim, Number>();
+
+          /**
+           * Set the state of the child \hmatrix, which is the same as its
+           * parent.
+           */
+          child_hmat->state = current_hmat->state;
+
+          /**
+           * Set the block type of the child \hmatrix, which depends on the
+           * block type of its parent.
+           */
+          switch (current_hmat->block_type)
+            {
+              case HMatrixSupport::undefined_block:
+                {
+                  /**
+                   * When the current \hmatrix block is @p undefined_block, all
+                   * child \hmatrices are @p undefined_block.
+                   */
+                  child_hmat->block_type = current_hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::diagonal_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p diagonal_block, the first and
+                   * fourth child \hmatrices are @p diagonal_block, while the second
+                   * child \hmatrix is @p upper_triangular_block and the third child
+                   * \hmatrix is @p lower_triangular_block.
+                   */
+                  switch (i)
+                    {
+                      case 0:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      case 1:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::upper_triangular_block;
+
+                          break;
+                        }
+                      case 2:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::lower_triangular_block;
+
+                          break;
+                        }
+                      case 3:
+                        {
+                          child_hmat->block_type =
+                            HMatrixSupport::diagonal_block;
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcNotImplemented());
+                        }
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p upper_triangular_block,
+                   * all child \hmatrices are @p upper_triangular_block.
+                   */
+                  child_hmat->block_type = current_hmat->block_type;
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular_block:
+                {
+                  /**
+                   * When the current \hmatrix is @p lower_triangular_block,
+                   * all child \hmatrices are @p lower_triangular_block.
+                   */
+                  child_hmat->block_type = current_hmat->block_type;
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix block type: " +
+                                    std::to_string(current_hmat->block_type)));
+                }
+            }
+
+          /**
+           * Set the property of the child \hmatrix, which depends on the
+           * property of its parent.
+           */
+          switch (current_hmat->property)
+            {
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p general,
+                   * all of its children have the same property @p general.
+                   */
+                  child_hmat->property = HMatrixSupport::general;
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the property of the current \hmatrix is @p symmetric,
+                   * only those diagonal submatrices are @p symmetric, while
+                   * the other submatrices are @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::symmetric;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::upper_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p upper_triangular, only those diagonal submatrices are
+                   * @p upper_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::upper_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::lower_triangular:
+                {
+                  /**
+                   * When the property of the current \hmatrix is
+                   * @p lower_triangular, only those diagonal submatrices are
+                   * @p lower_triangular, while the other submatrices are
+                   * @p general.
+                   */
+                  if (child_hmat->block_type == HMatrixSupport::diagonal_block)
+                    {
+                      child_hmat->property = HMatrixSupport::lower_triangular;
+                    }
+                  else
+                    {
+                      child_hmat->property = HMatrixSupport::general;
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false,
+                         ExcMessage("Invalid H-matrix property: " +
+                                    std::to_string(current_hmat->property)));
+                }
+            }
 
           current_hmat->submatrices.push_back(child_hmat);
 
@@ -3990,10 +7414,9 @@ RefineHMatrixWrtExtendedBlockClusterTree(
               current_hmat->type = FullMatrixType;
 
               /**
-               * Fill the current full matrix with the data extracted from
-               * the starting \hmatnode. This is actually a
-               * restriction of the starting \hmatnode to
-               * the current \hmatnode.
+               * Fill the current full matrix with the data extracted from the
+               * starting \hmatnode. This is actually a restriction of the
+               * starting \hmatnode to the current \hmatnode.
                */
               switch (starting_hmat->type)
                 {
@@ -4027,6 +7450,57 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                       Assert(false, ExcInvalidHMatrixType(starting_hmat->type));
 
                       break;
+                    }
+                }
+
+              /**
+               * Set the full matrix's property according to the current
+               * \hmatnode property only when the current \hmatnode is a
+               * diagonal block.
+               *
+               * \mynote{The @p state of the full matrix will be taken care of by
+               * itself, i.e. its state will change accordingly when some
+               * specific operation is applied to it.}
+               */
+              if (current_hmat->block_type == HMatrixSupport::diagonal_block)
+                {
+                  switch (current_hmat->property)
+                    {
+                      case HMatrixSupport::general:
+                        {
+                          current_hmat->fullmatrix->set_property(
+                            LAPACKSupport::general);
+
+                          break;
+                        }
+                      case HMatrixSupport::symmetric:
+                        {
+                          current_hmat->fullmatrix->set_property(
+                            LAPACKSupport::symmetric);
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular:
+                        {
+                          current_hmat->fullmatrix->set_property(
+                            LAPACKSupport::upper_triangular);
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular:
+                        {
+                          current_hmat->fullmatrix->set_property(
+                            LAPACKSupport::lower_triangular);
+
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false,
+                                 ExcMessage(
+                                   "Invalid H-matrix property: " +
+                                   std::to_string(current_hmat->property)));
+                        }
                     }
                 }
             }
@@ -6969,8 +10443,8 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &M0,
  *
  * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
  * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
- * which will assembles the contribution from \f$M_1 \cdot M_2\f$. For the first
- * call of this function, \p M is the same as \p M0.
+ * which will assembles the contribution from \f$M_1 \cdot M_2^T\f$. For the
+ * first call of this function, \p M is the same as \p M0.
  * @param M1 The first operand of the multiplication, which is built upon the
  * \bcn \f$\tau\times\sigma\f$.
  * @param M2 The second operand of the multiplication, which is built upon the
@@ -7188,8 +10662,8 @@ h_h_mTmult_from_leaf_node(HMatrix<spacedim, Number> &M0,
  *
  * @param M0 The initial product matrix on the \bcn \f$\tau_0\times\rho_0\f$.
  * @param M The current product matrix \f$M\f$ on the \bcn \f$\tau\times\rho\f$,
- * which will assembles the contribution from \f$M_1 \cdot M_2\f$. For the first
- * call of this function, \p M is the same as \p M0.
+ * which will assembles the contribution from \f$M_1 \cdot M_2^T\f$. For the
+ * first call of this function, \p M is the same as \p M0.
  * @param M1 The first operand of the multiplication, which is built upon the
  * \bcn \f$\tau\times\sigma\f$.
  * @param M2 The second operand of the multiplication, which is built upon the
@@ -7873,16 +11347,14 @@ h_h_mTmult_level_conserving(HMatrix<spacedim, Number> &M0,
  * copy is limited within the current node without recursion into its
  * descendants. This function will be called by \p copy_hmatrix.
  *
- * N.B. Do not copy the list \p submatrices from the source submatrix,
- * because newly created child matrices will be pushed back into this
- * list.
- *
- * Do not copy the list \p leaf_set. After the whole \hmatrix
- * hierarchy has been constructed, the leaf set will be built in the
- * constructor.
- *
- * Do not copy the working data: \p Sigma_P, \p Sigma_F, \p Sigma_R and
+ * \mynote{1. Do not copy the list \p submatrices from the source submatrix,
+ * because newly created child matrices will be pushed back into this list.
+ * 2. Do not copy the list \p leaf_set. After the whole \hmatrix hierarchy has
+ * been constructed, the leaf set will be built in the constructor.
+ * 3. Do not copy the working data: \p Sigma_P, \p Sigma_F, \p Sigma_R and
  * \p Tind.
+ * 4. Do not copy @p parent and it will be set during the recursive deep copy
+ * of the \hmatrix.}
  *
  * @param hmat_dst
  * @param hmat_src
@@ -7936,9 +11408,11 @@ copy_hmatrix_node(HMatrix<spacedim, Number> &      hmat_dst,
 
 
 /**
- * Shallow copy an \hmatnode into the target node, i.e. the
- * copy is limited within the current node without recursion into its
- * descendants.
+ * Shallow copy an \hmatnode into the target node, i.e. the copy is limited
+ * within the current node without recursion into its descendants. Or rather, we
+ * can say the destination \hmatrix takes over the data from the source
+ * \hmatrix.
+ *
  * @param hmat_dst
  * @param hmat_src
  */
@@ -8115,7 +11589,8 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k);
+  InitAndCreateHMatrixChildren(
+    this, bct.get_root(), fixed_rank_k, true, property);
   build_leaf_set();
 }
 
@@ -8148,7 +11623,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k);
+  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, true, property);
   build_leaf_set();
 }
 
@@ -8184,9 +11659,10 @@ HMatrix<spacedim, Number>::HMatrix(
   /**
    * Determine the property of the \hmatrix from the global full matrix.
    */
-  set_property(M);
+  set_current_matrix_property(M);
 
-  InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k, M);
+  InitAndCreateHMatrixChildren(
+    this, bct.get_root(), fixed_rank_k, M, true, property);
   build_leaf_set();
 }
 
@@ -8221,9 +11697,9 @@ HMatrix<spacedim, Number>::HMatrix(
   /**
    * Determine the property of the \hmatrix from the global full matrix.
    */
-  set_property(M);
+  set_current_matrix_property(M);
 
-  InitAndCreateHMatrixChildren(this, bct.get_root(), M);
+  InitAndCreateHMatrixChildren(this, bct.get_root(), M, true, property);
   build_leaf_set();
 }
 
@@ -8233,10 +11709,11 @@ HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const LAPACKFullMatrixExt<Number> &                                  M,
   const unsigned int              fixed_rank_k,
+  const HMatrixSupport::Property  property,
   const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
   , state(HMatrixSupport::matrix)
-  , property(HMatrixSupport::general)
+  , property(property)
   , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
@@ -8256,12 +11733,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  /**
-   * Determine the property of the \hmatrix from the global full matrix.
-   */
-  set_property(M);
-
-  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, M);
+  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, M, true, property);
   build_leaf_set();
 }
 
@@ -8270,10 +11742,11 @@ template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const LAPACKFullMatrixExt<Number> &                                  M,
+  const HMatrixSupport::Property                                       property,
   const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
   , state(HMatrixSupport::matrix)
-  , property(HMatrixSupport::general)
+  , property(property)
   , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
@@ -8293,12 +11766,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  /**
-   * Determine the property of the \hmatrix from the global full matrix.
-   */
-  set_property(M);
-
-  InitAndCreateHMatrixChildren(this, bc_node, M);
+  InitAndCreateHMatrixChildren(this, bc_node, M, true, property);
   build_leaf_set();
 }
 
@@ -8306,11 +11774,13 @@ HMatrix<spacedim, Number>::HMatrix(
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  HMatrix<spacedim, Number> &&                                         H)
+  HMatrix<spacedim, Number> &&                                         H,
+  const HMatrixSupport::Property                                       property,
+  const HMatrixSupport::BlockType block_type)
   : type(UndefinedMatrixType)
   , state(HMatrixSupport::matrix)
-  , property(HMatrixSupport::general)
-  , block_type(HMatrixSupport::undefined_block)
+  , property(property)
+  , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -8337,11 +11807,13 @@ HMatrix<spacedim, Number>::HMatrix(
 template <int spacedim, typename Number>
 HMatrix<spacedim, Number>::HMatrix(
   const BlockClusterTree<spacedim, Number> &bct,
-  HMatrix<spacedim, Number> &&              H)
+  HMatrix<spacedim, Number> &&              H,
+  const HMatrixSupport::Property            property,
+  const HMatrixSupport::BlockType           block_type)
   : type(UndefinedMatrixType)
   , state(HMatrixSupport::matrix)
-  , property(HMatrixSupport::general)
-  , block_type(HMatrixSupport::undefined_block)
+  , property(property)
+  , block_type(block_type)
   , submatrices(0)
   , parent(nullptr)
   , submatrix_index(submatrix_index_invalid)
@@ -8425,10 +11897,17 @@ HMatrix<spacedim, Number>::HMatrix(HMatrix<spacedim, Number> &&H)
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::reinit(const BlockClusterTree<spacedim, Number> &bct,
-                                  const unsigned int fixed_rank_k)
+                                  const unsigned int              fixed_rank_k,
+                                  const HMatrixSupport::Property  property,
+                                  const HMatrixSupport::BlockType block_type)
 {
   release();
-  InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k);
+
+  this->property   = property;
+  this->block_type = block_type;
+
+  InitAndCreateHMatrixChildren(
+    this, bct.get_root(), fixed_rank_k, true, this->property);
   build_leaf_set();
 }
 
@@ -8437,10 +11916,17 @@ template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::reinit(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const unsigned int fixed_rank_k)
+  const unsigned int              fixed_rank_k,
+  const HMatrixSupport::Property  property,
+  const HMatrixSupport::BlockType block_type)
 {
   release();
-  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k);
+
+  this->property   = property;
+  this->block_type = block_type;
+
+  InitAndCreateHMatrixChildren(
+    this, bc_node, fixed_rank_k, true, this->property);
   build_leaf_set();
 }
 
@@ -8475,14 +11961,22 @@ void
 HMatrix<spacedim, Number>::convertToFullMatrix(MatrixType &M) const
 {
   M.reinit(m, n);
-  _convertToFullMatrix(M);
+  _convertToFullMatrix(M, property);
+
+  /**
+   * Set the property of the full matrix according to the property of the
+   * \hmatrix.
+   */
+  set_property_for_converted_fullmatrix(M);
 }
 
 
 template <int spacedim, typename Number>
 template <typename MatrixType>
 void
-HMatrix<spacedim, Number>::_convertToFullMatrix(MatrixType &M) const
+HMatrix<spacedim, Number>::_convertToFullMatrix(
+  MatrixType &                   M,
+  const HMatrixSupport::Property top_hmat_property) const
 {
   LAPACKFullMatrixExt<Number> matrix_block;
 
@@ -8491,11 +11985,106 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(MatrixType &M) const
       case FullMatrixType:
         Assert(fullmatrix, ExcInternalError());
 
-        for (size_type i = 0; i < m; i++)
+        /**
+         * Determine if the current full matrix block is to be assigned with
+         * values, which is based on the property of the top level \hmatnode and
+         * the block type of the current \hmatnode.
+         */
+        bool is_assign_value_to_fullmatrix;
+
+        switch (top_hmat_property)
           {
-            for (size_type j = 0; j < n; j++)
+            case HMatrixSupport::general:
               {
-                M(row_indices->at(i), col_indices->at(j)) = (*fullmatrix)(i, j);
+                /**
+                 * When the property of the top level \hmatnode is @p general,
+                 * always copy values to the target full matrix.
+                 */
+                is_assign_value_to_fullmatrix = true;
+
+                break;
+              }
+            case HMatrixSupport::symmetric:
+              {
+                /**
+                 * When the property of the top level \hmatnode is
+                 * @p symmetric, only copy values to the target full matrix
+                 * when the current \hmatnode belongs to the lower triangular
+                 * part or the diagonal part.
+                 */
+                if (block_type == HMatrixSupport::lower_triangular_block ||
+                    block_type == HMatrixSupport::diagonal_block)
+                  {
+                    is_assign_value_to_fullmatrix = true;
+                  }
+                else
+                  {
+                    is_assign_value_to_fullmatrix = false;
+                  }
+
+                break;
+              }
+            case HMatrixSupport::upper_triangular:
+              {
+                /**
+                 * When the property of the top level \hmatnode is
+                 * @p upper_triangular, only copy values to the target full matrix
+                 * when the current \hmatnode belongs to the upper triangular
+                 * part or the diagonal part.
+                 */
+                if (block_type == HMatrixSupport::upper_triangular_block ||
+                    block_type == HMatrixSupport::diagonal_block)
+                  {
+                    is_assign_value_to_fullmatrix = true;
+                  }
+                else
+                  {
+                    is_assign_value_to_fullmatrix = false;
+                  }
+
+                break;
+              }
+            case HMatrixSupport::lower_triangular:
+              {
+                /**
+                 * When the property of the top level \hmatnode is
+                 * @p lower_triangular, only copy values to the target full matrix
+                 * when the current \hmatnode belongs to the lower triangular
+                 * part or the diagonal part.
+                 */
+                if (block_type == HMatrixSupport::lower_triangular_block ||
+                    block_type == HMatrixSupport::diagonal_block)
+                  {
+                    is_assign_value_to_fullmatrix = true;
+                  }
+                else
+                  {
+                    is_assign_value_to_fullmatrix = false;
+                  }
+
+                break;
+              }
+            default:
+              {
+                Assert(false,
+                       ExcMessage(
+                         std::string(
+                           "Invalid property of the top level H-matrix: ") +
+                         std::string(
+                           HMatrixSupport::property_name(top_hmat_property))));
+                is_assign_value_to_fullmatrix = false;
+              }
+          }
+
+        if (is_assign_value_to_fullmatrix)
+          {
+            for (size_type i = 0; i < m; i++)
+              {
+                for (size_type j = 0; j < n; j++)
+                  {
+                    M(row_indices->at(i), col_indices->at(j)) =
+                      (*fullmatrix)(i, j);
+                  }
               }
           }
 
@@ -8503,13 +12092,19 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(MatrixType &M) const
       case RkMatrixType:
         Assert(rkmatrix, ExcInternalError());
 
-        rkmatrix->convertToFullMatrix(matrix_block);
-
-        for (size_type i = 0; i < m; i++)
+        if (rkmatrix->convertToFullMatrix(matrix_block))
           {
-            for (size_type j = 0; j < n; j++)
+            /**
+             * Only when the converted full matrix is not zero-valued, the
+             * values will be copied to the full matrix.
+             */
+            for (size_type i = 0; i < m; i++)
               {
-                M(row_indices->at(i), col_indices->at(j)) = matrix_block(i, j);
+                for (size_type j = 0; j < n; j++)
+                  {
+                    M(row_indices->at(i), col_indices->at(j)) =
+                      matrix_block(i, j);
+                  }
               }
           }
 
@@ -8517,7 +12112,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(MatrixType &M) const
       case HierarchicalMatrixType:
         for (HMatrix *submatrix : submatrices)
           {
-            submatrix->_convertToFullMatrix(M);
+            submatrix->_convertToFullMatrix(M, top_hmat_property);
           }
 
         break;
@@ -8937,7 +12532,8 @@ HMatrix<spacedim, Number>::get_property() const
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
+HMatrix<spacedim, Number>::set_current_matrix_property(
+  const HMatrixSupport::Property property)
 {
   this->property = property;
 }
@@ -8945,7 +12541,8 @@ HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::set_property(const LAPACKFullMatrixExt<Number> &M)
+HMatrix<spacedim, Number>::set_current_matrix_property(
+  const LAPACKFullMatrixExt<Number> &M)
 {
   switch (M.get_property())
     {
@@ -8982,6 +12579,321 @@ HMatrix<spacedim, Number>::set_property(const LAPACKFullMatrixExt<Number> &M)
 
 
 template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_property(const HMatrixSupport::Property property)
+{
+  switch (property)
+    {
+      case HMatrixSupport::general:
+        {
+          /**
+           * When a \hmatnode's property is @p general, all of its descendants
+           * have this same property.
+           */
+
+          /**
+           * Set the current \hmatnode property to be @p general.
+           */
+          this->set_current_matrix_property(property);
+
+          /**
+           * Set the same property for each submatrix, if there are any.
+           */
+          for (HMatrix<spacedim, Number> *hmat : submatrices)
+            {
+              hmat->set_property(property);
+            }
+
+          break;
+        }
+      case HMatrixSupport::symmetric:
+        {
+          /**
+           * If the current \hmatnode is symmetric, it should belong to the
+           * diagonal part. Hence we make an assertion.
+           */
+          Assert(
+            block_type == HMatrixSupport::diagonal_block,
+            ExcMessage(
+              "A symmetric H-matrix node should belong to the diagonal part!"));
+
+          this->set_current_matrix_property(property);
+
+          if (submatrices.size() > 0)
+            {
+              /**
+               * When the current \hmatnode is not a leaf node, we currently
+               * only handle the situation where there are four child matrices.
+               *
+               * \mynote{Because @p AssertDimension is a macro, the second
+               * argument @p BlockClusterTree<spacedim, Number>::child_num
+               * should be protected by a pair of brackets.}
+               */
+              AssertDimension(submatrices.size(),
+                              (BlockClusterTree<spacedim, Number>::child_num));
+
+              /**
+               * In my implementation of \bct and \hmatrix construction, the
+               * first and the fourth child matrices belong to the diagonal
+               * part, the second child matrix belongs to the upper triangular
+               * part and the third child matrix belongs to the lower triangular
+               * part.
+               *
+               * <code>
+               *  -----
+               * |0 | 1|
+               *  -----
+               * |2 | 3|
+               *  -----
+               * </code>
+               */
+              Assert(
+                submatrices[0]->block_type == HMatrixSupport::diagonal_block,
+                ExcMessage(
+                  "The first child matrix should belong to the diagonal part!"));
+              Assert(
+                submatrices[1]->block_type ==
+                  HMatrixSupport::upper_triangular_block,
+                ExcMessage(
+                  "The second child matrix should belong to the upper triangular part!"));
+              Assert(
+                submatrices[2]->block_type ==
+                  HMatrixSupport::lower_triangular_block,
+                ExcMessage(
+                  "The third child matrix should belong to the lower triangular part!"));
+              Assert(
+                submatrices[3]->block_type == HMatrixSupport::diagonal_block,
+                ExcMessage(
+                  "The fourth child matrix should belong to the diagonal part!"));
+
+              /**
+               * After the assertion about block type has been made, set the
+               * property of each submatrix recursively.
+               */
+              submatrices[0]->set_property(this->property);
+              submatrices[1]->set_property(HMatrixSupport::general);
+              submatrices[2]->set_property(HMatrixSupport::general);
+              submatrices[3]->set_property(this->property);
+            }
+          else
+            {
+              /**
+               * When the current \hmatnode is a leaf node, because it must be
+               * a diagonal block, it should be a full matrix.
+               */
+              Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+
+              this->fullmatrix->set_property(LAPACKSupport::symmetric);
+            }
+
+          break;
+        }
+      case HMatrixSupport::upper_triangular:
+        {
+          /**
+           * If the current \hmatnode is upper triangular, it should belong to
+           * the diagonal part. Hence we make an assertion.
+           */
+          Assert(
+            block_type == HMatrixSupport::diagonal_block,
+            ExcMessage(
+              "An upper triangular H-matrix node should belong to the diagonal part!"));
+
+          this->set_current_matrix_property(property);
+
+          if (submatrices.size() > 0)
+            {
+              /**
+               * When the current \hmatnode is not a leaf node, we currently
+               * only handle the situation where there are four child matrices.
+               *
+               * \mynote{Because @p AssertDimension is a macro, the second
+               * argument @p BlockClusterTree<spacedim, Number>::child_num
+               * should be protected by a pair of brackets.}
+               */
+              AssertDimension(submatrices.size(),
+                              (BlockClusterTree<spacedim, Number>::child_num));
+
+              /**
+               * In my implementation of \bct and \hmatrix construction, the
+               * first and the fourth child matrices belong to the diagonal
+               * part, the second child matrix belongs to the upper triangular
+               * part and the third child matrix belongs to the lower triangular
+               * part.
+               */
+              Assert(
+                submatrices[0]->block_type == HMatrixSupport::diagonal_block,
+                ExcMessage(
+                  "The first child matrix should belong to the diagonal part!"));
+              Assert(
+                submatrices[1]->block_type ==
+                  HMatrixSupport::upper_triangular_block,
+                ExcMessage(
+                  "The second child matrix should belong to the upper triangular part!"));
+              Assert(
+                submatrices[2]->block_type ==
+                  HMatrixSupport::lower_triangular_block,
+                ExcMessage(
+                  "The third child matrix should belong to the lower triangular part!"));
+              Assert(
+                submatrices[3]->block_type == HMatrixSupport::diagonal_block,
+                ExcMessage(
+                  "The fourth child matrix should belong to the diagonal part!"));
+
+              /**
+               * After the assertion about block type has been made, set the
+               * property of each submatrix recursively.
+               */
+              submatrices[0]->set_property(this->property);
+              submatrices[1]->set_property(HMatrixSupport::general);
+              submatrices[2]->set_property(HMatrixSupport::general);
+              submatrices[3]->set_property(this->property);
+            }
+          else
+            {
+              /**
+               * When the current \hmatnode is a leaf node, because it is a
+               * diagonal block, it should be a full matrix.
+               */
+              Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+
+              this->fullmatrix->set_property(LAPACKSupport::upper_triangular);
+            }
+
+          break;
+        }
+      case HMatrixSupport::lower_triangular:
+        {
+          /**
+           * If the current \hmatnode is lower triangular, it should belong to
+           * the diagonal part. Hence we make an assertion.
+           */
+          Assert(
+            block_type == HMatrixSupport::diagonal_block,
+            ExcMessage(
+              "A lower triangular H-matrix node should belong to the diagonal part!"));
+
+          this->set_current_matrix_property(property);
+
+          if (submatrices.size() > 0)
+            {
+              /**
+               * When the current \hmatnode is not a leaf node, we currently
+               * only handle the situation where there are four child matrices.
+               *
+               * \mynote{Because @p AssertDimension is a macro, the second
+               * argument @p BlockClusterTree<spacedim, Number>::child_num
+               * should be protected by a pair of brackets.}
+               */
+              AssertDimension(submatrices.size(),
+                              (BlockClusterTree<spacedim, Number>::child_num));
+
+              /**
+               * In my implementation of \bct and \hmatrix construction, the
+               * first and the fourth child matrices belong to the diagonal
+               * part, the second child matrix belongs to the upper triangular
+               * part and the third child matrix belongs to the lower triangular
+               * part.
+               */
+              Assert(
+                submatrices[0]->block_type == HMatrixSupport::diagonal_block,
+                ExcMessage(
+                  "The first child matrix should belong to the diagonal part!"));
+              Assert(
+                submatrices[1]->block_type ==
+                  HMatrixSupport::upper_triangular_block,
+                ExcMessage(
+                  "The second child matrix should belong to the upper triangular part!"));
+              Assert(
+                submatrices[2]->block_type ==
+                  HMatrixSupport::lower_triangular_block,
+                ExcMessage(
+                  "The third child matrix should belong to the lower triangular part!"));
+              Assert(
+                submatrices[3]->block_type == HMatrixSupport::diagonal_block,
+                ExcMessage(
+                  "The fourth child matrix should belong to the diagonal part!"));
+
+              /**
+               * After the assertion about block type has been made, set the
+               * property of each submatrix recursively.
+               */
+              submatrices[0]->set_property(this->property);
+              submatrices[1]->set_property(HMatrixSupport::general);
+              submatrices[2]->set_property(HMatrixSupport::general);
+              submatrices[3]->set_property(this->property);
+            }
+          else
+            {
+              /**
+               * When the current \hmatnode is a leaf node, because it is a
+               * diagonal block, it should be a full matrix.
+               */
+              Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
+
+              this->fullmatrix->set_property(LAPACKSupport::lower_triangular);
+            }
+
+          break;
+        }
+      default:
+        {
+          Assert(false,
+                 ExcMessage(
+                   std::string("Invalid H-matrix property: ") +
+                   std::string(HMatrixSupport::property_name(property))));
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_property(const LAPACKFullMatrixExt<Number> &M)
+{
+  /**
+   * Determine the current \hmatnode property from the given full matrix.
+   */
+  this->set_current_matrix_property(M);
+
+  this->set_property(this->property);
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_current_matrix_state(
+  const HMatrixSupport::State state)
+{
+  this->state = state;
+}
+
+
+template <int spacedim, typename Number>
+HMatrixSupport::State
+HMatrix<spacedim, Number>::get_state() const
+{
+  return state;
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_state(const HMatrixSupport::State state)
+{
+  this->set_current_matrix_state(state);
+
+  /**
+   * All submatrices inherit the same state from their parent.
+   */
+  for (auto hmat : submatrices)
+    {
+      hmat->set_state(this->state);
+    }
+}
+
+
+template <int spacedim, typename Number>
 HMatrixSupport::BlockType
 HMatrix<spacedim, Number>::get_block_type() const
 {
@@ -8991,10 +12903,109 @@ HMatrix<spacedim, Number>::get_block_type() const
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::set_block_type(
+HMatrix<spacedim, Number>::set_current_matrix_block_type(
   const HMatrixSupport::BlockType block_type)
 {
   this->block_type = block_type;
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_block_type(
+  const HMatrixSupport::BlockType block_type)
+{
+  this->set_current_matrix_block_type(block_type);
+
+  for (unsigned int i = 0; i < submatrices.size(); i++)
+    {
+      switch (block_type)
+        {
+          case HMatrixSupport::undefined_block:
+            {
+              /**
+               * When the current \hmatrix block is @p undefined_block, all
+               * child \hmatrices are @p undefined_block.
+               */
+              submatrices[i]->set_block_type(block_type);
+
+              break;
+            }
+          case HMatrixSupport::diagonal_block:
+            {
+              /**
+               * When the current \hmatrix is @p diagonal_block, the first and
+               * fourth child \hmatrices are @p diagonal_block, while the second
+               * child \hmatrix is @p upper_triangular_block and the third child
+               * \hmatrix is @p lower_triangular_block.
+               */
+              switch (i)
+                {
+                  case 0:
+                    {
+                      submatrices[i]->set_block_type(
+                        HMatrixSupport::diagonal_block);
+
+                      break;
+                    }
+                  case 1:
+                    {
+                      submatrices[i]->set_block_type(
+                        HMatrixSupport::upper_triangular_block);
+
+                      break;
+                    }
+                  case 2:
+                    {
+                      submatrices[i]->set_block_type(
+                        HMatrixSupport::lower_triangular_block);
+
+                      break;
+                    }
+                  case 3:
+                    {
+                      submatrices[i]->set_block_type(
+                        HMatrixSupport::diagonal_block);
+
+                      break;
+                    }
+                  default:
+                    {
+                      Assert(false, ExcNotImplemented());
+                    }
+                }
+
+              break;
+            }
+          case HMatrixSupport::upper_triangular_block:
+            {
+              /**
+               * When the current \hmatrix is @p upper_triangular_block,
+               * all child \hmatrices are @p upper_triangular_block.
+               */
+              submatrices[i]->set_block_type(block_type);
+
+              break;
+            }
+          case HMatrixSupport::lower_triangular_block:
+            {
+              /**
+               * When the current \hmatrix is @p lower_triangular_block,
+               * all child \hmatrices are @p lower_triangular_block.
+               */
+              submatrices[i]->set_block_type(block_type);
+
+              break;
+            }
+          default:
+            {
+              Assert(false,
+                     ExcMessage(std::string("Invalid block type ") +
+                                std::string(HMatrixSupport::block_type_name(
+                                  block_type))));
+            }
+        }
+    }
 }
 
 
@@ -9167,7 +13178,12 @@ HMatrix<spacedim, Number>::print_current_matrix_info(std::ostream &out) const
     }
   out << ")\n";
   out << "Submatrix index wrt. the parent H-matrix: " << std::dec
-      << this->submatrix_index << std::endl;
+      << this->submatrix_index << "\n";
+  out << "H-matrix state: " << HMatrixSupport::state_name(this->state) << "\n"
+      << "H-matrix property: " << HMatrixSupport::property_name(this->property)
+      << "\n"
+      << "H-matrix block type: "
+      << HMatrixSupport::block_type_name(this->block_type) << std::endl;
 
   /**
    * Print the size of \f$\Sigma_b^P\f$, \f$\Sigma_b^R\f$ and \f$\Sigma_b^F\f$.
@@ -9238,7 +13254,13 @@ HMatrix<spacedim, Number>::_print_matrix_info_as_dot_node(
   print_vector_values(out, *col_indices, ",", false);
   out << "]<br/>Level: " << bc_node->get_level() << "<br/>";
   out << "Parent: " << std::hex << parent << "<br/>";
-  out << "Submatrix index: " << std::dec << submatrix_index << ">,";
+  out << "Submatrix index: " << std::dec << submatrix_index << "<br/>";
+  out << "H-matrix state: " << HMatrixSupport::state_name(this->state)
+      << "<br/>"
+      << "H-matrix property: " << HMatrixSupport::property_name(this->property)
+      << "<br/>"
+      << "H-matrix block type: "
+      << HMatrixSupport::block_type_name(this->block_type) << ">,";
 
   std::string node_color;
 
@@ -9277,6 +13299,48 @@ HMatrix<spacedim, Number>::_print_matrix_info_as_dot_node(
       Assert(submatrix != nullptr, ExcInternalError());
 
       submatrix->_print_matrix_info_as_dot_node(out);
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::set_property_for_converted_fullmatrix(
+  LAPACKFullMatrixExt<Number> &M) const
+{
+  switch (property)
+    {
+      case HMatrixSupport::general:
+        {
+          M.set_property(LAPACKSupport::general);
+
+          break;
+        }
+      case HMatrixSupport::symmetric:
+        {
+          M.set_property(LAPACKSupport::symmetric);
+
+          break;
+        }
+      case HMatrixSupport::upper_triangular:
+        {
+          M.set_property(LAPACKSupport::upper_triangular);
+
+          break;
+        }
+      case HMatrixSupport::lower_triangular:
+        {
+          M.set_property(LAPACKSupport::lower_triangular);
+
+          break;
+        }
+      default:
+        {
+          Assert(false,
+                 ExcMessage(
+                   std::string("Invalid H-matrix property: ") +
+                   std::string(HMatrixSupport::property_name(property))));
+        }
     }
 }
 
@@ -9468,7 +13532,7 @@ HMatrix<spacedim, Number>::find_row_diag_block_for_offdiag_block()
   /**
    * According to the currently adopted tensor product way of constructing
    * block clusters from clusters, the diagonal block can only be the first or
-   * last sibling of the current \hmatnode. Therefore, when the current
+   * the last sibling of the current \hmatnode. Therefore, when the current
    * \hmatnode's @p submatrix_index is 1 (2), we will directly check if the
    * first (last) sibling is a diagonal block on a same row.
    *
@@ -9580,6 +13644,15 @@ HMatrix<spacedim, Number>::find_row_diag_block_for_offdiag_block()
                 }
               default:
                 {
+                  Assert(
+                    current_hmat_during_recursion->bc_node->get_data_reference()
+                        .get_tau_node() !=
+                      current_hmat_during_recursion->bc_node
+                        ->get_data_reference()
+                        .get_sigma_node(),
+                    ExcMessage(
+                      "The current H-matrix node should not be a diagonal block!"));
+
                   /**
                    * Go one recursion level up for further searching.
                    */
@@ -9753,6 +13826,15 @@ HMatrix<spacedim, Number>::find_col_diag_block_for_offdiag_block()
                 }
               default:
                 {
+                  Assert(
+                    current_hmat_during_recursion->bc_node->get_data_reference()
+                        .get_tau_node() !=
+                      current_hmat_during_recursion->bc_node
+                        ->get_data_reference()
+                        .get_sigma_node(),
+                    ExcMessage(
+                      "The current H-matrix node should not be a diagonal block!"));
+
                   /**
                    * Go one recursion level up for further searching.
                    */
@@ -12892,6 +16974,10 @@ void
 HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
   Vector<Number> &b) const
 {
+  Assert(state == HMatrixSupport::cholesky,
+         ExcMessage(std::string("Invalid H-matrix state: ") +
+                    std::string(HMatrixSupport::state_name(state))));
+
   solve_by_forward_substitution(b, false);
 }
 
@@ -13235,6 +17321,10 @@ void
 HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
   Vector<Number> &b) const
 {
+  Assert(state == HMatrixSupport::cholesky,
+         ExcMessage(std::string("Invalid H-matrix state: ") +
+                    std::string(HMatrixSupport::state_name(state))));
+
   /**
    * The current \hmatnode should be square.
    */
@@ -13646,6 +17736,19 @@ HMatrix<spacedim, Number>::compute_cholesky_factorization(
   HMatrix<spacedim, Number> &L,
   const unsigned int         fixed_rank) const
 {
+  Assert(
+    this->state == HMatrixSupport::matrix,
+    ExcMessage(
+      "The input matrix for computing Cholesky factorization should be in the default 'matrix' state!"));
+  Assert(
+    this->property == HMatrixSupport::symmetric,
+    ExcMessage(
+      "The input matrix for computing Cholesky factorization should be symmetric!"));
+  Assert(
+    this->block_type == HMatrixSupport::diagonal_block,
+    ExcMessage(
+      "The input matrix for computing Cholesky factorization should belong to diagonal block!"));
+
   if (type != HierarchicalMatrixType)
     {
       /**
@@ -13703,6 +17806,15 @@ HMatrix<spacedim, Number>::compute_cholesky_factorization(
 
               /**
                * Iterate over each block column before the \f$j\f$-th column.
+               *
+               * \alert{2022-04-24 When \f$i\equiv j, the product
+               * \f$L_{ik}\cdot L_{jk}^T\f$\f$ is a symmetric matrix, which
+               * needs special treatment when it is to be added to the
+               * symmetric \hmatrix \f$Z\f$. Because the property of the
+               * \hmatrix block \f$L_{ik}\f$ is @p general not @p symmetric,
+               * all of its submatrices have been allocated with memory, while
+               * the symmetric block \f$Z\f$ only stores its diagonal and lower
+               * triangular blocks.}
                */
               for (size_type k = 0; k < j; k++)
                 {
@@ -13852,6 +17964,10 @@ void
 HMatrix<spacedim, Number>::solve_cholesky(Vector<Number> &      x,
                                           const Vector<Number> &b) const
 {
+  Assert(state == HMatrixSupport::cholesky,
+         ExcMessage(std::string("Invalid H-matrix state: ") +
+                    std::string(HMatrixSupport::state_name(state))));
+
   x = b;
   solve_cholesky_by_forward_substitution(x);
   solve_cholesky_by_backward_substitution(x);

@@ -3221,6 +3221,36 @@
                 			
             </target>
             			
+            <target name="hmatrix-set-property.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>hmatrix-set-property.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="hmatrix-set-block-type.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>hmatrix-set-block-type.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
             <target name="documentation" path="doc" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>doxygen</buildCommand>

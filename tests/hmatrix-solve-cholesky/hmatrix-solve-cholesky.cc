@@ -24,12 +24,18 @@
 int
 main()
 {
-  // Read a full matrix where only the lower triangular part (including the
-  // diagonal) is stored.
+  /**
+   * Read a full matrix where only the lower triangular part (including the
+   * diagonal) is stored.
+   */
   LAPACKFullMatrixExt<double> M;
   std::ifstream               in("M.dat");
   M.read_from_mat(in, "M");
   in.close();
+  /**
+   * Set the property of the full matrix as @p symmetric.
+   */
+  M.set_property(LAPACKSupport::symmetric);
 
   Vector<double> b;
   in.open("b.dat");
@@ -64,10 +70,12 @@ main()
 
   /**
    * Create the \hmatrix from the source matrix, where only the lower triangular
-   * part is stored.
+   * part is stored. N.B. Because the full matrix has been assigned the
+   * @p symmetric property, the created \hmatrix will be automatically set to
+   * @p symmetric, which is mandatory for the following Cholesky factorization.
    */
   const unsigned int fixed_rank = 8;
-  HMatrix<3, double> H(bct, M, fixed_rank);
+  HMatrix<3, double> H(bct, M, fixed_rank, HMatrixSupport::diagonal_block);
 
   std::ofstream H_bct("H_bct.dat");
   H.write_leaf_set_by_iteration(H_bct);
@@ -79,14 +87,26 @@ main()
 
   /**
    * Create the \hmatrix after Cholesky factorization, where only the lower
-   * triangular part is effective.
+   * triangular part is effective. The property of this matrix should be set to
+   * @p symmetric.
    */
-  HMatrix<3, double> LLT(bct, fixed_rank);
+  HMatrix<3, double> LLT(bct,
+                         fixed_rank,
+                         HMatrixSupport::symmetric,
+                         HMatrixSupport::diagonal_block);
 
   /**
-   * Perform Cholesky factorization.
+   * Perform Cholesky factorization. After that, the whole \hmatrix hierarchy
+   * should be set to the @p cholesky state.
    */
   H.compute_cholesky_factorization(LLT, fixed_rank);
+  /**
+   * After performing Cholesky factorization, the state of the original
+   * \hmatrix should be set to @p unusable and the state of the result \hmatrix
+   * should be set to @p cholesky.
+   */
+  H.set_state(HMatrixSupport::unusable);
+  LLT.set_state(HMatrixSupport::cholesky);
   /**
    * Recalculate the rank values (upper bound only) for all rank-k matrices in
    * the resulted \hmatrix \p LLT.

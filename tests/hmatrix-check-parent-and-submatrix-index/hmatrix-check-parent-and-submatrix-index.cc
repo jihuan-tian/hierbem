@@ -33,7 +33,7 @@ main()
   cluster_tree.partition();
 
   BlockClusterTree<3, double> block_cluster_tree(cluster_tree, cluster_tree);
-  block_cluster_tree.partition_coarse_non_tensor_product();
+  block_cluster_tree.partition_fine_non_tensor_product();
 
   /**
    * Create a full matrix with data.

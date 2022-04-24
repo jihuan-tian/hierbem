@@ -1,7 +1,8 @@
 /**
  * \file hp-matrix.cc
  * \brief Test the \f$H^p\f$ matrix.
- * \ingroup hierarchical_matrices
+ *
+ * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-06-23
  */

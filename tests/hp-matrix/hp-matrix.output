@@ -16,6 +16,7 @@
  388.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -821.00548 
 -822.41109 
@@ -24,6 +25,7 @@ RkMatrix.B=
   -0.78069 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1181.51174 
 -1182.92181 
@@ -36,6 +38,7 @@ RkMatrix.B=
  644.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1184.33188 
 -1185.74196 
@@ -44,6 +47,7 @@ RkMatrix.B=
   -0.75905 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -133.09308 
 -134.13341 
@@ -56,6 +60,7 @@ RkMatrix.B=
  390.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -135.18053 
 -136.23428 
@@ -64,6 +69,7 @@ RkMatrix.B=
   -0.99847 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -471.22180 
 -472.60976 
@@ -88,6 +94,7 @@ RkMatrix.B=
  904.00000 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2450.77047 
 -2452.75681 
@@ -100,6 +107,7 @@ RkMatrix.B=
   -0.57483 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3469.82477 
 -3471.81797 
@@ -112,6 +120,7 @@ RkMatrix.B=
   -0.55359 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1548.38303 
 -1549.79482 
@@ -120,6 +129,7 @@ RkMatrix.B=
   -0.74721 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1909.91989 
 -1911.33252 
@@ -132,6 +142,7 @@ RkMatrix.B=
 1160.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1912.74515 
 -1914.15778 
@@ -140,6 +151,7 @@ RkMatrix.B=
   -0.73976 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3477.79757 
 -3479.79080 
@@ -152,6 +164,7 @@ RkMatrix.B=
   -0.55347 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -493.47846 
 -495.11177 
@@ -164,6 +177,7 @@ RkMatrix.B=
   -0.79548 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -832.25116 
 -833.65700 
@@ -176,6 +190,7 @@ RkMatrix.B=
  906.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -835.06287 
 -836.46876 
@@ -184,6 +199,7 @@ RkMatrix.B=
   -0.77952 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1195.61281 
 -1197.02297 
@@ -192,6 +208,7 @@ RkMatrix.B=
   -0.75858 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -500.01706 
 -501.66091 
@@ -204,6 +221,7 @@ RkMatrix.B=
   -0.79306 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1462.28440 
 -1464.24587 
@@ -232,6 +250,7 @@ RkMatrix.B=
 1420.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2277.26898 
 -2278.68208 
@@ -240,6 +259,7 @@ RkMatrix.B=
   -0.73464 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2639.06082 
 -2640.47420 
@@ -252,6 +272,7 @@ RkMatrix.B=
 1676.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2641.88758 
 -2643.30097 
@@ -260,6 +281,7 @@ RkMatrix.B=
   -0.73091 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1559.67753 
 -1561.08936 
@@ -272,6 +294,7 @@ RkMatrix.B=
 1422.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1562.50120 
 -1563.91304 
@@ -280,6 +303,7 @@ RkMatrix.B=
   -0.74686 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1924.04626 
 -1925.45891 
@@ -304,6 +328,7 @@ RkMatrix.B=
 1936.00000 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7111.13202 
 -7113.94119 
@@ -324,6 +349,7 @@ RkMatrix.B=
   -0.41406 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9993.38058 
 -9996.19926 
@@ -344,6 +370,7 @@ RkMatrix.B=
   -0.39712 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4507.09707 
 -4509.09303 
@@ -356,6 +383,7 @@ RkMatrix.B=
   -0.54156 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5529.41262 
 -5531.40995 
@@ -368,6 +396,7 @@ RkMatrix.B=
   -0.53404 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3006.56648 
 -3007.98005 
@@ -376,6 +405,7 @@ RkMatrix.B=
   -0.72807 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3368.45870 
 -3369.87240 
@@ -388,6 +418,7 @@ RkMatrix.B=
 2192.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3371.28610 
 -3372.69981 
@@ -396,6 +427,7 @@ RkMatrix.B=
   -0.72583 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5537.40192 
 -5539.39925 
@@ -408,6 +440,7 @@ RkMatrix.B=
   -0.53399 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10015.93008 
 -10018.74881 
@@ -428,6 +461,7 @@ RkMatrix.B=
   -0.39703 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1554.95990 
 -1557.35732 
@@ -448,6 +482,7 @@ RkMatrix.B=
   -0.58624 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2482.55431 
 -2484.54100 
@@ -460,6 +495,7 @@ RkMatrix.B=
   -0.57392 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2288.57379 
 -2289.98690 
@@ -472,6 +508,7 @@ RkMatrix.B=
 1938.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2291.40001 
 -2292.81312 
@@ -480,6 +517,7 @@ RkMatrix.B=
   -0.73448 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2653.19468 
 -2654.60807 
@@ -488,6 +526,7 @@ RkMatrix.B=
   -0.73081 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -2490.50113 
 -2492.48791 
@@ -500,6 +539,7 @@ RkMatrix.B=
   -0.57370 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3509.69001 
 -3511.68336 
@@ -512,6 +552,7 @@ RkMatrix.B=
   -0.55300 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -1574.14515 
 -1576.55389 
@@ -532,6 +573,7 @@ RkMatrix.B=
   -0.58417 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4314.64905 
 -4317.42494 
@@ -568,6 +610,7 @@ RkMatrix.B=
 2452.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3736.03453 
 -3737.44833 
@@ -576,6 +619,7 @@ RkMatrix.B=
   -0.72403 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4097.97633 
 -4099.39020 
@@ -588,6 +632,7 @@ RkMatrix.B=
 2708.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4100.80407 
 -4102.21794 
@@ -596,6 +641,7 @@ RkMatrix.B=
   -0.72254 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3017.87508 
 -3019.28866 
@@ -608,6 +654,7 @@ RkMatrix.B=
 2454.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3020.70224 
 -3022.11582 
@@ -616,6 +663,7 @@ RkMatrix.B=
   -0.72797 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3382.59575 
 -3384.00946 
@@ -640,6 +688,7 @@ RkMatrix.B=
 2968.00000 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6568.23903 
 -6570.23713 
@@ -652,6 +701,7 @@ RkMatrix.B=
   -0.52874 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7591.39750 
 -7593.39608 
@@ -664,6 +714,7 @@ RkMatrix.B=
   -0.52493 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4465.58955 
 -4467.00347 
@@ -672,6 +723,7 @@ RkMatrix.B=
   -0.72129 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4827.55942 
 -4828.97339 
@@ -684,6 +736,7 @@ RkMatrix.B=
 3224.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4830.38736 
 -4831.80132 
@@ -692,6 +745,7 @@ RkMatrix.B=
   -0.72023 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7599.39182 
 -7601.39040 
@@ -704,6 +758,7 @@ RkMatrix.B=
   -0.52490 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4539.03293 
 -4541.02896 
@@ -716,6 +771,7 @@ RkMatrix.B=
   -0.54128 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3747.34493 
 -3748.75873 
@@ -728,6 +784,7 @@ RkMatrix.B=
 2970.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -3750.17253 
 -3751.58633 
@@ -736,6 +793,7 @@ RkMatrix.B=
   -0.72396 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4112.11503 
 -4113.52890 
@@ -744,6 +802,7 @@ RkMatrix.B=
   -0.72250 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4547.01704 
 -4549.01308 
@@ -756,6 +815,7 @@ RkMatrix.B=
   -0.54121 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5569.35939 
 -5571.35675 
@@ -784,6 +844,7 @@ RkMatrix.B=
 3484.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5195.19490 
 -5196.60889 
@@ -792,6 +853,7 @@ RkMatrix.B=
   -0.71932 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5557.18220 
 -5558.59623 
@@ -804,6 +866,7 @@ RkMatrix.B=
 3740.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5560.01025 
 -5561.42428 
@@ -812,6 +875,7 @@ RkMatrix.B=
   -0.71852 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4476.90094 
 -4478.31486 
@@ -824,6 +888,7 @@ RkMatrix.B=
 3486.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4479.72879 
 -4481.14271 
@@ -832,6 +897,7 @@ RkMatrix.B=
   -0.72125 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4841.69908 
 -4843.11305 
@@ -856,6 +922,7 @@ RkMatrix.B=
 4000.00000 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20365.22850 
 -20369.20163 
@@ -892,6 +959,7 @@ RkMatrix.B=
   -0.29539 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -28517.83571 
 -28521.82202 
@@ -928,6 +996,7 @@ RkMatrix.B=
   -0.28277 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12927.09927 
 -12929.92188 
@@ -948,6 +1017,7 @@ RkMatrix.B=
   -0.38746 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15818.53115 
 -15821.35569 
@@ -968,6 +1038,7 @@ RkMatrix.B=
   -0.38137 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8630.74713 
 -8632.74603 
@@ -980,6 +1051,7 @@ RkMatrix.B=
   -0.52196 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9654.24363 
 -9656.24275 
@@ -992,6 +1064,7 @@ RkMatrix.B=
   -0.51966 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5924.83198 
 -5926.24603 
@@ -1000,6 +1073,7 @@ RkMatrix.B=
   -0.71782 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6286.83084 
 -6288.24491 
@@ -1012,6 +1086,7 @@ RkMatrix.B=
 4256.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6289.65897 
 -6291.07304 
@@ -1020,6 +1095,7 @@ RkMatrix.B=
   -0.71721 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9662.24011 
 -9664.23924 
@@ -1032,6 +1108,7 @@ RkMatrix.B=
   -0.51965 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15841.12748 
 -15843.95203 
@@ -1052,6 +1129,7 @@ RkMatrix.B=
   -0.38133 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -28581.61664 
 -28585.60301 
@@ -1088,6 +1166,7 @@ RkMatrix.B=
   -0.28270 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4620.29336 
 -4623.73882 
@@ -1124,6 +1203,7 @@ RkMatrix.B=
   -0.42196 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7201.03150 
 -7203.84115 
@@ -1144,6 +1224,7 @@ RkMatrix.B=
   -0.41333 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6600.20878 
 -6602.20690 
@@ -1156,6 +1237,7 @@ RkMatrix.B=
   -0.52861 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5206.50689 
 -5207.92089 
@@ -1168,6 +1250,7 @@ RkMatrix.B=
 4002.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5209.33489 
 -5210.74889 
@@ -1176,6 +1259,7 @@ RkMatrix.B=
   -0.71928 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5571.32246 
 -5572.73649 
@@ -1184,6 +1268,7 @@ RkMatrix.B=
   -0.71850 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6608.20127 
 -6610.19939 
@@ -1196,6 +1281,7 @@ RkMatrix.B=
   -0.52857 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7631.36921 
 -7633.36780 
@@ -1208,6 +1294,7 @@ RkMatrix.B=
   -0.52480 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7223.50875 
 -7226.31852 
@@ -1228,6 +1315,7 @@ RkMatrix.B=
   -0.41316 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10106.13157 
 -10108.95047 
@@ -1248,6 +1336,7 @@ RkMatrix.B=
   -0.39665 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -4675.42813 
 -4678.88756 
@@ -1284,6 +1373,7 @@ RkMatrix.B=
   -0.42041 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12453.69470 
 -12457.62256 
@@ -1336,6 +1426,7 @@ RkMatrix.B=
 4516.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6654.49036 
 -6655.90445 
@@ -1344,6 +1435,7 @@ RkMatrix.B=
   -0.71666 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7016.49727 
 -7017.91137 
@@ -1356,6 +1448,7 @@ RkMatrix.B=
 4772.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7019.32547 
 -7020.73956 
@@ -1364,6 +1457,7 @@ RkMatrix.B=
   -0.71616 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5936.14437 
 -5937.55842 
@@ -1376,6 +1470,7 @@ RkMatrix.B=
 4518.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -5938.97247 
 -5940.38652 
@@ -1384,6 +1479,7 @@ RkMatrix.B=
   -0.71780 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6300.97151 
 -6302.38558 
@@ -1408,6 +1504,7 @@ RkMatrix.B=
 5032.00000 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10693.83093 
 -10695.83022 
@@ -1420,6 +1517,7 @@ RkMatrix.B=
   -0.51777 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11717.49615 
 -11719.49555 
@@ -1432,6 +1530,7 @@ RkMatrix.B=
   -0.51623 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7384.16373 
 -7385.57784 
@@ -1440,6 +1539,7 @@ RkMatrix.B=
   -0.71572 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7746.17648 
 -7747.59059 
@@ -1452,6 +1552,7 @@ RkMatrix.B=
 5288.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7749.00471 
 -7750.41883 
@@ -1460,6 +1561,7 @@ RkMatrix.B=
   -0.71532 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11725.49376 
 -11727.49317 
@@ -1472,6 +1574,7 @@ RkMatrix.B=
   -0.51622 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8662.72959 
 -8664.72850 
@@ -1484,6 +1587,7 @@ RkMatrix.B=
   -0.52188 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6665.80303 
 -6667.21711 
@@ -1496,6 +1600,7 @@ RkMatrix.B=
 5034.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -6668.63119 
 -6670.04528 
@@ -1504,6 +1609,7 @@ RkMatrix.B=
   -0.71664 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7030.63824 
 -7032.05233 
@@ -1512,6 +1618,7 @@ RkMatrix.B=
   -0.71615 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8670.72523 
 -8672.72414 
@@ -1524,6 +1631,7 @@ RkMatrix.B=
   -0.52186 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9694.22612 
 -9696.22524 
@@ -1552,6 +1660,7 @@ RkMatrix.B=
 5548.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8113.84804 
 -8115.26216 
@@ -1560,6 +1669,7 @@ RkMatrix.B=
   -0.71495 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8475.86515 
 -8477.27928 
@@ -1572,6 +1682,7 @@ RkMatrix.B=
 5804.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8478.69341 
 -8480.10755 
@@ -1580,6 +1691,7 @@ RkMatrix.B=
   -0.71461 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7395.47659 
 -7396.89070 
@@ -1592,6 +1704,7 @@ RkMatrix.B=
 5550.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7398.30481 
 -7399.71891 
@@ -1600,6 +1713,7 @@ RkMatrix.B=
   -0.71570 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -7760.31765 
 -7761.73177 
@@ -1624,6 +1738,7 @@ RkMatrix.B=
 6064.00000 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18756.68222 
 -18759.50788 
@@ -1644,6 +1759,7 @@ RkMatrix.B=
   -0.37708 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21650.53662 
 -21653.36297 
@@ -1664,6 +1780,7 @@ RkMatrix.B=
   -0.37398 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12757.21114 
 -12759.21063 
@@ -1676,6 +1793,7 @@ RkMatrix.B=
   -0.51492 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13780.97253 
 -13782.97210 
@@ -1688,6 +1806,7 @@ RkMatrix.B=
   -0.51382 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8843.54058 
 -8844.95472 
@@ -1696,6 +1815,7 @@ RkMatrix.B=
   -0.71431 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9205.56104 
 -9206.97518 
@@ -1708,6 +1828,7 @@ RkMatrix.B=
 6320.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9208.38933 
 -9209.80347 
@@ -1716,6 +1837,7 @@ RkMatrix.B=
   -0.71402 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13788.97081 
 -13790.97038 
@@ -1728,6 +1850,7 @@ RkMatrix.B=
   -0.51381 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21673.14744 
 -21675.97379 
@@ -1748,6 +1871,7 @@ RkMatrix.B=
   -0.37396 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13017.42369 
 -13020.24638 
@@ -1768,6 +1892,7 @@ RkMatrix.B=
   -0.38723 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10725.81950 
 -10727.81879 
@@ -1780,6 +1905,7 @@ RkMatrix.B=
   -0.51772 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8125.16104 
 -8126.57517 
@@ -1792,6 +1918,7 @@ RkMatrix.B=
 6066.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8127.98930 
 -8129.40342 
@@ -1800,6 +1927,7 @@ RkMatrix.B=
   -0.71494 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8490.00648 
 -8491.42061 
@@ -1808,6 +1936,7 @@ RkMatrix.B=
   -0.71460 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10733.81666 
 -10735.81594 
@@ -1820,6 +1949,7 @@ RkMatrix.B=
   -0.51770 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11757.48425 
 -11759.48366 
@@ -1832,6 +1962,7 @@ RkMatrix.B=
   -0.51618 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13040.00520 
 -13042.82791 
@@ -1852,6 +1983,7 @@ RkMatrix.B=
   -0.38717 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15931.51367 
 -15934.33826 
@@ -1888,6 +2020,7 @@ RkMatrix.B=
 6580.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9573.23947 
 -9574.65362 
@@ -1896,6 +2029,7 @@ RkMatrix.B=
   -0.71376 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9935.26255 
 -9936.67671 
@@ -1908,6 +2042,7 @@ RkMatrix.B=
 6836.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9938.09086 
 -9939.50502 
@@ -1916,6 +2051,7 @@ RkMatrix.B=
   -0.71352 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8854.85370 
 -8856.26784 
@@ -1928,6 +2064,7 @@ RkMatrix.B=
 6582.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -8857.68198 
 -8859.09612 
@@ -1936,6 +2073,7 @@ RkMatrix.B=
   -0.71429 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9219.70249 
 -9221.11664 
@@ -1960,6 +2098,7 @@ RkMatrix.B=
 7096.00000 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14820.76395 
 -14822.76357 
@@ -1972,6 +2111,7 @@ RkMatrix.B=
   -0.51286 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15844.58532 
 -15846.58499 
@@ -1984,6 +2124,7 @@ RkMatrix.B=
   -0.51203 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10302.94337 
 -10304.35752 
@@ -1992,6 +2133,7 @@ RkMatrix.B=
   -0.71329 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10664.96854 
 -10666.38270 
@@ -2004,6 +2146,7 @@ RkMatrix.B=
 7352.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10667.79687 
 -10669.21103 
@@ -2012,6 +2155,7 @@ RkMatrix.B=
   -0.71308 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15852.58402 
 -15854.58369 
@@ -2024,6 +2168,7 @@ RkMatrix.B=
   -0.51203 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12789.20310 
 -12791.20260 
@@ -2036,6 +2181,7 @@ RkMatrix.B=
   -0.51488 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9584.55268 
 -9585.96683 
@@ -2048,6 +2194,7 @@ RkMatrix.B=
 7098.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9587.38098 
 -9588.79513 
@@ -2056,6 +2203,7 @@ RkMatrix.B=
   -0.71375 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -9949.40410 
 -9950.81826 
@@ -2064,6 +2212,7 @@ RkMatrix.B=
   -0.71351 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12797.20110 
 -12799.20060 
@@ -2076,6 +2225,7 @@ RkMatrix.B=
   -0.51487 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13820.96393 
 -13822.96350 
@@ -2104,6 +2254,7 @@ RkMatrix.B=
 7612.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11032.65127 
 -11034.06543 
@@ -2112,6 +2263,7 @@ RkMatrix.B=
   -0.71288 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11394.67814 
 -11396.09231 
@@ -2124,6 +2276,7 @@ RkMatrix.B=
 7868.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11397.50648 
 -11398.92065 
@@ -2132,6 +2285,7 @@ RkMatrix.B=
   -0.71270 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10314.25664 
 -10315.67080 
@@ -2144,6 +2298,7 @@ RkMatrix.B=
 7614.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10317.08496 
 -10318.49912 
@@ -2152,6 +2307,7 @@ RkMatrix.B=
   -0.71328 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -10679.11017 
 -10680.52433 
@@ -2176,6 +2332,7 @@ RkMatrix.B=
 8128.00000 
 RkMatrix.dim=(32,32)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -57956.69054 
 -57962.30974 
@@ -2244,6 +2401,7 @@ RkMatrix.B=
   -0.20978 
 RkMatrix.dim=(32,32)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -81016.59353 
 -81022.23114 
@@ -2312,6 +2470,7 @@ RkMatrix.B=
   -0.20064 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -36815.73246 
 -36819.72424 
@@ -2348,6 +2507,7 @@ RkMatrix.B=
   -0.27554 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -44993.94605 
 -44997.94055 
@@ -2384,6 +2544,7 @@ RkMatrix.B=
   -0.27098 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -24590.19918 
 -24593.02600 
@@ -2404,6 +2565,7 @@ RkMatrix.B=
   -0.37156 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -27485.03374 
 -27487.86088 
@@ -2424,6 +2586,7 @@ RkMatrix.B=
   -0.36969 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16884.42608 
 -16886.42579 
@@ -2436,6 +2599,7 @@ RkMatrix.B=
   -0.51130 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17908.28736 
 -17910.28710 
@@ -2448,6 +2612,7 @@ RkMatrix.B=
   -0.51066 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11762.36243 
 -11763.77660 
@@ -2456,6 +2621,7 @@ RkMatrix.B=
   -0.71253 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12124.39071 
 -12125.80488 
@@ -2468,6 +2634,7 @@ RkMatrix.B=
 8384.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12127.21905 
 -12128.63323 
@@ -2476,6 +2643,7 @@ RkMatrix.B=
   -0.71236 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17916.28633 
 -17918.28608 
@@ -2488,6 +2656,7 @@ RkMatrix.B=
   -0.51065 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -27507.65086 
 -27510.47800 
@@ -2508,6 +2677,7 @@ RkMatrix.B=
   -0.36967 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -45057.85807 
 -45061.85258 
@@ -2544,6 +2714,7 @@ RkMatrix.B=
   -0.27095 
 RkMatrix.dim=(32,32)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -81196.99687 
 -81202.63455 
@@ -2612,6 +2783,7 @@ RkMatrix.B=
   -0.20059 
 RkMatrix.dim=(32,32)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13380.67558 
 -13385.58494 
@@ -2680,6 +2852,7 @@ RkMatrix.B=
   -0.30085 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20619.52483 
 -20623.49862 
@@ -2716,6 +2889,7 @@ RkMatrix.B=
   -0.29485 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18847.10375 
 -18849.92944 
@@ -2736,6 +2910,7 @@ RkMatrix.B=
   -0.37697 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14852.75799 
 -14854.75762 
@@ -2748,6 +2923,7 @@ RkMatrix.B=
   -0.51283 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11043.96460 
 -11045.37876 
@@ -2760,6 +2936,7 @@ RkMatrix.B=
 8130.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11046.79293 
 -11048.20709 
@@ -2768,6 +2945,7 @@ RkMatrix.B=
   -0.71288 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11408.81983 
 -11410.23400 
@@ -2776,6 +2954,7 @@ RkMatrix.B=
   -0.71269 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14860.75651 
 -14862.75614 
@@ -2788,6 +2967,7 @@ RkMatrix.B=
   -0.51282 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15884.57881 
 -15886.57849 
@@ -2800,6 +2980,7 @@ RkMatrix.B=
   -0.51200 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18869.70927 
 -18872.53496 
@@ -2820,6 +3001,7 @@ RkMatrix.B=
   -0.37694 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21763.59106 
 -21766.41743 
@@ -2840,6 +3022,7 @@ RkMatrix.B=
   -0.37387 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20683.10548 
 -20687.07943 
@@ -2876,6 +3059,7 @@ RkMatrix.B=
   -0.29472 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -28836.75006 
 -28840.73667 
@@ -2912,6 +3096,7 @@ RkMatrix.B=
   -0.28242 
 RkMatrix.dim=(32,32)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13537.78574 
 -13542.71356 
@@ -2980,6 +3165,7 @@ RkMatrix.B=
   -0.29972 
 RkMatrix.dim=(32,32)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -35576.19723 
 -35581.75379 
@@ -3064,6 +3250,7 @@ RkMatrix.B=
 8644.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12492.07629 
 -12493.49047 
@@ -3072,6 +3259,7 @@ RkMatrix.B=
   -0.71221 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12854.10573 
 -12855.51990 
@@ -3084,6 +3272,7 @@ RkMatrix.B=
 8900.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12856.93408 
 -12858.34826 
@@ -3092,6 +3281,7 @@ RkMatrix.B=
   -0.71207 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11773.67581 
 -11775.08998 
@@ -3104,6 +3294,7 @@ RkMatrix.B=
 8646.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -11776.50415 
 -11777.91832 
@@ -3112,6 +3303,7 @@ RkMatrix.B=
   -0.71252 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12138.53245 
 -12139.94662 
@@ -3136,6 +3328,7 @@ RkMatrix.B=
 9160.00000 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18948.16181 
 -18950.16158 
@@ -3148,6 +3341,7 @@ RkMatrix.B=
   -0.51007 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19972.05097 
 -19974.05077 
@@ -3160,6 +3354,7 @@ RkMatrix.B=
   -0.50956 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13221.79239 
 -13223.20657 
@@ -3168,6 +3363,7 @@ RkMatrix.B=
   -0.71193 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13583.82281 
 -13585.23699 
@@ -3180,6 +3376,7 @@ RkMatrix.B=
 9416.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13586.65117 
 -13588.06535 
@@ -3188,6 +3385,7 @@ RkMatrix.B=
   -0.71180 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19980.05015 
 -19982.04994 
@@ -3200,6 +3398,7 @@ RkMatrix.B=
   -0.50956 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16916.42149 
 -16918.42120 
@@ -3212,6 +3411,7 @@ RkMatrix.B=
   -0.51128 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12503.38970 
 -12504.80388 
@@ -3224,6 +3424,7 @@ RkMatrix.B=
 9162.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12506.21805 
 -12507.63223 
@@ -3232,6 +3433,7 @@ RkMatrix.B=
   -0.71221 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -12868.24751 
 -12869.66169 
@@ -3240,6 +3442,7 @@ RkMatrix.B=
   -0.71206 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16924.42034 
 -16926.42006 
@@ -3252,6 +3455,7 @@ RkMatrix.B=
   -0.51127 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17948.28226 
 -17950.28200 
@@ -3280,6 +3484,7 @@ RkMatrix.B=
 9676.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13951.51038 
 -13952.92457 
@@ -3288,6 +3493,7 @@ RkMatrix.B=
   -0.71168 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14313.54163 
 -14314.95582 
@@ -3300,6 +3506,7 @@ RkMatrix.B=
 9932.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14316.37000 
 -14317.78419 
@@ -3308,6 +3515,7 @@ RkMatrix.B=
   -0.71156 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13233.10583 
 -13234.52001 
@@ -3320,6 +3528,7 @@ RkMatrix.B=
 9678.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13235.93419 
 -13237.34837 
@@ -3328,6 +3537,7 @@ RkMatrix.B=
   -0.71193 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13597.96463 
 -13599.37881 
@@ -3352,6 +3562,7 @@ RkMatrix.B=
 10192.00000 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -30425.38742 
 -30428.21480 
@@ -3372,6 +3583,7 @@ RkMatrix.B=
   -0.36814 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -33320.71368 
 -33323.54123 
@@ -3392,6 +3604,7 @@ RkMatrix.B=
   -0.36688 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21011.94946 
 -21013.94927 
@@ -3404,6 +3617,7 @@ RkMatrix.B=
   -0.50909 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -22035.85887 
 -22037.85870 
@@ -3416,6 +3630,7 @@ RkMatrix.B=
   -0.50867 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14681.22999 
 -14682.64418 
@@ -3424,6 +3639,7 @@ RkMatrix.B=
   -0.71145 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15043.26195 
 -15044.67613 
@@ -3436,6 +3652,7 @@ RkMatrix.B=
 10448.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15046.09032 
 -15047.50451 
@@ -3444,6 +3661,7 @@ RkMatrix.B=
   -0.71135 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -22043.85819 
 -22045.85802 
@@ -3456,6 +3674,7 @@ RkMatrix.B=
   -0.50867 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -33343.33409 
 -33346.16164 
@@ -3476,6 +3695,7 @@ RkMatrix.B=
   -0.36688 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -24680.65753 
 -24683.48436 
@@ -3496,6 +3716,7 @@ RkMatrix.B=
   -0.37150 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18980.15817 
 -18982.15794 
@@ -3508,6 +3729,7 @@ RkMatrix.B=
   -0.51006 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13962.82385 
 -13964.23804 
@@ -3520,6 +3742,7 @@ RkMatrix.B=
 10194.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -13965.65222 
 -13967.06641 
@@ -3528,6 +3751,7 @@ RkMatrix.B=
   -0.71167 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14327.68348 
 -14329.09767 
@@ -3536,6 +3760,7 @@ RkMatrix.B=
   -0.71156 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18988.15726 
 -18990.15703 
@@ -3548,6 +3773,7 @@ RkMatrix.B=
   -0.51005 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20012.04687 
 -20014.04667 
@@ -3560,6 +3786,7 @@ RkMatrix.B=
   -0.50954 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -24703.27217 
 -24706.09900 
@@ -3580,6 +3807,7 @@ RkMatrix.B=
   -0.37148 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -27598.11950 
 -27600.94665 
@@ -3616,6 +3844,7 @@ RkMatrix.B=
 10708.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15410.95098 
 -15412.36517 
@@ -3624,6 +3853,7 @@ RkMatrix.B=
   -0.71125 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15772.98355 
 -15774.39774 
@@ -3636,6 +3866,7 @@ RkMatrix.B=
 10964.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15775.81193 
 -15777.22612 
@@ -3644,6 +3875,7 @@ RkMatrix.B=
   -0.71115 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14692.54348 
 -14693.95767 
@@ -3656,6 +3888,7 @@ RkMatrix.B=
 10710.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -14695.37186 
 -14696.78604 
@@ -3664,6 +3897,7 @@ RkMatrix.B=
   -0.71145 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15057.40383 
 -15058.81801 
@@ -3688,6 +3922,7 @@ RkMatrix.B=
 11224.00000 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -23075.77509 
 -23077.77494 
@@ -3700,6 +3935,7 @@ RkMatrix.B=
   -0.50828 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -24099.69967 
 -24101.69953 
@@ -3712,6 +3948,7 @@ RkMatrix.B=
   -0.50793 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16140.67316 
 -16142.08735 
@@ -3720,6 +3957,7 @@ RkMatrix.B=
   -0.71106 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16502.70626 
 -16504.12046 
@@ -3732,6 +3970,7 @@ RkMatrix.B=
 11480.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16505.53465 
 -16506.94884 
@@ -3740,6 +3979,7 @@ RkMatrix.B=
   -0.71097 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -24107.69910 
 -24109.69896 
@@ -3752,6 +3992,7 @@ RkMatrix.B=
   -0.50793 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21043.94649 
 -21045.94631 
@@ -3764,6 +4005,7 @@ RkMatrix.B=
   -0.50908 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15422.26449 
 -15423.67868 
@@ -3776,6 +4018,7 @@ RkMatrix.B=
 11226.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15425.09287 
 -15426.50706 
@@ -3784,6 +4027,7 @@ RkMatrix.B=
   -0.71124 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -15787.12545 
 -15788.53964 
@@ -3792,6 +4036,7 @@ RkMatrix.B=
   -0.71115 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21051.94575 
 -21053.94557 
@@ -3804,6 +4049,7 @@ RkMatrix.B=
   -0.50907 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -22075.85550 
 -22077.85533 
@@ -3832,6 +4078,7 @@ RkMatrix.B=
 11740.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16870.39638 
 -16871.81057 
@@ -3840,6 +4087,7 @@ RkMatrix.B=
   -0.71089 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17232.42995 
 -17233.84414 
@@ -3852,6 +4100,7 @@ RkMatrix.B=
 11996.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17235.25834 
 -17236.67253 
@@ -3860,6 +4109,7 @@ RkMatrix.B=
   -0.71081 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16151.98669 
 -16153.40088 
@@ -3872,6 +4122,7 @@ RkMatrix.B=
 11742.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16154.81507 
 -16156.22926 
@@ -3880,6 +4131,7 @@ RkMatrix.B=
   -0.71106 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16516.84819 
 -16518.26238 
@@ -3904,6 +4156,7 @@ RkMatrix.B=
 12256.00000 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -53304.27809 
 -53308.27417 
@@ -3940,6 +4193,7 @@ RkMatrix.B=
   -0.26775 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -61489.31366 
 -61493.31072 
@@ -3976,6 +4230,7 @@ RkMatrix.B=
   -0.26542 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -36261.44013 
 -36264.26781 
@@ -3996,6 +4251,7 @@ RkMatrix.B=
   -0.36581 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -39157.04759 
 -39159.87538 
@@ -4016,6 +4272,7 @@ RkMatrix.B=
   -0.36491 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -25139.62935 
 -25141.62922 
@@ -4028,6 +4285,7 @@ RkMatrix.B=
   -0.50760 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -26163.56558 
 -26165.56546 
@@ -4040,6 +4298,7 @@ RkMatrix.B=
   -0.50731 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17600.12051 
 -17601.53471 
@@ -4048,6 +4307,7 @@ RkMatrix.B=
   -0.71073 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17962.15449 
 -17963.56869 
@@ -4060,6 +4320,7 @@ RkMatrix.B=
 12512.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17964.98288 
 -17966.39708 
@@ -4068,6 +4329,7 @@ RkMatrix.B=
   -0.71066 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -26171.56510 
 -26173.56498 
@@ -4080,6 +4342,7 @@ RkMatrix.B=
   -0.50731 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -39179.66993 
 -39182.49773 
@@ -4100,6 +4363,7 @@ RkMatrix.B=
   -0.36491 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -61553.26655 
 -61557.26361 
@@ -4136,6 +4400,7 @@ RkMatrix.B=
   -0.26540 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -37071.20948 
 -37075.20138 
@@ -4172,6 +4437,7 @@ RkMatrix.B=
   -0.27537 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -30515.86355 
 -30518.69093 
@@ -4192,6 +4458,7 @@ RkMatrix.B=
   -0.36810 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -23107.77263 
 -23109.77248 
@@ -4204,6 +4471,7 @@ RkMatrix.B=
   -0.50827 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16881.70993 
 -16883.12412 
@@ -4216,6 +4484,7 @@ RkMatrix.B=
 12258.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -16884.53831 
 -16885.95250 
@@ -4224,6 +4493,7 @@ RkMatrix.B=
   -0.71089 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17246.57189 
 -17247.98609 
@@ -4232,6 +4502,7 @@ RkMatrix.B=
   -0.71081 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -23115.77202 
 -23117.77186 
@@ -4244,6 +4515,7 @@ RkMatrix.B=
   -0.50827 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -24139.69685 
 -24141.69671 
@@ -4256,6 +4528,7 @@ RkMatrix.B=
   -0.50792 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -30538.48261 
 -30541.30999 
@@ -4276,6 +4549,7 @@ RkMatrix.B=
   -0.36809 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -33433.81581 
 -33436.64337 
@@ -4296,6 +4570,7 @@ RkMatrix.B=
   -0.36684 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -37135.07986 
 -37139.07179 
@@ -4332,6 +4607,7 @@ RkMatrix.B=
   -0.27533 
 RkMatrix.dim=(16,16)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -45313.50860 
 -45317.50318 
@@ -4384,6 +4660,7 @@ RkMatrix.B=
 12772.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18329.84544 
 -18331.25964 
@@ -4392,6 +4669,7 @@ RkMatrix.B=
   -0.71059 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18691.87979 
 -18693.29398 
@@ -4404,6 +4682,7 @@ RkMatrix.B=
 13028.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18694.70818 
 -18696.12238 
@@ -4412,6 +4691,7 @@ RkMatrix.B=
   -0.71052 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17611.43407 
 -17612.84826 
@@ -4424,6 +4704,7 @@ RkMatrix.B=
 12774.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17614.26246 
 -17615.67665 
@@ -4432,6 +4713,7 @@ RkMatrix.B=
   -0.71073 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -17976.29645 
 -17977.71064 
@@ -4456,6 +4738,7 @@ RkMatrix.B=
 13288.00000 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -27203.50573 
 -27205.50562 
@@ -4468,6 +4751,7 @@ RkMatrix.B=
   -0.50703 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -28227.45111 
 -28229.45100 
@@ -4480,6 +4764,7 @@ RkMatrix.B=
   -0.50678 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19059.57109 
 -19060.98528 
@@ -4488,6 +4773,7 @@ RkMatrix.B=
   -0.71046 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19421.60575 
 -19423.01995 
@@ -4500,6 +4786,7 @@ RkMatrix.B=
 13544.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19424.43415 
 -19425.84835 
@@ -4508,6 +4795,7 @@ RkMatrix.B=
   -0.71039 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -28235.45070 
 -28237.45059 
@@ -4520,6 +4808,7 @@ RkMatrix.B=
   -0.50677 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -25171.62728 
 -25173.62715 
@@ -4532,6 +4821,7 @@ RkMatrix.B=
   -0.50759 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18341.15901 
 -18342.57321 
@@ -4544,6 +4834,7 @@ RkMatrix.B=
 13290.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18343.98741 
 -18345.40160 
@@ -4552,6 +4843,7 @@ RkMatrix.B=
   -0.71059 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -18706.02176 
 -18707.43595 
@@ -4560,6 +4852,7 @@ RkMatrix.B=
   -0.71052 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -25179.62676 
 -25181.62664 
@@ -4572,6 +4865,7 @@ RkMatrix.B=
   -0.50759 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -26203.56319 
 -26205.56307 
@@ -4600,6 +4894,7 @@ RkMatrix.B=
 13804.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19789.29736 
 -19790.71156 
@@ -4608,6 +4903,7 @@ RkMatrix.B=
   -0.71033 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20151.33231 
 -20152.74651 
@@ -4620,6 +4916,7 @@ RkMatrix.B=
 14060.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20154.16071 
 -20155.57491 
@@ -4628,6 +4925,7 @@ RkMatrix.B=
   -0.71028 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19070.88467 
 -19072.29887 
@@ -4640,6 +4938,7 @@ RkMatrix.B=
 13806.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19073.71306 
 -19075.12726 
@@ -4648,6 +4947,7 @@ RkMatrix.B=
   -0.71045 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19435.74773 
 -19437.16193 
@@ -4672,6 +4972,7 @@ RkMatrix.B=
 14320.00000 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -42097.99777 
 -42100.82564 
@@ -4692,6 +4993,7 @@ RkMatrix.B=
   -0.36412 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -44993.78099 
 -44996.60894 
@@ -4712,6 +5014,7 @@ RkMatrix.B=
   -0.36345 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -29267.39954 
 -29269.39945 
@@ -4724,6 +5027,7 @@ RkMatrix.B=
   -0.50654 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -30291.35223 
 -30293.35214 
@@ -4736,6 +5040,7 @@ RkMatrix.B=
   -0.50632 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20519.02420 
 -20520.43840 
@@ -4744,6 +5049,7 @@ RkMatrix.B=
   -0.71022 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20881.05941 
 -20882.47361 
@@ -4756,6 +5062,7 @@ RkMatrix.B=
 14576.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20883.88781 
 -20885.30201 
@@ -4764,6 +5071,7 @@ RkMatrix.B=
   -0.71016 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -30299.35187 
 -30301.35179 
@@ -4776,6 +5084,7 @@ RkMatrix.B=
   -0.50631 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -45016.40457 
 -45019.23251 
@@ -4796,6 +5105,7 @@ RkMatrix.B=
   -0.36344 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -36351.92617 
 -36354.75386 
@@ -4816,6 +5126,7 @@ RkMatrix.B=
   -0.36578 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -27235.50396 
 -27237.50385 
@@ -4828,6 +5139,7 @@ RkMatrix.B=
   -0.50702 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19800.61095 
 -19802.02515 
@@ -4840,6 +5152,7 @@ RkMatrix.B=
 14322.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -19803.43935 
 -19804.85355 
@@ -4848,6 +5161,7 @@ RkMatrix.B=
   -0.71033 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20165.47431 
 -20166.88851 
@@ -4856,6 +5170,7 @@ RkMatrix.B=
   -0.71027 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -27243.50352 
 -27245.50341 
@@ -4868,6 +5183,7 @@ RkMatrix.B=
   -0.50702 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -28267.44905 
 -28269.44895 
@@ -4880,6 +5196,7 @@ RkMatrix.B=
   -0.50677 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -36374.54769 
 -36377.37539 
@@ -4900,6 +5217,7 @@ RkMatrix.B=
   -0.36577 
 RkMatrix.dim=(8,8)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -39270.15936 
 -39272.98715 
@@ -4936,6 +5254,7 @@ RkMatrix.B=
 14836.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21248.75154 
 -21250.16574 
@@ -4944,6 +5263,7 @@ RkMatrix.B=
   -0.71011 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21610.78698 
 -21612.20118 
@@ -4956,6 +5276,7 @@ RkMatrix.B=
 15092.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21613.61538 
 -21615.02959 
@@ -4964,6 +5285,7 @@ RkMatrix.B=
   -0.71006 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20530.33780 
 -20531.75200 
@@ -4976,6 +5298,7 @@ RkMatrix.B=
 14838.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20533.16620 
 -20534.58040 
@@ -4984,6 +5307,7 @@ RkMatrix.B=
   -0.71022 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -20895.20141 
 -20896.61561 
@@ -5008,6 +5332,7 @@ RkMatrix.B=
 15352.00000 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -31331.30735 
 -31333.30726 
@@ -5020,6 +5345,7 @@ RkMatrix.B=
   -0.50611 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -32355.26597 
 -32357.26589 
@@ -5032,6 +5358,7 @@ RkMatrix.B=
   -0.50591 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21978.47934 
 -21979.89354 
@@ -5040,6 +5367,7 @@ RkMatrix.B=
   -0.71001 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -22340.51499 
 -22341.92919 
@@ -5052,6 +5380,7 @@ RkMatrix.B=
 15608.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -22343.34339 
 -22344.75760 
@@ -5060,6 +5389,7 @@ RkMatrix.B=
   -0.70997 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -32363.26566 
 -32365.26558 
@@ -5072,6 +5402,7 @@ RkMatrix.B=
   -0.50591 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -29299.39801 
 -29301.39792 
@@ -5084,6 +5415,7 @@ RkMatrix.B=
   -0.50653 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21260.06515 
 -21261.47935 
@@ -5096,6 +5428,7 @@ RkMatrix.B=
 15354.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21262.89355 
 -21264.30775 
@@ -5104,6 +5437,7 @@ RkMatrix.B=
   -0.71011 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21624.92899 
 -21626.34320 
@@ -5112,6 +5446,7 @@ RkMatrix.B=
   -0.71006 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -29307.39763 
 -29309.39754 
@@ -5124,6 +5459,7 @@ RkMatrix.B=
   -0.50653 
 RkMatrix.dim=(4,4)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -30331.35045 
 -30333.35036 
@@ -5152,6 +5488,7 @@ RkMatrix.B=
 15868.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -22708.20755 
 -22709.62175 
@@ -5160,6 +5497,7 @@ RkMatrix.B=
   -0.70992 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -23070.24339 
 -23071.65759 
@@ -5172,6 +5510,7 @@ RkMatrix.B=
 16124.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -23073.07179 
 -23074.48600 
@@ -5180,6 +5519,7 @@ RkMatrix.B=
   -0.70988 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21989.79295 
 -21991.20715 
@@ -5192,6 +5532,7 @@ RkMatrix.B=
 15870.00000 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -21992.62135 
 -21994.03556 
@@ -5200,6 +5541,7 @@ RkMatrix.B=
   -0.71001 
 RkMatrix.dim=(2,2)
 RkMatrix.rank=1
+RkMatrix.formal_rank=1
 RkMatrix.A=
 -22354.65701 
 -22356.07121 
