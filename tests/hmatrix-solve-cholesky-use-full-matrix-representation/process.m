@@ -1,5 +1,5 @@
 clear all;
-load hmatrix-solve-cholesky.output;
+load hmatrix-solve-cholesky-use-full-matrix-representation.output;
 load M.dat;
 load b.dat;
 

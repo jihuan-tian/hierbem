@@ -181,4 +181,26 @@ gen_linear_indices(Container<number> &a,
     }
 }
 
+
+/**
+ * Compute the memory consumption for a @p std::map.
+ *
+ * @param m
+ * @return
+ */
+template <typename KeyType, typename ValueType>
+std::size_t
+memory_consumption_of_map(const std::map<KeyType, ValueType> &m)
+{
+  return m.size() * (sizeof(KeyType) + sizeof(ValueType));
+}
+
+
+template <typename T>
+std::size_t
+memory_consumption_of_vector(const std::vector<T> &v)
+{
+  return v.capacity() * sizeof(T);
+}
+
 #endif /* INCLUDE_GENERIC_FUNCTORS_H_ */

@@ -22,6 +22,20 @@
 using namespace dealii;
 
 /**
+ * Exception for invalid LAPACKFullMatrix state (@p LAPACKSupport::State).
+ */
+DeclException1(ExcInvalidLAPACKFullMatrixState,
+               LAPACKSupport::State,
+               << "Invalid LAPACKFullMatrix state: " << arg1);
+
+/**
+ * Exception for invalid LAPACKFullMatrix property (@p LAPACKSupport::Property).
+ */
+DeclException1(ExcInvalidLAPACKFullMatrixProperty,
+               LAPACKSupport::Property,
+               << "Invalid LAPACKFullMatrix property: " << arg1);
+
+/**
  * Calculate singular value threshold value which can be used for estimating
  * the matrix's rank and perform rank truncation.
  *
@@ -559,7 +573,8 @@ public:
   /**
    * Perform the reduced singular value decomposition (SVD) with rank
    * truncation. In addition, the components \f$C\f$ and \f$D\f$ of the error
-   * matrix due to rank truncation are returned. The error matrix \f$E = CD^T\f$.
+   * matrix due to rank truncation are returned. The error matrix \f$E =
+   * CD^T\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
@@ -988,7 +1003,8 @@ public:
    */
   void
   add(LAPACKFullMatrixExt<Number> &      C,
-      const LAPACKFullMatrixExt<Number> &B) const;
+      const LAPACKFullMatrixExt<Number> &B,
+      const bool is_result_matrix_symm_apriori = false) const;
 
   /**
    * Add two matrix into a new matrix \f$C = A + b*B\f$ with a factor \f$b\f$
@@ -997,14 +1013,16 @@ public:
   void
   add(LAPACKFullMatrixExt<Number> &      C,
       const Number                       b,
-      const LAPACKFullMatrixExt<Number> &B) const;
+      const LAPACKFullMatrixExt<Number> &B,
+      const bool is_result_matrix_symm_apriori = false) const;
 
   /**
    * Add the matrix \p B into the current matrix.
    * @param B
    */
   void
-  add(const LAPACKFullMatrixExt<Number> &B);
+  add(const LAPACKFullMatrixExt<Number> &B,
+      const bool is_result_matrix_store_tril_only = false);
 
   /**
    * Add the matrix \p B into the current matrix with a factor \f$b\f$
@@ -1012,7 +1030,9 @@ public:
    * @param B
    */
   void
-  add(const Number b, const LAPACKFullMatrixExt<Number> &B);
+  add(const Number                       b,
+      const LAPACKFullMatrixExt<Number> &B,
+      const bool                         is_result_matrix_symm_apriori = false);
 
   /**
    * Multiply two matrices, i.e. \f$C = AB\f$ or \f$C = C + AB\f$.
@@ -1090,12 +1110,26 @@ public:
   set_property(const LAPACKSupport::Property property);
 
   /**
+   * Set the matrix state.
+   * @param state
+   */
+  void
+  set_state(const LAPACKSupport::State state);
+
+  /**
    * Get the matrix property.
    *
    * @return
    */
   LAPACKSupport::Property
   get_property() const;
+
+  /**
+   * Get the matrix state.
+   * @return
+   */
+  LAPACKSupport::State
+  get_state() const;
 
   /**
    * Solve the unit lower triangular matrix \f$Lx=b\f$ by forward substitution.
@@ -1199,6 +1233,24 @@ public:
    */
   void
   read_from_mat(std::ifstream &in, const std::string &name);
+
+  /**
+   * Determine an estimate for the memory consumption (in bytes) of this object.
+   *
+   * @return
+   */
+  std::size_t
+  memory_consumption() const;
+
+  /**
+   * Determine the memory consumption for the core data stored in this object,
+   * which is calculated by counting the number of data values then multiplied
+   * by the size of the value type.
+   *
+   * @return
+   */
+  std::size_t
+  memory_consumption_for_core_data() const;
 
 private:
   LAPACKSupport::State    state;
@@ -3486,17 +3538,10 @@ LAPACKFullMatrixExt<Number>::compute_cholesky_factorization()
   Assert(property == LAPACKSupport::symmetric, ExcProperty(property));
   state = LAPACKSupport::unusable;
 
-  // 2022-04-19: Comment out this manual assignment of symmetric property, since
-  // it will be set during the \hmatrix construction.
-  //  /**
-  //   * Explicitly set the matrix property to be \p symmetric, which is required
-  //   * by \p LAPACKFullMatrix<Number>::compute_cholesky_factorization().
-  //   */
-  //  set_property(LAPACKSupport::symmetric);
-
   LAPACKFullMatrix<Number>::compute_cholesky_factorization();
 
-  state = LAPACKSupport::cholesky;
+  state    = LAPACKSupport::cholesky;
+  property = LAPACKSupport::lower_triangular;
 }
 
 
@@ -4307,7 +4352,8 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
-                                 const LAPACKFullMatrixExt<Number> &B) const
+                                 const LAPACKFullMatrixExt<Number> &B,
+                                 const bool is_result_matrix_symm_apriori) const
 {
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
@@ -4317,11 +4363,33 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
 
   C.reinit(nrows, ncols);
 
-  for (size_type i = 0; i < nrows; i++)
+  if (is_result_matrix_symm_apriori)
     {
-      for (size_type j = 0; j < ncols; j++)
+      /**
+       * Perform addition for matrix elements in the diagonal part and in the
+       * lower triangular part only.
+       */
+      Assert(C.get_property() == LAPACKSupport::symmetric,
+             ExcMessage(std::string("The result matrix should be ") +
+                        std::string(LAPACKSupport::property_name(
+                          LAPACKSupport::symmetric))));
+
+      for (size_type i = 0; i < nrows; i++)
         {
-          C(i, j) = (*this)(i, j) + B(i, j);
+          for (size_type j = 0; j <= i; j++)
+            {
+              C(i, j) = (*this)(i, j) + B(i, j);
+            }
+        }
+    }
+  else
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          for (size_type j = 0; j < ncols; j++)
+            {
+              C(i, j) = (*this)(i, j) + B(i, j);
+            }
         }
     }
 }
@@ -4331,7 +4399,8 @@ template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
                                  const Number                       b,
-                                 const LAPACKFullMatrixExt<Number> &B) const
+                                 const LAPACKFullMatrixExt<Number> &B,
+                                 const bool is_result_matrix_symm_apriori) const
 {
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
@@ -4341,11 +4410,33 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
 
   C.reinit(nrows, ncols);
 
-  for (size_type i = 0; i < nrows; i++)
+  if (is_result_matrix_symm_apriori)
     {
-      for (size_type j = 0; j < ncols; j++)
+      /**
+       * Perform addition for matrix elements in the diagonal part and in the
+       * lower triangular part only.
+       */
+      Assert(C.get_property() == LAPACKSupport::symmetric,
+             ExcMessage(std::string("The result matrix should be ") +
+                        std::string(LAPACKSupport::property_name(
+                          LAPACKSupport::symmetric))));
+
+      for (size_type i = 0; i < nrows; i++)
         {
-          C(i, j) = (*this)(i, j) + b * B(i, j);
+          for (size_type j = 0; j <= i; j++)
+            {
+              C(i, j) = (*this)(i, j) + b * B(i, j);
+            }
+        }
+    }
+  else
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          for (size_type j = 0; j < ncols; j++)
+            {
+              C(i, j) = (*this)(i, j) + b * B(i, j);
+            }
         }
     }
 }
@@ -4353,7 +4444,8 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B)
+LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B,
+                                 const bool is_result_matrix_store_tril_only)
 {
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
@@ -4361,11 +4453,32 @@ LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B)
   const size_type nrows = this->m();
   const size_type ncols = this->n();
 
-  for (size_type i = 0; i < nrows; i++)
+  if (is_result_matrix_store_tril_only)
     {
-      for (size_type j = 0; j < ncols; j++)
+      /**
+       * Perform addition for matrix elements in the diagonal part and in the
+       * lower triangular part only.
+       */
+      Assert(this->get_property() == LAPACKSupport::symmetric ||
+               this->get_property() == LAPACKSupport::lower_triangular,
+             ExcInvalidLAPACKFullMatrixProperty(this->get_property()));
+
+      for (size_type i = 0; i < nrows; i++)
         {
-          (*this)(i, j) += B(i, j);
+          for (size_type j = 0; j <= i; j++)
+            {
+              (*this)(i, j) += B(i, j);
+            }
+        }
+    }
+  else
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          for (size_type j = 0; j < ncols; j++)
+            {
+              (*this)(i, j) += B(i, j);
+            }
         }
     }
 }
@@ -4374,7 +4487,8 @@ LAPACKFullMatrixExt<Number>::add(const LAPACKFullMatrixExt<Number> &B)
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::add(const Number                       b,
-                                 const LAPACKFullMatrixExt<Number> &B)
+                                 const LAPACKFullMatrixExt<Number> &B,
+                                 const bool is_result_matrix_symm_apriori)
 {
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
@@ -4382,11 +4496,33 @@ LAPACKFullMatrixExt<Number>::add(const Number                       b,
   const size_type nrows = this->m();
   const size_type ncols = this->n();
 
-  for (size_type i = 0; i < nrows; i++)
+  if (is_result_matrix_symm_apriori)
     {
-      for (size_type j = 0; j < ncols; j++)
+      /**
+       * Perform addition for matrix elements in the diagonal part and in the
+       * lower triangular part only.
+       */
+      Assert(this->get_property() == LAPACKSupport::symmetric,
+             ExcMessage(std::string("The current matrix should be ") +
+                        std::string(LAPACKSupport::property_name(
+                          LAPACKSupport::symmetric))));
+
+      for (size_type i = 0; i < nrows; i++)
         {
-          (*this)(i, j) += b * B(i, j);
+          for (size_type j = 0; j <= i; j++)
+            {
+              (*this)(i, j) += b * B(i, j);
+            }
+        }
+    }
+  else
+    {
+      for (size_type i = 0; i < nrows; i++)
+        {
+          for (size_type j = 0; j < ncols; j++)
+            {
+              (*this)(i, j) += b * B(i, j);
+            }
         }
     }
 }
@@ -4633,10 +4769,25 @@ LAPACKFullMatrixExt<Number>::set_property(
 
 
 template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::set_state(const LAPACKSupport::State state)
+{
+  this->state = state;
+}
+
+
+template <typename Number>
 LAPACKSupport::Property
 LAPACKFullMatrixExt<Number>::get_property() const
 {
   return property;
+}
+
+template <typename Number>
+LAPACKSupport::State
+LAPACKFullMatrixExt<Number>::get_state() const
+{
+  return state;
 }
 
 
@@ -4832,6 +4983,28 @@ LAPACKFullMatrixExt<Number>::read_from_mat(std::ifstream &    in,
           break;
         }
     }
+}
+
+
+template <typename Number>
+std::size_t
+LAPACKFullMatrixExt<Number>::memory_consumption() const
+{
+  return TransposeTable<Number>::memory_consumption() +
+         this->ipiv.capacity() * sizeof(types::blas_int) +
+         this->iwork.capacity() * sizeof(types::blas_int) +
+         this->work.capacity() * sizeof(Number) +
+         this->tau.capacity() *
+           sizeof(typename numbers::NumberTraits<Number>::real_type) +
+         sizeof(LAPACKSupport::State) + sizeof(LAPACKSupport::Property);
+}
+
+
+template <typename Number>
+std::size_t
+LAPACKFullMatrixExt<Number>::memory_consumption_for_core_data() const
+{
+  return this->m() * this->n() * sizeof(Number);
 }
 
 #endif /* INCLUDE_LAPACK_FULL_MATRIX_EXT_H_ */

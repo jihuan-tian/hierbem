@@ -33,6 +33,11 @@
  */
 
 /**
+ * \defgroup stl STL
+ * \brief STL related data structures and functions
+ */
+
+/**
  * \defgroup programming_tech Programming techniques
  * \brief Programming techniques for C++ and software engineering.
  */

@@ -1,10 +1,7 @@
 /**
- * \file hmatrix-solve-cholesky.cc
+ * \file hmatrix-solve-cholesky-use-full-matrix-representation.cc
  * \brief Verify Cholesky factorization of a positive definite and symmetric
- * \hmatrix and solve this matrix using forward and backward substitution. In
- * this tester, the property of the \hmatrix before factorization is set to
- * @p symmetric and the property of the result \hmatrix is set to
- * @p lower_triangular.
+ * \hmatrix and solve this matrix using forward and backward substitution.
  *
  * \details \alert{If there is no special treatment as that proposed by
  * Bebendorf, the approximation of the original full matrix using \hmatrix must
@@ -13,7 +10,7 @@
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
- * \date 2021-11-13
+ * \date 2022-05-06
  */
 
 #include <fstream>
@@ -29,17 +26,12 @@ main()
 {
   /**
    * Read a full matrix where only the lower triangular part (including the
-   * diagonal) is stored.
+   * diagonal) is stored. But the matrix property is still set to @p general.
    */
   LAPACKFullMatrixExt<double> M;
   std::ifstream               in("M.dat");
   M.read_from_mat(in, "M");
   in.close();
-
-  /**
-   * Set the property of the full matrix as @p symmetric.
-   */
-  M.set_property(LAPACKSupport::symmetric);
 
   /**
    * Read the RHS vector.
@@ -76,15 +68,17 @@ main()
   bct.partition_fine_non_tensor_product();
 
   /**
-   * Create the \hmatrix from the source full matrix @p M, where only the lower
-   * triangular part is stored.
-   *
-   * N.B. Because the full matrix has been assigned the @p symmetric property,
-   * the created \hmatrix will be automatically set to @p symmetric, which is
-   * mandatory for the following Cholesky factorization.
+   * Create the \hmatrix from the full matrix @p M with the property @p general.
+   * N.B. This is just for test purpose.
    */
   const unsigned int fixed_rank = 8;
   HMatrix<3, double> H(bct, M, fixed_rank, HMatrixSupport::diagonal_block);
+  /**
+   * Even though the memory has been allocated to all blocks in the \hmatrix,
+   * here we set its property to @p symmetric, to which the Cholesky
+   * factorization can be applied.
+   */
+  H.set_property(HMatrixSupport::symmetric);
 
   std::ofstream H_bct("H_bct.dat");
   H.write_leaf_set_by_iteration(H_bct);
@@ -95,15 +89,20 @@ main()
   H_full.print_formatted_to_mat(std::cout, "H_full", 15, false, 25, "0");
 
   /**
-   * Create the \hmatrix storing the result of Cholesky factorization, where
-   * only the lower triangular part is effective. The property of this matrix
-   * should be set to
-   * @p lower_triangular.
+   * Create the \hmatrix storing the result of Cholesky factorization. Here,
+   * its property is set to @p general just for test purpose, so that the memory
+   * will be allocated for all of its blocks.
    */
   HMatrix<3, double> LLT(bct,
                          fixed_rank,
-                         HMatrixSupport::lower_triangular,
+                         HMatrixSupport::general,
                          HMatrixSupport::diagonal_block);
+  /**
+   * Even though the memory has been allocated to all blocks in the result
+   * \hmatrix, here we set its property to @p lower_triangular, which is
+   * required by the Cholesky factorization to be performed.
+   */
+  LLT.set_property(HMatrixSupport::lower_triangular);
   std::cout << "LLT memory consumption before Cholesky factorization: "
             << LLT.memory_consumption() << std::endl;
 
@@ -144,13 +143,12 @@ main()
    */
   LAPACKFullMatrixExt<double> LLT_full;
   LLT.convertToFullMatrix(LLT_full);
-  std::cout << "LLT_full's property: "
-            << LAPACKSupport::property_name(LLT_full.get_property())
-            << std::endl;
   LLT_full.print_formatted_to_mat(std::cout, "LLT_full", 15, false, 25, "0");
 
   /**
-   * Solve the matrix.
+   * Solve the matrix. \alert{Before solving the matrix, the matrix state
+   * should be set to @p cholesky explicitly, which is required by the function
+   * @p solve_cholesky.}
    */
   Vector<double> x;
   LLT.solve_cholesky(x, b);

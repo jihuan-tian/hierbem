@@ -17,8 +17,6 @@ using namespace boost::program_options;
 int
 main(int argc, char *argv[])
 {
-  (void)argc;
-
   deallog.depth_console(2);
   deallog.pop();
 

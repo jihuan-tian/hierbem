@@ -1,7 +1,8 @@
 /**
  * \file rkmatrix.cc
  * \brief Test RkMatrix class.
- * \ingroup linalg
+ *
+ * \ingroup testers rkmatrices
  * \author Jihuan Tian
  * \date 2021-06-20
  */

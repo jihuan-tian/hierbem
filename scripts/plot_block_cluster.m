@@ -1,10 +1,14 @@
-function plot_block_cluster(bc, unit_size, enable_display_rank)
+function plot_block_cluster(bc, unit_size, enable_display_rank, is_fill)
   if (!exist("enable_display_rank", "var"))
     enable_display_rank = true;
   endif
 
-  yrange = [(bc.tau(1) - 0.5) * unit_size, (bc.tau(end) + 0.5) * unit_size];
-  xrange = [(bc.sigma(1) - 0.5) * unit_size, (bc.sigma(end) + 0.5) * unit_size];
+  if (!exist("is_fill", "var"))
+    is_fill = true;
+  endif
+
+  yrange = [(bc.tau(1) - 0.5) * unit_size, (bc.tau(end) + 0.5) * unit_size] + 1;
+  xrange = [(bc.sigma(1) - 0.5) * unit_size, (bc.sigma(end) + 0.5) * unit_size] + 1;
   xlength = xrange(2) - xrange(1);
 
   block_shape = [xrange(1), yrange(1);
@@ -18,7 +22,10 @@ function plot_block_cluster(bc, unit_size, enable_display_rank)
     shape_color = "g";
   end
 
-  fillPolygon(block_shape, shape_color);
+  if (is_fill)
+    fillPolygon(block_shape, shape_color);
+  endif
+  
   drawPolygon(block_shape, "k", "linewidth", 1);
 
   if (isfield(bc, "rank") && enable_display_rank)
