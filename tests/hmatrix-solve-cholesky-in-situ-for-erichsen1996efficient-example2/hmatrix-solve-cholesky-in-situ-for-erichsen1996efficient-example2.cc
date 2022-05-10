@@ -89,6 +89,8 @@ main(int argc, char *argv[])
       LAPACKFullMatrixExt<double> system_rhs_slp_matrix_ext;
       std::ifstream               in("input_matrices.dat");
       read_matrix_from_octave(in, "M", system_rhs_slp_matrix_ext);
+      system_rhs_slp_matrix_ext.set_property(LAPACKSupport::symmetric);
+
       Vector<double> system_rhs;
       in.close();
       in.open("input_matrices.dat");
@@ -104,9 +106,14 @@ main(int argc, char *argv[])
        * symmetric, all of its elements have been calculated due to the
        * unoptimized implementation up to now. Meanwhile, the conversion from
        * this full matrix to \hmatrix applies to all matrix blocks instead of
-       * only the diagonal and lower triangular blocks.}
+       * only the diagonal and lower triangular blocks.
+       *
+       * 2022-05-10: Now the symmetric \hmatrix is implemented and only the
+       * lower triangular part and the diagonal part are converted.}
        */
-      HMatrix<3, double> H(bct, system_rhs_slp_matrix_ext);
+      HMatrix<3, double> H(bct,
+                           system_rhs_slp_matrix_ext,
+                           HMatrixSupport::diagonal_block);
 
       std::string truncation_method(argv[3]);
       if (truncation_method == std::string("normal"))

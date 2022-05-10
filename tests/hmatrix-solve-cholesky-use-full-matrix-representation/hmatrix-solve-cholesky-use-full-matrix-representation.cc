@@ -3,10 +3,13 @@
  * \brief Verify Cholesky factorization of a positive definite and symmetric
  * \hmatrix and solve this matrix using forward and backward substitution.
  *
- * \details \alert{If there is no special treatment as that proposed by
- * Bebendorf, the approximation of the original full matrix using \hmatrix must
- * be good enough so that the positive definiteness of the original matrix is
- * preserved and Cholesky factorization is applicable.}
+ * \details In this tester, the property of the \hmatrix is @p general instead
+ * of @p symmetric.
+ *
+ * \alert{If there is no special treatment as that proposed by Bebendorf, the
+ * approximation of the original full matrix using \hmatrix must be good enough
+ * so that the positive definiteness of the original matrix is preserved and
+ * Cholesky factorization is applicable.}
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian

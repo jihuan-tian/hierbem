@@ -29,7 +29,7 @@ LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)
 # ##################################
 # Library target: generic_tools
 # ##################################
-ADD_LIBRARY(generic_tools aca_plus.cc generic_functors.cc sauter_quadrature.cc regex_tools.cc)
+ADD_LIBRARY(generic_tools aca_plus.cc generic_functors.cc sauter_quadrature.cc regex_tools.cc hmatrix_support.cc)
 # Because my library generic_tools has included deal.ii header files,
 # dependent include paths and library paths need to be imported by
 # calling this macro DEAL_II_SETUP_TARGET.

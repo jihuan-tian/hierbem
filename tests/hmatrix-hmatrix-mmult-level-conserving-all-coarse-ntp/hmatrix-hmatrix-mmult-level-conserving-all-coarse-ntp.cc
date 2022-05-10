@@ -104,7 +104,7 @@ main()
   /**
    * Multiply the two H-matrices \p H1 and \p H2.
    */
-  h_h_mmult_level_conserving(H3, H3, H1, H2, fixed_rank_k);
+  h_h_mmult_level_conserving(H3, H1, H2, fixed_rank_k);
   std::ofstream H3_out("H3_bct.dat");
   H3.write_leaf_set_by_iteration(H3_out);
   H3_out.close();

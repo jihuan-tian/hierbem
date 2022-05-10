@@ -37,7 +37,7 @@
 
 
 LLT memory consumption before Cholesky factorization: 50908
-H's state after Cholesky factorization: matrix
+H's state after Cholesky factorization: unusable
 H's property after Cholesky factorization: symmetric
 LLT's state after Cholesky factorization: cholesky decomposition
 LLT's property after Cholesky factorization: lower triangular

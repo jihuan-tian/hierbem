@@ -75,6 +75,10 @@ main()
    * Perform LU factorization.
    */
   H.compute_lu_factorization(LU, fixed_rank);
+  std::cout << "H's state after LU factorization: "
+            << HMatrixSupport::state_name(H.get_state()) << "\n";
+  std::cout << "LU's state after LU factorization: "
+            << HMatrixSupport::state_name(LU.get_state()) << std::endl;
 
   /**
    * Print the \bct structure of the LU \hmatrix.

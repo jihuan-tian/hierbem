@@ -1,18 +1,18 @@
 /**
- * \file hmatrix-solve-cholesky-in-situ.cc
+ * \file hmatrix-solve-cholesky-in-situ-use-full-matrix-representation.cc
  * \brief Verify in situ Cholesky factorization of a positive definite and
  * symmetric \hmatrix and solve this matrix using forward and backward
  * substitution.
  *
- * \details In this tester, the property of the \hmatrix is set to @p symmetric.
- * \alert{If there is no special treatment as that proposed by Bebendorf, the
- * approximation of the original full matrix using \hmatrix must be good enough
- * so that the positive definiteness of the original matrix is preserved and
- * Cholesky factorization is applicable.}
+ * In this tester, the property of the \hmatrix is @p general instead of
+ * @p symmetric. \alert{If there is no special treatment as that proposed by
+ * Bebendorf, the approximation of the original full matrix using \hmatrix must
+ * be good enough so that the positive definiteness of the original matrix is
+ * preserved and Cholesky factorization is applicable.}
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
- * \date 2021-11-13
+ * \date 2022-05-10
  */
 
 #include <fstream>
@@ -32,11 +32,6 @@ main()
   std::ifstream               in("M.dat");
   M.read_from_mat(in, "M");
   in.close();
-
-  /**
-   * Set the property of the full matrix as @p symmetric.
-   */
-  M.set_property(LAPACKSupport::symmetric);
 
   Vector<double> b;
   in.open("b.dat");
@@ -73,12 +68,22 @@ main()
    * Create the \hmatrix from the source full matrix @p M, where only the lower
    * triangular part is stored.
    *
-   * N.B. Because the full matrix has been assigned the @p symmetric property,
-   * the created \hmatrix will be automatically set to @p symmetric, which is
-   * mandatory for the following Cholesky factorization.
+   * N.B. Because the full matrix has not been assigned the @p symmetric
+   * property, the created \hmatrix will have memory allocated for all of its
+   * blocks. However, after the \hmatrix is created, its property should be
+   * manually set to @p symmetric, which is required by the internal assertions
+   * in @p HMatrix::_compute_cholesky_factorization.
    */
   const unsigned int fixed_rank = 8;
   HMatrix<3, double> H(bct, M, HMatrixSupport::diagonal_block);
+
+  std::cout << "H's state before Cholesky factorization: "
+            << HMatrixSupport::state_name(H.get_state()) << "\n";
+  std::cout << "H's property before Cholesky factorization: "
+            << HMatrixSupport::property_name(H.get_property()) << "\n";
+
+  H.set_property(HMatrixSupport::symmetric);
+
   // H.truncate_to_rank(fixed_rank);
   H.truncate_to_rank_preserve_positive_definite(fixed_rank);
 

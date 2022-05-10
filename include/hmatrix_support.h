@@ -13,6 +13,11 @@
 
 #include <deal.II/base/exceptions.h>
 
+#include <array>
+#include <string>
+
+using namespace dealii;
+
 namespace HMatrixSupport
 {
   /**
@@ -188,6 +193,15 @@ namespace HMatrixSupport
     Assert(false, ExcNotImplemented());
     return "invalid";
   }
+
+  /**
+   * Determine the block types of the four submatrices from the given block type
+   * of their parent \hmatrix.
+   */
+  void
+  infer_submatrix_block_types_from_parent_hmat(
+    const BlockType                           parent_hmat_block_type,
+    std::array<HMatrixSupport::BlockType, 4> &submatrix_block_types);
 } // namespace HMatrixSupport
 
 

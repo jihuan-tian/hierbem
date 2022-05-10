@@ -618,7 +618,9 @@ public:
    *
    * \mynote{This is a wrapper of the same function in \p LAPACKFullMatrix<Number>
    * in order that the \p state of the current \p LAPACKFullMatrixExt<Number>
-   * object can be updated.}
+   * object can be updated. Before the factorization, the full matrix has
+   * @p matrix state and @p symmetric property. After the factorization, it has
+   * @p cholesky state and @p lower_triangular property.}
    */
   void
   compute_cholesky_factorization();
@@ -2647,10 +2649,9 @@ void
 LAPACKFullMatrixExt<Number>::get_row(const size_type row_index,
                                      Vector<Number> &row_values) const
 {
-  const size_type n_rows = this->m();
   const size_type n_cols = this->n();
 
-  AssertIndexRange(row_index, n_rows);
+  AssertIndexRange(row_index, this->m());
 
   row_values.reinit(n_cols);
 
@@ -3524,7 +3525,7 @@ LAPACKFullMatrixExt<Number>::compute_lu_factorization()
   Assert(info >= 0, ExcInternalError());
 
   // if info >= 0, the factorization has been completed
-  state = lu;
+  state = LAPACKSupport::lu;
 
   AssertThrow(info == 0, LACExceptions::ExcSingular());
 }
@@ -4057,10 +4058,9 @@ LAPACKFullMatrixExt<Number>::fill_row(const size_type       row_index,
                                       const Vector<Number> &values,
                                       const bool            is_adding)
 {
-  const size_type n_rows = this->m();
   const size_type n_cols = this->n();
 
-  AssertIndexRange(row_index, n_rows);
+  AssertIndexRange(row_index, this->m());
   AssertDimension(values.size(), n_cols);
 
   for (size_type j = 0; j < n_cols; j++)
@@ -4085,10 +4085,9 @@ LAPACKFullMatrixExt<Number>::fill_row(const size_type dst_row_index,
                                       const Number                       factor,
                                       const bool is_adding)
 {
-  const size_type n_rows = this->m();
   const size_type n_cols = this->n();
 
-  AssertIndexRange(dst_row_index, n_rows);
+  AssertIndexRange(dst_row_index, this->m());
   AssertIndexRange(src_row_index, M.m());
   AssertDimension(M.n(), n_cols);
 

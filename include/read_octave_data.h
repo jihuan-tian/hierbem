@@ -46,18 +46,20 @@ read_matrix_from_octave(std::ifstream &    in,
            */
           std::getline(in, line_buf);
           std::smatch sm;
-          bool        found =
-            std::regex_match(line_buf, sm, std::regex("# rows: (\\d+)"));
-          Assert(found, ExcMessage("Cannot get n_rows of the matrix!"));
+          if (!std::regex_match(line_buf, sm, std::regex("# rows: (\\d+)")))
+            {
+              ExcMessage("Cannot get n_rows of the matrix!");
+            }
           const unsigned int n_rows = std::stoi(sm.str(1));
 
           /**
            * Read a new line to extract the number of columns.
            */
           std::getline(in, line_buf);
-          found =
-            std::regex_match(line_buf, sm, std::regex("# columns: (\\d+)"));
-          Assert(found, ExcMessage("Cannot get n_cols of the matrix!"));
+          if (!std::regex_match(line_buf, sm, std::regex("# columns: (\\d+)")))
+            {
+              ExcMessage("Cannot get n_cols of the matrix!");
+            }
           const unsigned int n_cols = std::stoi(sm.str(1));
 
           Assert(n_rows > 0, ExcMessage("Matrix to be read has no rows!"));
@@ -118,18 +120,20 @@ read_vector_from_octave(std::ifstream &         in,
            */
           std::getline(in, line_buf);
           std::smatch sm;
-          bool        found =
-            std::regex_match(line_buf, sm, std::regex("# rows: (\\d+)"));
-          Assert(found, ExcMessage("Cannot get n_rows of the matrix!"));
+          if (!std::regex_match(line_buf, sm, std::regex("# rows: (\\d+)")))
+            {
+              ExcMessage("Cannot get n_rows of the matrix!");
+            }
           const unsigned int n_rows = std::stoi(sm.str(1));
 
           /**
            * Read a new line to extract the number of columns.
            */
           std::getline(in, line_buf);
-          found =
-            std::regex_match(line_buf, sm, std::regex("# columns: (\\d+)"));
-          Assert(found, ExcMessage("Cannot get n_cols of the matrix!"));
+          if (!std::regex_match(line_buf, sm, std::regex("# columns: (\\d+)")))
+            {
+              ExcMessage("Cannot get n_cols of the matrix!");
+            }
           const unsigned int n_cols = std::stoi(sm.str(1));
 
           Assert(n_rows > 0, ExcMessage("Matrix to be read has no rows!"));
