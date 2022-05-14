@@ -1,7 +1,8 @@
 /**
  * @file aca_plus.h
  * @brief Implement the ACA+ method proposed in Grasedyck, L. 2005. “Adaptive
- * Recompression of \f$\mathscr{H}\f$-Matrices for BEM.” Computing 74 (3): 205–23.
+ * Recompression of \f$\mathscr{H}\f$-Matrices for BEM.” Computing 74 (3):
+ * 205–23.
  *
  * @date 2022-03-07
  * @author Jihuan Tian
@@ -58,11 +59,9 @@ namespace IdeoBEM
      */
     unsigned int max_iter;
     /**
-     * Relative error between the current cross and the approximant matrix \f$S\f$, i.e.
-     * \f[
-     * \norm{u_k}_2\norm{v_k}_2 \leq \frac{\varepsilon(1-\eta)}{1+\varepsilon}
-     * \norm{S}_{\rm F}.
-     * \f]
+     * Relative error between the current cross and the approximant matrix
+     * \f$S\f$, i.e. \f[ \norm{u_k}_2\norm{v_k}_2 \leq
+     * \frac{\varepsilon(1-\eta)}{1+\varepsilon} \norm{S}_{\rm F}. \f]
      */
     double epsilon;
     /**
@@ -1590,6 +1589,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -1606,7 +1607,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &           kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     const std::vector<types::global_dof_index> *row_dof_indices =
       leaf_mat->get_row_indices();
@@ -1626,24 +1628,133 @@ namespace IdeoBEM
             LAPACKFullMatrixExt<RangeNumberType> *fullmat =
               leaf_mat->get_fullmatrix();
 
-            for (types::global_dof_index row_dof_index : (*row_dof_indices))
+            if (enable_build_symmetric_hmat && kernel.is_symmetric())
               {
-                for (types::global_dof_index col_dof_index : (*col_dof_indices))
+                /**
+                 * When the flag @p enable_build_symmetric_hmat is true and the
+                 * kernel function is symmetric, try to build a symmetric
+                 * \hmatrix. Otherwise, the whole full matrix will be built.
+                 */
+                switch (leaf_mat->get_block_type())
                   {
-                    (*fullmat)(row_index_global_to_local_map.at(row_dof_index),
-                               col_index_global_to_local_map.at(
-                                 col_dof_index)) =
-                      sauter_assemble_on_one_pair_of_dofs(scratch,
-                                                          data,
-                                                          kernel,
-                                                          row_dof_index,
-                                                          col_dof_index,
-                                                          dof_to_cell_topo,
-                                                          bem_values,
-                                                          kx_dof_handler,
-                                                          ky_dof_handler,
-                                                          kx_mapping,
-                                                          ky_mapping);
+                    case HMatrixSupport::diagonal_block:
+                      {
+                        /**
+                         * A diagonal \hmatrix block as well as its associated
+                         * full matrix should be symmetric.
+                         */
+                        Assert(
+                          leaf_mat->get_property() == HMatrixSupport::symmetric,
+                          ExcInvalidHMatrixProperty(leaf_mat->get_property()));
+                        Assert(fullmat->get_property() ==
+                                 LAPACKSupport::symmetric,
+                               ExcInvalidLAPACKFullMatrixProperty(
+                                 fullmat->get_property()));
+
+                        /**
+                         * Only evaluate the diagonal and lower triangular
+                         * elements in the full matrix.
+                         */
+                        for (size_t i = 0; i < row_dof_indices->size(); i++)
+                          {
+                            for (size_t j = 0; j <= i; j++)
+                              {
+                                (*fullmat)(row_index_global_to_local_map.at(
+                                             (*row_dof_indices)[i]),
+                                           col_index_global_to_local_map.at(
+                                             (*col_dof_indices)[j])) =
+                                  sauter_assemble_on_one_pair_of_dofs(
+                                    scratch,
+                                    data,
+                                    kernel,
+                                    (*row_dof_indices)[i],
+                                    (*col_dof_indices)[j],
+                                    dof_to_cell_topo,
+                                    bem_values,
+                                    kx_dof_handler,
+                                    ky_dof_handler,
+                                    kx_mapping,
+                                    ky_mapping);
+                              }
+                          }
+
+                        break;
+                      }
+                    case HMatrixSupport::upper_triangular_block:
+                      {
+                        /**
+                         * Do not build \hmatrix block belonging to the upper
+                         * triangular part.
+                         */
+
+                        break;
+                      }
+                    case HMatrixSupport::lower_triangular_block:
+                      {
+                        /**
+                         * When the current \hmatrix block belongs to the lower
+                         * triangular part, evaluate all of its elements as
+                         * usual.
+                         */
+                        for (types::global_dof_index row_dof_index :
+                             (*row_dof_indices))
+                          {
+                            for (types::global_dof_index col_dof_index :
+                                 (*col_dof_indices))
+                              {
+                                (*fullmat)(row_index_global_to_local_map.at(
+                                             row_dof_index),
+                                           col_index_global_to_local_map.at(
+                                             col_dof_index)) =
+                                  sauter_assemble_on_one_pair_of_dofs(
+                                    scratch,
+                                    data,
+                                    kernel,
+                                    row_dof_index,
+                                    col_dof_index,
+                                    dof_to_cell_topo,
+                                    bem_values,
+                                    kx_dof_handler,
+                                    ky_dof_handler,
+                                    kx_mapping,
+                                    ky_mapping);
+                              }
+                          }
+
+                        break;
+                      }
+                    case HMatrixSupport::undefined_block:
+                      {
+                        Assert(false,
+                               ExcInvalidHMatrixBlockType(
+                                 leaf_mat->get_block_type()));
+
+                        break;
+                      }
+                  }
+              }
+            else
+              {
+                for (types::global_dof_index row_dof_index : (*row_dof_indices))
+                  {
+                    for (types::global_dof_index col_dof_index :
+                         (*col_dof_indices))
+                      {
+                        (*fullmat)(
+                          row_index_global_to_local_map.at(row_dof_index),
+                          col_index_global_to_local_map.at(col_dof_index)) =
+                          sauter_assemble_on_one_pair_of_dofs(scratch,
+                                                              data,
+                                                              kernel,
+                                                              row_dof_index,
+                                                              col_dof_index,
+                                                              dof_to_cell_topo,
+                                                              bem_values,
+                                                              kx_dof_handler,
+                                                              ky_dof_handler,
+                                                              kx_mapping,
+                                                              ky_mapping);
+                      }
                   }
               }
 
@@ -1653,19 +1764,71 @@ namespace IdeoBEM
           {
             RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
 
-            aca_plus((*rkmat),
-                     scratch,
-                     data,
-                     aca_config,
-                     kernel,
-                     (*row_dof_indices),
-                     (*col_dof_indices),
-                     dof_to_cell_topo,
-                     bem_values,
-                     kx_dof_handler,
-                     ky_dof_handler,
-                     kx_mapping,
-                     ky_mapping);
+            if (enable_build_symmetric_hmat && kernel.is_symmetric())
+              {
+                switch (leaf_mat->get_block_type())
+                  {
+                    case HMatrixSupport::lower_triangular_block:
+                      {
+                        /**
+                         * Build the \hmatrix block when it belongs to the lower
+                         * triangular part using ACA+.
+                         */
+                        aca_plus((*rkmat),
+                                 scratch,
+                                 data,
+                                 aca_config,
+                                 kernel,
+                                 (*row_dof_indices),
+                                 (*col_dof_indices),
+                                 dof_to_cell_topo,
+                                 bem_values,
+                                 kx_dof_handler,
+                                 ky_dof_handler,
+                                 kx_mapping,
+                                 ky_mapping);
+
+                        break;
+                      }
+                    case HMatrixSupport::upper_triangular_block:
+                      {
+                        /**
+                         * Do not build \hmatrix block belonging to the upper
+                         * triangular part.
+                         */
+
+                        break;
+                      }
+                    case HMatrixSupport::diagonal_block:
+                      /**
+                       * An rank-k matrix cannot belong to the diagonal part.
+                       */
+                    case HMatrixSupport::undefined_block:
+                      {
+                        Assert(false,
+                               ExcInvalidHMatrixBlockType(
+                                 leaf_mat->get_block_type()));
+
+                        break;
+                      }
+                  }
+              }
+            else
+              {
+                aca_plus((*rkmat),
+                         scratch,
+                         data,
+                         aca_config,
+                         kernel,
+                         (*row_dof_indices),
+                         (*col_dof_indices),
+                         dof_to_cell_topo,
+                         bem_values,
+                         kx_dof_handler,
+                         ky_dof_handler,
+                         kx_mapping,
+                         ky_mapping);
+              }
 
             break;
           }
@@ -1701,6 +1864,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -1717,7 +1882,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &            kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(leaf_mat_for_kernels.size(), kernels.size());
 
@@ -1734,6 +1900,12 @@ namespace IdeoBEM
       &col_index_global_to_local_map =
         leaf_mat_for_kernels[0]->get_col_index_global_to_local_map();
 
+    /**
+     * Flags indicating whether the kernels are to be evaluated at the pair of
+     * DoFs.
+     */
+    std::vector<bool> enable_kernel_evaluations(kernel_num);
+
     switch (leaf_mat_for_kernels[0]->get_type())
       {
         case FullMatrixType:
@@ -1743,43 +1915,148 @@ namespace IdeoBEM
             /**
              * Iterate over each DoF index \f$i\f$ in the cluster \$\tau\f$.
              */
-            for (types::global_dof_index row_dof_index : (*row_dof_indices))
+            for (size_t i = 0; i < row_dof_indices->size(); i++)
               {
                 /**
-                 * Iterate over each DoF index \f$j\f$ in the cluster \$\sigma\f$.
+                 * Iterate over each DoF index \f$j\f$ in the cluster
+                 * \$\sigma\f$.
                  */
-                for (types::global_dof_index col_dof_index : (*col_dof_indices))
+                for (size_t j = 0; j < col_dof_indices->size(); j++)
                   {
+                    /**
+                     * Determine if each kernel is to be evaluated at the
+                     * current pair of DoFs.
+                     */
+                    for (unsigned int k = 0; k < kernel_num; k++)
+                      {
+                        if (enable_build_symmetric_hmat &&
+                            kernels[k]->is_symmetric())
+                          {
+                            /**
+                             * When the flag @p enable_build_symmetric_hmat is true and the
+                             * kernel function is symmetric, try to build a
+                             * symmetric \hmatrix. Otherwise, the whole full
+                             * matrix will be always built.
+                             */
+                            switch (leaf_mat_for_kernels[k]->get_block_type())
+                              {
+                                case HMatrixSupport::diagonal_block:
+                                  {
+                                    /**
+                                     * A diagonal \hmatrix block as well as its
+                                     * associated full matrix should be
+                                     * symmetric.
+                                     */
+                                    Assert(
+                                      leaf_mat_for_kernels[k]->get_property() ==
+                                        HMatrixSupport::symmetric,
+                                      ExcInvalidHMatrixProperty(
+                                        leaf_mat_for_kernels[k]
+                                          ->get_property()));
+                                    Assert(leaf_mat_for_kernels[k]
+                                               ->get_fullmatrix()
+                                               ->get_property() ==
+                                             LAPACKSupport::symmetric,
+                                           ExcInvalidLAPACKFullMatrixProperty(
+                                             leaf_mat_for_kernels[k]
+                                               ->get_fullmatrix()
+                                               ->get_property()));
+
+                                    if (j <= i)
+                                      {
+                                        /**
+                                         * Only the diagonal and lower
+                                         * triangular elements in the full
+                                         * matrix will be evaluated.
+                                         */
+                                        enable_kernel_evaluations[k] = true;
+                                      }
+                                    else
+                                      {
+                                        /**
+                                         * Upper triangular elements in the full
+                                         * matrix are ignored.
+                                         */
+                                        enable_kernel_evaluations[k] = false;
+                                      }
+
+                                    break;
+                                  }
+                                case HMatrixSupport::upper_triangular_block:
+                                  {
+                                    /**
+                                     * Do not build \hmatrix block belonging to
+                                     * the upper triangular part.
+                                     */
+                                    enable_kernel_evaluations[k] = false;
+
+                                    break;
+                                  }
+                                case HMatrixSupport::lower_triangular_block:
+                                  {
+                                    /**
+                                     * When the current \hmatrix block belongs
+                                     * to the lower triangular part, evaluate
+                                     * all of its elements as usual.
+                                     */
+                                    enable_kernel_evaluations[k] = true;
+
+                                    break;
+                                  }
+                                case HMatrixSupport::undefined_block:
+                                  {
+                                    Assert(false,
+                                           ExcInvalidHMatrixBlockType(
+                                             leaf_mat_for_kernels[k]
+                                               ->get_block_type()));
+                                    enable_kernel_evaluations[k] = true;
+
+                                    break;
+                                  }
+                              }
+                          }
+                        else
+                          {
+                            enable_kernel_evaluations[k] = true;
+                          }
+                      }
+
                     /**
                      * Perform Sauter quadrature on the pair of DoF indices
                      * \f$(i,j)\f$ for the vector kernel functions. The list of
                      * results are collected into the vector @p fullmat_coeffs.
                      */
-                    sauter_assemble_on_one_pair_of_dofs(fullmat_coeffs,
-                                                        scratch,
-                                                        data,
-                                                        kernels,
-                                                        row_dof_index,
-                                                        col_dof_index,
-                                                        dof_to_cell_topo,
-                                                        bem_values,
-                                                        kx_dof_handler,
-                                                        ky_dof_handler,
-                                                        kx_mapping,
-                                                        ky_mapping);
+                    sauter_assemble_on_one_pair_of_dofs(
+                      fullmat_coeffs,
+                      scratch,
+                      data,
+                      kernels,
+                      enable_kernel_evaluations,
+                      (*row_dof_indices)[i],
+                      (*col_dof_indices)[j],
+                      dof_to_cell_topo,
+                      bem_values,
+                      kx_dof_handler,
+                      ky_dof_handler,
+                      kx_mapping,
+                      ky_mapping);
 
                     /**
                      * Assign the vector of returned values to each full matrix
                      * corresponding to the kernel function.
                      */
-                    for (unsigned int i = 0; i < kernel_num; i++)
+                    for (unsigned int k = 0; k < kernel_num; k++)
                       {
-                        LAPACKFullMatrixExt<RangeNumberType> *fullmat =
-                          leaf_mat_for_kernels[i]->get_fullmatrix();
-                        (*fullmat)(
-                          row_index_global_to_local_map.at(row_dof_index),
-                          col_index_global_to_local_map.at(col_dof_index)) =
-                          fullmat_coeffs(i);
+                        if (enable_kernel_evaluations[k])
+                          {
+                            LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+                              leaf_mat_for_kernels[k]->get_fullmatrix();
+                            (*fullmat)(row_index_global_to_local_map.at(
+                                         (*row_dof_indices)[i]),
+                                       col_index_global_to_local_map.at(
+                                         (*col_dof_indices)[j])) =
+                              fullmat_coeffs(k);
+                          }
                       }
                   }
               }
@@ -1789,28 +2066,84 @@ namespace IdeoBEM
         case RkMatrixType:
           {
             /**
+             * Determine if each kernel is to be evaluated at the current pair
+             * of DoFs.
+             */
+            for (unsigned int k = 0; k < kernel_num; k++)
+              {
+                if (enable_build_symmetric_hmat && kernels[k]->is_symmetric())
+                  {
+                    switch (leaf_mat_for_kernels[k]->get_block_type())
+                      {
+                        case HMatrixSupport::lower_triangular_block:
+                          {
+                            /**
+                             * Build the \hmatrix block when it belongs to the
+                             * lower triangular part using ACA+.
+                             */
+                            enable_kernel_evaluations[k] = true;
+
+                            break;
+                          }
+                        case HMatrixSupport::upper_triangular_block:
+                          {
+                            /**
+                             * Do not build \hmatrix block belonging to the
+                             * upper triangular part.
+                             */
+                            enable_kernel_evaluations[k] = false;
+
+                            break;
+                          }
+                        case HMatrixSupport::diagonal_block:
+                          /**
+                           * An rank-k matrix cannot belong to the diagonal
+                           * part.
+                           */
+                        case HMatrixSupport::undefined_block:
+                          {
+                            Assert(
+                              false,
+                              ExcInvalidHMatrixBlockType(
+                                leaf_mat_for_kernels[k]->get_block_type()));
+                            enable_kernel_evaluations[k] = true;
+
+                            break;
+                          }
+                      }
+                  }
+                else
+                  {
+                    enable_kernel_evaluations[k] = true;
+                  }
+              }
+
+            /**
              * Iterate over each kernel and build the far field matrix block in
              * the rank-k format using ACA+.
              */
             unsigned int counter = 0;
             for (const KernelFunction<spacedim> *kernel : kernels)
               {
-                RkMatrix<RangeNumberType> *rkmat =
-                  leaf_mat_for_kernels[counter]->get_rkmatrix();
+                if (enable_kernel_evaluations[counter])
+                  {
+                    RkMatrix<RangeNumberType> *rkmat =
+                      leaf_mat_for_kernels[counter]->get_rkmatrix();
 
-                aca_plus((*rkmat),
-                         scratch,
-                         data,
-                         aca_config,
-                         *kernel,
-                         (*row_dof_indices),
-                         (*col_dof_indices),
-                         dof_to_cell_topo,
-                         bem_values,
-                         kx_dof_handler,
-                         ky_dof_handler,
-                         kx_mapping,
-                         ky_mapping);
+                    aca_plus((*rkmat),
+                             scratch,
+                             data,
+                             aca_config,
+                             *kernel,
+                             (*row_dof_indices),
+                             (*col_dof_indices),
+                             dof_to_cell_topo,
+                             bem_values,
+                             kx_dof_handler,
+                             ky_dof_handler,
+                             kx_mapping,
+                             ky_mapping);
+                  }
 
                 counter++;
               }
@@ -1853,6 +2186,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -1871,7 +2206,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &            kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(leaf_mat_for_kernels.size(), kernels.size());
 
@@ -1888,6 +2224,12 @@ namespace IdeoBEM
       &col_index_global_to_local_map =
         leaf_mat_for_kernels[0]->get_col_index_global_to_local_map();
 
+    /**
+     * Flags indicating whether the kernels are to be evaluated at the pair of
+     * DoFs.
+     */
+    std::vector<bool> enable_kernel_evaluations(kernel_num);
+
     switch (leaf_mat_for_kernels[0]->get_type())
       {
         case FullMatrixType:
@@ -1897,45 +2239,150 @@ namespace IdeoBEM
             /**
              * Iterate over each DoF index \f$i\f$ in the cluster \$\tau\f$.
              */
-            for (types::global_dof_index row_dof_index : (*row_dof_indices))
+            for (size_t i = 0; i < row_dof_indices->size(); i++)
               {
                 /**
-                 * Iterate over each DoF index \f$j\f$ in the cluster \$\sigma\f$.
+                 * Iterate over each DoF index \f$j\f$ in the cluster
+                 * \$\sigma\f$.
                  */
-                for (types::global_dof_index col_dof_index : (*col_dof_indices))
+                for (size_t j = 0; j < col_dof_indices->size(); j++)
                   {
+                    /**
+                     * Determine if each kernel is to be evaluated at the
+                     * current pair of DoFs.
+                     */
+                    for (unsigned int k = 0; k < kernel_num; k++)
+                      {
+                        if (enable_build_symmetric_hmat &&
+                            kernels[k]->is_symmetric())
+                          {
+                            /**
+                             * When the flag @p enable_build_symmetric_hmat is true and the
+                             * kernel function is symmetric, try to build a
+                             * symmetric \hmatrix. Otherwise, the whole full
+                             * matrix will be always built.
+                             */
+                            switch (leaf_mat_for_kernels[k]->get_block_type())
+                              {
+                                case HMatrixSupport::diagonal_block:
+                                  {
+                                    /**
+                                     * A diagonal \hmatrix block as well as its
+                                     * associated full matrix should be
+                                     * symmetric.
+                                     */
+                                    Assert(
+                                      leaf_mat_for_kernels[k]->get_property() ==
+                                        HMatrixSupport::symmetric,
+                                      ExcInvalidHMatrixProperty(
+                                        leaf_mat_for_kernels[k]
+                                          ->get_property()));
+                                    Assert(leaf_mat_for_kernels[k]
+                                               ->get_fullmatrix()
+                                               ->get_property() ==
+                                             LAPACKSupport::symmetric,
+                                           ExcInvalidLAPACKFullMatrixProperty(
+                                             leaf_mat_for_kernels[k]
+                                               ->get_fullmatrix()
+                                               ->get_property()));
+
+                                    if (j <= i)
+                                      {
+                                        /**
+                                         * Only the diagonal and lower
+                                         * triangular elements in the full
+                                         * matrix will be evaluated.
+                                         */
+                                        enable_kernel_evaluations[k] = true;
+                                      }
+                                    else
+                                      {
+                                        /**
+                                         * Upper triangular elements in the full
+                                         * matrix are ignored.
+                                         */
+                                        enable_kernel_evaluations[k] = false;
+                                      }
+
+                                    break;
+                                  }
+                                case HMatrixSupport::upper_triangular_block:
+                                  {
+                                    /**
+                                     * Do not build \hmatrix block belonging to
+                                     * the upper triangular part.
+                                     */
+                                    enable_kernel_evaluations[k] = false;
+
+                                    break;
+                                  }
+                                case HMatrixSupport::lower_triangular_block:
+                                  {
+                                    /**
+                                     * When the current \hmatrix block belongs
+                                     * to the lower triangular part, evaluate
+                                     * all of its elements as usual.
+                                     */
+                                    enable_kernel_evaluations[k] = true;
+
+                                    break;
+                                  }
+                                case HMatrixSupport::undefined_block:
+                                  {
+                                    Assert(false,
+                                           ExcInvalidHMatrixBlockType(
+                                             leaf_mat_for_kernels[k]
+                                               ->get_block_type()));
+                                    enable_kernel_evaluations[k] = true;
+
+                                    break;
+                                  }
+                              }
+                          }
+                        else
+                          {
+                            enable_kernel_evaluations[k] = true;
+                          }
+                      }
+
                     /**
                      * Perform Sauter quadrature on the pair of DoF indices
                      * \f$(i,j)\f$ for the vector kernel functions. The list of
                      * results are collected into the vector @p fullmat_coeffs.
                      */
-                    sauter_assemble_on_one_pair_of_dofs(fullmat_coeffs,
-                                                        scratch,
-                                                        data,
-                                                        fem_scratch,
-                                                        mass_matrix_factors,
-                                                        kernels,
-                                                        row_dof_index,
-                                                        col_dof_index,
-                                                        dof_to_cell_topo,
-                                                        bem_values,
-                                                        kx_dof_handler,
-                                                        ky_dof_handler,
-                                                        kx_mapping,
-                                                        ky_mapping);
+                    sauter_assemble_on_one_pair_of_dofs(
+                      fullmat_coeffs,
+                      scratch,
+                      data,
+                      fem_scratch,
+                      mass_matrix_factors,
+                      kernels,
+                      enable_kernel_evaluations,
+                      (*row_dof_indices)[i],
+                      (*col_dof_indices)[j],
+                      dof_to_cell_topo,
+                      bem_values,
+                      kx_dof_handler,
+                      ky_dof_handler,
+                      kx_mapping,
+                      ky_mapping);
 
                     /**
                      * Assign the vector of returned values to each full matrix
                      * corresponding to the kernel function.
                      */
-                    for (unsigned int i = 0; i < kernel_num; i++)
+                    for (unsigned int k = 0; k < kernel_num; k++)
                       {
-                        LAPACKFullMatrixExt<RangeNumberType> *fullmat =
-                          leaf_mat_for_kernels[i]->get_fullmatrix();
-                        (*fullmat)(
-                          row_index_global_to_local_map.at(row_dof_index),
-                          col_index_global_to_local_map.at(col_dof_index)) =
-                          fullmat_coeffs(i);
+                        if (enable_kernel_evaluations[k])
+                          {
+                            LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+                              leaf_mat_for_kernels[k]->get_fullmatrix();
+                            (*fullmat)(row_index_global_to_local_map.at(
+                                         (*row_dof_indices)[i]),
+                                       col_index_global_to_local_map.at(
+                                         (*col_dof_indices)[j])) =
+                              fullmat_coeffs(k);
+                          }
                       }
                   }
               }
@@ -1945,28 +2392,84 @@ namespace IdeoBEM
         case RkMatrixType:
           {
             /**
+             * Determine if each kernel is to be evaluated at the current pair
+             * of DoFs.
+             */
+            for (unsigned int k = 0; k < kernel_num; k++)
+              {
+                if (enable_build_symmetric_hmat && kernels[k]->is_symmetric())
+                  {
+                    switch (leaf_mat_for_kernels[k]->get_block_type())
+                      {
+                        case HMatrixSupport::lower_triangular_block:
+                          {
+                            /**
+                             * Build the \hmatrix block when it belongs to the
+                             * lower triangular part using ACA+.
+                             */
+                            enable_kernel_evaluations[k] = true;
+
+                            break;
+                          }
+                        case HMatrixSupport::upper_triangular_block:
+                          {
+                            /**
+                             * Do not build \hmatrix block belonging to the
+                             * upper triangular part.
+                             */
+                            enable_kernel_evaluations[k] = false;
+
+                            break;
+                          }
+                        case HMatrixSupport::diagonal_block:
+                          /**
+                           * An rank-k matrix cannot belong to the diagonal
+                           * part.
+                           */
+                        case HMatrixSupport::undefined_block:
+                          {
+                            Assert(
+                              false,
+                              ExcInvalidHMatrixBlockType(
+                                leaf_mat_for_kernels[k]->get_block_type()));
+                            enable_kernel_evaluations[k] = true;
+
+                            break;
+                          }
+                      }
+                  }
+                else
+                  {
+                    enable_kernel_evaluations[k] = true;
+                  }
+              }
+
+            /**
              * Iterate over each kernel and build the far field matrix block in
              * the rank-k format using ACA+.
              */
             unsigned int counter = 0;
             for (const KernelFunction<spacedim> *kernel : kernels)
               {
-                RkMatrix<RangeNumberType> *rkmat =
-                  leaf_mat_for_kernels[counter]->get_rkmatrix();
+                if (enable_kernel_evaluations[counter])
+                  {
+                    RkMatrix<RangeNumberType> *rkmat =
+                      leaf_mat_for_kernels[counter]->get_rkmatrix();
 
-                aca_plus((*rkmat),
-                         scratch,
-                         data,
-                         aca_config,
-                         *kernel,
-                         (*row_dof_indices),
-                         (*col_dof_indices),
-                         dof_to_cell_topo,
-                         bem_values,
-                         kx_dof_handler,
-                         ky_dof_handler,
-                         kx_mapping,
-                         ky_mapping);
+                    aca_plus((*rkmat),
+                             scratch,
+                             data,
+                             aca_config,
+                             *kernel,
+                             (*row_dof_indices),
+                             (*col_dof_indices),
+                             dof_to_cell_topo,
+                             bem_values,
+                             kx_dof_handler,
+                             ky_dof_handler,
+                             kx_mapping,
+                             ky_mapping);
+                  }
 
                 counter++;
               }
@@ -1998,6 +2501,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -2014,7 +2519,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &           kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
@@ -2042,7 +2548,8 @@ namespace IdeoBEM
                                              kx_dof_handler,
                                              ky_dof_handler,
                                              kx_mapping,
-                                             ky_mapping);
+                                             ky_mapping,
+                                             enable_build_symmetric_hmat);
       }
   }
 
@@ -2065,6 +2572,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -2081,7 +2590,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &           kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(collection_of_leaf_sets.size(), kernels.size());
 
@@ -2128,7 +2638,8 @@ namespace IdeoBEM
                                              kx_dof_handler,
                                              ky_dof_handler,
                                              kx_mapping,
-                                             ky_mapping);
+                                             ky_mapping,
+                                             enable_build_symmetric_hmat);
       }
   }
 
@@ -2152,6 +2663,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -2170,7 +2683,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &           kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(collection_of_leaf_sets.size(), kernels.size());
 
@@ -2226,7 +2740,8 @@ namespace IdeoBEM
                                              kx_dof_handler,
                                              ky_dof_handler,
                                              kx_mapping,
-                                             ky_mapping);
+                                             ky_mapping,
+                                             enable_build_symmetric_hmat);
       }
   }
 
@@ -2252,6 +2767,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -2268,7 +2785,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &           kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
@@ -2282,7 +2800,8 @@ namespace IdeoBEM
                                              kx_dof_handler,
                                              ky_dof_handler,
                                              kx_mapping,
-                                             ky_mapping);
+                                             ky_mapping,
+                                             enable_build_symmetric_hmat);
       }
   }
 
@@ -2310,6 +2829,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -2325,7 +2846,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &           kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
       hmat.get_leaf_set();
@@ -2429,7 +2951,8 @@ namespace IdeoBEM
                 std::cref(kx_dof_handler),
                 std::cref(ky_dof_handler),
                 std::cref(kx_mapping),
-                std::cref(ky_mapping)),
+                std::cref(ky_mapping),
+                enable_build_symmetric_hmat),
       grain_size);
   }
 
@@ -2457,6 +2980,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -2472,7 +2997,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &             kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(hmats.size(), kernels.size());
 
@@ -2534,7 +3060,8 @@ namespace IdeoBEM
                              const DoFHandler<dim, spacedim> &,
                              const DoFHandler<dim, spacedim> &,
                              const MappingQGeneric<dim, spacedim> &,
-                             const MappingQGeneric<dim, spacedim> &)>(
+                             const MappingQGeneric<dim, spacedim> &,
+                             const bool)>(
           fill_hmatrix_leaf_node_subrange_with_aca_plus_for_kernel_list),
         std::placeholders::_1,
         std::cref(collection_of_leaf_sets),
@@ -2545,7 +3072,8 @@ namespace IdeoBEM
         std::cref(kx_dof_handler),
         std::cref(ky_dof_handler),
         std::cref(kx_mapping),
-        std::cref(ky_mapping)),
+        std::cref(ky_mapping),
+        enable_build_symmetric_hmat),
       tbb::auto_partitioner());
   }
 
@@ -2577,6 +3105,8 @@ namespace IdeoBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
+   * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -2594,7 +3124,8 @@ namespace IdeoBEM
     const MappingQGeneric<dim, spacedim> &             kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+      MappingQGeneric<dim, spacedim>(1),
+    const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(hmats.size(), kernels.size());
 
@@ -2658,7 +3189,8 @@ namespace IdeoBEM
                              const DoFHandler<dim, spacedim> &,
                              const DoFHandler<dim, spacedim> &,
                              const MappingQGeneric<dim, spacedim> &,
-                             const MappingQGeneric<dim, spacedim> &)>(
+                             const MappingQGeneric<dim, spacedim> &,
+                             const bool)>(
           fill_hmatrix_leaf_node_subrange_with_aca_plus_for_kernel_list),
         std::placeholders::_1,
         std::cref(collection_of_leaf_sets),
@@ -2671,7 +3203,8 @@ namespace IdeoBEM
         std::cref(kx_dof_handler),
         std::cref(ky_dof_handler),
         std::cref(kx_mapping),
-        std::cref(ky_mapping)),
+        std::cref(ky_mapping),
+        enable_build_symmetric_hmat),
       tbb::auto_partitioner());
   }
 } // namespace IdeoBEM

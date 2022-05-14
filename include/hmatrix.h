@@ -741,6 +741,12 @@ public:
    *   <dd>This function only has the verification purpose. In reality, a large
    * dense matrix cannot be saved as a full matrix.</dd>
    * </dl>
+   *
+   * If the current \hmatrix is symmetric, after conversion, the obtained full
+   * matrix may not be symmetric anymore, because when constructing an \hmatrix
+   * based on a real mesh, the indices stored in a cluster are usually not
+   * continuous.
+   *
    * @param matrix
    */
   template <typename MatrixType>
@@ -1180,12 +1186,17 @@ public:
    *
    * @param y
    * @param x
+   * @param top_hmat_property When the \hmatnode on the top level is symmetric
+   * for example, there will be special internal treatment.
    */
   void
-  vmult(Vector<Number> &y, const Vector<Number> &x) const;
+  vmult(Vector<Number> &               y,
+        const Vector<Number> &         x,
+        const HMatrixSupport::Property top_hmat_property =
+          HMatrixSupport::general) const;
 
   /**
-   * Calculate matrix-vector multiplication as \f$y = y + \alpha \codt M \cdot
+   * Calculate matrix-vector multiplication as \f$y = y + \alpha \cdot M \cdot
    * x\f$.
    *
    * @param y
@@ -12951,12 +12962,6 @@ HMatrix<spacedim, Number>::convertToFullMatrix(MatrixType &M) const
 {
   M.reinit(m, n);
   _convertToFullMatrix(M, property);
-
-  /**
-   * Set the property of the full matrix according to the property of the
-   * \hmatrix.
-   */
-  set_property_for_converted_fullmatrix(M);
 }
 
 
@@ -15337,73 +15342,358 @@ HMatrix<spacedim, Number>::truncate_to_rank_off_diag_preserve_positive_definite(
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::vmult(Vector<Number> &      y,
-                                 const Vector<Number> &x) const
+HMatrix<spacedim, Number>::vmult(
+  Vector<Number> &               y,
+  const Vector<Number> &         x,
+  const HMatrixSupport::Property top_hmat_property) const
 {
   switch (type)
     {
       case HierarchicalMatrixType:
         {
+          /**
+           * When the current \hmatnode is hierarchical, recursively call
+           * @p vmult of its children.
+           */
           for (HMatrix *submatrix : submatrices)
             {
-              submatrix->vmult(y, x);
+              submatrix->vmult(y, x, top_hmat_property);
             }
 
           break;
         }
       case FullMatrixType:
         {
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
           /**
-           * Restrict vector x to the current matrix block.
+           * Here we comes to the matrix-vector multiplication with respect to a
+           * near field leaf \hmatnode.
            */
-          for (size_type j = 0; j < n; j++)
+          switch (top_hmat_property)
             {
-              local_x(j) = x(col_indices->at(j));
-            }
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the top level \hmatnode is general, perform the
+                   * matrix-vector multiplication as usual.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
 
-          fullmatrix->vmult(local_y, local_x);
+                  /**
+                   * Restrict vector x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) = x(col_indices->at(j));
+                    }
 
-          /**
-           * Merge back the result vector \p local_y to \p y.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              y(row_indices->at(i)) += local_y(i);
+                  fullmatrix->vmult(local_y, local_x);
+
+                  /**
+                   * Merge back the result vector \p local_y to \p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y(row_indices->at(i)) += local_y(i);
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the top level \hmatnode is symmetric, the operation
+                   * depends on the block type of the current leaf \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                      case HMatrixSupport::diagonal_block:
+                        {
+                          /**
+                           * A leaf \hmatnode belonging to the diagonal block
+                           * should also be symmetric, when the top level
+                           * \hmatnode is symmetric.
+                           */
+                          Assert(property == HMatrixSupport::symmetric,
+                                 ExcInvalidHMatrixProperty(property));
+                          /**
+                           * The full matrix associated with the current
+                           * \hmatnode should also be symmetric.
+                           */
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::symmetric,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          /**
+                           * Perform the matrix-vector multiplication using the
+                           * LAPACK function @p symv. In my implementation, only
+                           * those lower triangular elements in a symmetric full
+                           * matrix are used by the function.
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x(col_indices->at(j));
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y(row_indices->at(i)) += local_y(i);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x(col_indices->at(j));
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y(row_indices->at(i)) += local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Tvmult(n);
+                          Vector<Number> local_x_for_Tvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed matrix
+                           * block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Tvmult(i) = x(row_indices->at(i));
+                            }
+
+                          fullmatrix->Tvmult(local_y_for_Tvmult,
+                                             local_x_for_Tvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Tvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y(col_indices->at(j)) += local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  break;
+                }
             }
 
           break;
         }
       case RkMatrixType:
         {
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
           /**
-           * Restrict vector x to the current matrix block.
+           * Here we comes to the matrix-vector multiplication with respect to a
+           * far field leaf \hmatnode.
            */
-          for (size_type j = 0; j < n; j++)
+          switch (top_hmat_property)
             {
-              local_x(j) = x(col_indices->at(j));
-            }
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the top level \hmatnode is general, perform the
+                   * matrix-vector multiplication as usual.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
 
-          rkmatrix->vmult(local_y, local_x);
+                  /**
+                   * Restrict vector x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) = x(col_indices->at(j));
+                    }
 
-          /**
-           * Merge back the result vector \p local_y to \p y.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              y(row_indices->at(i)) += local_y(i);
+                  rkmatrix->vmult(local_y, local_x);
+
+                  /**
+                   * Merge back the result vector \p local_y to \p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y(row_indices->at(i)) += local_y(i);
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the top level \hmatnode is symmetric, the operation
+                   * depends on the block type of the current leaf \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                      case HMatrixSupport::diagonal_block:
+                        {
+                          /**
+                           * When the current \hmatnode is rank-k matrix, it can
+                           * never belong to the diagonal part.
+                           */
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x(col_indices->at(j));
+                            }
+
+                          rkmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y(row_indices->at(i)) += local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Tvmult(n);
+                          Vector<Number> local_x_for_Tvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed matrix
+                           * block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Tvmult(i) = x(row_indices->at(i));
+                            }
+
+                          rkmatrix->Tvmult(local_y_for_Tvmult,
+                                           local_x_for_Tvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Tvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y(col_indices->at(j)) += local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  break;
+                }
             }
 
           break;
         }
       case UndefinedMatrixType:
       default:
-        Assert(false, ExcInvalidHMatrixType(type));
+        {
+          Assert(false, ExcInvalidHMatrixType(type));
+          break;
+        }
     }
 }
 

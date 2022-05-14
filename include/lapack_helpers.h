@@ -37,6 +37,36 @@ using namespace LAPACKSupport;
 
 namespace LAPACKHelpers
 {
+  template <typename T>
+  void
+  symv_helper(const char              uplo,
+              const T                 alpha,
+              const types::blas_int   n_rows,
+              const AlignedVector<T> &matrix,
+              const T *               x_pointer,
+              const T                 beta,
+              T *                     y_pointer,
+              const types::blas_int   incx = 1,
+              const types::blas_int   incy = 1)
+  {
+    Assert(uplo == 'U' || uplo == 'u' || uplo == 'L' || uplo == 'l',
+           ExcInternalError());
+    // The matrix should be square.
+    Assert(static_cast<size_t>(n_rows * n_rows) == matrix.size(),
+           ExcInternalError());
+
+    symv(&uplo,
+         &n_rows,
+         &alpha,
+         matrix.data(),
+         &n_rows,
+         x_pointer,
+         &incx,
+         &beta,
+         y_pointer,
+         &incy);
+  }
+
   // ZGEEV/CGEEV and DGEEV/SGEEV need different work arrays and different
   // output arrays for eigenvalues. This makes working with generic scalar
   // types a bit difficult. To get around this, geev_helper has the same

@@ -44,6 +44,14 @@ namespace LaplaceKernel
           const Tensor<1, dim> &nx,
           const Tensor<1, dim> &ny,
           const unsigned int    component = 0) const override;
+
+    /**
+     * Return whether the kernel function is symmetric.
+     *
+     * @return
+     */
+    virtual bool
+    is_symmetric() const override;
   };
 
 
@@ -75,6 +83,14 @@ namespace LaplaceKernel
   }
 
 
+  template <int dim, typename RangeNumberType>
+  bool
+  SingleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+  {
+    return true;
+  }
+
+
   /**
    * Double layer kernel.
    */
@@ -92,6 +108,14 @@ namespace LaplaceKernel
           const Tensor<1, dim> &nx,
           const Tensor<1, dim> &ny,
           const unsigned int    component = 0) const override;
+
+    /**
+     * Return whether the kernel function is symmetric.
+     *
+     * @return
+     */
+    virtual bool
+    is_symmetric() const override;
   };
 
 
@@ -123,6 +147,14 @@ namespace LaplaceKernel
   }
 
 
+  template <int dim, typename RangeNumberType>
+  bool
+  DoubleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+  {
+    return false;
+  }
+
+
   // Class for the adjoint double layer kernel.
   template <int dim, typename RangeNumberType = double>
   class AdjointDoubleLayerKernel : public KernelFunction<dim, RangeNumberType>
@@ -138,6 +170,14 @@ namespace LaplaceKernel
           const Tensor<1, dim> &nx,
           const Tensor<1, dim> &ny,
           const unsigned int    component = 0) const override;
+
+    /**
+     * Return whether the kernel function is symmetric.
+     *
+     * @return
+     */
+    virtual bool
+    is_symmetric() const override;
   };
 
 
@@ -169,6 +209,14 @@ namespace LaplaceKernel
   }
 
 
+  template <int dim, typename RangeNumberType>
+  bool
+  AdjointDoubleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+  {
+    return false;
+  }
+
+
   // Class for the hyper singular kernel.
   template <int dim, typename RangeNumberType = double>
   class HyperSingularKernel : public KernelFunction<dim, RangeNumberType>
@@ -184,6 +232,14 @@ namespace LaplaceKernel
           const Tensor<1, dim> &nx,
           const Tensor<1, dim> &ny,
           const unsigned int    component = 0) const override;
+
+    /**
+     * Return whether the kernel function is symmetric.
+     *
+     * @return
+     */
+    virtual bool
+    is_symmetric() const override;
   };
 
 
@@ -225,6 +281,13 @@ namespace LaplaceKernel
             return 0.;
           }
       }
+  }
+
+  template <int dim, typename RangeNumberType>
+  bool
+  HyperSingularKernel<dim, RangeNumberType>::is_symmetric() const
+  {
+    return true;
   }
 } // namespace LaplaceKernel
 

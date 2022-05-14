@@ -4,7 +4,7 @@ clear all;
 load matrices-assemble-on-cell-pair_fine-mesh.dat;
 ## Load SLP and DLP full mtrix data that are converted from
 ## corresponding H-matrices.
-load hmatrix-build-from-aca_coarse-fine.output.dat;
+load hmatrix-build-from-aca.output;
 
 figure;
 subplot(1, 2, 1);
@@ -28,10 +28,10 @@ colorbar;
 title("SLP from H-matrix");
 PrintGCF("slp-matrix");
 
-norm(dlp_full - dlp_cell_pair, 'fro') / norm(dlp_cell_pair, 'fro')
-norm(diag(dlp_full) - diag(dlp_cell_pair)) / norm(diag(dlp_cell_pair))
-norm(slp_full - slp_cell_pair, 'fro') / norm(slp_cell_pair, 'fro')
-norm(diag(slp_full) - diag(slp_cell_pair)) / norm(diag(slp_cell_pair))
+printout_var("norm(dlp_full - dlp_cell_pair, 'fro') / norm(dlp_cell_pair, 'fro')");
+printout_var("norm(diag(dlp_full) - diag(dlp_cell_pair)) / norm(diag(dlp_cell_pair))");
+printout_var("norm(slp_full - slp_cell_pair, 'fro') / norm(slp_cell_pair, 'fro')");
+printout_var("norm(diag(slp_full) - diag(slp_cell_pair)) / norm(diag(slp_cell_pair))");
 
 figure;
 bar([diag(dlp_full)(1:10), diag(dlp_cell_pair)(1:10)])

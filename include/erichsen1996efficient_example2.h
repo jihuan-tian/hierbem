@@ -171,21 +171,24 @@ namespace IdeoBEM
        * Assemble the system matrices as \hmatrices.
        */
       void
-      assemble_system_as_hmatrices();
+      assemble_system_as_hmatrices(
+        const bool enable_build_symmetric_hmat = false);
 
       /**
        * Assemble the system matrices as \hmatrices (SMP version) without
        * incorporating FEM mass matrix multiplied by the factor 0.5.
        */
       void
-      assemble_system_as_hmatrices_smp();
+      assemble_system_as_hmatrices_smp(
+        const bool enable_build_symmetric_hmat = false);
 
       /**
        * Assemble the system matrices as \hmatrices (SMP version) incorporating
        * FEM mass matrix multiplied by the factor 0.5.
        */
       void
-      assemble_system_as_hmatrices_with_mass_matrix_smp();
+      assemble_system_as_hmatrices_with_mass_matrix_smp(
+        const bool enable_build_symmetric_hmat = false);
 
       void
       run();
@@ -295,8 +298,8 @@ namespace IdeoBEM
       copy_cell_local_to_global(const CellWisePerTaskData &data);
 
       /**
-       * Assemble BEM matrices on a pair of cells, i.e. \f$K_x\f$ as the field cell
-       * and \f$K_y\f$ as the source cell.
+       * Assemble BEM matrices on a pair of cells, i.e. \f$K_x\f$ as the field
+       * cell and \f$K_y\f$ as the source cell.
        *
        * @param kx_cell_iter
        * @param ky_cell_iter
@@ -809,13 +812,14 @@ namespace IdeoBEM
                 {
                   // This part handles the common edge case of Sauter's
                   // quadrature rule.
-                  // 1. Get the DoF indices in the lexicographic order for \f$K_x\f$.
+                  // 1. Get the DoF indices in the lexicographic order for
+                  // \f$K_x\f$.
                   // 2. Get the DoF indices in the reversed lexicographic order
                   // for \f$K_x\f$.
-                  // 3. Extract DoF indices only for cell vertices in \f$K_x\f$ and
-                  // \f$K_y\f$. N.B. The DoF indices for the last two vertices are
-                  // swapped, such that the four vertices are in clockwise or
-                  // counter clockwise order.
+                  // 3. Extract DoF indices only for cell vertices in \f$K_x\f$
+                  // and \f$K_y\f$. N.B. The DoF indices for the last two
+                  // vertices are swapped, such that the four vertices are in
+                  // clockwise or counter clockwise order.
                   // 4. Determine the starting vertex.
 
                   Assert(scratch.vertex_dof_index_intersection.size() ==
@@ -844,7 +848,8 @@ namespace IdeoBEM
                     data.ky_local_dof_indices_permuted,
                     ky_local_vertex_dof_indices_swapped);
 
-                  // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+                  // Determine the starting vertex index in \f$K_x\f$ and
+                  // \f$K_y\f$.
                   unsigned int kx_starting_vertex_index =
                     get_start_vertex_dof_index<vertices_per_cell>(
                       scratch.vertex_dof_index_intersection,
@@ -858,8 +863,8 @@ namespace IdeoBEM
                   Assert(ky_starting_vertex_index < vertices_per_cell,
                          ExcInternalError());
 
-                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
-                  // starting from <code>kx_starting_vertex_index</code> or
+                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$
+                  // by starting from <code>kx_starting_vertex_index</code> or
                   // <code>ky_starting_vertex_index</code>.
                   generate_forward_dof_permutation(
                     kx_fe,
@@ -954,7 +959,8 @@ namespace IdeoBEM
                     data.ky_local_dof_indices_permuted,
                     ky_local_vertex_dof_indices_swapped);
 
-                  // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
+                  // Determine the starting vertex index in \f$K_x\f$ and
+                  // \f$K_y\f$.
                   unsigned int kx_starting_vertex_index =
                     get_start_vertex_dof_index<vertices_per_cell>(
                       scratch.vertex_dof_index_intersection,
@@ -968,8 +974,8 @@ namespace IdeoBEM
                   Assert(ky_starting_vertex_index < vertices_per_cell,
                          ExcInternalError());
 
-                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
-                  // starting from <code>kx_starting_vertex_index</code> or
+                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$
+                  // by starting from <code>kx_starting_vertex_index</code> or
                   // <code>ky_starting_vertex_index</code>.
                   generate_forward_dof_permutation(
                     kx_fe,
@@ -1465,7 +1471,8 @@ namespace IdeoBEM
 
 
     void
-    Example2::assemble_system_as_hmatrices()
+    Example2::assemble_system_as_hmatrices(
+      const bool enable_build_symmetric_hmat)
     {
       // Generate normal Gauss-Legendre quadrature rule for FEM integration.
       QGauss<2> quadrature_formula_2d(fe.degree + 1);
@@ -1585,7 +1592,12 @@ namespace IdeoBEM
        * \comment{既然自己已经为 @p ClusterTree, @p BlockClusterTree 以及 @p HMatrix 定义了
        * 浅拷贝构造与赋值函数，那么自己就要在实际中大胆地使用。一开始不熟悉、不放心，多次使用且经过实践的验证就习以为常了。}
        */
-      slp_hmat = HMatrix<3>(bct, max_hmat_rank);
+      slp_hmat =
+        HMatrix<3>(bct,
+                   max_hmat_rank,
+                   (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
+                                                  HMatrixSupport::general),
+                   HMatrixSupport::diagonal_block);
       dlp_hmat = HMatrix<3>(bct, max_hmat_rank);
 
       /**
@@ -1596,18 +1608,6 @@ namespace IdeoBEM
       /**
        * Fill the \hmatrices using ACA+ approximation.
        */
-      fill_hmatrix_with_aca_plus(dlp_hmat,
-                                 scratch_data,
-                                 per_task_data,
-                                 aca_config,
-                                 dlp,
-                                 dof_to_cell_topo,
-                                 bem_values,
-                                 dof_handler,
-                                 dof_handler,
-                                 mapping,
-                                 mapping);
-
       fill_hmatrix_with_aca_plus(slp_hmat,
                                  scratch_data,
                                  per_task_data,
@@ -1618,12 +1618,27 @@ namespace IdeoBEM
                                  dof_handler,
                                  dof_handler,
                                  mapping,
-                                 mapping);
+                                 mapping,
+                                 enable_build_symmetric_hmat);
+
+      fill_hmatrix_with_aca_plus(dlp_hmat,
+                                 scratch_data,
+                                 per_task_data,
+                                 aca_config,
+                                 dlp,
+                                 dof_to_cell_topo,
+                                 bem_values,
+                                 dof_handler,
+                                 dof_handler,
+                                 mapping,
+                                 mapping,
+                                 enable_build_symmetric_hmat);
     }
 
 
     void
-    Example2::assemble_system_as_hmatrices_smp()
+    Example2::assemble_system_as_hmatrices_smp(
+      const bool enable_build_symmetric_hmat)
     {
       // Generate normal Gauss-Legendre quadrature rule for FEM integration.
       QGauss<2> quadrature_formula_2d(fe.degree + 1);
@@ -1725,7 +1740,12 @@ namespace IdeoBEM
        * \comment{既然自己已经为 @p ClusterTree, @p BlockClusterTree 以及 @p HMatrix 定义了
        * 浅拷贝构造与赋值函数，那么自己就要在实际中大胆地使用。一开始不熟悉、不放心，多次使用且经过实践的验证就习以为常了。}
        */
-      slp_hmat = HMatrix<3>(bct, max_hmat_rank);
+      slp_hmat =
+        HMatrix<3>(bct,
+                   max_hmat_rank,
+                   (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
+                                                  HMatrixSupport::general),
+                   HMatrixSupport::diagonal_block);
       dlp_hmat = HMatrix<3>(bct, max_hmat_rank);
 
       /**
@@ -1770,12 +1790,14 @@ namespace IdeoBEM
                                      dof_handler,
                                      dof_handler,
                                      mapping,
-                                     mapping);
+                                     mapping,
+                                     enable_build_symmetric_hmat);
     }
 
 
     void
-    Example2::assemble_system_as_hmatrices_with_mass_matrix_smp()
+    Example2::assemble_system_as_hmatrices_with_mass_matrix_smp(
+      const bool enable_build_symmetric_hmat)
     {
       /**
        * Generate 4D Gauss-Legendre quadrature rules for various cell
@@ -1874,7 +1896,12 @@ namespace IdeoBEM
        * \comment{既然自己已经为 @p ClusterTree, @p BlockClusterTree 以及 @p HMatrix 定义了
        * 浅拷贝构造与赋值函数，那么自己就要在实际中大胆地使用。一开始不熟悉、不放心，多次使用且经过实践的验证就习以为常了。}
        */
-      slp_hmat = HMatrix<3>(bct, max_hmat_rank);
+      slp_hmat =
+        HMatrix<3>(bct,
+                   max_hmat_rank,
+                   (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
+                                                  HMatrixSupport::general),
+                   HMatrixSupport::diagonal_block);
       dlp_hmat = HMatrix<3>(bct, max_hmat_rank);
 
       /**
@@ -1912,7 +1939,8 @@ namespace IdeoBEM
                                      dof_handler,
                                      dof_handler,
                                      mapping,
-                                     mapping);
+                                     mapping,
+                                     enable_build_symmetric_hmat);
     }
 
 
@@ -2351,7 +2379,8 @@ namespace IdeoBEM
       setup_system();
 
       /**
-       * Generate the sequence of all DoF indices with the values \f$0, 1, \cdots\f$.
+       * Generate the sequence of all DoF indices with the values \f$0, 1,
+       * \cdots\f$.
        */
       dof_indices.resize(dof_handler.n_dofs());
       types::global_dof_index counter = 0;

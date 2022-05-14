@@ -1,6 +1,7 @@
 /** \file laplace_bem.h
  * \brief Implementation of BEM involving kernel functions and singular
  * numerical quadratures.
+ *
  * \ingroup sauter_quadrature
  * \date 2020-11-02
  * \author Jihuan Tian

@@ -174,6 +174,9 @@ namespace IdeoBEM
                       const std::vector<Tensor<1, dim>> &   nx_list,
                       const std::vector<Tensor<1, dim>> &   ny_list,
                       std::vector<Vector<RangeNumberType>> &values) const;
+
+    virtual bool
+    is_symmetric() const = 0;
   };
 
 

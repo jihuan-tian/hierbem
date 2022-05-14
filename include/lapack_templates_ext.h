@@ -22,6 +22,45 @@
 extern "C"
 {
   /**
+   * Perform matrix-vector multiplication \f$y:=\alpha A x + \beta y\f$, where
+   * the matrix \f$A\f$ is symmetric.
+   *
+   * @param uplo
+   * @param n
+   * @param alpha
+   * @param a
+   * @param dla
+   * @param x
+   * @param incx
+   * @param beta
+   * @param y
+   * @param incx
+   */
+  void
+  ssymv_(const char *                   uplo,
+         const dealii::types::blas_int *n,
+         const float *                  alpha,
+         const float *                  a,
+         const dealii::types::blas_int *lda,
+         const float *                  x,
+         const dealii::types::blas_int *incx,
+         const float *                  beta,
+         float *                        y,
+         const dealii::types::blas_int *incy);
+
+  void
+  dsymv_(const char *                   uplo,
+         const dealii::types::blas_int *n,
+         const double *                 alpha,
+         const double *                 a,
+         const dealii::types::blas_int *lda,
+         const double *                 x,
+         const dealii::types::blas_int *incx,
+         const double *                 beta,
+         double *                       y,
+         const dealii::types::blas_int *incy);
+
+  /**
    * Solve a triangular system.
    *
    * \ingroup lapack
@@ -74,6 +113,66 @@ extern "C"
          const dealii::types::blas_int *lda,
          std::complex<double> *         x,
          const dealii::types::blas_int *incx);
+}
+
+
+inline void
+symv(const char *                   uplo,
+     const dealii::types::blas_int *n,
+     const float *                  alpha,
+     const float *                  a,
+     const dealii::types::blas_int *lda,
+     const float *                  x,
+     const dealii::types::blas_int *incx,
+     const float *                  beta,
+     float *                        y,
+     const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  ssymv_(uplo, n, alpha, a, lda, x, incx, beta, y, incy);
+#else
+  (void)uplo;
+  (void)n;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)x;
+  (void)incx;
+  (void)beta;
+  (void)y;
+  (void)incy;
+  Assert(false, LAPACKSupport::ExcMissing("ssymv"));
+#endif
+}
+
+
+inline void
+symv(const char *                   uplo,
+     const dealii::types::blas_int *n,
+     const double *                 alpha,
+     const double *                 a,
+     const dealii::types::blas_int *lda,
+     const double *                 x,
+     const dealii::types::blas_int *incx,
+     const double *                 beta,
+     double *                       y,
+     const dealii::types::blas_int *incy)
+{
+#ifdef DEAL_II_WITH_LAPACK
+  dsymv_(uplo, n, alpha, a, lda, x, incx, beta, y, incy);
+#else
+  (void)uplo;
+  (void)n;
+  (void)alpha;
+  (void)a;
+  (void)lda;
+  (void)x;
+  (void)incx;
+  (void)beta;
+  (void)y;
+  (void)incy;
+  Assert(false, LAPACKSupport::ExcMissing("dsymv"));
+#endif
 }
 
 

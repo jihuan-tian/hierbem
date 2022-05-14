@@ -1037,6 +1037,19 @@ public:
       const bool                         is_result_matrix_symm_apriori = false);
 
   /**
+   * Matrix-vector multiplication which also handles the case when the matrix is
+   * symmetric.
+   *
+   * @param w
+   * @param v
+   * @param adding
+   */
+  void
+  vmult(Vector<Number> &      w,
+        const Vector<Number> &v,
+        const bool            adding = false) const;
+
+  /**
    * Multiply two matrices, i.e. \f$C = AB\f$ or \f$C = C + AB\f$.
    *
    * @param C
@@ -4522,6 +4535,45 @@ LAPACKFullMatrixExt<Number>::add(const Number                       b,
             {
               (*this)(i, j) += b * B(i, j);
             }
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
+                                   const Vector<Number> &v,
+                                   const bool            adding) const
+{
+  switch (get_property())
+    {
+      case LAPACKSupport::symmetric:
+        {
+          LAPACKHelpers::symv_helper(LAPACKSupport::L,
+                                     1.0,
+                                     this->m(),
+                                     this->values,
+                                     v.data(),
+                                     (adding ? 1.0 : 0.0),
+                                     w.data());
+
+          break;
+        }
+      case LAPACKSupport::general:
+        {
+          /**
+           * Call the normal matrix-vector multiplication.
+           */
+          this->LAPACKFullMatrix<Number>::vmult(w, v, adding);
+
+          break;
+        }
+      default:
+        {
+          Assert(false, ExcNotImplemented());
+
+          break;
         }
     }
 }

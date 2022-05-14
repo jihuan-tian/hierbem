@@ -2533,16 +2533,16 @@ namespace IdeoBEM
                    ExcInternalError());
 
             /**
-             * Generate the permutation of DoF indices in \f$K_x\f$ by starting from
-             * the vertex <code>kx_starting_vertex_index</code> in the
+             * Generate the permutation of DoF indices in \f$K_x\f$ by starting
+             * from the vertex <code>kx_starting_vertex_index</code> in the
              * lexicographic order, i.e. forward traversal.
              */
             std::vector<unsigned int> kx_local_dof_permutation =
               generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
 
             /**
-             * Generate the permutation of DoF indices in \f$K_y\f$ by starting from
-             * the vertex <code>ky_starting_vertex_index</code> in the
+             * Generate the permutation of DoF indices in \f$K_y\f$ by starting
+             * from the vertex <code>ky_starting_vertex_index</code> in the
              * reversed lexicographic order, i.e. backward traversal.
              */
             std::vector<unsigned int> ky_local_dof_permutation =
@@ -2675,16 +2675,16 @@ namespace IdeoBEM
                    ExcInternalError());
 
             /**
-             * Generate the permutation of DoF indices in \f$K_x\f$ by starting from
-             * the vertex <code>kx_starting_vertex_index</code> in the
+             * Generate the permutation of DoF indices in \f$K_x\f$ by starting
+             * from the vertex <code>kx_starting_vertex_index</code> in the
              * lexicographic order, i.e. forward traversal.
              */
             std::vector<unsigned int> kx_local_dof_permutation =
               generate_forward_dof_permutation(kx_fe, kx_starting_vertex_index);
 
             /**
-             * Generate the permutation of DoF indices in \f$K_y\f$ by starting from
-             * the vertex <code>ky_starting_vertex_index</code> in the
+             * Generate the permutation of DoF indices in \f$K_y\f$ by starting
+             * from the vertex <code>ky_starting_vertex_index</code> in the
              * lexicographic order, i.e. forward traversal.
              */
             std::vector<unsigned int> ky_local_dof_permutation =
@@ -3298,6 +3298,8 @@ namespace IdeoBEM
    * @param scratch
    * @param data
    * @param kernels A vector of kernel function pointers
+   * @param enable_kernel_evaluations A list of flags indicating if each kernel
+   * is to be evaluated.
    * @param i
    * @param j
    * @param dof_to_cell_topo
@@ -3314,6 +3316,7 @@ namespace IdeoBEM
     PairCellWiseScratchData &                        scratch,
     PairCellWisePerTaskData &                        data,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
+    const std::vector<bool> &                        enable_kernel_evaluations,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
     const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
@@ -3423,35 +3426,41 @@ namespace IdeoBEM
             unsigned int counter = 0;
             for (const KernelFunction<spacedim> *kernel : kernels)
               {
-                /**
-                 * Pullback the kernel function to unit cell.
-                 */
-                KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                  kernel_pullback_on_unit(*kernel,
-                                          cell_neighboring_type,
-                                          scratch.kx_support_points_permuted,
-                                          scratch.ky_support_points_permuted,
-                                          kx_fe,
-                                          ky_fe,
-                                          &bem_values,
-                                          &scratch,
-                                          i_index,
-                                          j_index);
+                if (enable_kernel_evaluations[counter])
+                  {
+                    /**
+                     * Pullback the kernel function to unit cell.
+                     */
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(
+                        *kernel,
+                        cell_neighboring_type,
+                        scratch.kx_support_points_permuted,
+                        scratch.ky_support_points_permuted,
+                        kx_fe,
+                        ky_fe,
+                        &bem_values,
+                        &scratch,
+                        i_index,
+                        j_index);
 
-                /**
-                 * Pullback the kernel function to Sauter parameter space.
-                 */
-                KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
-                  kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                            cell_neighboring_type,
-                                            &bem_values);
+                    /**
+                     * Pullback the kernel function to Sauter parameter space.
+                     */
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type,
+                                                &bem_values);
 
-                /**
-                 * Apply 4d Sauter numerical quadrature.
-                 */
-                results(counter) +=
-                  ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                                kernel_pullback_on_sauter);
+                    /**
+                     * Apply 4d Sauter numerical quadrature.
+                     */
+                    results(counter) +=
+                      ApplyQuadratureUsingBEMValues(active_quad_rule,
+                                                    kernel_pullback_on_sauter);
+                  }
 
                 counter++;
               }
@@ -3477,6 +3486,8 @@ namespace IdeoBEM
    * @param data
    * @param mass_matrix_factors
    * @param kernels A vector of kernel function pointers
+   * @param enable_kernel_evaluations A list of flags indicating if each kernel
+   * is to be evaluated.
    * @param i
    * @param j
    * @param dof_to_cell_topo
@@ -3495,6 +3506,7 @@ namespace IdeoBEM
     CellWiseScratchData &                            fem_scratch,
     const std::vector<RangeNumberType> &             mass_matrix_factors,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
+    const std::vector<bool> &                        enable_kernel_evaluations,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
     const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
@@ -3612,96 +3624,104 @@ namespace IdeoBEM
             unsigned int counter = 0;
             for (const KernelFunction<spacedim> *kernel : kernels)
               {
-                /**
-                 * Pullback the kernel function to unit cell.
-                 */
-                KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                  kernel_pullback_on_unit(*kernel,
-                                          cell_neighboring_type,
-                                          scratch.kx_support_points_permuted,
-                                          scratch.ky_support_points_permuted,
-                                          kx_fe,
-                                          ky_fe,
-                                          &bem_values,
-                                          &scratch,
-                                          i_index,
-                                          j_index);
-
-                /**
-                 * Pullback the kernel function to Sauter parameter space.
-                 */
-                KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
-                  kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                            cell_neighboring_type,
-                                            &bem_values);
-
-                /**
-                 * Apply 4d Sauter numerical quadrature.
-                 */
-                results(counter) +=
-                  ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                                kernel_pullback_on_sauter);
-
-                /**
-                 * Append the FEM mass matrix contribution.
-                 */
-                if ((kx_cell_index == ky_cell_index) &&
-                    (mass_matrix_factors[counter] != 0))
+                if (enable_kernel_evaluations[counter])
                   {
-                    if (is_update_kx_fe_values)
-                      {
-                        fem_scratch.fe_values.reinit(kx_cell_iter);
-                        is_update_kx_fe_values = false;
-                      }
-
-                    const unsigned int n_q_points =
-                      fem_scratch.fe_values.get_quadrature().size();
+                    /**
+                     * Pullback the kernel function to unit cell.
+                     */
+                    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+                      kernel_pullback_on_unit(
+                        *kernel,
+                        cell_neighboring_type,
+                        scratch.kx_support_points_permuted,
+                        scratch.ky_support_points_permuted,
+                        kx_fe,
+                        ky_fe,
+                        &bem_values,
+                        &scratch,
+                        i_index,
+                        j_index);
 
                     /**
-                     * Get the index of the global DoF index \f$i\f$ in the
-                     * current cell \f$K_x\f$.
+                     * Pullback the kernel function to Sauter parameter space.
                      */
-                    auto i_local_dof_iter = std::find(
-                      scratch.kx_local_dof_indices_hierarchical.begin(),
-                      scratch.kx_local_dof_indices_hierarchical.end(),
-                      i);
-                    Assert(i_local_dof_iter !=
-                             scratch.kx_local_dof_indices_hierarchical.end(),
-                           ExcMessage(
-                             std::string("Cannot find the global DoF index ") +
-                             std::to_string(i) +
-                             std::string(" in the list of cell DoF indices!")));
-                    const unsigned int i_local_dof_index =
-                      i_local_dof_iter -
-                      scratch.kx_local_dof_indices_hierarchical.begin();
+                    KernelPulledbackToSauterSpace<dim,
+                                                  spacedim,
+                                                  RangeNumberType>
+                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                                cell_neighboring_type,
+                                                &bem_values);
 
                     /**
-                     * Get the index of the global DoF index \f$j\f$ in the
-                     * current cell \f$K_x\f$.
+                     * Apply 4d Sauter numerical quadrature.
                      */
-                    auto j_local_dof_iter = std::find(
-                      scratch.kx_local_dof_indices_hierarchical.begin(),
-                      scratch.kx_local_dof_indices_hierarchical.end(),
-                      j);
-                    Assert(j_local_dof_iter !=
-                             scratch.kx_local_dof_indices_hierarchical.end(),
-                           ExcMessage(
-                             std::string("Cannot find the global DoF index ") +
-                             std::to_string(j) +
-                             std::string(" in the list of cell DoF indices!")));
-                    const unsigned int j_local_dof_index =
-                      j_local_dof_iter -
-                      scratch.kx_local_dof_indices_hierarchical.begin();
+                    results(counter) +=
+                      ApplyQuadratureUsingBEMValues(active_quad_rule,
+                                                    kernel_pullback_on_sauter);
 
-                    for (unsigned int q = 0; q < n_q_points; q++)
+                    /**
+                     * Append the FEM mass matrix contribution.
+                     */
+                    if ((kx_cell_index == ky_cell_index) &&
+                        (mass_matrix_factors[counter] != 0))
                       {
-                        results(counter) +=
-                          mass_matrix_factors[counter] *
-                          fem_scratch.fe_values.shape_value(i_local_dof_index,
-                                                            q) *
-                          fem_scratch.fe_values.shape_value(j_local_dof_index,
-                                                            q) *
-                          fem_scratch.fe_values.JxW(q);
+                        if (is_update_kx_fe_values)
+                          {
+                            fem_scratch.fe_values.reinit(kx_cell_iter);
+                            is_update_kx_fe_values = false;
+                          }
+
+                        const unsigned int n_q_points =
+                          fem_scratch.fe_values.get_quadrature().size();
+
+                        /**
+                         * Get the index of the global DoF index \f$i\f$ in the
+                         * current cell \f$K_x\f$.
+                         */
+                        auto i_local_dof_iter = std::find(
+                          scratch.kx_local_dof_indices_hierarchical.begin(),
+                          scratch.kx_local_dof_indices_hierarchical.end(),
+                          i);
+                        Assert(
+                          i_local_dof_iter !=
+                            scratch.kx_local_dof_indices_hierarchical.end(),
+                          ExcMessage(
+                            std::string("Cannot find the global DoF index ") +
+                            std::to_string(i) +
+                            std::string(" in the list of cell DoF indices!")));
+                        const unsigned int i_local_dof_index =
+                          i_local_dof_iter -
+                          scratch.kx_local_dof_indices_hierarchical.begin();
+
+                        /**
+                         * Get the index of the global DoF index \f$j\f$ in the
+                         * current cell \f$K_x\f$.
+                         */
+                        auto j_local_dof_iter = std::find(
+                          scratch.kx_local_dof_indices_hierarchical.begin(),
+                          scratch.kx_local_dof_indices_hierarchical.end(),
+                          j);
+                        Assert(
+                          j_local_dof_iter !=
+                            scratch.kx_local_dof_indices_hierarchical.end(),
+                          ExcMessage(
+                            std::string("Cannot find the global DoF index ") +
+                            std::to_string(j) +
+                            std::string(" in the list of cell DoF indices!")));
+                        const unsigned int j_local_dof_index =
+                          j_local_dof_iter -
+                          scratch.kx_local_dof_indices_hierarchical.begin();
+
+                        for (unsigned int q = 0; q < n_q_points; q++)
+                          {
+                            results(counter) +=
+                              mass_matrix_factors[counter] *
+                              fem_scratch.fe_values.shape_value(
+                                i_local_dof_index, q) *
+                              fem_scratch.fe_values.shape_value(
+                                j_local_dof_index, q) *
+                              fem_scratch.fe_values.JxW(q);
+                          }
                       }
                   }
 

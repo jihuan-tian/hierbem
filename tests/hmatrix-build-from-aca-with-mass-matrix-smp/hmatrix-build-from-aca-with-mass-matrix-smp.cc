@@ -33,6 +33,7 @@ main(int argc, char *argv[])
   double       eta;
   unsigned int max_hmat_rank;
   double       aca_relative_error;
+  bool         enable_build_symmetric_hmat;
 
   options_description opts(
     "hmatrix-build-from-aca-with-mass-matrix-smp options");
@@ -48,7 +49,9 @@ main(int argc, char *argv[])
     "Minimum block cluster size/cardinality")(
     "adm,a", value<double>(), "Admissibility condition constant")(
     "rank,r", value<unsigned int>(), "Maximum rank for the H-matrix")(
-    "epsilon,e", value<double>(), "ACA+ relative error");
+    "epsilon,e",
+    value<double>(),
+    "ACA+ relative error")("symm", "Build symmetric H-matrix");
 
   variables_map vm;
   store(parse_command_line(argc, argv, opts), vm);
@@ -194,6 +197,17 @@ main(int argc, char *argv[])
         << std::endl;
     }
 
+  if (vm.count("symm"))
+    {
+      enable_build_symmetric_hmat = true;
+    }
+  else
+    {
+      enable_build_symmetric_hmat = false;
+    }
+  std::cout << "Is symmetric H-matrix enabled: "
+            << (enable_build_symmetric_hmat ? "true" : "false") << std::endl;
+
   IdeoBEM::Erichsen1996Efficient::Example2 testcase(mesh_file_name,
                                                     fe_order,
                                                     thread_num,
@@ -205,7 +219,8 @@ main(int argc, char *argv[])
 
   testcase.read_mesh();
   testcase.setup_system();
-  testcase.assemble_system_as_hmatrices_with_mass_matrix_smp();
+  testcase.assemble_system_as_hmatrices_with_mass_matrix_smp(
+    enable_build_symmetric_hmat);
 
   /**
    * Convert the assembled \hmatrices to full matrices and write the data into
