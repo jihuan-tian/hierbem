@@ -16,7 +16,7 @@ cmakelist_template=$(cat <<EOF
 SET(TEST_TARGET $test_target_name)
 
 # Link TEST_TARGET to my generic_tools library.
-SET(TEST_LIBRARIES generic_tools)
+SET(TEST_LIBRARIES generic_tools boost_program_options)
 
 DEAL_II_PICKUP_TESTS()
 

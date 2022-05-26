@@ -3120,6 +3120,107 @@ namespace IdeoBEM
   }
 
 
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  sauter_assemble_on_one_pair_of_cells(
+    PairCellWiseScratchData &                        scratch,
+    PairCellWisePerTaskData &                        data,
+    const KernelFunction<spacedim> &                 slp,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator
+      &kx_cell_iter,
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator
+      &                                   ky_cell_iter,
+    const MappingQGeneric<dim, spacedim> &kx_mapping =
+      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGeneric<dim, spacedim> &ky_mapping =
+      MappingQGeneric<dim, spacedim>(1))
+  {
+    // Geometry information.
+    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
+
+    // Determine the cell neighboring type based on the vertex dof indices.
+    // The common dof indices will be stored into the vector
+    // <code>vertex_dof_index_intersection</code> if there is any.
+    std::array<types::global_dof_index, vertices_per_cell>
+      kx_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
+    std::array<types::global_dof_index, vertices_per_cell>
+      ky_vertex_dof_indices(
+        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+
+    scratch.vertex_dof_index_intersection.clear();
+    CellNeighboringType cell_neighboring_type =
+      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
+                                        ky_vertex_dof_indices,
+                                        scratch.vertex_dof_index_intersection);
+    // Quadrature rule to be adopted depending on the cell neighboring
+    // type.
+    const QGauss<dim * 2> active_quad_rule =
+      select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
+                                              bem_values);
+
+    const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
+    const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+
+    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+
+    permute_dofs_for_sauter_quad(scratch,
+                                 data,
+                                 cell_neighboring_type,
+                                 kx_cell_iter,
+                                 ky_cell_iter,
+                                 kx_mapping,
+                                 ky_mapping);
+
+    calc_jacobian_normals_for_sauter_quad(scratch,
+                                          cell_neighboring_type,
+                                          bem_values,
+                                          active_quad_rule);
+
+    /**
+     *  Clear the local matrix in case that it is reused from another
+     *  finished task. N.B. Its memory has already been allocated in the
+     *  constructor of @p CellPairWisePerTaskData.
+     */
+    data.dlp_matrix = 0.;
+
+    // Iterate over DoFs for test function space in \f$K_x\f$.
+    for (unsigned int i = 0; i < kx_n_dofs; i++)
+      {
+        // Iterate over DoFs for ansatz function space in \f$K_y\f$.
+        for (unsigned int j = 0; j < ky_n_dofs; j++)
+          {
+            // Pullback the SLP kernel function to unit cell.
+            KernelPulledbackToUnitCell<dim, spacedim, double>
+              slp_kernel_pullback_on_unit(slp,
+                                          cell_neighboring_type,
+                                          scratch.kx_support_points_permuted,
+                                          scratch.ky_support_points_permuted,
+                                          kx_fe,
+                                          ky_fe,
+                                          &bem_values,
+                                          &scratch,
+                                          i,
+                                          j);
+
+            // Pullback the SLP kernel function to Sauter parameter
+            // space.
+            KernelPulledbackToSauterSpace<dim, spacedim, double>
+              slp_kernel_pullback_on_sauter(slp_kernel_pullback_on_unit,
+                                            cell_neighboring_type,
+                                            &bem_values);
+
+            // Apply 4d Sauter numerical quadrature.
+            data.slp_matrix(i, j) =
+              ApplyQuadratureUsingBEMValues(active_quad_rule,
+                                            slp_kernel_pullback_on_sauter);
+          }
+      }
+  }
+
+
   /**
    * Perform Galerkin-BEM double integral with respect to a given kernel on a
    * pair of DoFs \f$(i, j)\f$ using the Sauter quadrature.

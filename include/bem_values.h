@@ -79,10 +79,12 @@ namespace IdeoBEM
      * @param ky_fe The finite element for \f$K_y\f$
      * @param sauter_quad_rule
      * @param kx_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is the
+     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is
+     * the
      * quadrature point number. Refer to @p BEMValues::kx_shape_value_table_for_same_panel.
      * @param ky_shape_value_table the 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is the
+     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is
+     * the
      * quadrature point number. Refer to @p BEMValues::ky_shape_value_table_for_same_panel.
      */
     void
@@ -101,10 +103,12 @@ namespace IdeoBEM
      * @param ky_fe The finite element for \f$K_y\f$
      * @param sauter_quad_rule
      * @param kx_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is the
+     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is
+     * the
      * quadrature point number. Refer to @p BEMValues::kx_shape_value_table_for_common_edge.
      * @param ky_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is the
+     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is
+     * the
      * quadrature point number. Refer to @p BEMValues::ky_shape_value_table_for_common_edge.
      */
     void
@@ -266,22 +270,23 @@ namespace IdeoBEM
      */
     const FiniteElement<dim, spacedim> &ky_fe;
     /**
-     * Reference to 4D Sauter quadrature rule for the case that \f$K_x \equiv K_y\f$.
+     * Reference to 4D Sauter quadrature rule for the case that \f$K_x \equiv
+     * K_y\f$.
      */
     const QGauss<4> &quad_rule_for_same_panel;
     /**
-     * Reference to 4D Sauter quadrature rule for the case that \f$K_x\f$ and \f$K_y\f$
-     * share a common edge.
+     * Reference to 4D Sauter quadrature rule for the case that \f$K_x\f$ and
+     * \f$K_y\f$ share a common edge.
      */
     const QGauss<4> &quad_rule_for_common_edge;
     /**
-     * Reference to 4D Sauter quadrature rule for the case that \f$K_x\f$ and \f$K_y\f$
-     * share a common vertex.
+     * Reference to 4D Sauter quadrature rule for the case that \f$K_x\f$ and
+     * \f$K_y\f$ share a common vertex.
      */
     const QGauss<4> &quad_rule_for_common_vertex;
     /**
-     * Reference to 4D Sauter quadrature rule for the case that \f$K_x\f$ and \f$K_y\f$ are
-     * separated.
+     * Reference to 4D Sauter quadrature rule for the case that \f$K_x\f$ and
+     * \f$K_y\f$ are separated.
      */
     const QGauss<4> &quad_rule_for_regular;
 
@@ -302,32 +307,32 @@ namespace IdeoBEM
      */
     Table<3, RangeNumberType> ky_shape_value_table_for_same_panel;
     /**
-     * Data table of shape function values for \f$K_x\f$ in the common edge case.
-     * It has three dimensions:
+     * Data table of shape function values for \f$K_x\f$ in the common edge
+     * case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=6
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> kx_shape_value_table_for_common_edge;
     /**
-     * Data table of shape function values for \f$K_y\f$ in the common edge case.
-     * It has three dimensions:
+     * Data table of shape function values for \f$K_y\f$ in the common edge
+     * case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=6
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> ky_shape_value_table_for_common_edge;
     /**
-     * Data table of shape function values for \f$K_x\f$ in the common vertex case.
-     * It has three dimensions:
+     * Data table of shape function values for \f$K_x\f$ in the common vertex
+     * case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=4
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> kx_shape_value_table_for_common_vertex;
     /**
-     * Data table of shape function values for \f$K_y\f$ in the common vertex case.
-     * It has three dimensions:
+     * Data table of shape function values for \f$K_y\f$ in the common vertex
+     * case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=4
      * 3. Quadrature point index: size=number of quadrature points
@@ -351,8 +356,8 @@ namespace IdeoBEM
     Table<3, RangeNumberType> ky_shape_value_table_for_regular;
 
     /**
-     * Data table of shape function's gradient values for \f$K_x\f$ in the same panel case.
-     * It has two dimensions:
+     * Data table of shape function's gradient values for \f$K_x\f$ in the same
+     * panel case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=8
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -361,8 +366,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_same_panel;
     /**
-     * Data table of shape function's gradient values for \f$K_y\f$ in the same panel case.
-     * It has two dimensions:
+     * Data table of shape function's gradient values for \f$K_y\f$ in the same
+     * panel case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=8
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -371,8 +376,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_same_panel;
     /**
-     * Data table of shape function's gradient values for \f$K_x\f$ in the common edge case.
-     * It has two dimensions:
+     * Data table of shape function's gradient values for \f$K_x\f$ in the
+     * common edge case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -381,8 +386,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_edge;
     /**
-     * Data table of shape function's gradient values for \f$K_y\f$ in the common edge case.
-     * It has two dimensions:
+     * Data table of shape function's gradient values for \f$K_y\f$ in the
+     * common edge case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -391,8 +396,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_edge;
     /**
-     * Data table of shape function's gradient values for \f$K_x\f$ in the common vertex case.
-     * It has two dimensions:
+     * Data table of shape function's gradient values for \f$K_x\f$ in the
+     * common vertex case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -401,8 +406,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_vertex;
     /**
-     * Data table of shape function's gradient values for \f$K_y\f$ in the common vertex case.
-     * It has two dimensions:
+     * Data table of shape function's gradient values for \f$K_y\f$ in the
+     * common vertex case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -411,8 +416,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_vertex;
     /**
-     * Data table of shape function's gradient values for \f$K_x\f$ in the regular case.
-     * It has two dimensions:
+     * Data table of shape function's gradient values for \f$K_x\f$ in the
+     * regular case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=1
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -421,8 +426,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_regular;
     /**
-     * Data table of shape function's gradient values for \f$K_y\f$ in the regular case.
-     * It has two dimensions:
+     * Data table of shape function's gradient values for \f$K_y\f$ in the
+     * regular case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=1
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -994,14 +999,14 @@ namespace IdeoBEM
                                                               ky_quad_point);
 
             // Calculate the gradient matrix evaluated at
-            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond to
-            // shape functions which are in the lexicographic order.
+            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
             kx_shape_grad_matrix_table(k, q) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(kx_fe,
                                                                  kx_quad_point);
             // Calculate the gradient matrix evaluated at
-            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond to
-            // shape functions which are in the lexicographic order.
+            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
             ky_shape_grad_matrix_table(k, q) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(ky_fe,
                                                                  ky_quad_point);
@@ -1053,14 +1058,14 @@ namespace IdeoBEM
                                                                ky_quad_point);
 
             // Calculate the gradient matrix evaluated at
-            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond to
-            // shape functions which are in the lexicographic order.
+            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
             kx_shape_grad_matrix_table(k, q) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(kx_fe,
                                                                  kx_quad_point);
             // Calculate the gradient matrix evaluated at
-            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond to
-            // shape functions which are in the lexicographic order.
+            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
             ky_shape_grad_matrix_table(k, q) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(ky_fe,
                                                                  ky_quad_point);
@@ -1112,14 +1117,14 @@ namespace IdeoBEM
                                                                  ky_quad_point);
 
             // Calculate the gradient matrix evaluated at
-            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond to
-            // shape functions which are in the lexicographic order.
+            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
             kx_shape_grad_matrix_table(k, q) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(kx_fe,
                                                                  kx_quad_point);
             // Calculate the gradient matrix evaluated at
-            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond to
-            // shape functions which are in the lexicographic order.
+            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
             ky_shape_grad_matrix_table(k, q) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(ky_fe,
                                                                  ky_quad_point);
@@ -1184,7 +1189,7 @@ namespace IdeoBEM
   /**
    * Structure holding cell-wise local matrix data and DoF indices,
    * which is used for SMP parallel computation of the term $(v,
-   * \frac{1}{2}u)$.
+   * \frac{1}{2}u)$ as well as the RHS vector if needed.
    */
   struct CellWisePerTaskData
   {

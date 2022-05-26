@@ -10589,7 +10589,7 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &     M0,
   // involving leaf node.
   LAPACKFullMatrixExt<Number> ZF;
   // The result matrix type for the multiplication involving leaf node.
-  HMatrixType result_matrix_type;
+  HMatrixType result_matrix_type = UndefinedMatrixType;
 
   if (M1.bc_node->is_leaf() || M2.bc_node->is_leaf())
     {
@@ -18079,12 +18079,12 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
       /**
        * Iterate over each block row of the matrix.
        */
-      const unsigned int n_row_blocks =
-        bc_node->get_data_reference().get_tau_node()->get_child_num();
       const unsigned int n_col_blocks =
         bc_node->get_data_reference().get_sigma_node()->get_child_num();
 
-      AssertDimension(n_row_blocks, n_col_blocks);
+      AssertDimension(
+        bc_node->get_data_reference().get_tau_node()->get_child_num(),
+        n_col_blocks);
 
       /**
        * Iterate each block column.
@@ -19536,7 +19536,9 @@ HMatrix<spacedim, Number>::compute_cholesky_factorization(
 
   /**
    * After Cholesky factorization, set the state of the result matrix to be
-   * @p cholesky and that of the original matrix as @p unusable.
+   * @p cholesky and that of the original matrix as @p unusable. Since the
+   * property of @p L is already lower triangular, there is no need to reset it
+   * here.
    */
   L.set_state(HMatrixSupport::cholesky);
   this->set_state(HMatrixSupport::unusable);
@@ -19685,6 +19687,8 @@ void
 HMatrix<spacedim, Number>::solve_lu(Vector<Number> &      x,
                                     const Vector<Number> &b) const
 {
+  Assert(state == HMatrixSupport::lu, ExcInvalidHMatrixState(state));
+
   x = b;
   solve_by_forward_substitution(x, true);
   solve_by_backward_substitution(x, false);

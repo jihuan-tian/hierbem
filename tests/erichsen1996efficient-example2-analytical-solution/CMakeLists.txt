@@ -1,3 +1,0 @@
-SET(TEST_TARGET_DEBUG erichsen1996efficient-example2-analytical-solution)
-SET(TEST_TARGET_RELEASE erichsen1996efficient-example2-analytical-solution)
-DEAL_II_PICKUP_TESTS()

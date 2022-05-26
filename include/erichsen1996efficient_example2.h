@@ -80,18 +80,33 @@ namespace IdeoBEM
     class Example2
     {
     public:
-      // Function object for the analytical solution.
-      class AnalyticalSolution : public Function<3>
+      /**
+       * Enum for the type of Laplace problem
+       */
+      enum ProblemType
+      {
+        NeumannBCProblem,  //!< NeumannBCProblem
+        DirichletBCProblem //!< DirichletBCProblem
+      };
+
+      /**
+       * Function object for the Dirichlet boundary condition data, which is
+       * also the solution of the Neumann problem. The analytical expression is:
+       * \f[
+       * u=\frac{1}{4\pi\norm{x-x_0}}
+       * \f]
+       */
+      class DirichletBC : public Function<3>
       {
       public:
         // N.B. This function should be defined outside class NeumannBC or class
-        // Example2.
-        AnalyticalSolution()
+        // Example2, if no inline.
+        DirichletBC()
           : Function<3>()
           , x0(0.25, 0.25, 0.25)
         {}
 
-        AnalyticalSolution(const Point<3> &x0)
+        DirichletBC(const Point<3> &x0)
           : Function<3>()
           , x0(x0)
         {}
@@ -105,17 +120,24 @@ namespace IdeoBEM
 
       private:
         /**
-         * Location of the point source.
+         * Location of the Dirac point source \f$\delta(x-x_0)\f$.
          */
         Point<3> x0;
       };
 
-      // Function object for the Neumann boundary condition data.
+      /**
+       * Function object for the Neumann boundary condition data, which is also
+       * the solution of the Dirichlet problem. The analytical expression is
+       * \f[
+       * \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{\langle x-x_c,x-x_0
+       * \rangle}{4\pi\norm{x-x_0}^3\rho}
+       * \f]
+       */
       class NeumannBC : public Function<3>
       {
       public:
         // N.B. This function should be defined outside class NeumannBC and
-        // class Example2.
+        // class Example2, if not inline.
         NeumannBC()
           : Function<3>()
           , x0(0.25, 0.25, 0.25)
@@ -137,8 +159,8 @@ namespace IdeoBEM
 
           Tensor<1, 3> diff_vector = p - x0;
 
-          return (model_sphere_center - p) * (-diff_vector) / 4.0 /
-                 numbers::PI / std::pow(diff_vector.norm(), 3);
+          return ((p - model_sphere_center) * diff_vector) / 4.0 / numbers::PI /
+                 std::pow(diff_vector.norm(), 3) / model_sphere_radius;
         }
 
       private:
@@ -150,6 +172,7 @@ namespace IdeoBEM
       Example2();
       Example2(const std::string &mesh_file_name,
                unsigned int       fe_order           = 2,
+               ProblemType        problem_type       = NeumannBCProblem,
                unsigned int       thread_num         = 4,
                unsigned int       n_min_for_ct       = 2,
                unsigned int       n_min_for_bct      = 8,
@@ -192,6 +215,9 @@ namespace IdeoBEM
 
       void
       run();
+
+      void
+      run_using_hmat();
 
       // DEBUG
       void
@@ -255,13 +281,6 @@ namespace IdeoBEM
       get_slp_hmat() const;
 
     private:
-      std::string  mesh_file_name;
-      unsigned int fe_order;
-      /**
-       * Number of threads
-       */
-      unsigned int thread_num;
-
       /**
        * Generate the quadrangular surface mesh on the model sphere.
        *
@@ -290,7 +309,9 @@ namespace IdeoBEM
         CellWisePerTaskData &                                  data);
 
       /**
-       * For handling FEM related cell wise matrix assembly.
+       * For handling FEM related cell wise matrix assembly. In this problem to
+       * be solved, it is the mass matrix multiplied by a factor, 1.0 for
+       * Dirichlet problem and 0.5 for Neumann problem.
        *
        * @param data
        */
@@ -299,7 +320,9 @@ namespace IdeoBEM
 
       /**
        * Assemble BEM matrices on a pair of cells, i.e. \f$K_x\f$ as the field
-       * cell and \f$K_y\f$ as the source cell.
+       * cell and \f$K_y\f$ as the source cell. For Dirichlet problem, only the
+       * SLP matrix is built. For Neumann problem, both SLP and DLP matrices are
+       * built.
        *
        * @param kx_cell_iter
        * @param ky_cell_iter
@@ -323,6 +346,10 @@ namespace IdeoBEM
         PairCellWiseScratchData &                              scratch,
         PairCellWisePerTaskData &                              data);
 
+      /**
+       * Assemble pair-cell local matrices to global matrices for BEM.
+       * @param data
+       */
       void
       copy_pair_of_cells_local_to_global(const PairCellWisePerTaskData &data);
 
@@ -353,6 +380,15 @@ namespace IdeoBEM
       void
       solve();
 
+      std::string  mesh_file_name;
+      unsigned int fe_order;
+      ProblemType  problem_type;
+
+      /**
+       * Number of threads
+       */
+      unsigned int thread_num;
+
       Triangulation<2, 3>   triangulation;
       FE_Q<2, 3>            fe;
       DoFHandler<2, 3>      dof_handler;
@@ -373,20 +409,26 @@ namespace IdeoBEM
        * The first integral term in the sum is carried on each cell, while the
        * second integral term is carried out on each pair of cells.
        */
-      FullMatrix<double> system_matrix;
+      FullMatrix<double> dlp_with_mass_matrix;
       /**
        * The right hand side matrix obtained from $(v, Vu)$.
        */
-      FullMatrix<double> system_rhs_matrix;
+      FullMatrix<double> slp_matrix;
       /**
        * Neumann boundary condition data at each DoF support point.
        */
       Vector<double> neumann_bc;
       /**
+       * Dirichlet boundary condition data at each DoF support point.
+       */
+      Vector<double> dirichlet_bc;
+      /**
        * Right hand side vector for the problem obtained from the product of
        * <code>system_rhs_matrix</code> and <code>neumann_bc</code>
        */
       Vector<double> system_rhs;
+
+      bool is_use_hmat;
 
       /**
        * \hmatrix for the Laplace SLP kernel
@@ -394,11 +436,13 @@ namespace IdeoBEM
       HMatrix<3> slp_hmat;
 
       /**
-       * \hmatrix for the Laplace DLP kernel
+       * \hmatrix for the Laplace DLP kernel and added with the scaled mass
+       * matrix \f$\frac{1}{2}I\f$.
        */
-      HMatrix<3> dlp_hmat;
+      HMatrix<3> dlp_hmat_with_mass_matrix;
 
-      Vector<double> analytical_solution;
+      Vector<double> analytical_solution_of_dirichlet_problem;
+      Vector<double> analytical_solution_of_neumann_problem;
       Vector<double> solution;
 
       /**
@@ -447,6 +491,7 @@ namespace IdeoBEM
     Example2::Example2()
       : mesh_file_name("mesh.msh")
       , fe_order(1)
+      , problem_type(NeumannBCProblem)
       , thread_num(4)
       , fe(fe_order)
       , dof_handler(triangulation)
@@ -454,6 +499,7 @@ namespace IdeoBEM
       , x0(0.25, 0.25, 0.25)
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
+      , is_use_hmat(true)
       , n_min_for_ct(8)
       , n_min_for_bct(
           n_min_for_ct) // By default, it is the same as the @p n_min_for_ct
@@ -465,6 +511,7 @@ namespace IdeoBEM
 
     Example2::Example2(const std::string &mesh_file_name,
                        unsigned int       fe_order,
+                       ProblemType        problem_type,
                        unsigned int       thread_num,
                        unsigned int       n_min_for_ct,
                        unsigned int       n_min_for_bct,
@@ -473,6 +520,7 @@ namespace IdeoBEM
                        double             aca_relative_error)
       : mesh_file_name(mesh_file_name)
       , fe_order(fe_order)
+      , problem_type(problem_type)
       , thread_num(thread_num)
       , fe(fe_order)
       , dof_handler(triangulation)
@@ -480,6 +528,7 @@ namespace IdeoBEM
       , x0(0.25, 0.25, 0.25)
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
+      , is_use_hmat(true)
       , n_min_for_ct(n_min_for_ct)
       , n_min_for_bct(n_min_for_bct)
       , eta(eta)
@@ -577,29 +626,76 @@ namespace IdeoBEM
 
       const unsigned int n_dofs = dof_handler.n_dofs();
 
-      system_matrix.reinit(n_dofs, n_dofs);
-      system_rhs_matrix.reinit(n_dofs, n_dofs);
-      system_rhs.reinit(n_dofs);
-      neumann_bc.reinit(n_dofs);
-      analytical_solution.reinit(n_dofs);
-      solution.reinit(n_dofs);
-
-      // Interpolate analytical solution values.
-      AnalyticalSolution analytical_solution_function(x0);
       /**
-       * \mynote{Because @p dof_handler is associated with both the
-       * FiniteElement and the Triangulation, the following interpolation
-       * operation is feasible.}
+       * Full matrices for DLP and SLP are only initialized when \hmatrix is not
+       * used.
        */
-      VectorTools::interpolate(dof_handler,
-                               analytical_solution_function,
-                               analytical_solution);
+      if (!is_use_hmat)
+        {
+          dlp_with_mass_matrix.reinit(n_dofs, n_dofs);
+          slp_matrix.reinit(n_dofs, n_dofs);
+        }
 
-      // Interpolate Neumann BC values.
-      NeumannBC neumann_bc_function(x0,
-                                    model_sphere_center,
-                                    model_sphere_radius);
-      VectorTools::interpolate(dof_handler, neumann_bc_function, neumann_bc);
+      system_rhs.reinit(n_dofs);
+
+      /**
+       * Analytical Dirichlet boundary data.
+       */
+      DirichletBC dirichlet_analytical_data(x0);
+
+      /**
+       * Analytical Neumann boundary data.
+       */
+      NeumannBC neumann_analytical_data(x0,
+                                        model_sphere_center,
+                                        model_sphere_radius);
+
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              /**
+               * Generate the Neumann boundary condition by interpolation.
+               */
+              neumann_bc.reinit(n_dofs);
+              VectorTools::interpolate(dof_handler,
+                                       neumann_analytical_data,
+                                       neumann_bc);
+
+              /**
+               * Generate the analytical solution, i.e. the Dirichlet data.
+               */
+              analytical_solution_of_neumann_problem.reinit(n_dofs);
+              VectorTools::interpolate(dof_handler,
+                                       dirichlet_analytical_data,
+                                       analytical_solution_of_neumann_problem);
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              /**
+               * Generate the Dirichlet boundary condition by interpolation.
+               */
+              dirichlet_bc.reinit(n_dofs);
+              VectorTools::interpolate(dof_handler,
+                                       dirichlet_analytical_data,
+                                       dirichlet_bc);
+
+              /**
+               * Generate the analytical solution, i.e. the Neumann data.
+               */
+              analytical_solution_of_dirichlet_problem.reinit(n_dofs);
+              VectorTools::interpolate(
+                dof_handler,
+                neumann_analytical_data,
+                analytical_solution_of_dirichlet_problem);
+
+              break;
+            }
+        }
+
+      solution.reinit(n_dofs);
     }
 
 
@@ -615,6 +711,7 @@ namespace IdeoBEM
        * @p CellWisePerTaskData.
        */
       data.local_matrix = 0.;
+
       // N.B. The construction of the object <code>scratch.fe_values</code> is
       // carried out in the constructor of <code>CellWiseScratchData</code>
       scratch.fe_values.reinit(cell_iter);
@@ -622,6 +719,10 @@ namespace IdeoBEM
       const unsigned int n_q_points = scratch.fe_values.get_quadrature().size();
       const unsigned int dofs_per_cell = fe.dofs_per_cell;
 
+      /**
+       * Calculate the local mass matrix multiplied by a factor 0.5 in the
+       * current cell.
+       */
       for (unsigned int q = 0; q < n_q_points; q++)
         {
           // Iterate over test function DoFs.
@@ -638,13 +739,15 @@ namespace IdeoBEM
             }
         }
 
-      // Extract the DoF indices. N.B. Before calling
-      // <code>get_dof_indices</code>, the memory for the argument vector should
-      // have been allocated. Here, the memory for
-      // <code>data.local_dof_indices</code> has been allocated in the
-      // constructor of <code>CellWisePerTaskData</code>.
+      /**
+       *  Extract the DoF indices. N.B. Before calling
+       * <code>get_dof_indices</code>, the memory for the argument vector should
+       * have been allocated. Here, the memory for
+       * <code>data.local_dof_indices</code> has been allocated in the
+       * constructor of <code>CellWisePerTaskData</code>.
+       */
       cell_iter->get_dof_indices(data.local_dof_indices);
-    }
+    } // namespace Erichsen1996Efficient
 
 
     void
@@ -652,14 +755,13 @@ namespace IdeoBEM
     {
       const unsigned int dofs_per_cell = data.local_matrix.m();
 
-      // Assemble the local matrix to system matrix.
       for (unsigned int i = 0; i < dofs_per_cell; i++)
         {
           for (unsigned int j = 0; j < dofs_per_cell; j++)
             {
-              system_matrix.add(data.local_dof_indices[i],
-                                data.local_dof_indices[j],
-                                data.local_matrix(i, j));
+              dlp_with_mass_matrix.add(data.local_dof_indices[i],
+                                       data.local_dof_indices[j],
+                                       data.local_matrix(i, j));
             }
         }
     }
@@ -1110,8 +1212,8 @@ namespace IdeoBEM
             }
 
           // Clear the local matrix in case that it is reused from another
-          // finished task. N.B. Its memory has already been allocated in the
-          // constructor of <code>CellPairWisePerTaskData</code>.
+          // finished task. N.B. Its memory has already been allocated in
+          // the constructor of <code>CellPairWisePerTaskData</code>.
           data.slp_matrix = 0.;
 
           // Iterate over DoFs for test function space in tensor product
@@ -1168,13 +1270,18 @@ namespace IdeoBEM
         {
           for (unsigned int j = 0; j < ky_dofs_per_cell; j++)
             {
-              system_matrix.add(data.kx_local_dof_indices_permuted[i],
-                                data.ky_local_dof_indices_permuted[j],
-                                data.dlp_matrix(i, j));
+              /**
+               * @p dlp_matrix has already contained the data for the scaled
+               * mass matrix, which will be added with the DLP matrix here.
+               * Then we obtain \f$\frac{1}{2}I + K\f$.
+               */
+              dlp_with_mass_matrix.add(data.kx_local_dof_indices_permuted[i],
+                                       data.ky_local_dof_indices_permuted[j],
+                                       data.dlp_matrix(i, j));
 
-              system_rhs_matrix.add(data.kx_local_dof_indices_permuted[i],
-                                    data.ky_local_dof_indices_permuted[j],
-                                    data.slp_matrix(i, j));
+              slp_matrix.add(data.kx_local_dof_indices_permuted[i],
+                             data.ky_local_dof_indices_permuted[j],
+                             data.slp_matrix(i, j));
             }
         }
     }
@@ -1192,9 +1299,9 @@ namespace IdeoBEM
         {
           for (unsigned int j = 0; j < ky_dofs_per_cell; j++)
             {
-              system_rhs_matrix.add(data.kx_local_dof_indices_permuted[i],
-                                    data.ky_local_dof_indices_permuted[j],
-                                    data.slp_matrix(i, j));
+              slp_matrix.add(data.kx_local_dof_indices_permuted[i],
+                             data.ky_local_dof_indices_permuted[j],
+                             data.slp_matrix(i, j));
             }
         }
     }
@@ -1206,7 +1313,8 @@ namespace IdeoBEM
 
       if (is_assemble_fem_mat)
         {
-          // Generate normal Gauss-Legendre quadrature rule for FEM integration.
+          // Generate normal Gauss-Legendre quadrature rule for FEM
+          // integration.
           QGauss<2> quadrature_formula_2d(fe.degree + 1);
 
 #ifdef GRAPH_COLORING
@@ -1273,9 +1381,9 @@ namespace IdeoBEM
        *
        * \mynote{Precalculate shape function values and their gradient values
        * at each quadrature point. N.B.
-       * 1. The data tables for shape function values and their gradient values
-       * should be calculated for both function space on \f$K_x\f$ and function
-       * space on \f$K_y\f$.
+       * 1. The data tables for shape function values and their gradient
+       * values should be calculated for both function space on \f$K_x\f$ and
+       * function space on \f$K_y\f$.
        * 2. Being different from the integral in FEM, the integral in BEM
        * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
        * (except the regular cell neighboring type), each of which should be
@@ -1349,8 +1457,24 @@ namespace IdeoBEM
           ++pd;
         }
 
-      // Calculate the right-hand side vector.
-      system_rhs_matrix.vmult(system_rhs, neumann_bc);
+      /**
+       * Calculate the RHS vector.
+       */
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              slp_matrix.vmult(system_rhs, neumann_bc);
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              dlp_with_mass_matrix.vmult(system_rhs, dirichlet_bc);
+
+              break;
+            }
+        }
     }
 
 
@@ -1359,7 +1483,8 @@ namespace IdeoBEM
     {
       if (is_assemble_fem_mat)
         {
-          // Generate normal Gauss-Legendre quadrature rule for FEM integration.
+          // Generate normal Gauss-Legendre quadrature rule for FEM
+          // integration.
           QGauss<2> quadrature_formula_2d(fe.degree + 1);
 
           WorkStream::run(dof_handler.begin_active(),
@@ -1398,9 +1523,9 @@ namespace IdeoBEM
        *
        * \mynote{Precalculate shape function values and their gradient values
        * at each quadrature point. N.B.
-       * 1. The data tables for shape function values and their gradient values
-       * should be calculated for both function space on \f$K_x\f$ and function
-       * space on \f$K_y\f$.
+       * 1. The data tables for shape function values and their gradient
+       * values should be calculated for both function space on \f$K_x\f$ and
+       * function space on \f$K_y\f$.
        * 2. Being different from the integral in FEM, the integral in BEM
        * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
        * (except the regular cell neighboring type), each of which should be
@@ -1436,7 +1561,7 @@ namespace IdeoBEM
         {
           for (types::global_dof_index j = 0; j < dof_handler.n_dofs(); j++)
             {
-              system_matrix(i, j) +=
+              dlp_with_mass_matrix(i, j) +=
                 sauter_assemble_on_one_pair_of_dofs(scratch_data,
                                                     per_task_data,
                                                     dlp,
@@ -1448,7 +1573,7 @@ namespace IdeoBEM
                                                     dof_handler,
                                                     mapping,
                                                     mapping);
-              system_rhs_matrix(i, j) +=
+              slp_matrix(i, j) +=
                 sauter_assemble_on_one_pair_of_dofs(scratch_data,
                                                     per_task_data,
                                                     slp,
@@ -1466,7 +1591,7 @@ namespace IdeoBEM
         }
 
       // Calculate the right-hand side vector.
-      system_rhs_matrix.vmult(system_rhs, neumann_bc);
+      slp_matrix.vmult(system_rhs, neumann_bc);
     }
 
 
@@ -1511,9 +1636,9 @@ namespace IdeoBEM
        *
        * \mynote{Precalculate shape function values and their gradient values
        * at each quadrature point. N.B.
-       * 1. The data tables for shape function values and their gradient values
-       * should be calculated for both function space on \f$K_x\f$ and function
-       * space on \f$K_y\f$.
+       * 1. The data tables for shape function values and their gradient
+       * values should be calculated for both function space on \f$K_x\f$ and
+       * function space on \f$K_y\f$.
        * 2. Being different from the integral in FEM, the integral in BEM
        * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
        * (except the regular cell neighboring type), each of which should be
@@ -1598,7 +1723,7 @@ namespace IdeoBEM
                    (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
                                                   HMatrixSupport::general),
                    HMatrixSupport::diagonal_block);
-      dlp_hmat = HMatrix<3>(bct, max_hmat_rank);
+      dlp_hmat_with_mass_matrix = HMatrix<3>(bct, max_hmat_rank);
 
       /**
        * Define the @p ACAConfig object.
@@ -1621,7 +1746,7 @@ namespace IdeoBEM
                                  mapping,
                                  enable_build_symmetric_hmat);
 
-      fill_hmatrix_with_aca_plus(dlp_hmat,
+      fill_hmatrix_with_aca_plus(dlp_hmat_with_mass_matrix,
                                  scratch_data,
                                  per_task_data,
                                  aca_config,
@@ -1662,9 +1787,9 @@ namespace IdeoBEM
        *
        * \mynote{Precalculate shape function values and their gradient values
        * at each quadrature point. N.B.
-       * 1. The data tables for shape function values and their gradient values
-       * should be calculated for both function space on \f$K_x\f$ and function
-       * space on \f$K_y\f$.
+       * 1. The data tables for shape function values and their gradient
+       * values should be calculated for both function space on \f$K_x\f$ and
+       * function space on \f$K_y\f$.
        * 2. Being different from the integral in FEM, the integral in BEM
        * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
        * (except the regular cell neighboring type), each of which should be
@@ -1746,7 +1871,7 @@ namespace IdeoBEM
                    (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
                                                   HMatrixSupport::general),
                    HMatrixSupport::diagonal_block);
-      dlp_hmat = HMatrix<3>(bct, max_hmat_rank);
+      dlp_hmat_with_mass_matrix = HMatrix<3>(bct, max_hmat_rank);
 
       /**
        * Define the @p ACAConfig object.
@@ -1778,7 +1903,8 @@ namespace IdeoBEM
       //                                     mapping,
       //                                     mapping);
 
-      std::vector<HMatrix<3, double> *> hmats{&dlp_hmat, &slp_hmat};
+      std::vector<HMatrix<3, double> *> hmats{&dlp_hmat_with_mass_matrix,
+                                              &slp_hmat};
       std::vector<KernelFunction<3> *>  kernels{&dlp, &slp};
 
       fill_hmatrix_with_aca_plus_smp(thread_num,
@@ -1818,9 +1944,9 @@ namespace IdeoBEM
        *
        * \mynote{Precalculate shape function values and their gradient values
        * at each quadrature point. N.B.
-       * 1. The data tables for shape function values and their gradient values
-       * should be calculated for both function space on \f$K_x\f$ and function
-       * space on \f$K_y\f$.
+       * 1. The data tables for shape function values and their gradient
+       * values should be calculated for both function space on \f$K_x\f$ and
+       * function space on \f$K_y\f$.
        * 2. Being different from the integral in FEM, the integral in BEM
        * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
        * (except the regular cell neighboring type), each of which should be
@@ -1902,7 +2028,7 @@ namespace IdeoBEM
                    (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
                                                   HMatrixSupport::general),
                    HMatrixSupport::diagonal_block);
-      dlp_hmat = HMatrix<3>(bct, max_hmat_rank);
+      dlp_hmat_with_mass_matrix = HMatrix<3>(bct, max_hmat_rank);
 
       /**
        * Define the @p ACAConfig object.
@@ -1912,7 +2038,8 @@ namespace IdeoBEM
       /**
        * Fill the \hmatrices using ACA+ approximation.
        */
-      std::vector<HMatrix<3, double> *> hmats{&dlp_hmat, &slp_hmat};
+      std::vector<HMatrix<3, double> *> hmats{&dlp_hmat_with_mass_matrix,
+                                              &slp_hmat};
       std::vector<KernelFunction<3> *>  kernels{&dlp, &slp};
 
       /**
@@ -1921,10 +2048,11 @@ namespace IdeoBEM
       QGauss<2> quadrature_formula_2d(fe.degree + 1);
 
       /**
-       * Factors before FEM mass matrix. For Example 2 in Erichsen1996Efficient
-       * paper, the system matrix to be solved is \f$\frac{1}{2}I+K\f$.
-       * Therefore, the mass matrix scaled by 0.5 is appended to the \hmatrix
-       * associated with the DLP kernel function.
+       * Factors before the mass matrix which is to be added into the DLP
+       * \hmatrix. For Example 2 in the Erichsen1996Efficient paper, the system
+       * matrix to be solved is \f$\frac{1}{2}I+K\f$. Therefore, the mass matrix
+       * scaled by 0.5 is appended to the \hmatrix associated with the DLP
+       * kernel function.
        */
       std::vector<double> mass_matrix_factors{0.5, 0};
 
@@ -1941,6 +2069,25 @@ namespace IdeoBEM
                                      mapping,
                                      mapping,
                                      enable_build_symmetric_hmat);
+
+      /**
+       * Calculate the RHS vector.
+       */
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              slp_hmat.vmult(system_rhs, neumann_bc, slp_hmat.get_property());
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              dlp_hmat_with_mass_matrix.vmult(system_rhs, dirichlet_bc);
+
+              break;
+            }
+        }
     }
 
 
@@ -1951,16 +2098,16 @@ namespace IdeoBEM
 
       // Precalculate shape function values and their gradient
       // values at each quadrature point. N.B.
-      // 1. The data tables for shape function values and their gradient values
-      // should be calculated for both function space on \f$K_x\f$ and function
-      // space on \f$K_y\f$.
+      // 1. The data tables for shape function values and their gradient
+      // values should be calculated for both function space on \f$K_x\f$ and
+      // function space on \f$K_y\f$.
       // 2. Being different from the integral in FEM, the integral in BEM
-      // handled by Sauter's quadrature rule has multiple parts of $k_3$ (except
-      // the regular cell neighboring type), each of which should be evaluated
-      // at a different set of quadrature points in the unit cell after
-      // coordinate transformation from the parametric space. Therefore, a
-      // dimension with respect to $k_3$ term index should be added to the data
-      // table compared to the usual FEValues.
+      // handled by Sauter's quadrature rule has multiple parts of $k_3$
+      // (except the regular cell neighboring type), each of which should be
+      // evaluated at a different set of quadrature points in the unit cell
+      // after coordinate transformation from the parametric space. Therefore,
+      // a dimension with respect to $k_3$ term index should be added to the
+      // data table compared to the usual FEValues.
 
       // Generate 4D Gauss-Legendre quadrature rules for various cell
       // neighboring types.
@@ -2030,7 +2177,7 @@ namespace IdeoBEM
         }
 
       // Calculate the right-hand side vector.
-      system_rhs_matrix.vmult(system_rhs, neumann_bc);
+      slp_matrix.vmult(system_rhs, neumann_bc);
     }
 
 
@@ -2087,9 +2234,9 @@ namespace IdeoBEM
             {
               for (unsigned int j = 0; j < dofs_per_cell; j++)
                 {
-                  system_matrix.add(local_dof_indices[i],
-                                    local_dof_indices[j],
-                                    local_matrix(i, j));
+                  dlp_with_mass_matrix.add(local_dof_indices[i],
+                                           local_dof_indices[j],
+                                           local_matrix(i, j));
                 }
             }
         }
@@ -2098,16 +2245,17 @@ namespace IdeoBEM
        * Precalculate shape function values and their gradient values at each
        * quadrature point. N.B.
        *
-       * 1. The data tables for shape function values and their gradient values
-       * should be calculated for both function space on \f$K_x\f$ and function
-       * space on \f$K_y\f$.
+       * 1. The data tables for shape function values and their gradient
+       * values should be calculated for both function space on \f$K_x\f$ and
+       * function space on \f$K_y\f$.
        *
        * 2. Being different from the integral in FEM, the integral in
-       * Galerkin-BEM handled by Sauter's quadrature rule has multiple parts of
-       * \f$k_3\f$ (except the regular cell neighboring type), each of which
-       * should be evaluated at a different set of quadrature points in the unit
-       * cell after coordinate transformation from the parametric space.
-       * Therefore, a dimension with respect to \f$k_3\f$ term index should be
+       * Galerkin-BEM handled by Sauter's quadrature rule has multiple parts
+       * of \f$k_3\f$ (except the regular cell neighboring type), each of
+       * which should be evaluated at a different set of quadrature points in
+       * the unit cell after coordinate transformation from the parametric
+       * space. Therefore, a dimension with respect to \f$k_3\f$ term index
+       * should be
        * added to the data table compared to the usual @p FEValues.
        */
 
@@ -2144,7 +2292,7 @@ namespace IdeoBEM
         {
           for (const auto &f : dof_handler.active_cell_iterators())
             {
-              SauterQuadRule(system_matrix,
+              SauterQuadRule(dlp_with_mass_matrix,
                              this->dlp,
                              bem_values,
                              e,
@@ -2152,7 +2300,7 @@ namespace IdeoBEM
                              this->mapping,
                              this->mapping);
 
-              SauterQuadRule(system_rhs_matrix,
+              SauterQuadRule(slp_matrix,
                              this->slp,
                              bem_values,
                              e,
@@ -2165,7 +2313,7 @@ namespace IdeoBEM
         }
 
       // Calculate the right-hand side vector.
-      system_rhs_matrix.vmult(system_rhs, neumann_bc);
+      slp_matrix.vmult(system_rhs, neumann_bc);
     }
 
 
@@ -2176,47 +2324,199 @@ namespace IdeoBEM
       SolverControl solver_control(1000, 1e-12);
       SolverCG<>    solver(solver_control);
 
-      solver.solve(system_matrix, solution, system_rhs, PreconditionIdentity());
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              solver.solve(dlp_with_mass_matrix,
+                           solution,
+                           system_rhs,
+                           PreconditionIdentity());
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              solver.solve(slp_matrix,
+                           solution,
+                           system_rhs,
+                           PreconditionIdentity());
+
+              break;
+            }
+        }
     }
 
 
     void
     Example2::output_results()
     {
-      deallog << "Analytical solution:" << std::endl;
-      analytical_solution.print(deallog.get_console(), 5);
-      deallog << "Numerical solution:" << std::endl;
-      solution.print(deallog.get_console(), 5);
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              print_vector_to_mat(std::cout,
+                                  "analytical_solution",
+                                  analytical_solution_of_neumann_problem,
+                                  false);
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              print_vector_to_mat(std::cout,
+                                  "analytical_solution",
+                                  analytical_solution_of_dirichlet_problem,
+                                  false);
+
+              break;
+            }
+        }
+
+      print_vector_to_mat(std::cout, "numerical_solution", solution, false);
 
       DataOut<2, DoFHandler<2, 3>> data_out;
       data_out.attach_dof_handler(dof_handler);
-      data_out.add_data_vector(analytical_solution, "analytical_solution");
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              data_out.add_data_vector(analytical_solution_of_neumann_problem,
+                                       "analytical_solution");
+              data_out.add_data_vector(neumann_bc, "neumann_bc");
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              data_out.add_data_vector(analytical_solution_of_dirichlet_problem,
+                                       "analytical_solution");
+              data_out.add_data_vector(dirichlet_bc, "dirichlet_bc");
+
+              break;
+            }
+        }
+
       data_out.add_data_vector(solution, "numerical_solution");
       data_out.build_patches();
 
-      std::ofstream output("solution.vtk");
-      data_out.write_vtk(output);
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              std::ofstream output("solution-neumann.vtk");
+              data_out.write_vtk(output);
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              std::ofstream output("solution-dirichlet.vtk");
+              data_out.write_vtk(output);
+
+              break;
+            }
+        }
     }
 
 
     FullMatrix<double> &
     Example2::get_system_matrix()
     {
-      return system_matrix;
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              return dlp_with_mass_matrix;
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              return slp_matrix;
+
+              break;
+            }
+          default:
+            {
+              return dlp_with_mass_matrix;
+            }
+        }
     }
 
 
     const FullMatrix<double> &
     Example2::get_system_matrix() const
     {
-      return system_matrix;
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              return dlp_with_mass_matrix;
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              return slp_matrix;
+
+              break;
+            }
+          default:
+            {
+              return dlp_with_mass_matrix;
+            }
+        }
     }
 
 
     FullMatrix<double> &
     Example2::get_system_rhs_matrix()
     {
-      return system_rhs_matrix;
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              return slp_matrix;
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              return dlp_with_mass_matrix;
+
+              break;
+            }
+          default:
+            {
+              return slp_matrix;
+            }
+        }
+    }
+
+
+    const FullMatrix<double> &
+    Example2::get_system_rhs_matrix() const
+    {
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              return slp_matrix;
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              return dlp_with_mass_matrix;
+
+              break;
+            }
+          default:
+            {
+              return slp_matrix;
+            }
+        }
     }
 
 
@@ -2276,14 +2576,14 @@ namespace IdeoBEM
     HMatrix<3> &
     Example2::get_dlp_hmat()
     {
-      return dlp_hmat;
+      return dlp_hmat_with_mass_matrix;
     }
 
 
     const HMatrix<3> &
     Example2::get_dlp_hmat() const
     {
-      return dlp_hmat;
+      return dlp_hmat_with_mass_matrix;
     }
 
 
@@ -2314,16 +2614,12 @@ namespace IdeoBEM
       return slp_hmat;
     }
 
-    const FullMatrix<double> &
-    Example2::get_system_rhs_matrix() const
-    {
-      return system_rhs_matrix;
-    }
-
 
     void
     Example2::run()
     {
+      is_use_hmat = false;
+
       // generate_mesh(1);
       read_mesh();
       // calc_cell_neighboring_types();
@@ -2331,18 +2627,17 @@ namespace IdeoBEM
 
       if (thread_num > 1)
         {
-          // assemble_system_smp(false);
           assemble_system_smp(true);
 
           // DEBUG: print out the assembled matrices.
           // std::ofstream out("matrices-assemble-on-cell-pair.dat");
-          std::ofstream out(
-            "matrices-assemble-on-cell-pair-with-mass-matrix.dat");
-          print_matrix_to_mat(
-            out, "dlp_cell_pair", system_matrix, 25, false, 15, "0");
-          print_matrix_to_mat(
-            out, "slp_cell_pair", system_rhs_matrix, 25, false, 15, "0");
-          out.close();
+          //          std::ofstream out(
+          //            "matrices-assemble-on-cell-pair-with-mass-matrix.dat");
+          //          print_matrix_to_mat(
+          //            out, "dlp_cell_pair", dlp_matrix, 25, false, 15, "0");
+          //          print_matrix_to_mat(
+          //            out, "slp_cell_pair", slp_matrix, 25, false, 15, "0");
+          //          out.close();
         }
       else
         {
@@ -2359,13 +2654,61 @@ namespace IdeoBEM
           // DEBUG: print out the assembled matrices.
           std::ofstream out("matrices-assemble-on-dof-pair.dat");
           print_matrix_to_mat(
-            out, "dlp_dof_pair", system_matrix, 25, false, 15, "0");
+            out, "dlp_dof_pair", dlp_with_mass_matrix, 25, false, 15, "0");
           print_matrix_to_mat(
-            out, "slp_dof_pair", system_rhs_matrix, 25, false, 15, "0");
+            out, "slp_dof_pair", slp_matrix, 25, false, 15, "0");
           out.close();
         }
 
       solve();
+      output_results();
+    }
+
+
+    void
+    Example2::run_using_hmat()
+    {
+      is_use_hmat = true;
+
+      read_mesh();
+      setup_system();
+      assemble_system_as_hmatrices_with_mass_matrix_smp(true);
+
+      switch (problem_type)
+        {
+          case NeumannBCProblem:
+            {
+              /**
+               * Perform the LU factorization of the system matrix
+               * \f$\frac{1}{2}I+K\f$.
+               */
+              dlp_hmat_with_mass_matrix.compute_lu_factorization(max_hmat_rank);
+
+              /**
+               * Solve the system equation using the direct LU solver.
+               */
+              dlp_hmat_with_mass_matrix.solve_lu(this->solution,
+                                                 this->system_rhs);
+
+              break;
+            }
+          case DirichletBCProblem:
+            {
+              /**
+               * Perform the Cholesky factorization of the system matrix
+               * \f$V\f$.
+               */
+              slp_hmat.compute_cholesky_factorization(max_hmat_rank);
+
+              /**
+               * Solve the system equation.
+               */
+              slp_hmat.solve_cholesky(this->solution, this->system_rhs);
+
+              break;
+            }
+        }
+
       output_results();
     }
 

@@ -1,18 +1,16 @@
 /**
- * \file erichsen1996efficient-example2.cc
- * \brief Verify solving the Laplace problem with pure Neumann boundary
- * condition using BEM. The matrices are constructed as full matrices.
- *
+ * \file erichsen1996efficient-example2-hmat-neumann-bc.cc
+ * \brief
  * \ingroup testers
  * \author Jihuan Tian
- * \date 2020-11-26
+ * \date 2022-05-14
  */
 
-#include <deal.II/base/logstream.h>
+#include <deal.II/base/multithread_info.h>
 
 #include <boost/program_options.hpp>
 
-#include <erichsen1996efficient_example2.h>
+#include "erichsen1996efficient_example2.h"
 
 using namespace dealii;
 using namespace boost::program_options;
@@ -20,20 +18,20 @@ using namespace boost::program_options;
 int
 main(int argc, char *argv[])
 {
-  deallog.depth_console(2);
-  deallog.pop();
+  (void)argc;
 
   std::string  mesh_file_name;
   unsigned int fe_order;
   unsigned int thread_num;
   char         problem_type_string;
-  unsigned int n_min_for_ct       = 2;
-  unsigned int n_min_for_bct      = 2;
-  double       eta                = 1.0;
-  unsigned int max_hmat_rank      = 4;
-  double       aca_relative_error = 0.01;
+  unsigned int n_min_for_ct;
+  unsigned int n_min_for_bct;
+  double       eta;
+  unsigned int max_hmat_rank;
+  double       aca_relative_error;
 
-  options_description opts("erichsen1996efficient-example2 options");
+  options_description opts(
+    "erichsen1996efficient-example2-hmat-neumann-bc options");
   opts.add_options()("help,h", "Display this help")("input,i",
                                                     value<std::string>(),
                                                     "Path to the mesh file")(
@@ -41,7 +39,14 @@ main(int argc, char *argv[])
     "threads,t", value<unsigned int>(), "Number of threads")(
     "problem,p",
     value<char>(),
-    "Problem type: 'd' for Dirichlet problem, 'n' for Neumann problem");
+    "Problem type: 'd' for Dirichlet problem, 'n' for Neumann problem")(
+    "nmin_ct,n", value<unsigned int>(), "Minimum cluster size/cardinality")(
+    "nmin_bct,N",
+    value<unsigned int>(),
+    "Minimum block cluster size/cardinality")(
+    "adm,a", value<double>(), "Admissibility condition constant")(
+    "rank,r", value<unsigned int>(), "Maximum rank for the H-matrix")(
+    "epsilon,e", value<double>(), "ACA+ relative error");
 
   variables_map vm;
   store(parse_command_line(argc, argv, opts), vm);
@@ -90,9 +95,9 @@ main(int argc, char *argv[])
     }
   else
     {
-      thread_num = 4;
-      std::cout << "Number of threads has been set to the default value: 4"
-                << std::endl;
+      thread_num = MultithreadInfo::n_cores();
+      std::cout << "Number of threads has been set to the default value: "
+                << thread_num << std::endl;
     }
 
   if (vm.count("problem"))
@@ -102,6 +107,76 @@ main(int argc, char *argv[])
   else
     {
       problem_type_string = 'n';
+    }
+
+  std::cout << "Problem type is: "
+            << (problem_type_string == 'n' ? "Neumann" : "Dirichlet")
+            << std::endl;
+
+  if (vm.count("nmin_ct"))
+    {
+      n_min_for_ct = vm["nmin_ct"].as<unsigned int>();
+      std::cout << "Minimum cluster size: " << n_min_for_ct << std::endl;
+    }
+  else
+    {
+      n_min_for_ct = 2;
+      std::cout
+        << "Minimum cluster size/cardinality has been set to the default value: 2"
+        << std::endl;
+    }
+
+  if (vm.count("nmin_bct"))
+    {
+      n_min_for_bct = vm["nmin_bct"].as<unsigned int>();
+      std::cout << "Minimum block cluster size: " << n_min_for_bct << std::endl;
+    }
+  else
+    {
+      n_min_for_bct = 2;
+      std::cout
+        << "Minimum block cluster size/cardinality has been set to the default value: 2"
+        << std::endl;
+    }
+
+  if (vm.count("adm"))
+    {
+      eta = vm["adm"].as<double>();
+      std::cout << "Admissibility constant: " << eta << std::endl;
+    }
+  else
+    {
+      eta = 1.0;
+      std::cout
+        << "Admissibility constant eta has been set to the default value: 1.0"
+        << std::endl;
+    }
+
+  if (vm.count("rank"))
+    {
+      max_hmat_rank = vm["rank"].as<unsigned int>();
+      std::cout << "Maximum H-matrix rank: " << max_hmat_rank << std::endl;
+    }
+  else
+    {
+      max_hmat_rank = 2;
+      std::cout
+        << "Maximum rank for the H-matrix has been set to the default value: 2"
+        << std::endl;
+    }
+
+  if (vm.count("epsilon"))
+    {
+      aca_relative_error = vm["epsilon"].as<double>();
+      std::cout << "Relative error for ACA+: " << aca_relative_error
+                << std::endl;
+    }
+  else
+    {
+      aca_relative_error = 1e-2;
+      std::cout
+        << "The relative error for ACA+ has been set to the default value: 1e-2"
+        << std::endl;
     }
 
   IdeoBEM::Erichsen1996Efficient::Example2::ProblemType problem_type;
@@ -141,7 +216,8 @@ main(int argc, char *argv[])
                                                     eta,
                                                     max_hmat_rank,
                                                     aca_relative_error);
-  testcase.run();
+
+  testcase.run_using_hmat();
 
   return 0;
 }

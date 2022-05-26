@@ -17,6 +17,7 @@ fontconfig/
 # Ignore data files
 *.dat
 *.png
+*.svg
 *.jpg
 *.eps
 *.gif
