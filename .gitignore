@@ -26,12 +26,12 @@ fontconfig/
 *.msh
 *.msh.opt
 *.mat
-*.txt
 *.ods
 *.puml
 *.csv
 *.log
 *.tm
+*.gpl
 octave-workspace
 
 # Ignore binary files

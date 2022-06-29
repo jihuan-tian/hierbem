@@ -104,17 +104,17 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   assemble_kernel_row(
-    Vector<RangeNumberType> &                        row_vector,
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const KernelFunction<spacedim> &                 kernel,
-    const types::global_dof_index                    row_dof_index,
-    const std::vector<types::global_dof_index> &     column_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+    Vector<RangeNumberType> &                                row_vector,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const KernelFunction<spacedim> &                         kernel,
+    const types::global_dof_index                            row_dof_index,
+    const std::vector<types::global_dof_index> &             column_dof_indices,
+    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
+    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
       MappingQGeneric<dim, spacedim>(1))
@@ -159,17 +159,17 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   assemble_kernel_column(
-    Vector<RangeNumberType> &                        col_vector,
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const KernelFunction<spacedim> &                 kernel,
-    const std::vector<types::global_dof_index> &     row_dof_indices,
-    const types::global_dof_index                    col_dof_index,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+    Vector<RangeNumberType> &                                col_vector,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const KernelFunction<spacedim> &                         kernel,
+    const std::vector<types::global_dof_index> &             row_dof_indices,
+    const types::global_dof_index                            col_dof_index,
+    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
+    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
       MappingQGeneric<dim, spacedim>(1))
@@ -228,10 +228,10 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   size_type
   random_select_ref_row(
-    Vector<RangeNumberType> &                        row_vector,
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const KernelFunction<spacedim> &                 kernel,
+    Vector<RangeNumberType> &                                row_vector,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const KernelFunction<spacedim> &                         kernel,
     std::forward_list<size_type> &                   remaining_row_indices,
     const size_type                                  current_ref_row_index,
     const std::vector<types::global_dof_index> &     row_dof_indices,
@@ -462,10 +462,10 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   size_type
   random_select_ref_column(
-    Vector<RangeNumberType> &                        col_vector,
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const KernelFunction<spacedim> &                 kernel,
+    Vector<RangeNumberType> &                                col_vector,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const KernelFunction<spacedim> &                         kernel,
     std::forward_list<size_type> &                   remaining_col_indices,
     const size_type                                  current_ref_col_index,
     const std::vector<types::global_dof_index> &     row_dof_indices,
@@ -690,11 +690,11 @@ namespace IdeoBEM
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
-  aca_plus(RkMatrix<RangeNumberType> &                      rkmat,
-           PairCellWiseScratchData &                        scratch,
-           PairCellWisePerTaskData &                        data,
-           const ACAConfig &                                aca_config,
-           const KernelFunction<spacedim> &                 kernel,
+  aca_plus(RkMatrix<RangeNumberType> &                              rkmat,
+           PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+           PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+           const ACAConfig &                                        aca_config,
+           const KernelFunction<spacedim> &                         kernel,
            const std::vector<types::global_dof_index> &     row_dof_indices,
            const std::vector<types::global_dof_index> &     col_dof_indices,
            const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
@@ -1595,16 +1595,16 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> *             leaf_mat,
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+    HMatrix<spacedim, RangeNumberType> *                     leaf_mat,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const ACAConfig &                                        aca_config,
+    const KernelFunction<spacedim> &                         kernel,
+    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
+    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
       MappingQGeneric<dim, spacedim>(1),
@@ -1871,15 +1871,15 @@ namespace IdeoBEM
   void
   fill_hmatrix_leaf_node_with_aca_plus(
     std::vector<HMatrix<spacedim, RangeNumberType> *> leaf_mat_for_kernels,
-    PairCellWiseScratchData &                         scratch,
-    PairCellWisePerTaskData &                         data,
-    const ACAConfig &                                 aca_config,
-    const std::vector<KernelFunction<spacedim> *> &   kernels,
-    const std::vector<std::vector<unsigned int>> &    dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> & bem_values,
-    const DoFHandler<dim, spacedim> &                 kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                 ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &            kx_mapping =
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const ACAConfig &                                        aca_config,
+    const std::vector<KernelFunction<spacedim> *> &          kernels,
+    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
+    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
       MappingQGeneric<dim, spacedim>(1),
@@ -2193,17 +2193,17 @@ namespace IdeoBEM
   void
   fill_hmatrix_leaf_node_with_aca_plus(
     std::vector<HMatrix<spacedim, RangeNumberType> *> leaf_mat_for_kernels,
-    PairCellWiseScratchData &                         scratch,
-    PairCellWisePerTaskData &                         data,
-    CellWiseScratchData &                             fem_scratch,
-    const std::vector<RangeNumberType> &              mass_matrix_factors,
-    const ACAConfig &                                 aca_config,
-    const std::vector<KernelFunction<spacedim> *> &   kernels,
-    const std::vector<std::vector<unsigned int>> &    dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> & bem_values,
-    const DoFHandler<dim, spacedim> &                 kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                 ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &            kx_mapping =
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    CellWiseScratchData<dim, spacedim> &                     fem_scratch,
+    const std::vector<RangeNumberType> &             mass_matrix_factors,
+    const ACAConfig &                                aca_config,
+    const std::vector<KernelFunction<spacedim> *> &  kernels,
+    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &           kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
       MappingQGeneric<dim, spacedim>(1),
@@ -2527,11 +2527,10 @@ namespace IdeoBEM
      * are local to the current working thread. This is mandatory because
      * each current working thread should have its own copy of these data.
      */
-    PairCellWiseScratchData scratch_data(kx_dof_handler.get_fe(),
-                                         ky_dof_handler.get_fe(),
-                                         bem_values);
-    PairCellWisePerTaskData per_task_data(kx_dof_handler.get_fe(),
-                                          ky_dof_handler.get_fe());
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
@@ -2602,11 +2601,10 @@ namespace IdeoBEM
      * are local to the current working thread. This is mandatory because
      * each current working thread should have its own copy of these data.
      */
-    PairCellWiseScratchData scratch_data(kx_dof_handler.get_fe(),
-                                         ky_dof_handler.get_fe(),
-                                         bem_values);
-    PairCellWisePerTaskData per_task_data(kx_dof_handler.get_fe(),
-                                          ky_dof_handler.get_fe());
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     /**
      * Generate a list of \hmatrix pointers at a given index in the subrange,
@@ -2693,20 +2691,20 @@ namespace IdeoBEM
     /**
      * Define @p CellWiseScratchData which is local to the current working thread.
      */
-    CellWiseScratchData fem_scratch_data(kx_dof_handler.get_fe(),
-                                         fem_quadrature_formula,
-                                         update_values | update_JxW_values);
+    CellWiseScratchData<dim, spacedim> fem_scratch_data(kx_dof_handler.get_fe(),
+                                                        fem_quadrature_formula,
+                                                        update_values |
+                                                          update_JxW_values);
 
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
      * are local to the current working thread. This is mandatory because
      * each current working thread should have its own copy of these data.
      */
-    PairCellWiseScratchData scratch_data(kx_dof_handler.get_fe(),
-                                         ky_dof_handler.get_fe(),
-                                         bem_values);
-    PairCellWisePerTaskData per_task_data(kx_dof_handler.get_fe(),
-                                          ky_dof_handler.get_fe());
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     /**
      * Generate a list of \hmatrix pointers at a given index in the subrange,
@@ -2773,16 +2771,16 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> &             hmat,
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+    HMatrix<spacedim, RangeNumberType> &                     hmat,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const ACAConfig &                                        aca_config,
+    const KernelFunction<spacedim> &                         kernel,
+    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
+    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
       MappingQGeneric<dim, spacedim>(1),

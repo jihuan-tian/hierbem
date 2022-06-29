@@ -43,6 +43,20 @@
  */
 
 /**
+ * \defgroup dealii_verify deal.ii verification
+ * \brief Verify the features and implementation details provided by deal.ii
+ */
+
+/**
  * \defgroup testers Test cases
  * \brief Test cases for verifying code design and algorithms.
+ */
+
+/**
+ * \defgroup bem_tools Tool functions for BEM
+ * \brief Tool functions related to geometric, mesh, finite element manipulation
+ * for BEM.
+ * @{
+ * \defgroup support_points_manip Manipulation of support points
+ * @}
  */

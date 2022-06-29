@@ -1,0 +1,2 @@
+SET(TEST_TARGET cluster-tree-hp)
+DEAL_II_PICKUP_TESTS()

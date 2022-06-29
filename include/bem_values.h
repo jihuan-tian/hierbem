@@ -12,6 +12,7 @@
 #include <deal.II/base/table_indices.h>
 
 #include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_base.h>
 #include <deal.II/fe/fe_tools.h>
 
 #include "bem_tools.h"
@@ -35,6 +36,8 @@ namespace IdeoBEM
   class BEMValues
   {
   public:
+    using FE_Poly_short = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+
     /**
      * Constructor
      *
@@ -683,10 +686,22 @@ namespace IdeoBEM
     Point<dim> kx_quad_point;
     Point<dim> ky_quad_point;
 
+    /**
+     * Get the polynomial space inverse numbering for accessing the shape
+     * functions in the lexicographic order.
+     *
+     * \alert{Here I have adopted an assumption that the finite elements are
+     * based on tensor product polynomials.}
+     */
+    const FE_Poly_short &kx_fe_poly =
+      dynamic_cast<const FE_Poly_short &>(kx_fe);
+    const FE_Poly_short &ky_fe_poly =
+      dynamic_cast<const FE_Poly_short &>(ky_fe);
+
     std::vector<unsigned int> kx_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(kx_fe));
+      kx_fe_poly.get_poly_space_numbering_inverse());
     std::vector<unsigned int> ky_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(ky_fe));
+      ky_fe_poly.get_poly_space_numbering_inverse());
 
     // Iterate over each $k_3$ part.
     for (unsigned k = 0; k < 8; k++)
@@ -761,10 +776,22 @@ namespace IdeoBEM
     Point<dim> kx_quad_point;
     Point<dim> ky_quad_point;
 
+    /**
+     * Get the polynomial space inverse numbering for accessing the shape
+     * functions in the lexicographic order.
+     *
+     * \alert{Here I have adopted an assumption that the finite elements are
+     * based on tensor product polynomials.}
+     */
+    const FE_Poly_short &kx_fe_poly =
+      dynamic_cast<const FE_Poly_short &>(kx_fe);
+    const FE_Poly_short &ky_fe_poly =
+      dynamic_cast<const FE_Poly_short &>(ky_fe);
+
     std::vector<unsigned int> kx_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(kx_fe));
+      kx_fe_poly.get_poly_space_numbering_inverse());
     std::vector<unsigned int> ky_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(ky_fe));
+      ky_fe_poly.get_poly_space_numbering_inverse());
 
     // Iterate over each $k_3$ part.
     for (unsigned k = 0; k < 6; k++)
@@ -840,10 +867,22 @@ namespace IdeoBEM
     Point<dim> kx_quad_point;
     Point<dim> ky_quad_point;
 
+    /**
+     * Get the polynomial space inverse numbering for accessing the shape
+     * functions in the lexicographic order.
+     *
+     * \alert{Here I have adopted an assumption that the finite elements are
+     * based on tensor product polynomials.}
+     */
+    const FE_Poly_short &kx_fe_poly =
+      dynamic_cast<const FE_Poly_short &>(kx_fe);
+    const FE_Poly_short &ky_fe_poly =
+      dynamic_cast<const FE_Poly_short &>(ky_fe);
+
     std::vector<unsigned int> kx_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(kx_fe));
+      kx_fe_poly.get_poly_space_numbering_inverse());
     std::vector<unsigned int> ky_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(ky_fe));
+      ky_fe_poly.get_poly_space_numbering_inverse());
 
     // Iterate over each $k_3$ part.
     for (unsigned k = 0; k < 4; k++)
@@ -918,10 +957,22 @@ namespace IdeoBEM
     Point<dim> kx_quad_point;
     Point<dim> ky_quad_point;
 
+    /**
+     * Get the polynomial space inverse numbering for accessing the shape
+     * functions in the lexicographic order.
+     *
+     * \alert{Here I have adopted an assumption that the finite elements are
+     * based on tensor product polynomials.}
+     */
+    const FE_Poly_short &kx_fe_poly =
+      dynamic_cast<const FE_Poly_short &>(kx_fe);
+    const FE_Poly_short &ky_fe_poly =
+      dynamic_cast<const FE_Poly_short &>(ky_fe);
+
     std::vector<unsigned int> kx_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(kx_fe));
+      kx_fe_poly.get_poly_space_numbering_inverse());
     std::vector<unsigned int> ky_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(ky_fe));
+      ky_fe_poly.get_poly_space_numbering_inverse());
 
     // Iterate over each quadrature point.
     for (unsigned int q = 0; q < n_q_points; q++)
@@ -932,9 +983,10 @@ namespace IdeoBEM
                                                        kx_quad_point,
                                                        ky_quad_point);
 
-        // Iterate over each shape function on the unit cell of \f$K_x\f$ and
-        // evaluate it at <code>kx_quad_point</code>. N.B. The shape
-        // functions are in the default hierarchical order.
+        /**
+         *  Iterate over each shape function in the lexicographic order on
+         *  the unit cell of \f$K_x\f$ and evaluate it at @p ky_quad_point.
+         */
         for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
           {
             kx_shape_value_table(s, 0, q) =
@@ -1187,77 +1239,171 @@ namespace IdeoBEM
   }
 
   /**
-   * Structure holding cell-wise local matrix data and DoF indices,
-   * which is used for SMP parallel computation of the term $(v,
-   * \frac{1}{2}u)$ as well as the RHS vector if needed.
+   * Structure holding cell-wise local matrix data and DoF indices, which is
+   * used for SMP parallel computation of the scaled FEM mass matrix.
    */
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
   struct CellWisePerTaskData
   {
-    FullMatrix<double> local_matrix;
+    FullMatrix<RangeNumberType> local_matrix;
     // N.B. Memory should be preallocated for this vector before calling
     // <code>get_dof_indices</code>.
-    std::vector<types::global_dof_index> local_dof_indices;
+    std::vector<types::global_dof_index> local_dof_indices_for_test_space;
+    std::vector<types::global_dof_index> local_dof_indices_for_trial_space;
 
-    CellWisePerTaskData(const FiniteElement<2, 3> &fe)
-      : local_matrix(fe.dofs_per_cell, fe.dofs_per_cell)
-      , local_dof_indices(fe.dofs_per_cell)
+    /**
+     * Constructor. Allocate memory for internal members.
+     *
+     * @param fe_for_test_space
+     * @param fe_for_trial_space
+     */
+    CellWisePerTaskData(const FiniteElement<dim, spacedim> &fe_for_test_space,
+                        const FiniteElement<dim, spacedim> &fe_for_trial_space)
+      : local_matrix(fe_for_test_space.dofs_per_cell,
+                     fe_for_trial_space.dofs_per_cell)
+      , local_dof_indices_for_test_space(fe_for_test_space.dofs_per_cell)
+      , local_dof_indices_for_trial_space(fe_for_trial_space.dofs_per_cell)
+    {}
+
+    /**
+     * Copy constructor
+     *
+     * @param task_data
+     */
+    CellWisePerTaskData(
+      const CellWisePerTaskData<dim, spacedim, RangeNumberType> &task_data)
+      : local_matrix(task_data.local_matrix)
+      , local_dof_indices_for_test_space(
+          task_data.local_dof_indices_for_test_space)
+      , local_dof_indices_for_trial_space(
+          task_data.local_dof_indices_for_trial_space)
     {}
   };
 
 
   /**
    * Structure holding temporary data which are needed for cell-wise
-   * integration for the term $(v, \frac{1}{2}u)$.
+   * integration, such as for the scaled mass matrix term \f$(v, \alpha \cdot
+   * u)\f$.
    */
+  template <int dim, int spacedim = dim>
   struct CellWiseScratchData
   {
-    FEValues<2, 3> fe_values;
+    FEValues<dim, spacedim> fe_values_for_test_space;
+    FEValues<dim, spacedim> fe_values_for_trial_space;
 
     /**
-     * Constructor for the structure.
-     * @param fe
+     * Constructor
+     *
+     * @param fe_for_test_space
+     * @param fe_for_trial_space
      * @param quadrature
      * @param update_flags
      */
-    CellWiseScratchData(const FiniteElement<2, 3> &fe,
-                        const Quadrature<2> &      quadrature,
-                        const UpdateFlags          update_flags)
-      : fe_values(fe, quadrature, update_flags)
+    CellWiseScratchData(const FiniteElement<dim, spacedim> &fe_for_test_space,
+                        const FiniteElement<dim, spacedim> &fe_for_trial_space,
+                        const Quadrature<dim> &             quadrature,
+                        const UpdateFlags                   update_flags)
+      : fe_values_for_test_space(fe_for_test_space, quadrature, update_flags)
+      , fe_values_for_trial_space(fe_for_trial_space, quadrature, update_flags)
     {}
 
 
     /**
-     * Copy constructor for the structure. Because <code>FEValues</code> is
-     * neither copyable nor has it copy constructor, this copy constructor
-     * is mandatory for replication into each task.
+     * Copy constructor. Because <code>FEValues</code> is neither copyable nor
+     * has it copy constructor, this copy constructor is mandatory for
+     * replication into each task.
+     *
      * @param scratch_data
      */
-    CellWiseScratchData(const CellWiseScratchData &scratch_data)
-      : fe_values(scratch_data.fe_values.get_fe(),
-                  scratch_data.fe_values.get_quadrature(),
-                  scratch_data.fe_values.get_update_flags())
+    CellWiseScratchData(const CellWiseScratchData<dim, spacedim> &scratch_data)
+      : fe_values_for_test_space(
+          scratch_data.fe_values_for_test_space.get_fe(),
+          scratch_data.fe_values_for_test_space.get_quadrature(),
+          scratch_data.fe_values_for_test_space.get_update_flags())
+      , fe_values_for_trial_space(
+          scratch_data.fe_values_for_trial_space.get_fe(),
+          scratch_data.fe_values_for_trial_space.get_quadrature(),
+          scratch_data.fe_values_for_trial_space.get_update_flags())
     {}
   };
 
 
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
+  struct CellWiseScratchDataForPotentialEval
+  {
+    FEValues<dim, spacedim> fe_values_for_trial_space;
+
+    CellWiseScratchDataForPotentialEval(
+      const FiniteElement<dim, spacedim> &fe_for_trial_space,
+      const Quadrature<dim> &             quadrature,
+      const UpdateFlags                   update_flags)
+      : fe_values_for_trial_space(fe_for_trial_space, quadrature, update_flags)
+    {}
+
+    /**
+     * Copy constructor
+     */
+    CellWiseScratchDataForPotentialEval(
+      const CellWiseScratchDataForPotentialEval<dim, spacedim> &scratch_data)
+      : fe_values_for_trial_space(
+          scratch_data.fe_values_for_trial_space.get_fe(),
+          scratch_data.fe_values_for_trial_space.get_quadrature(),
+          scratch_data.fe_values_for_trial_space.get_update_flags())
+    {}
+  };
+
+
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
+  struct CellWisePerTaskDataForPotentialEval
+  {
+    Vector<RangeNumberType>              local_vector;
+    std::vector<types::global_dof_index> local_dof_indices_for_trial_space;
+
+    CellWisePerTaskDataForPotentialEval(
+      const FiniteElement<dim, spacedim> &fe_for_trial_space)
+      : local_vector(fe_for_trial_space.dofs_per_cell)
+      , local_dof_indices_for_trial_space(fe_for_trial_space.dofs_per_cell)
+    {}
+
+    CellWisePerTaskDataForPotentialEval(
+      const CellWisePerTaskDataForPotentialEval<dim, spacedim, RangeNumberType>
+        &task_data)
+      : local_vector(task_data.local_vector)
+      , local_dof_indices_for_trial_space(
+          task_data.local_dof_indices_for_trial_space)
+    {}
+  };
+
+
+  /**
+   * Structure holding pair-cell-wise local matrix data and DoF indices, which
+   * is used for SMP parallel computation of BEM matrices.
+   */
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
   struct PairCellWiseScratchData
   {
+    using FE_Poly_short = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+
     /**
      * The intersection set of the vertex DoF indices for the two cells
      * \f$K_x\f$ and \f$K_y\f$.
      */
-    std::vector<types::global_dof_index> vertex_dof_index_intersection;
+    std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
+      common_vertex_dof_indices;
 
     /**
-     * List of support points in the real cell \f$K_x\f$ in the hierarchical
+     * List of support points in the real cell \f$K_x\f$ in the default DoF
      * order.
      */
-    std::vector<Point<3>> kx_support_points_hierarchical;
+    std::vector<Point<spacedim, RangeNumberType>>
+      kx_support_points_in_default_dof_order;
     /**
-     * List of support points in the real cell \f$K_y\f$ in the hierarchical
+     * List of support points in the real cell \f$K_y\f$ in the default DoF
      * order.
      */
-    std::vector<Point<3>> ky_support_points_hierarchical;
+    std::vector<Point<spacedim, RangeNumberType>>
+      ky_support_points_in_default_dof_order;
 
     /**
      * Permuted list of support points in the real cell \f$K_x\f$ in the
@@ -1265,38 +1411,40 @@ namespace IdeoBEM
      * determined by @p kx_local_dof_permutation in the common edge case and
      * common vertex case.
      */
-    std::vector<Point<3>> kx_support_points_permuted;
+    std::vector<Point<spacedim, RangeNumberType>> kx_support_points_permuted;
     /**
      * Permuted list of support points in the real cell \f$K_y\f$ in the
      * lexicographic order in the same panel case and regular case, and
      * determined by @p ky_local_dof_permutation in the common edge case and
      * common vertex case.
      */
-    std::vector<Point<3>> ky_support_points_permuted;
+    std::vector<Point<spacedim, RangeNumberType>> ky_support_points_permuted;
 
     /**
      * The list of DoF indices in \f$K_x\f$ which are ordered in the
-     * hierarchical order. This is directly retrieved from the function
+     * default DoF order. This is directly retrieved from the function
      * @p DoFHandler::cell_iterator::get_dof_indices.
      */
-    std::vector<types::global_dof_index> kx_local_dof_indices_hierarchical;
+    std::vector<types::global_dof_index>
+      kx_local_dof_indices_in_default_dof_order;
     /**
      * The list of DoF indices in \f$K_y\f$ which are ordered in the
-     * hierarchical order. This is directly retrieved from the function
+     * default DoF order. This is directly retrieved from the function
      * @p DoFHandler::cell_iterator::get_dof_indices.
      */
-    std::vector<types::global_dof_index> ky_local_dof_indices_hierarchical;
+    std::vector<types::global_dof_index>
+      ky_local_dof_indices_in_default_dof_order;
 
     /**
      * The numbering used for accessing the list of DoFs in \f$K_x\f$ in the
-     * lexicographic order, where the list of DoFs are stored in the
-     * hierarchical order.
+     * lexicographic order, where the list of DoFs are stored in the default DoF
+     * order.
      */
     std::vector<unsigned int> kx_fe_poly_space_numbering_inverse;
     /**
      * The numbering used for accessing the list of DoFs in \f$K_y\f$ in the
-     * lexicographic order, where the list of DoFs are stored in the
-     * hierarchical order.
+     * lexicographic order, where the list of DoFs are stored in the default DoF
+     * order.
      */
     std::vector<unsigned int> ky_fe_poly_space_numbering_inverse;
     /**
@@ -1304,7 +1452,7 @@ namespace IdeoBEM
      * reversed lexicographic order, where the list of DoFs are stored in the
      * hierarchical order.
      *
-     * \mynote{This numbering occurs when \f$K_x\f$ and \f$K_y\f$ share a
+     * \mynote{This numbering occurs only when \f$K_x\f$ and \f$K_y\f$ share a
      * common edge.}
      */
     std::vector<unsigned int> ky_fe_reversed_poly_space_numbering_inverse;
@@ -1313,7 +1461,7 @@ namespace IdeoBEM
      * The numbering used for accessing the list of support points and
      * associated DoF indices in \f$K_x\f$ in the lexicographic order by
      * starting from a specific vertex, where the list of support points and
-     * associated DoF indices are stored in the hierarchical order.
+     * associated DoF indices are stored in the default DoF order.
      *
      * \mynote{"By starting from a specific vertex" means:
      * 1. In the same panel case, this numbering is not used because the first
@@ -1329,7 +1477,7 @@ namespace IdeoBEM
      * associated DoF indices in \f$K_y\f$ in the lexicographic order or the
      * reversed lexicographic order by starting from a specific vertex, where
      * the list of support points and associated DoF indices are stored in the
-     * hierarchical order.
+     * default DoF order.
      *
      * \mynote{"By starting from a specific vertex" means:
      * 1. In the same panel case, this numbering is not used because the first
@@ -1351,128 +1499,128 @@ namespace IdeoBEM
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the same panel case.
      */
-    Table<2, double> kx_jacobians_same_panel;
+    Table<dim, RangeNumberType> kx_jacobians_same_panel;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common edge case.
      */
-    Table<2, double> kx_jacobians_common_edge;
+    Table<dim, RangeNumberType> kx_jacobians_common_edge;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common vertex case.
      */
-    Table<2, double> kx_jacobians_common_vertex;
+    Table<dim, RangeNumberType> kx_jacobians_common_vertex;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the regular case.
      */
-    Table<2, double> kx_jacobians_regular;
+    Table<dim, RangeNumberType> kx_jacobians_regular;
 
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the same panel case.
      */
-    Table<2, Tensor<1, 3>> kx_normals_same_panel;
+    Table<dim, Tensor<1, spacedim, RangeNumberType>> kx_normals_same_panel;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the common edge case.
      */
-    Table<2, Tensor<1, 3>> kx_normals_common_edge;
+    Table<dim, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_edge;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the common vertex case.
      */
-    Table<2, Tensor<1, 3>> kx_normals_common_vertex;
+    Table<dim, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_vertex;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the regular case.
      */
-    Table<2, Tensor<1, 3>> kx_normals_regular;
+    Table<dim, Tensor<1, spacedim, RangeNumberType>> kx_normals_regular;
 
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the same panel case.
      */
-    Table<2, Point<3>> kx_quad_points_same_panel;
+    Table<dim, Point<spacedim, RangeNumberType>> kx_quad_points_same_panel;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common edge case.
      */
-    Table<2, Point<3>> kx_quad_points_common_edge;
+    Table<dim, Point<spacedim, RangeNumberType>> kx_quad_points_common_edge;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common vertex case.
      */
-    Table<2, Point<3>> kx_quad_points_common_vertex;
+    Table<dim, Point<spacedim, RangeNumberType>> kx_quad_points_common_vertex;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the regular case.
      */
-    Table<2, Point<3>> kx_quad_points_regular;
+    Table<dim, Point<spacedim, RangeNumberType>> kx_quad_points_regular;
 
 
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the same panel case.
      */
-    Table<2, double> ky_jacobians_same_panel;
+    Table<dim, RangeNumberType> ky_jacobians_same_panel;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common edge case.
      */
-    Table<2, double> ky_jacobians_common_edge;
+    Table<dim, RangeNumberType> ky_jacobians_common_edge;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common vertex case.
      */
-    Table<2, double> ky_jacobians_common_vertex;
+    Table<dim, RangeNumberType> ky_jacobians_common_vertex;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the regular case.
      */
-    Table<2, double> ky_jacobians_regular;
+    Table<dim, RangeNumberType> ky_jacobians_regular;
 
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the same panel case.
      */
-    Table<2, Tensor<1, 3>> ky_normals_same_panel;
+    Table<dim, Tensor<1, spacedim, RangeNumberType>> ky_normals_same_panel;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the common edge case.
      */
-    Table<2, Tensor<1, 3>> ky_normals_common_edge;
+    Table<dim, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_edge;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the common vertex case.
      */
-    Table<2, Tensor<1, 3>> ky_normals_common_vertex;
+    Table<dim, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_vertex;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the regular case.
      */
-    Table<2, Tensor<1, 3>> ky_normals_regular;
+    Table<dim, Tensor<1, spacedim, RangeNumberType>> ky_normals_regular;
 
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the same panel case.
      */
-    Table<2, Point<3>> ky_quad_points_same_panel;
+    Table<dim, Point<spacedim, RangeNumberType>> ky_quad_points_same_panel;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common edge case.
      */
-    Table<2, Point<3>> ky_quad_points_common_edge;
+    Table<dim, Point<spacedim, RangeNumberType>> ky_quad_points_common_edge;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common vertex case.
      */
-    Table<2, Point<3>> ky_quad_points_common_vertex;
+    Table<dim, Point<spacedim, RangeNumberType>> ky_quad_points_common_vertex;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the regular case.
      */
-    Table<2, Point<3>> ky_quad_points_regular;
+    Table<dim, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
 
     /**
      * Constructor
@@ -1481,16 +1629,16 @@ namespace IdeoBEM
      * @param ky_fe
      * @param bem_values
      */
-    PairCellWiseScratchData(const FiniteElement<2, 3> &kx_fe,
-                            const FiniteElement<2, 3> &ky_fe,
-                            const BEMValues<2, 3> &    bem_values)
-      : vertex_dof_index_intersection(0)
-      , kx_support_points_hierarchical(kx_fe.dofs_per_cell)
-      , ky_support_points_hierarchical(ky_fe.dofs_per_cell)
+    PairCellWiseScratchData(const FiniteElement<dim, spacedim> &kx_fe,
+                            const FiniteElement<dim, spacedim> &ky_fe,
+                            const BEMValues<dim, spacedim> &    bem_values)
+      : common_vertex_dof_indices(0)
+      , kx_support_points_in_default_dof_order(kx_fe.dofs_per_cell)
+      , ky_support_points_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_support_points_permuted(kx_fe.dofs_per_cell)
       , ky_support_points_permuted(ky_fe.dofs_per_cell)
-      , kx_local_dof_indices_hierarchical(kx_fe.dofs_per_cell)
-      , ky_local_dof_indices_hierarchical(ky_fe.dofs_per_cell)
+      , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
+      , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)
       , ky_fe_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
       , ky_fe_reversed_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
@@ -1533,14 +1681,20 @@ namespace IdeoBEM
           bem_values.quad_rule_for_common_vertex.size())
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
     {
-      vertex_dof_index_intersection.reserve(GeometryInfo<2>::vertices_per_cell);
+      common_vertex_dof_indices.reserve(GeometryInfo<dim>::vertices_per_cell);
 
       // Polynomial space inverse numbering for recovering the lexicographic
       // order.
+      const FE_Poly_short &kx_fe_poly =
+        dynamic_cast<const FE_Poly_short &>(kx_fe);
+      const FE_Poly_short &ky_fe_poly =
+        dynamic_cast<const FE_Poly_short &>(ky_fe);
+
       kx_fe_poly_space_numbering_inverse =
-        FETools::lexicographic_to_hierarchic_numbering(kx_fe);
+        kx_fe_poly.get_poly_space_numbering_inverse();
       ky_fe_poly_space_numbering_inverse =
-        FETools::lexicographic_to_hierarchic_numbering(ky_fe);
+        ky_fe_poly.get_poly_space_numbering_inverse();
+
       generate_backward_dof_permutation(
         ky_fe, 0, ky_fe_reversed_poly_space_numbering_inverse);
     }
@@ -1551,16 +1705,19 @@ namespace IdeoBEM
      *
      * @param scratch
      */
-    PairCellWiseScratchData(const PairCellWiseScratchData &scratch)
-      : vertex_dof_index_intersection(scratch.vertex_dof_index_intersection)
-      , kx_support_points_hierarchical(scratch.kx_support_points_hierarchical)
-      , ky_support_points_hierarchical(scratch.ky_support_points_hierarchical)
+    PairCellWiseScratchData(
+      const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch)
+      : common_vertex_dof_indices(scratch.common_vertex_dof_indices)
+      , kx_support_points_in_default_dof_order(
+          scratch.kx_support_points_in_default_dof_order)
+      , ky_support_points_in_default_dof_order(
+          scratch.ky_support_points_in_default_dof_order)
       , kx_support_points_permuted(scratch.kx_support_points_permuted)
       , ky_support_points_permuted(scratch.ky_support_points_permuted)
-      , kx_local_dof_indices_hierarchical(
-          scratch.kx_local_dof_indices_hierarchical)
-      , ky_local_dof_indices_hierarchical(
-          scratch.ky_local_dof_indices_hierarchical)
+      , kx_local_dof_indices_in_default_dof_order(
+          scratch.kx_local_dof_indices_in_default_dof_order)
+      , ky_local_dof_indices_in_default_dof_order(
+          scratch.ky_local_dof_indices_in_default_dof_order)
       , kx_fe_poly_space_numbering_inverse(
           scratch.kx_fe_poly_space_numbering_inverse)
       , ky_fe_poly_space_numbering_inverse(
@@ -1597,16 +1754,17 @@ namespace IdeoBEM
   };
 
 
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
   struct PairCellWisePerTaskData
   {
     /**
-     * Local matrix for the pair of cells for the DLP kernel.
+     * Local matrix for the pair of cells to be assembled into the global full
+     * matrix representation of the boundary integral operator.
+     *
+     * \comment{Therefore, this data field is only defined for verification.}
      */
-    FullMatrix<double> dlp_matrix;
-    /**
-     * Local matrix for the pair of cells for the SLP kernel.
-     */
-    FullMatrix<double> slp_matrix;
+    FullMatrix<RangeNumberType> local_pair_cell_matrix;
+
     /**
      * Permuted list of DoF indices in the cell \f$K_x\f$, each element of
      * which is associated with the corresponding element in
@@ -1626,10 +1784,9 @@ namespace IdeoBEM
      * @param kx_fe
      * @param ky_fe
      */
-    PairCellWisePerTaskData(const FiniteElement<2, 3> &kx_fe,
-                            const FiniteElement<2, 3> &ky_fe)
-      : dlp_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
-      , slp_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
+    PairCellWisePerTaskData(const FiniteElement<dim, spacedim> &kx_fe,
+                            const FiniteElement<dim, spacedim> &ky_fe)
+      : local_pair_cell_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
       , kx_local_dof_indices_permuted(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_permuted(ky_fe.dofs_per_cell)
     {}
@@ -1640,9 +1797,9 @@ namespace IdeoBEM
      *
      * @param task_data
      */
-    PairCellWisePerTaskData(const PairCellWisePerTaskData &task_data)
-      : dlp_matrix(task_data.dlp_matrix)
-      , slp_matrix(task_data.slp_matrix)
+    PairCellWisePerTaskData(
+      const PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &task_data)
+      : local_pair_cell_matrix(task_data.local_pair_cell_matrix)
       , kx_local_dof_indices_permuted(task_data.kx_local_dof_indices_permuted)
       , ky_local_dof_indices_permuted(task_data.ky_local_dof_indices_permuted)
     {}

@@ -1,6 +1,7 @@
 /**
  * @file bem_tools.h
  * @brief Introduction of bem_tools.h
+ * @ingroup bem_tools
  *
  * @date 2022-03-03
  * @author Jihuan Tian
@@ -30,7 +31,11 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <map>
+#include <utility>
 #include <vector>
+
+#include "generic_functors.h"
 
 using namespace dealii;
 
@@ -38,20 +43,115 @@ namespace IdeoBEM
 {
   namespace BEMTools
   {
+    /**
+     * Different cell neighboring types
+     */
     enum CellNeighboringType
     {
-      SamePanel,
-      CommonEdge,
-      CommonVertex,
-      Regular,
-      None
+      SamePanel,    //!< SamePanel
+      CommonEdge,   //!< CommonEdge
+      CommonVertex, //!< CommonVertex
+      Regular,      //!< Regular
+      None          //!< None
     };
 
 
     /**
+     * Different scenarios for detecting cell neighboring types
+     */
+    enum DetectCellNeighboringTypeMethod
+    {
+      SameDoFHandlers,         //!< SameDoFHandlers
+      SameTriangulations,      //!< SameTriangulations
+      DifferentTriangulations, //!< DifferentTriangulations
+    };
+
+
+    /**
+     * Get the string representation of the cell neighboring type.
+     *
+     * @param s
+     * @return
+     */
+    inline const char *
+    cell_neighboring_type_name(CellNeighboringType n)
+    {
+      switch (n)
+        {
+          case SamePanel:
+            return "same panel";
+          case CommonEdge:
+            return "common edge";
+          case CommonVertex:
+            return "common vertex";
+          case Regular:
+            return "disjoint";
+          default:
+            return "unknown";
+        }
+    }
+
+
+    /**
+     * Permute a vector by using the given permutation indices to access its
+     * elements.
+     *
+     * @param input_vector
+     * @param permutation_indices
+     * @return Permuted vector
+     */
+    template <typename T>
+    std::vector<T>
+    permute_vector(const std::vector<T> &           input_vector,
+                   const std::vector<unsigned int> &permutation_indices)
+    {
+      const unsigned int N = input_vector.size();
+      Assert(N == permutation_indices.size(),
+             ExcDimensionMismatch(N, permutation_indices.size()));
+
+      std::vector<T> permuted_vector(N);
+
+      for (unsigned int i = 0; i < N; i++)
+        {
+          permuted_vector[i] = input_vector[permutation_indices[i]];
+        }
+
+      return permuted_vector;
+    }
+
+
+    /**
+     * Permute a vector by using the given permutation indices to access its
+     * elements. The result vector is returned as argument.
+     *
+     * @param input_vector
+     * @param permutation_indices
+     * @param permuted_vector Permuted vector, the memory of which should be
+     * pre-allocated.
+     */
+    template <typename T>
+    void
+    permute_vector(const std::vector<T> &           input_vector,
+                   const std::vector<unsigned int> &permutation_indices,
+                   std::vector<T> &                 permuted_vector)
+    {
+      const unsigned int N = input_vector.size();
+      Assert(N == permutation_indices.size(),
+             ExcDimensionMismatch(N, permutation_indices.size()));
+      Assert(N == permuted_vector.size(),
+             ExcDimensionMismatch(N, permuted_vector.size()));
+
+      for (unsigned int i = 0; i < N; i++)
+        {
+          permuted_vector[i] = input_vector[permutation_indices[i]];
+        }
+    }
+
+
+    /**
      * This function returns a list of DoF indices in the given cell iterator,
-     * which is used for checking if two cells associated the iterators have
-     * interaction. This function is called by @p GraphColoring::make_graph_coloring.
+     * which is used for checking if the two cells have interaction. This
+     * function is called by @p GraphColoring::make_graph_coloring.
      *
      * Reference:
      * http://localhost/dealii-9.1.1-doc/namespaceGraphColoring.html#a670720d11f544a762592112ae5213876
@@ -59,7 +159,7 @@ namespace IdeoBEM
      * @param cell
      * @return
      */
-    template <int dim, int spacedim>
+    template <int dim, int spacedim = dim>
     std::vector<types::global_dof_index>
     get_conflict_indices(
       const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell)
@@ -74,15 +174,80 @@ namespace IdeoBEM
 
 
     /**
+     * Get the local index of the given vertex in the list of vertices of the
+     * cell by raw comparison of vertex coordinates.
+     *
+     * \mynote{The template parameter @p dim cannot be deduced from the
+     * arguments.}
+     *
+     * @param v
+     * @param cell
+     * @return
+     */
+    template <int dim, int spacedim = dim>
+    unsigned int
+    get_vertex_local_index_in_cell(
+      const Point<spacedim> &                                     v,
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell)
+    {
+      const unsigned int vertices_per_cell =
+        GeometryInfo<dim>::vertices_per_cell;
+
+      unsigned int i = 0;
+      for (; i < vertices_per_cell; i++)
+        {
+          if (is_equal(v, cell->vertex(i)))
+            {
+              break;
+            }
+        }
+
+      return i;
+    }
+
+
+    /**
+     * Get the local index of the given vertex in the list of vertices of the
+     * cell by numerical comparison of vertex coordinates.
+     *
+     * \mynote{The template parameter @p dim cannot be deduced from the
+     * arguments.}
+     *
+     * @param v
+     * @param cell
+     * @return
+     */
+    template <int dim, int spacedim = dim>
+    unsigned int
+    get_vertex_local_index_in_cell(
+      const Point<spacedim> &                                     v,
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const double                                                threshold)
+    {
+      unsigned int i = 0;
+      for (; i < GeometryInfo<dim>::vertices_per_cell; i++)
+        {
+          if (is_equal(v, cell->vertex(i), threshold))
+            {
+              break;
+            }
+        }
+
+      return i;
+    }
+
+
+    /**
      * Return a list of global vertex indices for all the vertices in the given
-     * cell.
+     * cell pointed by the cell iterator obtained from a triangulation. The
+     * result is obtained via the return value.
      *
      * @param cell
      * @return
      */
-    template <int dim, int spacedim>
+    template <int dim, int spacedim = dim>
     std::array<types::global_vertex_index, GeometryInfo<dim>::vertices_per_cell>
-    get_vertex_indices(
+    get_vertex_indices_in_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell)
     {
       std::array<types::global_vertex_index,
@@ -99,37 +264,1623 @@ namespace IdeoBEM
 
 
     /**
-     * Return a list of global DoF indices associated with all the vertices in
-     * the given cell.
+     * Return a list of global vertex indices for all the vertices in the given
+     * cell pointed by the cell iterator obtained from a triangulation. The
+     * result is obtained via argument by reference.
+     *
+     * @param cell
+     * @param cell_vertex_indices
+     */
+    template <int dim, int spacedim = dim>
+    void
+    get_vertex_indices_in_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      std::array<types::global_vertex_index,
+                 GeometryInfo<dim>::vertices_per_cell> &cell_vertex_indices)
+    {
+      for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_cell; v++)
+        {
+          cell_vertex_indices[v] = cell->vertex_index(v);
+        }
+    }
+
+
+    /**
+     * Return a list of global vertex indices for all the vertices in the given
+     * face pointed by the face iterator obtained from a triangulation. The
+     * result is obtained via the return value.
+     *
+     * \mynote{The dimension of the face is @p dim-1.}
+     *
+     * @param face
+     * @return
+     */
+    template <int dim, int spacedim = dim>
+    std::array<types::global_vertex_index, GeometryInfo<dim>::vertices_per_face>
+    get_vertex_indices_in_face(
+      const typename Triangulation<dim, spacedim>::face_iterator &face)
+    {
+      std::array<types::global_vertex_index,
+                 GeometryInfo<dim>::vertices_per_face>
+        face_vertex_indices;
+
+      for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_face; v++)
+        {
+          face_vertex_indices[v] = face->vertex_index(v);
+        }
+
+      return face_vertex_indices;
+    }
+
+
+    /**
+     * Return a list of global vertex indices for all the vertices in the given
+     * face pointed by the face iterator obtained from a triangulation. The
+     * result is obtained via argument by reference.
+     *
+     * \mynote{The dimension of the face is @p dim-1.}
+     *
+     * @param face
+     * @param face_vertex_indices
+     */
+    template <int dim, int spacedim = dim>
+    void
+    get_vertex_indices_in_face(
+      const typename Triangulation<dim, spacedim>::face_iterator &face,
+      std::array<types::global_vertex_index,
+                 GeometryInfo<dim>::vertices_per_face> &face_vertex_indices)
+    {
+      for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_face; v++)
+        {
+          face_vertex_indices[v] = face->vertex_index(v);
+        }
+    }
+
+
+    /**
+     * Calculate the distance between the centers of two cells.
+     *
+     * @param first_cell
+     * @param second_cell
+     * @return
+     */
+    template <int dim, int spacedim, typename Number = double>
+    Number
+    cell_distance(
+      const typename Triangulation<dim, spacedim>::cell_iterator first_cell,
+      const typename Triangulation<dim, spacedim>::cell_iterator second_cell)
+    {
+      return first_cell->center().distance(second_cell->center());
+    }
+
+
+    /**
+     * Calculates the matrix which stores shape function gradient values with
+     * respect to area coordinates. Each row of the matrix is the gradient of
+     * one of the shape functions. The order of the matrix rows corresponding to
+     * the shape function gradients is determined by the given numbering
+     * @p dof_permuation.
+     *
+     * \mynote{The support points, shape functions and DoFs in the finite
+     * element are enumerated in the hierarchic order for the continuous
+     * element @p FE_Q, while the discontinuous element @p FE_DGQ adopts the
+     * lexicographic order.}
+     *
+     * @param fe
+     * @param dof_permutation The numbering for accessing the shape functions in
+     * the specified order.
+     * @param p The area coordinates at which the shape function's gradient is to be
+     * evaluated.
+     * @return The matrix storing the gradient of each shape function. Its
+     * dimension is @p dofs_per_cell*dim.
+     */
+    template <int dim, int spacedim>
+    FullMatrix<double>
+    shape_grad_matrix(const FiniteElement<dim, spacedim> &fe,
+                      const std::vector<unsigned int> &   dof_permutation,
+                      const Point<dim> &                  p)
+    {
+      FullMatrix<double> shape_grad_matrix(fe.dofs_per_cell, dim);
+
+      for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
+        {
+          // The gradient of a shape function as a tensor.
+          Tensor<1, dim> shape_grad_tensor =
+            fe.shape_grad(dof_permutation[i], p);
+          // Assign the gradient of the shape function to the matrix.
+          for (unsigned int j = 0; j < dim; j++)
+            {
+              shape_grad_matrix(i, j) = shape_grad_tensor[j];
+            }
+        }
+
+      return shape_grad_matrix;
+    }
+
+
+    /**
+     * Calculate the matrix which stores shape function gradient values with
+     * respect to area coordinates. Each row of the matrix is the gradient of
+     * one of the shape functions. The matrix rows corresponding to the shape
+     * function gradients are arranged in the default DoF order.
+     *
+     * \mynote{The support points, shape functions and DoFs in the finite
+     * element are enumerated in the hierarchic order for the continuous
+     * element @p FE_Q, while the discontinuous element @p FE_DGQ adopts the
+     * lexicographic order.}
+     *
+     * @param fe
+     * @param p The area coordinates at which the shape function's gradient is to be
+     * evaluated.
+     * @return The matrix storing the gradient of each shape function. Its
+     * dimension is @p dofs_per_cell*dim.
+     */
+    template <int dim, int spacedim>
+    FullMatrix<double>
+    shape_grad_matrix_in_default_dof_order(
+      const FiniteElement<dim, spacedim> &fe,
+      const Point<dim> &                  p)
+    {
+      FullMatrix<double> shape_grad_matrix(fe.dofs_per_cell, dim);
+
+      for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
+        {
+          // The gradient of a shape function as a tensor.
+          Tensor<1, dim> shape_grad_tensor = fe.shape_grad(i, p);
+          // Assign the gradient of the shape function to the matrix.
+          for (unsigned int j = 0; j < dim; j++)
+            {
+              shape_grad_matrix(i, j) = shape_grad_tensor[j];
+            }
+        }
+
+      return shape_grad_matrix;
+    }
+
+
+    /**
+     * Calculate the matrix which stores shape function gradient values with
+     * respect to area coordinates. Each row of the matrix is the gradient of
+     * one of the shape functions. The matrix rows corresponding to the shape
+     * function gradients are arranged in the lexicographic order.
+     *
+     * \mynote{The support points, shape functions and DoFs in the finite
+     * element are enumerated in the hierarchic order for the continuous
+     * element @p FE_Q, while the discontinuous element @p FE_DGQ adopts the
+     * lexicographic order.}
+     *
+     * @param fe
+     * @param p The area coordinates at which the shape function's gradient is to be
+     * evaluated.
+     * @return The matrix storing the gradient of each shape function. Its
+     * dimension is @p dofs_per_cell*dim.
+     */
+    template <int dim, int spacedim>
+    FullMatrix<double>
+    shape_grad_matrix_in_lexicographic_order(
+      const FiniteElement<dim, spacedim> &fe,
+      const Point<dim> &                  p)
+    {
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      return shape_grad_matrix(fe,
+                               fe_poly.get_poly_space_numbering_inverse(),
+                               p);
+    }
+
+
+    /**
+     * Evaluate a list of shape functions at the specified area coordinates. The
+     * shape functions are arranged in the order specified by @p dof_permutation.
+     *
+     * @param fe
+     * @param dof_permutation The numbering for accessing the shape functions in
+     * the specified order.
+     * @param p The area coordinates at which the shape functions are to be
+     * evaluated.
+     * @return A list of shape function values.
+     */
+    template <int dim, int spacedim>
+    Vector<double>
+    shape_values(const FiniteElement<dim, spacedim> &fe,
+                 const std::vector<unsigned int> &   dof_permutation,
+                 const Point<dim> &                  p)
+    {
+      Vector<double> shape_values_vector(fe.dofs_per_cell);
+
+      for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
+        {
+          shape_values_vector(i) = fe.shape_value(dof_permutation[i], p);
+        }
+
+      return shape_values_vector;
+    }
+
+
+    /**
+     * Evaluate a list of shape functions at the specified area coordinates in
+     * the default DoF order.
+     *
+     * \mynote{The support points, shape functions and DoFs in the finite
+     * element are enumerated in the hierarchic order for the continuous
+     * element @p FE_Q, while the discontinuous element @p FE_DGQ adopts the
+     * lexicographic order.}
+     *
+     * @param fe
+     * @param p The area coordinates at which the shape functions are to be
+     * evaluated.
+     * @return A list of shape function values.
+     */
+    template <int dim, int spacedim>
+    Vector<double>
+    shape_values_in_default_dof_order(const FiniteElement<dim, spacedim> &fe,
+                                      const Point<dim> &                  p)
+    {
+      Vector<double> shape_values_vector(fe.dofs_per_cell);
+
+      for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
+        {
+          shape_values_vector(i) = fe.shape_value(i, p);
+        }
+
+      return shape_values_vector;
+    }
+
+
+    /**
+     * Evaluate a list of shape functions at the specified area coordinates in
+     * the lexicographic order.
+     *
+     * \mynote{The support points, shape functions and DoFs in the finite
+     * element are enumerated in the hierarchic order for the continuous
+     * element @p FE_Q, while the discontinuous element @p FE_DGQ adopts the
+     * lexicographic order.}
+     *
+     * @param fe
+     * @param p The area coordinates at which the shape functions are to be
+     * evaluated.
+     * @return A list of shape function values.
+     */
+    template <int dim, int spacedim>
+    Vector<double>
+    shape_values_in_lexicographic_order(const FiniteElement<dim, spacedim> &fe,
+                                        const Point<dim> &                  p)
+    {
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      // Use the inverse numbering of polynomial space to restore the tensor
+      // product ordering of shape functions.
+      return shape_values(fe, fe_poly.get_poly_space_numbering_inverse(), p);
+    }
+
+
+    /**
+     * Collect two coordinate components from the list of points in 3D space.
+     *
+     * \mynote{This function is useful in constructing the surface metric tensor
+     * or surface normal vector.}
+     *
+     * @param points A list of points in 3D space
+     * @param first_component Index for the first coordinate component to be
+     * collected
+     * @param second_component Index for the second coordinate component to be
+     * collected
+     * @return A matrix storing the two coordinate components for all points. It
+     * has a dimension @p 2*points.size().
+     */
+    template <int spacedim>
+    FullMatrix<double>
+    collect_two_components_from_point3(
+      const std::vector<Point<spacedim>> &points,
+      const unsigned int                  first_component,
+      const unsigned int                  second_component)
+    {
+      Assert(first_component < 3, ExcInternalError());
+      Assert(second_component < 3, ExcInternalError());
+
+      FullMatrix<double> two_component_coords(2, points.size());
+
+      for (unsigned int i = 0; i < points.size(); i++)
+        {
+          two_component_coords(0, i) = points[i](first_component);
+          two_component_coords(1, i) = points[i](second_component);
+        }
+
+      return two_component_coords;
+    }
+
+
+    /**
+     * Get the list of unit support points in the finite element, which is
+     * ordered according to the specified permutation. The results are obtained
+     * via the return value.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param fe
+     * @param dof_permutation
+     * @return
+     */
+    template <int dim, int spacedim = dim>
+    std::vector<Point<dim>>
+    get_unit_support_points_with_permutation(
+      const FiniteElement<dim, spacedim> &fe,
+      const std::vector<unsigned int> &   dof_permutation)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int dofs_per_cell = fe.dofs_per_cell;
+      AssertDimension(dofs_per_cell, dof_permutation.size());
+
+      std::vector<Point<dim>> permuted_unit_support_points(dofs_per_cell);
+
+      /**
+       * Get the list of support points in the unit cell in the default DoF
+       * ordering.
+       */
+      const std::vector<Point<dim>> &unit_support_points =
+        fe.get_unit_support_points();
+
+      for (unsigned int i = 0; i < dofs_per_cell; i++)
+        {
+          permuted_unit_support_points[i] =
+            unit_support_points[dof_permutation[i]];
+        }
+
+      return permuted_unit_support_points;
+    }
+
+
+    /**
+     * Get the list of unit support points in the finite element, which is
+     * ordered according to the specified permutation. The results are obtained
+     * as argument by reference.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param fe
+     * @param dof_permutation
+     * @param permuted_unit_support_points Returned list of permuted unit
+     * support points, the memory of which should be preallocated.
+     */
+    template <int dim, int spacedim = dim>
+    void
+    get_unit_support_points_with_permutation(
+      const FiniteElement<dim, spacedim> &fe,
+      const std::vector<unsigned int> &   dof_permutation,
+      std::vector<Point<dim>> &           permuted_unit_support_points)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int dofs_per_cell = fe.dofs_per_cell;
+      AssertDimension(dofs_per_cell, dof_permutation.size());
+      AssertDimension(dofs_per_cell, permuted_unit_support_points.size());
+
+      /**
+       * Get the list of support points in the unit cell in the default DoF
+       * ordering.
+       */
+      const std::vector<Point<dim>> &unit_support_points =
+        fe.get_unit_support_points();
+
+      for (unsigned int i = 0; i < dofs_per_cell; i++)
+        {
+          permuted_unit_support_points[i] =
+            unit_support_points[dof_permutation[i]];
+        }
+    }
+
+
+    /**
+     * Get the list of unit support points in the lexicographic order in the
+     * finite element. The results are obtained via the return value.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param fe
+     * @return
+     */
+    template <int dim, int spacedim = dim>
+    std::vector<Point<dim>>
+    get_lexicographic_unit_support_points(
+      const FiniteElement<dim, spacedim> &fe)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int      dofs_per_cell = fe.dofs_per_cell;
+      std::vector<Point<dim>> lexicographic_unit_support_points(dofs_per_cell);
+
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      lexicographic_unit_support_points =
+        get_unit_support_points_with_permutation(
+          fe, fe_poly.get_poly_space_numbering_inverse());
+
+      return lexicographic_unit_support_points;
+    }
+
+
+    /**
+     * Get the list of unit support points in the lexicographic order in the
+     * finite element. The results are obtained via argument by reference.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param fe
+     * @param lexicographic_unit_support_points Returned list of unit support
+     * points in the lexicographic order, the memory of which should be
+     * preallocated.
+     */
+    template <int dim, int spacedim = dim>
+    void
+    get_lexicographic_unit_support_points(
+      const FiniteElement<dim, spacedim> &fe,
+      std::vector<Point<dim>> &           lexicographic_unit_support_points)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int dofs_per_cell = fe.dofs_per_cell;
+      AssertDimension(dofs_per_cell, lexicographic_unit_support_points.size());
+
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      get_unit_support_points_with_permutation(
+        fe,
+        fe_poly.get_poly_space_numbering_inverse(),
+        lexicographic_unit_support_points);
+    }
+
+
+    /**
+     * Calculate a list of support points in the real cell in the order
+     * specified by @p dof_permutation. The results are returned via the return
+     * value.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param cell
+     * @param fe
+     * @param mapping Geometric mapping object used for transforming support
+     * points from the unit cell to the real cell.
+     * @param dof_permutation The numbering for accessing the support points in
+     * the specified order.
+     * @return A list of support points in the real cell.
+     *
+     * \mynote{N.B. Each support point in the real cell has the space
+     * dimension
+     * @p spacedim, while each support point in the unit cell has the manifold
+     * dimension @p dim.}
+     */
+    template <int dim, int spacedim = dim>
+    std::vector<Point<spacedim>>
+    get_support_points_in_real_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const FiniteElement<dim, spacedim> &                        fe,
+      const MappingQGeneric<dim, spacedim> &                      mapping,
+      const std::vector<unsigned int> &dof_permutation)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int           dofs_per_cell = fe.dofs_per_cell;
+      std::vector<Point<spacedim>> support_points_in_real_cell(dofs_per_cell);
+
+      /**
+       * Get the list of support points in the unit cell in the default DoF
+       * ordering.
+       */
+      const std::vector<Point<dim>> &unit_support_points =
+        fe.get_unit_support_points();
+
+      /**
+       * Transform the support points from unit cell to real cell via the
+       * @p mapping object. The support points in the original default DoF
+       * ordering are permuted according to @p dof_permutation.
+       */
+      for (unsigned int i = 0; i < dofs_per_cell; i++)
+        {
+          support_points_in_real_cell[i] = mapping.transform_unit_to_real_cell(
+            cell, unit_support_points.at(dof_permutation[i]));
+        }
+
+      return support_points_in_real_cell;
+    }
+
+
+    /**
+     * Calculate a list of support points in the real cell in the order
+     * specified by @p dof_permutation. The results are returned via argument
+     * by reference.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param cell
+     * @param fe
+     * @param mapping
+     * @param dof_permutation
+     * @param support_points_in_real_cell
+     */
+    template <int dim, int spacedim = dim>
+    void
+    get_support_points_in_real_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const FiniteElement<dim, spacedim> &                        fe,
+      const MappingQGeneric<dim, spacedim> &                      mapping,
+      const std::vector<unsigned int> &dof_permutation,
+      std::vector<Point<spacedim>> &   support_points_in_real_cell)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int dofs_per_cell = fe.dofs_per_cell;
+      AssertDimension(dofs_per_cell, support_points_in_real_cell.size());
+
+      /**
+       * Get the list of support points in the unit cell in the default DoF
+       * ordering.
+       */
+      const std::vector<Point<dim>> &unit_support_points =
+        fe.get_unit_support_points();
+
+      /**
+       * Transform the support points from unit cell to real cell via the
+       * @p mapping object. The support points in the original default DoF
+       * ordering are permuted according to @p dof_permutation.
+       */
+      for (unsigned int i = 0; i < dofs_per_cell; i++)
+        {
+          support_points_in_real_cell[i] = mapping.transform_unit_to_real_cell(
+            cell, unit_support_points.at(dof_permutation[i]));
+        }
+    }
+
+
+    /**
+     * Calculate a list of support points in the real cell in the default
+     * DoF order.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param cell
+     * @param fe
+     * @param mapping Geometric mapping object used for transforming support
+     * points from the unit cell to the real cell.
+     * @return A list of support points in the real cell in the default DoF order.
+     *
+     * \mynote{N.B. Each support point in the real cell has the space dimension
+     * @p spacedim, while each support point in the unit cell has the manifold
+     * dimension @p dim.}
+     */
+    template <int dim, int spacedim>
+    std::vector<Point<spacedim>>
+    get_support_points_in_default_dof_order_in_real_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const FiniteElement<dim, spacedim> &                        fe,
+      const MappingQGeneric<dim, spacedim> &                      mapping)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int           dofs_per_cell = fe.dofs_per_cell;
+      std::vector<Point<spacedim>> support_points_in_real_cell(dofs_per_cell);
+
+      // Get the list of support points in the unit cell in the default
+      // hierarchical ordering.
+      const std::vector<Point<dim>> &unit_support_points =
+        fe.get_unit_support_points();
+
+      // Transform the support points from unit cell to real cell.
+      for (unsigned int i = 0; i < dofs_per_cell; i++)
+        {
+          support_points_in_real_cell[i] =
+            mapping.transform_unit_to_real_cell(cell, unit_support_points[i]);
+        }
+
+      return support_points_in_real_cell;
+    }
+
+
+    /**
+     * Calculate a list of support points in the real cell in the default
+     * DoF order.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param cell
+     * @param fe
+     * @param mapping Geometric mapping object used for transforming support
+     * points from the unit cell to the real cell.
+     * @param support_points_in_real_cell A list of support points in the real
+     * cell in the hierarchic order, the memory of which should be preallocated.
+     *
+     * \mynote{N.B. Each support point in the real cell has the space dimension
+     * @p spacedim, while each support point in the unit cell has the manifold
+     * dimension @p dim.}
+     */
+    template <int dim, int spacedim>
+    void
+    get_support_points_in_default_dof_order_in_real_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const FiniteElement<dim, spacedim> &                        fe,
+      const MappingQGeneric<dim, spacedim> &                      mapping,
+      std::vector<Point<spacedim>> &support_points_in_reall_cell)
+    {
+      const unsigned int dofs_per_cell = fe.dofs_per_cell;
+
+      Assert(support_points_in_reall_cell.size() == dofs_per_cell,
+             ExcDimensionMismatch(support_points_in_reall_cell.size(),
+                                  dofs_per_cell));
+
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      // Get the list of support points in the unit cell in the default
+      // hierarchical ordering.
+      const std::vector<Point<dim>> &unit_support_points =
+        fe.get_unit_support_points();
+
+      // Transform the support points from unit cell to real cell.
+      for (unsigned int i = 0; i < dofs_per_cell; i++)
+        {
+          support_points_in_reall_cell[i] =
+            mapping.transform_unit_to_real_cell(cell, unit_support_points[i]);
+        }
+    }
+
+
+    /**
+     * Calculate a list of support points in the real cell in the lexicographic
+     * order. The results are obtained via the return value.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param cell
+     * @param fe
+     * @param mapping Geometric mapping object used for transforming support
+     * points from the unit cell to the real cell.
+     * @return A list of support points in the real cell in the lexicographic
+     * order.
+     *
+     * \mynote{N.B. Each support point in the real cell has the space dimension
+     * @p spacedim, while each support point in the unit cell has the manifold
+     * dimension @p dim.}
+     */
+    template <int dim, int spacedim>
+    std::vector<Point<spacedim>>
+    get_lexicographic_support_points_in_real_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const FiniteElement<dim, spacedim> &                        fe,
+      const MappingQGeneric<dim, spacedim> &                      mapping)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int           dofs_per_cell = fe.dofs_per_cell;
+      std::vector<Point<spacedim>> support_points_in_real_cell(dofs_per_cell);
+
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      support_points_in_real_cell = get_support_points_in_real_cell(
+        cell, fe, mapping, fe_poly.get_poly_space_numbering_inverse());
+
+      return support_points_in_real_cell;
+    }
+
+
+    /**
+     * Calculate a list of support points in the real cell in the lexicographic
+     * order. The results are obtained via argument by reference.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param cell
+     * @param fe
+     * @param mapping
+     * @param support_points_in_real_cell Returned list of support points in the
+     * lexicographic order in the real cell, the memory of which should be
+     * preallocated.
+     */
+    template <int dim, int spacedim>
+    void
+    get_lexicographic_support_points_in_real_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const FiniteElement<dim, spacedim> &                        fe,
+      const MappingQGeneric<dim, spacedim> &                      mapping,
+      std::vector<Point<spacedim>> &support_points_in_real_cell)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      const unsigned int dofs_per_cell = fe.dofs_per_cell;
+      AssertDimension(dofs_per_cell, support_points_in_real_cell.size());
+
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      get_support_points_in_real_cell(
+        cell,
+        fe,
+        mapping,
+        fe_poly.get_poly_space_numbering_inverse(),
+        support_points_in_real_cell);
+    }
+
+
+    template <int dim, int spacedim = dim>
+    unsigned int
+    get_dofs_per_face_for_fe(const FiniteElement<dim, spacedim> &fe)
+    {
+      if (fe.conforms(FiniteElementData<dim>::H1))
+        {
+          Assert(
+            fe.dofs_per_face > 0,
+            ExcMessage(
+              "H1 finite element should have non-zero number of DoFs per face!"));
+
+          return fe.dofs_per_face;
+        }
+      else if (fe.conforms(FiniteElementData<dim>::L2))
+        {
+          Assert(fe.dofs_per_face == 0,
+                 ExcMessage(
+                   "L2 finite element should have zero DoFs per face!"));
+
+          switch (dim)
+            {
+              case 1:
+                {
+                  return 1;
+                }
+              case 2:
+                {
+                  return fe.degree + 1;
+                }
+              case 3:
+                {
+                  return (fe.degree + 1) * (fe.degree + 1);
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  return 0;
+                }
+            }
+        }
+      else
+        {
+          Assert(false, ExcNotImplemented());
+          return 0;
+        }
+    }
+
+
+    /**
+     * Get the list of vertex coordinates from a list of unit support points in
+     * the lexicographic order. The results are obtained via the return value.
+     *
+     * If @p is_counter_clockwise_ordered is @p true when @p dim==2, the last
+     * two vertices will be swapped.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param fe
+     * @return
+     */
+    template <int dim, int spacedim>
+    std::array<Point<dim>, GeometryInfo<dim>::vertices_per_cell>
+    get_vertices_from_lexicographic_unit_support_points(
+      const FiniteElement<dim, spacedim> &fe,
+      const bool                          is_counter_clockwise_ordered = false)
+    {
+      /**
+       * Get the list of unit support points in the lexicographic order.
+       */
+      std::vector<Point<dim>> unit_support_points(
+        get_lexicographic_unit_support_points(fe));
+
+      std::array<Point<dim>, GeometryInfo<dim>::vertices_per_cell> vertices;
+
+      const unsigned int dofs_per_face = get_dofs_per_face_for_fe(fe);
+
+      switch (dim)
+        {
+          case 1:
+            {
+              vertices[0] = unit_support_points[0];
+              vertices[1] = unit_support_points[unit_support_points.size() - 1];
+
+              break;
+            }
+          case 2:
+            {
+              vertices[0] = unit_support_points[0];
+              vertices[1] = unit_support_points[dofs_per_face - 1];
+
+              if (is_counter_clockwise_ordered)
+                {
+                  /**
+                   * Swap the last two vertices so that all the vertices are
+                   * ordered counter clockwise.
+                   */
+                  vertices[2] =
+                    unit_support_points[unit_support_points.size() - 1];
+                  vertices[3] = unit_support_points[unit_support_points.size() -
+                                                    1 - (dofs_per_face - 1)];
+                }
+              else
+                {
+                  vertices[2] = unit_support_points[unit_support_points.size() -
+                                                    1 - (dofs_per_face - 1)];
+                  vertices[3] =
+                    unit_support_points[unit_support_points.size() - 1];
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false, ExcNotImplemented());
+
+              break;
+            }
+        }
+
+      return vertices;
+    }
+
+
+    /**
+     * Get the list of vertex coordinates from a list of unit support points in
+     * the lexicographic order. The results are obtained via argument by
+     * reference.
+     *
+     * If @p is_counter_clockwise_ordered is @p true when @p dim==2, the last
+     * two vertices will be swapped.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param fe
+     * @param vertices
+     * @param is_counter_clockwise_ordered
+     */
+    template <int dim, int spacedim>
+    void
+    get_vertices_from_lexicographic_unit_support_points(
+      const FiniteElement<dim, spacedim> &                          fe,
+      std::array<Point<dim>, GeometryInfo<dim>::vertices_per_cell> &vertices,
+      const bool is_counter_clockwise_ordered = false)
+    {
+      /**
+       * Get the list of unit support points in the lexicographic order.
+       */
+      std::vector<Point<dim>> unit_support_points(
+        get_lexicographic_unit_support_points(fe));
+
+      const unsigned int dofs_per_face = get_dofs_per_face_for_fe(fe);
+
+      switch (dim)
+        {
+          case 1:
+            {
+              vertices[0] = unit_support_points[0];
+              vertices[1] = unit_support_points[unit_support_points.size() - 1];
+
+              break;
+            }
+          case 2:
+            {
+              vertices[0] = unit_support_points[0];
+              vertices[1] = unit_support_points[dofs_per_face - 1];
+
+              if (is_counter_clockwise_ordered)
+                {
+                  vertices[2] =
+                    unit_support_points[unit_support_points.size() - 1];
+                  vertices[3] = unit_support_points[unit_support_points.size() -
+                                                    1 - (dofs_per_face - 1)];
+                }
+              else
+                {
+                  vertices[2] = unit_support_points[unit_support_points.size() -
+                                                    1 - (dofs_per_face - 1)];
+                  vertices[3] =
+                    unit_support_points[unit_support_points.size() - 1];
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false, ExcNotImplemented());
+
+              break;
+            }
+        }
+    }
+
+
+    /**
+     * Get the list of vertex coordinates from a list of support points in the
+     * real cell in the lexicographic order. The results are obtained via the
+     * return value.
+     *
+     * If @p is_counter_clockwise_ordered is @p true when @p dim==2, the last
+     * two vertices will be swapped.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param cell
+     * @param fe
+     * @param mapping
+     * @param is_counter_clockwise_ordered
+     * @return
+     */
+    template <int dim, int spacedim>
+    std::array<Point<spacedim>, GeometryInfo<dim>::vertices_per_cell>
+    get_vertices_from_lexicographic_support_points_in_real_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const FiniteElement<dim, spacedim> &                        fe,
+      const Mapping<dim, spacedim> &                              mapping,
+      const bool is_counter_clockwise_ordered = false)
+    {
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      /**
+       * Extract the list of support points at vertices in the unit cell.
+       */
+      const unsigned int vertices_per_cell =
+        GeometryInfo<dim>::vertices_per_cell;
+      std::array<Point<dim>, vertices_per_cell> vertices_in_unit_cell;
+      get_vertices_from_lexicographic_unit_support_points(
+        fe, vertices_in_unit_cell, is_counter_clockwise_ordered);
+
+      /**
+       * Map the support points from the unit cell to the real cell.
+       */
+      std::array<Point<spacedim>, vertices_per_cell> vertices_in_real_cell;
+      for (unsigned int v = 0; v < vertices_per_cell; v++)
+        {
+          vertices_in_real_cell[v] =
+            mapping.transform_unit_to_real_cell(cell, vertices_in_unit_cell[v]);
+        }
+
+      return vertices_in_real_cell;
+    }
+
+
+    /**
+     * Get the list of vertex coordinates from a list of support points in the
+     * real cell in the lexicographic order. The results are obtained via
+     * argument by reference.
+     *
+     * If @p is_counter_clockwise_ordered is @p true when @p dim==2, the last
+     * two vertices will be swapped.
+     *
+     * \ingroup support_points_manip
+     *
+     * @param cell
+     * @param fe
+     * @param mapping
+     * @param vertices_in_real_cell
+     * @param is_counter_clockwise_ordered
+     */
+    template <int dim, int spacedim>
+    void
+    get_vertices_from_lexicographic_support_points_in_real_cell(
+      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
+      const FiniteElement<dim, spacedim> &                        fe,
+      const Mapping<dim, spacedim> &                              mapping,
+      std::array<Point<spacedim>, GeometryInfo<dim>::vertices_per_cell>
+        &        vertices_in_real_cell,
+      const bool is_counter_clockwise_ordered = false)
+    {
+      const unsigned int vertices_per_cell =
+        GeometryInfo<dim>::vertices_per_cell;
+
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+      AssertDimension(vertices_in_real_cell.size(), vertices_per_cell);
+
+      /**
+       * Extract the list of support points at vertices in the unit cell.
+       */
+      std::array<Point<dim>, vertices_per_cell> vertices_in_unit_cell;
+      get_vertices_from_lexicographic_unit_support_points(
+        fe, vertices_in_unit_cell, is_counter_clockwise_ordered);
+
+      /**
+       * Map the support points from the unit cell to the real cell.
+       */
+      for (unsigned int v = 0; v < vertices_per_cell; v++)
+        {
+          vertices_in_real_cell[v] =
+            mapping.transform_unit_to_real_cell(cell, vertices_in_unit_cell[v]);
+        }
+    }
+
+
+    /**
+     * Get the list of DoF indices in the current cell. It is obtained via the
+     * return value.
      *
      * @param cell
      * @return
      */
     template <int dim, int spacedim>
-    std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
-    get_vertex_dof_indices(
+    std::vector<types::global_dof_index>
+    get_lexicographic_dof_indices(
       const typename DoFHandler<dim, spacedim>::cell_iterator &cell)
     {
-      // Ensure that there is only one DoF associated with each vertex.
-      Assert(cell->get_fe().dofs_per_vertex == 1,
-             ExcDimensionMismatch(cell->get_fe().dofs_per_vertex, 1));
+      const FiniteElement<dim, spacedim> &fe = cell->get_fe();
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
 
+      /**
+       * Extract the list of DoF indices in the current cell.
+       */
+      std::vector<types::global_dof_index> dof_indices(fe.dofs_per_cell);
+      std::vector<types::global_dof_index> lexicographic_dof_indices(
+        fe.dofs_per_cell);
+
+      cell->get_dof_indices(dof_indices);
+
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      permute_vector(dof_indices,
+                     fe_poly.get_poly_space_numbering_inverse(),
+                     lexicographic_dof_indices);
+
+      return lexicographic_dof_indices;
+    }
+
+
+    /**
+     * Get the list of DoF indices in the current cell. It is obtained via
+     * argument by reference.
+     *
+     * @param cell
+     * @param lexicographic_dof_indices
+     */
+    template <int dim, int spacedim>
+    void
+    get_lexicographic_dof_indices(
+      const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
+      std::vector<types::global_dof_index> &lexicographic_dof_indices)
+    {
+      const FiniteElement<dim, spacedim> &fe = cell->get_fe();
+      Assert(fe.has_support_points(),
+             ExcMessage("The finite element should have support points."));
+
+      AssertDimension(lexicographic_dof_indices.size(), fe.dofs_per_cell);
+
+      /**
+       * Extract the list of DoF indices in the current cell.
+       */
+      std::vector<types::global_dof_index> dof_indices(fe.dofs_per_cell);
+      cell->get_dof_indices(dof_indices);
+
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      permute_vector(dof_indices,
+                     fe_poly.get_poly_space_numbering_inverse(),
+                     lexicographic_dof_indices);
+    }
+
+
+    /**
+     * Get a list of vertex DoF indices, which are directly extracted from the
+     * list of DoF indices in the lexicographic order. The result is obtained in
+     * the return value.
+     *
+     * @param cell
+     * @param is_counter_clockwise_ordered
+     * @return
+     */
+    template <int dim, int spacedim>
+    std::vector<types::global_dof_index>
+    get_vertex_dof_indices_from_lexicographic_dof_indices(
+      const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
+      const bool is_counter_clockwise_ordered = false)
+    {
+      const FiniteElement<dim, spacedim> &fe = cell->get_fe();
+
+      /**
+       * Get the list of DoF indices in the lexicographic order.
+       */
+      std::vector<types::global_dof_index> lexicographic_dof_indices(
+        fe.dofs_per_cell);
+      get_lexicographic_dof_indices(cell, lexicographic_dof_indices);
+
+      std::vector<types::global_dof_index> vertex_dof_indices(
+        GeometryInfo<dim>::vertices_per_cell);
+
+      const unsigned int dofs_per_face = get_dofs_per_face_for_fe(fe);
+
+      switch (dim)
+        {
+          case 1:
+            {
+              vertex_dof_indices[0] = lexicographic_dof_indices[0];
+              vertex_dof_indices[1] =
+                lexicographic_dof_indices[lexicographic_dof_indices.size() - 1];
+
+              break;
+            }
+          case 2:
+            {
+              vertex_dof_indices[0] = lexicographic_dof_indices[0];
+              vertex_dof_indices[1] =
+                lexicographic_dof_indices[dofs_per_face - 1];
+
+              if (is_counter_clockwise_ordered)
+                {
+                  vertex_dof_indices[2] =
+                    lexicographic_dof_indices[lexicographic_dof_indices.size() -
+                                              1];
+                  vertex_dof_indices[3] =
+                    lexicographic_dof_indices[lexicographic_dof_indices.size() -
+                                              1 - (dofs_per_face - 1)];
+                }
+              else
+                {
+                  vertex_dof_indices[2] =
+                    lexicographic_dof_indices[lexicographic_dof_indices.size() -
+                                              1 - (dofs_per_face - 1)];
+                  vertex_dof_indices[3] =
+                    lexicographic_dof_indices[lexicographic_dof_indices.size() -
+                                              1];
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false, ExcNotImplemented());
+
+              break;
+            }
+        }
+
+      return vertex_dof_indices;
+    }
+
+
+    /**
+     * Get a list of vertex DoF indices, which are directly extracted from the
+     * list of DoF indices in the lexicographic order. The result is obtained
+     * via argument by reference.
+     *
+     * @param cell
+     * @param vertex_dof_indices
+     * @param is_counter_clockwise_ordered
+     */
+    template <int dim, int spacedim = dim>
+    void
+    get_vertex_dof_indices_from_lexicographic_dof_indices(
+      const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
       std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
+        &        vertex_dof_indices,
+      const bool is_counter_clockwise_ordered = false)
+    {
+      const FiniteElement<dim, spacedim> &fe = cell->get_fe();
+
+      /**
+       * Get the list of DoF indices in the lexicographic order.
+       */
+      std::vector<types::global_dof_index> lexicographic_dof_indices(
+        fe.dofs_per_cell);
+      get_lexicographic_dof_indices<dim, spacedim>(cell,
+                                                   lexicographic_dof_indices);
+
+      const unsigned int dofs_per_face = get_dofs_per_face_for_fe(fe);
+
+      switch (dim)
+        {
+          case 1:
+            {
+              vertex_dof_indices[0] = lexicographic_dof_indices[0];
+              vertex_dof_indices[1] =
+                lexicographic_dof_indices[lexicographic_dof_indices.size() - 1];
+
+              break;
+            }
+          case 2:
+            {
+              vertex_dof_indices[0] = lexicographic_dof_indices[0];
+              vertex_dof_indices[1] =
+                lexicographic_dof_indices[dofs_per_face - 1];
+
+              if (is_counter_clockwise_ordered)
+                {
+                  vertex_dof_indices[2] =
+                    lexicographic_dof_indices[lexicographic_dof_indices.size() -
+                                              1];
+                  vertex_dof_indices[3] =
+                    lexicographic_dof_indices[lexicographic_dof_indices.size() -
+                                              1 - (dofs_per_face - 1)];
+                }
+              else
+                {
+                  vertex_dof_indices[2] =
+                    lexicographic_dof_indices[lexicographic_dof_indices.size() -
+                                              1 - (dofs_per_face - 1)];
+                  vertex_dof_indices[3] =
+                    lexicographic_dof_indices[lexicographic_dof_indices.size() -
+                                              1];
+                }
+
+              break;
+            }
+          default:
+            {
+              Assert(false, ExcNotImplemented());
+
+              break;
+            }
+        }
+    }
+
+
+    /**
+     * Return a list of global DoF indices, which are located at the list of
+     * vertices in the cell respectively. The result is obtained via the return
+     * value.
+     *
+     * @param cell
+     * @param mapping
+     * @param threshold
+     * @return
+     */
+    template <int dim, int spacedim>
+    std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
+    get_vertex_dof_indices_in_cell(
+      const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
+      const Mapping<dim, spacedim> &                           mapping,
+      const double threshold = 1e-12)
+    {
+      const unsigned int vertices_per_cell =
+        GeometryInfo<dim>::vertices_per_cell;
+      const FiniteElement<dim, spacedim> &fe = cell->get_fe();
+
+      Assert(fe.has_support_points(), ExcInternalError());
+
+      std::array<types::global_dof_index, vertices_per_cell>
         cell_vertex_dof_indices;
 
-      for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_cell; v++)
+      if (fe.conforms(FiniteElementData<dim>::H1))
         {
-          cell_vertex_dof_indices[v] = cell->vertex_dof_index(v, 0);
+          /**
+           * When the finite element conforms to \f$H_1\f$, e.g. @p FE_Q, the
+           * vertex DoF indices can be directly obtained by calling the member
+           * function @p DoFAccessor::vertex_dof_index.
+           */
+
+          /**
+           * Assert there is only one DoF associated with each vertex.
+           */
+          Assert(fe.dofs_per_vertex == 1,
+                 ExcMessage(
+                   "There should be only one DoF associated a vertex!"));
+
+          for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_cell;
+               v++)
+            {
+              cell_vertex_dof_indices[v] = cell->vertex_dof_index(v, 0);
+            }
+        }
+      else if (fe.conforms(FiniteElementData<dim>::L2))
+        {
+          /**
+           * Handle the case when the finite element conforms to \f$L_2\f$,
+           * e.g. @p FE_DGQ, where there are no DoFs associated with vertices.
+           */
+
+          /**
+           * Assert there is no DoF associated with each vertex.
+           */
+          Assert(fe.dofs_per_vertex == 0,
+                 ExcMessage(
+                   "There should be no DoFs associated with a vertex!"));
+
+          /**
+           * Get the list of vertex DoF indices which are directly extracted
+           * from the list of all DoF indices. N.B. The ordering of this list of
+           * vertex DoF indices may not match the ordering of the vertices in
+           * the geometry information.
+           */
+          std::array<types::global_dof_index, vertices_per_cell>
+            vertex_dof_indices_from_lexicographic_dof_indices;
+          get_vertex_dof_indices_from_lexicographic_dof_indices<dim, spacedim>(
+            cell, vertex_dof_indices_from_lexicographic_dof_indices, false);
+
+          /**
+           * Calculate the list of vertex support point coordinates in the real
+           * cell with the help of the mapping object. It will be compared with
+           * the vertex coordinates obtained from the cell geometry.
+           *
+           * N.B. The ordering of this list of vertex support points corresponds
+           * with the ordering of the list of the above vertex DoF indices.
+           */
+          std::array<Point<spacedim>, vertices_per_cell>
+            vertex_support_points_in_real_cell;
+          get_vertices_from_lexicographic_support_points_in_real_cell(
+            cell, fe, mapping, vertex_support_points_in_real_cell);
+
+          /**
+           * Iterate over each vertex support point and check that to which
+           * vertex in the cell it is equal.
+           */
+          unsigned int vertex_support_point_local_index;
+          for (unsigned int v = 0; v < vertices_per_cell; v++)
+            {
+              vertex_support_point_local_index =
+                get_vertex_local_index_in_cell<dim, spacedim>(
+                  vertex_support_points_in_real_cell[v], cell, threshold);
+              AssertIndexRange(vertex_support_point_local_index,
+                               vertices_per_cell);
+
+              cell_vertex_dof_indices[vertex_support_point_local_index] =
+                vertex_dof_indices_from_lexicographic_dof_indices[v];
+            }
+        }
+      else
+        {
+          Assert(false, ExcNotImplemented());
         }
 
       return cell_vertex_dof_indices;
     }
 
 
+    /**
+     * Return a list of global DoF indices, which are located at the list of
+     * vertices in the cell respectively. The result is obtained via argument by
+     * reference.
+     *
+     * @param cell
+     * @param mapping
+     * @param threshold
+     * @param cell_vertex_dof_indices
+     */
+    template <int dim, int spacedim>
+    void
+    get_vertex_dof_indices_in_cell(
+      const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
+      const Mapping<dim, spacedim> &                           mapping,
+      std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
+        &          cell_vertex_dof_indices,
+      const double threshold = 1e-12)
+    {
+      const unsigned int vertices_per_cell =
+        GeometryInfo<dim>::vertices_per_cell;
+      const FiniteElement<dim, spacedim> &fe = cell->get_fe();
+
+      Assert(fe.has_support_points(), ExcInternalError());
+
+      if (fe.conforms(FiniteElementData<dim>::H1))
+        {
+          /**
+           * When the finite element conforms to \f$H_1\f$, e.g. @p FE_Q, the
+           * vertex DoF indices can be directly obtained by calling the member
+           * function @p DoFAccessor::vertex_dof_index.
+           */
+
+          /**
+           * Assert there is only one DoF associated with each vertex.
+           */
+          Assert(fe.dofs_per_vertex == 1,
+                 ExcMessage(
+                   "There should be only one DoF associated a vertex!"));
+
+          for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_cell;
+               v++)
+            {
+              cell_vertex_dof_indices[v] = cell->vertex_dof_index(v, 0);
+            }
+        }
+      else if (fe.conforms(FiniteElementData<dim>::L2))
+        {
+          /**
+           * Handle the case when the finite element conforms to \f$L_2\f$,
+           * e.g. @p FE_DGQ, where there are no DoFs associated with vertices.
+           */
+
+          /**
+           * Assert there is no DoF associated with each vertex.
+           */
+          Assert(fe.dofs_per_vertex == 0,
+                 ExcMessage(
+                   "There should be no DoFs associated with a vertex!"));
+
+          /**
+           * Get the list of vertex DoF indices which are directly extracted
+           * from the list of all DoF indices. N.B. The ordering of this list of
+           * vertex DoF indices may not match the ordering of the vertices in
+           * the geometry information.
+           */
+          std::array<types::global_dof_index, vertices_per_cell>
+            vertex_dof_indices_from_lexicographic_dof_indices;
+          get_vertex_dof_indices_from_lexicographic_dof_indices(
+            cell, vertex_dof_indices_from_lexicographic_dof_indices, false);
+
+          /**
+           * Calculate the list of vertex support point coordinates in the real
+           * cell with the help of the mapping object. It will be compared with
+           * the vertex coordinates obtained from the cell geometry.
+           *
+           * N.B. The ordering of this list of vertex support points corresponds
+           * with the ordering of the list of the above vertex DoF indices.
+           */
+          std::array<Point<spacedim>, vertices_per_cell>
+            vertex_support_points_in_real_cell;
+          get_vertices_from_lexicographic_support_points_in_real_cell(
+            cell, fe, mapping, vertex_support_points_in_real_cell);
+
+          /**
+           * Iterate over each vertex support point and check that to which
+           * vertex in the cell it is equal.
+           */
+          unsigned int vertex_support_point_local_index;
+          for (unsigned int v = 0; v < vertices_per_cell; v++)
+            {
+              vertex_support_point_local_index =
+                get_vertex_local_index_in_cell<dim, spacedim>(
+                  vertex_support_points_in_real_cell[v], cell, threshold);
+              AssertIndexRange(vertex_support_point_local_index,
+                               vertices_per_cell);
+
+              cell_vertex_dof_indices[vertex_support_point_local_index] =
+                vertex_dof_indices_from_lexicographic_dof_indices[v];
+            }
+        }
+      else
+        {
+          Assert(false, ExcNotImplemented());
+        }
+    }
+
+
+    /**
+     * Get the DoF index for the specified vertex in the cell.
+     *
+     * \mynote{When the finite element associated with the cell conforms with
+     * @p H1, this function is the same as @p DoFAccessor::vertex_dof_index.
+     * When the finite element conforms with @p L2, because there are no DoFs
+     * associated with vertices, the matching of support points and vertices
+     * should be calculated.}
+     *
+     * @param cell
+     * @param mapping
+     * @param local_vertex_index_in_cell
+     * @param threshold
+     * @return
+     */
+    template <int dim, int spacedim>
+    typename types::global_dof_index
+    get_dof_index_for_vertex_in_cell(
+      const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
+      const Mapping<dim, spacedim> &                           mapping,
+      const unsigned int local_vertex_index_in_cell,
+      const double       threshold = 1e-12)
+    {
+      const unsigned int vertices_per_cell =
+        GeometryInfo<dim>::vertices_per_cell;
+      const FiniteElement<dim, spacedim> &fe = cell->get_fe();
+
+      Assert(fe.has_support_points(), ExcInternalError());
+
+      if (fe.conforms(FiniteElementData<dim>::H1))
+        {
+          /**
+           * When the finite element conforms to \f$H_1\f$, e.g. @p FE_Q, the
+           * vertex DoF indices can be directly obtained by calling the member
+           * function @p DoFAccessor::vertex_dof_index.
+           */
+
+          /**
+           * Assert there is only one DoF associated with each vertex.
+           */
+          Assert(fe.dofs_per_vertex == 1,
+                 ExcMessage(
+                   "There should be only one DoF associated a vertex!"));
+
+
+          return cell->vertex_dof_index(local_vertex_index_in_cell, 0);
+        }
+      else if (fe.conforms(FiniteElementData<dim>::L2))
+        {
+          /**
+           * Handle the case when the finite element conforms to \f$L_2\f$,
+           * e.g. @p FE_DGQ, where there are no DoFs associated with vertices.
+           */
+
+          /**
+           * Assert there is no DoF associated with each vertex.
+           */
+          Assert(fe.dofs_per_vertex == 0,
+                 ExcMessage(
+                   "There should be no DoFs associated with a vertex!"));
+
+          /**
+           * Get the list of vertex DoF indices which are directly extracted
+           * from the list of all DoF indices. N.B. The ordering of this list of
+           * vertex DoF indices may not match the ordering of the vertices in
+           * the geometry information.
+           */
+          std::array<types::global_dof_index, vertices_per_cell>
+            vertex_dof_indices_from_lexicographic_dof_indices;
+          get_vertex_dof_indices_from_lexicographic_dof_indices<dim, spacedim>(
+            cell, vertex_dof_indices_from_lexicographic_dof_indices, false);
+
+          /**
+           * Calculate the list of vertex support point coordinates in the real
+           * cell with the help of the mapping object. It will be compared with
+           * the vertex coordinates obtained from the cell geometry.
+           *
+           * N.B. The ordering of this list of vertex support points corresponds
+           * with the ordering of the list of the above vertex DoF indices.
+           */
+          std::array<Point<spacedim>, vertices_per_cell>
+            vertex_support_points_in_real_cell;
+          get_vertices_from_lexicographic_support_points_in_real_cell(
+            cell, fe, mapping, vertex_support_points_in_real_cell);
+
+          /**
+           * Iterate over each vertex support point and check if it matches the
+           * required vertex.
+           */
+          for (unsigned int v = 0; v < vertices_per_cell; v++)
+            {
+              if (get_vertex_local_index_in_cell<dim, spacedim>(
+                    vertex_support_points_in_real_cell[v], cell, threshold) ==
+                  local_vertex_index_in_cell)
+                {
+                  return vertex_dof_indices_from_lexicographic_dof_indices[v];
+                }
+            }
+
+          Assert(false,
+                 ExcMessage(
+                   "There is no support point matching the specified vertex!"));
+        }
+      else
+        {
+          Assert(false, ExcNotImplemented());
+        }
+
+      return 0;
+    }
+
 
     /**
      * Detect the cell neighboring type for two cells by checking the
-     * intersection of their vertex indices.
+     * intersection of their vertex indices. The intersection of the global
+     * vertex indices is returned via argument by reference.
+     *
+     * \alert{Comparison of vertex indices implies that the two cells should
+     * belong to a same triangulation. Otherwise, there will be two sets of
+     * vertex indices, which cannot be compared.}
      *
      * \mynote{N.B. The template argument @p dim of this function cannot be
      * automatically inducted by the compiler from its input arguments, since
@@ -137,7 +1888,7 @@ namespace IdeoBEM
      * of the two input arguments @p first_cell_vertex_indices and
      * @p second_cell_vertex_indices contains @p dim, the whole
      * @p GeometryInfo<dim>::vertices_per_cell will be evaluated into an
-     * integer by the compiler with @p dim discarded.}
+     * integer by the compiler, so that @p dim will be discarded.}
      *
      * @param first_cell_vertex_indices
      * @param second_cell_vertex_indices
@@ -146,7 +1897,7 @@ namespace IdeoBEM
      */
     template <int dim>
     CellNeighboringType
-    detect_cell_neighboring_type(
+    detect_cell_neighboring_type_for_same_triangulations(
       const std::array<types::global_vertex_index,
                        GeometryInfo<dim>::vertices_per_cell>
         &first_cell_vertex_indices,
@@ -169,7 +1920,9 @@ namespace IdeoBEM
       std::sort(second_cell_vertex_indices_sorted.begin(),
                 second_cell_vertex_indices_sorted.end());
 
-      // Calculate the intersection of the two cells' vertex indices.
+      /**
+       * Calculate the intersection of the two cells' vertex indices.
+       */
       std::set_intersection(first_cell_vertex_indices_sorted.begin(),
                             first_cell_vertex_indices_sorted.end(),
                             second_cell_vertex_indices_sorted.begin(),
@@ -202,7 +1955,14 @@ namespace IdeoBEM
 
     /**
      * Detect the cell neighboring type for two cells by checking the
-     * intersection of the DoF indices associated with their vertices.
+     * intersection of the DoF indices associated with their vertices. Because
+     * there are vertex DoFs, the finite elements contained in the DoF handlers
+     * should be @p H1. The intersection of the DoF indices is returned via
+     * argument by reference.
+     *
+     * \alert{Comparison of DoF indices implies that the two cells should belong
+     * to a same DoFHandler. Otherwise, there will be two sets of DoF indices,
+     * which cannot be compared.}
      *
      * \mynote{N.B. The template argument @p dim of this function cannot be
      * automatically inducted by the compiler from its input arguments, since
@@ -210,16 +1970,17 @@ namespace IdeoBEM
      * of the two input arguments @p first_cell_vertex_dof_indices and
      * @p second_cell_vertex_dof_indices contains @p dim, the whole
      * @p GeometryInfo<dim>::vertices_per_cell will be evaluated into an
-     * integer by the compiler with @p dim discarded.}
+     * integer by the compiler, so that @p dim will be discarded.}
      *
      * @param first_cell_vertex_dof_indices
      * @param second_cell_vertex_dof_indices
-     * @param vertex_dof_index_intersection
+     * @param vertex_dof_index_intersection Before calling this function, this
+     * variable should be cleared.
      * @return
      */
     template <int dim>
     CellNeighboringType
-    detect_cell_neighboring_type(
+    detect_cell_neighboring_type_for_same_h1_dofhandlers(
       const std::array<types::global_dof_index,
                        GeometryInfo<dim>::vertices_per_cell>
         &first_cell_vertex_dof_indices,
@@ -238,7 +1999,9 @@ namespace IdeoBEM
       std::sort(second_cell_vertex_dof_indices_sorted.begin(),
                 second_cell_vertex_dof_indices_sorted.end());
 
-      // Calculate the intersection of the two cells' vertex dof indices.
+      /**
+       * Calculate the intersection of the two cells' vertex DoF indices.
+       */
       std::set_intersection(first_cell_vertex_dof_indices_sorted.begin(),
                             first_cell_vertex_dof_indices_sorted.end(),
                             second_cell_vertex_dof_indices_sorted.begin(),
@@ -270,468 +2033,542 @@ namespace IdeoBEM
 
 
     /**
-     * Calculate the distance between the centers of two cells.
+     * Detect the cell neighboring type for the two cells pointed by the input
+     * cell iterators. This function handles the case when the involved two DoF
+     * handlers are different where the finite elements are different but the
+     * triangulations are the same.
      *
-     * @param first_cell
-     * @param second_cell
+     * In this case, the vertex indices for the two cells are numbered in a same
+     * index system. But the DoF indices for the two cells are independently
+     * indexed.
+     *
+     * @param first_cell_iter
+     * @param second_cell_iter
+     * @param common_vertex_dof_indices A vector of pairs of DoF indices. Each
+     * pair corresponds to a common vertex and in each pair, the first DoF index
+     * is in the first cell, while the second DoF index is in the second cell.
      * @return
      */
-    template <int dim, int spacedim, typename Number = double>
-    Number
-    cell_distance(
-      const typename Triangulation<dim, spacedim>::cell_iterator first_cell,
-      const typename Triangulation<dim, spacedim>::cell_iterator second_cell)
+    template <int dim, int spacedim = dim>
+    CellNeighboringType
+    detect_cell_neighboring_type_for_same_triangulations(
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+        &first_cell_iter,
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+        &                           second_cell_iter,
+      const Mapping<dim, spacedim> &first_cell_mapping,
+      const Mapping<dim, spacedim> &second_cell_mapping,
+      std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
+        &          common_vertex_dof_indices,
+      const double threshold = 1e-12)
     {
-      return first_cell->center().distance(second_cell->center());
-    }
+      const unsigned int vertices_per_cell =
+        GeometryInfo<dim>::vertices_per_cell;
 
+      const FiniteElement<dim, spacedim> &first_cell_fe =
+        first_cell_iter->get_fe();
+      const FiniteElement<dim, spacedim> &second_cell_fe =
+        second_cell_iter->get_fe();
 
-    /**
-     * Calculates the matrix which stores shape function gradient values with
-     * respect to area coordinates. Each row of the matrix is the gradient of
-     * one of the shape functions. The order of the matrix rows corresponding to
-     * the
-     * shape function gradients is determined by the given numbering @p dof_permuation.
-     *
-     * \mynote{The support points, shape functions and DoFs in the finite
-     * element are enumerated in the hierarchic order by default.}
-     *
-     * @param fe
-     * @param dof_permutation The numbering for accessing the shape functions in
-     * the specified order.
-     * @param p The area coordinates at which the shape function's gradient is to be
-     * evaluated.
-     * @return The matrix storing the gradient of each shape function. Its
-     * dimension is @p dofs_per_cell*dim.
-     */
-    template <int dim, int spacedim>
-    FullMatrix<double>
-    shape_grad_matrix(const FiniteElement<dim, spacedim> &fe,
-                      const std::vector<unsigned int> &   dof_permutation,
-                      const Point<dim> &                  p)
-    {
-      FullMatrix<double> shape_grad_matrix(fe.dofs_per_cell, dim);
+      /**
+       * Get the vertex indices in each cell.
+       */
+      std::array<types::global_vertex_index, vertices_per_cell>
+        first_cell_vertex_indices(
+          get_vertex_indices_in_cell<dim, spacedim>(first_cell_iter));
 
-      for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
+      std::array<types::global_vertex_index, vertices_per_cell>
+        second_cell_vertex_indices(
+          get_vertex_indices_in_cell<dim, spacedim>(second_cell_iter));
+
+      /**
+       * Calculate the intersection of the two cells' vertex indices. This
+       * operation is meaningful because the triangulations for the two cells
+       * are the same.
+       */
+      std::vector<types::global_vertex_index> vertex_index_intersection;
+      detect_cell_neighboring_type_for_same_triangulations<dim>(
+        first_cell_vertex_indices,
+        second_cell_vertex_indices,
+        vertex_index_intersection);
+
+      /**
+       * Fill the vector of pairs for @p common_vertex_dof_indices. For each
+       * vertex index in the intersection, find the corresponding DoF indices in
+       * the two cells respectively.
+       */
+      common_vertex_dof_indices.clear();
+      types::global_dof_index common_vertex_dof_index_in_first_cell;
+      types::global_dof_index common_vertex_dof_index_in_second_cell;
+
+      for (auto vertex_index : vertex_index_intersection)
         {
-          // The gradient of a shape function as a tensor.
-          Tensor<1, dim> shape_grad_tensor =
-            fe.shape_grad(dof_permutation.at(i), p);
-          // Assign the gradient of the shape function to the matrix.
-          for (unsigned int j = 0; j < dim; j++)
+          if (first_cell_fe.dofs_per_cell > 1)
             {
-              shape_grad_matrix(i, j) = shape_grad_tensor[j];
+              /**
+               * Find the current common vertex in the list of vertex indices
+               * for the first cell.
+               */
+              auto first_cell_vertex_found_pos =
+                std::find(first_cell_vertex_indices.cbegin(),
+                          first_cell_vertex_indices.cend(),
+                          vertex_index);
+
+              Assert(
+                first_cell_vertex_found_pos != first_cell_vertex_indices.cend(),
+                ExcMessage("Cannot find the common vertex in the first cell!"));
+
+              common_vertex_dof_index_in_first_cell =
+                get_dof_index_for_vertex_in_cell(
+                  first_cell_iter,
+                  first_cell_mapping,
+                  first_cell_vertex_found_pos -
+                    first_cell_vertex_indices.cbegin(),
+                  threshold);
             }
+          else
+            {
+              /**
+               * Handle the case when the finite element order is 0, i.e. for
+               * @p FE_DGQ. Set the common vertex DoF index to be the DoF in
+               * the cell's interior, even though it is not associated to the
+               * vertex.
+               */
+              common_vertex_dof_index_in_first_cell =
+                first_cell_iter->dof_index(0);
+            }
+
+          if (second_cell_fe.dofs_per_cell > 1)
+            {
+              /**
+               * Find the current common vertex in the list of vertex indices
+               * for the second cell.
+               */
+              auto second_cell_vertex_found_pos =
+                std::find(second_cell_vertex_indices.cbegin(),
+                          second_cell_vertex_indices.cend(),
+                          vertex_index);
+
+              Assert(second_cell_vertex_found_pos !=
+                       second_cell_vertex_indices.cend(),
+                     ExcMessage(
+                       "Cannot find the common vertex in the second cell!"));
+
+              common_vertex_dof_index_in_second_cell =
+                get_dof_index_for_vertex_in_cell(
+                  second_cell_iter,
+                  second_cell_mapping,
+                  second_cell_vertex_found_pos -
+                    second_cell_vertex_indices.cbegin(),
+                  threshold);
+            }
+          else
+            {
+              /**
+               * Handle the case when the finite element order is 0, i.e. for
+               * @p FE_DGQ. Set the common vertex DoF index to be the DoF in
+               * the cell's interior, even though it is not associated to the
+               * vertex.
+               */
+              common_vertex_dof_index_in_second_cell =
+                second_cell_iter->dof_index(0);
+            }
+
+          common_vertex_dof_indices.push_back(
+            std::pair<types::global_dof_index, types::global_dof_index>(
+              common_vertex_dof_index_in_first_cell,
+              common_vertex_dof_index_in_second_cell));
         }
 
-      return shape_grad_matrix;
-    }
-
-
-    /**
-     * Calculate the matrix which stores shape function gradient values with
-     * respect to area coordinates. Each row of the matrix is the gradient of
-     * one of the shape functions. The matrix rows corresponding to the shape
-     * function gradients are arranged in the default hierarchic order.
-     *
-     * @param fe
-     * @param p The area coordinates at which the shape function's gradient is to be
-     * evaluated.
-     * @return The matrix storing the gradient of each shape function. Its
-     * dimension is @p dofs_per_cell*dim.
-     */
-    template <int dim, int spacedim>
-    FullMatrix<double>
-    shape_grad_matrix_in_hierarchical_order(
-      const FiniteElement<dim, spacedim> &fe,
-      const Point<dim> &                  p)
-    {
-      FullMatrix<double> shape_grad_matrix(fe.dofs_per_cell, dim);
-
-      for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
+      CellNeighboringType cell_neighboring_type;
+      switch (vertex_index_intersection.size())
         {
-          // The gradient of a shape function as a tensor.
-          Tensor<1, dim> shape_grad_tensor = fe.shape_grad(i, p);
-          // Assign the gradient of the shape function to the matrix.
-          for (unsigned int j = 0; j < dim; j++)
-            {
-              shape_grad_matrix(i, j) = shape_grad_tensor[j];
-            }
+          case (0):
+            cell_neighboring_type = Regular;
+            break;
+          case (1):
+            cell_neighboring_type = CommonVertex;
+            break;
+          case (2):
+            cell_neighboring_type = CommonEdge;
+            break;
+          case (4):
+            cell_neighboring_type = SamePanel;
+            break;
+          default:
+            cell_neighboring_type = None;
+            Assert(false, ExcInternalError());
         }
 
-      return shape_grad_matrix;
+      return cell_neighboring_type;
     }
 
 
     /**
-     * Calculate the matrix which stores shape function gradient values with
-     * respect to area coordinates. Each row of the matrix is the gradient of
-     * one of the shape functions. The matrix rows corresponding to the shape
-     * function gradients are arranged in the lexicographic order.
+     * Detect the cell neighboring type for the two cells pointed by the input
+     * cell iterators. This function handles the case when the involved two DoF
+     * handlers are the same, i.e. both the associated finite elements and
+     * triangulations are the same.
      *
-     * \mynote{The support points, shape functions and DoFs in the finite
-     * element are enumerated in the hierarchic order by default.}
+     * In this case, the vertex indices for the two cells are numbered in a same
+     * index system. Same situation holds for DoF indices for the two cells.
+     * Hence, when the finite element is @p H1, such as @p FE_Q, in each pair
+     * of the returned vector @p common_vertex_dof_indices, the two elements
+     * are the same.
      *
-     * @param fe
-     * @param p The area coordinates at which the shape function's gradient is to be
-     * evaluated.
-     * @return The matrix storing the gradient of each shape function. Its
-     * dimension is @p dofs_per_cell*dim.
+     * @param first_cell_iter
+     * @param second_cell_iter
+     * @param common_vertex_dof_indices A vector of pairs of DoF indices. Each
+     * pair corresponds to a common vertex and in each pair, the first DoF index
+     * is in the first cell, while the second DoF index is in the second cell.
+     * @return
      */
-    template <int dim, int spacedim>
-    FullMatrix<double>
-    shape_grad_matrix_in_lexicographic_order(
-      const FiniteElement<dim, spacedim> &fe,
-      const Point<dim> &                  p)
+    template <int dim, int spacedim = dim>
+    CellNeighboringType
+    detect_cell_neighboring_type_for_same_dofhandlers(
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+        &first_cell_iter,
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+        &                           second_cell_iter,
+      const Mapping<dim, spacedim> &first_cell_mapping,
+      const Mapping<dim, spacedim> &second_cell_mapping,
+      std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
+        &          common_vertex_dof_indices,
+      const double threshold = 1e-12)
     {
-      try
+      /**
+       * Get the finite element, which should be the same for the two cell
+       * iterators.
+       */
+      const FiniteElement<dim, spacedim> &fe = first_cell_iter->get_fe();
+
+      if (fe.conforms(FiniteElementData<dim>::H1))
+        {
+          const unsigned int vertices_per_cell =
+            GeometryInfo<dim>::vertices_per_cell;
+
+          /**
+           * Get the list of vertex DoF indices in the two cells
+           */
+          std::array<types::global_dof_index, vertices_per_cell>
+            first_cell_vertex_dof_indices(get_vertex_dof_indices_in_cell(
+              first_cell_iter, first_cell_mapping, threshold));
+
+          std::array<types::global_dof_index, vertices_per_cell>
+            second_cell_vertex_dof_indices(get_vertex_dof_indices_in_cell(
+              second_cell_iter, second_cell_mapping, threshold));
+
+          std::vector<types::global_dof_index> vertex_dof_index_intersection;
+          common_vertex_dof_indices.clear();
+
+          detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
+            first_cell_vertex_dof_indices,
+            second_cell_vertex_dof_indices,
+            vertex_dof_index_intersection);
+
+          /**
+           * Fill the vector of pairs for @p common_vertex_dof_indices.
+           */
+          for (auto dof_index : vertex_dof_index_intersection)
+            {
+              common_vertex_dof_indices.push_back(
+                std::pair<types::global_dof_index, types::global_dof_index>(
+                  dof_index, dof_index));
+            }
+
+          CellNeighboringType cell_neighboring_type;
+          switch (vertex_dof_index_intersection.size())
+            {
+              case (0):
+                cell_neighboring_type = Regular;
+                break;
+              case (1):
+                cell_neighboring_type = CommonVertex;
+                break;
+              case (2):
+                cell_neighboring_type = CommonEdge;
+                break;
+              case (4):
+                cell_neighboring_type = SamePanel;
+                break;
+              default:
+                cell_neighboring_type = None;
+                Assert(false, ExcInternalError());
+            }
+
+          return cell_neighboring_type;
+        }
+      else if (fe.conforms(FiniteElementData<dim>::L2))
+        {
+          return detect_cell_neighboring_type_for_same_triangulations(
+            first_cell_iter,
+            second_cell_iter,
+            first_cell_mapping,
+            second_cell_mapping,
+            common_vertex_dof_indices,
+            threshold);
+        }
+      else
+        {
+          Assert(false, ExcNotImplemented());
+
+          return CellNeighboringType::None;
+        }
+    }
+
+
+    /**
+     * Detect the cell neighboring type for the two cells pointed by the input
+     * cell iterators. This function handles the case when the involved two DoF
+     * handlers are different where the finite elements can be either identical
+     * or different, but the triangulations are different.
+     *
+     * In this case, neither vertex indices nor DoF indices for the two cells
+     * are numbered in a same index system.
+     *
+     * \alert{The template parameters @p dim and @p spacedim are for the
+     * boundary mesh. For the original volume mesh, the corresponding dimensions
+     * should be @p dim+1 and @p spacedim.}
+     *
+     * @param first_cell_iter
+     * @param second_cell_iter
+     * @param map_from_first_boundary_mesh_to_volume_mesh
+     * @param map_from_second_boundary_mesh_to_volume_mesh
+     * @param common_vertex_dof_indices A vector of pairs of DoF indices. Each
+     * pair corresponds to a common vertex and in each pair, the first DoF index
+     * is in the first cell, while the second DoF index is in the second cell.
+     * @return
+     */
+    template <int dim, int spacedim = dim>
+    CellNeighboringType
+    detect_cell_neighboring_type_for_different_triangulations(
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+        &first_cell_iter,
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+        &                           second_cell_iter,
+      const Mapping<dim, spacedim> &first_cell_mapping,
+      const Mapping<dim, spacedim> &second_cell_mapping,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_first_boundary_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_second_boundary_mesh_to_volume_mesh,
+      std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
+        &          common_vertex_dof_indices,
+      const double threshold = 1e-12)
+    {
+      const FiniteElement<dim, spacedim> &first_cell_fe =
+        first_cell_iter->get_fe();
+      const FiniteElement<dim, spacedim> &second_cell_fe =
+        second_cell_iter->get_fe();
+
+      /**
+       * Get the iterators to the faces in the original volume triangulation.
+       */
+      auto first_face_iter_pos =
+        map_from_first_boundary_mesh_to_volume_mesh.find(first_cell_iter);
+      Assert(
+        first_face_iter_pos !=
+          map_from_first_boundary_mesh_to_volume_mesh.end(),
+        ExcMessage(
+          "The associated face iterator in the volume triangulation cannot be found for the first cell iterator in the boundary mesh!"));
+      auto first_face_iter = first_face_iter_pos->second;
+
+      auto second_face_iter_pos =
+        map_from_second_boundary_mesh_to_volume_mesh.find(second_cell_iter);
+      Assert(
+        second_face_iter_pos !=
+          map_from_second_boundary_mesh_to_volume_mesh.end(),
+        ExcMessage(
+          "The associated face iterator in the volume triangulation cannot be found for the second cell iterator in the boundary mesh!"));
+      auto second_face_iter = second_face_iter_pos->second;
+
+      /**
+       * Get the vertex indices in each face in the original volume
+       * triangulation.
+       */
+      auto first_face_vertex_indices =
+        get_vertex_indices_in_face<dim + 1, spacedim>(first_face_iter);
+      auto second_face_vertex_indices =
+        get_vertex_indices_in_face<dim + 1, spacedim>(second_face_iter);
+
+      /**
+       * Sort the vertex indices in each face, which is a precondition for
+       * calling the function @p std::set_intersection.
+       */
+      decltype(first_face_vertex_indices) first_face_vertex_indices_sorted(
+        first_face_vertex_indices);
+      decltype(second_face_vertex_indices) second_face_vertex_indices_sorted(
+        second_face_vertex_indices);
+
+      std::sort(first_face_vertex_indices_sorted.begin(),
+                first_face_vertex_indices_sorted.end());
+      std::sort(second_face_vertex_indices_sorted.begin(),
+                second_face_vertex_indices_sorted.end());
+
+      /**
+       * Calculate the intersection of the two faces' vertex indices. This
+       * operation is meaningful because the two faces are both pulled back in
+       * the original volume triangulation.
+       */
+      std::vector<types::global_vertex_index> vertex_index_intersection;
+      std::set_intersection(first_face_vertex_indices_sorted.begin(),
+                            first_face_vertex_indices_sorted.end(),
+                            second_face_vertex_indices_sorted.begin(),
+                            second_face_vertex_indices_sorted.end(),
+                            std::back_inserter(vertex_index_intersection));
+
+      /**
+       * According to deal.ii's documentation about @p extract_boundary_mesh,
+       *
+       * > The order of vertices of surface cells at the boundary and the
+       * corresponding volume faces may not match in order to ensure that each
+       * surface cell is associated with an outward facing normal. As a
+       * consequence, if you want to match quantities on the faces of the
+       * domain cells and on the cells of the surface mesh, you may have to
+       * translate between vertex locations or quadrature points.
+       *
+       * Hence, the local location of the common vertex index in the list of
+       * vertex indices in the face is not the same as that in the list of
+       * vertices in the boundary cell. Therefore, the mapping between vertices
+       * of the cell in the boundary mesh and those of the face in the volume
+       * mesh should be constructed by checking their coordinates.
+       */
+
+      /**
+       * Fill the vector of pairs for @p common_vertex_dof_indices. For each
+       * vertex index in the intersection, find the corresponding DoF indices in
+       * the two cells respectively.
+       */
+      common_vertex_dof_indices.clear();
+
+      types::global_dof_index common_vertex_dof_index_in_first_cell;
+      types::global_dof_index common_vertex_dof_index_in_second_cell;
+
+      for (auto vertex_index_in_volume_mesh : vertex_index_intersection)
         {
           /**
-           * Get the lexicographic numbering from
-           * @p FE_Poly<PolynomialType,dim,spacedim>::get_poly_space_numbering_inverse.
-           * An alternative is to call @p FETools::lexicographic_to_hierarchic_numbering.
+           * Get the coordinates of the current common vertex.
            */
-          using FE_Poly = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
-          const FE_Poly &fe_poly = dynamic_cast<const FE_Poly &>(fe);
+          auto first_face_vertex_found_pos =
+            std::find(first_face_vertex_indices.cbegin(),
+                      first_face_vertex_indices.cend(),
+                      vertex_index_in_volume_mesh);
 
-          // Use the inverse numbering of polynomial space to restore the tensor
-          // product ordering of shape functions.
-          return shape_grad_matrix(fe,
-                                   fe_poly.get_poly_space_numbering_inverse(),
-                                   p);
+          Assert(
+            first_face_vertex_found_pos != first_face_vertex_indices.cend(),
+            ExcMessage("Cannot find the common vertex in the first face!"));
+
+          /**
+           * Get the coordinates of the current common vertex. \mynote{The
+           * point returned from the member function @p TriaAccessor::vertex is
+           * a reference.}
+           */
+          const Point<spacedim> &common_vertex_coords = first_face_iter->vertex(
+            first_face_vertex_found_pos - first_face_vertex_indices.cbegin());
+
+          if (first_cell_fe.dofs_per_cell > 1)
+            {
+              /**
+               * Find the current common vertex in the first boundary cell by
+               * coordinate matching.
+               */
+              const unsigned int vertex_local_index_in_first_cell =
+                get_vertex_local_index_in_cell<dim, spacedim>(
+                  common_vertex_coords, first_cell_iter);
+              AssertIndexRange(vertex_local_index_in_first_cell,
+                               GeometryInfo<dim>::vertices_per_cell);
+
+              /**
+               * Get the DoF index associated with the common vertex in the
+               * first cell.
+               */
+              common_vertex_dof_index_in_first_cell =
+                get_dof_index_for_vertex_in_cell(
+                  first_cell_iter,
+                  first_cell_mapping,
+                  vertex_local_index_in_first_cell,
+                  threshold);
+            }
+          else
+            {
+              /**
+               * Handle the case when the finite element order is 0, i.e. for
+               * @p FE_DGQ. Set the common vertex DoF index to be the DoF in
+               * the cell's interior, even though it is not associated to the
+               * vertex.
+               */
+              common_vertex_dof_index_in_first_cell =
+                first_cell_iter->dof_index(0);
+            }
+
+          if (second_cell_fe.dofs_per_cell > 1)
+            {
+              /**
+               * Find the current common vertex in the second boundary cell by
+               * coordinates.
+               */
+              const unsigned int vertex_local_index_in_second_cell =
+                get_vertex_local_index_in_cell<dim, spacedim>(
+                  common_vertex_coords, second_cell_iter);
+              AssertIndexRange(vertex_local_index_in_second_cell,
+                               GeometryInfo<dim>::vertices_per_cell);
+
+              /**
+               * Get the DoF index associated with the common vertex in the
+               * second cell.
+               */
+              common_vertex_dof_index_in_second_cell =
+                get_dof_index_for_vertex_in_cell(
+                  second_cell_iter,
+                  second_cell_mapping,
+                  vertex_local_index_in_second_cell,
+                  threshold);
+            }
+          else
+            {
+              /**
+               * Handle the case when the finite element order is 0, i.e. for
+               * @p FE_DGQ. Set the common vertex DoF index to be the DoF in
+               * the cell's interior, even though it is not associated to the
+               * vertex.
+               */
+              common_vertex_dof_index_in_second_cell =
+                second_cell_iter->dof_index(0);
+            }
+
+          /**
+           * Add the pair of DoF indices associated with the common vertex in
+           * the two boundary cells to the list.
+           */
+          common_vertex_dof_indices.push_back(
+            std::pair<types::global_dof_index, types::global_dof_index>(
+              common_vertex_dof_index_in_first_cell,
+              common_vertex_dof_index_in_second_cell));
         }
-      catch (const std::bad_cast &e)
+
+      CellNeighboringType cell_neighboring_type;
+      switch (vertex_index_intersection.size())
         {
-          Assert(false, ExcInternalError());
-          return FullMatrix<double>();
-        }
-    }
-
-
-    /**
-     * Evaluate a list of shape functions at the specified area coordinates. The
-     * shape functions are arranged in the required order.
-     *
-     * @param fe
-     * @param dof_permutation The numbering for accessing the shape functions in
-     * the specified order.
-     * @param p The area coordinates at which the shape functions are to be
-     * evaluated.
-     * @return A list of shape function values.
-     */
-    template <int dim, int spacedim>
-    Vector<double>
-    shape_values(const FiniteElement<dim, spacedim> &fe,
-                 const std::vector<unsigned int> &   dof_permutation,
-                 const Point<dim> &                  p)
-    {
-      Vector<double> shape_values_vector(fe.dofs_per_cell);
-
-      for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
-        {
-          shape_values_vector(i) = fe.shape_value(dof_permutation.at(i), p);
+          case (0):
+            cell_neighboring_type = Regular;
+            break;
+          case (1):
+            cell_neighboring_type = CommonVertex;
+            break;
+          case (2):
+            cell_neighboring_type = CommonEdge;
+            break;
+          case (4):
+            cell_neighboring_type = SamePanel;
+            break;
+          default:
+            cell_neighboring_type = None;
+            Assert(false, ExcInternalError());
         }
 
-      return shape_values_vector;
-    }
-
-
-    /**
-     * Evaluate a list of shape functions at the specified area coordinates in
-     * the default hierarchic order.
-     *
-     * @param fe
-     * @param p The area coordinates at which the shape functions are to be
-     * evaluated.
-     * @return A list of shape function values.
-     */
-    template <int dim, int spacedim>
-    Vector<double>
-    shape_values_in_hierarchical_order(const FiniteElement<dim, spacedim> &fe,
-                                       const Point<dim> &                  p)
-    {
-      Vector<double> shape_values_vector(fe.dofs_per_cell);
-
-      for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
-        {
-          shape_values_vector(i) = fe.shape_value(i, p);
-        }
-
-      return shape_values_vector;
-    }
-
-
-    /**
-     * Evaluate a list of shape functions at the specified area coordinates in
-     * the lexicographic order.
-     *
-     * @param fe
-     * @param p The area coordinates at which the shape functions are to be
-     * evaluated.
-     * @return A list of shape function values.
-     */
-    template <int dim, int spacedim>
-    Vector<double>
-    shape_values_in_lexicographic_order(const FiniteElement<dim, spacedim> &fe,
-                                        const Point<dim> &                  p)
-    {
-      try
-        {
-          using FE_Poly = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
-          const FE_Poly &fe_poly = dynamic_cast<const FE_Poly &>(fe);
-
-          // Use the inverse numbering of polynomial space to restore the tensor
-          // product ordering of shape functions.
-          return shape_values(fe,
-                              fe_poly.get_poly_space_numbering_inverse(),
-                              p);
-        }
-      catch (const std::bad_cast &e)
-        {
-          Assert(false, ExcInternalError());
-          return Vector<double>();
-        }
-    }
-
-
-    /**
-     * Collect two coordinate components from the list of points in 3D space.
-     *
-     * \mynote{This function is useful in constructing the surface metric tensor
-     * or surface normal vector.}
-     *
-     * @param points A list of points in 3D space
-     * @param first_component Index for the first coordinate component to be
-     * collected
-     * @param second_component Index for the second coordinate component to be
-     * collected
-     * @return A matrix storing the two coordinate components for all points. It
-     * has a dimension @p 2*points.size().
-     */
-    template <int spacedim>
-    FullMatrix<double>
-    collect_two_components_from_point3(
-      const std::vector<Point<spacedim>> &points,
-      const unsigned int                  first_component,
-      const unsigned int                  second_component)
-    {
-      Assert(first_component < 3, ExcInternalError());
-      Assert(second_component < 3, ExcInternalError());
-
-      FullMatrix<double> two_component_coords(2, points.size());
-
-      for (unsigned int i = 0; i < points.size(); i++)
-        {
-          two_component_coords(0, i) = points.at(i)(first_component);
-          two_component_coords(1, i) = points.at(i)(second_component);
-        }
-
-      return two_component_coords;
-    }
-
-
-    /**
-     * Calculate a list of support points in the real cell in the order
-     * required by the given numbering.
-     *
-     * @param cell
-     * @param fe
-     * @param mapping Geometric mapping object used for transforming support
-     * points from the unit cell to the real cell.
-     * @param dof_permutation The numbering for accessing the support points in
-     * the specified order.
-     * @return A list of support points in the real cell.
-     *
-     * \mynote{N.B. Each support point in the real cell has the space dimension
-     * @p spacedim, while each support point in the unit cell has the manifold
-     * dimension @p dim.}
-     */
-    template <int dim, int spacedim>
-    std::vector<Point<spacedim>>
-    get_support_points_in_real_cell(
-      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping,
-      const std::vector<unsigned int> &dof_permutation)
-    {
-      try
-        {
-          using FE_Poly = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
-          const FE_Poly &fe_poly = dynamic_cast<const FE_Poly &>(fe);
-
-          // The Mapping object should has the same degree as the FE_Q object.
-          Assert(fe_poly.get_degree() == mapping.get_degree(),
-                 ExcInternalError());
-        }
-      catch (const std::bad_cast &e)
-        {
-          Assert(false, ExcInternalError());
-        }
-
-      const unsigned int           dofs_per_cell = fe.dofs_per_cell;
-      std::vector<Point<spacedim>> support_points_in_real_cell(dofs_per_cell);
-
-      Assert(fe.has_support_points(),
-             ExcMessage("The finite element should have support points."));
-
-      // Get the list of support points in the unit cell in the default
-      // hierarchical ordering.
-      const std::vector<Point<dim>> &unit_support_points =
-        fe.get_unit_support_points();
-
-      // Transform the support points from unit cell to real cell.
-      for (unsigned int i = 0; i < dofs_per_cell; i++)
-        {
-          support_points_in_real_cell.at(i) =
-            mapping.transform_unit_to_real_cell(
-              cell, unit_support_points.at(dof_permutation.at(i)));
-        }
-
-      return support_points_in_real_cell;
-    }
-
-    /**
-     * Calculate a list of support points in the real cell in the default
-     * hierarchic order.
-     *
-     * @param cell
-     * @param fe
-     * @param mapping Geometric mapping object used for transforming support
-     * points from the unit cell to the real cell.
-     * @return A list of support points in the real cell in the hierarchic order.
-     *
-     * \mynote{N.B. Each support point in the real cell has the space dimension
-     * @p spacedim, while each support point in the unit cell has the manifold
-     * dimension @p dim.}
-     */
-    template <int dim, int spacedim>
-    std::vector<Point<spacedim>>
-    get_hierarchic_support_points_in_real_cell(
-      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping)
-    {
-      const unsigned int           dofs_per_cell = fe.dofs_per_cell;
-      std::vector<Point<spacedim>> support_points_in_real_cell(dofs_per_cell);
-
-      Assert(fe.has_support_points(),
-             ExcMessage("The finite element should have support points."));
-
-      // Get the list of support points in the unit cell in the default
-      // hierarchical ordering.
-      const std::vector<Point<dim>> &unit_support_points =
-        fe.get_unit_support_points();
-
-      // Transform the support points from unit cell to real cell.
-      for (unsigned int i = 0; i < dofs_per_cell; i++)
-        {
-          support_points_in_real_cell.at(i) =
-            mapping.transform_unit_to_real_cell(cell,
-                                                unit_support_points.at(i));
-        }
-
-      return support_points_in_real_cell;
-    }
-
-
-    /**
-     * Calculate a list of support points in the real cell in the default
-     * hierarchic order.
-     *
-     * @param cell
-     * @param fe
-     * @param mapping Geometric mapping object used for transforming support
-     * points from the unit cell to the real cell.
-     * @param support_points_in_real_cell A list of support points in the real
-     * cell in the hierarchic order, the memory of which should be preallocated.
-     *
-     * \mynote{N.B. Each support point in the real cell has the space dimension
-     * @p spacedim, while each support point in the unit cell has the manifold
-     * dimension @p dim.}
-     */
-    template <int dim, int spacedim>
-    void
-    get_hierarchic_support_points_in_real_cell(
-      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping,
-      std::vector<Point<spacedim>> &support_points_in_reall_cell)
-    {
-      const unsigned int dofs_per_cell = fe.dofs_per_cell;
-
-      Assert(support_points_in_reall_cell.size() == dofs_per_cell,
-             ExcDimensionMismatch(support_points_in_reall_cell.size(),
-                                  dofs_per_cell));
-
-      Assert(fe.has_support_points(),
-             ExcMessage("The finite element should have support points."));
-
-      // Get the list of support points in the unit cell in the default
-      // hierarchical ordering.
-      const std::vector<Point<dim>> &unit_support_points =
-        fe.get_unit_support_points();
-
-      // Transform the support points from unit cell to real cell.
-      for (unsigned int i = 0; i < dofs_per_cell; i++)
-        {
-          support_points_in_reall_cell.at(i) =
-            mapping.transform_unit_to_real_cell(cell,
-                                                unit_support_points.at(i));
-        }
-    }
-
-
-    /**
-     * Calculate a list of support points in the real cell in the lexicographic
-     * order.
-     *
-     * @param cell
-     * @param fe
-     * @param mapping Geometric mapping object used for transforming support
-     * points from the unit cell to the real cell.
-     * @return A list of support points in the real cell in the lexicographic
-     * order.
-     *
-     * \mynote{N.B. Each support point in the real cell has the space dimension
-     * @p spacedim, while each support point in the unit cell has the manifold
-     * dimension @p dim.}
-     */
-    template <int dim, int spacedim>
-    std::vector<Point<spacedim>>
-    get_lexicographic_support_points_in_real_cell(
-      const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping)
-    {
-      const unsigned int           dofs_per_cell = fe.dofs_per_cell;
-      std::vector<Point<spacedim>> support_points_in_real_cell(dofs_per_cell);
-
-      try
-        {
-          using FE_Poly = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
-          const FE_Poly &fe_poly = dynamic_cast<const FE_Poly &>(fe);
-
-          // The Mapping object should has the same degree as the @p FE_Q object,
-          // so that the support points in the real cell requested from the
-          // @p mapping object are compatible with the support points of the
-          // finite element @p fe.
-          Assert(fe_poly.get_degree() == mapping.get_degree(),
-                 ExcInternalError());
-
-          Assert(fe.has_support_points(),
-                 ExcMessage("The finite element should have support points."));
-
-          std::vector<unsigned int> poly_space_inverse_numbering(
-            fe_poly.get_poly_space_numbering_inverse());
-          support_points_in_real_cell = get_support_points_in_real_cell(
-            cell, fe, mapping, poly_space_inverse_numbering);
-        }
-      catch (const std::bad_cast &e)
-        {
-          Assert(false, ExcInternalError());
-        }
-
-      return support_points_in_real_cell;
+      return cell_neighboring_type;
     }
 
 
@@ -865,7 +2702,8 @@ namespace IdeoBEM
       const FiniteElement<dim, spacedim> &fe,
       const std::vector<Point<spacedim>> &support_points_in_real_cell,
       const Point<dim> &                  p,
-      Tensor<1, spacedim> &               normal_vector)
+      Tensor<1, spacedim> &               normal_vector,
+      const bool                          is_normal_vector_negated = false)
     {
       /**
        * \mynote{Currently, only @p dim=2 and @p spacedim=3 are supported.}
@@ -908,14 +2746,23 @@ namespace IdeoBEM
       surface_jacobian_det = std::sqrt(surface_jacobian_det);
 
       /**
-       * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$ to
-       * \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal vector.
+       * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
+       * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal vector.
        */
       for (unsigned int i = 0; i < spacedim; i++)
         {
-          normal_vector[i] =
-            surface_jacobian_det_components[(i + 1) % spacedim] /
-            surface_jacobian_det;
+          if (is_normal_vector_negated)
+            {
+              normal_vector[i] =
+                -surface_jacobian_det_components[(i + 1) % spacedim] /
+                surface_jacobian_det;
+            }
+          else
+            {
+              normal_vector[i] =
+                surface_jacobian_det_components[(i + 1) % spacedim] /
+                surface_jacobian_det;
+            }
         }
 
       return surface_jacobian_det;
@@ -942,7 +2789,8 @@ namespace IdeoBEM
       const unsigned int                  quad_no,
       const Table<2, FullMatrix<double>> &shape_grad_matrix_table,
       const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      Tensor<1, spacedim> &               normal_vector)
+      Tensor<1, spacedim> &               normal_vector,
+      const bool                          is_normal_vector_negated = false)
     {
       // Currently, only spacedim=3 is supported.
       Assert(spacedim == 3, ExcInternalError());
@@ -974,14 +2822,23 @@ namespace IdeoBEM
       surface_jacobian_det = std::sqrt(surface_jacobian_det);
 
       /**
-       * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$ to
-       * \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal vector.
+       * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
+       * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal vector.
        */
       for (unsigned int i = 0; i < spacedim; i++)
         {
-          normal_vector[i] =
-            surface_jacobian_det_components[(i + 1) % spacedim] /
-            surface_jacobian_det;
+          if (is_normal_vector_negated)
+            {
+              normal_vector[i] =
+                -surface_jacobian_det_components[(i + 1) % spacedim] /
+                surface_jacobian_det;
+            }
+          else
+            {
+              normal_vector[i] =
+                surface_jacobian_det_components[(i + 1) % spacedim] /
+                surface_jacobian_det;
+            }
         }
 
       return surface_jacobian_det;
@@ -1031,8 +2888,8 @@ namespace IdeoBEM
        */
       for (unsigned int i = 0; i < dofs_per_cell; i++)
         {
-          real_coords = real_coords + shape_values_vector(i) *
-                                        support_points_in_real_cell.at(i);
+          real_coords = real_coords +
+                        shape_values_vector(i) * support_points_in_real_cell[i];
         }
 
       return real_coords;
@@ -1084,7 +2941,7 @@ namespace IdeoBEM
       for (unsigned int i = 0; i < dofs_per_cell; i++)
         {
           real_coords = real_coords + shape_value_table(i, k3_index, quad_no) *
-                                        support_points_in_real_cell.at(i);
+                                        support_points_in_real_cell[i];
         }
 
       return real_coords;
@@ -1109,86 +2966,80 @@ namespace IdeoBEM
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
 
-      try
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      std::vector<unsigned int> poly_space_inverse_numbering(
+        fe_poly.get_poly_space_numbering_inverse());
+      std::vector<unsigned int> dof_permutation(
+        poly_space_inverse_numbering.size());
+
+      const int poly_degree = fe.degree;
+      Assert((poly_degree + 1) * (poly_degree + 1) == fe.dofs_per_cell,
+             ExcDimensionMismatch((poly_degree + 1) * (poly_degree + 1),
+                                  fe.dofs_per_cell));
+
+      // Store the inverse numbering into a matrix for further traversing.
+      unsigned int             c = 0;
+      FullMatrix<unsigned int> dof_numbering_matrix(poly_degree + 1,
+                                                    poly_degree + 1);
+      for (int i = poly_degree; i >= 0; i--)
         {
-          std::vector<unsigned int> poly_space_inverse_numbering(
-            FETools::lexicographic_to_hierarchic_numbering(fe));
-          std::vector<unsigned int> dof_permutation(
-            poly_space_inverse_numbering.size());
-
-          const int poly_degree = fe.degree;
-          Assert((poly_degree + 1) * (poly_degree + 1) == fe.dofs_per_cell,
-                 ExcDimensionMismatch((poly_degree + 1) * (poly_degree + 1),
-                                      fe.dofs_per_cell));
-
-          // Store the inverse numbering into a matrix for further traversing.
-          unsigned int             c = 0;
-          FullMatrix<unsigned int> dof_numbering_matrix(poly_degree + 1,
-                                                        poly_degree + 1);
-          for (int i = poly_degree; i >= 0; i--)
+          for (int j = 0; j <= poly_degree; j++)
             {
-              for (int j = 0; j <= poly_degree; j++)
-                {
-                  dof_numbering_matrix(i, j) =
-                    poly_space_inverse_numbering.at(c);
-                  c++;
-                }
+              dof_numbering_matrix(i, j) = poly_space_inverse_numbering[c];
+              c++;
             }
+        }
 
-          switch (starting_corner)
-            {
-              case 0:
-                return poly_space_inverse_numbering;
+      switch (starting_corner)
+        {
+          case 0:
+            return poly_space_inverse_numbering;
 
-                break;
-              case 1:
-                c = 0;
-                for (int j = poly_degree; j >= 0; j--)
+            break;
+          case 1:
+            c = 0;
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                for (int i = poly_degree; i >= 0; i--)
                   {
-                    for (int i = poly_degree; i >= 0; i--)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
                   }
+              }
 
-                break;
-              case 2:
-                c = 0;
-                for (int j = 0; j <= poly_degree; j++)
-                  {
-                    for (int i = 0; i <= poly_degree; i++)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
-                  }
-
-                break;
-              case 3:
-                c = 0;
+            break;
+          case 2:
+            c = 0;
+            for (int j = 0; j <= poly_degree; j++)
+              {
                 for (int i = 0; i <= poly_degree; i++)
                   {
-                    for (int j = poly_degree; j >= 0; j--)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
                   }
+              }
 
-                break;
-              default:
-                Assert(false, ExcInternalError());
-            }
+            break;
+          case 3:
+            c = 0;
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                for (int j = poly_degree; j >= 0; j--)
+                  {
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
 
-          return dof_permutation;
+            break;
+          default:
+            Assert(false, ExcInternalError());
         }
-      catch (const std::bad_cast &e)
-        {
-          Assert(false, ExcInternalError());
 
-          return std::vector<unsigned int>();
-        }
+      return dof_permutation;
     }
 
 
@@ -1212,82 +3063,77 @@ namespace IdeoBEM
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
 
-      try
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      std::vector<unsigned int> poly_space_inverse_numbering(
+        fe_poly.get_poly_space_numbering_inverse());
+
+      const int poly_degree = fe.degree;
+      Assert((poly_degree + 1) * (poly_degree + 1) == fe.dofs_per_cell,
+             ExcDimensionMismatch((poly_degree + 1) * (poly_degree + 1),
+                                  fe.dofs_per_cell));
+      Assert(dof_permutation.size() == fe.dofs_per_cell,
+             ExcDimensionMismatch(dof_permutation.size(), fe.dofs_per_cell));
+
+      // Store the inverse numbering into a matrix for further traversing.
+      unsigned int             c = 0;
+      FullMatrix<unsigned int> dof_numbering_matrix(poly_degree + 1,
+                                                    poly_degree + 1);
+      for (int i = poly_degree; i >= 0; i--)
         {
-          std::vector<unsigned int> poly_space_inverse_numbering(
-            FETools::lexicographic_to_hierarchic_numbering(fe));
-
-          const int poly_degree = fe.degree;
-          Assert((poly_degree + 1) * (poly_degree + 1) == fe.dofs_per_cell,
-                 ExcDimensionMismatch((poly_degree + 1) * (poly_degree + 1),
-                                      fe.dofs_per_cell));
-          Assert(dof_permutation.size() == fe.dofs_per_cell,
-                 ExcDimensionMismatch(dof_permutation.size(),
-                                      fe.dofs_per_cell));
-
-          // Store the inverse numbering into a matrix for further traversing.
-          unsigned int             c = 0;
-          FullMatrix<unsigned int> dof_numbering_matrix(poly_degree + 1,
-                                                        poly_degree + 1);
-          for (int i = poly_degree; i >= 0; i--)
+          for (int j = 0; j <= poly_degree; j++)
             {
-              for (int j = 0; j <= poly_degree; j++)
-                {
-                  dof_numbering_matrix(i, j) =
-                    poly_space_inverse_numbering.at(c);
-                  c++;
-                }
-            }
-
-          switch (starting_corner)
-            {
-              case 0:
-                dof_permutation = poly_space_inverse_numbering;
-
-                break;
-              case 1:
-                c = 0;
-                for (int j = poly_degree; j >= 0; j--)
-                  {
-                    for (int i = poly_degree; i >= 0; i--)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
-                  }
-
-                break;
-              case 2:
-                c = 0;
-                for (int j = 0; j <= poly_degree; j++)
-                  {
-                    for (int i = 0; i <= poly_degree; i++)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
-                  }
-
-                break;
-              case 3:
-                c = 0;
-                for (int i = 0; i <= poly_degree; i++)
-                  {
-                    for (int j = poly_degree; j >= 0; j--)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
-                  }
-
-                break;
-              default:
-                Assert(false, ExcInternalError());
+              dof_numbering_matrix(i, j) = poly_space_inverse_numbering[c];
+              c++;
             }
         }
-      catch (const std::bad_cast &e)
+
+      switch (starting_corner)
         {
-          Assert(false, ExcInternalError());
+          case 0:
+            dof_permutation = poly_space_inverse_numbering;
+
+            break;
+          case 1:
+            c = 0;
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                for (int i = poly_degree; i >= 0; i--)
+                  {
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 2:
+            c = 0;
+            for (int j = 0; j <= poly_degree; j++)
+              {
+                for (int i = 0; i <= poly_degree; i++)
+                  {
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 3:
+            c = 0;
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                for (int j = poly_degree; j >= 0; j--)
+                  {
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          default:
+            Assert(false, ExcInternalError());
         }
     }
 
@@ -1310,8 +3156,12 @@ namespace IdeoBEM
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
 
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
       std::vector<unsigned int> poly_space_inverse_numbering(
-        FETools::lexicographic_to_hierarchic_numbering(fe));
+        fe_poly.get_poly_space_numbering_inverse());
       std::vector<unsigned int> dof_permutation(
         poly_space_inverse_numbering.size());
 
@@ -1328,7 +3178,7 @@ namespace IdeoBEM
         {
           for (int j = 0; j <= poly_degree; j++)
             {
-              dof_numbering_matrix(i, j) = poly_space_inverse_numbering.at(c);
+              dof_numbering_matrix(i, j) = poly_space_inverse_numbering[c];
               c++;
             }
         }
@@ -1341,7 +3191,7 @@ namespace IdeoBEM
               {
                 for (int i = poly_degree; i >= 0; i--)
                   {
-                    dof_permutation.at(c) = dof_numbering_matrix(i, j);
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
                     c++;
                   }
               }
@@ -1353,7 +3203,7 @@ namespace IdeoBEM
               {
                 for (int j = poly_degree; j >= 0; j--)
                   {
-                    dof_permutation.at(c) = dof_numbering_matrix(i, j);
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
                     c++;
                   }
               }
@@ -1365,7 +3215,7 @@ namespace IdeoBEM
               {
                 for (int j = 0; j <= poly_degree; j++)
                   {
-                    dof_permutation.at(c) = dof_numbering_matrix(i, j);
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
                     c++;
                   }
               }
@@ -1377,7 +3227,7 @@ namespace IdeoBEM
               {
                 for (int i = 0; i <= poly_degree; i++)
                   {
-                    dof_permutation.at(c) = dof_numbering_matrix(i, j);
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
                     c++;
                   }
               }
@@ -1399,7 +3249,7 @@ namespace IdeoBEM
      * @param fe
      * @param starting_corner Index of the starting corner point. Because there
      * are only four corners in a cell, its value belongs to \f$[0,1,2,3]\f$.
-     * @dof_permutation Numbering of the permuted DoFs. Its memory should
+     * @return dof_permutation Numbering of the permuted DoFs. Its memory should
      * be pre-allocated.
      */
     template <int dim, int spacedim>
@@ -1412,146 +3262,85 @@ namespace IdeoBEM
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
 
-      try
+      using FE_Poly_short =
+        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
+
+      std::vector<unsigned int> poly_space_inverse_numbering(
+        fe_poly.get_poly_space_numbering_inverse());
+
+      const int poly_degree = fe.degree;
+      Assert((poly_degree + 1) * (poly_degree + 1) == fe.dofs_per_cell,
+             ExcDimensionMismatch((poly_degree + 1) * (poly_degree + 1),
+                                  fe.dofs_per_cell));
+      Assert(dof_permutation.size() == fe.dofs_per_cell,
+             ExcDimensionMismatch(dof_permutation.size(), fe.dofs_per_cell));
+
+      // Store the inverse numbering into a matrix for further traversing.
+      unsigned int             c = 0;
+      FullMatrix<unsigned int> dof_numbering_matrix(poly_degree + 1,
+                                                    poly_degree + 1);
+      for (int i = poly_degree; i >= 0; i--)
         {
-          std::vector<unsigned int> poly_space_inverse_numbering(
-            FETools::lexicographic_to_hierarchic_numbering(fe));
-
-          const int poly_degree = fe.degree;
-          Assert((poly_degree + 1) * (poly_degree + 1) == fe.dofs_per_cell,
-                 ExcDimensionMismatch((poly_degree + 1) * (poly_degree + 1),
-                                      fe.dofs_per_cell));
-          Assert(dof_permutation.size() == fe.dofs_per_cell,
-                 ExcDimensionMismatch(dof_permutation.size(),
-                                      fe.dofs_per_cell));
-
-          // Store the inverse numbering into a matrix for further traversing.
-          unsigned int             c = 0;
-          FullMatrix<unsigned int> dof_numbering_matrix(poly_degree + 1,
-                                                        poly_degree + 1);
-          for (int i = poly_degree; i >= 0; i--)
+          for (int j = 0; j <= poly_degree; j++)
             {
-              for (int j = 0; j <= poly_degree; j++)
-                {
-                  dof_numbering_matrix(i, j) =
-                    poly_space_inverse_numbering.at(c);
-                  c++;
-                }
+              dof_numbering_matrix(i, j) = poly_space_inverse_numbering[c];
+              c++;
             }
+        }
 
-          switch (starting_corner)
-            {
-              case 0:
-                c = 0;
-                for (int j = 0; j <= poly_degree; j++)
-                  {
-                    for (int i = poly_degree; i >= 0; i--)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
-                  }
-
-                break;
-              case 1:
-                c = 0;
+      switch (starting_corner)
+        {
+          case 0:
+            c = 0;
+            for (int j = 0; j <= poly_degree; j++)
+              {
                 for (int i = poly_degree; i >= 0; i--)
                   {
-                    for (int j = poly_degree; j >= 0; j--)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
                   }
+              }
 
-                break;
-              case 2:
-                c = 0;
-                for (int i = 0; i <= poly_degree; i++)
-                  {
-                    for (int j = 0; j <= poly_degree; j++)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
-                  }
-
-                break;
-              case 3:
-                c = 0;
+            break;
+          case 1:
+            c = 0;
+            for (int i = poly_degree; i >= 0; i--)
+              {
                 for (int j = poly_degree; j >= 0; j--)
                   {
-                    for (int i = 0; i <= poly_degree; i++)
-                      {
-                        dof_permutation.at(c) = dof_numbering_matrix(i, j);
-                        c++;
-                      }
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
                   }
+              }
 
-                break;
-              default:
-                Assert(false, ExcInternalError());
-            }
-        }
-      catch (const std::bad_cast &e)
-        {
-          Assert(false, ExcInternalError());
-        }
-    }
+            break;
+          case 2:
+            c = 0;
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                for (int j = 0; j <= poly_degree; j++)
+                  {
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
 
+            break;
+          case 3:
+            c = 0;
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                for (int i = 0; i <= poly_degree; i++)
+                  {
+                    dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
 
-    /**
-     * Permute a vector by using the given permutation indices to access its
-     * elements.
-     *
-     * @param input_vector
-     * @param permutation_indices
-     * @return Permuted vector
-     */
-    template <typename T>
-    std::vector<T>
-    permute_vector(const std::vector<T> &           input_vector,
-                   const std::vector<unsigned int> &permutation_indices)
-    {
-      const unsigned int N = input_vector.size();
-      Assert(N == permutation_indices.size(),
-             ExcDimensionMismatch(N, permutation_indices.size()));
-
-      std::vector<T> permuted_vector(N);
-
-      for (unsigned int i = 0; i < N; i++)
-        {
-          permuted_vector.at(i) = input_vector.at(permutation_indices.at(i));
-        }
-
-      return permuted_vector;
-    }
-
-
-    /**
-     * Permute a vector by using the given permutation indices to access its
-     * elements. The result vector is returned as argument.
-     *
-     * @param input_vector
-     * @param permutation_indices
-     * @param permuted_vector Permuted vector, the memory of which should be
-     * pre-allocated.
-     */
-    template <typename T>
-    void
-    permute_vector(const std::vector<T> &           input_vector,
-                   const std::vector<unsigned int> &permutation_indices,
-                   std::vector<T> &                 permuted_vector)
-    {
-      const unsigned int N = input_vector.size();
-      Assert(N == permutation_indices.size(),
-             ExcDimensionMismatch(N, permutation_indices.size()));
-      Assert(N == permuted_vector.size(),
-             ExcDimensionMismatch(N, permuted_vector.size()));
-
-      for (unsigned int i = 0; i < N; i++)
-        {
-          permuted_vector.at(i) = input_vector.at(permutation_indices.at(i));
+            break;
+          default:
+            Assert(false, ExcInternalError());
         }
     }
   } // namespace BEMTools

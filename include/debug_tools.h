@@ -14,7 +14,10 @@
 
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/mapping.h>
+
+#include <deal.II/grid/tria.h>
 
 #include <iostream>
 #include <iterator>
@@ -289,6 +292,107 @@ print_support_point_info(const FESystem<dim, spacedim> &  fe_system,
       DoFTools::write_gnuplot_dof_support_point_info(gnuplot_file,
                                                      support_points);
     }
+}
+
+
+template <int dim, int spacedim>
+void
+print_support_point_info(const MappingQGeneric<dim, spacedim> &mapping,
+                         const DoFHandler<dim, spacedim> &     dof_handler,
+                         const std::string &                   fe_name)
+{
+  if (dof_handler.get_fe().has_support_points())
+    {
+      // Allocate memory for the vector storing support points.
+      std::map<types::global_dof_index, Point<spacedim>> support_points;
+      DoFTools::map_dofs_to_support_points(mapping,
+                                           dof_handler,
+                                           support_points);
+      std::ofstream gnuplot_file(fe_name + ".gpl");
+      DoFTools::write_gnuplot_dof_support_point_info(gnuplot_file,
+                                                     support_points);
+    }
+}
+
+
+/**
+ * Print out the polynomial space numbering and inverse numbering of a finite
+ * element in Octave format.
+ *
+ * @param out
+ * @param fe
+ * @param fe_name
+ */
+template <typename FiniteElementType>
+void
+print_polynomial_space_numbering(std::ostream &           out,
+                                 const FiniteElementType &fe,
+                                 const std::string &      fe_name)
+{
+  print_vector_to_mat(out,
+                      fe_name + std::string("_poly_space_numbering"),
+                      fe.get_poly_space_numbering(),
+                      true);
+  print_vector_to_mat(out,
+                      fe_name + std::string("_poly_space_numbering_inverse"),
+                      fe.get_poly_space_numbering_inverse(),
+                      true);
+}
+
+
+/**
+ * Print out the mapping between lexicographic numbering and hierarchic
+ * numbering of a finite element in Octave format.
+ *
+ * @param out
+ * @param fe
+ * @param fe_name
+ */
+template <int dim, int spacedim = dim>
+void
+print_mapping_between_lexicographic_and_hierarchic_numberings(
+  std::ostream &                      out,
+  const FiniteElement<dim, spacedim> &fe,
+  const std::string &                 fe_name)
+{
+  print_vector_to_mat(out,
+                      fe_name + std::string("_lexi2hier"),
+                      FETools::lexicographic_to_hierarchic_numbering(fe),
+                      true);
+  print_vector_to_mat(out,
+                      fe_name + std::string("_hier2lexi"),
+                      FETools::hierarchic_to_lexicographic_numbering(fe),
+                      true);
+}
+
+
+template <int dim, int spacedim = dim>
+void
+print_triangulation_info(std::ostream &                      out,
+                         const Triangulation<dim, spacedim> &triangulation)
+{
+  out << "Number of cells: " << triangulation.n_active_cells() << "\n"
+      << "Number of faces: " << triangulation.n_active_faces() << "\n"
+      << "Number of lines: " << triangulation.n_active_lines() << "\n"
+      << "Number of vertices: " << triangulation.n_vertices() << std::endl;
+}
+
+
+template <int dim, int spacedim = dim>
+void
+print_fe_info(std::ostream &out, const FiniteElement<dim, spacedim> &fe)
+{
+  out << "Finite element: " << fe.get_name() << "\n"
+      << "Has support points: " << (fe.has_support_points() ? "Yes" : "No")
+      << "\n"
+      << "dofs_per_vertex: " << fe.dofs_per_vertex << "\n"
+      << "dofs_per_line: " << fe.dofs_per_line << "\n"
+      << "dofs_per_quad: " << fe.dofs_per_quad << "\n"
+      << "dofs_per_hex: " << fe.dofs_per_hex << "\n"
+      << "dofs_per_face: " << fe.dofs_per_face << "\n"
+      << "dofs_per_cell: " << fe.dofs_per_cell << "\n"
+      << "components: " << fe.components << "\n"
+      << "degree: " << fe.degree << std::endl;
 }
 
 #endif /* INCLUDE_DEBUG_TOOLS_H_ */

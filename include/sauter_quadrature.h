@@ -33,7 +33,12 @@ namespace IdeoBEM
   using namespace dealii;
 
   /**
-   * Build the topology for "DoF support point to cell" relation.
+   * Build the topology for "DoF support point-to-cell" relation.
+   *
+   * \mynote{2022-06-06 This topology is needed when the continuous finite
+   * element such as @p FE_Q is adopted. For the discontinuous finite element
+   * such as @p FE_DGQ, the DoFs in a cell are separated from those in other
+   * cells. Hence, such point-to-cell topology is not necessary.}
    *
    * @param dof_to_cell_topo
    * @param dof_handler
@@ -70,7 +75,7 @@ namespace IdeoBEM
 
 
   /**
-   * Print out the topological information about DoF support point to cell
+   * Print out the topological information about DoF support point-to-cell
    * relation.
    *
    * @param dof_to_cell_topo
@@ -81,16 +86,17 @@ namespace IdeoBEM
 
 
   /**
-   * Get the DoF indices associated with the cell vertices or corners from a
-   * list of DoF indices which have been arranged in either the forward or
-   * backward lexicographic order. The results are returned in an array as the
-   * function's return value.
+   * Get the DoF indices associated with the cell vertices from a list of DoF
+   * indices which have been arranged in either the forward or backward
+   * lexicographic order. In this overloaded version, the results are returned
+   * in an array as the function's return value.
    *
    * \mynote{There are <code>GeometryInfo<dim>::vertices_per_cell</code>
    * vertices in the returned array, among which the last two vertex DoF indices
    * have been swapped in this function so that the whole list of vertex DoF
    * indices in the returned array are arranged in either the clockwise or
-   * counter clockwise order instead of the original zigzag order.}
+   * counter clockwise order instead of the original lexicographic(zigzag)
+   * order.}
    *
    * @param fe
    * @param dof_indices List of DoF indices in either the forward or backward
@@ -109,27 +115,38 @@ namespace IdeoBEM
     std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
       vertex_dof_indices;
 
+    /**
+     * When the finite element is L2, such as @p FE_DGQ, its member
+     * @p dofs_per_face is 0. Therefore, here we manually calculate the number
+     * of DoFs per face.
+     */
+    const unsigned int dofs_per_face =
+      fe.dofs_per_face > 0 ?
+        fe.dofs_per_face :
+        static_cast<unsigned int>(std::pow(fe.degree + 1, dim - 1));
+
     vertex_dof_indices[0] = dof_indices[0];
-    vertex_dof_indices[1] = dof_indices[fe.dofs_per_face - 1];
+    vertex_dof_indices[1] = dof_indices[dofs_per_face - 1];
     vertex_dof_indices[2] = dof_indices[dof_indices.size() - 1];
     vertex_dof_indices[3] =
-      dof_indices[dof_indices.size() - 1 - (fe.dofs_per_face - 1)];
+      dof_indices[dof_indices.size() - 1 - (dofs_per_face - 1)];
 
     return vertex_dof_indices;
   }
 
 
   /**
-   * Get the DoF indices associated with the cell vertices or corners from a
-   * list of DoF indices which have been arranged in either the forward or
-   * backward lexicographic order. The results are returned in an array as the
-   * last argument of this function.
+   * Get the DoF indices associated with the cell vertices from a list of DoF
+   * indices which have been arranged in either the forward or backward
+   * lexicographic order. In this overloaded version, the results are returned
+   * in an array as the last argument of this function.
    *
    * \mynote{There are <code>GeometryInfo<dim>::vertices_per_cell</code>
    * vertices in the returned array, among which the last two vertex DoF indices
    * have been swapped in this function so that the whole list of vertex DoF
    * indices in the returned array are arranged in either the clockwise or
-   * counter clockwise order instead of the original zigzag order.}
+   * counter clockwise order instead of the original lexicographic(zigzag)
+   * order.}
    *
    * @param fe
    * @param dof_indices List of DoF indices in either the forward or backward
@@ -147,11 +164,21 @@ namespace IdeoBEM
   {
     Assert(dim == 2, ExcNotImplemented());
 
+    /**
+     * When the finite element is L2, such as @p FE_DGQ, its member
+     * @p dofs_per_face is 0. Therefore, here we manually calculate the number
+     * of DoFs per face.
+     */
+    const unsigned int dofs_per_face =
+      fe.dofs_per_face > 0 ?
+        fe.dofs_per_face :
+        static_cast<unsigned int>(std::pow(fe.degree + 1, dim - 1));
+
     vertex_dof_indices[0] = dof_indices[0];
-    vertex_dof_indices[1] = dof_indices[fe.dofs_per_face - 1];
+    vertex_dof_indices[1] = dof_indices[dofs_per_face - 1];
     vertex_dof_indices[2] = dof_indices[dof_indices.size() - 1];
     vertex_dof_indices[3] =
-      dof_indices[dof_indices.size() - 1 - (fe.dofs_per_face - 1)];
+      dof_indices[dof_indices.size() - 1 - (dofs_per_face - 1)];
   }
 
 
@@ -171,45 +198,71 @@ namespace IdeoBEM
    * 2. In the common vertex case, since there is only one DoF index in the
    * vector @p vertex_dof_index_intersection, this vertex is the starting point.}
    *
-   * @param vertex_dof_index_intersection The vector storing the intersection
-   * of vertex DoF indices for \f$K_x\f$ and \f$K_y\f$.
+   * @param common_vertex_dof_indices The vector storing the pairs of vertex
+   * DoF indices in \f$K_x\f$ and \f$K_y\f$, which share common vertices.
    * @param local_vertex_dof_indices_swapped Vertex DoF indices with the last
    * two swapped, which have been obtained from the function
    * @p get_vertex_dof_indices_swapped.
+   * @param is_first_cell If the common vertex DoF indices in the first cell or
+   * the second cell are to be extracted.
    * @return The array index for the starting vertex, wrt. the original list of
    * vertex DoF indices, i.e. the last two elements of which are not swapped.
    */
   template <int vertices_per_cell>
   unsigned int
   get_start_vertex_dof_index(
-    const std::vector<types::global_dof_index> &vertex_dof_index_intersection,
+    const std::vector<
+      std::pair<types::global_dof_index, types::global_dof_index>>
+      &common_vertex_dof_indices,
     const std::array<types::global_dof_index, vertices_per_cell>
-      &local_vertex_dof_indices_swapped)
+      &        local_vertex_dof_indices_swapped,
+    const bool is_first_cell)
   {
     unsigned int starting_vertex_index = 9999;
 
-    switch (vertex_dof_index_intersection.size())
+    switch (common_vertex_dof_indices.size())
       {
         case 2: // Common edge case
           {
+            types::global_dof_index first_vertex_dof_index,
+              second_vertex_dof_index;
+
+            if (is_first_cell)
+              {
+                first_vertex_dof_index  = common_vertex_dof_indices[0].first;
+                second_vertex_dof_index = common_vertex_dof_indices[1].first;
+              }
+            else
+              {
+                first_vertex_dof_index  = common_vertex_dof_indices[0].second;
+                second_vertex_dof_index = common_vertex_dof_indices[1].second;
+              }
+
             typename std::array<types::global_dof_index,
                                 vertices_per_cell>::const_iterator
               first_common_vertex_iterator =
                 std::find(local_vertex_dof_indices_swapped.cbegin(),
                           local_vertex_dof_indices_swapped.cend(),
-                          vertex_dof_index_intersection[0]);
+                          first_vertex_dof_index);
+            Assert(first_common_vertex_iterator !=
+                     local_vertex_dof_indices_swapped.cend(),
+                   ExcInternalError());
+
             typename std::array<types::global_dof_index,
                                 vertices_per_cell>::const_iterator
               second_common_vertex_iterator =
                 std::find(local_vertex_dof_indices_swapped.cbegin(),
                           local_vertex_dof_indices_swapped.cend(),
-                          vertex_dof_index_intersection[1]);
+                          second_vertex_dof_index);
+            Assert(second_common_vertex_iterator !=
+                     local_vertex_dof_indices_swapped.cend(),
+                   ExcInternalError());
 
             if ((first_common_vertex_iterator + 1) !=
                 local_vertex_dof_indices_swapped.cend())
               {
                 if (*(first_common_vertex_iterator + 1) ==
-                    vertex_dof_index_intersection[1])
+                    second_vertex_dof_index)
                   {
                     starting_vertex_index =
                       first_common_vertex_iterator -
@@ -225,7 +278,7 @@ namespace IdeoBEM
             else
               {
                 if ((*local_vertex_dof_indices_swapped.cbegin()) ==
-                    vertex_dof_index_intersection[1])
+                    second_vertex_dof_index)
                   {
                     starting_vertex_index =
                       first_common_vertex_iterator -
@@ -248,7 +301,8 @@ namespace IdeoBEM
               first_common_vertex_iterator =
                 std::find(local_vertex_dof_indices_swapped.cbegin(),
                           local_vertex_dof_indices_swapped.cend(),
-                          vertex_dof_index_intersection[0]);
+                          is_first_cell ? common_vertex_dof_indices[0].first :
+                                          common_vertex_dof_indices[0].second);
             Assert(first_common_vertex_iterator !=
                      local_vertex_dof_indices_swapped.cend(),
                    ExcInternalError());
@@ -282,39 +336,6 @@ namespace IdeoBEM
 
 
   /**
-   * TODO: Permute DoFs support points in real cells and their associated global
-   * DoF indices for Sauter quadrature, the behavior of which depends on the
-   * detected cell neighboring types.
-   *
-   * \mynote{This version does not involve @p PairCellWiseScratchData and
-   * @p PairCellWisePerTaskData.}
-   *
-   * @param kx_support_points_permuted
-   * @param ky_support_points_permuted
-   * @param kx_local_dof_indices_permuted
-   * @param ky_local_dof_indices_permuted
-   * @param kx_cell_iter
-   * @param ky_cell_iter
-   * @param kx_mapping
-   * @param ky_mapping
-   */
-  template <int dim, int spacedim, typename RangeNumberType = double>
-  void
-  permute_dofs_for_sauter_quad(
-    std::vector<Point<spacedim>> &        kx_support_points_permuted,
-    std::vector<Point<spacedim>> &        ky_support_points_permuted,
-    std::vector<types::global_dof_index> &kx_local_dof_indices_permuted,
-    std::vector<types::global_dof_index> &ky_local_dof_indices_permuted,
-    const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
-    const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
-    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
-  {}
-
-
-  /**
    * Permute DoFs support points in real cells and their associated global
    * DoF indices for Sauter quadrature, the behavior of which depends on the
    * detected cell neighboring types.
@@ -332,8 +353,8 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   permute_dofs_for_sauter_quad(
-    PairCellWiseScratchData & scratch,
-    PairCellWisePerTaskData & data,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
     const CellNeighboringType cell_neighboring_type,
     const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
     const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
@@ -349,216 +370,365 @@ namespace IdeoBEM
     const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
 
     // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
-    // hierarchical order.
-    get_hierarchic_support_points_in_real_cell(
-      kx_cell_iter, kx_fe, kx_mapping, scratch.kx_support_points_hierarchical);
-    get_hierarchic_support_points_in_real_cell(
-      ky_cell_iter, ky_fe, ky_mapping, scratch.ky_support_points_hierarchical);
+    // DoF order.
+    get_support_points_in_default_dof_order_in_real_cell(
+      kx_cell_iter,
+      kx_fe,
+      kx_mapping,
+      scratch.kx_support_points_in_default_dof_order);
+    get_support_points_in_default_dof_order_in_real_cell(
+      ky_cell_iter,
+      ky_fe,
+      ky_mapping,
+      scratch.ky_support_points_in_default_dof_order);
 
     // N.B. The vector holding local DoF indices has to have the right size
     // before being passed to the function <code>get_dof_indices</code>.
-    kx_cell_iter->get_dof_indices(scratch.kx_local_dof_indices_hierarchical);
-    ky_cell_iter->get_dof_indices(scratch.ky_local_dof_indices_hierarchical);
+    kx_cell_iter->get_dof_indices(
+      scratch.kx_local_dof_indices_in_default_dof_order);
+    ky_cell_iter->get_dof_indices(
+      scratch.ky_local_dof_indices_in_default_dof_order);
 
     switch (cell_neighboring_type)
       {
         case SamePanel:
           {
-            Assert(scratch.vertex_dof_index_intersection.size() ==
+            Assert(scratch.common_vertex_dof_indices.size() ==
                      vertices_per_cell,
                    ExcInternalError());
 
-            /**
-             * Get support points in the lexicographic order.
-             */
-            permute_vector(scratch.kx_support_points_hierarchical,
-                           scratch.kx_fe_poly_space_numbering_inverse,
-                           scratch.kx_support_points_permuted);
-            permute_vector(scratch.ky_support_points_hierarchical,
-                           scratch.ky_fe_poly_space_numbering_inverse,
-                           scratch.ky_support_points_permuted);
+            if (kx_fe.dofs_per_cell > 1)
+              {
+                /**
+                 * Get support points and DoF indices in the lexicographic
+                 * order.
+                 */
+                permute_vector(scratch.kx_support_points_in_default_dof_order,
+                               scratch.kx_fe_poly_space_numbering_inverse,
+                               scratch.kx_support_points_permuted);
+                permute_vector(
+                  scratch.kx_local_dof_indices_in_default_dof_order,
+                  scratch.kx_fe_poly_space_numbering_inverse,
+                  data.kx_local_dof_indices_permuted);
+              }
+            else
+              {
+                /**
+                 * Handle the case when the finite element order is 0, i.e. for
+                 * @p FE_DGQ. Then there is no permutation needed.
+                 */
+                scratch.kx_support_points_permuted[0] =
+                  scratch.kx_support_points_in_default_dof_order[0];
+                data.kx_local_dof_indices_permuted[0] =
+                  scratch.kx_local_dof_indices_in_default_dof_order[0];
+              }
 
-            /**
-             * Get permuted local DoF indices in the lexicographic order.
-             */
-            permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                           scratch.kx_fe_poly_space_numbering_inverse,
-                           data.kx_local_dof_indices_permuted);
-            permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                           scratch.ky_fe_poly_space_numbering_inverse,
-                           data.ky_local_dof_indices_permuted);
+            if (ky_fe.dofs_per_cell > 1)
+              {
+                /**
+                 * Get support points and DoF indices in the lexicographic
+                 * order.
+                 */
+                permute_vector(scratch.ky_support_points_in_default_dof_order,
+                               scratch.ky_fe_poly_space_numbering_inverse,
+                               scratch.ky_support_points_permuted);
+                permute_vector(
+                  scratch.ky_local_dof_indices_in_default_dof_order,
+                  scratch.ky_fe_poly_space_numbering_inverse,
+                  data.ky_local_dof_indices_permuted);
+              }
+            else
+              {
+                /**
+                 * Handle the case when the finite element order is 0, i.e. for
+                 * @p FE_DGQ. Then there is no permutation needed.
+                 */
+                scratch.ky_support_points_permuted[0] =
+                  scratch.ky_support_points_in_default_dof_order[0];
+                data.ky_local_dof_indices_permuted[0] =
+                  scratch.ky_local_dof_indices_in_default_dof_order[0];
+              }
 
             break;
           }
         case CommonEdge:
           {
-            // This part handles the common edge case of Sauter's
-            // quadrature rule.
-            // 1. Get the DoF indices in the lexicographic order for \f$K_x\f$.
-            // 2. Get the DoF indices in the reversed lexicographic order
-            // for \f$K_y\f$.
-            // 3. Extract DoF indices only for cell vertices in \f$K_x\f$ and
-            // \f$K_y\f$. N.B. The DoF indices for the last two vertices are
-            // swapped, such that the four vertices are in clockwise or
-            // counter clockwise order.
-            // 4. Determine the starting vertex.
+            /**
+             * This part handles the common edge case of Sauter's quadrature
+             * rule.
+             * 1. Get the DoF indices in the lexicographic order for \f$K_x\f$.
+             * 2. Get the DoF indices in the reversed lexicographic order for
+             * \f$K_y\f$.
+             * 3. Extract DoF indices only for cell vertices in \f$K_x\f$ and
+             * \f$K_y\f$. N.B. The DoF indices for the last two vertices are
+             * swapped, such that the four vertices are in clockwise or counter
+             * clockwise order.
+             * 4. Determine the starting vertex.
+             */
 
-            Assert(scratch.vertex_dof_index_intersection.size() ==
-                     GeometryInfo<2>::vertices_per_face,
+            Assert(scratch.common_vertex_dof_indices.size() ==
+                     GeometryInfo<dim>::vertices_per_face,
                    ExcInternalError());
 
-            permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                           scratch.kx_fe_poly_space_numbering_inverse,
-                           data.kx_local_dof_indices_permuted);
+            if (kx_fe.dofs_per_cell > 1)
+              {
+                permute_vector(
+                  scratch.kx_local_dof_indices_in_default_dof_order,
+                  scratch.kx_fe_poly_space_numbering_inverse,
+                  data.kx_local_dof_indices_permuted);
 
-            permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                           scratch.ky_fe_reversed_poly_space_numbering_inverse,
-                           data.ky_local_dof_indices_permuted);
+                std::array<types::global_dof_index, vertices_per_cell>
+                  kx_local_vertex_dof_indices_swapped;
+                get_vertex_dof_indices_swapped(
+                  kx_fe,
+                  data.kx_local_dof_indices_permuted,
+                  kx_local_vertex_dof_indices_swapped);
 
-            std::array<types::global_dof_index, vertices_per_cell>
-              kx_local_vertex_dof_indices_swapped;
-            get_vertex_dof_indices_swapped<2, 3>(
-              kx_fe,
-              data.kx_local_dof_indices_permuted,
-              kx_local_vertex_dof_indices_swapped);
-            std::array<types::global_dof_index, vertices_per_cell>
-              ky_local_vertex_dof_indices_swapped;
-            get_vertex_dof_indices_swapped<2, 3>(
-              ky_fe,
-              data.ky_local_dof_indices_permuted,
-              ky_local_vertex_dof_indices_swapped);
+                // Determine the starting vertex index in \f$K_x\f$.
+                unsigned int kx_starting_vertex_index =
+                  get_start_vertex_dof_index<vertices_per_cell>(
+                    scratch.common_vertex_dof_indices,
+                    kx_local_vertex_dof_indices_swapped,
+                    true);
+                AssertIndexRange(kx_starting_vertex_index, vertices_per_cell);
 
-            // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
-            unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                scratch.vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
-            Assert(kx_starting_vertex_index < vertices_per_cell,
-                   ExcInternalError());
-            unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                scratch.vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
-            Assert(ky_starting_vertex_index < vertices_per_cell,
-                   ExcInternalError());
+                // Generate the permutation of DoFs in \f$K_x\f$ by starting
+                // from <code>kx_starting_vertex_index</code>.
+                generate_forward_dof_permutation(
+                  kx_fe,
+                  kx_starting_vertex_index,
+                  scratch.kx_local_dof_permutation);
 
-            // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
-            // starting from <code>kx_starting_vertex_index</code> or
-            // <code>ky_starting_vertex_index</code>.
-            generate_forward_dof_permutation(kx_fe,
-                                             kx_starting_vertex_index,
-                                             scratch.kx_local_dof_permutation);
-            generate_backward_dof_permutation(ky_fe,
-                                              ky_starting_vertex_index,
-                                              scratch.ky_local_dof_permutation);
+                permute_vector(scratch.kx_support_points_in_default_dof_order,
+                               scratch.kx_local_dof_permutation,
+                               scratch.kx_support_points_permuted);
+                permute_vector(
+                  scratch.kx_local_dof_indices_in_default_dof_order,
+                  scratch.kx_local_dof_permutation,
+                  data.kx_local_dof_indices_permuted);
+              }
+            else
+              {
+                /**
+                 * Handle the case when the finite element order is 0, i.e. for
+                 * @p FE_DGQ. Then there is no permutation needed.
+                 */
+                scratch.kx_support_points_permuted[0] =
+                  scratch.kx_support_points_in_default_dof_order[0];
+                data.kx_local_dof_indices_permuted[0] =
+                  scratch.kx_local_dof_indices_in_default_dof_order[0];
+              }
 
-            permute_vector(scratch.kx_support_points_hierarchical,
-                           scratch.kx_local_dof_permutation,
-                           scratch.kx_support_points_permuted);
-            permute_vector(scratch.ky_support_points_hierarchical,
-                           scratch.ky_local_dof_permutation,
-                           scratch.ky_support_points_permuted);
+            if (ky_fe.dofs_per_cell > 1)
+              {
+                permute_vector(
+                  scratch.ky_local_dof_indices_in_default_dof_order,
+                  scratch.ky_fe_reversed_poly_space_numbering_inverse,
+                  data.ky_local_dof_indices_permuted);
 
-            permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                           scratch.kx_local_dof_permutation,
-                           data.kx_local_dof_indices_permuted);
-            permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                           scratch.ky_local_dof_permutation,
-                           data.ky_local_dof_indices_permuted);
+                std::array<types::global_dof_index, vertices_per_cell>
+                  ky_local_vertex_dof_indices_swapped;
+                get_vertex_dof_indices_swapped(
+                  ky_fe,
+                  data.ky_local_dof_indices_permuted,
+                  ky_local_vertex_dof_indices_swapped);
+
+                // Determine the starting vertex index in \f$K_y\f$.
+                unsigned int ky_starting_vertex_index =
+                  get_start_vertex_dof_index<vertices_per_cell>(
+                    scratch.common_vertex_dof_indices,
+                    ky_local_vertex_dof_indices_swapped,
+                    false);
+                AssertIndexRange(ky_starting_vertex_index, vertices_per_cell);
+
+                // Generate the permutation of DoFs in \f$K_y\f$ by starting
+                // from <code>ky_starting_vertex_index</code>.
+                generate_backward_dof_permutation(
+                  ky_fe,
+                  ky_starting_vertex_index,
+                  scratch.ky_local_dof_permutation);
+
+                permute_vector(scratch.ky_support_points_in_default_dof_order,
+                               scratch.ky_local_dof_permutation,
+                               scratch.ky_support_points_permuted);
+                permute_vector(
+                  scratch.ky_local_dof_indices_in_default_dof_order,
+                  scratch.ky_local_dof_permutation,
+                  data.ky_local_dof_indices_permuted);
+              }
+            else
+              {
+                /**
+                 * Handle the case when the finite element order is 0, i.e. for
+                 * @p FE_DGQ. Then there is no permutation needed.
+                 */
+                scratch.ky_support_points_permuted[0] =
+                  scratch.ky_support_points_in_default_dof_order[0];
+                data.ky_local_dof_indices_permuted[0] =
+                  scratch.ky_local_dof_indices_in_default_dof_order[0];
+              }
 
             break;
           }
         case CommonVertex:
           {
-            Assert(scratch.vertex_dof_index_intersection.size() == 1,
+            Assert(scratch.common_vertex_dof_indices.size() == 1,
                    ExcInternalError());
 
-            permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                           scratch.kx_fe_poly_space_numbering_inverse,
-                           data.kx_local_dof_indices_permuted);
+            if (kx_fe.dofs_per_cell > 1)
+              {
+                permute_vector(
+                  scratch.kx_local_dof_indices_in_default_dof_order,
+                  scratch.kx_fe_poly_space_numbering_inverse,
+                  data.kx_local_dof_indices_permuted);
 
-            permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                           scratch.ky_fe_poly_space_numbering_inverse,
-                           data.ky_local_dof_indices_permuted);
+                std::array<types::global_dof_index, vertices_per_cell>
+                  kx_local_vertex_dof_indices_swapped;
+                get_vertex_dof_indices_swapped(
+                  kx_fe,
+                  data.kx_local_dof_indices_permuted,
+                  kx_local_vertex_dof_indices_swapped);
 
-            std::array<types::global_dof_index, vertices_per_cell>
-              kx_local_vertex_dof_indices_swapped;
-            get_vertex_dof_indices_swapped<2, 3>(
-              kx_fe,
-              data.kx_local_dof_indices_permuted,
-              kx_local_vertex_dof_indices_swapped);
-            std::array<types::global_dof_index, vertices_per_cell>
-              ky_local_vertex_dof_indices_swapped;
-            get_vertex_dof_indices_swapped<2, 3>(
-              ky_fe,
-              data.ky_local_dof_indices_permuted,
-              ky_local_vertex_dof_indices_swapped);
+                // Determine the starting vertex index in \f$K_x\f$.
+                unsigned int kx_starting_vertex_index =
+                  get_start_vertex_dof_index<vertices_per_cell>(
+                    scratch.common_vertex_dof_indices,
+                    kx_local_vertex_dof_indices_swapped,
+                    true);
+                AssertIndexRange(kx_starting_vertex_index, vertices_per_cell);
 
-            // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
-            unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                scratch.vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
-            Assert(kx_starting_vertex_index < vertices_per_cell,
-                   ExcInternalError());
-            unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                scratch.vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
-            Assert(ky_starting_vertex_index < vertices_per_cell,
-                   ExcInternalError());
+                // Generate the permutation of DoFs in \f$K_x\f$ by starting
+                // from <code>kx_starting_vertex_index</code>.
+                generate_forward_dof_permutation(
+                  kx_fe,
+                  kx_starting_vertex_index,
+                  scratch.kx_local_dof_permutation);
 
-            // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$ by
-            // starting from <code>kx_starting_vertex_index</code> or
-            // <code>ky_starting_vertex_index</code>.
-            generate_forward_dof_permutation(kx_fe,
-                                             kx_starting_vertex_index,
-                                             scratch.kx_local_dof_permutation);
-            generate_forward_dof_permutation(ky_fe,
-                                             ky_starting_vertex_index,
-                                             scratch.ky_local_dof_permutation);
+                permute_vector(scratch.kx_support_points_in_default_dof_order,
+                               scratch.kx_local_dof_permutation,
+                               scratch.kx_support_points_permuted);
+                permute_vector(
+                  scratch.kx_local_dof_indices_in_default_dof_order,
+                  scratch.kx_local_dof_permutation,
+                  data.kx_local_dof_indices_permuted);
+              }
+            else
+              {
+                /**
+                 * Handle the case when the finite element order is 0, i.e. for
+                 * @p FE_DGQ. Then there is no permutation needed.
+                 */
+                scratch.kx_support_points_permuted[0] =
+                  scratch.kx_support_points_in_default_dof_order[0];
+                data.kx_local_dof_indices_permuted[0] =
+                  scratch.kx_local_dof_indices_in_default_dof_order[0];
+              }
 
-            permute_vector(scratch.kx_support_points_hierarchical,
-                           scratch.kx_local_dof_permutation,
-                           scratch.kx_support_points_permuted);
-            permute_vector(scratch.ky_support_points_hierarchical,
-                           scratch.ky_local_dof_permutation,
-                           scratch.ky_support_points_permuted);
+            if (ky_fe.dofs_per_cell > 1)
+              {
+                permute_vector(
+                  scratch.ky_local_dof_indices_in_default_dof_order,
+                  scratch.ky_fe_poly_space_numbering_inverse,
+                  data.ky_local_dof_indices_permuted);
 
-            permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                           scratch.kx_local_dof_permutation,
-                           data.kx_local_dof_indices_permuted);
-            permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                           scratch.ky_local_dof_permutation,
-                           data.ky_local_dof_indices_permuted);
+                std::array<types::global_dof_index, vertices_per_cell>
+                  ky_local_vertex_dof_indices_swapped;
+                get_vertex_dof_indices_swapped(
+                  ky_fe,
+                  data.ky_local_dof_indices_permuted,
+                  ky_local_vertex_dof_indices_swapped);
+
+                // Determine the starting vertex index in \f$K_y\f$.
+                unsigned int ky_starting_vertex_index =
+                  get_start_vertex_dof_index<vertices_per_cell>(
+                    scratch.common_vertex_dof_indices,
+                    ky_local_vertex_dof_indices_swapped,
+                    false);
+                AssertIndexRange(ky_starting_vertex_index, vertices_per_cell);
+
+                // Generate the permutation of DoFs in \f$K_x\f$ by starting
+                // from <code>kx_starting_vertex_index</code>.
+                generate_forward_dof_permutation(
+                  ky_fe,
+                  ky_starting_vertex_index,
+                  scratch.ky_local_dof_permutation);
+
+                permute_vector(scratch.ky_support_points_in_default_dof_order,
+                               scratch.ky_local_dof_permutation,
+                               scratch.ky_support_points_permuted);
+                permute_vector(
+                  scratch.ky_local_dof_indices_in_default_dof_order,
+                  scratch.ky_local_dof_permutation,
+                  data.ky_local_dof_indices_permuted);
+              }
+            else
+              {
+                /**
+                 * Handle the case when the finite element order is 0, i.e. for
+                 * @p FE_DGQ. Then there is no permutation needed.
+                 */
+                scratch.ky_support_points_permuted[0] =
+                  scratch.ky_support_points_in_default_dof_order[0];
+                data.ky_local_dof_indices_permuted[0] =
+                  scratch.ky_local_dof_indices_in_default_dof_order[0];
+              }
 
             break;
           }
         case Regular:
           {
-            Assert(scratch.vertex_dof_index_intersection.size() == 0,
+            Assert(scratch.common_vertex_dof_indices.size() == 0,
                    ExcInternalError());
 
-            permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                           scratch.kx_fe_poly_space_numbering_inverse,
-                           data.kx_local_dof_indices_permuted);
+            if (kx_fe.dofs_per_cell > 1)
+              {
+                permute_vector(
+                  scratch.kx_local_dof_indices_in_default_dof_order,
+                  scratch.kx_fe_poly_space_numbering_inverse,
+                  data.kx_local_dof_indices_permuted);
+                permute_vector(scratch.kx_support_points_in_default_dof_order,
+                               scratch.kx_fe_poly_space_numbering_inverse,
+                               scratch.kx_support_points_permuted);
+              }
+            else
+              {
+                /**
+                 * Handle the case when the finite element order is 0, i.e. for
+                 * @p FE_DGQ. Then there is no permutation needed.
+                 */
+                scratch.kx_support_points_permuted[0] =
+                  scratch.kx_support_points_in_default_dof_order[0];
+                data.kx_local_dof_indices_permuted[0] =
+                  scratch.kx_local_dof_indices_in_default_dof_order[0];
+              }
 
-            permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                           scratch.ky_fe_poly_space_numbering_inverse,
-                           data.ky_local_dof_indices_permuted);
-
-            permute_vector(scratch.kx_support_points_hierarchical,
-                           scratch.kx_fe_poly_space_numbering_inverse,
-                           scratch.kx_support_points_permuted);
-            permute_vector(scratch.ky_support_points_hierarchical,
-                           scratch.ky_fe_poly_space_numbering_inverse,
-                           scratch.ky_support_points_permuted);
+            if (ky_fe.dofs_per_cell > 1)
+              {
+                permute_vector(
+                  scratch.ky_local_dof_indices_in_default_dof_order,
+                  scratch.ky_fe_poly_space_numbering_inverse,
+                  data.ky_local_dof_indices_permuted);
+                permute_vector(scratch.ky_support_points_in_default_dof_order,
+                               scratch.ky_fe_poly_space_numbering_inverse,
+                               scratch.ky_support_points_permuted);
+              }
+            else
+              {
+                /**
+                 * Handle the case when the finite element order is 0, i.e. for
+                 * @p FE_DGQ. Then there is no permutation needed.
+                 */
+                scratch.ky_support_points_permuted[0] =
+                  scratch.ky_support_points_in_default_dof_order[0];
+                data.ky_local_dof_indices_permuted[0] =
+                  scratch.ky_local_dof_indices_in_default_dof_order[0];
+              }
 
             break;
           }
         default:
           {
-            Assert(false, ExcNotImplemented());
+            Assert(false, ExcInternalError());
           }
       }
   }
@@ -577,7 +747,7 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   calc_jacobian_normals_for_sauter_quad(
-    PairCellWiseScratchData &                        scratch,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
     const CellNeighboringType                        cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const QGauss<dim * 2> &                          active_quad_rule)
@@ -586,7 +756,7 @@ namespace IdeoBEM
       {
         case SamePanel:
           {
-            Assert(scratch.vertex_dof_index_intersection.size() ==
+            Assert(scratch.common_vertex_dof_indices.size() ==
                      GeometryInfo<dim>::vertices_per_cell,
                    ExcInternalError());
 
@@ -605,7 +775,8 @@ namespace IdeoBEM
                         q,
                         bem_values.kx_shape_grad_matrix_table_for_same_panel,
                         scratch.kx_support_points_permuted,
-                        scratch.kx_normals_same_panel(k3_index, q));
+                        scratch.kx_normals_same_panel(k3_index, q),
+                        true);
 
                     scratch.ky_jacobians_same_panel(k3_index, q) =
                       surface_jacobian_det_and_normal_vector(
@@ -613,7 +784,8 @@ namespace IdeoBEM
                         q,
                         bem_values.ky_shape_grad_matrix_table_for_same_panel,
                         scratch.ky_support_points_permuted,
-                        scratch.ky_normals_same_panel(k3_index, q));
+                        scratch.ky_normals_same_panel(k3_index, q),
+                        true);
 
                     scratch.kx_quad_points_same_panel(k3_index, q) =
                       transform_unit_to_permuted_real_cell(
@@ -635,7 +807,7 @@ namespace IdeoBEM
           }
         case CommonEdge:
           {
-            Assert(scratch.vertex_dof_index_intersection.size() ==
+            Assert(scratch.common_vertex_dof_indices.size() ==
                      GeometryInfo<2>::vertices_per_face,
                    ExcInternalError());
 
@@ -650,7 +822,8 @@ namespace IdeoBEM
                         q,
                         bem_values.kx_shape_grad_matrix_table_for_common_edge,
                         scratch.kx_support_points_permuted,
-                        scratch.kx_normals_common_edge(k3_index, q));
+                        scratch.kx_normals_common_edge(k3_index, q),
+                        true);
 
                     scratch.ky_jacobians_common_edge(k3_index, q) =
                       surface_jacobian_det_and_normal_vector(
@@ -658,7 +831,8 @@ namespace IdeoBEM
                         q,
                         bem_values.ky_shape_grad_matrix_table_for_common_edge,
                         scratch.ky_support_points_permuted,
-                        scratch.ky_normals_common_edge(k3_index, q));
+                        scratch.ky_normals_common_edge(k3_index, q),
+                        true);
 
                     scratch.kx_quad_points_common_edge(k3_index, q) =
                       transform_unit_to_permuted_real_cell(
@@ -680,7 +854,7 @@ namespace IdeoBEM
           }
         case CommonVertex:
           {
-            Assert(scratch.vertex_dof_index_intersection.size() == 1,
+            Assert(scratch.common_vertex_dof_indices.size() == 1,
                    ExcInternalError());
 
             // Precalculate surface Jacobians and normal vectors.
@@ -694,7 +868,8 @@ namespace IdeoBEM
                         q,
                         bem_values.kx_shape_grad_matrix_table_for_common_vertex,
                         scratch.kx_support_points_permuted,
-                        scratch.kx_normals_common_vertex(k3_index, q));
+                        scratch.kx_normals_common_vertex(k3_index, q),
+                        true);
 
                     scratch.ky_jacobians_common_vertex(k3_index, q) =
                       surface_jacobian_det_and_normal_vector(
@@ -702,7 +877,8 @@ namespace IdeoBEM
                         q,
                         bem_values.ky_shape_grad_matrix_table_for_common_vertex,
                         scratch.ky_support_points_permuted,
-                        scratch.ky_normals_common_vertex(k3_index, q));
+                        scratch.ky_normals_common_vertex(k3_index, q),
+                        true);
 
                     scratch.kx_quad_points_common_vertex(k3_index, q) =
                       transform_unit_to_permuted_real_cell(
@@ -724,7 +900,7 @@ namespace IdeoBEM
           }
         case Regular:
           {
-            Assert(scratch.vertex_dof_index_intersection.size() == 0,
+            Assert(scratch.common_vertex_dof_indices.size() == 0,
                    ExcInternalError());
 
             // Precalculate surface Jacobians and normal vectors.
@@ -736,7 +912,8 @@ namespace IdeoBEM
                     q,
                     bem_values.kx_shape_grad_matrix_table_for_regular,
                     scratch.kx_support_points_permuted,
-                    scratch.kx_normals_regular(0, q));
+                    scratch.kx_normals_regular(0, q),
+                    true);
 
                 scratch.ky_jacobians_regular(0, q) =
                   surface_jacobian_det_and_normal_vector(
@@ -744,7 +921,8 @@ namespace IdeoBEM
                     q,
                     bem_values.ky_shape_grad_matrix_table_for_regular,
                     scratch.ky_support_points_permuted,
-                    scratch.ky_normals_regular(0, q));
+                    scratch.ky_normals_regular(0, q),
+                    true);
 
                 scratch.kx_quad_points_regular(0, q) =
                   transform_unit_to_permuted_real_cell(
@@ -808,19 +986,18 @@ namespace IdeoBEM
     // Determine the cell neighboring type based on the vertex dof indices.
     // The common dof indices will be stored into the vector
     // <code>vertex_dof_index_intersection</code> if there is any.
-    std::array<types::global_dof_index, vertices_per_cell>
-      kx_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-    std::array<types::global_dof_index, vertices_per_cell>
-      ky_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+    std::vector<types::global_dof_index> kx_vertex_dof_indices(
+      get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
+    std::vector<types::global_dof_index> ky_vertex_dof_indices(
+      get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
 
     std::vector<types::global_dof_index> vertex_dof_index_intersection;
     vertex_dof_index_intersection.reserve(vertices_per_cell);
     CellNeighboringType cell_neighboring_type =
-      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
-                                        ky_vertex_dof_indices,
-                                        vertex_dof_index_intersection);
+      detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
+        kx_vertex_dof_indices,
+        ky_vertex_dof_indices,
+        vertex_dof_index_intersection);
 
     const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
     const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
@@ -831,9 +1008,13 @@ namespace IdeoBEM
     // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
     // hierarchical order.
     std::vector<Point<spacedim>> kx_support_points_hierarchical =
-      hierarchical_support_points_in_real_cell(kx_cell_iter, kx_fe, kx_mapping);
+      get_support_points_in_default_dof_order_in_real_cell(kx_cell_iter,
+                                                           kx_fe,
+                                                           kx_mapping);
     std::vector<Point<spacedim>> ky_support_points_hierarchical =
-      hierarchical_support_points_in_real_cell(ky_cell_iter, ky_fe, ky_mapping);
+      get_support_points_in_default_dof_order_in_real_cell(ky_cell_iter,
+                                                           ky_fe,
+                                                           ky_mapping);
 
     // Permuted support points to be used in the common edge and common vertex
     // cases instead of the original support points in hierarchical order.
@@ -933,7 +1114,7 @@ namespace IdeoBEM
             // order in \f$K_x\f$.
             for (unsigned int i = 0; i < kx_n_dofs; i++)
               {
-                // Iterate over DoFs for ansatz function space in tensor
+                // Iterate over DoFs for trial function space in tensor
                 // product order in \f$K_y\f$.
                 for (unsigned int j = 0; j < ky_n_dofs; j++)
                   {
@@ -1004,15 +1185,16 @@ namespace IdeoBEM
 
             // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
             unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         kx_local_vertex_dof_indices_swapped,
+                                         true);
             Assert(kx_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
+
             unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         ky_local_vertex_dof_indices_swapped,
+                                         false);
             Assert(ky_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -1068,7 +1250,7 @@ namespace IdeoBEM
             // order in \f$K_x\f$.
             for (unsigned int i = 0; i < kx_n_dofs; i++)
               {
-                // Iterate over DoFs for ansatz function space in tensor
+                // Iterate over DoFs for trial function space in tensor
                 // product order in \f$K_y\f$.
                 for (unsigned int j = 0; j < ky_n_dofs; j++)
                   {
@@ -1124,15 +1306,16 @@ namespace IdeoBEM
 
             // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
             unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         kx_local_vertex_dof_indices_swapped,
+                                         true);
             Assert(kx_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
+
             unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         ky_local_vertex_dof_indices_swapped,
+                                         false);
             Assert(ky_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -1187,7 +1370,7 @@ namespace IdeoBEM
             // order in \f$K_x\f$.
             for (unsigned int i = 0; i < kx_n_dofs; i++)
               {
-                // Iterate over DoFs for ansatz function space in tensor
+                // Iterate over DoFs for trial function space in tensor
                 // product order in \f$K_y\f$.
                 for (unsigned int j = 0; j < ky_n_dofs; j++)
                   {
@@ -1269,7 +1452,7 @@ namespace IdeoBEM
             // order in \f$K_x\f$.
             for (unsigned int i = 0; i < kx_n_dofs; i++)
               {
-                // Iterate over DoFs for ansatz function space in tensor
+                // Iterate over DoFs for trial function space in tensor
                 // product order in \f$K_y\f$.
                 for (unsigned int j = 0; j < ky_n_dofs; j++)
                   {
@@ -1329,19 +1512,18 @@ namespace IdeoBEM
     // Determine the cell neighboring type based on the vertex dof indices.
     // The common dof indices will be stored into the vector
     // <code>vertex_dof_index_intersection</code> if there is any.
-    std::array<types::global_dof_index, vertices_per_cell>
-      kx_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-    std::array<types::global_dof_index, vertices_per_cell>
-      ky_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+    std::vector<types::global_dof_index> kx_vertex_dof_indices(
+      get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
+    std::vector<types::global_dof_index> ky_vertex_dof_indices(
+      get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
 
     std::vector<types::global_dof_index> vertex_dof_index_intersection;
     vertex_dof_index_intersection.reserve(vertices_per_cell);
     CellNeighboringType cell_neighboring_type =
-      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
-                                        ky_vertex_dof_indices,
-                                        vertex_dof_index_intersection);
+      detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
+        kx_vertex_dof_indices,
+        ky_vertex_dof_indices,
+        vertex_dof_index_intersection);
 
     const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
     const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
@@ -1352,9 +1534,13 @@ namespace IdeoBEM
     // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
     // hierarchical order.
     std::vector<Point<spacedim>> kx_support_points_hierarchical =
-      hierarchical_support_points_in_real_cell(kx_cell_iter, kx_fe, kx_mapping);
+      get_support_points_in_default_dof_order_in_real_cell(kx_cell_iter,
+                                                           kx_fe,
+                                                           kx_mapping);
     std::vector<Point<spacedim>> ky_support_points_hierarchical =
-      hierarchical_support_points_in_real_cell(ky_cell_iter, ky_fe, ky_mapping);
+      get_support_points_in_default_dof_order_in_real_cell(ky_cell_iter,
+                                                           ky_fe,
+                                                           ky_mapping);
 
     // Permuted support points to be used in the common edge and common vertex
     // cases instead of the original support points in hierarchical order.
@@ -1483,15 +1669,16 @@ namespace IdeoBEM
 
             // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
             unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         kx_local_vertex_dof_indices_swapped,
+                                         true);
             Assert(kx_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
+
             unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         ky_local_vertex_dof_indices_swapped,
+                                         false);
             Assert(ky_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -1570,15 +1757,16 @@ namespace IdeoBEM
 
             // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
             unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         kx_local_vertex_dof_indices_swapped,
+                                         true);
             Assert(kx_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
+
             unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         ky_local_vertex_dof_indices_swapped,
+                                         false);
             Assert(ky_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -1691,7 +1879,7 @@ namespace IdeoBEM
     // order in \f$K_x\f$.
     for (unsigned int i = 0; i < kx_n_dofs; i++)
       {
-        // Iterate over DoFs for ansatz function space in tensor
+        // Iterate over DoFs for trial function space in tensor
         // product order in \f$K_y\f$.
         for (unsigned int j = 0; j < ky_n_dofs; j++)
           {
@@ -1764,19 +1952,18 @@ namespace IdeoBEM
     // Determine the cell neighboring type based on the vertex dof indices.
     // The common dof indices will be stored into the vector
     // <code>vertex_dof_index_intersection</code> if there is any.
-    std::array<types::global_dof_index, vertices_per_cell>
-      kx_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-    std::array<types::global_dof_index, vertices_per_cell>
-      ky_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+    std::vector<types::global_dof_index> kx_vertex_dof_indices(
+      get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
+    std::vector<types::global_dof_index> ky_vertex_dof_indices(
+      get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
 
     std::vector<types::global_dof_index> vertex_dof_index_intersection;
     vertex_dof_index_intersection.reserve(vertices_per_cell);
     CellNeighboringType cell_neighboring_type =
-      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
-                                        ky_vertex_dof_indices,
-                                        vertex_dof_index_intersection);
+      detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
+        kx_vertex_dof_indices,
+        ky_vertex_dof_indices,
+        vertex_dof_index_intersection);
 
 
     const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
@@ -1788,9 +1975,13 @@ namespace IdeoBEM
     // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
     // hierarchical order.
     std::vector<Point<spacedim>> kx_support_points_hierarchical =
-      hierarchical_support_points_in_real_cell(kx_cell_iter, kx_fe, kx_mapping);
+      get_support_points_in_default_dof_order_in_real_cell(kx_cell_iter,
+                                                           kx_fe,
+                                                           kx_mapping);
     std::vector<Point<spacedim>> ky_support_points_hierarchical =
-      hierarchical_support_points_in_real_cell(ky_cell_iter, ky_fe, ky_mapping);
+      get_support_points_in_default_dof_order_in_real_cell(ky_cell_iter,
+                                                           ky_fe,
+                                                           ky_mapping);
 
     // Permuted support points to be used in the common edge and common vertex
     // cases instead of the original support points in hierarchical order.
@@ -1890,7 +2081,7 @@ namespace IdeoBEM
             // order in \f$K_x\f$.
             for (unsigned int i = 0; i < kx_n_dofs; i++)
               {
-                // Iterate over DoFs for ansatz function space in tensor
+                // Iterate over DoFs for trial function space in tensor
                 // product order in \f$K_y\f$.
                 for (unsigned int j = 0; j < ky_n_dofs; j++)
                   {
@@ -1961,15 +2152,16 @@ namespace IdeoBEM
 
             // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
             unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         kx_local_vertex_dof_indices_swapped,
+                                         true);
             Assert(kx_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
+
             unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         ky_local_vertex_dof_indices_swapped,
+                                         false);
             Assert(ky_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -2025,7 +2217,7 @@ namespace IdeoBEM
             // order in \f$K_x\f$.
             for (unsigned int i = 0; i < kx_n_dofs; i++)
               {
-                // Iterate over DoFs for ansatz function space in tensor
+                // Iterate over DoFs for trial function space in tensor
                 // product order in \f$K_y\f$.
                 for (unsigned int j = 0; j < ky_n_dofs; j++)
                   {
@@ -2081,15 +2273,17 @@ namespace IdeoBEM
 
             // Determine the starting vertex index in \f$K_x\f$ and \f$K_y\f$.
             unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         kx_local_vertex_dof_indices_swapped,
+                                         true);
             Assert(kx_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
+
             unsigned int ky_starting_vertex_index =
               get_start_vertex_dof_index<vertices_per_cell>(
                 vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
+                ky_local_vertex_dof_indices_swapped,
+                false);
             Assert(ky_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -2144,7 +2338,7 @@ namespace IdeoBEM
             // order in \f$K_x\f$.
             for (unsigned int i = 0; i < kx_n_dofs; i++)
               {
-                // Iterate over DoFs for ansatz function space in tensor
+                // Iterate over DoFs for trial function space in tensor
                 // product order in \f$K_y\f$.
                 for (unsigned int j = 0; j < ky_n_dofs; j++)
                   {
@@ -2226,7 +2420,7 @@ namespace IdeoBEM
             // order in \f$K_x\f$.
             for (unsigned int i = 0; i < kx_n_dofs; i++)
               {
-                // Iterate over DoFs for ansatz function space in tensor
+                // Iterate over DoFs for trial function space in tensor
                 // product order in \f$K_y\f$.
                 for (unsigned int j = 0; j < ky_n_dofs; j++)
                   {
@@ -2312,19 +2506,18 @@ namespace IdeoBEM
     // Determine the cell neighboring type based on the vertex dof indices.
     // The common dof indices will be stored into the vector
     // <code>vertex_dof_index_intersection</code> if there is any.
-    std::array<types::global_dof_index, vertices_per_cell>
-      kx_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-    std::array<types::global_dof_index, vertices_per_cell>
-      ky_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+    std::vector<types::global_dof_index> kx_vertex_dof_indices(
+      get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
+    std::vector<types::global_dof_index> ky_vertex_dof_indices(
+      get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
 
     std::vector<types::global_dof_index> vertex_dof_index_intersection;
     vertex_dof_index_intersection.reserve(vertices_per_cell);
     CellNeighboringType cell_neighboring_type =
-      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
-                                        ky_vertex_dof_indices,
-                                        vertex_dof_index_intersection);
+      detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
+        kx_vertex_dof_indices,
+        ky_vertex_dof_indices,
+        vertex_dof_index_intersection);
 
 
     const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
@@ -2336,13 +2529,13 @@ namespace IdeoBEM
     // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
     // hierarchical order.
     std::vector<Point<spacedim>> kx_support_points_hierarchical =
-      get_hierarchic_support_points_in_real_cell(kx_cell_iter,
-                                                 kx_fe,
-                                                 kx_mapping);
+      get_support_points_in_default_dof_order_in_real_cell(kx_cell_iter,
+                                                           kx_fe,
+                                                           kx_mapping);
     std::vector<Point<spacedim>> ky_support_points_hierarchical =
-      get_hierarchic_support_points_in_real_cell(ky_cell_iter,
-                                                 ky_fe,
-                                                 ky_mapping);
+      get_support_points_in_default_dof_order_in_real_cell(ky_cell_iter,
+                                                           ky_fe,
+                                                           ky_mapping);
 
     // Permuted support points to be used in the common edge and common vertex
     // cases instead of the original support points in hierarchical order.
@@ -2516,9 +2709,9 @@ namespace IdeoBEM
              * indices in \f$K_x\f$.
              */
             unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         kx_local_vertex_dof_indices_swapped,
+                                         true);
             Assert(kx_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
             /**
@@ -2526,9 +2719,9 @@ namespace IdeoBEM
              * indices in \f$K_y\f$.
              */
             unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         ky_local_vertex_dof_indices_swapped,
+                                         false);
             Assert(ky_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -2657,9 +2850,9 @@ namespace IdeoBEM
              * indices in \f$K_x\f$.
              */
             unsigned int kx_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                kx_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         kx_local_vertex_dof_indices_swapped,
+                                         true);
             Assert(kx_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -2668,9 +2861,9 @@ namespace IdeoBEM
              * indices in \f$K_y\f$.
              */
             unsigned int ky_starting_vertex_index =
-              get_start_vertex_dof_index<vertices_per_cell>(
-                vertex_dof_index_intersection,
-                ky_local_vertex_dof_indices_swapped);
+              get_start_vertex_dof_index(vertex_dof_index_intersection,
+                                         ky_local_vertex_dof_indices_swapped,
+                                         false);
             Assert(ky_starting_vertex_index < vertices_per_cell,
                    ExcInternalError());
 
@@ -2829,7 +3022,7 @@ namespace IdeoBEM
     for (unsigned int i = 0; i < kx_n_dofs; i++)
       {
         /**
-         * Iterate over DoFs for ansatz function space in \f$K_y\f$.
+         * Iterate over DoFs for trial function space in \f$K_y\f$.
          */
         for (unsigned int j = 0; j < ky_n_dofs; j++)
           {
@@ -2880,11 +3073,13 @@ namespace IdeoBEM
 
 
   /**
-   * Apply the Sauter's 4D quadrature rule to the kernel function pulled back to
-   * the Sauter's parametric space.
+   * Apply the Sauter's quadrature rule to the kernel function pulled back to
+   * the Sauter's parametric space. The result will also be multiplied by a
+   * factor.
    *
    * @param quad_rule
    * @param f
+   * @param factor
    * @param component
    * @return
    */
@@ -2893,6 +3088,7 @@ namespace IdeoBEM
   ApplyQuadrature(
     const Quadrature<dim * 2> &quad_rule,
     const KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType> &f,
+    const RangeNumberType                                                factor,
     unsigned int component = 0)
   {
     RangeNumberType result = 0.;
@@ -2905,17 +3101,18 @@ namespace IdeoBEM
         result += f.value(quad_points[q], component) * quad_weights[q];
       }
 
-    return result;
+    return result * factor;
   }
 
 
   /**
-   * Apply the Sauter's 4D quadrature rule to the kernel function pulled back to
-   * the Sauter's parametric space. This version uses the precalculated
-   * @p BEMValues.
+   * Apply the Sauter's quadrature rule to the kernel function pulled back to
+   * the Sauter's parametric space. The result will also be multiplied by a
+   * factor. This version uses the precalculated @p BEMValues.
    *
    * @param quad_rule
    * @param f
+   * @param factor
    * @param component
    * @return
    */
@@ -2924,6 +3121,7 @@ namespace IdeoBEM
   ApplyQuadratureUsingBEMValues(
     const Quadrature<dim * 2> &quad_rule,
     const KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType> &f,
+    const RangeNumberType                                                factor,
     unsigned int component = 0)
   {
     RangeNumberType result = 0.;
@@ -2937,7 +3135,7 @@ namespace IdeoBEM
         result += f.value(q, component) * quad_weights[q];
       }
 
-    return result;
+    return result * factor;
   }
 
 
@@ -2976,186 +3174,110 @@ namespace IdeoBEM
 
 
   /**
-   * Perform the Galerkin-BEM double integral using Sauter's quadrature.
+   * Perform the Galerkin-BEM double integral with respect to a boundary
+   * integral operator (represented as the input kernel function) using Sauter's
+   * quadrature for the DoFs in a pair of cells \f$K_x\f$ and \f$K_y\f$.
    *
-   * \mynote{1. This version is used for parallelization, where the computation
-   * results will be used to fill the @p scratch and @p data.
-   * 2. At present, both SLP and DLP kernels are computed.}
+   * \mynote{This is only applicable to the case when a full matrix for a
+   * boundary integral operator is to be constructed. Therefore, this function
+   * is only meaningful for algorithm verification. In real application, an
+   * \hmatrix should be built. Also note that even for the near field matrix
+   * node in an \hmatrix, which must be a full matrix, the Sauter's quadrature
+   * is built in the paradigm of "on a pair of DoFs" instead of "on a pair of
+   * cells". This is because the two cluster trees associated with an \hmatrix
+   * use partition by DoF support points in stead of partition by cells.}
    *
-   * @param scratch
-   * @param data
-   * @param slp
-   * @param dlp
-   * @param bem_values
+   * @param kernel
+   * @param factor
    * @param kx_cell_iter
    * @param ky_cell_iter
    * @param kx_mapping
    * @param ky_mapping
+   * @param map_from_kx_mesh_to_volume_mesh
+   * @param map_from_ky_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param bem_values
+   * @param scratch
+   * @param data
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   sauter_assemble_on_one_pair_of_cells(
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const KernelFunction<spacedim> &                 slp,
-    const KernelFunction<spacedim> &                 dlp,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const KernelFunction<spacedim> &kernel,
+    const RangeNumberType           factor,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
       &kx_cell_iter,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
       &                                   ky_cell_iter,
-    const MappingQGeneric<dim, spacedim> &kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+    const MappingQGeneric<dim, spacedim> &kx_mapping,
+    const MappingQGeneric<dim, spacedim> &ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &                                   map_from_ky_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data)
   {
-    // Geometry information.
-    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
-
-    // Determine the cell neighboring type based on the vertex dof indices.
-    // The common dof indices will be stored into the vector
-    // <code>vertex_dof_index_intersection</code> if there is any.
-    std::array<types::global_dof_index, vertices_per_cell>
-      kx_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-    std::array<types::global_dof_index, vertices_per_cell>
-      ky_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
-
-    scratch.vertex_dof_index_intersection.clear();
-    CellNeighboringType cell_neighboring_type =
-      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
-                                        ky_vertex_dof_indices,
-                                        scratch.vertex_dof_index_intersection);
-    // Quadrature rule to be adopted depending on the cell neighboring
-    // type.
-    const QGauss<dim * 2> active_quad_rule =
-      select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
-                                              bem_values);
-
-    const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
-    const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
-
-    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
-    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
-
-    permute_dofs_for_sauter_quad(scratch,
-                                 data,
-                                 cell_neighboring_type,
-                                 kx_cell_iter,
-                                 ky_cell_iter,
-                                 kx_mapping,
-                                 ky_mapping);
-
-    calc_jacobian_normals_for_sauter_quad(scratch,
-                                          cell_neighboring_type,
-                                          bem_values,
-                                          active_quad_rule);
-
-    /**
-     *  Clear the local matrix in case that it is reused from another
-     *  finished task. N.B. Its memory has already been allocated in the
-     *  constructor of @p CellPairWisePerTaskData.
-     */
-    data.dlp_matrix = 0.;
-    data.slp_matrix = 0.;
-
-    // Iterate over DoFs for test function space in \f$K_x\f$.
-    for (unsigned int i = 0; i < kx_n_dofs; i++)
+    CellNeighboringType cell_neighboring_type;
+    scratch.common_vertex_dof_indices.clear();
+    switch (method_for_cell_neighboring_type)
       {
-        // Iterate over DoFs for ansatz function space in \f$K_y\f$.
-        for (unsigned int j = 0; j < ky_n_dofs; j++)
+        case DetectCellNeighboringTypeMethod::SameDoFHandlers:
           {
-            // Pullback the DLP kernel function to unit cell.
-            KernelPulledbackToUnitCell<dim, spacedim, double>
-              dlp_kernel_pullback_on_unit(dlp,
-                                          cell_neighboring_type,
-                                          scratch.kx_support_points_permuted,
-                                          scratch.ky_support_points_permuted,
-                                          kx_fe,
-                                          ky_fe,
-                                          &bem_values,
-                                          &scratch,
-                                          i,
-                                          j);
+            cell_neighboring_type =
+              detect_cell_neighboring_type_for_same_dofhandlers(
+                kx_cell_iter,
+                ky_cell_iter,
+                kx_mapping,
+                ky_mapping,
+                scratch.common_vertex_dof_indices);
 
-            // Pullback the DLP kernel function to Sauter parameter
-            // space.
-            KernelPulledbackToSauterSpace<dim, spacedim, double>
-              dlp_kernel_pullback_on_sauter(dlp_kernel_pullback_on_unit,
-                                            cell_neighboring_type,
-                                            &bem_values);
+            break;
+          }
+        case DetectCellNeighboringTypeMethod::SameTriangulations:
+          {
+            cell_neighboring_type =
+              detect_cell_neighboring_type_for_same_triangulations(
+                kx_cell_iter,
+                ky_cell_iter,
+                kx_mapping,
+                ky_mapping,
+                scratch.common_vertex_dof_indices);
 
-            // Apply 4d Sauter numerical quadrature.
-            data.dlp_matrix(i, j) =
-              ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                            dlp_kernel_pullback_on_sauter);
+            break;
+          }
+        case DetectCellNeighboringTypeMethod::DifferentTriangulations:
+          {
+            cell_neighboring_type =
+              detect_cell_neighboring_type_for_different_triangulations(
+                kx_cell_iter,
+                ky_cell_iter,
+                kx_mapping,
+                ky_mapping,
+                map_from_kx_mesh_to_volume_mesh,
+                map_from_ky_mesh_to_volume_mesh,
+                scratch.common_vertex_dof_indices);
 
-            // Pullback the SLP kernel function to unit cell.
-            KernelPulledbackToUnitCell<dim, spacedim, double>
-              slp_kernel_pullback_on_unit(slp,
-                                          cell_neighboring_type,
-                                          scratch.kx_support_points_permuted,
-                                          scratch.ky_support_points_permuted,
-                                          kx_fe,
-                                          ky_fe,
-                                          &bem_values,
-                                          &scratch,
-                                          i,
-                                          j);
+            break;
+          }
+        default:
+          {
+            Assert(false,
+                   ExcMessage(
+                     "Invalid cell neighboring type detection method!"));
+            cell_neighboring_type = CellNeighboringType::None;
 
-            // Pullback the SLP kernel function to Sauter parameter
-            // space.
-            KernelPulledbackToSauterSpace<dim, spacedim, double>
-              slp_kernel_pullback_on_sauter(slp_kernel_pullback_on_unit,
-                                            cell_neighboring_type,
-                                            &bem_values);
-
-            // Apply 4d Sauter numerical quadrature.
-            data.slp_matrix(i, j) =
-              ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                            slp_kernel_pullback_on_sauter);
+            break;
           }
       }
-  }
 
-
-  template <int dim, int spacedim, typename RangeNumberType = double>
-  void
-  sauter_assemble_on_one_pair_of_cells(
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const KernelFunction<spacedim> &                 slp,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const typename DoFHandler<dim, spacedim>::active_cell_iterator
-      &kx_cell_iter,
-    const typename DoFHandler<dim, spacedim>::active_cell_iterator
-      &                                   ky_cell_iter,
-    const MappingQGeneric<dim, spacedim> &kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
-  {
-    // Geometry information.
-    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
-
-    // Determine the cell neighboring type based on the vertex dof indices.
-    // The common dof indices will be stored into the vector
-    // <code>vertex_dof_index_intersection</code> if there is any.
-    std::array<types::global_dof_index, vertices_per_cell>
-      kx_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-    std::array<types::global_dof_index, vertices_per_cell>
-      ky_vertex_dof_indices(
-        get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
-
-    scratch.vertex_dof_index_intersection.clear();
-    CellNeighboringType cell_neighboring_type =
-      detect_cell_neighboring_type<dim>(kx_vertex_dof_indices,
-                                        ky_vertex_dof_indices,
-                                        scratch.vertex_dof_index_intersection);
-    // Quadrature rule to be adopted depending on the cell neighboring
-    // type.
+    /**
+     * Create a quadrature rule, which depends on the cell neighboring type.
+     */
     const QGauss<dim * 2> active_quad_rule =
       select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
                                               bem_values);
@@ -3184,38 +3306,40 @@ namespace IdeoBEM
      *  finished task. N.B. Its memory has already been allocated in the
      *  constructor of @p CellPairWisePerTaskData.
      */
-    data.dlp_matrix = 0.;
+    data.local_pair_cell_matrix.reinit(
+      data.kx_local_dof_indices_permuted.size(),
+      data.ky_local_dof_indices_permuted.size());
 
     // Iterate over DoFs for test function space in \f$K_x\f$.
     for (unsigned int i = 0; i < kx_n_dofs; i++)
       {
-        // Iterate over DoFs for ansatz function space in \f$K_y\f$.
+        // Iterate over DoFs for trial function space in \f$K_y\f$.
         for (unsigned int j = 0; j < ky_n_dofs; j++)
           {
-            // Pullback the SLP kernel function to unit cell.
-            KernelPulledbackToUnitCell<dim, spacedim, double>
-              slp_kernel_pullback_on_unit(slp,
-                                          cell_neighboring_type,
-                                          scratch.kx_support_points_permuted,
-                                          scratch.ky_support_points_permuted,
-                                          kx_fe,
-                                          ky_fe,
-                                          &bem_values,
-                                          &scratch,
-                                          i,
-                                          j);
+            // Pullback the kernel function to unit cell.
+            KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+              kernel_pullback_on_unit(kernel,
+                                      cell_neighboring_type,
+                                      scratch.kx_support_points_permuted,
+                                      scratch.ky_support_points_permuted,
+                                      kx_fe,
+                                      ky_fe,
+                                      &bem_values,
+                                      &scratch,
+                                      i,
+                                      j);
 
-            // Pullback the SLP kernel function to Sauter parameter
-            // space.
-            KernelPulledbackToSauterSpace<dim, spacedim, double>
-              slp_kernel_pullback_on_sauter(slp_kernel_pullback_on_unit,
-                                            cell_neighboring_type,
-                                            &bem_values);
+            // Pullback the kernel function to Sauter parameter space.
+            KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
+              kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                        cell_neighboring_type,
+                                        &bem_values);
 
-            // Apply 4d Sauter numerical quadrature.
-            data.slp_matrix(i, j) =
+            // Apply Sauter numerical quadrature.
+            data.local_pair_cell_matrix(i, j) =
               ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                            slp_kernel_pullback_on_sauter);
+                                            kernel_pullback_on_sauter,
+                                            factor);
           }
       }
   }
@@ -3247,16 +3371,16 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   RangeNumberType
   sauter_assemble_on_one_pair_of_dofs(
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const KernelFunction<spacedim> &                 kernel,
-    const types::global_dof_index                    i,
-    const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const KernelFunction<spacedim> &                         kernel,
+    const types::global_dof_index                            i,
+    const types::global_dof_index                            j,
+    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
+    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
+    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
       MappingQGeneric<dim, spacedim>(1),
     const MappingQGeneric<dim, spacedim> &ky_mapping =
       MappingQGeneric<dim, spacedim>(1))
@@ -3288,19 +3412,17 @@ namespace IdeoBEM
             // Determine the cell neighboring type based on the vertex dof
             // indices. The common dof indices will be stored into the vector
             // <code>vertex_dof_index_intersection</code> if there is any.
-            std::array<types::global_dof_index, vertices_per_cell>
-              kx_vertex_dof_indices(
-                get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-            std::array<types::global_dof_index, vertices_per_cell>
-              ky_vertex_dof_indices(
-                get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+            std::vector<types::global_dof_index> kx_vertex_dof_indices(
+              get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
+            std::vector<types::global_dof_index> ky_vertex_dof_indices(
+              get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
 
-            scratch.vertex_dof_index_intersection.clear();
+            scratch.common_vertex_dof_indices.clear();
             CellNeighboringType cell_neighboring_type =
-              detect_cell_neighboring_type<dim>(
+              detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
                 kx_vertex_dof_indices,
                 ky_vertex_dof_indices,
-                scratch.vertex_dof_index_intersection);
+                scratch.common_vertex_dof_indices);
             // Quadrature rule to be adopted depending on the cell neighboring
             // type.
             const QGauss<dim * 2> active_quad_rule =
@@ -3413,10 +3535,10 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   sauter_assemble_on_one_pair_of_dofs(
-    Vector<RangeNumberType> &                        results,
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    const std::vector<KernelFunction<spacedim> *> &  kernels,
+    Vector<RangeNumberType> &                                results,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const std::vector<KernelFunction<spacedim> *> &          kernels,
     const std::vector<bool> &                        enable_kernel_evaluations,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
@@ -3459,19 +3581,17 @@ namespace IdeoBEM
             // Determine the cell neighboring type based on the vertex dof
             // indices. The common dof indices will be stored into the vector
             // <code>vertex_dof_index_intersection</code> if there is any.
-            std::array<types::global_dof_index, vertices_per_cell>
-              kx_vertex_dof_indices(
-                get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-            std::array<types::global_dof_index, vertices_per_cell>
-              ky_vertex_dof_indices(
-                get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+            std::vector<types::global_dof_index> kx_vertex_dof_indices(
+              get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
+            std::vector<types::global_dof_index> ky_vertex_dof_indices(
+              get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
 
-            scratch.vertex_dof_index_intersection.clear();
+            scratch.common_vertex_dof_indices.clear();
             CellNeighboringType cell_neighboring_type =
-              detect_cell_neighboring_type<dim>(
+              detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
                 kx_vertex_dof_indices,
                 ky_vertex_dof_indices,
-                scratch.vertex_dof_index_intersection);
+                scratch.common_vertex_dof_indices);
             // Quadrature rule to be adopted depending on the cell neighboring
             // type.
             const QGauss<dim * 2> active_quad_rule =
@@ -3601,10 +3721,10 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   sauter_assemble_on_one_pair_of_dofs(
-    Vector<RangeNumberType> &                        results,
-    PairCellWiseScratchData &                        scratch,
-    PairCellWisePerTaskData &                        data,
-    CellWiseScratchData &                            fem_scratch,
+    Vector<RangeNumberType> &                                results,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    CellWiseScratchData<dim, spacedim> &                     fem_scratch,
     const std::vector<RangeNumberType> &             mass_matrix_factors,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
     const std::vector<bool> &                        enable_kernel_evaluations,
@@ -3657,19 +3777,17 @@ namespace IdeoBEM
             // Determine the cell neighboring type based on the vertex dof
             // indices. The common dof indices will be stored into the vector
             // <code>vertex_dof_index_intersection</code> if there is any.
-            std::array<types::global_dof_index, vertices_per_cell>
-              kx_vertex_dof_indices(
-                get_vertex_dof_indices<dim, spacedim>(kx_cell_iter));
-            std::array<types::global_dof_index, vertices_per_cell>
-              ky_vertex_dof_indices(
-                get_vertex_dof_indices<dim, spacedim>(ky_cell_iter));
+            std::vector<types::global_dof_index> kx_vertex_dof_indices(
+              get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
+            std::vector<types::global_dof_index> ky_vertex_dof_indices(
+              get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
 
-            scratch.vertex_dof_index_intersection.clear();
+            scratch.common_vertex_dof_indices.clear();
             CellNeighboringType cell_neighboring_type =
-              detect_cell_neighboring_type<dim>(
+              detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
                 kx_vertex_dof_indices,
                 ky_vertex_dof_indices,
-                scratch.vertex_dof_index_intersection);
+                scratch.common_vertex_dof_indices);
             // Quadrature rule to be adopted depending on the cell neighboring
             // type.
             const QGauss<dim * 2> active_quad_rule =
@@ -3768,60 +3886,70 @@ namespace IdeoBEM
                       {
                         if (is_update_kx_fe_values)
                           {
-                            fem_scratch.fe_values.reinit(kx_cell_iter);
+                            fem_scratch.fe_values_for_test_space.reinit(
+                              kx_cell_iter);
                             is_update_kx_fe_values = false;
                           }
 
                         const unsigned int n_q_points =
-                          fem_scratch.fe_values.get_quadrature().size();
+                          fem_scratch.fe_values_for_test_space.get_quadrature()
+                            .size();
 
                         /**
                          * Get the index of the global DoF index \f$i\f$ in the
                          * current cell \f$K_x\f$.
                          */
                         auto i_local_dof_iter = std::find(
-                          scratch.kx_local_dof_indices_hierarchical.begin(),
-                          scratch.kx_local_dof_indices_hierarchical.end(),
+                          scratch.kx_local_dof_indices_in_default_dof_order
+                            .begin(),
+                          scratch.kx_local_dof_indices_in_default_dof_order
+                            .end(),
                           i);
                         Assert(
                           i_local_dof_iter !=
-                            scratch.kx_local_dof_indices_hierarchical.end(),
+                            scratch.kx_local_dof_indices_in_default_dof_order
+                              .end(),
                           ExcMessage(
                             std::string("Cannot find the global DoF index ") +
                             std::to_string(i) +
                             std::string(" in the list of cell DoF indices!")));
                         const unsigned int i_local_dof_index =
                           i_local_dof_iter -
-                          scratch.kx_local_dof_indices_hierarchical.begin();
+                          scratch.kx_local_dof_indices_in_default_dof_order
+                            .begin();
 
                         /**
                          * Get the index of the global DoF index \f$j\f$ in the
                          * current cell \f$K_x\f$.
                          */
                         auto j_local_dof_iter = std::find(
-                          scratch.kx_local_dof_indices_hierarchical.begin(),
-                          scratch.kx_local_dof_indices_hierarchical.end(),
+                          scratch.kx_local_dof_indices_in_default_dof_order
+                            .begin(),
+                          scratch.kx_local_dof_indices_in_default_dof_order
+                            .end(),
                           j);
                         Assert(
                           j_local_dof_iter !=
-                            scratch.kx_local_dof_indices_hierarchical.end(),
+                            scratch.kx_local_dof_indices_in_default_dof_order
+                              .end(),
                           ExcMessage(
                             std::string("Cannot find the global DoF index ") +
                             std::to_string(j) +
                             std::string(" in the list of cell DoF indices!")));
                         const unsigned int j_local_dof_index =
                           j_local_dof_iter -
-                          scratch.kx_local_dof_indices_hierarchical.begin();
+                          scratch.kx_local_dof_indices_in_default_dof_order
+                            .begin();
 
                         for (unsigned int q = 0; q < n_q_points; q++)
                           {
                             results(counter) +=
                               mass_matrix_factors[counter] *
-                              fem_scratch.fe_values.shape_value(
+                              fem_scratch.fe_values_for_test_space.shape_value(
                                 i_local_dof_index, q) *
-                              fem_scratch.fe_values.shape_value(
+                              fem_scratch.fe_values_for_test_space.shape_value(
                                 j_local_dof_index, q) *
-                              fem_scratch.fe_values.JxW(q);
+                              fem_scratch.fe_values_for_test_space.JxW(q);
                           }
                       }
                   }

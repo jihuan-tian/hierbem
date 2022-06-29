@@ -8,10 +8,12 @@
 #define INCLUDE_GENERIC_FUNCTORS_H_
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/point.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/lac/lapack_support.h>
 
+#include <cmath>
 #include <forward_list>
 #include <iterator>
 #include <map>
@@ -201,6 +203,70 @@ std::size_t
 memory_consumption_of_vector(const std::vector<T> &v)
 {
   return v.capacity() * sizeof(T);
+}
+
+
+/**
+ * Check the equality of the two points using raw comparison instead of
+ * numerical comparison.
+ *
+ * \mynote{Here the raw comparison means each component in the @p dim
+ * coordinates of @p p1 is directly compared with that of @p p2, which is
+ * not checking if the absolute value of their difference is less than a
+ * threshold. The latter is a common technique in numerical computation.}
+ *
+ * @param p1
+ * @param p2
+ * @return
+ */
+template <int spacedim, typename Number = double>
+bool
+is_equal(const Point<spacedim, Number> &p1, const Point<spacedim, Number> &p2)
+{
+  bool equality = true;
+
+  for (unsigned int i = 0; i < spacedim; i++)
+    {
+      if (p1(i) != p2(i))
+        {
+          equality = false;
+          break;
+        }
+    }
+
+  return equality;
+}
+
+
+/**
+ * Check the equality of the two points using numerical comparison instead of
+ * raw comparison.
+ *
+ * @param p1
+ * @param p2
+ * @param threshold
+ * @return
+ */
+template <int spacedim, typename Number = double>
+bool
+is_equal(const Point<spacedim, Number> &p1,
+         const Point<spacedim, Number> &p2,
+         const Number                   threshold)
+{
+  Assert(threshold > 0, ExcMessage("The given threshold value should be >0!"));
+
+  bool equality = true;
+
+  for (unsigned int i = 0; i < spacedim; i++)
+    {
+      if (std::abs(p1(i) - p2(i)) > threshold)
+        {
+          equality = false;
+          break;
+        }
+    }
+
+  return equality;
 }
 
 #endif /* INCLUDE_GENERIC_FUNCTORS_H_ */

@@ -420,9 +420,9 @@ namespace IdeoBEM
       const FiniteElement<dim, spacedim> &             kx_fe,
       const FiniteElement<dim, spacedim> &             ky_fe,
       const BEMValues<dim, spacedim, RangeNumberType> *bem_values,
-      const PairCellWiseScratchData *                  scratch,
-      const unsigned int                               kx_dof_index = 0,
-      const unsigned int                               ky_dof_index = 0);
+      const PairCellWiseScratchData<dim, spacedim, RangeNumberType> *scratch,
+      const unsigned int kx_dof_index = 0,
+      const unsigned int ky_dof_index = 0);
 
 
     /**
@@ -524,8 +524,8 @@ namespace IdeoBEM
     const FiniteElement<dim, spacedim> &kx_fe;
     const FiniteElement<dim, spacedim> &ky_fe;
 
-    const BEMValues<dim, spacedim, RangeNumberType> *bem_values;
-    const PairCellWiseScratchData *                  scratch;
+    const BEMValues<dim, spacedim, RangeNumberType> *              bem_values;
+    const PairCellWiseScratchData<dim, spacedim, RangeNumberType> *scratch;
 
     /**
      * The current index for accessing the list of DoFs in the lexicographic
@@ -606,9 +606,9 @@ namespace IdeoBEM
       const FiniteElement<dim, spacedim> &             kx_fe,
       const FiniteElement<dim, spacedim> &             ky_fe,
       const BEMValues<dim, spacedim, RangeNumberType> *bem_values,
-      const PairCellWiseScratchData *                  scratch,
-      const unsigned int                               kx_dof_index,
-      const unsigned int                               ky_dof_index)
+      const PairCellWiseScratchData<dim, spacedim, RangeNumberType> *scratch,
+      const unsigned int kx_dof_index,
+      const unsigned int ky_dof_index)
     : n_components(kernel_function.n_components)
     , kernel_function(kernel_function)
     , cell_neighboring_type(cell_neighboring_type)

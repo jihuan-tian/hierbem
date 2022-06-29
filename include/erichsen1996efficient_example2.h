@@ -38,6 +38,7 @@
 #include <deal.II/dofs/dof_tools.h>
 
 // H1-conforming finite element shape functions.
+#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_values.h>
 
@@ -56,8 +57,11 @@
 
 #include <fstream>
 #include <functional>
+#include <map>
+#include <set>
 
 #include "aca_plus.h"
+#include "bem_general.h"
 #include "bem_kernels.h"
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
@@ -77,6 +81,39 @@ namespace IdeoBEM
 {
   namespace Erichsen1996Efficient
   {
+    template <int dim,
+              int spacedim,
+              typename RangeNumberType,
+              typename MatrixType>
+    friend void
+    assemble_fem_scaled_mass_matrix(
+      const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+      const DoFHandler<dim, spacedim> &dof_handler_for_ansatz_space,
+      const RangeNumberType            factor,
+      const Quadrature<dim> &          quad_rule,
+      MatrixType &                     target_full_matrix);
+
+    template <int dim,
+              int spacedim,
+              typename RangeNumberType,
+              typename MatrixType>
+    friend void
+    assemble_bem_full_matrix(
+      const KernelFunction<spacedim, RangeNumberType> &kernel,
+      const DoFHandler<dim, spacedim> &     dof_handler_for_test_space,
+      const DoFHandler<dim, spacedim> &     dof_handler_for_ansatz_space,
+      const MappingQGeneric<dim, spacedim> &kx_mapping,
+      const MappingQGeneric<dim, spacedim> &ky_mapping,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_test_space_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_ansatz_space_mesh_to_volume_mesh,
+      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+      const SauterQuadratureRule &          sauter_quad_rule,
+      MatrixType &                          target_full_matrix);
+
     class Example2
     {
     public:
@@ -85,8 +122,9 @@ namespace IdeoBEM
        */
       enum ProblemType
       {
-        NeumannBCProblem,  //!< NeumannBCProblem
-        DirichletBCProblem //!< DirichletBCProblem
+        NeumannBCProblem,   //!< NeumannBCProblem
+        DirichletBCProblem, //!< DirichletBCProblem
+        MixedBCProblem      //!< MixedBCProblem
       };
 
       /**
@@ -169,16 +207,46 @@ namespace IdeoBEM
         double   model_sphere_radius;
       };
 
+      /**
+       * Default constructor
+       */
       Example2();
+
+      /**
+       * Constructor for full matrix builder and solver, which is only for
+       * verification purpose.
+       *
+       * @param mesh_file_name
+       * @param fe_order_for_dirichlet_space
+       * @param fe_order_for_neumann_space
+       * @param mapping_order
+       * @param problem_type
+       * @param thread_num
+       */
       Example2(const std::string &mesh_file_name,
-               unsigned int       fe_order           = 2,
-               ProblemType        problem_type       = NeumannBCProblem,
-               unsigned int       thread_num         = 4,
-               unsigned int       n_min_for_ct       = 2,
-               unsigned int       n_min_for_bct      = 8,
-               double             eta                = 1.0,
-               unsigned int       max_hmat_rank      = 2,
-               double             aca_relative_error = 1e-2);
+               unsigned int       fe_order_for_dirichlet_space = 1,
+               unsigned int       fe_order_for_neumann_space   = 0,
+               unsigned int       mapping_order                = 1,
+               ProblemType        problem_type = DirichletBCProblem,
+               unsigned int       thread_num   = 4);
+
+      /**
+       * Constructor for \hmatrix builder and solver.
+       *
+       * @param mesh_file_name
+       * @param fe_order_for_dirichlet_space
+       * @param fe_order_for_neumann_space
+       * @param mapping_order
+       * @param problem_type
+       * @param thread_num
+       * @param n_min_for_ct
+       * @param n_min_for_bct
+       * @param eta
+       * @param max_hmat_rank
+       * @param aca_relative_error
+       */
+      Example2();
+
       ~Example2();
 
       /**
@@ -186,6 +254,12 @@ namespace IdeoBEM
        */
       void
       read_mesh();
+
+      /**
+       * Extract the boundary mesh from the volume mesh for BEM.
+       */
+      void
+      extract_boundary_mesh();
 
       void
       setup_system();
@@ -215,13 +289,6 @@ namespace IdeoBEM
 
       void
       run();
-
-      void
-      run_using_hmat();
-
-      // DEBUG
-      void
-      build_slp_only(bool is_build_matrix);
 
       void
       output_results();
@@ -295,72 +362,8 @@ namespace IdeoBEM
       void
       calc_cell_neighboring_types();
 
-      /**
-       * For handling FEM related cell wise integral.
-       *
-       * @param cell_iter
-       * @param scratch
-       * @param data
-       */
       void
-      assemble_on_one_cell(
-        const typename DoFHandler<2, 3>::active_cell_iterator &cell_iter,
-        CellWiseScratchData &                                  scratch,
-        CellWisePerTaskData &                                  data);
-
-      /**
-       * For handling FEM related cell wise matrix assembly. In this problem to
-       * be solved, it is the mass matrix multiplied by a factor, 1.0 for
-       * Dirichlet problem and 0.5 for Neumann problem.
-       *
-       * @param data
-       */
-      void
-      copy_cell_local_to_global(const CellWisePerTaskData &data);
-
-      /**
-       * Assemble BEM matrices on a pair of cells, i.e. \f$K_x\f$ as the field
-       * cell and \f$K_y\f$ as the source cell. For Dirichlet problem, only the
-       * SLP matrix is built. For Neumann problem, both SLP and DLP matrices are
-       * built.
-       *
-       * @param kx_cell_iter
-       * @param ky_cell_iter
-       * @param scratch
-       * @param data
-       */
-      void
-      assemble_on_one_pair_of_cells(
-        const typename DoFHandler<2, 3>::active_cell_iterator &kx_cell_iter,
-        const typename DoFHandler<2, 3>::active_cell_iterator &ky_cell_iter,
-        const BEMValues<2, 3> &                                bem_values,
-        PairCellWiseScratchData &                              scratch,
-        PairCellWisePerTaskData &                              data);
-
-      // DEBUG
-      void
-      assemble_on_one_pair_of_cells_for_slp(
-        const typename DoFHandler<2, 3>::active_cell_iterator &kx_cell_iter,
-        const typename DoFHandler<2, 3>::active_cell_iterator &ky_cell_iter,
-        const BEMValues<2, 3> &                                bem_values,
-        PairCellWiseScratchData &                              scratch,
-        PairCellWisePerTaskData &                              data);
-
-      /**
-       * Assemble pair-cell local matrices to global matrices for BEM.
-       * @param data
-       */
-      void
-      copy_pair_of_cells_local_to_global(const PairCellWisePerTaskData &data);
-
-      // #region: DEBUG
-      void
-      copy_pair_of_cells_local_to_global_for_slp(
-        const PairCellWisePerTaskData &data);
-      // #end-region
-
-      void
-      assemble_system_smp(bool is_assemble_fem_mat = true);
+      assemble_full_matrix_system_smp();
 
       /**
        * For debug purpose: Verify the function @p sauter_assemble_on_one_pair_of_dofs.
@@ -380,24 +383,108 @@ namespace IdeoBEM
       void
       solve();
 
-      std::string  mesh_file_name;
-      unsigned int fe_order;
-      ProblemType  problem_type;
+      /**
+       * Mesh file to be read into the triangulation.
+       */
+      std::string mesh_file_name;
+      /**
+       * Finite element order for the Dirichlet space.
+       */
+      unsigned int fe_order_for_dirichlet_space;
+      /**
+       * Finite element order for the Neumann space.
+       */
+      unsigned int fe_order_for_neumann_space;
+      /**
+       * Laplace problem type to be solved.
+       */
+      ProblemType problem_type;
 
       /**
        * Number of threads
        */
       unsigned int thread_num;
 
-      Triangulation<2, 3>   triangulation;
-      FE_Q<2, 3>            fe;
-      DoFHandler<2, 3>      dof_handler;
+      /**
+       * Triangulation for the volume mesh.
+       */
+      Triangulation<3, 3> volume_triangulation;
+
+      /**
+       * Triangulation for the Dirichlet domain.
+       */
+      Triangulation<2, 3> triangulation_for_dirichlet_domain;
+
+      /**
+       * Triangulation for the Neumann domain.
+       */
+      Triangulation<2, 3> triangulation_for_neumann_domain;
+
+      /**
+       * A set of boundary indices for the Dirichlet domain.
+       */
+      std::set<types::boundary_id> boundary_ids_for_dirichlet_domain;
+
+      /**
+       * A set of boundary indices for the Neumann domain.
+       */
+      std::set<types::boundary_id> boundary_ids_for_neumann_domain;
+
+      /**
+       * Map from cell iterators in the surface mesh for the Dirichlet domain to
+       * the face iterators in the original volume mesh.
+       */
+      std::map<typename Triangulation<2, 3>::cell_iterator,
+               typename Triangulation<3, 3>::face_iterator>
+        map_from_dirichlet_boundary_mesh_to_volume_mesh;
+
+      /**
+       * Map from cell iterators in the surface mesh for the Neumann domain to
+       * the face iterators in the original volume mesh.
+       */
+      std::map<typename Triangulation<2, 3>::cell_iterator,
+               typename Triangulation<3, 3>::face_iterator>
+        map_from_neumann_boundary_mesh_to_volume_mesh;
+
+      /**
+       * Finite element \f$H^{\frac{1}{2}+s}\f$ for the Dirichlet space. At
+       * present, it is implemented as a continuous Lagrange space.
+       */
+      FE_Q<2, 3> fe_for_dirichlet_space;
+      /**
+       * Finite element \f$H^{-\frac{1}{2}+s}\f$ for the Neumann space. At
+       * present, it is implemented as a discontinuous Lagrange space.
+       */
+      FE_DGQ<2, 3> fe_for_neumann_space;
+
+      /**
+       * Definition of DoFHandlers for a series of combination of finite element
+       * spaces and triangulations.
+       */
+      DoFHandler<2, 3> dof_handler_for_dirichlet_space_on_dirichlet_domain;
+      DoFHandler<2, 3> dof_handler_for_dirichlet_space_on_neumann_domain;
+      DoFHandler<2, 3> dof_handler_for_neumann_space_on_dirichlet_domain;
+      DoFHandler<2, 3> dof_handler_for_neumann_space_on_neumann_domain;
+
+      unsigned int          mapping_order;
       MappingQGeneric<2, 3> mapping;
 
-      // Generate the single layer kernel function object.
-      LaplaceKernel::SingleLayerKernel<3> slp;
-      // Generate the double layer kernel function object.
-      LaplaceKernel::DoubleLayerKernel<3> dlp;
+      /**
+       * Kernel function for the single layer potential.
+       */
+      LaplaceKernel::SingleLayerKernel<3> single_layer_kernel;
+      /**
+       * Kernel function for the double layer potential.
+       */
+      LaplaceKernel::DoubleLayerKernel<3> double_layer_kernel;
+      /**
+       * Kernel function for the adjoint double layer potential.
+       */
+      LaplaceKernel::AdjointDoubleLayerKernel<3> adjoint_double_layer_kernel;
+      /**
+       * Kernel function for the hyper-singular potential.
+       */
+      LaplaceKernel::HyperSingularKernel<3> hyper_singular_kernel;
 
       // Location of the unit Dirac point source.
       Point<3> x0;
@@ -405,97 +492,159 @@ namespace IdeoBEM
       double   model_sphere_radius;
 
       /**
-       * System matrix obtained from $(v, \frac{1}{2}u) + (v, Ku)$.
-       * The first integral term in the sum is carried on each cell, while the
-       * second integral term is carried out on each pair of cells.
+       * Full matrices for verification purpose.
        */
-      FullMatrix<double> dlp_with_mass_matrix;
-      /**
-       * The right hand side matrix obtained from $(v, Vu)$.
-       */
-      FullMatrix<double> slp_matrix;
-      /**
-       * Neumann boundary condition data at each DoF support point.
-       */
-      Vector<double> neumann_bc;
-      /**
-       * Dirichlet boundary condition data at each DoF support point.
-       */
-      Vector<double> dirichlet_bc;
-      /**
-       * Right hand side vector for the problem obtained from the product of
-       * <code>system_rhs_matrix</code> and <code>neumann_bc</code>
-       */
-      Vector<double> system_rhs;
+      FullMatrix<double> V1_matrix;
+      FullMatrix<double> K1_matrix;
+      FullMatrix<double> K_prime1_matrix;
+      FullMatrix<double> D1_matrix;
+      FullMatrix<double> K2_matrix_with_mass_matrix;
+      FullMatrix<double> V2_matrix;
+      FullMatrix<double> D2_matrix;
+      FullMatrix<double> K_prime2_matrix_with_mass_matrix;
 
       bool is_use_hmat;
 
       /**
-       * \hmatrix for the Laplace SLP kernel
+       * Cluster trees
        */
-      HMatrix<3> slp_hmat;
+      ClusterTree<3> ct_for_neumann_space_on_dirichlet_domain;
+      ClusterTree<3> ct_for_neumann_space_on_neumann_domain;
+      ClusterTree<3> ct_for_dirichlet_space_on_dirichlet_domain;
+      ClusterTree<3> ct_for_dirichlet_space_on_neumann_domain;
 
       /**
-       * \hmatrix for the Laplace DLP kernel and added with the scaled mass
-       * matrix \f$\frac{1}{2}I\f$.
+       * Block cluster trees corresponding to discretized bilinear forms in
+       * the mixed boundary value problem, which contain all possible cases.
+       * \f[
+       * \begin{equation}
+       * \begin{pmatrix}
+       *  -\mathscr{V} & \mathscr{K} \\ \mathscr{K}' & \mathscr{D} \end{pmatrix}
+       * \begin{pmatrix}
+       *  t \big\vert_{\Gamma_{\rm D}} \\ u \big\vert_{\Gamma_{\rm N}}
+       * \end{pmatrix}= \begin{pmatrix}
+       *  -\frac{1}{2}\mathscr{I} - \mathscr{K} & \mathscr{V} \\ \mathscr{-D} &
+       * \frac{1}{2}\mathscr{I} - \mathscr{K}' \end{pmatrix} \begin{pmatrix} g_D
+       * \\ g_N \end{pmatrix} \end{equation} \f]
+       * @p V1, @p K1, @p K_prime1 and @p D1 correspond to matrix blocks on the
+       * left. @p K2, @p V2, @p D2 and @p K_prime2 correspond to matrix blocks
+       * on the right.
        */
-      HMatrix<3> dlp_hmat_with_mass_matrix;
-
-      Vector<double> analytical_solution_of_dirichlet_problem;
-      Vector<double> analytical_solution_of_neumann_problem;
-      Vector<double> solution;
+      BlockClusterTree<3> bct_for_bilinear_form_V1;
+      BlockClusterTree<3> bct_for_bilinear_form_K1;
+      BlockClusterTree<3> bct_for_bilinear_form_K_prime1;
+      BlockClusterTree<3> bct_for_bilinear_form_D1;
+      BlockClusterTree<3> bct_for_bilinear_form_V2;
+      BlockClusterTree<3> bct_for_bilinear_form_K2;
+      BlockClusterTree<3> bct_for_bilinear_form_K_prime2;
+      BlockClusterTree<3> bct_for_bilinear_form_D2;
 
       /**
-       * The sequence of all DoF indices with the values \f$0, 1, \cdots\f$.
+       * \hmatrices corresponding to discretized bilinear forms in the
+       * mixed boundary value problem, which contain all possible cases.
        */
-      std::vector<types::global_dof_index> dof_indices;
+      HMatrix<3> V1_hmat;
+      HMatrix<3> K1_hmat;
+      HMatrix<3> K_prime1_hmat;
+      HMatrix<3> D1_hmat;
+      HMatrix<3> V2_hmat;
+      HMatrix<3> K2_hmat_with_mass_matrix;
+      HMatrix<3> K_prime2_hmat_with_mass_matrix;
+      HMatrix<3> D2_hmat;
+
+      /**
+       * The sequence of all DoF indices with the values \f$0, 1, \cdots\f$ for
+       * different DoFHandlers.
+       */
+      std::vector<types::global_dof_index>
+        dof_indices_for_neumann_space_on_dirichlet_domain;
+      std::vector<types::global_dof_index>
+        dof_indices_for_dirichlet_space_on_neumann_domain;
+      std::vector<types::global_dof_index>
+        dof_indices_for_dirichlet_space_on_dirichlet_domain;
+      std::vector<types::global_dof_index>
+        dof_indices_for_neumann_space_on_neumann_domain;
+
       /**
        * The list of all support points associated with @p dof_indices.
        */
-      std::vector<Point<3>> all_support_points;
+      std::vector<Point<3>>
+        support_points_for_dirichlet_space_on_dirichlet_domain;
+      std::vector<Point<3>>
+        support_points_for_dirichlet_space_on_neumann_domain;
+      std::vector<Point<3>>
+                            support_points_for_neumann_space_on_dirichlet_domain;
+      std::vector<Point<3>> support_points_for_neumann_space_on_neumann_domain;
+
       /**
        * Estimated average cell size values associated with @p dof_indices.
        */
-      std::vector<double> dof_average_cell_size;
+      std::vector<double>
+        dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain;
+      std::vector<double>
+        dof_average_cell_size_for_dirichlet_space_on_neumann_domain;
+      std::vector<double>
+        dof_average_cell_size_for_neumann_space_on_dirichlet_domain;
+      std::vector<double>
+        dof_average_cell_size_for_neumann_space_on_neumann_domain;
 
       /**
-       * Minimum cluster size
+       * Minimum cluster size. At present, assume all \bcts share this same
+       * parameter.
        */
       unsigned int n_min_for_ct;
       /**
-       * Minimum block cluster size
+       * Minimum block cluster size. At present, assume all \bcts share this
+       * same parameter.
        */
       unsigned int n_min_for_bct;
       /**
-       * Admissibility constant
+       * Admissibility constant. At present, assume all \bcts share this same
+       * parameter.
        */
       double eta;
       /**
-       * Maximum rank of the \hmatrices to be built
+       * Maximum rank of the \hmatrices to be built. At present, assume all
+       * \hmatrices share this same parameter.
        */
       unsigned int max_hmat_rank;
       /**
-       * Relative approximation error used in ACA+
+       * Relative approximation error used in ACA+. At present, assume all
+       * \hmatrices share this same parameter.
        */
       double aca_relative_error;
+
       /**
-       * Cluster tree
+       * Neumann boundary condition data at each DoF support point.
        */
-      ClusterTree<3> ct;
+      Vector<double> neumann_bc;
+
       /**
-       * Block cluster tree
+       * Dirichlet boundary condition data at each DoF support point.
        */
-      BlockClusterTree<3> bct;
+      Vector<double> dirichlet_bc;
+
+      /**
+       * Right hand side vector.
+       */
+      Vector<double> system_rhs;
+
+      Vector<double> analytical_solution_for_dirichlet_domain;
+      Vector<double> analytical_solution_for_neumann_domain;
+      Vector<double> solution_for_dirichlet_domain;
+      Vector<double> solution_for_neumann_domain;
     };
 
     Example2::Example2()
       : mesh_file_name("mesh.msh")
-      , fe_order(1)
-      , problem_type(NeumannBCProblem)
+      , fe_order_for_dirichlet_space(1)
+      , fe_order_for_neumann_space(0)
+      , problem_type(DirichletBCProblem)
       , thread_num(4)
-      , fe(fe_order)
-      , dof_handler(triangulation)
-      , mapping(fe_order)
+      , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
+      , fe_for_neumann_space(fe_order_for_neumann_space)
+      , mapping_order(1)
+      , mapping(mapping_order)
       , x0(0.25, 0.25, 0.25)
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
@@ -510,89 +659,158 @@ namespace IdeoBEM
 
 
     Example2::Example2(const std::string &mesh_file_name,
-                       unsigned int       fe_order,
+                       unsigned int       fe_order_for_dirichlet_space,
+                       unsigned int       fe_order_for_neumann_space,
+                       unsigned int       mapping_order,
                        ProblemType        problem_type,
-                       unsigned int       thread_num,
-                       unsigned int       n_min_for_ct,
-                       unsigned int       n_min_for_bct,
-                       double             eta,
-                       unsigned int       max_hmat_rank,
-                       double             aca_relative_error)
+                       unsigned int       thread_num)
       : mesh_file_name(mesh_file_name)
-      , fe_order(fe_order)
+      , fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
+      , fe_order_for_neumann_space(fe_order_for_neumann_space)
       , problem_type(problem_type)
       , thread_num(thread_num)
-      , fe(fe_order)
-      , dof_handler(triangulation)
-      , mapping(fe_order)
+      , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
+      , fe_for_neumann_space(fe_order_for_neumann_space)
+      , mapping_order(mapping_order)
+      , mapping(mapping_order)
       , x0(0.25, 0.25, 0.25)
       , model_sphere_center(0.0, 0.0, 0.0)
       , model_sphere_radius(1.0)
-      , is_use_hmat(true)
-      , n_min_for_ct(n_min_for_ct)
+      , is_use_hmat(false)
+      , n_min_for_ct(8)
       , n_min_for_bct(n_min_for_bct)
-      , eta(eta)
-      , max_hmat_rank(max_hmat_rank)
-      , aca_relative_error(aca_relative_error)
+      , eta(1.0)
+      , max_hmat_rank(2)
+      , aca_relative_error(1e-2)
     {}
 
 
     Example2::~Example2()
     {
-      dof_handler.clear();
+      dof_handler_for_dirichlet_space_on_dirichlet_domain.clear();
+      dof_handler_for_dirichlet_space_on_neumann_domain.clear();
+      dof_handler_for_neumann_space_on_dirichlet_domain.clear();
+      dof_handler_for_neumann_space_on_neumann_domain.clear();
     }
 
     void
     Example2::generate_mesh(unsigned int number_of_refinements)
     {
       // Generate the initial mesh.
-      GridGenerator::hyper_sphere(triangulation,
-                                  model_sphere_center,
-                                  model_sphere_radius);
+      GridGenerator::hyper_ball((Triangulation<3>)volume_triangulation,
+                                model_sphere_center,
+                                model_sphere_radius,
+                                true);
 
       // Output the initial mesh.
       GridOut       grid_out;
       std::string   base_name("sphere-");
       std::ofstream mesh_file(base_name + std::string("0.msh"));
-      grid_out.write_msh(triangulation, mesh_file);
+      grid_out.write_msh(volume_triangulation, mesh_file);
 
       // Refine the mesh.
       for (unsigned int i = 0; i < number_of_refinements; i++)
         {
-          triangulation.refine_global(1);
+          volume_triangulation.refine_global(1);
           std::ofstream mesh_file(base_name + std::to_string(i + 1) +
                                   std::string(".msh"));
-          grid_out.write_msh(triangulation, mesh_file);
+          grid_out.write_msh(volume_triangulation, mesh_file);
         }
+
+      extract_boundary_mesh();
     }
 
 
     void
     Example2::read_mesh()
     {
-      GridIn<2, 3> grid_in;
-      grid_in.attach_triangulation(triangulation);
+      GridIn<3, 3> grid_in;
+      grid_in.attach_triangulation(volume_triangulation);
       std::fstream mesh_file(mesh_file_name);
       grid_in.read_msh(mesh_file);
+
+      // TODO Initialize the sets for boundary ids.
+
+      extract_boundary_mesh();
+    }
+
+
+    void
+    Example2::extract_boundary_mesh()
+    {
+      switch (problem_type)
+        {
+          case DirichletBCProblem:
+            {
+              /**
+               * Extract the whole boundary mesh as the triangulation for the
+               * Dirichlet domain.
+               */
+              map_from_dirichlet_boundary_mesh_to_volume_mesh =
+                GridGenerator::extract_boundary_mesh(
+                  volume_triangulation, triangulation_for_dirichlet_domain);
+
+              break;
+            }
+          case NeumannBCProblem:
+            {
+              /**
+               * Extract the whole boundary mesh as the triangulation for the
+               * Neumann domain.
+               */
+              map_from_neumann_boundary_mesh_to_volume_mesh =
+                GridGenerator::extract_boundary_mesh(
+                  volume_triangulation, triangulation_for_neumann_domain);
+
+              break;
+            }
+          case MixedBCProblem:
+            {
+              /**
+               * Extract part of the boundary mesh as the triangulation for the
+               * Dirichlet domain.
+               */
+              map_from_dirichlet_boundary_mesh_to_volume_mesh =
+                GridGenerator::extract_boundary_mesh(
+                  volume_triangulation,
+                  triangulation_for_dirichlet_domain,
+                  boundary_ids_for_dirichlet_domain);
+
+              /**
+               * Extract part of the boundary mesh as the triangulation for the
+               * Neumann domain.
+               */
+              map_from_neumann_boundary_mesh_to_volume_mesh =
+                GridGenerator::extract_boundary_mesh(
+                  volume_triangulation,
+                  triangulation_for_neumann_domain,
+                  boundary_ids_for_neumann_domain);
+
+              break;
+            }
+        }
     }
 
 
     void
     Example2::calc_cell_neighboring_types()
     {
-      const unsigned int       n_active_cells = triangulation.n_active_cells();
+      const unsigned int n_active_cells =
+        triangulation_for_dirichlet_domain.n_active_cells();
       FullMatrix<unsigned int> cell_neighboring_type_matrix(n_active_cells,
                                                             n_active_cells);
 
       types::global_vertex_index i = 0;
-      for (const auto &first_cell : triangulation.active_cell_iterators())
+      for (const auto &first_cell :
+           triangulation_for_dirichlet_domain.active_cell_iterators())
         {
           std::array<types::global_vertex_index,
                      GeometryInfo<2>::vertices_per_cell>
             first_cell_vertex_indices(get_vertex_indices<2, 3>(first_cell));
 
           types::global_vertex_index j = 0;
-          for (const auto &second_cell : triangulation.active_cell_iterators())
+          for (const auto &second_cell :
+               triangulation_for_dirichlet_domain.active_cell_iterators())
             {
               std::array<types::global_vertex_index,
                          GeometryInfo<2>::vertices_per_cell>
@@ -619,858 +837,470 @@ namespace IdeoBEM
       deallog << std::endl;
     }
 
+
     void
     Example2::setup_system()
     {
-      dof_handler.distribute_dofs(fe);
-
-      const unsigned int n_dofs = dof_handler.n_dofs();
-
-      /**
-       * Full matrices for DLP and SLP are only initialized when \hmatrix is not
-       * used.
-       */
-      if (!is_use_hmat)
-        {
-          dlp_with_mass_matrix.reinit(n_dofs, n_dofs);
-          slp_matrix.reinit(n_dofs, n_dofs);
-        }
-
-      system_rhs.reinit(n_dofs);
-
-      /**
-       * Analytical Dirichlet boundary data.
-       */
-      DirichletBC dirichlet_analytical_data(x0);
-
-      /**
-       * Analytical Neumann boundary data.
-       */
-      NeumannBC neumann_analytical_data(x0,
-                                        model_sphere_center,
-                                        model_sphere_radius);
-
       switch (problem_type)
         {
-          case NeumannBCProblem:
-            {
-              /**
-               * Generate the Neumann boundary condition by interpolation.
-               */
-              neumann_bc.reinit(n_dofs);
-              VectorTools::interpolate(dof_handler,
-                                       neumann_analytical_data,
-                                       neumann_bc);
-
-              /**
-               * Generate the analytical solution, i.e. the Dirichlet data.
-               */
-              analytical_solution_of_neumann_problem.reinit(n_dofs);
-              VectorTools::interpolate(dof_handler,
-                                       dirichlet_analytical_data,
-                                       analytical_solution_of_neumann_problem);
-
-              break;
-            }
           case DirichletBCProblem:
             {
-              /**
-               * Generate the Dirichlet boundary condition by interpolation.
-               */
-              dirichlet_bc.reinit(n_dofs);
-              VectorTools::interpolate(dof_handler,
-                                       dirichlet_analytical_data,
-                                       dirichlet_bc);
+              dof_handler_for_dirichlet_space_on_dirichlet_domain.initialize(
+                triangulation_for_dirichlet_domain, fe_for_dirichlet_space);
+              dof_handler_for_neumann_space_on_dirichlet_domain.initialize(
+                triangulation_for_dirichlet_domain, fe_for_neumann_space);
+
+              const unsigned int n_dofs_for_neumann_space_on_dirichlet_domain =
+                dof_handler_for_neumann_space_on_dirichlet_domain.n_dofs();
+              const unsigned int
+                n_dofs_for_dirichlet_space_on_dirichlet_domain =
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs();
+
+              if (!is_use_hmat)
+                {
+                  /**
+                   * If full matrices are used for verification purpose,
+                   * allocate memory for them.
+                   */
+                  V1_matrix.reinit(
+                    n_dofs_for_neumann_space_on_dirichlet_domain,
+                    n_dofs_for_neumann_space_on_dirichlet_domain);
+                  K2_matrix_with_mass_matrix.reinit(
+                    n_dofs_for_neumann_space_on_dirichlet_domain,
+                    n_dofs_for_dirichlet_space_on_dirichlet_domain);
+                }
+              else
+                {
+                  /**
+                   * TODO Setup for Dirichlet problem solved by \hmatrix.
+                   */
+                }
 
               /**
-               * Generate the analytical solution, i.e. the Neumann data.
+               * Function objects for analytical boundary data.
                */
-              analytical_solution_of_dirichlet_problem.reinit(n_dofs);
+              DirichletBC dirichlet_analytical_data(x0);
+              NeumannBC   neumann_analytical_data(x0,
+                                                model_sphere_center,
+                                                model_sphere_radius);
+
+              /**
+               * Interpolate the analytical Dirichlet boundary data.
+               */
+              dirichlet_bc.reinit(
+                n_dofs_for_dirichlet_space_on_dirichlet_domain);
               VectorTools::interpolate(
-                dof_handler,
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                dirichlet_analytical_data,
+                dirichlet_bc);
+
+              /**
+               * Generate the analytical solution, i.e. the Neumann boundary
+               * data.
+               */
+              analytical_solution_for_dirichlet_domain.reinit(
+                n_dofs_for_neumann_space_on_dirichlet_domain);
+              VectorTools::interpolate(
+                dof_handler_for_neumann_space_on_dirichlet_domain,
                 neumann_analytical_data,
-                analytical_solution_of_dirichlet_problem);
+                analytical_solution_for_dirichlet_domain);
+
+              /**
+               * Allocate memory for rhs and solution vectors.
+               */
+              system_rhs.reinit(n_dofs_for_neumann_space_on_dirichlet_domain);
+              solution_for_dirichlet_domain.reinit(
+                n_dofs_for_neumann_space_on_dirichlet_domain);
+
+              break;
+            }
+          case NeumannBCProblem:
+            {
+              // TODO
+              Assert(false, ExcNotImplemented());
+
+              break;
+            }
+          case MixedBCProblem:
+            {
+              dof_handler_for_dirichlet_space_on_dirichlet_domain.initialize(
+                triangulation_for_dirichlet_domain, fe_for_dirichlet_space);
+              dof_handler_for_neumann_space_on_dirichlet_domain.initialize(
+                triangulation_for_dirichlet_domain, fe_for_neumann_space);
+              dof_handler_for_dirichlet_space_on_neumann_domain.initialize(
+                triangulation_for_neumann_domain, fe_for_dirichlet_space);
+              dof_handler_for_neumann_space_on_neumann_domain.initialize(
+                triangulation_for_neumann_domain, fe_for_neumann_space);
+
+              const unsigned int
+                n_dofs_for_dirichlet_space_on_dirichlet_domain =
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs();
+              const unsigned int n_dofs_for_neumann_space_on_dirichlet_domain =
+                dof_handler_for_neumann_space_on_dirichlet_domain.n_dofs();
+              const unsigned int n_dofs_for_dirichlet_space_on_neumann_domain =
+                dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs();
+              const unsigned int n_dofs_for_neumann_space_on_neumann_domain =
+                dof_handler_for_neumann_space_on_neumann_domain.n_dofs();
+
+              if (!is_use_hmat)
+                {
+                  /**
+                   * If full matrices are used for verification purpose,
+                   * allocate memory for them.
+                   */
+                  V1_matrix.reinit(
+                    n_dofs_for_neumann_space_on_dirichlet_domain,
+                    n_dofs_for_neumann_space_on_dirichlet_domain);
+                  K1_matrix.reinit(
+                    n_dofs_for_neumann_space_on_dirichlet_domain,
+                    n_dofs_for_dirichlet_space_on_neumann_domain);
+
+                  AssertDimension(V1_matrix.m(), K1_matrix.m());
+
+                  K_prime1_matrix.reinit(
+                    n_dofs_for_dirichlet_space_on_neumann_domain,
+                    n_dofs_for_neumann_space_on_dirichlet_domain);
+                  D1_matrix.reinit(
+                    n_dofs_for_dirichlet_space_on_neumann_domain,
+                    n_dofs_for_dirichlet_space_on_neumann_domain);
+
+                  AssertDimension(K_prime1_matrix.m(), D1_matrix.m());
+                  AssertDimension(V1_matrix.n(), K_prime1_matrix.n());
+                  AssertDimension(K1_matrix.n(), D1_matrix.n());
+
+                  K2_matrix_with_mass_matrix.reinit(
+                    n_dofs_for_neumann_space_on_dirichlet_domain,
+                    n_dofs_for_dirichlet_space_on_dirichlet_domain);
+                  V2_matrix.reinit(n_dofs_for_neumann_space_on_dirichlet_domain,
+                                   n_dofs_for_neumann_space_on_neumann_domain);
+
+                  AssertDimension(K2_matrix_with_mass_matrix.m(),
+                                  V2_matrix.m());
+                  AssertDimension(K2_matrix_with_mass_matrix.m(),
+                                  K1_matrix.m());
+
+                  D2_matrix.reinit(
+                    n_dofs_for_dirichlet_space_on_neumann_domain,
+                    n_dofs_for_dirichlet_space_on_dirichlet_domain);
+                  K_prime2_matrix_with_mass_matrix.reinit(
+                    n_dofs_for_dirichlet_space_on_neumann_domain,
+                    n_dofs_for_neumann_space_on_neumann_domain);
+
+                  AssertDimension(D2_matrix.m(),
+                                  K_prime2_matrix_with_mass_matrix.m());
+                  AssertDimension(D2_matrix.m(), K_prime1_matrix.m());
+                  AssertDimension(K2_matrix_with_mass_matrix.n(),
+                                  D2_matrix.n());
+                  AssertDimension(V2_matrix.n(),
+                                  K_prime2_matrix_with_mass_matrix.n());
+                }
+              else
+                {
+                  /**
+                   * TODO Setup for mixed boundary value problem solved by
+                   * \hmatrix.
+                   */
+                }
+
+              /**
+               * Function objects for analytical boundary data.
+               */
+              DirichletBC dirichlet_analytical_data(x0);
+              NeumannBC   neumann_analytical_data(x0,
+                                                model_sphere_center,
+                                                model_sphere_radius);
+
+              /**
+               * Interpolate the analytical Dirichlet boundary data.
+               */
+              dirichlet_bc.reinit(
+                n_dofs_for_dirichlet_space_on_dirichlet_domain);
+              VectorTools::interpolate(
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                dirichlet_analytical_data,
+                dirichlet_bc);
+
+              /**
+               * Interpolate the analytical Neumann boundary data.
+               */
+              neumann_bc.reinit(n_dofs_for_neumann_space_on_neumann_domain);
+              VectorTools::interpolate(
+                dof_handler_for_neumann_space_on_neumann_domain,
+                neumann_analytical_data,
+                neumann_bc);
+
+              /**
+               * Generate the analytical solution of Neumann data in the
+               * Dirichlet domain.
+               */
+              analytical_solution_for_dirichlet_domain.reinit(
+                n_dofs_for_neumann_space_on_dirichlet_domain);
+              VectorTools::interpolate(
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                neumann_analytical_data,
+                analytical_solution_for_dirichlet_domain);
+
+              /**
+               * Generate the analytical solution of Dirichlet data in the
+               * Neumann domain.
+               */
+              analytical_solution_for_neumann_domain.reinit(
+                n_dofs_for_dirichlet_space_on_neumann_domain);
+              VectorTools::interpolate(
+                dof_handler_for_dirichlet_space_on_neumann_domain,
+                dirichlet_analytical_data,
+                analytical_solution_for_neumann_domain);
+
+              /**
+               * Allocate memory for rhs and solution vectors.
+               */
+              system_rhs.reinit(n_dofs_for_neumann_space_on_dirichlet_domain +
+                                n_dofs_for_dirichlet_space_on_neumann_domain);
+              solution_for_dirichlet_domain.reinit(
+                n_dofs_for_neumann_space_on_dirichlet_domain +
+                n_dofs_for_dirichlet_space_on_neumann_domain);
 
               break;
             }
         }
-
-      solution.reinit(n_dofs);
     }
 
 
     void
-    Example2::assemble_on_one_cell(
-      const typename DoFHandler<2, 3>::active_cell_iterator &cell_iter,
-      CellWiseScratchData &                                  scratch,
-      CellWisePerTaskData &                                  data)
-    {
-      /**
-       * Clear the local matrix in case that it is reused from another finished
-       * task. N.B. Its memory has already been allocated in the constructor of
-       * @p CellWisePerTaskData.
-       */
-      data.local_matrix = 0.;
-
-      // N.B. The construction of the object <code>scratch.fe_values</code> is
-      // carried out in the constructor of <code>CellWiseScratchData</code>
-      scratch.fe_values.reinit(cell_iter);
-
-      const unsigned int n_q_points = scratch.fe_values.get_quadrature().size();
-      const unsigned int dofs_per_cell = fe.dofs_per_cell;
-
-      /**
-       * Calculate the local mass matrix multiplied by a factor 0.5 in the
-       * current cell.
-       */
-      for (unsigned int q = 0; q < n_q_points; q++)
-        {
-          // Iterate over test function DoFs.
-          for (unsigned int i = 0; i < dofs_per_cell; i++)
-            {
-              // Iterate over ansatz function DoFs.
-              for (unsigned int j = 0; j < dofs_per_cell; j++)
-                {
-                  data.local_matrix(i, j) +=
-                    0.5 * scratch.fe_values.shape_value(i, q) *
-                    scratch.fe_values.shape_value(j, q) *
-                    scratch.fe_values.JxW(q);
-                }
-            }
-        }
-
-      /**
-       *  Extract the DoF indices. N.B. Before calling
-       * <code>get_dof_indices</code>, the memory for the argument vector should
-       * have been allocated. Here, the memory for
-       * <code>data.local_dof_indices</code> has been allocated in the
-       * constructor of <code>CellWisePerTaskData</code>.
-       */
-      cell_iter->get_dof_indices(data.local_dof_indices);
-    } // namespace Erichsen1996Efficient
-
-
-    void
-    Example2::copy_cell_local_to_global(const CellWisePerTaskData &data)
-    {
-      const unsigned int dofs_per_cell = data.local_matrix.m();
-
-      for (unsigned int i = 0; i < dofs_per_cell; i++)
-        {
-          for (unsigned int j = 0; j < dofs_per_cell; j++)
-            {
-              dlp_with_mass_matrix.add(data.local_dof_indices[i],
-                                       data.local_dof_indices[j],
-                                       data.local_matrix(i, j));
-            }
-        }
-    }
-
-
-    void
-    Example2::assemble_on_one_pair_of_cells(
-      const typename DoFHandler<2, 3>::active_cell_iterator &kx_cell_iter,
-      const typename DoFHandler<2, 3>::active_cell_iterator &ky_cell_iter,
-      const BEMValues<2, 3> &                                bem_values,
-      PairCellWiseScratchData &                              scratch,
-      PairCellWisePerTaskData &                              data)
-    {
-      sauter_assemble_on_one_pair_of_cells(scratch,
-                                           data,
-                                           slp,
-                                           dlp,
-                                           bem_values,
-                                           kx_cell_iter,
-                                           ky_cell_iter,
-                                           mapping,
-                                           mapping);
-    }
-
-
-    void
-    Example2::assemble_on_one_pair_of_cells_for_slp(
-      const typename DoFHandler<2, 3>::active_cell_iterator &kx_cell_iter,
-      const typename DoFHandler<2, 3>::active_cell_iterator &ky_cell_iter,
-      const BEMValues<2, 3> &                                bem_values,
-      PairCellWiseScratchData &                              scratch,
-      PairCellWisePerTaskData &                              data)
-    {
-      // Geometry information.
-      const unsigned int vertices_per_cell = GeometryInfo<2>::vertices_per_cell;
-
-      // Determine the cell neighboring type based on the vertex dof indices.
-      // The common dof indices will be stored into the vector
-      // <code>vertex_dof_index_intersection</code> if there is any.
-      std::array<types::global_dof_index, vertices_per_cell>
-        kx_vertex_dof_indices(get_vertex_dof_indices<2, 3>(kx_cell_iter));
-      std::array<types::global_dof_index, vertices_per_cell>
-        ky_vertex_dof_indices(get_vertex_dof_indices<2, 3>(ky_cell_iter));
-
-      scratch.vertex_dof_index_intersection.clear();
-      CellNeighboringType cell_neighboring_type =
-        detect_cell_neighboring_type<2>(kx_vertex_dof_indices,
-                                        ky_vertex_dof_indices,
-                                        scratch.vertex_dof_index_intersection);
-
-      const FiniteElement<2, 3> &kx_fe = kx_cell_iter->get_fe();
-      const FiniteElement<2, 3> &ky_fe = ky_cell_iter->get_fe();
-
-      const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
-      const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
-
-      // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
-      // hierarchical order.
-      get_hierarchic_support_points_in_real_cell(
-        kx_cell_iter,
-        kx_fe,
-        this->mapping,
-        scratch.kx_support_points_hierarchical);
-      get_hierarchic_support_points_in_real_cell(
-        ky_cell_iter,
-        ky_fe,
-        this->mapping,
-        scratch.ky_support_points_hierarchical);
-
-      // N.B. The vector holding local DoF indices has to have the right size
-      // before being passed to the function <code>get_dof_indices</code>.
-      kx_cell_iter->get_dof_indices(scratch.kx_local_dof_indices_hierarchical);
-      ky_cell_iter->get_dof_indices(scratch.ky_local_dof_indices_hierarchical);
-
-      try
-        {
-          // Quadrature rule to be adopted depending on the cell neighboring
-          // type.
-          const QGauss<4> *active_quad_rule = nullptr;
-
-          switch (cell_neighboring_type)
-            {
-              case SamePanel:
-                {
-                  Assert(scratch.vertex_dof_index_intersection.size() ==
-                           vertices_per_cell,
-                         ExcInternalError());
-
-                  // Get support points in the lexicographic order.
-                  permute_vector(scratch.kx_support_points_hierarchical,
-                                 scratch.kx_fe_poly_space_numbering_inverse,
-                                 scratch.kx_support_points_permuted);
-                  permute_vector(scratch.ky_support_points_hierarchical,
-                                 scratch.ky_fe_poly_space_numbering_inverse,
-                                 scratch.ky_support_points_permuted);
-
-                  // Get permuted local DoF indices.
-                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                                 scratch.kx_fe_poly_space_numbering_inverse,
-                                 data.kx_local_dof_indices_permuted);
-                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                                 scratch.ky_fe_poly_space_numbering_inverse,
-                                 data.ky_local_dof_indices_permuted);
-
-                  active_quad_rule = &(bem_values.quad_rule_for_same_panel);
-
-                  // Precalculate surface Jacobians and normal vectors.
-                  for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
-                    {
-                      for (unsigned int q = 0; q < active_quad_rule->size();
-                           q++)
-                        {
-                          scratch.kx_jacobians_same_panel(k3_index, q) =
-                            surface_jacobian_det_and_normal_vector(
-                              k3_index,
-                              q,
-                              bem_values
-                                .kx_shape_grad_matrix_table_for_same_panel,
-                              scratch.kx_support_points_permuted,
-                              scratch.kx_normals_same_panel(k3_index, q));
-
-                          scratch.ky_jacobians_same_panel(k3_index, q) =
-                            surface_jacobian_det_and_normal_vector(
-                              k3_index,
-                              q,
-                              bem_values
-                                .ky_shape_grad_matrix_table_for_same_panel,
-                              scratch.ky_support_points_permuted,
-                              scratch.ky_normals_same_panel(k3_index, q));
-
-                          scratch.kx_quad_points_same_panel(k3_index, q) =
-                            transform_unit_to_permuted_real_cell(
-                              k3_index,
-                              q,
-                              bem_values.kx_shape_value_table_for_same_panel,
-                              scratch.kx_support_points_permuted);
-
-                          scratch.ky_quad_points_same_panel(k3_index, q) =
-                            transform_unit_to_permuted_real_cell(
-                              k3_index,
-                              q,
-                              bem_values.ky_shape_value_table_for_same_panel,
-                              scratch.ky_support_points_permuted);
-                        }
-                    }
-
-                  break;
-                }
-              case CommonEdge:
-                {
-                  // This part handles the common edge case of Sauter's
-                  // quadrature rule.
-                  // 1. Get the DoF indices in the lexicographic order for
-                  // \f$K_x\f$.
-                  // 2. Get the DoF indices in the reversed lexicographic order
-                  // for \f$K_x\f$.
-                  // 3. Extract DoF indices only for cell vertices in \f$K_x\f$
-                  // and \f$K_y\f$. N.B. The DoF indices for the last two
-                  // vertices are swapped, such that the four vertices are in
-                  // clockwise or counter clockwise order.
-                  // 4. Determine the starting vertex.
-
-                  Assert(scratch.vertex_dof_index_intersection.size() ==
-                           GeometryInfo<2>::vertices_per_face,
-                         ExcInternalError());
-
-                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                                 scratch.kx_fe_poly_space_numbering_inverse,
-                                 data.kx_local_dof_indices_permuted);
-
-                  permute_vector(
-                    scratch.ky_local_dof_indices_hierarchical,
-                    scratch.ky_fe_reversed_poly_space_numbering_inverse,
-                    data.ky_local_dof_indices_permuted);
-
-                  std::array<types::global_dof_index, vertices_per_cell>
-                    kx_local_vertex_dof_indices_swapped;
-                  get_vertex_dof_indices_swapped<2, 3>(
-                    kx_fe,
-                    data.kx_local_dof_indices_permuted,
-                    kx_local_vertex_dof_indices_swapped);
-                  std::array<types::global_dof_index, vertices_per_cell>
-                    ky_local_vertex_dof_indices_swapped;
-                  get_vertex_dof_indices_swapped<2, 3>(
-                    ky_fe,
-                    data.ky_local_dof_indices_permuted,
-                    ky_local_vertex_dof_indices_swapped);
-
-                  // Determine the starting vertex index in \f$K_x\f$ and
-                  // \f$K_y\f$.
-                  unsigned int kx_starting_vertex_index =
-                    get_start_vertex_dof_index<vertices_per_cell>(
-                      scratch.vertex_dof_index_intersection,
-                      kx_local_vertex_dof_indices_swapped);
-                  Assert(kx_starting_vertex_index < vertices_per_cell,
-                         ExcInternalError());
-                  unsigned int ky_starting_vertex_index =
-                    get_start_vertex_dof_index<vertices_per_cell>(
-                      scratch.vertex_dof_index_intersection,
-                      ky_local_vertex_dof_indices_swapped);
-                  Assert(ky_starting_vertex_index < vertices_per_cell,
-                         ExcInternalError());
-
-                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$
-                  // by starting from <code>kx_starting_vertex_index</code> or
-                  // <code>ky_starting_vertex_index</code>.
-                  generate_forward_dof_permutation(
-                    kx_fe,
-                    kx_starting_vertex_index,
-                    scratch.kx_local_dof_permutation);
-                  generate_backward_dof_permutation(
-                    ky_fe,
-                    ky_starting_vertex_index,
-                    scratch.ky_local_dof_permutation);
-
-                  permute_vector(scratch.kx_support_points_hierarchical,
-                                 scratch.kx_local_dof_permutation,
-                                 scratch.kx_support_points_permuted);
-                  permute_vector(scratch.ky_support_points_hierarchical,
-                                 scratch.ky_local_dof_permutation,
-                                 scratch.ky_support_points_permuted);
-
-                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                                 scratch.kx_local_dof_permutation,
-                                 data.kx_local_dof_indices_permuted);
-                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                                 scratch.ky_local_dof_permutation,
-                                 data.ky_local_dof_indices_permuted);
-
-                  active_quad_rule = &(bem_values.quad_rule_for_common_edge);
-
-                  // Precalculate surface Jacobians and normal vectors.
-                  for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
-                    {
-                      for (unsigned int q = 0; q < active_quad_rule->size();
-                           q++)
-                        {
-                          scratch.kx_jacobians_common_edge(k3_index, q) =
-                            surface_jacobian_det_and_normal_vector(
-                              k3_index,
-                              q,
-                              bem_values
-                                .kx_shape_grad_matrix_table_for_common_edge,
-                              scratch.kx_support_points_permuted,
-                              scratch.kx_normals_common_edge(k3_index, q));
-
-                          scratch.ky_jacobians_common_edge(k3_index, q) =
-                            surface_jacobian_det_and_normal_vector(
-                              k3_index,
-                              q,
-                              bem_values
-                                .ky_shape_grad_matrix_table_for_common_edge,
-                              scratch.ky_support_points_permuted,
-                              scratch.ky_normals_common_edge(k3_index, q));
-
-                          scratch.kx_quad_points_common_edge(k3_index, q) =
-                            transform_unit_to_permuted_real_cell(
-                              k3_index,
-                              q,
-                              bem_values.kx_shape_value_table_for_common_edge,
-                              scratch.kx_support_points_permuted);
-
-                          scratch.ky_quad_points_common_edge(k3_index, q) =
-                            transform_unit_to_permuted_real_cell(
-                              k3_index,
-                              q,
-                              bem_values.ky_shape_value_table_for_common_edge,
-                              scratch.ky_support_points_permuted);
-                        }
-                    }
-
-                  break;
-                }
-              case CommonVertex:
-                {
-                  Assert(scratch.vertex_dof_index_intersection.size() == 1,
-                         ExcInternalError());
-
-                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                                 scratch.kx_fe_poly_space_numbering_inverse,
-                                 data.kx_local_dof_indices_permuted);
-
-                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                                 scratch.ky_fe_poly_space_numbering_inverse,
-                                 data.ky_local_dof_indices_permuted);
-
-                  std::array<types::global_dof_index, vertices_per_cell>
-                    kx_local_vertex_dof_indices_swapped;
-                  get_vertex_dof_indices_swapped<2, 3>(
-                    kx_fe,
-                    data.kx_local_dof_indices_permuted,
-                    kx_local_vertex_dof_indices_swapped);
-                  std::array<types::global_dof_index, vertices_per_cell>
-                    ky_local_vertex_dof_indices_swapped;
-                  get_vertex_dof_indices_swapped<2, 3>(
-                    ky_fe,
-                    data.ky_local_dof_indices_permuted,
-                    ky_local_vertex_dof_indices_swapped);
-
-                  // Determine the starting vertex index in \f$K_x\f$ and
-                  // \f$K_y\f$.
-                  unsigned int kx_starting_vertex_index =
-                    get_start_vertex_dof_index<vertices_per_cell>(
-                      scratch.vertex_dof_index_intersection,
-                      kx_local_vertex_dof_indices_swapped);
-                  Assert(kx_starting_vertex_index < vertices_per_cell,
-                         ExcInternalError());
-                  unsigned int ky_starting_vertex_index =
-                    get_start_vertex_dof_index<vertices_per_cell>(
-                      scratch.vertex_dof_index_intersection,
-                      ky_local_vertex_dof_indices_swapped);
-                  Assert(ky_starting_vertex_index < vertices_per_cell,
-                         ExcInternalError());
-
-                  // Generate the permutation of DoFs in \f$K_x\f$ and \f$K_y\f$
-                  // by starting from <code>kx_starting_vertex_index</code> or
-                  // <code>ky_starting_vertex_index</code>.
-                  generate_forward_dof_permutation(
-                    kx_fe,
-                    kx_starting_vertex_index,
-                    scratch.kx_local_dof_permutation);
-                  generate_forward_dof_permutation(
-                    ky_fe,
-                    ky_starting_vertex_index,
-                    scratch.ky_local_dof_permutation);
-
-                  permute_vector(scratch.kx_support_points_hierarchical,
-                                 scratch.kx_local_dof_permutation,
-                                 scratch.kx_support_points_permuted);
-                  permute_vector(scratch.ky_support_points_hierarchical,
-                                 scratch.ky_local_dof_permutation,
-                                 scratch.ky_support_points_permuted);
-
-                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                                 scratch.kx_local_dof_permutation,
-                                 data.kx_local_dof_indices_permuted);
-                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                                 scratch.ky_local_dof_permutation,
-                                 data.ky_local_dof_indices_permuted);
-
-                  active_quad_rule = &(bem_values.quad_rule_for_common_vertex);
-
-                  // Precalculate surface Jacobians and normal vectors.
-                  for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
-                    {
-                      for (unsigned int q = 0; q < active_quad_rule->size();
-                           q++)
-                        {
-                          scratch.kx_jacobians_common_vertex(k3_index, q) =
-                            surface_jacobian_det_and_normal_vector(
-                              k3_index,
-                              q,
-                              bem_values
-                                .kx_shape_grad_matrix_table_for_common_vertex,
-                              scratch.kx_support_points_permuted,
-                              scratch.kx_normals_common_vertex(k3_index, q));
-
-                          scratch.ky_jacobians_common_vertex(k3_index, q) =
-                            surface_jacobian_det_and_normal_vector(
-                              k3_index,
-                              q,
-                              bem_values
-                                .ky_shape_grad_matrix_table_for_common_vertex,
-                              scratch.ky_support_points_permuted,
-                              scratch.ky_normals_common_vertex(k3_index, q));
-
-                          scratch.kx_quad_points_common_vertex(k3_index, q) =
-                            transform_unit_to_permuted_real_cell(
-                              k3_index,
-                              q,
-                              bem_values.kx_shape_value_table_for_common_vertex,
-                              scratch.kx_support_points_permuted);
-
-                          scratch.ky_quad_points_common_vertex(k3_index, q) =
-                            transform_unit_to_permuted_real_cell(
-                              k3_index,
-                              q,
-                              bem_values.ky_shape_value_table_for_common_vertex,
-                              scratch.ky_support_points_permuted);
-                        }
-                    }
-
-                  break;
-                }
-              case Regular:
-                {
-                  Assert(scratch.vertex_dof_index_intersection.size() == 0,
-                         ExcInternalError());
-
-                  permute_vector(scratch.kx_local_dof_indices_hierarchical,
-                                 scratch.kx_fe_poly_space_numbering_inverse,
-                                 data.kx_local_dof_indices_permuted);
-
-                  permute_vector(scratch.ky_local_dof_indices_hierarchical,
-                                 scratch.ky_fe_poly_space_numbering_inverse,
-                                 data.ky_local_dof_indices_permuted);
-
-                  permute_vector(scratch.kx_support_points_hierarchical,
-                                 scratch.kx_fe_poly_space_numbering_inverse,
-                                 scratch.kx_support_points_permuted);
-                  permute_vector(scratch.ky_support_points_hierarchical,
-                                 scratch.ky_fe_poly_space_numbering_inverse,
-                                 scratch.ky_support_points_permuted);
-
-                  active_quad_rule = &(bem_values.quad_rule_for_regular);
-
-                  // Precalculate surface Jacobians and normal vectors.
-                  for (unsigned int q = 0; q < active_quad_rule->size(); q++)
-                    {
-                      scratch.kx_jacobians_regular(0, q) =
-                        surface_jacobian_det_and_normal_vector(
-                          0,
-                          q,
-                          bem_values.kx_shape_grad_matrix_table_for_regular,
-                          scratch.kx_support_points_permuted,
-                          scratch.kx_normals_regular(0, q));
-
-                      scratch.ky_jacobians_regular(0, q) =
-                        surface_jacobian_det_and_normal_vector(
-                          0,
-                          q,
-                          bem_values.ky_shape_grad_matrix_table_for_regular,
-                          scratch.ky_support_points_permuted,
-                          scratch.ky_normals_regular(0, q));
-
-                      scratch.kx_quad_points_regular(0, q) =
-                        transform_unit_to_permuted_real_cell(
-                          0,
-                          q,
-                          bem_values.kx_shape_value_table_for_regular,
-                          scratch.kx_support_points_permuted);
-
-                      scratch.ky_quad_points_regular(0, q) =
-                        transform_unit_to_permuted_real_cell(
-                          0,
-                          q,
-                          bem_values.ky_shape_value_table_for_regular,
-                          scratch.ky_support_points_permuted);
-                    }
-
-                  break;
-                }
-              default:
-                {
-                  Assert(false, ExcNotImplemented());
-                  active_quad_rule = nullptr;
-                }
-            }
-
-          // Clear the local matrix in case that it is reused from another
-          // finished task. N.B. Its memory has already been allocated in
-          // the constructor of <code>CellPairWisePerTaskData</code>.
-          data.slp_matrix = 0.;
-
-          // Iterate over DoFs for test function space in tensor product
-          // order in \f$K_x\f$.
-          for (unsigned int i = 0; i < kx_n_dofs; i++)
-            {
-              // Iterate over DoFs for ansatz function space in tensor
-              // product order in \f$K_y\f$.
-              for (unsigned int j = 0; j < ky_n_dofs; j++)
-                {
-                  // Pullback the kernel function to unit cell.
-                  KernelPulledbackToUnitCell<2, 3, double>
-                    slp_kernel_pullback_on_unit(
-                      this->slp,
-                      cell_neighboring_type,
-                      scratch.kx_support_points_permuted,
-                      scratch.ky_support_points_permuted,
-                      kx_fe,
-                      ky_fe,
-                      &bem_values,
-                      &scratch,
-                      i,
-                      j);
-
-                  // Pullback the kernel function to Sauter parameter
-                  // space.
-                  KernelPulledbackToSauterSpace<2, 3, double>
-                    slp_kernel_pullback_on_sauter(slp_kernel_pullback_on_unit,
-                                                  cell_neighboring_type,
-                                                  &bem_values);
-
-                  // Apply 4d Sauter numerical quadrature.
-                  data.slp_matrix(i, j) = ApplyQuadratureUsingBEMValues(
-                    *active_quad_rule, slp_kernel_pullback_on_sauter);
-                }
-            }
-        }
-      catch (const std::bad_cast &e)
-        {
-          Assert(false, ExcInternalError());
-        }
-    }
-
-
-    void
-    Example2::copy_pair_of_cells_local_to_global(
-      const PairCellWisePerTaskData &data)
-    {
-      const unsigned int kx_dofs_per_cell = data.dlp_matrix.m();
-      const unsigned int ky_dofs_per_cell = data.dlp_matrix.n();
-
-      // Assemble the local matrix to system matrix.
-      for (unsigned int i = 0; i < kx_dofs_per_cell; i++)
-        {
-          for (unsigned int j = 0; j < ky_dofs_per_cell; j++)
-            {
-              /**
-               * @p dlp_matrix has already contained the data for the scaled
-               * mass matrix, which will be added with the DLP matrix here.
-               * Then we obtain \f$\frac{1}{2}I + K\f$.
-               */
-              dlp_with_mass_matrix.add(data.kx_local_dof_indices_permuted[i],
-                                       data.ky_local_dof_indices_permuted[j],
-                                       data.dlp_matrix(i, j));
-
-              slp_matrix.add(data.kx_local_dof_indices_permuted[i],
-                             data.ky_local_dof_indices_permuted[j],
-                             data.slp_matrix(i, j));
-            }
-        }
-    }
-
-
-    void
-    Example2::copy_pair_of_cells_local_to_global_for_slp(
-      const PairCellWisePerTaskData &data)
-    {
-      const unsigned int kx_dofs_per_cell = data.slp_matrix.m();
-      const unsigned int ky_dofs_per_cell = data.slp_matrix.n();
-
-      // Assemble the local matrix to system matrix.
-      for (unsigned int i = 0; i < kx_dofs_per_cell; i++)
-        {
-          for (unsigned int j = 0; j < ky_dofs_per_cell; j++)
-            {
-              slp_matrix.add(data.kx_local_dof_indices_permuted[i],
-                             data.ky_local_dof_indices_permuted[j],
-                             data.slp_matrix(i, j));
-            }
-        }
-    }
-
-    void
-    Example2::assemble_system_smp(bool is_assemble_fem_mat)
+    Example2::assemble_full_matrix_system_smp()
     {
       MultithreadInfo::set_thread_limit(thread_num);
 
-      if (is_assemble_fem_mat)
-        {
-          // Generate normal Gauss-Legendre quadrature rule for FEM
-          // integration.
-          QGauss<2> quadrature_formula_2d(fe.degree + 1);
-
-#ifdef GRAPH_COLORING
-          // Graph coloring of the mesh for parallelizing matrix assembly.
-          std::vector<
-            std::vector<typename DoFHandler<2, 3>::active_cell_iterator>>
-            colored_cells = GraphColoring::make_graph_coloring(
-              dof_handler.begin_active(),
-              dof_handler.end(),
-              (std::function<std::vector<types::global_dof_index>(
-                 const typename DoFHandler<2, 3>::active_cell_iterator &)>)
-                get_conflict_indices<2, 3>);
-
-          WorkStream::run(colored_cells,
-                          std::bind(&Example2::assemble_on_one_cell,
-                                    this,
-                                    std::placeholders::_1,
-                                    std::placeholders::_2,
-                                    std::placeholders::_3),
-                          std::bind(&Example2::copy_cell_local_to_global,
-                                    this,
-                                    std::placeholders::_1),
-                          CellWiseScratchData(fe,
-                                              quadrature_formula_2d,
-                                              update_values |
-                                                update_JxW_values),
-                          CellWisePerTaskData(fe));
-#else
-          WorkStream::run(dof_handler.begin_active(),
-                          dof_handler.end(),
-                          std::bind(&Example2::assemble_on_one_cell,
-                                    this,
-                                    std::placeholders::_1,
-                                    std::placeholders::_2,
-                                    std::placeholders::_3),
-                          std::bind(&Example2::copy_cell_local_to_global,
-                                    this,
-                                    std::placeholders::_1),
-                          CellWiseScratchData(fe,
-                                              quadrature_formula_2d,
-                                              update_values |
-                                                update_JxW_values),
-                          CellWisePerTaskData(fe));
-#endif
-        }
-
-      /**
-       * Generate 4D Gauss-Legendre quadrature rules for various cell
-       * neighboring types.
-       */
-      const unsigned int quad_order_for_same_panel    = 5;
-      const unsigned int quad_order_for_common_edge   = 4;
-      const unsigned int quad_order_for_common_vertex = 4;
-      const unsigned int quad_order_for_regular       = 3;
-
-      QGauss<4> quad_rule_for_same_panel(quad_order_for_same_panel);
-      QGauss<4> quad_rule_for_common_edge(quad_order_for_common_edge);
-      QGauss<4> quad_rule_for_common_vertex(quad_order_for_common_vertex);
-      QGauss<4> quad_rule_for_regular(quad_order_for_regular);
-
-
-      /**
-       * Precalculate data tables for shape values at quadrature points.
-       *
-       * \mynote{Precalculate shape function values and their gradient values
-       * at each quadrature point. N.B.
-       * 1. The data tables for shape function values and their gradient
-       * values should be calculated for both function space on \f$K_x\f$ and
-       * function space on \f$K_y\f$.
-       * 2. Being different from the integral in FEM, the integral in BEM
-       * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
-       * (except the regular cell neighboring type), each of which should be
-       * evaluated at a different set of quadrature points in the unit cell
-       * after coordinate transformation from the parametric space. Therefore,
-       * a dimension with respect to \f$k_3\f$ term index should be added to
-       * the data table compared to the usual FEValues and this brings about
-       * the class @p BEMValues.}
-       */
-      BEMValues<2, 3> bem_values(fe,
-                                 fe,
-                                 quad_rule_for_same_panel,
-                                 quad_rule_for_common_edge,
-                                 quad_rule_for_common_vertex,
-                                 quad_rule_for_regular);
-      bem_values.fill_shape_value_tables();
-      bem_values.fill_shape_grad_matrix_tables();
-
-      // Initialize the progress display.
-      boost::progress_display pd(triangulation.n_active_cells(), std::cerr);
-
-      /**
-       * \alert{Since @p scratch_data and @p per_task_data should be copied to
-       * each thread and will further be modified in the working function
-       * @p assemble_on_one_pair_of_cells, they should be passed-by-value.}
-       */
-      PairCellWiseScratchData scratch_data(fe, fe, bem_values);
-      PairCellWisePerTaskData per_task_data(fe, fe);
-      // Calculate the term $(v, Ku)$ to be assembled into system matrix and
-      // $(v, V(\psi))$ to be assembled into right-hand side vector.
-      for (const auto &e : dof_handler.active_cell_iterators())
-        {
-#ifdef GRAPH_COLORING
-          WorkStream::run(
-            colored_cells,
-            std::bind(&Example2::assemble_on_one_pair_of_cells,
-                      this,
-                      e,
-                      std::placeholders::_1,
-                      bem_values,
-                      std::placeholders::_2,
-                      std::placeholders::_3),
-            std::bind(&Example2::copy_pair_of_cells_local_to_global,
-                      this,
-                      std::placeholders::_1),
-            scratch_data,
-            per_task_data);
-#else
-          /**
-           * \alert{@p bem_values will not be modified inside the working
-           * function, so it is safe to pass it by const reference in the call
-           * of @p std::bind.}
-           */
-          WorkStream::run(
-            dof_handler.begin_active(),
-            dof_handler.end(),
-            std::bind(&Example2::assemble_on_one_pair_of_cells,
-                      this,
-                      e,
-                      std::placeholders::_1,
-                      bem_values,
-                      std::placeholders::_2,
-                      std::placeholders::_3),
-            std::bind(&Example2::copy_pair_of_cells_local_to_global,
-                      this,
-                      std::placeholders::_1),
-            scratch_data,
-            per_task_data);
-#endif
-
-          ++pd;
-        }
-
-      /**
-       * Calculate the RHS vector.
-       */
       switch (problem_type)
         {
-          case NeumannBCProblem:
+          case DirichletBCProblem:
             {
-              slp_matrix.vmult(system_rhs, neumann_bc);
+              /**
+               * Assemble the FEM scaled mass matrix, which is stored into the
+               * full matrix for \f$K_2\f$.
+               *
+               * \mynote{The polynomial order specified for the Gauss-Legendre
+               * quadrature rule for FEM integration is accurate for the
+               * integration of \f$2N-1\f$-th polynomial, where \f$N\f is the
+               * number of quadrature points.}
+               */
+              assemble_fem_scaled_mass_matrix(
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                0.5,
+                QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                K2_matrix_with_mass_matrix);
+
+              /**
+               * Assemble the DLP matrix, which is added with the previous
+               * scaled FEM mass matrix.
+               */
+              assemble_bem_full_matrix(
+                double_layer_kernel,
+                1.0,
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                mapping,
+                mapping,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  SameTriangulations,
+                SauterQuadratureRule(5, 4, 4, 3),
+                K2_matrix_with_mass_matrix);
+
+              /**
+               * Assemble the SLP matrix.
+               */
+              assemble_bem_full_matrix(
+                single_layer_kernel,
+                1.0,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                mapping,
+                mapping,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  SameDoFHandlers,
+                SauterQuadratureRule(5, 4, 4, 3),
+                V1_matrix);
+
+              /**
+               * Calculate the RHS vector.
+               */
+              K2_matrix_with_mass_matrix.vmult(system_rhs, dirichlet_bc);
 
               break;
             }
-          case DirichletBCProblem:
+          case NeumannBCProblem:
             {
-              dlp_with_mass_matrix.vmult(system_rhs, dirichlet_bc);
+              // TODO Assemble full mass matrices for NeumannBCProblem. The
+              // formulation of the representation formula and the boundary
+              // integral equation should be determined.
+              break;
+            }
+          case MixedBCProblem:
+            {
+              /**
+               * Assemble the FEM scaled mass matrix \f$\mathscr{I}_1\f$, which
+               * is stored into the full matrix for \f$K_2\f$.
+               */
+              assemble_fem_scaled_mass_matrix(
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                -0.5,
+                QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                K2_matrix_with_mass_matrix);
+
+              /**
+               * Assemble the negated DLP matrix, which is added with
+               * \f$-\frac{1}{2}\mathscr{I}_1\f$.
+               */
+              assemble_bem_full_matrix(
+                double_layer_kernel,
+                -1.0,
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                mapping,
+                mapping,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  SameTriangulations,
+                SauterQuadratureRule(5, 4, 4, 3),
+                K2_matrix_with_mass_matrix);
+
+              /**
+               * Assemble the FEM scaled mass matrix \f$\mathscr{I}_2\f$, which
+               * is stored into the full matrix for \f$K_2'\f$.
+               */
+              assemble_fem_scaled_mass_matrix(
+                dof_handler_for_neumann_space_on_neumann_domain,
+                dof_handler_for_dirichlet_space_on_neumann_domain,
+                0.5,
+                QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                K_prime2_matrix_with_mass_matrix);
+
+              /**
+               * Assemble the negated ADLP matrix, which is added with
+               * \f$\frac{1}{2}\mathscr{I}_2\f$.
+               */
+              assemble_bem_full_matrix(
+                adjoint_double_layer_kernel,
+                -1.0,
+                dof_handler_for_neumann_space_on_neumann_domain,
+                dof_handler_for_dirichlet_space_on_neumann_domain,
+                mapping,
+                mapping,
+                map_from_neumann_boundary_mesh_to_volume_mesh,
+                map_from_neumann_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  SameTriangulations,
+                SauterQuadratureRule(5, 4, 4, 3),
+                K_prime2_matrix_with_mass_matrix);
+
+              /**
+               * Assemble the negated SLP matrix \f$\mathscr{V}_1\f$.
+               */
+              assemble_bem_full_matrix(
+                single_layer_kernel,
+                -1.0,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                mapping,
+                mapping,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  SameDoFHandlers,
+                SauterQuadratureRule(5, 4, 4, 3),
+                V1_matrix);
+
+              /**
+               * Assemble the DLP matrix \f$\mathscr{K}_1\f$.
+               */
+              assemble_bem_full_matrix(
+                double_layer_kernel,
+                1.0,
+                dof_handler_for_dirichlet_space_on_neumann_domain,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                mapping,
+                mapping,
+                map_from_neumann_boundary_mesh_to_volume_mesh,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  DifferentTriangulations,
+                SauterQuadratureRule(5, 4, 4, 3),
+                K1_matrix);
+
+              /**
+               * Assemble the ADLP matrix \f$\mathscr{K}_1'\f$.
+               */
+              assemble_bem_full_matrix(
+                adjoint_double_layer_kernel,
+                1.0,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                dof_handler_for_dirichlet_space_on_neumann_domain,
+                mapping,
+                mapping,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                map_from_neumann_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  DifferentTriangulations,
+                SauterQuadratureRule(5, 4, 4, 3),
+                K_prime1_matrix);
+
+              /**
+               * Assemble the hyper singular matrix \f$\mathscr{D}_1\f$.
+               */
+              assemble_bem_full_matrix(
+                hyper_singular_kernel,
+                1.0,
+                dof_handler_for_dirichlet_space_on_neumann_domain,
+                dof_handler_for_dirichlet_space_on_neumann_domain,
+                mapping,
+                mapping,
+                map_from_neumann_boundary_mesh_to_volume_mesh,
+                map_from_neumann_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  SameDoFHandlers,
+                SauterQuadratureRule(5, 4, 4, 3),
+                D1_matrix);
+
+              /**
+               * Assemble the SLP matrix \f$\mathscr{V}_2\f$.
+               */
+              assemble_bem_full_matrix(
+                single_layer_kernel,
+                1.0,
+                dof_handler_for_neumann_space_on_neumann_domain,
+                dof_handler_for_neumann_space_on_dirichlet_domain,
+                mapping,
+                mapping,
+                map_from_neumann_boundary_mesh_to_volume_mesh,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  DifferentTriangulations,
+                SauterQuadratureRule(5, 4, 4, 3),
+                V2_matrix);
+
+              /**
+               * Assemble the negated hyper singular matrix \f$\mathscr{D}_2\f$.
+               */
+              assemble_bem_full_matrix(
+                hyper_singular_kernel,
+                -1.0,
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                dof_handler_for_dirichlet_space_on_neumann_domain,
+                mapping,
+                mapping,
+                map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                map_from_neumann_boundary_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  DifferentTriangulations,
+                SauterQuadratureRule(5, 4, 4, 3),
+                D2_matrix);
 
               break;
             }
@@ -1485,23 +1315,24 @@ namespace IdeoBEM
         {
           // Generate normal Gauss-Legendre quadrature rule for FEM
           // integration.
-          QGauss<2> quadrature_formula_2d(fe.degree + 1);
+          QGauss<2> quadrature_formula_2d(fe_for_dirichlet_space.degree + 1);
 
-          WorkStream::run(dof_handler.begin_active(),
-                          dof_handler.end(),
-                          std::bind(&Example2::assemble_on_one_cell,
-                                    this,
-                                    std::placeholders::_1,
-                                    std::placeholders::_2,
-                                    std::placeholders::_3),
-                          std::bind(&Example2::copy_cell_local_to_global,
-                                    this,
-                                    std::placeholders::_1),
-                          CellWiseScratchData(fe,
-                                              quadrature_formula_2d,
-                                              update_values |
-                                                update_JxW_values),
-                          CellWisePerTaskData(fe));
+          WorkStream::run(
+            cell_iterator_pointer_pairs_for_mass_matrix.begin(),
+            cell_iterator_pointer_pairs_for_mass_matrix.end(),
+            std::bind(&Example2::assemble_scaled_mass_matrix_on_one_cell,
+                      this,
+                      std::placeholders::_1,
+                      std::placeholders::_2,
+                      std::placeholders::_3),
+            std::bind(&Example2::copy_cell_local_to_global,
+                      this,
+                      std::placeholders::_1),
+            CellWiseScratchData(fe_for_dirichlet_space,
+                                fe_for_neumann_space,
+                                quadrature_formula_2d,
+                                update_values | update_JxW_values),
+            CellWisePerTaskData(fe_for_dirichlet_space, fe_for_neumann_space));
         }
 
       /**
@@ -1535,8 +1366,8 @@ namespace IdeoBEM
        * the data table compared to the usual FEValues and this brings about
        * the class @p BEMValues.}
        */
-      BEMValues<2, 3> bem_values(fe,
-                                 fe,
+      BEMValues<2, 3> bem_values(fe_for_dirichlet_space,
+                                 fe_for_dirichlet_space,
                                  quad_rule_for_same_panel,
                                  quad_rule_for_common_edge,
                                  quad_rule_for_common_vertex,
@@ -1545,53 +1376,64 @@ namespace IdeoBEM
       bem_values.fill_shape_grad_matrix_tables();
 
       // Initialize the progress display.
-      boost::progress_display pd(dof_handler.n_dofs() * dof_handler.n_dofs(),
-                                 std::cerr);
+      boost::progress_display pd(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs() *
+          dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs(),
+        std::cerr);
 
-      PairCellWiseScratchData scratch_data(fe, fe, bem_values);
-      PairCellWisePerTaskData per_task_data(fe, fe);
+      PairCellWiseScratchData scratch_data(fe_for_dirichlet_space,
+                                           fe_for_dirichlet_space,
+                                           bem_values);
+      PairCellWisePerTaskData per_task_data(fe_for_dirichlet_space,
+                                            fe_for_dirichlet_space);
 
       /**
        * Build the DoF-to-cell topology.
        */
       std::vector<std::vector<unsigned int>> dof_to_cell_topo;
-      build_dof_to_cell_topology(dof_to_cell_topo, dof_handler);
+      build_dof_to_cell_topology(
+        dof_to_cell_topo, dof_handler_for_dirichlet_space_on_dirichlet_domain);
 
-      for (types::global_dof_index i = 0; i < dof_handler.n_dofs(); i++)
+      for (types::global_dof_index i = 0;
+           i < dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs();
+           i++)
         {
-          for (types::global_dof_index j = 0; j < dof_handler.n_dofs(); j++)
+          for (types::global_dof_index j = 0;
+               j < dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs();
+               j++)
             {
-              dlp_with_mass_matrix(i, j) +=
-                sauter_assemble_on_one_pair_of_dofs(scratch_data,
-                                                    per_task_data,
-                                                    dlp,
-                                                    i,
-                                                    j,
-                                                    dof_to_cell_topo,
-                                                    bem_values,
-                                                    dof_handler,
-                                                    dof_handler,
-                                                    mapping,
-                                                    mapping);
-              slp_matrix(i, j) +=
-                sauter_assemble_on_one_pair_of_dofs(scratch_data,
-                                                    per_task_data,
-                                                    slp,
-                                                    i,
-                                                    j,
-                                                    dof_to_cell_topo,
-                                                    bem_values,
-                                                    dof_handler,
-                                                    dof_handler,
-                                                    mapping,
-                                                    mapping);
+              K2_matrix_with_mass_matrix(i, j) +=
+                sauter_assemble_on_one_pair_of_dofs(
+                  scratch_data,
+                  per_task_data,
+                  double_layer_kernel,
+                  i,
+                  j,
+                  dof_to_cell_topo,
+                  bem_values,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  mapping,
+                  mapping);
+              V1_matrix(i, j) += sauter_assemble_on_one_pair_of_dofs(
+                scratch_data,
+                per_task_data,
+                single_layer_kernel,
+                i,
+                j,
+                dof_to_cell_topo,
+                bem_values,
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                mapping,
+                mapping);
 
               ++pd;
             }
         }
 
       // Calculate the right-hand side vector.
-      slp_matrix.vmult(system_rhs, neumann_bc);
+      V1_matrix.vmult(system_rhs, neumann_bc);
     }
 
 
@@ -1600,22 +1442,24 @@ namespace IdeoBEM
       const bool enable_build_symmetric_hmat)
     {
       // Generate normal Gauss-Legendre quadrature rule for FEM integration.
-      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+      QGauss<2> quadrature_formula_2d(fe_for_dirichlet_space.degree + 1);
 
-      WorkStream::run(dof_handler.begin_active(),
-                      dof_handler.end(),
-                      std::bind(&Example2::assemble_on_one_cell,
-                                this,
-                                std::placeholders::_1,
-                                std::placeholders::_2,
-                                std::placeholders::_3),
-                      std::bind(&Example2::copy_cell_local_to_global,
-                                this,
-                                std::placeholders::_1),
-                      CellWiseScratchData(fe,
-                                          quadrature_formula_2d,
-                                          update_values | update_JxW_values),
-                      CellWisePerTaskData(fe));
+      WorkStream::run(
+        cell_iterator_pointer_pairs_for_mass_matrix.begin(),
+        cell_iterator_pointer_pairs_for_mass_matrix.end(),
+        std::bind(&Example2::assemble_scaled_mass_matrix_on_one_cell,
+                  this,
+                  std::placeholders::_1,
+                  std::placeholders::_2,
+                  std::placeholders::_3),
+        std::bind(&Example2::copy_cell_local_to_global,
+                  this,
+                  std::placeholders::_1),
+        CellWiseScratchData(fe_for_dirichlet_space,
+                            fe_for_neumann_space,
+                            quadrature_formula_2d,
+                            update_values | update_JxW_values),
+        CellWisePerTaskData(fe_for_dirichlet_space, fe_for_neumann_space));
 
       /**
        * Generate 4D Gauss-Legendre quadrature rules for various cell
@@ -1648,8 +1492,8 @@ namespace IdeoBEM
        * the data table compared to the usual FEValues and this brings about
        * the class @p BEMValues.}
        */
-      BEMValues<2, 3> bem_values(fe,
-                                 fe,
+      BEMValues<2, 3> bem_values(fe_for_dirichlet_space,
+                                 fe_for_dirichlet_space,
                                  quad_rule_for_same_panel,
                                  quad_rule_for_common_edge,
                                  quad_rule_for_common_vertex,
@@ -1657,59 +1501,72 @@ namespace IdeoBEM
       bem_values.fill_shape_value_tables();
       bem_values.fill_shape_grad_matrix_tables();
 
-      PairCellWiseScratchData scratch_data(fe, fe, bem_values);
-      PairCellWisePerTaskData per_task_data(fe, fe);
+      PairCellWiseScratchData scratch_data(fe_for_dirichlet_space,
+                                           fe_for_dirichlet_space,
+                                           bem_values);
+      PairCellWisePerTaskData per_task_data(fe_for_dirichlet_space,
+                                            fe_for_dirichlet_space);
 
       /**
        * Build the DoF-to-cell topology.
        */
       std::vector<std::vector<unsigned int>> dof_to_cell_topo;
-      build_dof_to_cell_topology(dof_to_cell_topo, dof_handler);
+      build_dof_to_cell_topology(
+        dof_to_cell_topo, dof_handler_for_dirichlet_space_on_dirichlet_domain);
 
       /**
        * Generate a list of all DoF indices.
        */
-      std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
+      std::vector<types::global_dof_index> dof_indices(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
       gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
 
       /**
        * Get the spatial coordinates of the support points associated with DoF
        * indices.
        */
-      std::vector<Point<3>> all_support_points(dof_handler.n_dofs());
-      DoFTools::map_dofs_to_support_points(mapping,
-                                           dof_handler,
-                                           all_support_points);
+      std::vector<Point<3>> all_support_points(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
+      DoFTools::map_dofs_to_support_points(
+        mapping,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        all_support_points);
 
       /**
        * Calculate the average mesh cell size at each support point.
        */
-      std::vector<double> dof_average_cell_size(dof_handler.n_dofs(), 0);
-      map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
+      std::vector<double> dof_average_cell_size(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs(), 0);
+      map_dofs_to_average_cell_size(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        dof_average_cell_size);
 
       /**
        * Initialize the cluster tree \f$T(I)\f$ and \f$T(J)\f$ for all the DoF
        * indices.
        */
-      ct = ClusterTree<3>(dof_indices,
-                          all_support_points,
-                          dof_average_cell_size,
-                          n_min_for_ct);
+      ct_for_neumann_space_on_dirichlet_domain = ClusterTree<3>(
+        dof_indices, all_support_points, dof_average_cell_size, n_min_for_ct);
 
       /**
        * Partition the cluster tree.
        */
-      ct.partition(all_support_points, dof_average_cell_size);
+      ct_for_neumann_space_on_dirichlet_domain.partition(all_support_points,
+                                                         dof_average_cell_size);
 
       /**
        * Create the block cluster tree.
        */
-      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_bct);
+      bct_for_bilinear_form_V1 =
+        BlockClusterTree<3>(ct_for_neumann_space_on_dirichlet_domain,
+                            ct_for_neumann_space_on_dirichlet_domain,
+                            eta,
+                            n_min_for_bct);
 
       /**
        * Perform admissible partition on the block cluster tree.
        */
-      bct.partition(all_support_points);
+      bct_for_bilinear_form_V1.partition(all_support_points);
 
       /**
        * Initialize the SLP and DLP \hmatrices.
@@ -1717,13 +1574,14 @@ namespace IdeoBEM
        * \comment{既然自己已经为 @p ClusterTree, @p BlockClusterTree 以及 @p HMatrix 定义了
        * 浅拷贝构造与赋值函数，那么自己就要在实际中大胆地使用。一开始不熟悉、不放心，多次使用且经过实践的验证就习以为常了。}
        */
-      slp_hmat =
-        HMatrix<3>(bct,
+      V1_hmat =
+        HMatrix<3>(bct_for_bilinear_form_V,
                    max_hmat_rank,
                    (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
                                                   HMatrixSupport::general),
                    HMatrixSupport::diagonal_block);
-      dlp_hmat_with_mass_matrix = HMatrix<3>(bct, max_hmat_rank);
+      K2_hmat_with_mass_matrix =
+        HMatrix<3>(bct_for_bilinear_form_V, max_hmat_rank);
 
       /**
        * Define the @p ACAConfig object.
@@ -1733,31 +1591,33 @@ namespace IdeoBEM
       /**
        * Fill the \hmatrices using ACA+ approximation.
        */
-      fill_hmatrix_with_aca_plus(slp_hmat,
-                                 scratch_data,
-                                 per_task_data,
-                                 aca_config,
-                                 slp,
-                                 dof_to_cell_topo,
-                                 bem_values,
-                                 dof_handler,
-                                 dof_handler,
-                                 mapping,
-                                 mapping,
-                                 enable_build_symmetric_hmat);
+      fill_hmatrix_with_aca_plus(
+        V1_hmat,
+        scratch_data,
+        per_task_data,
+        aca_config,
+        single_layer_kernel,
+        dof_to_cell_topo,
+        bem_values,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        mapping,
+        mapping,
+        enable_build_symmetric_hmat);
 
-      fill_hmatrix_with_aca_plus(dlp_hmat_with_mass_matrix,
-                                 scratch_data,
-                                 per_task_data,
-                                 aca_config,
-                                 dlp,
-                                 dof_to_cell_topo,
-                                 bem_values,
-                                 dof_handler,
-                                 dof_handler,
-                                 mapping,
-                                 mapping,
-                                 enable_build_symmetric_hmat);
+      fill_hmatrix_with_aca_plus(
+        K2_hmat_with_mass_matrix,
+        scratch_data,
+        per_task_data,
+        aca_config,
+        double_layer_kernel,
+        dof_to_cell_topo,
+        bem_values,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        mapping,
+        mapping,
+        enable_build_symmetric_hmat);
     }
 
 
@@ -1766,7 +1626,7 @@ namespace IdeoBEM
       const bool enable_build_symmetric_hmat)
     {
       // Generate normal Gauss-Legendre quadrature rule for FEM integration.
-      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+      QGauss<2> quadrature_formula_2d(fe_for_dirichlet_space.degree + 1);
 
       /**
        * Generate 4D Gauss-Legendre quadrature rules for various cell
@@ -1799,8 +1659,8 @@ namespace IdeoBEM
        * the data table compared to the usual FEValues and this brings about
        * the class @p BEMValues.}
        */
-      BEMValues<2, 3> bem_values(fe,
-                                 fe,
+      BEMValues<2, 3> bem_values(fe_for_dirichlet_space,
+                                 fe_for_dirichlet_space,
                                  quad_rule_for_same_panel,
                                  quad_rule_for_common_edge,
                                  quad_rule_for_common_vertex,
@@ -1812,52 +1672,62 @@ namespace IdeoBEM
        * Build the DoF-to-cell topology.
        */
       std::vector<std::vector<unsigned int>> dof_to_cell_topo;
-      build_dof_to_cell_topology(dof_to_cell_topo, dof_handler);
+      build_dof_to_cell_topology(
+        dof_to_cell_topo, dof_handler_for_dirichlet_space_on_dirichlet_domain);
 
       /**
        * Generate a list of all DoF indices.
        */
-      std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
+      std::vector<types::global_dof_index> dof_indices(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
       gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
 
       /**
        * Get the spatial coordinates of the support points associated with DoF
        * indices.
        */
-      std::vector<Point<3>> all_support_points(dof_handler.n_dofs());
-      DoFTools::map_dofs_to_support_points(mapping,
-                                           dof_handler,
-                                           all_support_points);
+      std::vector<Point<3>> all_support_points(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
+      DoFTools::map_dofs_to_support_points(
+        mapping,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        all_support_points);
 
       /**
        * Calculate the average mesh cell size at each support point.
        */
-      std::vector<double> dof_average_cell_size(dof_handler.n_dofs(), 0);
-      map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
+      std::vector<double> dof_average_cell_size(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs(), 0);
+      map_dofs_to_average_cell_size(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        dof_average_cell_size);
 
       /**
        * Initialize the cluster tree \f$T(I)\f$ and \f$T(J)\f$ for all the DoF
        * indices.
        */
-      ct = ClusterTree<3>(dof_indices,
-                          all_support_points,
-                          dof_average_cell_size,
-                          n_min_for_ct);
+      ct_for_neumann_space_on_dirichlet_domain = ClusterTree<3>(
+        dof_indices, all_support_points, dof_average_cell_size, n_min_for_ct);
 
       /**
        * Partition the cluster tree.
        */
-      ct.partition(all_support_points, dof_average_cell_size);
+      ct_for_neumann_space_on_dirichlet_domain.partition(all_support_points,
+                                                         dof_average_cell_size);
 
       /**
        * Create the block cluster tree.
        */
-      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_bct);
+      bct_for_bilinear_form_V =
+        BlockClusterTree<3>(ct_for_neumann_space_on_dirichlet_domain,
+                            ct_for_neumann_space_on_dirichlet_domain,
+                            eta,
+                            n_min_for_bct);
 
       /**
        * Perform admissible partition on the block cluster tree.
        */
-      bct.partition(all_support_points);
+      bct_for_bilinear_form_V.partition(all_support_points);
 
       /**
        * Initialize the SLP and DLP \hmatrices.
@@ -1865,13 +1735,14 @@ namespace IdeoBEM
        * \comment{既然自己已经为 @p ClusterTree, @p BlockClusterTree 以及 @p HMatrix 定义了
        * 浅拷贝构造与赋值函数，那么自己就要在实际中大胆地使用。一开始不熟悉、不放心，多次使用且经过实践的验证就习以为常了。}
        */
-      slp_hmat =
-        HMatrix<3>(bct,
+      V1_hmat =
+        HMatrix<3>(bct_for_bilinear_form_V,
                    max_hmat_rank,
                    (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
                                                   HMatrixSupport::general),
                    HMatrixSupport::diagonal_block);
-      dlp_hmat_with_mass_matrix = HMatrix<3>(bct, max_hmat_rank);
+      K2_hmat_with_mass_matrix =
+        HMatrix<3>(bct_for_bilinear_form_V, max_hmat_rank);
 
       /**
        * Define the @p ACAConfig object.
@@ -1903,21 +1774,23 @@ namespace IdeoBEM
       //                                     mapping,
       //                                     mapping);
 
-      std::vector<HMatrix<3, double> *> hmats{&dlp_hmat_with_mass_matrix,
-                                              &slp_hmat};
-      std::vector<KernelFunction<3> *>  kernels{&dlp, &slp};
+      std::vector<HMatrix<3, double> *> hmats{&K2_hmat_with_mass_matrix,
+                                              &V1_hmat};
+      std::vector<KernelFunction<3> *>  kernels{&double_layer_kernel,
+                                               &single_layer_kernel};
 
-      fill_hmatrix_with_aca_plus_smp(thread_num,
-                                     hmats,
-                                     aca_config,
-                                     kernels,
-                                     dof_to_cell_topo,
-                                     bem_values,
-                                     dof_handler,
-                                     dof_handler,
-                                     mapping,
-                                     mapping,
-                                     enable_build_symmetric_hmat);
+      fill_hmatrix_with_aca_plus_smp(
+        thread_num,
+        hmats,
+        aca_config,
+        kernels,
+        dof_to_cell_topo,
+        bem_values,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        mapping,
+        mapping,
+        enable_build_symmetric_hmat);
     }
 
 
@@ -1956,8 +1829,8 @@ namespace IdeoBEM
        * the data table compared to the usual FEValues and this brings about
        * the class @p BEMValues.}
        */
-      BEMValues<2, 3> bem_values(fe,
-                                 fe,
+      BEMValues<2, 3> bem_values(fe_for_dirichlet_space,
+                                 fe_for_dirichlet_space,
                                  quad_rule_for_same_panel,
                                  quad_rule_for_common_edge,
                                  quad_rule_for_common_vertex,
@@ -1969,52 +1842,62 @@ namespace IdeoBEM
        * Build the DoF-to-cell topology.
        */
       std::vector<std::vector<unsigned int>> dof_to_cell_topo;
-      build_dof_to_cell_topology(dof_to_cell_topo, dof_handler);
+      build_dof_to_cell_topology(
+        dof_to_cell_topo, dof_handler_for_dirichlet_space_on_dirichlet_domain);
 
       /**
        * Generate a list of all DoF indices.
        */
-      std::vector<types::global_dof_index> dof_indices(dof_handler.n_dofs());
+      std::vector<types::global_dof_index> dof_indices(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
       gen_linear_indices<vector_uta, types::global_dof_index>(dof_indices);
 
       /**
        * Get the spatial coordinates of the support points associated with DoF
        * indices.
        */
-      std::vector<Point<3>> all_support_points(dof_handler.n_dofs());
-      DoFTools::map_dofs_to_support_points(mapping,
-                                           dof_handler,
-                                           all_support_points);
+      std::vector<Point<3>> all_support_points(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
+      DoFTools::map_dofs_to_support_points(
+        mapping,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        all_support_points);
 
       /**
        * Calculate the average mesh cell size at each support point.
        */
-      std::vector<double> dof_average_cell_size(dof_handler.n_dofs(), 0);
-      map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
+      std::vector<double> dof_average_cell_size(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs(), 0);
+      map_dofs_to_average_cell_size(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        dof_average_cell_size);
 
       /**
        * Initialize the cluster tree \f$T(I)\f$ and \f$T(J)\f$ for all the DoF
        * indices.
        */
-      ct = ClusterTree<3>(dof_indices,
-                          all_support_points,
-                          dof_average_cell_size,
-                          n_min_for_ct);
+      ct_for_neumann_space_on_dirichlet_domain = ClusterTree<3>(
+        dof_indices, all_support_points, dof_average_cell_size, n_min_for_ct);
 
       /**
        * Partition the cluster tree.
        */
-      ct.partition(all_support_points, dof_average_cell_size);
+      ct_for_neumann_space_on_dirichlet_domain.partition(all_support_points,
+                                                         dof_average_cell_size);
 
       /**
        * Create the block cluster tree.
        */
-      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_bct);
+      bct_for_bilinear_form_V =
+        BlockClusterTree<3>(ct_for_neumann_space_on_dirichlet_domain,
+                            ct_for_neumann_space_on_dirichlet_domain,
+                            eta,
+                            n_min_for_bct);
 
       /**
        * Perform admissible partition on the block cluster tree.
        */
-      bct.partition(all_support_points);
+      bct_for_bilinear_form_V.partition(all_support_points);
 
       /**
        * Initialize the SLP and DLP \hmatrices.
@@ -2022,13 +1905,14 @@ namespace IdeoBEM
        * \comment{既然自己已经为 @p ClusterTree, @p BlockClusterTree 以及 @p HMatrix 定义了
        * 浅拷贝构造与赋值函数，那么自己就要在实际中大胆地使用。一开始不熟悉、不放心，多次使用且经过实践的验证就习以为常了。}
        */
-      slp_hmat =
-        HMatrix<3>(bct,
+      V1_hmat =
+        HMatrix<3>(bct_for_bilinear_form_V,
                    max_hmat_rank,
                    (enable_build_symmetric_hmat ? HMatrixSupport::symmetric :
                                                   HMatrixSupport::general),
                    HMatrixSupport::diagonal_block);
-      dlp_hmat_with_mass_matrix = HMatrix<3>(bct, max_hmat_rank);
+      K2_hmat_with_mass_matrix =
+        HMatrix<3>(bct_for_bilinear_form_V, max_hmat_rank);
 
       /**
        * Define the @p ACAConfig object.
@@ -2038,37 +1922,39 @@ namespace IdeoBEM
       /**
        * Fill the \hmatrices using ACA+ approximation.
        */
-      std::vector<HMatrix<3, double> *> hmats{&dlp_hmat_with_mass_matrix,
-                                              &slp_hmat};
-      std::vector<KernelFunction<3> *>  kernels{&dlp, &slp};
+      std::vector<HMatrix<3, double> *> hmats{&K2_hmat_with_mass_matrix,
+                                              &V1_hmat};
+      std::vector<KernelFunction<3> *>  kernels{&double_layer_kernel,
+                                               &single_layer_kernel};
 
       /**
        * Generate normal Gauss-Legendre quadrature rule for FEM integration.
        */
-      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+      QGauss<2> quadrature_formula_2d(fe_for_dirichlet_space.degree + 1);
 
       /**
        * Factors before the mass matrix which is to be added into the DLP
-       * \hmatrix. For Example 2 in the Erichsen1996Efficient paper, the system
-       * matrix to be solved is \f$\frac{1}{2}I+K\f$. Therefore, the mass matrix
-       * scaled by 0.5 is appended to the \hmatrix associated with the DLP
-       * kernel function.
+       * \hmatrix. For Example 2 in the Erichsen1996Efficient paper, the
+       * system matrix to be solved is \f$\frac{1}{2}I+K\f$. Therefore, the
+       * mass matrix scaled by 0.5 is appended to the \hmatrix associated with
+       * the DLP kernel function.
        */
       std::vector<double> mass_matrix_factors{0.5, 0};
 
-      fill_hmatrix_with_aca_plus_smp(thread_num,
-                                     hmats,
-                                     mass_matrix_factors,
-                                     aca_config,
-                                     kernels,
-                                     dof_to_cell_topo,
-                                     bem_values,
-                                     quadrature_formula_2d,
-                                     dof_handler,
-                                     dof_handler,
-                                     mapping,
-                                     mapping,
-                                     enable_build_symmetric_hmat);
+      fill_hmatrix_with_aca_plus_smp(
+        thread_num,
+        hmats,
+        mass_matrix_factors,
+        aca_config,
+        kernels,
+        dof_to_cell_topo,
+        bem_values,
+        quadrature_formula_2d,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        dof_handler_for_dirichlet_space_on_dirichlet_domain,
+        mapping,
+        mapping,
+        enable_build_symmetric_hmat);
 
       /**
        * Calculate the RHS vector.
@@ -2077,13 +1963,13 @@ namespace IdeoBEM
         {
           case NeumannBCProblem:
             {
-              slp_hmat.vmult(system_rhs, neumann_bc, slp_hmat.get_property());
+              V1_hmat.vmult(system_rhs, neumann_bc, V1_hmat.get_property());
 
               break;
             }
           case DirichletBCProblem:
             {
-              dlp_hmat_with_mass_matrix.vmult(system_rhs, dirichlet_bc);
+              K2_hmat_with_mass_matrix.vmult(system_rhs, dirichlet_bc);
 
               break;
             }
@@ -2122,8 +2008,8 @@ namespace IdeoBEM
       QGauss<4> quad_rule_for_regular(quad_order_for_regular);
 
       // Precalculate data tables for shape values at quadrature points.
-      BEMValues<2, 3> bem_values(fe,
-                                 fe,
+      BEMValues<2, 3> bem_values(fe_for_dirichlet_space,
+                                 fe_for_dirichlet_space,
                                  quad_rule_for_same_panel,
                                  quad_rule_for_common_edge,
                                  quad_rule_for_common_vertex,
@@ -2132,18 +2018,23 @@ namespace IdeoBEM
       bem_values.fill_shape_grad_matrix_tables();
 
       // Initialize the progress display.
-      boost::progress_display pd(triangulation.n_active_cells(), std::cerr);
+      boost::progress_display pd(
+        triangulation_for_dirichlet_domain.n_active_cells(), std::cerr);
 
-      PairCellWiseScratchData scratch_data(fe, fe, bem_values);
-      PairCellWisePerTaskData per_task_data(fe, fe);
+      PairCellWiseScratchData scratch_data(fe_for_dirichlet_space,
+                                           fe_for_dirichlet_space,
+                                           bem_values);
+      PairCellWisePerTaskData per_task_data(fe_for_dirichlet_space,
+                                            fe_for_dirichlet_space);
 
       // Calculate the term \f$(v, V(u))\f$.
-      for (const auto &e : dof_handler.active_cell_iterators())
+      for (const auto &e : dof_handler_for_dirichlet_space_on_dirichlet_domain
+                             .active_cell_iterators())
         {
 #ifdef GRAPH_COLORING
           WorkStream::run(
             colored_cells,
-            std::bind(&Example2::assemble_on_one_pair_of_cells,
+            std::bind(&Example2::assemble_for_full_matrix_on_one_pair_of_cells,
                       this,
                       e,
                       std::placeholders::_1,
@@ -2157,8 +2048,8 @@ namespace IdeoBEM
             per_task_data);
 #else
           WorkStream::run(
-            dof_handler.begin_active(),
-            dof_handler.end(),
+            dof_handler_for_dirichlet_space_on_dirichlet_domain.begin_active(),
+            dof_handler_for_dirichlet_space_on_dirichlet_domain.end(),
             std::bind(&Example2::assemble_on_one_pair_of_cells_for_slp,
                       this,
                       e,
@@ -2177,7 +2068,7 @@ namespace IdeoBEM
         }
 
       // Calculate the right-hand side vector.
-      slp_matrix.vmult(system_rhs, neumann_bc);
+      V1_matrix.vmult(system_rhs, neumann_bc);
     }
 
 
@@ -2185,14 +2076,14 @@ namespace IdeoBEM
     Example2::assemble_system_serial()
     {
       // Generate normal Gauss-Legendre quadrature rule for FEM integration.
-      QGauss<2> quadrature_formula_2d(fe.degree + 1);
+      QGauss<2> quadrature_formula_2d(fe_for_dirichlet_space.degree + 1);
 
-      const unsigned int dofs_per_cell = fe.dofs_per_cell;
+      const unsigned int dofs_per_cell = fe_for_dirichlet_space.dofs_per_cell;
 
       FullMatrix<double> local_matrix(dofs_per_cell, dofs_per_cell);
 
       // Calculate the term $(v, \frac{1}{2}u)$.
-      FEValues<2, 3> fe_values(fe,
+      FEValues<2, 3> fe_values(fe_for_dirichlet_space,
                                quadrature_formula_2d,
                                update_values | update_JxW_values);
 
@@ -2203,7 +2094,9 @@ namespace IdeoBEM
       const unsigned int n_q_points = quadrature_formula_2d.size();
 
       // Loop over each active cell.
-      for (const auto &cell : dof_handler.active_cell_iterators())
+      for (const auto &cell :
+           dof_handler_for_dirichlet_space_on_dirichlet_domain
+             .active_cell_iterators())
         {
           // Clear the local matrix elements for a new cell.
           local_matrix = 0.;
@@ -2234,9 +2127,9 @@ namespace IdeoBEM
             {
               for (unsigned int j = 0; j < dofs_per_cell; j++)
                 {
-                  dlp_with_mass_matrix.add(local_dof_indices[i],
-                                           local_dof_indices[j],
-                                           local_matrix(i, j));
+                  K2_matrix_with_mass_matrix.add(local_dof_indices[i],
+                                                 local_dof_indices[j],
+                                                 local_matrix(i, j));
                 }
             }
         }
@@ -2272,8 +2165,8 @@ namespace IdeoBEM
       QGauss<4> quad_rule_for_regular(quad_order_for_regular);
 
       // Precalculate data tables for shape values at quadrature points.
-      BEMValues<2, 3> bem_values(fe,
-                                 fe,
+      BEMValues<2, 3> bem_values(fe_for_dirichlet_space,
+                                 fe_for_dirichlet_space,
                                  quad_rule_for_same_panel,
                                  quad_rule_for_common_edge,
                                  quad_rule_for_common_vertex,
@@ -2282,26 +2175,30 @@ namespace IdeoBEM
       bem_values.fill_shape_grad_matrix_tables();
 
       // Initialize the progress display.
-      boost::progress_display pd(triangulation.n_active_cells() *
-                                   triangulation.n_active_cells(),
-                                 deallog.get_console());
+      boost::progress_display pd(
+        triangulation_for_dirichlet_domain.n_active_cells() *
+          triangulation_for_dirichlet_domain.n_active_cells(),
+        deallog.get_console());
 
       // Calculate the term $(v, Ku)$ to be assembled into system matrix and
       // $(v, V(\psi))$ to be assembled into right-hand side vector.
-      for (const auto &e : dof_handler.active_cell_iterators())
+      for (const auto &e : dof_handler_for_dirichlet_space_on_dirichlet_domain
+                             .active_cell_iterators())
         {
-          for (const auto &f : dof_handler.active_cell_iterators())
+          for (const auto &f :
+               dof_handler_for_dirichlet_space_on_dirichlet_domain
+                 .active_cell_iterators())
             {
-              SauterQuadRule(dlp_with_mass_matrix,
-                             this->dlp,
+              SauterQuadRule(K2_matrix_with_mass_matrix,
+                             this->double_layer_kernel,
                              bem_values,
                              e,
                              f,
                              this->mapping,
                              this->mapping);
 
-              SauterQuadRule(slp_matrix,
-                             this->slp,
+              SauterQuadRule(V1_matrix,
+                             this->single_layer_kernel,
                              bem_values,
                              e,
                              f,
@@ -2313,7 +2210,7 @@ namespace IdeoBEM
         }
 
       // Calculate the right-hand side vector.
-      slp_matrix.vmult(system_rhs, neumann_bc);
+      V1_matrix.vmult(system_rhs, neumann_bc);
     }
 
 
@@ -2328,8 +2225,8 @@ namespace IdeoBEM
         {
           case NeumannBCProblem:
             {
-              solver.solve(dlp_with_mass_matrix,
-                           solution,
+              solver.solve(K2_matrix_with_mass_matrix,
+                           solution_for_dirichlet_domain,
                            system_rhs,
                            PreconditionIdentity());
 
@@ -2337,8 +2234,8 @@ namespace IdeoBEM
             }
           case DirichletBCProblem:
             {
-              solver.solve(slp_matrix,
-                           solution,
+              solver.solve(V1_matrix,
+                           solution_for_dirichlet_domain,
                            system_rhs,
                            PreconditionIdentity());
 
@@ -2357,7 +2254,7 @@ namespace IdeoBEM
             {
               print_vector_to_mat(std::cout,
                                   "analytical_solution",
-                                  analytical_solution_of_neumann_problem,
+                                  analytical_solution_for_neumann_domain,
                                   false);
 
               break;
@@ -2366,22 +2263,26 @@ namespace IdeoBEM
             {
               print_vector_to_mat(std::cout,
                                   "analytical_solution",
-                                  analytical_solution_of_dirichlet_problem,
+                                  analytical_solution_for_dirichlet_domain,
                                   false);
 
               break;
             }
         }
 
-      print_vector_to_mat(std::cout, "numerical_solution", solution, false);
+      print_vector_to_mat(std::cout,
+                          "numerical_solution",
+                          solution_for_dirichlet_domain,
+                          false);
 
       DataOut<2, DoFHandler<2, 3>> data_out;
-      data_out.attach_dof_handler(dof_handler);
+      data_out.attach_dof_handler(
+        dof_handler_for_dirichlet_space_on_dirichlet_domain);
       switch (problem_type)
         {
           case NeumannBCProblem:
             {
-              data_out.add_data_vector(analytical_solution_of_neumann_problem,
+              data_out.add_data_vector(analytical_solution_for_neumann_domain,
                                        "analytical_solution");
               data_out.add_data_vector(neumann_bc, "neumann_bc");
 
@@ -2389,7 +2290,7 @@ namespace IdeoBEM
             }
           case DirichletBCProblem:
             {
-              data_out.add_data_vector(analytical_solution_of_dirichlet_problem,
+              data_out.add_data_vector(analytical_solution_for_dirichlet_domain,
                                        "analytical_solution");
               data_out.add_data_vector(dirichlet_bc, "dirichlet_bc");
 
@@ -2397,7 +2298,8 @@ namespace IdeoBEM
             }
         }
 
-      data_out.add_data_vector(solution, "numerical_solution");
+      data_out.add_data_vector(solution_for_dirichlet_domain,
+                               "numerical_solution");
       data_out.build_patches();
 
       switch (problem_type)
@@ -2427,19 +2329,19 @@ namespace IdeoBEM
         {
           case NeumannBCProblem:
             {
-              return dlp_with_mass_matrix;
+              return K2_matrix_with_mass_matrix;
 
               break;
             }
           case DirichletBCProblem:
             {
-              return slp_matrix;
+              return V1_matrix;
 
               break;
             }
           default:
             {
-              return dlp_with_mass_matrix;
+              return K2_matrix_with_mass_matrix;
             }
         }
     }
@@ -2452,19 +2354,19 @@ namespace IdeoBEM
         {
           case NeumannBCProblem:
             {
-              return dlp_with_mass_matrix;
+              return K2_matrix_with_mass_matrix;
 
               break;
             }
           case DirichletBCProblem:
             {
-              return slp_matrix;
+              return V1_matrix;
 
               break;
             }
           default:
             {
-              return dlp_with_mass_matrix;
+              return K2_matrix_with_mass_matrix;
             }
         }
     }
@@ -2477,19 +2379,19 @@ namespace IdeoBEM
         {
           case NeumannBCProblem:
             {
-              return slp_matrix;
+              return V1_matrix;
 
               break;
             }
           case DirichletBCProblem:
             {
-              return dlp_with_mass_matrix;
+              return K2_matrix_with_mass_matrix;
 
               break;
             }
           default:
             {
-              return slp_matrix;
+              return V1_matrix;
             }
         }
     }
@@ -2502,19 +2404,19 @@ namespace IdeoBEM
         {
           case NeumannBCProblem:
             {
-              return slp_matrix;
+              return V1_matrix;
 
               break;
             }
           case DirichletBCProblem:
             {
-              return dlp_with_mass_matrix;
+              return K2_matrix_with_mass_matrix;
 
               break;
             }
           default:
             {
-              return slp_matrix;
+              return V1_matrix;
             }
         }
     }
@@ -2537,265 +2439,180 @@ namespace IdeoBEM
     ClusterTree<3> &
     Example2::get_ct()
     {
-      return ct;
+      return ct_for_neumann_space_on_dirichlet_domain;
     }
 
     BlockClusterTree<3> &
     Example2::get_bct()
     {
-      return bct;
+      return bct_for_bilinear_form_V;
     }
 
 
     std::vector<Point<3>> &
     Example2::get_all_support_points()
     {
-      return all_support_points;
+      return support_points_for_dirichlet_space_on_dirichlet_domain;
     }
 
 
     const std::vector<Point<3>> &
     Example2::get_all_support_points() const
     {
-      return all_support_points;
+      return support_points_for_dirichlet_space_on_dirichlet_domain;
     }
 
     const BlockClusterTree<3> &
     Example2::get_bct() const
     {
-      return bct;
+      return bct_for_bilinear_form_V;
     }
 
     const ClusterTree<3> &
     Example2::get_ct() const
     {
-      return ct;
+      return ct_for_neumann_space_on_dirichlet_domain;
     }
 
 
     HMatrix<3> &
     Example2::get_dlp_hmat()
     {
-      return dlp_hmat_with_mass_matrix;
+      return K2_hmat_with_mass_matrix;
     }
 
 
     const HMatrix<3> &
     Example2::get_dlp_hmat() const
     {
-      return dlp_hmat_with_mass_matrix;
+      return K2_hmat_with_mass_matrix;
     }
 
 
     std::vector<types::global_dof_index> &
     Example2::get_dof_indices()
     {
-      return dof_indices;
+      return dof_indices_for_neumann_space_on_dirichlet_domain;
     }
 
 
     const std::vector<types::global_dof_index> &
     Example2::get_dof_indices() const
     {
-      return dof_indices;
+      return dof_indices_for_neumann_space_on_dirichlet_domain;
     }
 
 
     HMatrix<3> &
     Example2::get_slp_hmat()
     {
-      return slp_hmat;
+      return V1_hmat;
     }
 
 
     const HMatrix<3> &
     Example2::get_slp_hmat() const
     {
-      return slp_hmat;
+      return V1_hmat;
     }
 
 
     void
     Example2::run()
     {
-      is_use_hmat = false;
-
-      // generate_mesh(1);
       read_mesh();
-      // calc_cell_neighboring_types();
       setup_system();
 
-      if (thread_num > 1)
+      if (!is_use_hmat)
         {
-          assemble_system_smp(true);
+          if (thread_num > 1)
+            {
+              assemble_full_matrix_system_smp();
 
-          // DEBUG: print out the assembled matrices.
-          // std::ofstream out("matrices-assemble-on-cell-pair.dat");
-          //          std::ofstream out(
-          //            "matrices-assemble-on-cell-pair-with-mass-matrix.dat");
-          //          print_matrix_to_mat(
-          //            out, "dlp_cell_pair", dlp_matrix, 25, false, 15, "0");
-          //          print_matrix_to_mat(
-          //            out, "slp_cell_pair", slp_matrix, 25, false, 15, "0");
-          //          out.close();
+              // DEBUG: print out the assembled matrices.
+              // std::ofstream out("matrices-assemble-on-cell-pair.dat");
+              //          std::ofstream out(
+              //            "matrices-assemble-on-cell-pair-with-mass-matrix.dat");
+              //          print_matrix_to_mat(
+              //            out, "dlp_cell_pair", dlp_matrix, 25, false, 15,
+              //            "0");
+              //          print_matrix_to_mat(
+              //            out, "slp_cell_pair", slp_matrix, 25, false, 15,
+              //            "0");
+              //          out.close();
+            }
+          else
+            {
+              // assemble_system_serial();
+
+              // For verification of the function @p assemble_system_via_pairs_of_dofs.
+              // assemble_system_via_pairs_of_dofs();
+
+              // For verification of the function @p fill_hmatrix_with_aca_plus in
+              // @p aca_plus.h, during which the FEM matrix will not be assembled,
+              // and only SLP and DLP full matrices are generated.
+              assemble_system_via_pairs_of_dofs(false);
+
+              // DEBUG: print out the assembled matrices.
+              std::ofstream out("matrices-assemble-on-dof-pair.dat");
+              print_matrix_to_mat(out,
+                                  "dlp_dof_pair",
+                                  K2_matrix_with_mass_matrix,
+                                  25,
+                                  false,
+                                  15,
+                                  "0");
+              print_matrix_to_mat(
+                out, "slp_dof_pair", V1_matrix, 25, false, 15, "0");
+              out.close();
+            }
+
+          solve();
+          output_results();
         }
       else
         {
-          // assemble_system_serial();
+          assemble_system_as_hmatrices_with_mass_matrix_smp(true);
 
-          // For verification of the function @p assemble_system_via_pairs_of_dofs.
-          // assemble_system_via_pairs_of_dofs();
-
-          // For verification of the function @p fill_hmatrix_with_aca_plus in
-          // @p aca_plus.h, during which the FEM matrix will not be assembled,
-          // and only SLP and DLP full matrices are generated.
-          assemble_system_via_pairs_of_dofs(false);
-
-          // DEBUG: print out the assembled matrices.
-          std::ofstream out("matrices-assemble-on-dof-pair.dat");
-          print_matrix_to_mat(
-            out, "dlp_dof_pair", dlp_with_mass_matrix, 25, false, 15, "0");
-          print_matrix_to_mat(
-            out, "slp_dof_pair", slp_matrix, 25, false, 15, "0");
-          out.close();
-        }
-
-      solve();
-      output_results();
-    }
-
-
-    void
-    Example2::run_using_hmat()
-    {
-      is_use_hmat = true;
-
-      read_mesh();
-      setup_system();
-      assemble_system_as_hmatrices_with_mass_matrix_smp(true);
-
-      switch (problem_type)
-        {
-          case NeumannBCProblem:
+          switch (problem_type)
             {
-              /**
-               * Perform the LU factorization of the system matrix
-               * \f$\frac{1}{2}I+K\f$.
-               */
-              dlp_hmat_with_mass_matrix.compute_lu_factorization(max_hmat_rank);
+              case NeumannBCProblem:
+                {
+                  /**
+                   * Perform the LU factorization of the system matrix
+                   * \f$\frac{1}{2}I+K\f$.
+                   */
+                  K2_hmat_with_mass_matrix.compute_lu_factorization(
+                    max_hmat_rank);
 
-              /**
-               * Solve the system equation using the direct LU solver.
-               */
-              dlp_hmat_with_mass_matrix.solve_lu(this->solution,
-                                                 this->system_rhs);
+                  /**
+                   * Solve the system equation using the direct LU solver.
+                   */
+                  K2_hmat_with_mass_matrix.solve_lu(
+                    this->solution_for_dirichlet_domain, this->system_rhs);
 
-              break;
+                  break;
+                }
+              case DirichletBCProblem:
+                {
+                  /**
+                   * Perform the Cholesky factorization of the system matrix
+                   * \f$V\f$.
+                   */
+                  V1_hmat.compute_cholesky_factorization(max_hmat_rank);
+
+                  /**
+                   * Solve the system equation.
+                   */
+                  V1_hmat.solve_cholesky(this->solution_for_dirichlet_domain,
+                                         this->system_rhs);
+
+                  break;
+                }
             }
-          case DirichletBCProblem:
-            {
-              /**
-               * Perform the Cholesky factorization of the system matrix
-               * \f$V\f$.
-               */
-              slp_hmat.compute_cholesky_factorization(max_hmat_rank);
 
-              /**
-               * Solve the system equation.
-               */
-              slp_hmat.solve_cholesky(this->solution, this->system_rhs);
-
-              break;
-            }
+          output_results();
         }
-
-      output_results();
-    }
-
-
-    void
-    Example2::build_slp_only(bool is_build_matrix)
-    {
-      // generate_mesh(1);
-      read_mesh();
-      calc_cell_neighboring_types();
-      setup_system();
-
-      /**
-       * Generate the sequence of all DoF indices with the values \f$0, 1,
-       * \cdots\f$.
-       */
-      dof_indices.resize(dof_handler.n_dofs());
-      types::global_dof_index counter = 0;
-      for (auto &dof_index : dof_indices)
-        {
-          dof_index = counter;
-          counter++;
-        }
-
-      /**
-       * Get the spatial coordinates of the support points associated with DoF
-       * indices. The used @p mapping object here should be consistent with the
-       * FinteElement space adopted.
-       */
-      all_support_points.resize(dof_handler.n_dofs());
-      DoFTools::map_dofs_to_support_points(mapping,
-                                           dof_handler,
-                                           all_support_points);
-
-      // #region: DEBUG
-      /**
-       * Calculate the distance between each pair of support points associated
-       * with DoFs.
-       */
-      LAPACKFullMatrixExt<double> dof_distance_matrix(dof_handler.n_dofs(),
-                                                      dof_handler.n_dofs());
-      for (unsigned int i = 1; i < dof_handler.n_dofs(); i++)
-        {
-          for (unsigned int j = 0; j < i; j++)
-            {
-              dof_distance_matrix(i, j) =
-                all_support_points[i].distance(all_support_points[j]);
-              dof_distance_matrix(j, i) = dof_distance_matrix(i, j);
-            }
-        }
-
-      dof_distance_matrix.print_formatted_to_mat(
-        std::cout, "dof_distance_matrix", 15, false, 25, "0");
-      // #end-region
-
-      /**
-       * Calculate the average mesh cell size at each support point.
-       */
-      dof_average_cell_size.resize(dof_handler.n_dofs(), 0);
-      map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
-
-      /**
-       * Create the cluster tree.
-       */
-      ct = ClusterTree<3>(dof_indices,
-                          all_support_points,
-                          dof_average_cell_size,
-                          n_min_for_ct);
-      ct.partition(all_support_points, dof_average_cell_size);
-
-      /**
-       * Create the block cluster tree.
-       */
-      bct = BlockClusterTree<3>(ct, ct, eta, n_min_for_bct);
-      bct.partition(all_support_points);
-
-#ifdef RUN_SMP_PARALLEL
-      if (is_build_matrix)
-        {
-          assemble_slp_smp();
-        }
-#else
-      if (is_build_matrix)
-        {
-          assemble_system_serial();
-        }
-#endif
     }
   } // namespace Erichsen1996Efficient
 } // namespace IdeoBEM
