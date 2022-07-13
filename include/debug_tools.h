@@ -209,6 +209,7 @@ print_vector_of_tree_node_pointer_values(
  * splot "./data_file.gpl" using 1:2:3:4 with labels offset 1,1 point pt 1 lc \
  * rgb "red"
  * \endcode
+ *
  * @param fe_system The given FiniteElement object will be checked if it has support points.
  * @param mapping
  * @param dof_handler
@@ -243,6 +244,39 @@ print_support_point_info(const FiniteElement<dim, spacedim> &fe,
                                                      support_points);
     }
 }
+
+
+/**
+ * Generate a table of DoF indices associated with each support point. The DoF
+ * indices are automatically assigned by starting from zero.
+ *
+ * @param support_points
+ * @param base_name
+ */
+template <int spacedim>
+void
+print_support_point_info(const std::vector<Point<spacedim>> &support_points,
+                         const std::string &                 base_name)
+{
+  /**
+   * Allocate memory for the vector storing support points. The DoF numbering
+   * will automatically be given by starting from zero.
+   */
+  std::map<types::global_dof_index, Point<spacedim>> support_points_map;
+
+  for (unsigned int i = 0; i < support_points.size(); i++)
+    {
+      support_points_map[i] = support_points[i];
+    }
+
+  /**
+   * Write the table of DoF indices for each support point into file.
+   */
+  std::ofstream gnuplot_file(base_name + ".gpl");
+  DoFTools::write_gnuplot_dof_support_point_info(gnuplot_file,
+                                                 support_points_map);
+}
+
 
 /**
  * \brief Generate a table of DoF indices associated with each support point.

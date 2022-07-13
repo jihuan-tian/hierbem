@@ -3749,6 +3749,52 @@
                 			
             </target>
             			
+            <target name="verify-mapping-q-generic.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>verify-mapping-q-generic.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="verify-vertex-order-in-cell-and-mapping-support-points.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>verify-vertex-order-in-cell-and-mapping-support-points.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="verify-vertex-order-in-cell-and-fe-support-points.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildArguments/>
+                				
+                <buildTarget>verify-vertex-order-in-cell-and-fe-support-points.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
             <target name="documentation" path="doc" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>doxygen</buildCommand>

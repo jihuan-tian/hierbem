@@ -22,7 +22,6 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_values.h>
-#include <deal.II/fe/mapping_q_generic.h>
 
 #include <deal.II/grid/tria.h>
 
@@ -36,6 +35,7 @@
 #include <vector>
 
 #include "generic_functors.h"
+#include "mapping_q_generic_ext.h"
 
 using namespace dealii;
 
@@ -2572,6 +2572,48 @@ namespace IdeoBEM
     }
 
 
+    //    template <int dim, int spacedim = dim>
+    //    CellNeighboringType
+    //    detect_cell_neighboring_type_for_same_triangulations(
+    //      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+    //        &first_cell_iter,
+    //      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+    //        &                           second_cell_iter,
+    //      const Mapping<dim, spacedim> &first_cell_mapping,
+    //      const Mapping<dim, spacedim> &second_cell_mapping,
+    //      std::vector<std::pair<types::global_dof_index,
+    //      types::global_dof_index>>
+    //        &          common_vertex_dof_indices,
+    //      const double threshold = 1e-12)
+    //    {
+    //      const unsigned int vertices_per_cell =
+    //        GeometryInfo<dim>::vertices_per_cell;
+    //
+    //      /**
+    //       * Get the vertex indices in each cell.
+    //       */
+    //      std::array<types::global_vertex_index, vertices_per_cell>
+    //        first_cell_vertex_indices(
+    //          get_vertex_indices_in_cell<dim, spacedim>(first_cell_iter));
+    //
+    //      std::array<types::global_vertex_index, vertices_per_cell>
+    //        second_cell_vertex_indices(
+    //          get_vertex_indices_in_cell<dim, spacedim>(second_cell_iter));
+    //
+    //      /**
+    //       * Calculate the intersection of the two cells' vertex indices. This
+    //       * operation is meaningful because the triangulations for the two
+    //       cells
+    //       * are the same.
+    //       */
+    //      std::vector<types::global_vertex_index> vertex_index_intersection;
+    //      detect_cell_neighboring_type_for_same_triangulations<dim>(
+    //        first_cell_vertex_indices,
+    //        second_cell_vertex_indices,
+    //        vertex_index_intersection);
+    //    }
+
+
     /**
      * Calculate the surface Jacobian determinant at the specified area
      * coordinates. Support points in the real cell should have been
@@ -3138,6 +3180,178 @@ namespace IdeoBEM
     }
 
 
+    template <int dim, int spacedim>
+    std::vector<unsigned int>
+    generate_forward_mapping_support_point_permutation(
+      const MappingQGenericExt<dim, spacedim> &mapping,
+      unsigned int                             starting_corner)
+    {
+      // Currently, only dim=2 and spacedim=3 are supported.
+      Assert((dim == 2) && (spacedim == 3), ExcInternalError());
+      const int poly_degree = mapping.polynomial_degree;
+
+      std::vector<unsigned int> poly_space_inverse_numbering(
+        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+            poly_degree),
+          1,
+          poly_degree)));
+      std::vector<unsigned int> support_point_permutation(
+        poly_space_inverse_numbering.size());
+
+      // Store the inverse numbering into a matrix for further traversing.
+      unsigned int             c = 0;
+      FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
+                                                              poly_degree + 1);
+      for (int i = poly_degree; i >= 0; i--)
+        {
+          for (int j = 0; j <= poly_degree; j++)
+            {
+              support_point_numbering_matrix(i, j) =
+                poly_space_inverse_numbering[c];
+              c++;
+            }
+        }
+
+      switch (starting_corner)
+        {
+          case 0:
+            return poly_space_inverse_numbering;
+
+            break;
+          case 1:
+            c = 0;
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                for (int i = poly_degree; i >= 0; i--)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 2:
+            c = 0;
+            for (int j = 0; j <= poly_degree; j++)
+              {
+                for (int i = 0; i <= poly_degree; i++)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 3:
+            c = 0;
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                for (int j = poly_degree; j >= 0; j--)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          default:
+            Assert(false, ExcInternalError());
+        }
+
+      return support_point_permutation;
+    }
+
+
+    template <int dim, int spacedim>
+    void
+    generate_forward_mapping_support_point_permutation(
+      const MappingQGenericExt<dim, spacedim> &mapping,
+      unsigned int                             starting_corner,
+      std::vector<unsigned int> &              support_point_permutation)
+    {
+      // Currently, only dim=2 and spacedim=3 are supported.
+      Assert((dim == 2) && (spacedim == 3), ExcInternalError());
+      const int poly_degree = mapping.polynomial_degree;
+
+      std::vector<unsigned int> poly_space_inverse_numbering(
+        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+            poly_degree),
+          1,
+          poly_degree)));
+
+      AssertDimension(support_point_permutation.size(),
+                      poly_space_inverse_numbering.size());
+
+      // Store the inverse numbering into a matrix for further traversing.
+      unsigned int             c = 0;
+      FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
+                                                              poly_degree + 1);
+      for (int i = poly_degree; i >= 0; i--)
+        {
+          for (int j = 0; j <= poly_degree; j++)
+            {
+              support_point_numbering_matrix(i, j) =
+                poly_space_inverse_numbering[c];
+              c++;
+            }
+        }
+
+      switch (starting_corner)
+        {
+          case 0:
+            support_point_permutation = poly_space_inverse_numbering;
+
+            break;
+          case 1:
+            c = 0;
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                for (int i = poly_degree; i >= 0; i--)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 2:
+            c = 0;
+            for (int j = 0; j <= poly_degree; j++)
+              {
+                for (int i = 0; i <= poly_degree; i++)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 3:
+            c = 0;
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                for (int j = poly_degree; j >= 0; j--)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          default:
+            Assert(false, ExcInternalError());
+        }
+    }
+
+
     /**
      * Generate the permutation of the polynomial space inverse numbering by
      * starting from the specified corner in the backward direction. The
@@ -3334,6 +3548,196 @@ namespace IdeoBEM
                 for (int i = 0; i <= poly_degree; i++)
                   {
                     dof_permutation[c] = dof_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          default:
+            Assert(false, ExcInternalError());
+        }
+    }
+
+
+    template <int dim, int spacedim>
+    std::vector<unsigned int>
+    generate_backward_mapping_support_point_permutation(
+      const MappingQGenericExt<dim, spacedim> &mapping,
+      unsigned int                             starting_corner)
+    {
+      // Currently, only dim=2 and spacedim=3 are supported.
+      Assert((dim == 2) && (spacedim == 3), ExcInternalError());
+      const int poly_degree = mapping.polynomial_degree;
+
+      std::vector<unsigned int> poly_space_inverse_numbering(
+        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+            poly_degree),
+          1,
+          poly_degree)));
+      std::vector<unsigned int> support_point_permutation(
+        poly_space_inverse_numbering.size());
+
+      // Store the inverse numbering into a matrix for further traversing.
+      unsigned int             c = 0;
+      FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
+                                                              poly_degree + 1);
+      for (int i = poly_degree; i >= 0; i--)
+        {
+          for (int j = 0; j <= poly_degree; j++)
+            {
+              support_point_numbering_matrix(i, j) =
+                poly_space_inverse_numbering[c];
+              c++;
+            }
+        }
+
+      switch (starting_corner)
+        {
+          case 0:
+            c = 0;
+            for (int j = 0; j <= poly_degree; j++)
+              {
+                for (int i = poly_degree; i >= 0; i--)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 1:
+            c = 0;
+            for (int i = poly_degree; i >= 0; i--)
+              {
+                for (int j = poly_degree; j >= 0; j--)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 2:
+            c = 0;
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                for (int j = 0; j <= poly_degree; j++)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 3:
+            c = 0;
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                for (int i = 0; i <= poly_degree; i++)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          default:
+            Assert(false, ExcInternalError());
+        }
+
+      return support_point_permutation;
+    }
+
+
+    template <int dim, int spacedim>
+    void
+    generate_backward_mapping_support_point_permutation(
+      const MappingQGenericExt<dim, spacedim> &mapping,
+      unsigned int                             starting_corner,
+      std::vector<unsigned int> &              support_point_permutation)
+    {
+      // Currently, only dim=2 and spacedim=3 are supported.
+      Assert((dim == 2) && (spacedim == 3), ExcInternalError());
+      const int poly_degree = mapping.get_degree();
+
+      std::vector<unsigned int> poly_space_inverse_numbering(
+        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+            poly_degree),
+          1,
+          poly_degree)));
+
+      AssertDimension(support_point_permutation.size(),
+                      poly_space_inverse_numbering.size());
+
+      // Store the inverse numbering into a matrix for further traversing.
+      unsigned int             c = 0;
+      FullMatrix<unsigned int> support_point_numbering_matrix(poly_degree + 1,
+                                                              poly_degree + 1);
+      for (int i = poly_degree; i >= 0; i--)
+        {
+          for (int j = 0; j <= poly_degree; j++)
+            {
+              support_point_numbering_matrix(i, j) =
+                poly_space_inverse_numbering[c];
+              c++;
+            }
+        }
+
+      switch (starting_corner)
+        {
+          case 0:
+            c = 0;
+            for (int j = 0; j <= poly_degree; j++)
+              {
+                for (int i = poly_degree; i >= 0; i--)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 1:
+            c = 0;
+            for (int i = poly_degree; i >= 0; i--)
+              {
+                for (int j = poly_degree; j >= 0; j--)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 2:
+            c = 0;
+            for (int i = 0; i <= poly_degree; i++)
+              {
+                for (int j = 0; j <= poly_degree; j++)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
+                    c++;
+                  }
+              }
+
+            break;
+          case 3:
+            c = 0;
+            for (int j = poly_degree; j >= 0; j--)
+              {
+                for (int i = 0; i <= poly_degree; i++)
+                  {
+                    support_point_permutation[c] =
+                      support_point_numbering_matrix(i, j);
                     c++;
                   }
               }

@@ -306,9 +306,11 @@ namespace IdeoBEM
     const KernelFunction<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                            factor,
     const DoFHandler<dim, spacedim> &                dof_handler_for_test_space,
-    const DoFHandler<dim, spacedim> &     dof_handler_for_trial_space,
-    const MappingQGeneric<dim, spacedim> &kx_mapping,
-    const MappingQGeneric<dim, spacedim> &ky_mapping,
+    const DoFHandler<dim, spacedim> &        dof_handler_for_trial_space,
+    const MappingQGenericExt<dim, spacedim> &kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_test_space_mesh_to_volume_mesh,
@@ -346,13 +348,14 @@ namespace IdeoBEM
     BEMValues<dim, spacedim, RangeNumberType> bem_values(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
       sauter_quad_rule.quad_rule_for_same_panel,
       sauter_quad_rule.quad_rule_for_common_edge,
       sauter_quad_rule.quad_rule_for_common_vertex,
       sauter_quad_rule.quad_rule_for_regular);
 
-    bem_values.fill_shape_value_tables();
-    bem_values.fill_shape_grad_matrix_tables();
+    bem_values.fill_shape_function_value_tables();
 
     /**
      * Create data structure for parallel matrix assembly.
@@ -365,6 +368,10 @@ namespace IdeoBEM
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      kx_mapping_data,
+      ky_mapping_data,
       bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
       dof_handler_for_test_space.get_fe(),
@@ -376,6 +383,11 @@ namespace IdeoBEM
 
     for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
       {
+        /**
+         * Update the support points in the mapping object for \f$K_x\f$.
+         */
+        kx_mapping.compute_mapping_support_points(e);
+
         /**
          * Apply parallelization to the inner loop.
          *

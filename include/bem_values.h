@@ -53,216 +53,58 @@ namespace IdeoBEM
      * @param quad_rule_for_common_vertex
      * @param quad_rule_for_regular
      */
-    BEMValues(const FiniteElement<dim, spacedim> &kx_fe,
-              const FiniteElement<dim, spacedim> &ky_fe,
-              const QGauss<4> &                   quad_rule_for_same_panel,
-              const QGauss<4> &                   quad_rule_for_common_edge,
-              const QGauss<4> &                   quad_rule_for_common_vertex,
-              const QGauss<4> &                   quad_rule_for_regular);
+    BEMValues(
+      const FiniteElement<dim, spacedim> &                   kx_fe,
+      const FiniteElement<dim, spacedim> &                   ky_fe,
+      typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+      typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+      const QGauss<4> &quad_rule_for_same_panel,
+      const QGauss<4> &quad_rule_for_common_edge,
+      const QGauss<4> &quad_rule_for_common_vertex,
+      const QGauss<4> &quad_rule_for_regular);
 
 
     /**
-     * Copy constructor for class @p BEMValues.
-     *
-     * \mynote{The internal references for finite element objects and
-     * quadrature objects contained by the current @p BEMValues object will be
-     * bound to the same objects associated with the input @p bem_values.
-     * Meanwhile, the data tables will be copied.}
-     *
-     * @param bem_values
+     * Copy constructor for class @p BEMValues is deleted.
      */
-    BEMValues(const BEMValues<dim, spacedim, RangeNumberType> &bem_values);
+    BEMValues(const BEMValues<dim, spacedim, RangeNumberType> &bem_values) =
+      delete;
 
 
     /**
-     * Calculate the table storing shape function values at Sauter quadrature
-     * points for the same panel case.
-     *
-     * @param kx_fe The finite element for \f$K_x\f$
-     * @param ky_fe The finite element for \f$K_y\f$
-     * @param sauter_quad_rule
-     * @param kx_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is
-     * the
-     * quadrature point number. Refer to @p BEMValues::kx_shape_value_table_for_same_panel.
-     * @param ky_shape_value_table the 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is
-     * the
-     * quadrature point number. Refer to @p BEMValues::ky_shape_value_table_for_same_panel.
+     * Calculate the table storing shape function values and derivatives for
+     * both finite element and mapping objects at Sauter quadrature points for
+     * the same panel case.
      */
     void
-    shape_values_same_panel(const FiniteElement<dim, spacedim> &kx_fe,
-                            const FiniteElement<dim, spacedim> &ky_fe,
-                            const QGauss<4> &          sauter_quad_rule,
-                            Table<3, RangeNumberType> &kx_shape_value_table,
-                            Table<3, RangeNumberType> &ky_shape_value_table);
+    shape_function_values_same_panel();
 
 
     /**
-     * Calculate the table storing shape function values at Sauter quadrature
-     * points for the common edge case.
-     *
-     * @param kx_fe The finite element for \f$K_x\f$
-     * @param ky_fe The finite element for \f$K_y\f$
-     * @param sauter_quad_rule
-     * @param kx_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is
-     * the
-     * quadrature point number. Refer to @p BEMValues::kx_shape_value_table_for_common_edge.
-     * @param ky_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for \f$k_3\f$ terms; the 3rd dimension is
-     * the
-     * quadrature point number. Refer to @p BEMValues::ky_shape_value_table_for_common_edge.
+     * Calculate the table storing shape function values and derivatives for
+     * both finite element and mapping objects at Sauter quadrature points for
+     * the common edge case.
      */
     void
-    shape_values_common_edge(const FiniteElement<dim, spacedim> &kx_fe,
-                             const FiniteElement<dim, spacedim> &ky_fe,
-                             const QGauss<4> &          sauter_quad_rule,
-                             Table<3, RangeNumberType> &kx_shape_value_table,
-                             Table<3, RangeNumberType> &ky_shape_value_table);
+    shape_function_values_common_edge();
 
 
     /**
-     * Calculate the table storing shape function values at Sauter quadrature
-     * points for the common vertex case.
-     *
-     * @param kx_fe The finite element for \f$K_x\f$
-     * @param ky_fe The finite element for \f$K_y\f$
-     * @param sauter_quad_rule
-     * @param kx_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the
-     * quadrature point number. Refer to @p BEMValues::kx_shape_value_table_for_common_vertex.
-     * @param ky_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the
-     * quadrature point number. Refer to @p BEMValues::ky_shape_value_table_for_common_vertex.
+     * Calculate the table storing shape function values and derivatives for
+     * both finite element and mapping objects at Sauter quadrature points for
+     * the common vertex case.
      */
     void
-    shape_values_common_vertex(const FiniteElement<dim, spacedim> &kx_fe,
-                               const FiniteElement<dim, spacedim> &ky_fe,
-                               const QGauss<4> &          sauter_quad_rule,
-                               Table<3, RangeNumberType> &kx_shape_value_table,
-                               Table<3, RangeNumberType> &ky_shape_value_table);
+    shape_function_values_common_vertex();
 
 
     /**
-     * Calculate the table storing shape function values at Sauter quadrature
-     * points for the regular case.
-     *
-     * @param kx_fe The finite element for \f$K_x\f$
-     * @param ky_fe The finite element for \f$K_y\f$
-     * @param sauter_quad_rule
-     * @param kx_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the
-     * quadrature point number. Refer to @p BEMValues::kx_shape_value_table_for_regular.
-     * @param ky_shape_value_table The 1st dimension is the shape function hierarchical numbering;
-     * the 2nd dimension is the index for $k_3$ terms; the 3rd dimension is the
-     * quadrature point number. Refer to @p BEMValues::ky_shape_value_table_for_regular.
+     * Calculate the table storing shape function values and derivatives for
+     * both finite element and mapping objects at Sauter quadrature points for
+     * the regular case.
      */
     void
-    shape_values_regular(const FiniteElement<dim, spacedim> &kx_fe,
-                         const FiniteElement<dim, spacedim> &ky_fe,
-                         const QGauss<4> &                   sauter_quad_rule,
-                         Table<3, RangeNumberType> &kx_shape_value_table,
-                         Table<3, RangeNumberType> &ky_shape_value_table);
-
-
-    /**
-     * Calculate the table storing shape function gradient matrices at Sauter
-     * quadrature points for the same panel case. N.B. The shape functions are
-     * in the lexicographic order and each row of the gradient matrix
-     * corresponds to a shape function.
-     *
-     * @param kx_fe The finite element for \f$K_x\f$
-     * @param ky_fe The finite element for \f$K_y\f$
-     * @param sauter_quad_rule
-     * @param kx_shape_grad_matrix_table The 1st dimension is the index for \f$k_3\f$
-     * terms; the 2nd dimension is the quadrature point number. Refer to
-     * @p BEMValues::kx_shape_grad_matrix_table_for_regular.
-     * @param ky_shape_grad_matrix_table The 1st dimension is the index for \f$k_3\f$
-     * terms; the 2nd dimension is the quadrature point number. Refer to
-     * @p BEMValues::ky_shape_grad_matrix_table_for_regular.
-     */
-    void
-    shape_grad_matrices_same_panel(
-      const FiniteElement<dim, spacedim> &   kx_fe,
-      const FiniteElement<dim, spacedim> &   ky_fe,
-      const QGauss<4> &                      sauter_quad_rule,
-      Table<2, FullMatrix<RangeNumberType>> &kx_shape_grad_matrix_table,
-      Table<2, FullMatrix<RangeNumberType>> &ky_shape_grad_matrix_table);
-
-
-    /**
-     * Calculate the table storing shape function gradient matrices at Sauter
-     * quadrature points for the common edge case. N.B. The shape functions are
-     * in the lexicographic order and each row of the gradient matrix
-     * corresponds to a shape function.
-     *
-     * @param kx_fe The finite element for \f$K_x\f$
-     * @param ky_fe The finite element for \f$K_y\f$
-     * @param sauter_quad_rule
-     * @param kx_shape_grad_matrix_table The 1st dimension is the index for \f$k_3\f$
-     * terms; the 2nd dimension is the quadrature point number. Refer to
-     * @p BEMValues::kx_shape_grad_matrix_table_for_common_edge.
-     * @param ky_shape_grad_matrix_table The 1st dimension is the index for \f$k_3\f$
-     * terms; the 2nd dimension is the quadrature point number. Refer to
-     * @p BEMValues::ky_shape_grad_matrix_table_for_common_edge.
-     */
-    void
-    shape_grad_matrices_common_edge(
-      const FiniteElement<dim, spacedim> &   kx_fe,
-      const FiniteElement<dim, spacedim> &   ky_fe,
-      const QGauss<4> &                      sauter_quad_rule,
-      Table<2, FullMatrix<RangeNumberType>> &kx_shape_grad_matrix_table,
-      Table<2, FullMatrix<RangeNumberType>> &ky_shape_grad_matrix_table);
-
-
-    /**
-     * Calculate the table storing shape function gradient matrices at Sauter
-     * quadrature points for the common vertex case. N.B. The shape functions
-     * are in the lexicographic order and each row of the gradient matrix
-     * corresponds to a shape function.
-     *
-     * @param kx_fe The finite element for \f$K_x\f$
-     * @param ky_fe The finite element for \f$K_y\f$
-     * @param sauter_quad_rule
-     * @param kx_shape_grad_matrix_table The 1st dimension is the index for \f$k_3\f$
-     * terms; the 2nd dimension is the quadrature point number. Refer to
-     * @p BEMValues::kx_shape_grad_matrix_table_for_common_vertex.
-     * @param ky_shape_grad_matrix_table The 1st dimension is the index for \f$k_3\f$
-     * terms; the 2nd dimension is the quadrature point number. Refer to
-     * @p BEMValues::ky_shape_grad_matrix_table_for_common_vertex.
-     */
-    void
-    shape_grad_matrices_common_vertex(
-      const FiniteElement<dim, spacedim> &   kx_fe,
-      const FiniteElement<dim, spacedim> &   ky_fe,
-      const QGauss<4> &                      sauter_quad_rule,
-      Table<2, FullMatrix<RangeNumberType>> &kx_shape_grad_matrix_table,
-      Table<2, FullMatrix<RangeNumberType>> &ky_shape_grad_matrix_table);
-
-
-    /**
-     * Calculate the table storing shape function gradient matrices at Sauter
-     * quadrature points for the regular case. N.B. The shape functions are
-     * in the lexicographic order and each row of the gradient matrix
-     * corresponds to a shape function.
-     *
-     * @param kx_fe The finite element for \f$K_x\f$
-     * @param ky_fe The finite element for \f$K_y\f$
-     * @param sauter_quad_rule
-     * @param kx_shape_grad_matrix_table The 1st dimension is the quadrature point
-     * number. Refer to @p BEMValues::kx_shape_grad_matrix_table_for_regular.
-     * @param ky_shape_grad_matrix_table The 1st dimension is the quadrature point
-     * number. Refer to @p BEMValues::ky_shape_grad_matrix_table_for_regular.
-     */
-    void
-    shape_grad_matrices_regular(
-      const FiniteElement<dim, spacedim> &   kx_fe,
-      const FiniteElement<dim, spacedim> &   ky_fe,
-      const QGauss<4> &                      sauter_quad_rule,
-      Table<2, FullMatrix<RangeNumberType>> &kx_shape_grad_matrix_table,
-      Table<2, FullMatrix<RangeNumberType>> &ky_shape_grad_matrix_table);
-
+    shape_function_values_regular();
 
     /**
      * Reference to finite element on the field cell \f$K_x\f$.
@@ -272,6 +114,14 @@ namespace IdeoBEM
      * Reference to finite element on the field cell \f$K_y\f$.
      */
     const FiniteElement<dim, spacedim> &ky_fe;
+    /**
+     * Reference to the internal data in the mapping of \f$K_x\f$.
+     */
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data;
+    /**
+     * Reference to the internal data in the mapping of \f$K_y\f$.
+     */
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data;
     /**
      * Reference to 4D Sauter quadrature rule for the case that \f$K_x \equiv
      * K_y\f$.
@@ -294,64 +144,64 @@ namespace IdeoBEM
     const QGauss<4> &quad_rule_for_regular;
 
     /**
-     * Data table of shape function values for \f$K_x\f$ in the same panel case.
-     * It has three dimensions:
+     * Data table of finite element shape function values for \f$K_x\f$ in the
+     * same panel case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=8
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> kx_shape_value_table_for_same_panel;
     /**
-     * Data table of shape function values for \f$K_y\f$ in the same panel case.
-     * It has three dimensions:
+     * Data table of finite element shape function values for \f$K_y\f$ in the
+     * same panel case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=8
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> ky_shape_value_table_for_same_panel;
     /**
-     * Data table of shape function values for \f$K_x\f$ in the common edge
-     * case. It has three dimensions:
+     * Data table of finite element shape function values for \f$K_x\f$ in the
+     * common edge case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=6
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> kx_shape_value_table_for_common_edge;
     /**
-     * Data table of shape function values for \f$K_y\f$ in the common edge
-     * case. It has three dimensions:
+     * Data table of finite element shape function values for \f$K_y\f$ in the
+     * common edge case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=6
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> ky_shape_value_table_for_common_edge;
     /**
-     * Data table of shape function values for \f$K_x\f$ in the common vertex
-     * case. It has three dimensions:
+     * Data table of finite element shape function values for \f$K_x\f$ in the
+     * common vertex case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=4
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> kx_shape_value_table_for_common_vertex;
     /**
-     * Data table of shape function values for \f$K_y\f$ in the common vertex
-     * case. It has three dimensions:
+     * Data table of finite element shape function values for \f$K_y\f$ in the
+     * common vertex case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=4
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> ky_shape_value_table_for_common_vertex;
     /**
-     * Data table of shape function values for \f$K_x\f$ in the regular case.
-     * It has three dimensions:
+     * Data table of finite element shape function values for \f$K_x\f$ in the
+     * regular case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=1
      * 3. Quadrature point index: size=number of quadrature points
      */
     Table<3, RangeNumberType> kx_shape_value_table_for_regular;
     /**
-     * Data table of shape function values for \f$K_y\f$ in the regular case.
-     * It has three dimensions:
+     * Data table of finite element shape function values for \f$K_y\f$ in the
+     * regular case. It has three dimensions:
      * 1. shape function index: size=@p dofs_per_cell
      * 2. \f$k_3\f$ term index: size=1
      * 3. Quadrature point index: size=number of quadrature points
@@ -359,8 +209,73 @@ namespace IdeoBEM
     Table<3, RangeNumberType> ky_shape_value_table_for_regular;
 
     /**
-     * Data table of shape function's gradient values for \f$K_x\f$ in the same
-     * panel case. It has two dimensions:
+     * Data table of mapping shape function values for \f$K_x\f$ in the
+     * same panel case. It has three dimensions:
+     * 1. shape function index: size=@p dofs_per_cell
+     * 2. \f$k_3\f$ term index: size=8
+     * 3. Quadrature point index: size=number of quadrature points
+     */
+    Table<3, RangeNumberType> kx_mapping_shape_value_table_for_same_panel;
+    /**
+     * Data table of mapping shape function values for \f$K_y\f$ in the
+     * same panel case. It has three dimensions:
+     * 1. shape function index: size=@p dofs_per_cell
+     * 2. \f$k_3\f$ term index: size=8
+     * 3. Quadrature point index: size=number of quadrature points
+     */
+    Table<3, RangeNumberType> ky_mapping_shape_value_table_for_same_panel;
+    /**
+     * Data table of mapping shape function values for \f$K_x\f$ in the
+     * common edge case. It has three dimensions:
+     * 1. shape function index: size=@p dofs_per_cell
+     * 2. \f$k_3\f$ term index: size=6
+     * 3. Quadrature point index: size=number of quadrature points
+     */
+    Table<3, RangeNumberType> kx_mapping_shape_value_table_for_common_edge;
+    /**
+     * Data table of mapping shape function values for \f$K_y\f$ in the
+     * common edge case. It has three dimensions:
+     * 1. shape function index: size=@p dofs_per_cell
+     * 2. \f$k_3\f$ term index: size=6
+     * 3. Quadrature point index: size=number of quadrature points
+     */
+    Table<3, RangeNumberType> ky_mapping_shape_value_table_for_common_edge;
+    /**
+     * Data table of mapping shape function values for \f$K_x\f$ in the
+     * common vertex case. It has three dimensions:
+     * 1. shape function index: size=@p dofs_per_cell
+     * 2. \f$k_3\f$ term index: size=4
+     * 3. Quadrature point index: size=number of quadrature points
+     */
+    Table<3, RangeNumberType> kx_mapping_shape_value_table_for_common_vertex;
+    /**
+     * Data table of mapping shape function values for \f$K_y\f$ in the
+     * common vertex case. It has three dimensions:
+     * 1. shape function index: size=@p dofs_per_cell
+     * 2. \f$k_3\f$ term index: size=4
+     * 3. Quadrature point index: size=number of quadrature points
+     */
+    Table<3, RangeNumberType> ky_mapping_shape_value_table_for_common_vertex;
+    /**
+     * Data table of mapping shape function values for \f$K_x\f$ in the
+     * regular case. It has three dimensions:
+     * 1. shape function index: size=@p dofs_per_cell
+     * 2. \f$k_3\f$ term index: size=1
+     * 3. Quadrature point index: size=number of quadrature points
+     */
+    Table<3, RangeNumberType> kx_mapping_shape_value_table_for_regular;
+    /**
+     * Data table of mapping shape function values for \f$K_y\f$ in the
+     * regular case. It has three dimensions:
+     * 1. shape function index: size=@p dofs_per_cell
+     * 2. \f$k_3\f$ term index: size=1
+     * 3. Quadrature point index: size=number of quadrature points
+     */
+    Table<3, RangeNumberType> ky_mapping_shape_value_table_for_regular;
+
+    /**
+     * Data table of finite element shape function's gradient values for
+     * \f$K_x\f$ in the same panel case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=8
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -369,8 +284,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_same_panel;
     /**
-     * Data table of shape function's gradient values for \f$K_y\f$ in the same
-     * panel case. It has two dimensions:
+     * Data table of finite element shape function's gradient values for
+     * \f$K_y\f$ in the same panel case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=8
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -379,8 +294,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_same_panel;
     /**
-     * Data table of shape function's gradient values for \f$K_x\f$ in the
-     * common edge case. It has two dimensions:
+     * Data table of finite element shape function's gradient values for
+     * \f$K_x\f$ in the common edge case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -389,8 +304,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_edge;
     /**
-     * Data table of shape function's gradient values for \f$K_y\f$ in the
-     * common edge case. It has two dimensions:
+     * Data table of finite element shape function's gradient values for
+     * \f$K_y\f$ in the common edge case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -399,8 +314,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_edge;
     /**
-     * Data table of shape function's gradient values for \f$K_x\f$ in the
-     * common vertex case. It has two dimensions:
+     * Data table of finite element shape function's gradient values for
+     * \f$K_x\f$ in the common vertex case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -409,8 +324,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_vertex;
     /**
-     * Data table of shape function's gradient values for \f$K_y\f$ in the
-     * common vertex case. It has two dimensions:
+     * Data table of finite element shape function's gradient values for
+     * \f$K_y\f$ in the common vertex case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -419,8 +334,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_vertex;
     /**
-     * Data table of shape function's gradient values for \f$K_x\f$ in the
-     * regular case. It has two dimensions:
+     * Data table of finite element shape function's gradient values for
+     * \f$K_x\f$ in the regular case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=1
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -429,8 +344,8 @@ namespace IdeoBEM
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_regular;
     /**
-     * Data table of shape function's gradient values for \f$K_y\f$ in the
-     * regular case. It has two dimensions:
+     * Data table of finite element shape function's gradient values for
+     * \f$K_y\f$ in the regular case. It has two dimensions:
      * 1. \f$k_3\f$ term index: size=1
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
@@ -440,101 +355,145 @@ namespace IdeoBEM
       ky_shape_grad_matrix_table_for_regular;
 
     /**
-     * Fill the data tables for shape function values.
+     * Data table of mapping shape function's gradient values for
+     * \f$K_x\f$ in the same panel case. It has two dimensions:
+     * 1. \f$k_3\f$ term index: size=8
+     * 2. Quadrature point index: size=number of quadrature points
+     * N.B. Each data item in the table is itself a matrix with the dimension
+     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
      */
-    void
-    fill_shape_value_tables();
+    Table<2, FullMatrix<RangeNumberType>>
+      kx_mapping_shape_grad_matrix_table_for_same_panel;
+    /**
+     * Data table of mapping shape function's gradient values for
+     * \f$K_y\f$ in the same panel case. It has two dimensions:
+     * 1. \f$k_3\f$ term index: size=8
+     * 2. Quadrature point index: size=number of quadrature points
+     * N.B. Each data item in the table is itself a matrix with the dimension
+     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     */
+    Table<2, FullMatrix<RangeNumberType>>
+      ky_mapping_shape_grad_matrix_table_for_same_panel;
+    /**
+     * Data table of mapping shape function's gradient values for
+     * \f$K_x\f$ in the common edge case. It has two dimensions:
+     * 1. \f$k_3\f$ term index: size=6
+     * 2. Quadrature point index: size=number of quadrature points
+     * N.B. Each data item in the table is itself a matrix with the dimension
+     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     */
+    Table<2, FullMatrix<RangeNumberType>>
+      kx_mapping_shape_grad_matrix_table_for_common_edge;
+    /**
+     * Data table of mapping shape function's gradient values for
+     * \f$K_y\f$ in the common edge case. It has two dimensions:
+     * 1. \f$k_3\f$ term index: size=6
+     * 2. Quadrature point index: size=number of quadrature points
+     * N.B. Each data item in the table is itself a matrix with the dimension
+     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     */
+    Table<2, FullMatrix<RangeNumberType>>
+      ky_mapping_shape_grad_matrix_table_for_common_edge;
+    /**
+     * Data table of mapping shape function's gradient values for
+     * \f$K_x\f$ in the common vertex case. It has two dimensions:
+     * 1. \f$k_3\f$ term index: size=4
+     * 2. Quadrature point index: size=number of quadrature points
+     * N.B. Each data item in the table is itself a matrix with the dimension
+     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     */
+    Table<2, FullMatrix<RangeNumberType>>
+      kx_mapping_shape_grad_matrix_table_for_common_vertex;
+    /**
+     * Data table of mapping shape function's gradient values for
+     * \f$K_y\f$ in the common vertex case. It has two dimensions:
+     * 1. \f$k_3\f$ term index: size=4
+     * 2. Quadrature point index: size=number of quadrature points
+     * N.B. Each data item in the table is itself a matrix with the dimension
+     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     */
+    Table<2, FullMatrix<RangeNumberType>>
+      ky_mapping_shape_grad_matrix_table_for_common_vertex;
+    /**
+     * Data table of mapping shape function's gradient values for
+     * \f$K_x\f$ in the regular case. It has two dimensions:
+     * 1. \f$k_3\f$ term index: size=1
+     * 2. Quadrature point index: size=number of quadrature points
+     * N.B. Each data item in the table is itself a matrix with the dimension
+     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     */
+    Table<2, FullMatrix<RangeNumberType>>
+      kx_mapping_shape_grad_matrix_table_for_regular;
+    /**
+     * Data table of mapping shape function's gradient values for
+     * \f$K_y\f$ in the regular case. It has two dimensions:
+     * 1. \f$k_3\f$ term index: size=1
+     * 2. Quadrature point index: size=number of quadrature points
+     * N.B. Each data item in the table is itself a matrix with the dimension
+     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     */
+    Table<2, FullMatrix<RangeNumberType>>
+      ky_mapping_shape_grad_matrix_table_for_regular;
 
     /**
-     * Fill the data tables for the gradient values of shape functions.
+     * Fill the data tables for both finite element and mapping shape function
+     * values and their derivatives.
      */
     void
-    fill_shape_grad_matrix_tables();
+    fill_shape_function_value_tables();
 
   protected:
     /**
-     * Initialize the data tables for shape function values.
+     * Initialize the data tables for the finite element shape function values.
      */
     void
     init_shape_value_tables();
 
     /**
-     * Initialize the data tables for the gradient values of shape functions.
+     * Initialize the data tables for the mapping shape function values.
+     */
+    void
+    init_mapping_shape_value_tables();
+
+    /**
+     * Initialize the data tables for the gradient values of finite element
+     * shape functions.
      */
     void
     init_shape_grad_matrix_tables();
+
+    /**
+     * Initialize the data tables for the gradient values of mapping shape
+     * functions.
+     */
+    void
+    init_mapping_shape_grad_matrix_tables();
   };
 
 
   template <int dim, int spacedim, typename RangeNumberType>
   BEMValues<dim, spacedim, RangeNumberType>::BEMValues(
-    const FiniteElement<dim, spacedim> &kx_fe,
-    const FiniteElement<dim, spacedim> &ky_fe,
-    const QGauss<4> &                   quad_rule_for_same_panel,
-    const QGauss<4> &                   quad_rule_for_common_edge,
-    const QGauss<4> &                   quad_rule_for_common_vertex,
-    const QGauss<4> &                   quad_rule_for_regular)
+    const FiniteElement<dim, spacedim> &                   kx_fe,
+    const FiniteElement<dim, spacedim> &                   ky_fe,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const QGauss<4> &quad_rule_for_same_panel,
+    const QGauss<4> &quad_rule_for_common_edge,
+    const QGauss<4> &quad_rule_for_common_vertex,
+    const QGauss<4> &quad_rule_for_regular)
     : kx_fe(kx_fe)
     , ky_fe(ky_fe)
+    , kx_mapping_data(kx_mapping_data)
+    , ky_mapping_data(ky_mapping_data)
     , quad_rule_for_same_panel(quad_rule_for_same_panel)
     , quad_rule_for_common_edge(quad_rule_for_common_edge)
     , quad_rule_for_common_vertex(quad_rule_for_common_vertex)
     , quad_rule_for_regular(quad_rule_for_regular)
   {
     init_shape_value_tables();
+    init_mapping_shape_value_tables();
     init_shape_grad_matrix_tables();
-  }
-
-
-  template <int dim, int spacedim, typename RangeNumberType>
-  BEMValues<dim, spacedim, RangeNumberType>::BEMValues(
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values)
-    : kx_fe(bem_values.kx_fe)
-    , ky_fe(bem_values.ky_fe)
-    , quad_rule_for_same_panel(bem_values.quad_rule_for_same_panel)
-    , quad_rule_for_common_edge(bem_values.quad_rule_for_common_edge)
-    , quad_rule_for_common_vertex(bem_values.quad_rule_for_common_vertex)
-    , quad_rule_for_regular(bem_values.quad_rule_for_regular)
-  {
-    kx_shape_value_table_for_same_panel =
-      bem_values.kx_shape_value_table_for_same_panel;
-    ky_shape_value_table_for_same_panel =
-      bem_values.ky_shape_value_table_for_same_panel;
-
-    kx_shape_value_table_for_common_edge =
-      bem_values.kx_shape_value_table_for_common_edge;
-    ky_shape_value_table_for_common_edge =
-      bem_values.ky_shape_value_table_for_common_edge;
-
-    kx_shape_value_table_for_common_vertex =
-      bem_values.kx_shape_value_table_for_common_vertex;
-    ky_shape_value_table_for_common_vertex =
-      bem_values.ky_shape_value_table_for_common_vertex;
-
-    kx_shape_value_table_for_regular =
-      bem_values.kx_shape_value_table_for_regular;
-    ky_shape_value_table_for_regular =
-      bem_values.ky_shape_value_table_for_regular;
-
-    kx_shape_grad_matrix_table_for_same_panel =
-      bem_values.kx_shape_grad_matrix_table_for_same_panel;
-    ky_shape_grad_matrix_table_for_same_panel =
-      bem_values.ky_shape_grad_matrix_table_for_same_panel;
-
-    kx_shape_grad_matrix_table_for_common_edge =
-      bem_values.kx_shape_grad_matrix_table_for_common_edge;
-    ky_shape_grad_matrix_table_for_common_edge =
-      bem_values.ky_shape_grad_matrix_table_for_common_edge;
-
-    kx_shape_grad_matrix_table_for_common_vertex =
-      bem_values.kx_shape_grad_matrix_table_for_common_vertex;
-    ky_shape_grad_matrix_table_for_common_vertex =
-      bem_values.ky_shape_grad_matrix_table_for_common_vertex;
-
-    kx_shape_grad_matrix_table_for_regular =
-      bem_values.kx_shape_grad_matrix_table_for_regular;
-    ky_shape_grad_matrix_table_for_regular =
-      bem_values.ky_shape_grad_matrix_table_for_regular;
+    init_mapping_shape_grad_matrix_tables();
   }
 
 
@@ -566,6 +525,36 @@ namespace IdeoBEM
 
   template <int dim, int spacedim, typename RangeNumberType>
   void
+  BEMValues<dim, spacedim, RangeNumberType>::init_mapping_shape_value_tables()
+  {
+    kx_mapping_shape_value_table_for_same_panel.reinit(TableIndices<3>(
+      kx_mapping_data.n_shape_functions, 8, quad_rule_for_same_panel.size()));
+    ky_mapping_shape_value_table_for_same_panel.reinit(TableIndices<3>(
+      ky_mapping_data.n_shape_functions, 8, quad_rule_for_same_panel.size()));
+
+    kx_mapping_shape_value_table_for_common_edge.reinit(TableIndices<3>(
+      kx_mapping_data.n_shape_functions, 6, quad_rule_for_common_edge.size()));
+    ky_mapping_shape_value_table_for_common_edge.reinit(TableIndices<3>(
+      ky_mapping_data.n_shape_functions, 6, quad_rule_for_common_edge.size()));
+
+    kx_mapping_shape_value_table_for_common_vertex.reinit(
+      TableIndices<3>(kx_mapping_data.n_shape_functions,
+                      4,
+                      quad_rule_for_common_vertex.size()));
+    ky_mapping_shape_value_table_for_common_vertex.reinit(
+      TableIndices<3>(ky_mapping_data.n_shape_functions,
+                      4,
+                      quad_rule_for_common_vertex.size()));
+
+    kx_mapping_shape_value_table_for_regular.reinit(TableIndices<3>(
+      kx_mapping_data.n_shape_functions, 1, quad_rule_for_regular.size()));
+    ky_mapping_shape_value_table_for_regular.reinit(TableIndices<3>(
+      ky_mapping_data.n_shape_functions, 1, quad_rule_for_regular.size()));
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType>
+  void
   BEMValues<dim, spacedim, RangeNumberType>::init_shape_grad_matrix_tables()
   {
     kx_shape_grad_matrix_table_for_same_panel.reinit(
@@ -592,106 +581,119 @@ namespace IdeoBEM
 
   template <int dim, int spacedim, typename RangeNumberType>
   void
-  BEMValues<dim, spacedim, RangeNumberType>::fill_shape_value_tables()
+  BEMValues<dim, spacedim, RangeNumberType>::
+    init_mapping_shape_grad_matrix_tables()
   {
-    shape_values_same_panel(kx_fe,
-                            ky_fe,
-                            quad_rule_for_same_panel,
-                            kx_shape_value_table_for_same_panel,
-                            ky_shape_value_table_for_same_panel);
+    kx_mapping_shape_grad_matrix_table_for_same_panel.reinit(
+      TableIndices<2>(8, quad_rule_for_same_panel.size()));
+    ky_mapping_shape_grad_matrix_table_for_same_panel.reinit(
+      TableIndices<2>(8, quad_rule_for_same_panel.size()));
 
-    shape_values_common_edge(kx_fe,
-                             ky_fe,
-                             quad_rule_for_common_edge,
-                             kx_shape_value_table_for_common_edge,
-                             ky_shape_value_table_for_common_edge);
+    kx_mapping_shape_grad_matrix_table_for_common_edge.reinit(
+      TableIndices<2>(6, quad_rule_for_common_edge.size()));
+    ky_mapping_shape_grad_matrix_table_for_common_edge.reinit(
+      TableIndices<2>(6, quad_rule_for_common_edge.size()));
 
-    shape_values_common_vertex(kx_fe,
-                               ky_fe,
-                               quad_rule_for_common_vertex,
-                               kx_shape_value_table_for_common_vertex,
-                               ky_shape_value_table_for_common_vertex);
+    kx_mapping_shape_grad_matrix_table_for_common_vertex.reinit(
+      TableIndices<2>(4, quad_rule_for_common_vertex.size()));
+    ky_mapping_shape_grad_matrix_table_for_common_vertex.reinit(
+      TableIndices<2>(4, quad_rule_for_common_vertex.size()));
 
-    shape_values_regular(kx_fe,
-                         ky_fe,
-                         quad_rule_for_regular,
-                         kx_shape_value_table_for_regular,
-                         ky_shape_value_table_for_regular);
+    kx_mapping_shape_grad_matrix_table_for_regular.reinit(
+      TableIndices<2>(1, quad_rule_for_regular.size()));
+    ky_mapping_shape_grad_matrix_table_for_regular.reinit(
+      TableIndices<2>(1, quad_rule_for_regular.size()));
   }
 
 
   template <int dim, int spacedim, typename RangeNumberType>
   void
-  BEMValues<dim, spacedim, RangeNumberType>::fill_shape_grad_matrix_tables()
+  BEMValues<dim, spacedim, RangeNumberType>::fill_shape_function_value_tables()
   {
-    shape_grad_matrices_same_panel(kx_fe,
-                                   ky_fe,
-                                   quad_rule_for_same_panel,
-                                   kx_shape_grad_matrix_table_for_same_panel,
-                                   ky_shape_grad_matrix_table_for_same_panel);
-
-    shape_grad_matrices_common_edge(kx_fe,
-                                    ky_fe,
-                                    quad_rule_for_common_edge,
-                                    kx_shape_grad_matrix_table_for_common_edge,
-                                    ky_shape_grad_matrix_table_for_common_edge);
-
-    shape_grad_matrices_common_vertex(
-      kx_fe,
-      ky_fe,
-      quad_rule_for_common_vertex,
-      kx_shape_grad_matrix_table_for_common_vertex,
-      ky_shape_grad_matrix_table_for_common_vertex);
-
-    shape_grad_matrices_regular(kx_fe,
-                                ky_fe,
-                                quad_rule_for_regular,
-                                kx_shape_grad_matrix_table_for_regular,
-                                ky_shape_grad_matrix_table_for_regular);
+    shape_function_values_same_panel();
+    shape_function_values_common_edge();
+    shape_function_values_common_vertex();
+    shape_function_values_regular();
   }
 
 
   template <int dim, int spacedim, typename RangeNumberType>
   void
-  BEMValues<dim, spacedim, RangeNumberType>::shape_values_same_panel(
-    const FiniteElement<dim, spacedim> &kx_fe,
-    const FiniteElement<dim, spacedim> &ky_fe,
-    const QGauss<4> &                   sauter_quad_rule,
-    Table<3, RangeNumberType> &         kx_shape_value_table,
-    Table<3, RangeNumberType> &         ky_shape_value_table)
+  BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_same_panel()
   {
     const unsigned int kx_dofs_per_cell = kx_fe.dofs_per_cell;
     const unsigned int ky_dofs_per_cell = ky_fe.dofs_per_cell;
-    const unsigned int n_q_points       = sauter_quad_rule.size();
+    const unsigned int kx_mapping_n_shape_functions =
+      kx_mapping_data.n_shape_functions;
+    const unsigned int ky_mapping_n_shape_functions =
+      ky_mapping_data.n_shape_functions;
+    const unsigned int n_q_points = quad_rule_for_same_panel.size();
 
     // Make assertion about the length for each dimension of the data table.
-    Assert(kx_shape_value_table.size(0) == kx_dofs_per_cell,
-           ExcDimensionMismatch(kx_shape_value_table.size(0),
-                                kx_dofs_per_cell));
-    Assert(kx_shape_value_table.size(1) == 8,
-           ExcDimensionMismatch(kx_shape_value_table.size(1), 8));
-    Assert(kx_shape_value_table.size(2) == n_q_points,
-           ExcDimensionMismatch(kx_shape_value_table.size(2), n_q_points));
+    AssertDimension(kx_shape_value_table_for_same_panel.size(0),
+                    kx_dofs_per_cell);
+    AssertDimension(kx_shape_value_table_for_same_panel.size(1), 8);
+    AssertDimension(kx_shape_value_table_for_same_panel.size(2), n_q_points);
 
-    Assert(ky_shape_value_table.size(0) == ky_dofs_per_cell,
-           ExcDimensionMismatch(ky_shape_value_table.size(0),
-                                ky_dofs_per_cell));
-    Assert(ky_shape_value_table.size(1) == 8,
-           ExcDimensionMismatch(ky_shape_value_table.size(1), 8));
-    Assert(ky_shape_value_table.size(2) == n_q_points,
-           ExcDimensionMismatch(ky_shape_value_table.size(2), n_q_points));
+    AssertDimension(ky_shape_value_table_for_same_panel.size(0),
+                    ky_dofs_per_cell);
+    AssertDimension(ky_shape_value_table_for_same_panel.size(1), 8);
+    AssertDimension(ky_shape_value_table_for_same_panel.size(2), n_q_points);
 
-    std::vector<Point<dim * 2>> quad_points = sauter_quad_rule.get_points();
+    AssertDimension(kx_mapping_shape_value_table_for_same_panel.size(0),
+                    kx_mapping_n_shape_functions);
+    AssertDimension(kx_mapping_shape_value_table_for_same_panel.size(1), 8);
+    AssertDimension(kx_mapping_shape_value_table_for_same_panel.size(2),
+                    n_q_points);
 
-    Point<dim> kx_quad_point;
-    Point<dim> ky_quad_point;
+    AssertDimension(ky_mapping_shape_value_table_for_same_panel.size(0),
+                    ky_mapping_n_shape_functions);
+    AssertDimension(ky_mapping_shape_value_table_for_same_panel.size(1), 8);
+    AssertDimension(ky_mapping_shape_value_table_for_same_panel.size(2),
+                    n_q_points);
+
+    AssertDimension(kx_shape_grad_matrix_table_for_same_panel.size(0), 8);
+    AssertDimension(kx_shape_grad_matrix_table_for_same_panel.size(1),
+                    n_q_points);
+
+    AssertDimension(ky_shape_grad_matrix_table_for_same_panel.size(0), 8);
+    AssertDimension(ky_shape_grad_matrix_table_for_same_panel.size(1),
+                    n_q_points);
+
+    AssertDimension(kx_mapping_shape_grad_matrix_table_for_same_panel.size(0),
+                    8);
+    AssertDimension(kx_mapping_shape_grad_matrix_table_for_same_panel.size(1),
+                    n_q_points);
+
+    AssertDimension(ky_mapping_shape_grad_matrix_table_for_same_panel.size(0),
+                    8);
+    AssertDimension(ky_mapping_shape_grad_matrix_table_for_same_panel.size(1),
+                    n_q_points);
+
+    /**
+     * Initialize the internal data held in the mapping objects.
+     */
+    kx_mapping_data.shape_values.resize(kx_mapping_n_shape_functions *
+                                        n_q_points);
+    kx_mapping_data.shape_derivatives.resize(kx_mapping_n_shape_functions *
+                                             n_q_points);
+    ky_mapping_data.shape_values.resize(ky_mapping_n_shape_functions *
+                                        n_q_points);
+    ky_mapping_data.shape_derivatives.resize(ky_mapping_n_shape_functions *
+                                             n_q_points);
+
+    /**
+     * Quadrature points in the Sauter's parametric space.
+     */
+    std::vector<Point<dim * 2>> quad_points =
+      quad_rule_for_same_panel.get_points();
 
     /**
      * Get the polynomial space inverse numbering for accessing the shape
      * functions in the lexicographic order.
      *
-     * \alert{Here I have adopted an assumption that the finite elements are
-     * based on tensor product polynomials.}
+     * \alert{Here I have adopted an assumption that the finite elements
+     * are based on tensor product polynomials.}
      */
     const FE_Poly_short &kx_fe_poly =
       dynamic_cast<const FE_Poly_short &>(kx_fe);
@@ -702,6 +704,13 @@ namespace IdeoBEM
       kx_fe_poly.get_poly_space_numbering_inverse());
     std::vector<unsigned int> ky_poly_space_inverse_numbering(
       ky_fe_poly.get_poly_space_numbering_inverse());
+
+    /**
+     * Quadrature points in the unit cells of \f$K_x\f$ and \f$K_y\f$
+     * respectively.
+     */
+    std::vector<Point<dim>> kx_unit_quad_points(n_q_points);
+    std::vector<Point<dim>> ky_unit_quad_points(n_q_points);
 
     // Iterate over each $k_3$ part.
     for (unsigned k = 0; k < 8; k++)
@@ -711,30 +720,84 @@ namespace IdeoBEM
           {
             // Transform the quadrature point in the parametric space to
             // the unit cells of \f$K_x\f$ and \f$K_y\f$.
-            sauter_same_panel_parametric_coords_to_unit_cells(quad_points[q],
-                                                              k,
-                                                              kx_quad_point,
-                                                              ky_quad_point);
+            sauter_same_panel_parametric_coords_to_unit_cells(
+              quad_points[q],
+              k,
+              kx_unit_quad_points[q],
+              ky_unit_quad_points[q]);
 
-            // Iterate over each shape function on the unit cell of \f$K_x\f$
-            // and evaluate it at <code>kx_quad_point</code>. N.B. The
-            // shape functions are in the lexicographic order.
+            /**
+             * Iterate over each finite element shape function in the
+             * lexicographic order on the unit cell of \f$K_x\f$ and evaluate it
+             * at the current quadrature point @p kx_unit_quad_points[q].
+             */
             for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
               {
-                kx_shape_value_table(s, k, q) =
+                kx_shape_value_table_for_same_panel(s, k, q) =
                   kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
-                                    kx_quad_point);
+                                    kx_unit_quad_points[q]);
               }
 
             /**
-             *  Iterate over each shape function in the lexicographic order on
-             *  the unit cell of \f$K_y\f$ and evaluate it at @p ky_quad_point.
+             * Iterate over each finite element shape function in the
+             * lexicographic order on the unit cell of \f$K_y\f$ and evaluate it
+             * at the current quadrature point @p ky_unit_quad_points[q].
              */
             for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
               {
-                ky_shape_value_table(s, k, q) =
+                ky_shape_value_table_for_same_panel(s, k, q) =
                   ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
-                                    ky_quad_point);
+                                    ky_unit_quad_points[q]);
+              }
+
+            // Calculate the Jacobian matrix evaluated at
+            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
+            kx_shape_grad_matrix_table_for_same_panel(k, q) =
+              BEMTools::shape_grad_matrix_in_lexicographic_order(
+                kx_fe, kx_unit_quad_points[q]);
+            // Calculate the Jacobian matrix evaluated at
+            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
+            ky_shape_grad_matrix_table_for_same_panel(k, q) =
+              BEMTools::shape_grad_matrix_in_lexicographic_order(
+                ky_fe, ky_unit_quad_points[q]);
+          }
+
+        /**
+         * Compute mapping shape function values and their derivatives in batch.
+         * \mynote{Remember that the shape functions held by the mapping object
+         * are already in the tensor product order.}
+         */
+        kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
+        ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
+
+        for (unsigned int q = 0; q < n_q_points; q++)
+          {
+            for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
+              {
+                kx_mapping_shape_value_table_for_same_panel(s, k, q) =
+                  kx_mapping_data.shape(q, s);
+
+                for (unsigned int d = 0; d < dim; d++)
+                  {
+                    kx_mapping_shape_grad_matrix_table_for_same_panel(k, q)(s,
+                                                                            d) =
+                      kx_mapping_data.derivative(q, s)[d];
+                  }
+              }
+
+            for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
+              {
+                ky_mapping_shape_value_table_for_same_panel(s, k, q) =
+                  ky_mapping_data.shape(q, s);
+
+                for (unsigned int d = 0; d < dim; d++)
+                  {
+                    ky_mapping_shape_grad_matrix_table_for_same_panel(k, q)(s,
+                                                                            d) =
+                      ky_mapping_data.derivative(q, s)[d];
+                  }
               }
           }
       }
@@ -743,38 +806,74 @@ namespace IdeoBEM
 
   template <int dim, int spacedim, typename RangeNumberType>
   void
-  BEMValues<dim, spacedim, RangeNumberType>::shape_values_common_edge(
-    const FiniteElement<dim, spacedim> &kx_fe,
-    const FiniteElement<dim, spacedim> &ky_fe,
-    const QGauss<4> &                   sauter_quad_rule,
-    Table<3, RangeNumberType> &         kx_shape_value_table,
-    Table<3, RangeNumberType> &         ky_shape_value_table)
+  BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_common_edge()
   {
     const unsigned int kx_dofs_per_cell = kx_fe.dofs_per_cell;
     const unsigned int ky_dofs_per_cell = ky_fe.dofs_per_cell;
-    const unsigned int n_q_points       = sauter_quad_rule.size();
+    const unsigned int kx_mapping_n_shape_functions =
+      kx_mapping_data.n_shape_functions;
+    const unsigned int ky_mapping_n_shape_functions =
+      ky_mapping_data.n_shape_functions;
+    const unsigned int n_q_points = quad_rule_for_common_edge.size();
 
     // Make assertion about the length for each dimension of the data table.
-    Assert(kx_shape_value_table.size(0) == kx_dofs_per_cell,
-           ExcDimensionMismatch(kx_shape_value_table.size(0),
-                                kx_dofs_per_cell));
-    Assert(kx_shape_value_table.size(1) == 6,
-           ExcDimensionMismatch(kx_shape_value_table.size(1), 6));
-    Assert(kx_shape_value_table.size(2) == n_q_points,
-           ExcDimensionMismatch(kx_shape_value_table.size(2), n_q_points));
+    AssertDimension(kx_shape_value_table_for_common_edge.size(0),
+                    kx_dofs_per_cell);
+    AssertDimension(kx_shape_value_table_for_common_edge.size(1), 6);
+    AssertDimension(kx_shape_value_table_for_common_edge.size(2), n_q_points);
 
-    Assert(ky_shape_value_table.size(0) == ky_dofs_per_cell,
-           ExcDimensionMismatch(ky_shape_value_table.size(0),
-                                ky_dofs_per_cell));
-    Assert(ky_shape_value_table.size(1) == 6,
-           ExcDimensionMismatch(ky_shape_value_table.size(1), 6));
-    Assert(ky_shape_value_table.size(2) == n_q_points,
-           ExcDimensionMismatch(ky_shape_value_table.size(2), n_q_points));
+    AssertDimension(ky_shape_value_table_for_common_edge.size(0),
+                    ky_dofs_per_cell);
+    AssertDimension(ky_shape_value_table_for_common_edge.size(1), 6);
+    AssertDimension(ky_shape_value_table_for_common_edge.size(2), n_q_points);
 
-    std::vector<Point<dim * 2>> quad_points = sauter_quad_rule.get_points();
+    AssertDimension(kx_mapping_shape_value_table_for_common_edge.size(0),
+                    kx_mapping_n_shape_functions);
+    AssertDimension(kx_mapping_shape_value_table_for_common_edge.size(1), 6);
+    AssertDimension(kx_mapping_shape_value_table_for_common_edge.size(2),
+                    n_q_points);
 
-    Point<dim> kx_quad_point;
-    Point<dim> ky_quad_point;
+    AssertDimension(ky_mapping_shape_value_table_for_common_edge.size(0),
+                    ky_mapping_n_shape_functions);
+    AssertDimension(ky_mapping_shape_value_table_for_common_edge.size(1), 6);
+    AssertDimension(ky_mapping_shape_value_table_for_common_edge.size(2),
+                    n_q_points);
+
+    AssertDimension(kx_shape_grad_matrix_table_for_common_edge.size(0), 6);
+    AssertDimension(kx_shape_grad_matrix_table_for_common_edge.size(1),
+                    n_q_points);
+
+    AssertDimension(ky_shape_grad_matrix_table_for_common_edge.size(0), 6);
+    AssertDimension(ky_shape_grad_matrix_table_for_common_edge.size(1),
+                    n_q_points);
+
+    AssertDimension(kx_mapping_shape_grad_matrix_table_for_common_edge.size(0),
+                    6);
+    AssertDimension(kx_mapping_shape_grad_matrix_table_for_common_edge.size(1),
+                    n_q_points);
+
+    AssertDimension(ky_mapping_shape_grad_matrix_table_for_common_edge.size(0),
+                    6);
+    AssertDimension(ky_mapping_shape_grad_matrix_table_for_common_edge.size(1),
+                    n_q_points);
+
+    /**
+     * Initialize the internal data held in the mapping objects.
+     */
+    kx_mapping_data.shape_values.resize(kx_mapping_n_shape_functions *
+                                        n_q_points);
+    kx_mapping_data.shape_derivatives.resize(kx_mapping_n_shape_functions *
+                                             n_q_points);
+    ky_mapping_data.shape_values.resize(ky_mapping_n_shape_functions *
+                                        n_q_points);
+    ky_mapping_data.shape_derivatives.resize(ky_mapping_n_shape_functions *
+                                             n_q_points);
+
+    /**
+     * Quadrature points in the Sauter's parametric space.
+     */
+    std::vector<Point<dim * 2>> quad_points =
+      quad_rule_for_common_edge.get_points();
 
     /**
      * Get the polynomial space inverse numbering for accessing the shape
@@ -792,6 +891,13 @@ namespace IdeoBEM
       kx_fe_poly.get_poly_space_numbering_inverse());
     std::vector<unsigned int> ky_poly_space_inverse_numbering(
       ky_fe_poly.get_poly_space_numbering_inverse());
+
+    /**
+     * Quadrature points in the unit cells of \f$K_x\f$ and \f$K_y\f$
+     * respectively.
+     */
+    std::vector<Point<dim>> kx_unit_quad_points(n_q_points);
+    std::vector<Point<dim>> ky_unit_quad_points(n_q_points);
 
     // Iterate over each $k_3$ part.
     for (unsigned k = 0; k < 6; k++)
@@ -801,31 +907,82 @@ namespace IdeoBEM
           {
             // Transform the quadrature point in the parametric space to
             // the unit cells of \f$K_x\f$ and \f$K_y\f$.
-            sauter_common_edge_parametric_coords_to_unit_cells(quad_points[q],
-                                                               k,
-                                                               kx_quad_point,
-                                                               ky_quad_point);
+            sauter_common_edge_parametric_coords_to_unit_cells(
+              quad_points[q],
+              k,
+              kx_unit_quad_points[q],
+              ky_unit_quad_points[q]);
 
             /**
-             *  Iterate over each shape function in the lexicographic order on
-             *  the unit cell of \f$K_x\f$ and evaluate it at @p kx_quad_point.
+             * Iterate over each finite element shape function in the
+             * lexicographic order on the unit cell of \f$K_x\f$ and evaluate it
+             * at the current quadrature point @p kx_unit_quad_points[q].
              */
             for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
               {
-                kx_shape_value_table(s, k, q) =
+                kx_shape_value_table_for_common_edge(s, k, q) =
                   kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
-                                    kx_quad_point);
+                                    kx_unit_quad_points[q]);
               }
 
             /**
-             *  Iterate over each shape function in the lexicographic order on
-             *  the unit cell of \f$K_y\f$ and evaluate it at @p ky_quad_point.
+             * Iterate over each finite element shape function in the
+             * lexicographic order on the unit cell of \f$K_y\f$ and evaluate it
+             * at the current quadrature point @p ky_unit_quad_points[q].
              */
             for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
               {
-                ky_shape_value_table(s, k, q) =
+                ky_shape_value_table_for_common_edge(s, k, q) =
                   ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
-                                    ky_quad_point);
+                                    ky_unit_quad_points[q]);
+              }
+
+            // Calculate the Jacobian matrix evaluated at
+            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
+            kx_shape_grad_matrix_table_for_common_edge(k, q) =
+              BEMTools::shape_grad_matrix_in_lexicographic_order(
+                kx_fe, kx_unit_quad_points[q]);
+            // Calculate the Jacobian matrix evaluated at
+            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
+            ky_shape_grad_matrix_table_for_common_edge(k, q) =
+              BEMTools::shape_grad_matrix_in_lexicographic_order(
+                ky_fe, ky_unit_quad_points[q]);
+          }
+
+        /**
+         * Compute mapping shape function values and their derivatives in batch.
+         * \mynote{Remember that the shape functions held by the mapping object
+         * are already in the tensor product order.}
+         */
+        kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
+        ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
+
+        for (unsigned int q = 0; q < n_q_points; q++)
+          {
+            for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
+              {
+                kx_mapping_shape_value_table_for_common_edge(s, k, q) =
+                  kx_mapping_data.shape(q, s);
+
+                for (unsigned int d = 0; d < dim; d++)
+                  {
+                    kx_mapping_shape_grad_matrix_table_for_common_edge(k, q)(
+                      s, d) = kx_mapping_data.derivative(q, s)[d];
+                  }
+              }
+
+            for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
+              {
+                ky_mapping_shape_value_table_for_common_edge(s, k, q) =
+                  ky_mapping_data.shape(q, s);
+
+                for (unsigned int d = 0; d < dim; d++)
+                  {
+                    ky_mapping_shape_grad_matrix_table_for_common_edge(k, q)(
+                      s, d) = ky_mapping_data.derivative(q, s)[d];
+                  }
               }
           }
       }
@@ -834,38 +991,75 @@ namespace IdeoBEM
 
   template <int dim, int spacedim, typename RangeNumberType>
   void
-  BEMValues<dim, spacedim, RangeNumberType>::shape_values_common_vertex(
-    const FiniteElement<dim, spacedim> &kx_fe,
-    const FiniteElement<dim, spacedim> &ky_fe,
-    const QGauss<4> &                   sauter_quad_rule,
-    Table<3, RangeNumberType> &         kx_shape_value_table,
-    Table<3, RangeNumberType> &         ky_shape_value_table)
+  BEMValues<dim, spacedim, RangeNumberType>::
+    shape_function_values_common_vertex()
   {
     const unsigned int kx_dofs_per_cell = kx_fe.dofs_per_cell;
     const unsigned int ky_dofs_per_cell = ky_fe.dofs_per_cell;
-    const unsigned int n_q_points       = sauter_quad_rule.size();
+    const unsigned int kx_mapping_n_shape_functions =
+      kx_mapping_data.n_shape_functions;
+    const unsigned int ky_mapping_n_shape_functions =
+      ky_mapping_data.n_shape_functions;
+    const unsigned int n_q_points = quad_rule_for_common_vertex.size();
 
     // Make assertion about the length for each dimension of the data table.
-    Assert(kx_shape_value_table.size(0) == kx_dofs_per_cell,
-           ExcDimensionMismatch(kx_shape_value_table.size(0),
-                                kx_dofs_per_cell));
-    Assert(kx_shape_value_table.size(1) == 4,
-           ExcDimensionMismatch(kx_shape_value_table.size(1), 4));
-    Assert(kx_shape_value_table.size(2) == n_q_points,
-           ExcDimensionMismatch(kx_shape_value_table.size(2), n_q_points));
+    AssertDimension(kx_shape_value_table_for_common_vertex.size(0),
+                    kx_dofs_per_cell);
+    AssertDimension(kx_shape_value_table_for_common_vertex.size(1), 4);
+    AssertDimension(kx_shape_value_table_for_common_vertex.size(2), n_q_points);
 
-    Assert(ky_shape_value_table.size(0) == ky_dofs_per_cell,
-           ExcDimensionMismatch(ky_shape_value_table.size(0),
-                                ky_dofs_per_cell));
-    Assert(ky_shape_value_table.size(1) == 4,
-           ExcDimensionMismatch(ky_shape_value_table.size(1), 4));
-    Assert(ky_shape_value_table.size(2) == n_q_points,
-           ExcDimensionMismatch(ky_shape_value_table.size(2), n_q_points));
+    AssertDimension(ky_shape_value_table_for_common_vertex.size(0),
+                    ky_dofs_per_cell);
+    AssertDimension(ky_shape_value_table_for_common_vertex.size(1), 4);
+    AssertDimension(ky_shape_value_table_for_common_vertex.size(2), n_q_points);
 
-    std::vector<Point<dim * 2>> quad_points = sauter_quad_rule.get_points();
+    AssertDimension(kx_mapping_shape_value_table_for_common_vertex.size(0),
+                    kx_mapping_n_shape_functions);
+    AssertDimension(kx_mapping_shape_value_table_for_common_vertex.size(1), 4);
+    AssertDimension(kx_mapping_shape_value_table_for_common_vertex.size(2),
+                    n_q_points);
 
-    Point<dim> kx_quad_point;
-    Point<dim> ky_quad_point;
+    AssertDimension(ky_mapping_shape_value_table_for_common_vertex.size(0),
+                    ky_mapping_n_shape_functions);
+    AssertDimension(ky_mapping_shape_value_table_for_common_vertex.size(1), 4);
+    AssertDimension(ky_mapping_shape_value_table_for_common_vertex.size(2),
+                    n_q_points);
+
+    AssertDimension(kx_shape_grad_matrix_table_for_common_vertex.size(0), 4);
+    AssertDimension(kx_shape_grad_matrix_table_for_common_vertex.size(1),
+                    n_q_points);
+
+    AssertDimension(ky_shape_grad_matrix_table_for_common_vertex.size(0), 4);
+    AssertDimension(ky_shape_grad_matrix_table_for_common_vertex.size(1),
+                    n_q_points);
+
+    AssertDimension(
+      kx_mapping_shape_grad_matrix_table_for_common_vertex.size(0), 4);
+    AssertDimension(
+      kx_mapping_shape_grad_matrix_table_for_common_vertex.size(1), n_q_points);
+
+    AssertDimension(
+      ky_mapping_shape_grad_matrix_table_for_common_vertex.size(0), 4);
+    AssertDimension(
+      ky_mapping_shape_grad_matrix_table_for_common_vertex.size(1), n_q_points);
+
+    /**
+     * Initialize the internal data held in the mapping objects.
+     */
+    kx_mapping_data.shape_values.resize(kx_mapping_n_shape_functions *
+                                        n_q_points);
+    kx_mapping_data.shape_derivatives.resize(kx_mapping_n_shape_functions *
+                                             n_q_points);
+    ky_mapping_data.shape_values.resize(ky_mapping_n_shape_functions *
+                                        n_q_points);
+    ky_mapping_data.shape_derivatives.resize(ky_mapping_n_shape_functions *
+                                             n_q_points);
+
+    /**
+     * Quadrature points in the Sauter's parametric space.
+     */
+    std::vector<Point<dim * 2>> quad_points =
+      quad_rule_for_common_vertex.get_points();
 
     /**
      * Get the polynomial space inverse numbering for accessing the shape
@@ -883,6 +1077,13 @@ namespace IdeoBEM
       kx_fe_poly.get_poly_space_numbering_inverse());
     std::vector<unsigned int> ky_poly_space_inverse_numbering(
       ky_fe_poly.get_poly_space_numbering_inverse());
+
+    /**
+     * Quadrature points in the unit cells of \f$K_x\f$ and \f$K_y\f$
+     * respectively.
+     */
+    std::vector<Point<dim>> kx_unit_quad_points(n_q_points);
+    std::vector<Point<dim>> ky_unit_quad_points(n_q_points);
 
     // Iterate over each $k_3$ part.
     for (unsigned k = 0; k < 4; k++)
@@ -892,30 +1093,82 @@ namespace IdeoBEM
           {
             // Transform the quadrature point in the parametric space to
             // the unit cells of \f$K_x\f$ and \f$K_y\f$.
-            sauter_common_vertex_parametric_coords_to_unit_cells(quad_points[q],
-                                                                 k,
-                                                                 kx_quad_point,
-                                                                 ky_quad_point);
+            sauter_common_vertex_parametric_coords_to_unit_cells(
+              quad_points[q],
+              k,
+              kx_unit_quad_points[q],
+              ky_unit_quad_points[q]);
 
-            // Iterate over each shape function on the unit cell of \f$K_x\f$
-            // and evaluate it at <code>kx_quad_point</code>. N.B. The
-            // shape functions are in the default hierarchical order.
+            /**
+             * Iterate over each finite element shape function in the
+             * lexicographic order on the unit cell of \f$K_x\f$ and evaluate it
+             * at the current quadrature point @p kx_unit_quad_points[q].
+             */
             for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
               {
-                kx_shape_value_table(s, k, q) =
+                kx_shape_value_table_for_common_vertex(s, k, q) =
                   kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
-                                    kx_quad_point);
+                                    kx_unit_quad_points[q]);
               }
 
             /**
-             *  Iterate over each shape function in the lexicographic order on
-             *  the unit cell of \f$K_y\f$ and evaluate it at @p ky_quad_point.
+             * Iterate over each finite element shape function in the
+             * lexicographic order on the unit cell of \f$K_y\f$ and evaluate it
+             * at the current quadrature point @p ky_unit_quad_points[q].
              */
             for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
               {
-                ky_shape_value_table(s, k, q) =
+                ky_shape_value_table_for_common_vertex(s, k, q) =
                   ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
-                                    ky_quad_point);
+                                    ky_unit_quad_points[q]);
+              }
+
+            // Calculate the Jacobian matrix evaluated at
+            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
+            kx_shape_grad_matrix_table_for_common_vertex(k, q) =
+              BEMTools::shape_grad_matrix_in_lexicographic_order(
+                kx_fe, kx_unit_quad_points[q]);
+            // Calculate the Jacobian matrix evaluated at
+            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
+            // to shape functions which are in the lexicographic order.
+            ky_shape_grad_matrix_table_for_common_vertex(k, q) =
+              BEMTools::shape_grad_matrix_in_lexicographic_order(
+                ky_fe, ky_unit_quad_points[q]);
+          }
+
+        /**
+         * Compute mapping shape function values and their derivatives in batch.
+         * \mynote{Remember that the shape functions held by the mapping object
+         * are already in the tensor product order.}
+         */
+        kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
+        ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
+
+        for (unsigned int q = 0; q < n_q_points; q++)
+          {
+            for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
+              {
+                kx_mapping_shape_value_table_for_common_vertex(s, k, q) =
+                  kx_mapping_data.shape(q, s);
+
+                for (unsigned int d = 0; d < dim; d++)
+                  {
+                    kx_mapping_shape_grad_matrix_table_for_common_vertex(k, q)(
+                      s, d) = kx_mapping_data.derivative(q, s)[d];
+                  }
+              }
+
+            for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
+              {
+                ky_mapping_shape_value_table_for_common_vertex(s, k, q) =
+                  ky_mapping_data.shape(q, s);
+
+                for (unsigned int d = 0; d < dim; d++)
+                  {
+                    ky_mapping_shape_grad_matrix_table_for_common_vertex(k, q)(
+                      s, d) = ky_mapping_data.derivative(q, s)[d];
+                  }
               }
           }
       }
@@ -924,38 +1177,68 @@ namespace IdeoBEM
 
   template <int dim, int spacedim, typename RangeNumberType>
   void
-  BEMValues<dim, spacedim, RangeNumberType>::shape_values_regular(
-    const FiniteElement<dim, spacedim> &kx_fe,
-    const FiniteElement<dim, spacedim> &ky_fe,
-    const QGauss<4> &                   sauter_quad_rule,
-    Table<3, RangeNumberType> &         kx_shape_value_table,
-    Table<3, RangeNumberType> &         ky_shape_value_table)
+  BEMValues<dim, spacedim, RangeNumberType>::shape_function_values_regular()
   {
     const unsigned int kx_dofs_per_cell = kx_fe.dofs_per_cell;
     const unsigned int ky_dofs_per_cell = ky_fe.dofs_per_cell;
-    const unsigned int n_q_points       = sauter_quad_rule.size();
+    const unsigned int kx_mapping_n_shape_functions =
+      kx_mapping_data.n_shape_functions;
+    const unsigned int ky_mapping_n_shape_functions =
+      ky_mapping_data.n_shape_functions;
+    const unsigned int n_q_points = quad_rule_for_regular.size();
 
     // Make assertion about the length for each dimension of the data table.
-    Assert(kx_shape_value_table.size(0) == kx_dofs_per_cell,
-           ExcDimensionMismatch(kx_shape_value_table.size(0),
-                                kx_dofs_per_cell));
-    Assert(kx_shape_value_table.size(1) == 1,
-           ExcDimensionMismatch(kx_shape_value_table.size(1), 1));
-    Assert(kx_shape_value_table.size(2) == n_q_points,
-           ExcDimensionMismatch(kx_shape_value_table.size(2), n_q_points));
+    AssertDimension(kx_shape_value_table_for_regular.size(0), kx_dofs_per_cell);
+    AssertDimension(kx_shape_value_table_for_regular.size(1), 1);
+    AssertDimension(kx_shape_value_table_for_regular.size(2), n_q_points);
 
-    Assert(ky_shape_value_table.size(0) == ky_dofs_per_cell,
-           ExcDimensionMismatch(ky_shape_value_table.size(0),
-                                ky_dofs_per_cell));
-    Assert(ky_shape_value_table.size(1) == 1,
-           ExcDimensionMismatch(ky_shape_value_table.size(1), 1));
-    Assert(ky_shape_value_table.size(2) == n_q_points,
-           ExcDimensionMismatch(ky_shape_value_table.size(2), n_q_points));
+    AssertDimension(ky_shape_value_table_for_regular.size(0), ky_dofs_per_cell);
+    AssertDimension(ky_shape_value_table_for_regular.size(1), 1);
+    AssertDimension(ky_shape_value_table_for_regular.size(2), n_q_points);
 
-    std::vector<Point<dim * 2>> quad_points = sauter_quad_rule.get_points();
+    AssertDimension(kx_mapping_shape_value_table_for_regular.size(0),
+                    kx_mapping_n_shape_functions);
+    AssertDimension(kx_mapping_shape_value_table_for_regular.size(1), 1);
+    AssertDimension(kx_mapping_shape_value_table_for_regular.size(2),
+                    n_q_points);
 
-    Point<dim> kx_quad_point;
-    Point<dim> ky_quad_point;
+    AssertDimension(ky_mapping_shape_value_table_for_regular.size(0),
+                    ky_mapping_n_shape_functions);
+    AssertDimension(ky_mapping_shape_value_table_for_regular.size(1), 1);
+    AssertDimension(ky_mapping_shape_value_table_for_regular.size(2),
+                    n_q_points);
+
+    AssertDimension(kx_shape_grad_matrix_table_for_regular.size(0), 1);
+    AssertDimension(kx_shape_grad_matrix_table_for_regular.size(1), n_q_points);
+
+    AssertDimension(ky_shape_grad_matrix_table_for_regular.size(0), 1);
+    AssertDimension(ky_shape_grad_matrix_table_for_regular.size(1), n_q_points);
+
+    AssertDimension(kx_mapping_shape_grad_matrix_table_for_regular.size(0), 1);
+    AssertDimension(kx_mapping_shape_grad_matrix_table_for_regular.size(1),
+                    n_q_points);
+
+    AssertDimension(ky_mapping_shape_grad_matrix_table_for_regular.size(0), 1);
+    AssertDimension(ky_mapping_shape_grad_matrix_table_for_regular.size(1),
+                    n_q_points);
+
+    /**
+     * Initialize the internal data held in the mapping objects.
+     */
+    kx_mapping_data.shape_values.resize(kx_mapping_n_shape_functions *
+                                        n_q_points);
+    kx_mapping_data.shape_derivatives.resize(kx_mapping_n_shape_functions *
+                                             n_q_points);
+    ky_mapping_data.shape_values.resize(ky_mapping_n_shape_functions *
+                                        n_q_points);
+    ky_mapping_data.shape_derivatives.resize(ky_mapping_n_shape_functions *
+                                             n_q_points);
+
+    /**
+     * Quadrature points in the Sauter's parametric space.
+     */
+    std::vector<Point<dim * 2>> quad_points =
+      quad_rule_for_regular.get_points();
 
     /**
      * Get the polynomial space inverse numbering for accessing the shape
@@ -974,269 +1257,96 @@ namespace IdeoBEM
     std::vector<unsigned int> ky_poly_space_inverse_numbering(
       ky_fe_poly.get_poly_space_numbering_inverse());
 
+    /**
+     * Quadrature points in the unit cells of \f$K_x\f$ and \f$K_y\f$
+     * respectively.
+     */
+    std::vector<Point<dim>> kx_unit_quad_points(n_q_points);
+    std::vector<Point<dim>> ky_unit_quad_points(n_q_points);
+
     // Iterate over each quadrature point.
     for (unsigned int q = 0; q < n_q_points; q++)
       {
         // Transform the quadrature point in the parametric space to the
         // unit cells of \f$K_x\f$ and \f$K_y\f$.
         sauter_regular_parametric_coords_to_unit_cells(quad_points[q],
-                                                       kx_quad_point,
-                                                       ky_quad_point);
+                                                       kx_unit_quad_points[q],
+                                                       ky_unit_quad_points[q]);
 
         /**
-         *  Iterate over each shape function in the lexicographic order on
-         *  the unit cell of \f$K_x\f$ and evaluate it at @p ky_quad_point.
+         * Iterate over each finite element shape function in the
+         * lexicographic order on the unit cell of \f$K_x\f$ and evaluate it
+         * at the current quadrature point @p kx_unit_quad_points[q].
          */
         for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
           {
-            kx_shape_value_table(s, 0, q) =
+            kx_shape_value_table_for_regular(s, 0, q) =
               kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
-                                kx_quad_point);
+                                kx_unit_quad_points[q]);
           }
 
         /**
-         *  Iterate over each shape function in the lexicographic order on
-         *  the unit cell of \f$K_y\f$ and evaluate it at @p ky_quad_point.
+         * Iterate over each finite element shape function in the
+         * lexicographic order on the unit cell of \f$K_y\f$ and evaluate it
+         * at the current quadrature point @p ky_unit_quad_points[q].
          */
         for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
           {
-            ky_shape_value_table(s, 0, q) =
+            ky_shape_value_table_for_regular(s, 0, q) =
               ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
-                                ky_quad_point);
+                                ky_unit_quad_points[q]);
           }
+
+        // Calculate the Jacobian matrix evaluated at
+        // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
+        // to shape functions which are in the lexicographic order.
+        kx_shape_grad_matrix_table_for_regular(0, q) =
+          BEMTools::shape_grad_matrix_in_lexicographic_order(
+            kx_fe, kx_unit_quad_points[q]);
+        // Calculate the Jacobian matrix evaluated at
+        // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
+        // to shape functions which are in the lexicographic order.
+        ky_shape_grad_matrix_table_for_regular(0, q) =
+          BEMTools::shape_grad_matrix_in_lexicographic_order(
+            ky_fe, ky_unit_quad_points[q]);
       }
-  }
 
+    /**
+     * Compute mapping shape function values and their derivatives in batch.
+     * \mynote{Remember that the shape functions held by the mapping object
+     * are already in the tensor product order.}
+     */
+    kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
+    ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
 
-  template <int dim, int spacedim, typename RangeNumberType>
-  void
-  BEMValues<dim, spacedim, RangeNumberType>::shape_grad_matrices_same_panel(
-    const FiniteElement<dim, spacedim> &   kx_fe,
-    const FiniteElement<dim, spacedim> &   ky_fe,
-    const QGauss<4> &                      sauter_quad_rule,
-    Table<2, FullMatrix<RangeNumberType>> &kx_shape_grad_matrix_table,
-    Table<2, FullMatrix<RangeNumberType>> &ky_shape_grad_matrix_table)
-  {
-    const unsigned int n_q_points = sauter_quad_rule.size();
-
-    // Make assertion about the length for each dimension of the data table.
-    Assert(kx_shape_grad_matrix_table.size(0) == 8,
-           ExcDimensionMismatch(kx_shape_grad_matrix_table.size(0), 8));
-    Assert(kx_shape_grad_matrix_table.size(1) == n_q_points,
-           ExcDimensionMismatch(kx_shape_grad_matrix_table.size(1),
-                                n_q_points));
-
-    Assert(ky_shape_grad_matrix_table.size(0) == 8,
-           ExcDimensionMismatch(ky_shape_grad_matrix_table.size(0), 8));
-    Assert(ky_shape_grad_matrix_table.size(1) == n_q_points,
-           ExcDimensionMismatch(ky_shape_grad_matrix_table.size(1),
-                                n_q_points));
-
-    std::vector<Point<dim * 2>> quad_points = sauter_quad_rule.get_points();
-
-    Point<dim> kx_quad_point;
-    Point<dim> ky_quad_point;
-
-    // Iterate over each $k_3$ part.
-    for (unsigned k = 0; k < 8; k++)
-      {
-        // Iterate over each quadrature point.
-        for (unsigned int q = 0; q < n_q_points; q++)
-          {
-            // Transform the quadrature point in the parametric space to the
-            // unit cells of \f$K_x\f$ and \f$K_y\f$.
-            sauter_same_panel_parametric_coords_to_unit_cells(quad_points[q],
-                                                              k,
-                                                              kx_quad_point,
-                                                              ky_quad_point);
-
-            // Calculate the gradient matrix evaluated at
-            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
-            // to shape functions which are in the lexicographic order.
-            kx_shape_grad_matrix_table(k, q) =
-              BEMTools::shape_grad_matrix_in_lexicographic_order(kx_fe,
-                                                                 kx_quad_point);
-            // Calculate the gradient matrix evaluated at
-            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
-            // to shape functions which are in the lexicographic order.
-            ky_shape_grad_matrix_table(k, q) =
-              BEMTools::shape_grad_matrix_in_lexicographic_order(ky_fe,
-                                                                 ky_quad_point);
-          }
-      }
-  }
-
-
-  template <int dim, int spacedim, typename RangeNumberType>
-  void
-  BEMValues<dim, spacedim, RangeNumberType>::shape_grad_matrices_common_edge(
-    const FiniteElement<dim, spacedim> &   kx_fe,
-    const FiniteElement<dim, spacedim> &   ky_fe,
-    const QGauss<4> &                      sauter_quad_rule,
-    Table<2, FullMatrix<RangeNumberType>> &kx_shape_grad_matrix_table,
-    Table<2, FullMatrix<RangeNumberType>> &ky_shape_grad_matrix_table)
-  {
-    const unsigned int n_q_points = sauter_quad_rule.size();
-
-    // Make assertion about the length for each dimension of the data table.
-    Assert(kx_shape_grad_matrix_table.size(0) == 6,
-           ExcDimensionMismatch(kx_shape_grad_matrix_table.size(0), 6));
-    Assert(kx_shape_grad_matrix_table.size(1) == n_q_points,
-           ExcDimensionMismatch(kx_shape_grad_matrix_table.size(1),
-                                n_q_points));
-
-    Assert(ky_shape_grad_matrix_table.size(0) == 6,
-           ExcDimensionMismatch(ky_shape_grad_matrix_table.size(0), 6));
-    Assert(ky_shape_grad_matrix_table.size(1) == n_q_points,
-           ExcDimensionMismatch(ky_shape_grad_matrix_table.size(1),
-                                n_q_points));
-
-    std::vector<Point<dim * 2>> quad_points = sauter_quad_rule.get_points();
-
-    Point<dim> kx_quad_point;
-    Point<dim> ky_quad_point;
-
-    // Iterate over each $k_3$ part.
-    for (unsigned k = 0; k < 6; k++)
-      {
-        // Iterate over each quadrature point.
-        for (unsigned int q = 0; q < n_q_points; q++)
-          {
-            // Transform the quadrature point in the parametric space to the
-            // unit cells of \f$K_x\f$ and \f$K_y\f$.
-            sauter_common_edge_parametric_coords_to_unit_cells(quad_points[q],
-                                                               k,
-                                                               kx_quad_point,
-                                                               ky_quad_point);
-
-            // Calculate the gradient matrix evaluated at
-            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
-            // to shape functions which are in the lexicographic order.
-            kx_shape_grad_matrix_table(k, q) =
-              BEMTools::shape_grad_matrix_in_lexicographic_order(kx_fe,
-                                                                 kx_quad_point);
-            // Calculate the gradient matrix evaluated at
-            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
-            // to shape functions which are in the lexicographic order.
-            ky_shape_grad_matrix_table(k, q) =
-              BEMTools::shape_grad_matrix_in_lexicographic_order(ky_fe,
-                                                                 ky_quad_point);
-          }
-      }
-  }
-
-
-  template <int dim, int spacedim, typename RangeNumberType>
-  void
-  BEMValues<dim, spacedim, RangeNumberType>::shape_grad_matrices_common_vertex(
-    const FiniteElement<dim, spacedim> &   kx_fe,
-    const FiniteElement<dim, spacedim> &   ky_fe,
-    const QGauss<4> &                      sauter_quad_rule,
-    Table<2, FullMatrix<RangeNumberType>> &kx_shape_grad_matrix_table,
-    Table<2, FullMatrix<RangeNumberType>> &ky_shape_grad_matrix_table)
-  {
-    const unsigned int n_q_points = sauter_quad_rule.size();
-
-    // Make assertion about the length for each dimension of the data table.
-    Assert(kx_shape_grad_matrix_table.size(0) == 4,
-           ExcDimensionMismatch(kx_shape_grad_matrix_table.size(0), 4));
-    Assert(kx_shape_grad_matrix_table.size(1) == n_q_points,
-           ExcDimensionMismatch(kx_shape_grad_matrix_table.size(1),
-                                n_q_points));
-
-    Assert(ky_shape_grad_matrix_table.size(0) == 4,
-           ExcDimensionMismatch(ky_shape_grad_matrix_table.size(0), 4));
-    Assert(ky_shape_grad_matrix_table.size(1) == n_q_points,
-           ExcDimensionMismatch(ky_shape_grad_matrix_table.size(1),
-                                n_q_points));
-
-    std::vector<Point<dim * 2>> quad_points = sauter_quad_rule.get_points();
-
-    Point<dim> kx_quad_point;
-    Point<dim> ky_quad_point;
-
-    // Iterate over each $k_3$ part.
-    for (unsigned k = 0; k < 4; k++)
-      {
-        // Iterate over each quadrature point.
-        for (unsigned int q = 0; q < n_q_points; q++)
-          {
-            // Transform the quadrature point in the parametric space to the
-            // unit cells of \f$K_x\f$ and \f$K_y\f$.
-            sauter_common_vertex_parametric_coords_to_unit_cells(quad_points[q],
-                                                                 k,
-                                                                 kx_quad_point,
-                                                                 ky_quad_point);
-
-            // Calculate the gradient matrix evaluated at
-            // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
-            // to shape functions which are in the lexicographic order.
-            kx_shape_grad_matrix_table(k, q) =
-              BEMTools::shape_grad_matrix_in_lexicographic_order(kx_fe,
-                                                                 kx_quad_point);
-            // Calculate the gradient matrix evaluated at
-            // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
-            // to shape functions which are in the lexicographic order.
-            ky_shape_grad_matrix_table(k, q) =
-              BEMTools::shape_grad_matrix_in_lexicographic_order(ky_fe,
-                                                                 ky_quad_point);
-          }
-      }
-  }
-
-
-  template <int dim, int spacedim, typename RangeNumberType>
-  void
-  BEMValues<dim, spacedim, RangeNumberType>::shape_grad_matrices_regular(
-    const FiniteElement<dim, spacedim> &   kx_fe,
-    const FiniteElement<dim, spacedim> &   ky_fe,
-    const QGauss<4> &                      sauter_quad_rule,
-    Table<2, FullMatrix<RangeNumberType>> &kx_shape_grad_matrix_table,
-    Table<2, FullMatrix<RangeNumberType>> &ky_shape_grad_matrix_table)
-  {
-    const unsigned int n_q_points = sauter_quad_rule.size();
-
-    // Make assertion about the length for each dimension of the data table.
-    Assert(kx_shape_grad_matrix_table.size(0) == 1,
-           ExcDimensionMismatch(kx_shape_grad_matrix_table.size(0), 1));
-    Assert(kx_shape_grad_matrix_table.size(1) == n_q_points,
-           ExcDimensionMismatch(kx_shape_grad_matrix_table.size(1),
-                                n_q_points));
-
-    Assert(ky_shape_grad_matrix_table.size(0) == 1,
-           ExcDimensionMismatch(ky_shape_grad_matrix_table.size(0), 1));
-    Assert(ky_shape_grad_matrix_table.size(1) == n_q_points,
-           ExcDimensionMismatch(ky_shape_grad_matrix_table.size(1),
-                                n_q_points));
-
-    std::vector<Point<dim * 2>> quad_points = sauter_quad_rule.get_points();
-
-    Point<dim> kx_quad_point;
-    Point<dim> ky_quad_point;
-
-    // Iterate over each quadrature point.
     for (unsigned int q = 0; q < n_q_points; q++)
       {
-        // Transform the quadrature point in the parametric space to the
-        // unit cells of \f$K_x\f$ and \f$K_y\f$.
-        sauter_regular_parametric_coords_to_unit_cells(quad_points[q],
-                                                       kx_quad_point,
-                                                       ky_quad_point);
+        for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
+          {
+            kx_mapping_shape_value_table_for_regular(s, 0, q) =
+              kx_mapping_data.shape(q, s);
 
-        // Calculate the gradient matrix evaluated at
-        // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond to
-        // shape functions which are in the lexicographic order.
-        kx_shape_grad_matrix_table(0, q) =
-          BEMTools::shape_grad_matrix_in_lexicographic_order(kx_fe,
-                                                             kx_quad_point);
-        // Calculate the gradient matrix evaluated at
-        // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond to
-        // shape functions which are in the lexicographic order.
-        ky_shape_grad_matrix_table(0, q) =
-          BEMTools::shape_grad_matrix_in_lexicographic_order(ky_fe,
-                                                             ky_quad_point);
+            for (unsigned int d = 0; d < dim; d++)
+              {
+                kx_mapping_shape_grad_matrix_table_for_regular(0, q)(s, d) =
+                  kx_mapping_data.derivative(q, s)[d];
+              }
+          }
+
+        for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
+          {
+            ky_mapping_shape_value_table_for_regular(s, 0, q) =
+              ky_mapping_data.shape(q, s);
+
+            for (unsigned int d = 0; d < dim; d++)
+              {
+                ky_mapping_shape_grad_matrix_table_for_regular(0, q)(s, d) =
+                  ky_mapping_data.derivative(q, s)[d];
+              }
+          }
       }
   }
+
 
   /**
    * Structure holding cell-wise local matrix data and DoF indices, which is
@@ -1406,6 +1516,19 @@ namespace IdeoBEM
       ky_support_points_in_default_dof_order;
 
     /**
+     * List of mapping support points in the real cell \f$K_x\f$ in the
+     * tensor product order.
+     */
+    std::vector<Point<spacedim, RangeNumberType>>
+      kx_mapping_support_points_in_default_order;
+    /**
+     * List of mapping support points in the real cell \f$K_y\f$ in the
+     * tensor product order.
+     */
+    std::vector<Point<spacedim, RangeNumberType>>
+      ky_mapping_support_points_in_default_order;
+
+    /**
      * Permuted list of support points in the real cell \f$K_x\f$ in the
      * lexicographic order in the same panel case and regular case, and
      * determined by @p kx_local_dof_permutation in the common edge case and
@@ -1419,6 +1542,17 @@ namespace IdeoBEM
      * common vertex case.
      */
     std::vector<Point<spacedim, RangeNumberType>> ky_support_points_permuted;
+
+    /**
+     * Permuted list of mapping support points in the real cell \f$K_x\f$.
+     */
+    std::vector<Point<spacedim, RangeNumberType>>
+      kx_mapping_support_points_permuted;
+    /**
+     * Permuted list of mapping support points in the real cell \f$K_y\f$.
+     */
+    std::vector<Point<spacedim, RangeNumberType>>
+      ky_mapping_support_points_permuted;
 
     /**
      * The list of DoF indices in \f$K_x\f$ which are ordered in the
@@ -1456,6 +1590,28 @@ namespace IdeoBEM
      * common edge.}
      */
     std::vector<unsigned int> ky_fe_reversed_poly_space_numbering_inverse;
+
+    /**
+     * The numbering used for accessing the list of support points in the
+     * mapping object for \f$K_x\f$ in the lexicographic order, where the list
+     * of support points are stored in the hierarchic order.
+     */
+    std::vector<unsigned int> kx_mapping_poly_space_numbering_inverse;
+    /**
+     * The numbering used for accessing the list of support points in the
+     * mapping object for \f$K_y\f$ in the lexicographic order, where the list
+     * of support points are stored in the hierarchic order.
+     */
+    std::vector<unsigned int> ky_mapping_poly_space_numbering_inverse;
+    /**
+     * The numbering used for accessing the list of support points in the
+     * mapping object for \f$K_y\f$ in the reversed lexicographic order, where
+     * the list of support points are stored in the hierarchical order.
+     *
+     * \mynote{This numbering occurs only when \f$K_x\f$ and \f$K_y\f$ share a
+     * common edge.}
+     */
+    std::vector<unsigned int> ky_mapping_reversed_poly_space_numbering_inverse;
 
     /**
      * The numbering used for accessing the list of support points and
@@ -1629,19 +1785,38 @@ namespace IdeoBEM
      * @param ky_fe
      * @param bem_values
      */
-    PairCellWiseScratchData(const FiniteElement<dim, spacedim> &kx_fe,
-                            const FiniteElement<dim, spacedim> &ky_fe,
-                            const BEMValues<dim, spacedim> &    bem_values)
+    PairCellWiseScratchData(
+      const FiniteElement<dim, spacedim> &     kx_fe,
+      const FiniteElement<dim, spacedim> &     ky_fe,
+      const MappingQGenericExt<dim, spacedim> &kx_mapping,
+      const MappingQGenericExt<dim, spacedim> &ky_mapping,
+      const typename MappingQGeneric<dim, spacedim>::InternalData
+        &kx_mapping_data,
+      const typename MappingQGeneric<dim, spacedim>::InternalData
+        &                             ky_mapping_data,
+      const BEMValues<dim, spacedim> &bem_values)
       : common_vertex_dof_indices(0)
       , kx_support_points_in_default_dof_order(kx_fe.dofs_per_cell)
       , ky_support_points_in_default_dof_order(ky_fe.dofs_per_cell)
+      , kx_mapping_support_points_in_default_order(
+          kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_points_in_default_order(
+          ky_mapping_data.n_shape_functions)
       , kx_support_points_permuted(kx_fe.dofs_per_cell)
       , ky_support_points_permuted(ky_fe.dofs_per_cell)
+      , kx_mapping_support_points_permuted(kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_points_permuted(ky_mapping_data.n_shape_functions)
       , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)
       , ky_fe_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
       , ky_fe_reversed_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
+      , kx_mapping_poly_space_numbering_inverse(
+          kx_mapping_data.n_shape_functions)
+      , ky_mapping_poly_space_numbering_inverse(
+          ky_mapping_data.n_shape_functions)
+      , ky_mapping_reversed_poly_space_numbering_inverse(
+          ky_mapping_data.n_shape_functions)
       , kx_local_dof_permutation(kx_fe.dofs_per_cell)
       , ky_local_dof_permutation(ky_fe.dofs_per_cell)
       , kx_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
@@ -1694,9 +1869,23 @@ namespace IdeoBEM
         kx_fe_poly.get_poly_space_numbering_inverse();
       ky_fe_poly_space_numbering_inverse =
         ky_fe_poly.get_poly_space_numbering_inverse();
-
       generate_backward_dof_permutation(
         ky_fe, 0, ky_fe_reversed_poly_space_numbering_inverse);
+
+      kx_mapping_poly_space_numbering_inverse =
+        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+            kx_mapping.get_degree()),
+          1,
+          kx_mapping.get_degree()));
+      ky_mapping_poly_space_numbering_inverse =
+        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+            ky_mapping.get_degree()),
+          1,
+          ky_mapping.get_degree()));
+      generate_backward_mapping_support_point_permutation(
+        ky_mapping, 0, ky_mapping_reversed_poly_space_numbering_inverse);
     }
 
 
@@ -1712,8 +1901,16 @@ namespace IdeoBEM
           scratch.kx_support_points_in_default_dof_order)
       , ky_support_points_in_default_dof_order(
           scratch.ky_support_points_in_default_dof_order)
+      , kx_mapping_support_points_in_default_order(
+          scratch.kx_mapping_support_points_in_default_order)
+      , ky_mapping_support_points_in_default_order(
+          scratch.ky_mapping_support_points_in_default_order)
       , kx_support_points_permuted(scratch.kx_support_points_permuted)
       , ky_support_points_permuted(scratch.ky_support_points_permuted)
+      , kx_mapping_support_points_permuted(
+          scratch.kx_mapping_support_points_permuted)
+      , ky_mapping_support_points_permuted(
+          scratch.ky_mapping_support_points_permuted)
       , kx_local_dof_indices_in_default_dof_order(
           scratch.kx_local_dof_indices_in_default_dof_order)
       , ky_local_dof_indices_in_default_dof_order(
@@ -1724,6 +1921,12 @@ namespace IdeoBEM
           scratch.ky_fe_poly_space_numbering_inverse)
       , ky_fe_reversed_poly_space_numbering_inverse(
           scratch.ky_fe_reversed_poly_space_numbering_inverse)
+      , kx_mapping_poly_space_numbering_inverse(
+          scratch.kx_mapping_poly_space_numbering_inverse)
+      , ky_mapping_poly_space_numbering_inverse(
+          scratch.ky_mapping_poly_space_numbering_inverse)
+      , ky_mapping_reversed_poly_space_numbering_inverse(
+          scratch.ky_mapping_reversed_poly_space_numbering_inverse)
       , kx_local_dof_permutation(scratch.kx_local_dof_permutation)
       , ky_local_dof_permutation(scratch.ky_local_dof_permutation)
       , kx_jacobians_same_panel(scratch.kx_jacobians_same_panel)

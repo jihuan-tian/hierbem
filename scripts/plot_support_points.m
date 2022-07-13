@@ -63,7 +63,9 @@ function [x, y, z, labels] = plot_support_points(varargin)
 	  error(cstrcat("There are ", num2str(coordinates_num), " coordinates, which is not supported!"));
       endswitch
       
-      labels{end+1} = line_str_split{2};
+      if (length(line_str_split) >= 2)
+	labels{end+1} = line_str_split{2};
+      endif
     endif
   endwhile
   fclose(fid);
@@ -83,7 +85,7 @@ function [x, y, z, labels] = plot_support_points(varargin)
 
   ## Add labels to the markers.
   hold on;
-  if (p.Results.labelsize > 0)
+  if (p.Results.labelsize > 0 && length(labels) > 0)
     for m = 1:n
       switch (coordinates_num)
 	case 2

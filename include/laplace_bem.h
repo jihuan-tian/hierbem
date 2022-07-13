@@ -23,7 +23,6 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_values.h>
-#include <deal.II/fe/mapping_q_generic.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_in.h>
@@ -48,6 +47,7 @@
 #include "cluster_tree.h"
 #include "hmatrix.h"
 #include "laplace_kernels.h"
+#include "mapping_q_generic_ext.h"
 #include "quadrature.templates.h"
 
 namespace IdeoBEM
@@ -89,10 +89,12 @@ namespace IdeoBEM
     friend void
     assemble_bem_full_matrix(
       const KernelFunction<spacedim1, RangeNumberType> &kernel,
-      const DoFHandler<dim1, spacedim1> &     dof_handler_for_test_space,
-      const DoFHandler<dim1, spacedim1> &     dof_handler_for_trial_space,
-      const MappingQGeneric<dim1, spacedim1> &kx_mapping,
-      const MappingQGeneric<dim1, spacedim1> &ky_mapping,
+      const DoFHandler<dim1, spacedim1> &        dof_handler_for_test_space,
+      const DoFHandler<dim1, spacedim1> &        dof_handler_for_trial_space,
+      const MappingQGenericExt<dim1, spacedim1> &kx_mapping,
+      const MappingQGenericExt<dim1, spacedim1> &ky_mapping,
+      typename MappingQGeneric<dim1, spacedim1>::InternalData &kx_mapping_data,
+      typename MappingQGeneric<dim1, spacedim1>::InternalData &ky_mapping_data,
       const std::map<typename Triangulation<dim1, spacedim1>::cell_iterator,
                      typename Triangulation<dim1 + 1, spacedim1>::face_iterator>
         &map_from_test_space_mesh_to_volume_mesh,
@@ -118,7 +120,8 @@ namespace IdeoBEM
      */
     LaplaceBEM(unsigned int fe_order_for_dirichlet_space,
                unsigned int fe_order_for_neumann_space,
-               unsigned int mapping_order,
+               unsigned int mapping_order_for_dirichlet_domain,
+               unsigned int mapping_order_for_neumann_domain,
                ProblemType  problem_type,
                unsigned int thread_num);
 
@@ -139,7 +142,8 @@ namespace IdeoBEM
      */
     LaplaceBEM(unsigned int fe_order_for_dirichlet_space,
                unsigned int fe_order_for_neumann_space,
-               unsigned int mapping_order,
+               unsigned int mapping_order_for_dirichlet_domain,
+               unsigned int mapping_order_for_neumann_domain,
                ProblemType  problem_type,
                unsigned int n_min_for_ct,
                unsigned int n_min_for_bct,
@@ -215,6 +219,12 @@ namespace IdeoBEM
     run();
 
   private:
+    /**
+     * Initialize the mapping data object.
+     */
+    void
+    initialize_mapping_data();
+
     /**
      * Finite element order for the Dirichlet space.
      */
@@ -297,8 +307,42 @@ namespace IdeoBEM
     DoFHandler<dim, spacedim> dof_handler_for_neumann_space_on_dirichlet_domain;
     DoFHandler<dim, spacedim> dof_handler_for_neumann_space_on_neumann_domain;
 
-    unsigned int                   mapping_order;
-    MappingQGeneric<dim, spacedim> mapping;
+    /**
+     * Polynomial order for describing the geometric mapping for the Dirichlet
+     * domain, i.e. the transformation from the unit cell to a real cell.
+     */
+    unsigned int mapping_order_for_dirichlet_domain;
+    /**
+     * Polynomial order for describing the geometric mapping for the Neumann
+     * domain, i.e. the transformation from the unit cell to a real cell.
+     */
+    unsigned int mapping_order_for_neumann_domain;
+    /**
+     * Geometric mapping object for the Dirichlet domain.
+     */
+    MappingQGenericExt<dim, spacedim> kx_mapping_for_dirichlet_domain;
+    MappingQGenericExt<dim, spacedim> ky_mapping_for_dirichlet_domain;
+    /**
+     * Geometric mapping object for the Neumann domain.
+     */
+    MappingQGenericExt<dim, spacedim> kx_mapping_for_neumann_domain;
+    MappingQGenericExt<dim, spacedim> ky_mapping_for_neumann_domain;
+    /**
+     * Pointer to the internal data held by the @p Mapping object for the
+     * Dirichlet domain.
+     */
+    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
+      kx_mapping_data_for_dirichlet_domain;
+    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
+      ky_mapping_data_for_dirichlet_domain;
+    /**
+     * Pointer to the internal data held by the @p Mapping object for the
+     * Neumann domain.
+     */
+    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
+      kx_mapping_data_for_neumann_domain;
+    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
+      ky_mapping_data_for_neumann_domain;
 
     /**
      * Kernel function for the single layer potential.
@@ -482,8 +526,16 @@ namespace IdeoBEM
     , thread_num(0)
     , fe_for_dirichlet_space(0)
     , fe_for_neumann_space(0)
-    , mapping_order(0)
-    , mapping(0)
+    , mapping_order_for_dirichlet_domain(0)
+    , mapping_order_for_neumann_domain(0)
+    , kx_mapping_for_dirichlet_domain(0)
+    , ky_mapping_for_dirichlet_domain(0)
+    , kx_mapping_for_neumann_domain(0)
+    , ky_mapping_for_neumann_domain(0)
+    , kx_mapping_data_for_dirichlet_domain(nullptr)
+    , ky_mapping_data_for_dirichlet_domain(nullptr)
+    , kx_mapping_data_for_neumann_domain(nullptr)
+    , ky_mapping_data_for_neumann_domain(nullptr)
     , is_use_hmat(false)
     , n_min_for_ct(0)
     , n_min_for_bct(0) // By default, it is the same as the @p n_min_for_ct
@@ -499,7 +551,8 @@ namespace IdeoBEM
   LaplaceBEM<dim, spacedim>::LaplaceBEM(
     unsigned int fe_order_for_dirichlet_space,
     unsigned int fe_order_for_neumann_space,
-    unsigned int mapping_order,
+    unsigned int mapping_order_for_dirichlet_domain,
+    unsigned int mapping_order_for_neumann_domain,
     ProblemType  problem_type,
     unsigned int thread_num)
     : fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
@@ -508,8 +561,16 @@ namespace IdeoBEM
     , thread_num(thread_num)
     , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_for_neumann_space(fe_order_for_neumann_space)
-    , mapping_order(mapping_order)
-    , mapping(mapping_order)
+    , mapping_order_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
+    , mapping_order_for_neumann_domain(mapping_order_for_neumann_domain)
+    , kx_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
+    , ky_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
+    , kx_mapping_for_neumann_domain(mapping_order_for_neumann_domain)
+    , ky_mapping_for_neumann_domain(mapping_order_for_neumann_domain)
+    , kx_mapping_data_for_dirichlet_domain(nullptr)
+    , ky_mapping_data_for_dirichlet_domain(nullptr)
+    , kx_mapping_data_for_neumann_domain(nullptr)
+    , ky_mapping_data_for_neumann_domain(nullptr)
     , is_use_hmat(false)
     , n_min_for_ct(0)
     , n_min_for_bct(0)
@@ -518,14 +579,17 @@ namespace IdeoBEM
     , aca_relative_error(0)
     , neumann_bc_functor_ptr(nullptr)
     , dirichlet_bc_functor_ptr(nullptr)
-  {}
+  {
+    initialize_mapping_data();
+  }
 
 
   template <int dim, int spacedim>
   LaplaceBEM<dim, spacedim>::LaplaceBEM(
     unsigned int fe_order_for_dirichlet_space,
     unsigned int fe_order_for_neumann_space,
-    unsigned int mapping_order,
+    unsigned int mapping_order_for_dirichlet_domain,
+    unsigned int mapping_order_for_neumann_domain,
     ProblemType  problem_type,
     unsigned int n_min_for_ct,
     unsigned int n_min_for_bct,
@@ -539,8 +603,16 @@ namespace IdeoBEM
     , thread_num(thread_num)
     , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_for_neumann_space(fe_order_for_neumann_space)
-    , mapping_order(mapping_order)
-    , mapping(mapping_order)
+    , mapping_order_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
+    , mapping_order_for_neumann_domain(mapping_order_for_neumann_domain)
+    , kx_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
+    , ky_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
+    , kx_mapping_for_neumann_domain(mapping_order_for_neumann_domain)
+    , ky_mapping_for_neumann_domain(mapping_order_for_neumann_domain)
+    , kx_mapping_data_for_dirichlet_domain(nullptr)
+    , ky_mapping_data_for_dirichlet_domain(nullptr)
+    , kx_mapping_data_for_neumann_domain(nullptr)
+    , ky_mapping_data_for_neumann_domain(nullptr)
     , is_use_hmat(true)
     , n_min_for_ct(n_min_for_ct)
     , n_min_for_bct(n_min_for_bct)
@@ -549,7 +621,9 @@ namespace IdeoBEM
     , aca_relative_error(aca_relative_error)
     , neumann_bc_functor_ptr(nullptr)
     , dirichlet_bc_functor_ptr(nullptr)
-  {}
+  {
+    initialize_mapping_data();
+  }
 
 
   template <int dim, int spacedim>
@@ -903,8 +977,10 @@ namespace IdeoBEM
               1.0,
               dof_handler_for_neumann_space_on_dirichlet_domain,
               dof_handler_for_dirichlet_space_on_dirichlet_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_dirichlet_domain,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -921,8 +997,10 @@ namespace IdeoBEM
               1.0,
               dof_handler_for_neumann_space_on_dirichlet_domain,
               dof_handler_for_neumann_space_on_dirichlet_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_dirichlet_domain,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -966,8 +1044,10 @@ namespace IdeoBEM
               -1.0,
               dof_handler_for_neumann_space_on_dirichlet_domain,
               dof_handler_for_dirichlet_space_on_dirichlet_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_dirichlet_domain,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -995,8 +1075,10 @@ namespace IdeoBEM
               -1.0,
               dof_handler_for_dirichlet_space_on_neumann_domain,
               dof_handler_for_neumann_space_on_neumann_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_neumann_domain,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -1012,8 +1094,10 @@ namespace IdeoBEM
               -1.0,
               dof_handler_for_neumann_space_on_dirichlet_domain,
               dof_handler_for_neumann_space_on_dirichlet_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_dirichlet_domain,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -1029,8 +1113,10 @@ namespace IdeoBEM
               1.0,
               dof_handler_for_neumann_space_on_dirichlet_domain,
               dof_handler_for_dirichlet_space_on_neumann_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_neumann_domain,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -1046,8 +1132,10 @@ namespace IdeoBEM
               1.0,
               dof_handler_for_dirichlet_space_on_neumann_domain,
               dof_handler_for_neumann_space_on_dirichlet_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_dirichlet_domain,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -1063,8 +1151,10 @@ namespace IdeoBEM
               1.0,
               dof_handler_for_dirichlet_space_on_neumann_domain,
               dof_handler_for_dirichlet_space_on_neumann_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_neumann_domain,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -1080,8 +1170,10 @@ namespace IdeoBEM
               1.0,
               dof_handler_for_neumann_space_on_dirichlet_domain,
               dof_handler_for_neumann_space_on_neumann_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_neumann_domain,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -1097,8 +1189,10 @@ namespace IdeoBEM
               -1.0,
               dof_handler_for_dirichlet_space_on_neumann_domain,
               dof_handler_for_dirichlet_space_on_dirichlet_domain,
-              mapping,
-              mapping,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_dirichlet_domain,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
@@ -1389,6 +1483,69 @@ namespace IdeoBEM
     solve();
     output_results();
     output_potential_at_target_points();
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::initialize_mapping_data()
+  {
+    if (problem_type == DirichletBCProblem || problem_type == MixedBCProblem)
+      {
+        /**
+         * Create the internal data object in the @p Mapping object. N.B. A dummy
+         * quadrature object is passed to the @p get_data function. The
+         * @p UpdateFlags is set to @p update_default, which at the moment disables
+         * any memory allocation, because this operation will be manually taken
+         * care of later on.
+         */
+        std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
+          kx_mapping_database_for_dirichlet_domain =
+            kx_mapping_for_dirichlet_domain.get_data(update_default,
+                                                     QGauss<dim>(1));
+
+        /**
+         * Downcast the pointer of Mapping<dim, spacedim>::InternalDataBase to
+         * MappingQGeneric<dim,spacedim>::InternalData.
+         */
+        kx_mapping_data_for_dirichlet_domain = std::unique_ptr<
+          typename MappingQGeneric<dim, spacedim>::InternalData>(
+          static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
+            kx_mapping_database_for_dirichlet_domain.release()));
+
+        std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
+          ky_mapping_database_for_dirichlet_domain =
+            ky_mapping_for_dirichlet_domain.get_data(update_default,
+                                                     QGauss<dim>(1));
+
+        ky_mapping_data_for_dirichlet_domain = std::unique_ptr<
+          typename MappingQGeneric<dim, spacedim>::InternalData>(
+          static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
+            ky_mapping_database_for_dirichlet_domain.release()));
+      }
+
+    if (problem_type == NeumannBCProblem || problem_type == MixedBCProblem)
+      {
+        std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
+          kx_mapping_database_for_neumann_domain =
+            kx_mapping_for_neumann_domain.get_data(update_default,
+                                                   QGauss<dim>(1));
+
+        kx_mapping_data_for_neumann_domain = std::unique_ptr<
+          typename MappingQGeneric<dim, spacedim>::InternalData>(
+          static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
+            kx_mapping_database_for_neumann_domain.release()));
+
+        std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
+          ky_mapping_database_for_neumann_domain =
+            ky_mapping_for_neumann_domain.get_data(update_default,
+                                                   QGauss<dim>(1));
+
+        ky_mapping_data_for_neumann_domain = std::unique_ptr<
+          typename MappingQGeneric<dim, spacedim>::InternalData>(
+          static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
+            ky_mapping_database_for_neumann_domain.release()));
+      }
   }
 } // namespace IdeoBEM
 
