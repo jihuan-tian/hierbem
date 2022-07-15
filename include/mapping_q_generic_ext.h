@@ -128,6 +128,14 @@ MappingQGenericExt<dim, spacedim>::MappingQGenericExt(
 
 
 template <int dim, int spacedim>
+MappingQGenericExt<dim, spacedim>::MappingQGenericExt(
+  const MappingQGenericExt<dim, spacedim> &mapping)
+  : MappingQGeneric<dim, spacedim>(mapping)
+  , support_points(mapping.support_points)
+{}
+
+
+template <int dim, int spacedim>
 void
 MappingQGenericExt<dim, spacedim>::compute_mapping_support_points(
   const typename Triangulation<dim, spacedim>::cell_iterator &cell)

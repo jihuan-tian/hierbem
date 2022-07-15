@@ -16,6 +16,7 @@
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/mapping.h>
+#include <deal.II/fe/mapping_q_generic.h>
 
 #include <deal.II/grid/tria.h>
 

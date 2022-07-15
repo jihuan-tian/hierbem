@@ -61,7 +61,6 @@ namespace IdeoBEM
      */
     enum DetectCellNeighboringTypeMethod
     {
-      SameDoFHandlers,         //!< SameDoFHandlers
       SameTriangulations,      //!< SameTriangulations
       DifferentTriangulations, //!< DifferentTriangulations
     };
@@ -1874,9 +1873,9 @@ namespace IdeoBEM
 
 
     /**
-     * Detect the cell neighboring type for two cells by checking the
-     * intersection of their vertex indices. The intersection of the global
-     * vertex indices is returned via argument by reference.
+     * Detect the cell neighboring type by checking the
+     * intersection of the given two lists of vertex indices. The intersection
+     * of the global vertex indices is returned via argument by reference.
      *
      * \alert{Comparison of vertex indices implies that the two cells should
      * belong to a same triangulation. Otherwise, there will be two sets of
@@ -1904,16 +1903,12 @@ namespace IdeoBEM
       const std::array<types::global_vertex_index,
                        GeometryInfo<dim>::vertices_per_cell>
         &                                      second_cell_vertex_indices,
-      std::vector<types::global_vertex_index> &vertex_index_intersection)
+      std::vector<types::global_vertex_index> &common_vertex_indices)
     {
       // The arrays storing vertex indices should be sorted before calling
       // @p std::set_intersection.
-      std::array<types::global_vertex_index,
-                 GeometryInfo<dim>::vertices_per_cell>
-        first_cell_vertex_indices_sorted(first_cell_vertex_indices);
-      std::array<types::global_vertex_index,
-                 GeometryInfo<dim>::vertices_per_cell>
-        second_cell_vertex_indices_sorted(second_cell_vertex_indices);
+      auto first_cell_vertex_indices_sorted  = first_cell_vertex_indices;
+      auto second_cell_vertex_indices_sorted = second_cell_vertex_indices;
 
       std::sort(first_cell_vertex_indices_sorted.begin(),
                 first_cell_vertex_indices_sorted.end());
@@ -1927,10 +1922,10 @@ namespace IdeoBEM
                             first_cell_vertex_indices_sorted.end(),
                             second_cell_vertex_indices_sorted.begin(),
                             second_cell_vertex_indices_sorted.end(),
-                            std::back_inserter(vertex_index_intersection));
+                            std::back_inserter(common_vertex_indices));
 
       CellNeighboringType cell_neighboring_type;
-      switch (vertex_index_intersection.size())
+      switch (common_vertex_indices.size())
         {
           case (0):
             cell_neighboring_type = Regular;
@@ -1947,6 +1942,221 @@ namespace IdeoBEM
           default:
             cell_neighboring_type = None;
             Assert(false, ExcInternalError());
+        }
+
+      return cell_neighboring_type;
+    }
+
+
+    /**
+     * Detect the cell neighboring type for two cells by checking the
+     * intersection of their vertex indices. Each of the common global
+     * vertex index is duplicated and made into a pair, then pushed into the
+     * result vector.
+     *
+     * \alert{Comparison of vertex indices implies that the two cells should
+     * belong to a same triangulation. Otherwise, there will be two sets of
+     * vertex indices, which cannot be compared.}
+     *
+     * @param first_cell_iter
+     * @param second_cell_iter
+     * @param common_vertex_pair_indices
+     * @return
+     */
+    template <int dim, int spacedim>
+    CellNeighboringType
+    detect_cell_neighboring_type_for_same_triangulations(
+      const typename Triangulation<dim, spacedim>::active_cell_iterator
+        &first_cell_iter,
+      const typename Triangulation<dim, spacedim>::active_cell_iterator
+        &second_cell_iter,
+      std::vector<std::pair<unsigned int, unsigned int>>
+        &common_vertex_pair_local_indices)
+    {
+      auto first_cell_vertex_indices =
+        get_vertex_indices_in_cell<dim, spacedim>(first_cell_iter);
+      auto second_cell_vertex_indices =
+        get_vertex_indices_in_cell<dim, spacedim>(second_cell_iter);
+
+      CellNeighboringType                     cell_neighboring_type;
+      std::vector<types::global_vertex_index> common_vertex_indices;
+
+      cell_neighboring_type =
+        detect_cell_neighboring_type_for_same_triangulations<dim>(
+          first_cell_vertex_indices,
+          second_cell_vertex_indices,
+          common_vertex_indices);
+
+      common_vertex_pair_local_indices.clear();
+      unsigned int common_vertex_local_index_in_first_cell;
+      unsigned int common_vertex_local_index_in_second_cell;
+
+      for (auto v : common_vertex_indices)
+        {
+          auto first_vertex_found_pos =
+            std::find(first_cell_vertex_indices.cbegin(),
+                      first_cell_vertex_indices.cend(),
+                      v);
+          Assert(first_vertex_found_pos != first_cell_vertex_indices.cend(),
+                 ExcMessage(
+                   "Cannot find the common vertex in the first cell!"));
+
+          common_vertex_local_index_in_first_cell =
+            first_vertex_found_pos - first_cell_vertex_indices.cbegin();
+
+          auto second_vertex_found_pos =
+            std::find(second_cell_vertex_indices.cbegin(),
+                      second_cell_vertex_indices.cend(),
+                      v);
+          Assert(second_vertex_found_pos != second_cell_vertex_indices.cend(),
+                 ExcMessage(
+                   "Cannot find the common vertex in the second cell!"));
+
+          common_vertex_local_index_in_second_cell =
+            second_vertex_found_pos - second_cell_vertex_indices.cbegin();
+
+          common_vertex_pair_local_indices.push_back(
+            std::pair<unsigned int, unsigned int>(
+              common_vertex_local_index_in_first_cell,
+              common_vertex_local_index_in_second_cell));
+        }
+
+      return cell_neighboring_type;
+    }
+
+
+    /**
+     * Detect the cell neighboring type for two cells for different
+     * triangulation case.
+     *
+     * @param first_cell_iter
+     * @param second_cell_iter
+     * @param common_vertex_pair_indices
+     * @return
+     */
+    template <int dim, int spacedim>
+    CellNeighboringType
+    detect_cell_neighboring_type_for_different_triangulations(
+      const typename Triangulation<dim, spacedim>::active_cell_iterator
+        &first_cell_iter,
+      const typename Triangulation<dim, spacedim>::active_cell_iterator
+        &second_cell_iter,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_first_boundary_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_second_boundary_mesh_to_volume_mesh,
+      std::vector<std::pair<unsigned int, unsigned int>>
+        &common_vertex_pair_local_indices)
+    {
+      /**
+       * Get the iterators to the faces in the original volume triangulation.
+       */
+      auto first_face_iter_pos =
+        map_from_first_boundary_mesh_to_volume_mesh.find(first_cell_iter);
+      Assert(
+        first_face_iter_pos !=
+          map_from_first_boundary_mesh_to_volume_mesh.end(),
+        ExcMessage(
+          "The associated face iterator in the volume triangulation cannot be found for the first cell iterator in the boundary mesh!"));
+      auto first_face_iter = first_face_iter_pos->second;
+
+      auto second_face_iter_pos =
+        map_from_second_boundary_mesh_to_volume_mesh.find(second_cell_iter);
+      Assert(
+        second_face_iter_pos !=
+          map_from_second_boundary_mesh_to_volume_mesh.end(),
+        ExcMessage(
+          "The associated face iterator in the volume triangulation cannot be found for the second cell iterator in the boundary mesh!"));
+      auto second_face_iter = second_face_iter_pos->second;
+
+      /**
+       * Get the vertex indices in each face in the original volume
+       * triangulation.
+       */
+      auto first_face_vertex_indices =
+        get_vertex_indices_in_face<dim + 1, spacedim>(first_face_iter);
+      auto second_face_vertex_indices =
+        get_vertex_indices_in_face<dim + 1, spacedim>(second_face_iter);
+
+      /**
+       * Calculate the intersection of the two faces' vertex indices. This
+       * operation is meaningful because the two faces are both pulled back in
+       * the original volume triangulation.
+       */
+      CellNeighboringType cell_neighboring_type;
+      std::vector<types::global_vertex_index>
+        common_vertex_indices_in_volume_mesh;
+      cell_neighboring_type =
+        detect_cell_neighboring_type_for_same_triangulations<dim>(
+          first_face_vertex_indices,
+          second_face_vertex_indices,
+          common_vertex_indices_in_volume_mesh);
+
+      /**
+       * According to deal.ii's documentation about @p extract_boundary_mesh,
+       *
+       * > The order of vertices of surface cells at the boundary and the
+       * corresponding volume faces may not match in order to ensure that each
+       * surface cell is associated with an outward facing normal. As a
+       * consequence, if you want to match quantities on the faces of the
+       * domain cells and on the cells of the surface mesh, you may have to
+       * translate between vertex locations or quadrature points.
+       *
+       * Hence, the local location of the common vertex index in the list of
+       * vertex indices in the face is not the same as that in the list of
+       * vertices in the boundary cell. Therefore, the mapping between vertices
+       * of the cell in the boundary mesh and those of the face in the volume
+       * mesh should be constructed by checking their coordinates.
+       */
+
+      common_vertex_pair_local_indices.clear();
+      unsigned int common_vertex_local_index_in_first_cell;
+      unsigned int common_vertex_local_index_in_second_cell;
+
+      for (auto v : common_vertex_indices_in_volume_mesh)
+        {
+          /**
+           * Get the coordinates of the current common vertex. \mynote{The
+           * point returned from the member function @p TriaAccessor::vertex is
+           * a reference.}
+           */
+          auto first_face_vertex_found_pos =
+            std::find(first_face_vertex_indices.cbegin(),
+                      first_face_vertex_indices.cend(),
+                      v);
+          Assert(
+            first_face_vertex_found_pos != first_face_vertex_indices.cend(),
+            ExcMessage("Cannot find the common vertex in the first face!"));
+
+          const Point<spacedim> &common_vertex_coords = first_face_iter->vertex(
+            first_face_vertex_found_pos - first_face_vertex_indices.cbegin());
+
+          /**
+           * Find the current common vertex in the first boundary cell by
+           * coordinate matching.
+           */
+          common_vertex_local_index_in_first_cell =
+            get_vertex_local_index_in_cell<dim, spacedim>(common_vertex_coords,
+                                                          first_cell_iter);
+          AssertIndexRange(common_vertex_local_index_in_first_cell,
+                           GeometryInfo<dim>::vertices_per_cell);
+
+          /**
+           * Find the current common vertex in the second boundary cell by
+           * coordinate matching.
+           */
+          common_vertex_local_index_in_second_cell =
+            get_vertex_local_index_in_cell<dim, spacedim>(common_vertex_coords,
+                                                          second_cell_iter);
+          AssertIndexRange(common_vertex_local_index_in_second_cell,
+                           GeometryInfo<dim>::vertices_per_cell);
+
+          common_vertex_pair_local_indices.push_back(
+            std::pair<unsigned int, unsigned int>(
+              common_vertex_local_index_in_first_cell,
+              common_vertex_local_index_in_second_cell));
         }
 
       return cell_neighboring_type;
@@ -3275,7 +3485,7 @@ namespace IdeoBEM
     {
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
-      const int poly_degree = mapping.polynomial_degree;
+      const int poly_degree = mapping.get_degree();
 
       std::vector<unsigned int> poly_space_inverse_numbering(
         FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(

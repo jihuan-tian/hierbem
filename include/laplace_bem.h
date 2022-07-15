@@ -89,10 +89,10 @@ namespace IdeoBEM
     friend void
     assemble_bem_full_matrix(
       const KernelFunction<spacedim1, RangeNumberType> &kernel,
-      const DoFHandler<dim1, spacedim1> &        dof_handler_for_test_space,
-      const DoFHandler<dim1, spacedim1> &        dof_handler_for_trial_space,
-      const MappingQGenericExt<dim1, spacedim1> &kx_mapping,
-      const MappingQGenericExt<dim1, spacedim1> &ky_mapping,
+      const DoFHandler<dim1, spacedim1> &  dof_handler_for_test_space,
+      const DoFHandler<dim1, spacedim1> &  dof_handler_for_trial_space,
+      MappingQGenericExt<dim1, spacedim1> &kx_mapping,
+      MappingQGenericExt<dim1, spacedim1> &ky_mapping,
       typename MappingQGeneric<dim1, spacedim1>::InternalData &kx_mapping_data,
       typename MappingQGeneric<dim1, spacedim1>::InternalData &ky_mapping_data,
       const std::map<typename Triangulation<dim1, spacedim1>::cell_iterator,
@@ -1004,7 +1004,7 @@ namespace IdeoBEM
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameDoFHandlers,
+                SameTriangulations,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
               V1_matrix);
 
@@ -1101,7 +1101,7 @@ namespace IdeoBEM
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               map_from_dirichlet_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameDoFHandlers,
+                SameTriangulations,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
               V1_matrix);
 
@@ -1158,7 +1158,7 @@ namespace IdeoBEM
               map_from_neumann_boundary_mesh_to_volume_mesh,
               map_from_neumann_boundary_mesh_to_volume_mesh,
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameDoFHandlers,
+                SameTriangulations,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
               D1_matrix);
 

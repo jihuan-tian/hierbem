@@ -468,6 +468,10 @@ namespace IdeoBEM
      */
     void
     init_mapping_shape_grad_matrix_tables();
+
+    void init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      Table<2, FullMatrix<RangeNumberType>> &table,
+      const unsigned int                     n_shape_functions);
   };
 
 
@@ -586,23 +590,65 @@ namespace IdeoBEM
   {
     kx_mapping_shape_grad_matrix_table_for_same_panel.reinit(
       TableIndices<2>(8, quad_rule_for_same_panel.size()));
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      kx_mapping_shape_grad_matrix_table_for_same_panel,
+      kx_mapping_data.n_shape_functions);
+
     ky_mapping_shape_grad_matrix_table_for_same_panel.reinit(
       TableIndices<2>(8, quad_rule_for_same_panel.size()));
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      ky_mapping_shape_grad_matrix_table_for_same_panel,
+      ky_mapping_data.n_shape_functions);
 
     kx_mapping_shape_grad_matrix_table_for_common_edge.reinit(
       TableIndices<2>(6, quad_rule_for_common_edge.size()));
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      kx_mapping_shape_grad_matrix_table_for_common_edge,
+      kx_mapping_data.n_shape_functions);
+
     ky_mapping_shape_grad_matrix_table_for_common_edge.reinit(
       TableIndices<2>(6, quad_rule_for_common_edge.size()));
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      ky_mapping_shape_grad_matrix_table_for_common_edge,
+      ky_mapping_data.n_shape_functions);
 
     kx_mapping_shape_grad_matrix_table_for_common_vertex.reinit(
       TableIndices<2>(4, quad_rule_for_common_vertex.size()));
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      kx_mapping_shape_grad_matrix_table_for_common_vertex,
+      kx_mapping_data.n_shape_functions);
+
     ky_mapping_shape_grad_matrix_table_for_common_vertex.reinit(
       TableIndices<2>(4, quad_rule_for_common_vertex.size()));
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      ky_mapping_shape_grad_matrix_table_for_common_vertex,
+      ky_mapping_data.n_shape_functions);
 
     kx_mapping_shape_grad_matrix_table_for_regular.reinit(
       TableIndices<2>(1, quad_rule_for_regular.size()));
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      kx_mapping_shape_grad_matrix_table_for_regular,
+      kx_mapping_data.n_shape_functions);
+
     ky_mapping_shape_grad_matrix_table_for_regular.reinit(
       TableIndices<2>(1, quad_rule_for_regular.size()));
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      ky_mapping_shape_grad_matrix_table_for_regular,
+      ky_mapping_data.n_shape_functions);
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType>
+  void BEMValues<dim, spacedim, RangeNumberType>::
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
+      Table<2, FullMatrix<RangeNumberType>> &table,
+      const unsigned int                     n_shape_functions)
+  {
+    for (unsigned int i = 0; i < table.size(0); i++)
+      for (unsigned int j = 0; j < table.size(1); j++)
+        {
+          table(TableIndices<2>(i, j)).reinit(n_shape_functions, dim);
+        }
   }
 
 
@@ -733,7 +779,7 @@ namespace IdeoBEM
              */
             for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
               {
-                kx_shape_value_table_for_same_panel(s, k, q) =
+                kx_shape_value_table_for_same_panel(TableIndices<3>(s, k, q)) =
                   kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
                                     kx_unit_quad_points[q]);
               }
@@ -745,7 +791,7 @@ namespace IdeoBEM
              */
             for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
               {
-                ky_shape_value_table_for_same_panel(s, k, q) =
+                ky_shape_value_table_for_same_panel(TableIndices<3>(s, k, q)) =
                   ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
                                     ky_unit_quad_points[q]);
               }
@@ -753,13 +799,13 @@ namespace IdeoBEM
             // Calculate the Jacobian matrix evaluated at
             // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
             // to shape functions which are in the lexicographic order.
-            kx_shape_grad_matrix_table_for_same_panel(k, q) =
+            kx_shape_grad_matrix_table_for_same_panel(TableIndices<2>(k, q)) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(
                 kx_fe, kx_unit_quad_points[q]);
             // Calculate the Jacobian matrix evaluated at
             // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
             // to shape functions which are in the lexicographic order.
-            ky_shape_grad_matrix_table_for_same_panel(k, q) =
+            ky_shape_grad_matrix_table_for_same_panel(TableIndices<2>(k, q)) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(
                 ky_fe, ky_unit_quad_points[q]);
           }
@@ -776,26 +822,26 @@ namespace IdeoBEM
           {
             for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
               {
-                kx_mapping_shape_value_table_for_same_panel(s, k, q) =
-                  kx_mapping_data.shape(q, s);
+                kx_mapping_shape_value_table_for_same_panel(
+                  TableIndices<3>(s, k, q)) = kx_mapping_data.shape(q, s);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
-                    kx_mapping_shape_grad_matrix_table_for_same_panel(k, q)(s,
-                                                                            d) =
+                    kx_mapping_shape_grad_matrix_table_for_same_panel(
+                      TableIndices<2>(k, q))(s, d) =
                       kx_mapping_data.derivative(q, s)[d];
                   }
               }
 
             for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
               {
-                ky_mapping_shape_value_table_for_same_panel(s, k, q) =
-                  ky_mapping_data.shape(q, s);
+                ky_mapping_shape_value_table_for_same_panel(
+                  TableIndices<3>(s, k, q)) = ky_mapping_data.shape(q, s);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
-                    ky_mapping_shape_grad_matrix_table_for_same_panel(k, q)(s,
-                                                                            d) =
+                    ky_mapping_shape_grad_matrix_table_for_same_panel(
+                      TableIndices<2>(k, q))(s, d) =
                       ky_mapping_data.derivative(q, s)[d];
                   }
               }
@@ -920,7 +966,7 @@ namespace IdeoBEM
              */
             for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
               {
-                kx_shape_value_table_for_common_edge(s, k, q) =
+                kx_shape_value_table_for_common_edge(TableIndices<3>(s, k, q)) =
                   kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
                                     kx_unit_quad_points[q]);
               }
@@ -932,7 +978,7 @@ namespace IdeoBEM
              */
             for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
               {
-                ky_shape_value_table_for_common_edge(s, k, q) =
+                ky_shape_value_table_for_common_edge(TableIndices<3>(s, k, q)) =
                   ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
                                     ky_unit_quad_points[q]);
               }
@@ -940,13 +986,13 @@ namespace IdeoBEM
             // Calculate the Jacobian matrix evaluated at
             // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
             // to shape functions which are in the lexicographic order.
-            kx_shape_grad_matrix_table_for_common_edge(k, q) =
+            kx_shape_grad_matrix_table_for_common_edge(TableIndices<2>(k, q)) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(
                 kx_fe, kx_unit_quad_points[q]);
             // Calculate the Jacobian matrix evaluated at
             // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
             // to shape functions which are in the lexicographic order.
-            ky_shape_grad_matrix_table_for_common_edge(k, q) =
+            ky_shape_grad_matrix_table_for_common_edge(TableIndices<2>(k, q)) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(
                 ky_fe, ky_unit_quad_points[q]);
           }
@@ -963,25 +1009,27 @@ namespace IdeoBEM
           {
             for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
               {
-                kx_mapping_shape_value_table_for_common_edge(s, k, q) =
-                  kx_mapping_data.shape(q, s);
+                kx_mapping_shape_value_table_for_common_edge(
+                  TableIndices<3>(s, k, q)) = kx_mapping_data.shape(q, s);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
-                    kx_mapping_shape_grad_matrix_table_for_common_edge(k, q)(
-                      s, d) = kx_mapping_data.derivative(q, s)[d];
+                    kx_mapping_shape_grad_matrix_table_for_common_edge(
+                      TableIndices<2>(k, q))(s, d) =
+                      kx_mapping_data.derivative(q, s)[d];
                   }
               }
 
             for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
               {
-                ky_mapping_shape_value_table_for_common_edge(s, k, q) =
-                  ky_mapping_data.shape(q, s);
+                ky_mapping_shape_value_table_for_common_edge(
+                  TableIndices<3>(s, k, q)) = ky_mapping_data.shape(q, s);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
-                    ky_mapping_shape_grad_matrix_table_for_common_edge(k, q)(
-                      s, d) = ky_mapping_data.derivative(q, s)[d];
+                    ky_mapping_shape_grad_matrix_table_for_common_edge(
+                      TableIndices<2>(k, q))(s, d) =
+                      ky_mapping_data.derivative(q, s)[d];
                   }
               }
           }
@@ -1106,7 +1154,8 @@ namespace IdeoBEM
              */
             for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
               {
-                kx_shape_value_table_for_common_vertex(s, k, q) =
+                kx_shape_value_table_for_common_vertex(
+                  TableIndices<3>(s, k, q)) =
                   kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
                                     kx_unit_quad_points[q]);
               }
@@ -1118,7 +1167,8 @@ namespace IdeoBEM
              */
             for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
               {
-                ky_shape_value_table_for_common_vertex(s, k, q) =
+                ky_shape_value_table_for_common_vertex(
+                  TableIndices<3>(s, k, q)) =
                   ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
                                     ky_unit_quad_points[q]);
               }
@@ -1126,13 +1176,15 @@ namespace IdeoBEM
             // Calculate the Jacobian matrix evaluated at
             // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
             // to shape functions which are in the lexicographic order.
-            kx_shape_grad_matrix_table_for_common_vertex(k, q) =
+            kx_shape_grad_matrix_table_for_common_vertex(
+              TableIndices<2>(k, q)) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(
                 kx_fe, kx_unit_quad_points[q]);
             // Calculate the Jacobian matrix evaluated at
             // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
             // to shape functions which are in the lexicographic order.
-            ky_shape_grad_matrix_table_for_common_vertex(k, q) =
+            ky_shape_grad_matrix_table_for_common_vertex(
+              TableIndices<2>(k, q)) =
               BEMTools::shape_grad_matrix_in_lexicographic_order(
                 ky_fe, ky_unit_quad_points[q]);
           }
@@ -1149,25 +1201,27 @@ namespace IdeoBEM
           {
             for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
               {
-                kx_mapping_shape_value_table_for_common_vertex(s, k, q) =
-                  kx_mapping_data.shape(q, s);
+                kx_mapping_shape_value_table_for_common_vertex(
+                  TableIndices<3>(s, k, q)) = kx_mapping_data.shape(q, s);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
-                    kx_mapping_shape_grad_matrix_table_for_common_vertex(k, q)(
-                      s, d) = kx_mapping_data.derivative(q, s)[d];
+                    kx_mapping_shape_grad_matrix_table_for_common_vertex(
+                      TableIndices<2>(k, q))(s, d) =
+                      kx_mapping_data.derivative(q, s)[d];
                   }
               }
 
             for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
               {
-                ky_mapping_shape_value_table_for_common_vertex(s, k, q) =
-                  ky_mapping_data.shape(q, s);
+                ky_mapping_shape_value_table_for_common_vertex(
+                  TableIndices<3>(s, k, q)) = ky_mapping_data.shape(q, s);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
-                    ky_mapping_shape_grad_matrix_table_for_common_vertex(k, q)(
-                      s, d) = ky_mapping_data.derivative(q, s)[d];
+                    ky_mapping_shape_grad_matrix_table_for_common_vertex(
+                      TableIndices<2>(k, q))(s, d) =
+                      ky_mapping_data.derivative(q, s)[d];
                   }
               }
           }
@@ -1280,7 +1334,7 @@ namespace IdeoBEM
          */
         for (unsigned int s = 0; s < kx_dofs_per_cell; s++)
           {
-            kx_shape_value_table_for_regular(s, 0, q) =
+            kx_shape_value_table_for_regular(TableIndices<3>(s, 0, q)) =
               kx_fe.shape_value(kx_poly_space_inverse_numbering[s],
                                 kx_unit_quad_points[q]);
           }
@@ -1292,7 +1346,7 @@ namespace IdeoBEM
          */
         for (unsigned int s = 0; s < ky_dofs_per_cell; s++)
           {
-            ky_shape_value_table_for_regular(s, 0, q) =
+            ky_shape_value_table_for_regular(TableIndices<3>(s, 0, q)) =
               ky_fe.shape_value(ky_poly_space_inverse_numbering[s],
                                 ky_unit_quad_points[q]);
           }
@@ -1300,13 +1354,13 @@ namespace IdeoBEM
         // Calculate the Jacobian matrix evaluated at
         // <code>kx_quad_point</code> in  \f$K_x\f$. Matrix rows correspond
         // to shape functions which are in the lexicographic order.
-        kx_shape_grad_matrix_table_for_regular(0, q) =
+        kx_shape_grad_matrix_table_for_regular(TableIndices<2>(0, q)) =
           BEMTools::shape_grad_matrix_in_lexicographic_order(
             kx_fe, kx_unit_quad_points[q]);
         // Calculate the Jacobian matrix evaluated at
         // <code>ky_quad_point</code> in  \f$K_y\f$. Matrix rows correspond
         // to shape functions which are in the lexicographic order.
-        ky_shape_grad_matrix_table_for_regular(0, q) =
+        ky_shape_grad_matrix_table_for_regular(TableIndices<2>(0, q)) =
           BEMTools::shape_grad_matrix_in_lexicographic_order(
             ky_fe, ky_unit_quad_points[q]);
       }
@@ -1323,24 +1377,26 @@ namespace IdeoBEM
       {
         for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
           {
-            kx_mapping_shape_value_table_for_regular(s, 0, q) =
+            kx_mapping_shape_value_table_for_regular(TableIndices<3>(s, 0, q)) =
               kx_mapping_data.shape(q, s);
 
             for (unsigned int d = 0; d < dim; d++)
               {
-                kx_mapping_shape_grad_matrix_table_for_regular(0, q)(s, d) =
+                kx_mapping_shape_grad_matrix_table_for_regular(
+                  TableIndices<2>(0, q))(s, d) =
                   kx_mapping_data.derivative(q, s)[d];
               }
           }
 
         for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
           {
-            ky_mapping_shape_value_table_for_regular(s, 0, q) =
+            ky_mapping_shape_value_table_for_regular(TableIndices<3>(s, 0, q)) =
               ky_mapping_data.shape(q, s);
 
             for (unsigned int d = 0; d < dim; d++)
               {
-                ky_mapping_shape_grad_matrix_table_for_regular(0, q)(s, d) =
+                ky_mapping_shape_grad_matrix_table_for_regular(
+                  TableIndices<2>(0, q))(s, d) =
                   ky_mapping_data.derivative(q, s)[d];
               }
           }
@@ -1496,11 +1552,11 @@ namespace IdeoBEM
     using FE_Poly_short = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
 
     /**
-     * The intersection set of the vertex DoF indices for the two cells
+     * The intersection set of the vertex local indices for the two cells
      * \f$K_x\f$ and \f$K_y\f$.
      */
-    std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-      common_vertex_dof_indices;
+    std::vector<std::pair<unsigned int, unsigned int>>
+      common_vertex_pair_local_indices;
 
     /**
      * List of support points in the real cell \f$K_x\f$ in the default DoF
@@ -1581,15 +1637,6 @@ namespace IdeoBEM
      * order.
      */
     std::vector<unsigned int> ky_fe_poly_space_numbering_inverse;
-    /**
-     * The numbering used for accessing the list of DoFs in \f$K_y\f$ in the
-     * reversed lexicographic order, where the list of DoFs are stored in the
-     * hierarchical order.
-     *
-     * \mynote{This numbering occurs only when \f$K_x\f$ and \f$K_y\f$ share a
-     * common edge.}
-     */
-    std::vector<unsigned int> ky_fe_reversed_poly_space_numbering_inverse;
 
     /**
      * The numbering used for accessing the list of support points in the
@@ -1649,6 +1696,9 @@ namespace IdeoBEM
      * 4. In the regular panel case, same as the same panel case.}
      */
     std::vector<unsigned int> ky_local_dof_permutation;
+
+    std::vector<unsigned int> kx_mapping_support_point_permutation;
+    std::vector<unsigned int> ky_mapping_support_point_permutation;
 
     // The first dimension of the following data tables is the \f$k_3\f$ index.
     /**
@@ -1795,7 +1845,7 @@ namespace IdeoBEM
       const typename MappingQGeneric<dim, spacedim>::InternalData
         &                             ky_mapping_data,
       const BEMValues<dim, spacedim> &bem_values)
-      : common_vertex_dof_indices(0)
+      : common_vertex_pair_local_indices(0)
       , kx_support_points_in_default_dof_order(kx_fe.dofs_per_cell)
       , ky_support_points_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_mapping_support_points_in_default_order(
@@ -1810,7 +1860,6 @@ namespace IdeoBEM
       , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)
       , ky_fe_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
-      , ky_fe_reversed_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
       , kx_mapping_poly_space_numbering_inverse(
           kx_mapping_data.n_shape_functions)
       , ky_mapping_poly_space_numbering_inverse(
@@ -1819,6 +1868,8 @@ namespace IdeoBEM
           ky_mapping_data.n_shape_functions)
       , kx_local_dof_permutation(kx_fe.dofs_per_cell)
       , ky_local_dof_permutation(ky_fe.dofs_per_cell)
+      , kx_mapping_support_point_permutation(kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_point_permutation(ky_mapping_data.n_shape_functions)
       , kx_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
       , kx_jacobians_common_edge(6, bem_values.quad_rule_for_common_edge.size())
       , kx_jacobians_common_vertex(
@@ -1856,7 +1907,8 @@ namespace IdeoBEM
           bem_values.quad_rule_for_common_vertex.size())
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
     {
-      common_vertex_dof_indices.reserve(GeometryInfo<dim>::vertices_per_cell);
+      common_vertex_pair_local_indices.reserve(
+        GeometryInfo<dim>::vertices_per_cell);
 
       // Polynomial space inverse numbering for recovering the lexicographic
       // order.
@@ -1869,8 +1921,6 @@ namespace IdeoBEM
         kx_fe_poly.get_poly_space_numbering_inverse();
       ky_fe_poly_space_numbering_inverse =
         ky_fe_poly.get_poly_space_numbering_inverse();
-      generate_backward_dof_permutation(
-        ky_fe, 0, ky_fe_reversed_poly_space_numbering_inverse);
 
       kx_mapping_poly_space_numbering_inverse =
         FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
@@ -1896,7 +1946,8 @@ namespace IdeoBEM
      */
     PairCellWiseScratchData(
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch)
-      : common_vertex_dof_indices(scratch.common_vertex_dof_indices)
+      : common_vertex_pair_local_indices(
+          scratch.common_vertex_pair_local_indices)
       , kx_support_points_in_default_dof_order(
           scratch.kx_support_points_in_default_dof_order)
       , ky_support_points_in_default_dof_order(
@@ -1919,8 +1970,6 @@ namespace IdeoBEM
           scratch.kx_fe_poly_space_numbering_inverse)
       , ky_fe_poly_space_numbering_inverse(
           scratch.ky_fe_poly_space_numbering_inverse)
-      , ky_fe_reversed_poly_space_numbering_inverse(
-          scratch.ky_fe_reversed_poly_space_numbering_inverse)
       , kx_mapping_poly_space_numbering_inverse(
           scratch.kx_mapping_poly_space_numbering_inverse)
       , ky_mapping_poly_space_numbering_inverse(
@@ -1929,6 +1978,10 @@ namespace IdeoBEM
           scratch.ky_mapping_reversed_poly_space_numbering_inverse)
       , kx_local_dof_permutation(scratch.kx_local_dof_permutation)
       , ky_local_dof_permutation(scratch.ky_local_dof_permutation)
+      , kx_mapping_support_point_permutation(
+          scratch.kx_mapping_support_point_permutation)
+      , ky_mapping_support_point_permutation(
+          scratch.ky_mapping_support_point_permutation)
       , kx_jacobians_same_panel(scratch.kx_jacobians_same_panel)
       , kx_jacobians_common_edge(scratch.kx_jacobians_common_edge)
       , kx_jacobians_common_vertex(scratch.kx_jacobians_common_vertex)

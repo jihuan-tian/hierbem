@@ -306,9 +306,9 @@ namespace IdeoBEM
     const KernelFunction<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                            factor,
     const DoFHandler<dim, spacedim> &                dof_handler_for_test_space,
-    const DoFHandler<dim, spacedim> &        dof_handler_for_trial_space,
-    const MappingQGenericExt<dim, spacedim> &kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &ky_mapping,
+    const DoFHandler<dim, spacedim> &  dof_handler_for_trial_space,
+    MappingQGenericExt<dim, spacedim> &kx_mapping,
+    MappingQGenericExt<dim, spacedim> &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -384,9 +384,9 @@ namespace IdeoBEM
     for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
       {
         /**
-         * Update the support points in the mapping object for \f$K_x\f$.
+         * Calculate Kx related data here.
          */
-        kx_mapping.compute_mapping_support_points(e);
+        // kx_mapping.compute_mapping_support_points(e);
 
         /**
          * Apply parallelization to the inner loop.
