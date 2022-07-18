@@ -730,16 +730,6 @@ namespace IdeoBEM
                   }
               }
 
-            // DEBUG
-            std::ofstream out("jacobians-same-panel.dat");
-            print_2d_table_to_mat(out,
-                                  "kx_jacobians_same_panel",
-                                  scratch.kx_jacobians_same_panel,
-                                  15,
-                                  false,
-                                  25);
-            out.close();
-
             break;
           }
         case CommonEdge:
@@ -788,22 +778,6 @@ namespace IdeoBEM
                         scratch.ky_mapping_support_points_permuted);
                   }
               }
-
-            // DEBUG
-            std::ofstream out("jacobians-common-edge.dat");
-            print_2d_table_to_mat(out,
-                                  "kx_jacobians_common_edge",
-                                  scratch.kx_jacobians_common_edge,
-                                  15,
-                                  false,
-                                  25);
-            print_2d_table_to_mat(out,
-                                  "ky_jacobians_common_edge",
-                                  scratch.ky_jacobians_common_edge,
-                                  15,
-                                  false,
-                                  25);
-            out.close();
 
             break;
           }
@@ -855,22 +829,6 @@ namespace IdeoBEM
                   }
               }
 
-            // DEBUG
-            std::ofstream out("jacobians-common-vertex.dat");
-            print_2d_table_to_mat(out,
-                                  "kx_jacobians_common_vertex",
-                                  scratch.kx_jacobians_common_vertex,
-                                  15,
-                                  false,
-                                  25);
-            print_2d_table_to_mat(out,
-                                  "ky_jacobians_common_vertex",
-                                  scratch.ky_jacobians_common_vertex,
-                                  15,
-                                  false,
-                                  25);
-            out.close();
-
             break;
           }
         case Regular:
@@ -913,22 +871,6 @@ namespace IdeoBEM
                     bem_values.ky_mapping_shape_value_table_for_regular,
                     scratch.ky_mapping_support_points_permuted);
               }
-
-            // DEBUG
-            std::ofstream out("jacobians-regular.dat");
-            print_2d_table_to_mat(out,
-                                  "kx_jacobians_regular",
-                                  scratch.kx_jacobians_regular,
-                                  15,
-                                  false,
-                                  25);
-            print_2d_table_to_mat(out,
-                                  "ky_jacobians_regular",
-                                  scratch.ky_jacobians_regular,
-                                  15,
-                                  false,
-                                  25);
-            out.close();
 
             break;
           }
