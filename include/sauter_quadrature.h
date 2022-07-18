@@ -9,6 +9,8 @@
 #define INCLUDE_SAUTER_QUADRATURE_H_
 
 
+#include <deal.II/base/utilities.h>
+
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 
@@ -25,6 +27,7 @@
 
 #include "bem_kernels.h"
 #include "bem_values.h"
+#include "debug_tools.h"
 #include "mapping_q_generic_ext.h"
 #include "sauter_quadrature_tools.h"
 
@@ -121,9 +124,9 @@ namespace IdeoBEM
      * of DoFs per face.
      */
     const unsigned int dofs_per_face =
-      fe.dofs_per_face > 0 ?
-        fe.dofs_per_face :
-        static_cast<unsigned int>(std::pow(fe.degree + 1, dim - 1));
+      fe.dofs_per_face > 0 ? fe.dofs_per_face :
+                             static_cast<unsigned int>(
+                               Utilities::fixed_power<dim - 1>(fe.degree + 1));
 
     vertex_dof_indices[0] = dof_indices[0];
     vertex_dof_indices[1] = dof_indices[dofs_per_face - 1];
@@ -170,9 +173,9 @@ namespace IdeoBEM
      * of DoFs per face.
      */
     const unsigned int dofs_per_face =
-      fe.dofs_per_face > 0 ?
-        fe.dofs_per_face :
-        static_cast<unsigned int>(std::pow(fe.degree + 1, dim - 1));
+      fe.dofs_per_face > 0 ? fe.dofs_per_face :
+                             static_cast<unsigned int>(
+                               Utilities::fixed_power<dim - 1>(fe.degree + 1));
 
     vertex_dof_indices[0] = dof_indices[0];
     vertex_dof_indices[1] = dof_indices[dofs_per_face - 1];
@@ -331,19 +334,6 @@ namespace IdeoBEM
     const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
     const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
 
-    // Support points of \f$K_x\f$ and \f$K_y\f$ in the default
-    // DoF order.
-    get_support_points_in_default_dof_order_in_real_cell(
-      kx_cell_iter,
-      kx_fe,
-      kx_mapping,
-      scratch.kx_support_points_in_default_dof_order);
-    get_support_points_in_default_dof_order_in_real_cell(
-      ky_cell_iter,
-      ky_fe,
-      ky_mapping,
-      scratch.ky_support_points_in_default_dof_order);
-
     // N.B. The vector holding local DoF indices has to have the right size
     // before being passed to the function <code>get_dof_indices</code>. And
     // this has been performed during the initialization of the scratch data.
@@ -371,17 +361,10 @@ namespace IdeoBEM
                            scratch.ky_mapping_support_points_permuted);
 
             /**
-             * Permute DoF support points and indices in the finite elements.
+             * Permute DoF indices in the finite elements.
              */
             if (kx_fe.dofs_per_cell > 1)
               {
-                /**
-                 * Get support points and DoF indices in the lexicographic
-                 * order.
-                 */
-                permute_vector(scratch.kx_support_points_in_default_dof_order,
-                               scratch.kx_fe_poly_space_numbering_inverse,
-                               scratch.kx_support_points_permuted);
                 permute_vector(
                   scratch.kx_local_dof_indices_in_default_dof_order,
                   scratch.kx_fe_poly_space_numbering_inverse,
@@ -393,8 +376,6 @@ namespace IdeoBEM
                  * Handle the case when the finite element order is 0, i.e. for
                  * @p FE_DGQ(0). Permutation is not needed.
                  */
-                scratch.kx_support_points_permuted[0] =
-                  scratch.kx_support_points_in_default_dof_order[0];
                 data.kx_local_dof_indices_permuted[0] =
                   scratch.kx_local_dof_indices_in_default_dof_order[0];
               }
@@ -402,12 +383,9 @@ namespace IdeoBEM
             if (ky_fe.dofs_per_cell > 1)
               {
                 /**
-                 * Get support points and DoF indices in the lexicographic
+                 * Get DoF indices in the lexicographic
                  * order.
                  */
-                permute_vector(scratch.ky_support_points_in_default_dof_order,
-                               scratch.ky_fe_poly_space_numbering_inverse,
-                               scratch.ky_support_points_permuted);
                 permute_vector(
                   scratch.ky_local_dof_indices_in_default_dof_order,
                   scratch.ky_fe_poly_space_numbering_inverse,
@@ -419,8 +397,6 @@ namespace IdeoBEM
                  * Handle the case when the finite element order is 0, i.e. for
                  * @p FE_DGQ. Then there is no permutation needed.
                  */
-                scratch.ky_support_points_permuted[0] =
-                  scratch.ky_support_points_in_default_dof_order[0];
                 data.ky_local_dof_indices_permuted[0] =
                   scratch.ky_local_dof_indices_in_default_dof_order[0];
               }
@@ -495,9 +471,6 @@ namespace IdeoBEM
                   kx_starting_vertex_local_index,
                   scratch.kx_local_dof_permutation);
 
-                permute_vector(scratch.kx_support_points_in_default_dof_order,
-                               scratch.kx_local_dof_permutation,
-                               scratch.kx_support_points_permuted);
                 permute_vector(
                   scratch.kx_local_dof_indices_in_default_dof_order,
                   scratch.kx_local_dof_permutation,
@@ -509,8 +482,6 @@ namespace IdeoBEM
                  * Handle the case when the finite element order is 0, i.e. for
                  * @p FE_DGQ. Then there is no permutation needed.
                  */
-                scratch.kx_support_points_permuted[0] =
-                  scratch.kx_support_points_in_default_dof_order[0];
                 data.kx_local_dof_indices_permuted[0] =
                   scratch.kx_local_dof_indices_in_default_dof_order[0];
               }
@@ -524,9 +495,6 @@ namespace IdeoBEM
                   ky_starting_vertex_local_index,
                   scratch.ky_local_dof_permutation);
 
-                permute_vector(scratch.ky_support_points_in_default_dof_order,
-                               scratch.ky_local_dof_permutation,
-                               scratch.ky_support_points_permuted);
                 permute_vector(
                   scratch.ky_local_dof_indices_in_default_dof_order,
                   scratch.ky_local_dof_permutation,
@@ -538,8 +506,6 @@ namespace IdeoBEM
                  * Handle the case when the finite element order is 0, i.e. for
                  * @p FE_DGQ. Then there is no permutation needed.
                  */
-                scratch.ky_support_points_permuted[0] =
-                  scratch.ky_support_points_in_default_dof_order[0];
                 data.ky_local_dof_indices_permuted[0] =
                   scratch.ky_local_dof_indices_in_default_dof_order[0];
               }
@@ -593,9 +559,6 @@ namespace IdeoBEM
                   kx_starting_vertex_local_index,
                   scratch.kx_local_dof_permutation);
 
-                permute_vector(scratch.kx_support_points_in_default_dof_order,
-                               scratch.kx_local_dof_permutation,
-                               scratch.kx_support_points_permuted);
                 permute_vector(
                   scratch.kx_local_dof_indices_in_default_dof_order,
                   scratch.kx_local_dof_permutation,
@@ -607,8 +570,6 @@ namespace IdeoBEM
                  * Handle the case when the finite element order is 0, i.e. for
                  * @p FE_DGQ. Then there is no permutation needed.
                  */
-                scratch.kx_support_points_permuted[0] =
-                  scratch.kx_support_points_in_default_dof_order[0];
                 data.kx_local_dof_indices_permuted[0] =
                   scratch.kx_local_dof_indices_in_default_dof_order[0];
               }
@@ -622,9 +583,6 @@ namespace IdeoBEM
                   ky_starting_vertex_local_index,
                   scratch.ky_local_dof_permutation);
 
-                permute_vector(scratch.ky_support_points_in_default_dof_order,
-                               scratch.ky_local_dof_permutation,
-                               scratch.ky_support_points_permuted);
                 permute_vector(
                   scratch.ky_local_dof_indices_in_default_dof_order,
                   scratch.ky_local_dof_permutation,
@@ -636,8 +594,6 @@ namespace IdeoBEM
                  * Handle the case when the finite element order is 0, i.e. for
                  * @p FE_DGQ. Then there is no permutation needed.
                  */
-                scratch.ky_support_points_permuted[0] =
-                  scratch.ky_support_points_in_default_dof_order[0];
                 data.ky_local_dof_indices_permuted[0] =
                   scratch.ky_local_dof_indices_in_default_dof_order[0];
               }
@@ -665,9 +621,6 @@ namespace IdeoBEM
                   scratch.kx_local_dof_indices_in_default_dof_order,
                   scratch.kx_fe_poly_space_numbering_inverse,
                   data.kx_local_dof_indices_permuted);
-                permute_vector(scratch.kx_support_points_in_default_dof_order,
-                               scratch.kx_fe_poly_space_numbering_inverse,
-                               scratch.kx_support_points_permuted);
               }
             else
               {
@@ -675,8 +628,6 @@ namespace IdeoBEM
                  * Handle the case when the finite element order is 0, i.e. for
                  * @p FE_DGQ. Then there is no permutation needed.
                  */
-                scratch.kx_support_points_permuted[0] =
-                  scratch.kx_support_points_in_default_dof_order[0];
                 data.kx_local_dof_indices_permuted[0] =
                   scratch.kx_local_dof_indices_in_default_dof_order[0];
               }
@@ -687,9 +638,6 @@ namespace IdeoBEM
                   scratch.ky_local_dof_indices_in_default_dof_order,
                   scratch.ky_fe_poly_space_numbering_inverse,
                   data.ky_local_dof_indices_permuted);
-                permute_vector(scratch.ky_support_points_in_default_dof_order,
-                               scratch.ky_fe_poly_space_numbering_inverse,
-                               scratch.ky_support_points_permuted);
               }
             else
               {
@@ -697,8 +645,6 @@ namespace IdeoBEM
                  * Handle the case when the finite element order is 0, i.e. for
                  * @p FE_DGQ. Then there is no permutation needed.
                  */
-                scratch.ky_support_points_permuted[0] =
-                  scratch.ky_support_points_in_default_dof_order[0];
                 data.ky_local_dof_indices_permuted[0] =
                   scratch.ky_local_dof_indices_in_default_dof_order[0];
               }
@@ -784,6 +730,16 @@ namespace IdeoBEM
                   }
               }
 
+            // DEBUG
+            std::ofstream out("jacobians-same-panel.dat");
+            print_2d_table_to_mat(out,
+                                  "kx_jacobians_same_panel",
+                                  scratch.kx_jacobians_same_panel,
+                                  15,
+                                  false,
+                                  25);
+            out.close();
+
             break;
           }
         case CommonEdge:
@@ -832,6 +788,22 @@ namespace IdeoBEM
                         scratch.ky_mapping_support_points_permuted);
                   }
               }
+
+            // DEBUG
+            std::ofstream out("jacobians-common-edge.dat");
+            print_2d_table_to_mat(out,
+                                  "kx_jacobians_common_edge",
+                                  scratch.kx_jacobians_common_edge,
+                                  15,
+                                  false,
+                                  25);
+            print_2d_table_to_mat(out,
+                                  "ky_jacobians_common_edge",
+                                  scratch.ky_jacobians_common_edge,
+                                  15,
+                                  false,
+                                  25);
+            out.close();
 
             break;
           }
@@ -883,6 +855,22 @@ namespace IdeoBEM
                   }
               }
 
+            // DEBUG
+            std::ofstream out("jacobians-common-vertex.dat");
+            print_2d_table_to_mat(out,
+                                  "kx_jacobians_common_vertex",
+                                  scratch.kx_jacobians_common_vertex,
+                                  15,
+                                  false,
+                                  25);
+            print_2d_table_to_mat(out,
+                                  "ky_jacobians_common_vertex",
+                                  scratch.ky_jacobians_common_vertex,
+                                  15,
+                                  false,
+                                  25);
+            out.close();
+
             break;
           }
         case Regular:
@@ -925,6 +913,22 @@ namespace IdeoBEM
                     bem_values.ky_mapping_shape_value_table_for_regular,
                     scratch.ky_mapping_support_points_permuted);
               }
+
+            // DEBUG
+            std::ofstream out("jacobians-regular.dat");
+            print_2d_table_to_mat(out,
+                                  "kx_jacobians_regular",
+                                  scratch.kx_jacobians_regular,
+                                  15,
+                                  false,
+                                  25);
+            print_2d_table_to_mat(out,
+                                  "ky_jacobians_regular",
+                                  scratch.ky_jacobians_regular,
+                                  15,
+                                  false,
+                                  25);
+            out.close();
 
             break;
           }
@@ -3351,8 +3355,8 @@ namespace IdeoBEM
       cell_neighboring_type,
       kx_cell_iter,
       ky_cell_iter,
-      kx_mapping,
-      ky_mapping);
+      kx_mapping_copy,
+      ky_mapping_copy);
 
     calc_jacobian_normals_for_sauter_quad(scratch,
                                           cell_neighboring_type,
@@ -3376,16 +3380,8 @@ namespace IdeoBEM
           {
             // Pullback the kernel function to unit cell.
             KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-              kernel_pullback_on_unit(kernel,
-                                      cell_neighboring_type,
-                                      scratch.kx_support_points_permuted,
-                                      scratch.ky_support_points_permuted,
-                                      kx_fe,
-                                      ky_fe,
-                                      &bem_values,
-                                      &scratch,
-                                      i,
-                                      j);
+              kernel_pullback_on_unit(
+                kernel, cell_neighboring_type, &bem_values, &scratch, i, j);
 
             // Pullback the kernel function to Sauter parameter space.
             KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>

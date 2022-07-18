@@ -198,7 +198,8 @@ namespace IdeoBEM
           Tensor<1, 3> diff_vector = p - x0;
 
           return ((p - model_sphere_center) * diff_vector) / 4.0 / numbers::PI /
-                 std::pow(diff_vector.norm(), 3) / model_sphere_radius;
+                 Utilities::fixed_power<3>(diff_vector.norm()) /
+                 model_sphere_radius;
         }
 
       private:

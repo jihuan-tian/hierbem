@@ -13,6 +13,7 @@
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
+#include <deal.II/base/utilities.h>
 
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -2873,7 +2874,7 @@ namespace IdeoBEM
           support_point_components.mmult(jacobian_matrix_2x2,
                                          shape_grad_matrix_at_p);
           jacobian_det_squared +=
-            std::pow(jacobian_matrix_2x2.determinant(), 2);
+            Utilities::fixed_power<2>(jacobian_matrix_2x2.determinant());
         }
 
       return std::sqrt(jacobian_det_squared);
@@ -2921,7 +2922,7 @@ namespace IdeoBEM
           support_point_components.mmult(jacobian_matrix_2x2,
                                          shape_grad_matrix_at_quad_point);
           jacobian_det_squared +=
-            std::pow(jacobian_matrix_2x2.determinant(), 2);
+            Utilities::fixed_power<2>(jacobian_matrix_2x2.determinant());
         }
 
       return std::sqrt(jacobian_det_squared);
@@ -2992,7 +2993,7 @@ namespace IdeoBEM
           surface_jacobian_det_components[i] =
             jacobian_matrix_2x2.determinant();
           surface_jacobian_det +=
-            std::pow(surface_jacobian_det_components[i], 2);
+            Utilities::fixed_power<2>(surface_jacobian_det_components[i]);
         }
 
       surface_jacobian_det = std::sqrt(surface_jacobian_det);
@@ -3068,7 +3069,7 @@ namespace IdeoBEM
           surface_jacobian_det_components[i] =
             jacobian_matrix_2x2.determinant();
           surface_jacobian_det +=
-            std::pow(surface_jacobian_det_components[i], 2);
+            Utilities::fixed_power<2>(surface_jacobian_det_components[i]);
         }
 
       surface_jacobian_det = std::sqrt(surface_jacobian_det);

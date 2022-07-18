@@ -138,7 +138,7 @@ namespace LaplaceKernel
 
         case 3:
           return ((x - y) * ny) / 4.0 / numbers::PI /
-                 std::pow((x - y).norm(), 3.0);
+                 Utilities::fixed_power<3>((x - y).norm());
 
         default:
           Assert(false, ExcInternalError());
@@ -200,7 +200,7 @@ namespace LaplaceKernel
 
         case 3:
           return ((y - x) * nx) / 4.0 / numbers::PI /
-                 std::pow((x - y).norm(), 3.0);
+                 Utilities::fixed_power<3>((x - y).norm());
 
         default:
           Assert(false, ExcInternalError());

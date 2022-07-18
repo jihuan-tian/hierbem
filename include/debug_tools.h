@@ -9,6 +9,8 @@
 #ifndef INCLUDE_DEBUG_TOOLS_H_
 #define INCLUDE_DEBUG_TOOLS_H_
 
+#include <deal.II/base/table.h>
+
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
 
@@ -20,6 +22,7 @@
 
 #include <deal.II/grid/tria.h>
 
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <string>
@@ -153,6 +156,19 @@ print_vector_to_mat(std::ostream &     out,
 }
 
 
+/**
+ * Print a @p FullMatrix or a @p LAPACKFullMatrix into an Octave matrix.
+ *
+ * @param out
+ * @param name
+ * @param values
+ * @param precision
+ * @param scientific
+ * @param width
+ * @param zero_string
+ * @param denominator
+ * @param threshold
+ */
 template <typename MatrixType>
 void
 print_matrix_to_mat(std::ostream &     out,
@@ -176,6 +192,36 @@ print_matrix_to_mat(std::ostream &     out,
   out << "\n\n";
 }
 
+template <typename T>
+void
+print_2d_table_to_mat(std::ostream &     out,
+                      const std::string &name,
+                      const Table<2, T> &values,
+                      const unsigned int precision  = 8,
+                      const bool         scientific = true,
+                      const unsigned int width      = 0)
+{
+  const typename TableBase<2, T>::size_type m = values.size(0);
+  const typename TableBase<2, T>::size_type n = values.size(1);
+
+  out << "# name: " << name << "\n";
+  out << "# type: matrix\n";
+  out << "# rows: " << m << "\n";
+  out << "# columns: " << n << "\n";
+
+  for (typename TableBase<2, T>::size_type i = 0; i < m; i++)
+    {
+      for (typename TableBase<2, T>::size_type j = 0; j < n; j++)
+        {
+          out << (scientific ? std::scientific : std::fixed) << std::setw(width)
+              << std::setprecision(precision) << values(TableIndices<2>(i, j))
+              << " ";
+        }
+      out << std::endl;
+    }
+
+  out << "\n\n";
+}
 
 template <typename node_pointer_type>
 void

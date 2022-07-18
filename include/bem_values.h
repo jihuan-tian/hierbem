@@ -812,9 +812,25 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Remember that the shape functions held by the mapping object
-         * are already in the tensor product order.}
+         * \mynote{Even though the internally generated polynomials are in the
+         * tensor product order, the shape function values and derivatives are
+         * still in the hierarchic order.}
          */
+        // Get the numbering for accessing the support points in the
+        // lexicographic ordering which are stored in the hierarchic ordering.
+        const std::vector<unsigned int> kx_mapping_poly_space_inverse_numbering(
+          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+              kx_mapping_data.polynomial_degree),
+            1,
+            kx_mapping_data.polynomial_degree)));
+        const std::vector<unsigned int> ky_mapping_poly_space_inverse_numbering(
+          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+              ky_mapping_data.polynomial_degree),
+            1,
+            ky_mapping_data.polynomial_degree)));
+
         kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
         ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
 
@@ -823,26 +839,32 @@ namespace IdeoBEM
             for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
               {
                 kx_mapping_shape_value_table_for_same_panel(
-                  TableIndices<3>(s, k, q)) = kx_mapping_data.shape(q, s);
+                  TableIndices<3>(s, k, q)) =
+                  kx_mapping_data.shape(
+                    q, kx_mapping_poly_space_inverse_numbering[s]);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
                     kx_mapping_shape_grad_matrix_table_for_same_panel(
                       TableIndices<2>(k, q))(s, d) =
-                      kx_mapping_data.derivative(q, s)[d];
+                      kx_mapping_data.derivative(
+                        q, kx_mapping_poly_space_inverse_numbering[s])[d];
                   }
               }
 
             for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
               {
                 ky_mapping_shape_value_table_for_same_panel(
-                  TableIndices<3>(s, k, q)) = ky_mapping_data.shape(q, s);
+                  TableIndices<3>(s, k, q)) =
+                  ky_mapping_data.shape(
+                    q, ky_mapping_poly_space_inverse_numbering[s]);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
                     ky_mapping_shape_grad_matrix_table_for_same_panel(
                       TableIndices<2>(k, q))(s, d) =
-                      ky_mapping_data.derivative(q, s)[d];
+                      ky_mapping_data.derivative(
+                        q, ky_mapping_poly_space_inverse_numbering[s])[d];
                   }
               }
           }
@@ -999,9 +1021,25 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Remember that the shape functions held by the mapping object
-         * are already in the tensor product order.}
+         * \mynote{Even though the internally generated polynomials are in the
+         * tensor product order, the shape function values and derivatives are
+         * still in the hierarchic order.}
          */
+        // Get the numbering for accessing the support points in the
+        // lexicographic ordering which are stored in the hierarchic ordering.
+        const std::vector<unsigned int> kx_mapping_poly_space_inverse_numbering(
+          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+              kx_mapping_data.polynomial_degree),
+            1,
+            kx_mapping_data.polynomial_degree)));
+        const std::vector<unsigned int> ky_mapping_poly_space_inverse_numbering(
+          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+              ky_mapping_data.polynomial_degree),
+            1,
+            ky_mapping_data.polynomial_degree)));
+
         kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
         ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
 
@@ -1010,26 +1048,32 @@ namespace IdeoBEM
             for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
               {
                 kx_mapping_shape_value_table_for_common_edge(
-                  TableIndices<3>(s, k, q)) = kx_mapping_data.shape(q, s);
+                  TableIndices<3>(s, k, q)) =
+                  kx_mapping_data.shape(
+                    q, kx_mapping_poly_space_inverse_numbering[s]);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
                     kx_mapping_shape_grad_matrix_table_for_common_edge(
                       TableIndices<2>(k, q))(s, d) =
-                      kx_mapping_data.derivative(q, s)[d];
+                      kx_mapping_data.derivative(
+                        q, kx_mapping_poly_space_inverse_numbering[s])[d];
                   }
               }
 
             for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
               {
                 ky_mapping_shape_value_table_for_common_edge(
-                  TableIndices<3>(s, k, q)) = ky_mapping_data.shape(q, s);
+                  TableIndices<3>(s, k, q)) =
+                  ky_mapping_data.shape(
+                    q, ky_mapping_poly_space_inverse_numbering[s]);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
                     ky_mapping_shape_grad_matrix_table_for_common_edge(
                       TableIndices<2>(k, q))(s, d) =
-                      ky_mapping_data.derivative(q, s)[d];
+                      ky_mapping_data.derivative(
+                        q, ky_mapping_poly_space_inverse_numbering[s])[d];
                   }
               }
           }
@@ -1191,9 +1235,25 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Remember that the shape functions held by the mapping object
-         * are already in the tensor product order.}
+         * \mynote{Even though the internally generated polynomials are in the
+         * tensor product order, the shape function values and derivatives are
+         * still in the hierarchic order.}
          */
+        // Get the numbering for accessing the support points in the
+        // lexicographic ordering which are stored in the hierarchic ordering.
+        const std::vector<unsigned int> kx_mapping_poly_space_inverse_numbering(
+          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+              kx_mapping_data.polynomial_degree),
+            1,
+            kx_mapping_data.polynomial_degree)));
+        const std::vector<unsigned int> ky_mapping_poly_space_inverse_numbering(
+          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+              ky_mapping_data.polynomial_degree),
+            1,
+            ky_mapping_data.polynomial_degree)));
+
         kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
         ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
 
@@ -1202,26 +1262,32 @@ namespace IdeoBEM
             for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
               {
                 kx_mapping_shape_value_table_for_common_vertex(
-                  TableIndices<3>(s, k, q)) = kx_mapping_data.shape(q, s);
+                  TableIndices<3>(s, k, q)) =
+                  kx_mapping_data.shape(
+                    q, kx_mapping_poly_space_inverse_numbering[s]);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
                     kx_mapping_shape_grad_matrix_table_for_common_vertex(
                       TableIndices<2>(k, q))(s, d) =
-                      kx_mapping_data.derivative(q, s)[d];
+                      kx_mapping_data.derivative(
+                        q, kx_mapping_poly_space_inverse_numbering[s])[d];
                   }
               }
 
             for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
               {
                 ky_mapping_shape_value_table_for_common_vertex(
-                  TableIndices<3>(s, k, q)) = ky_mapping_data.shape(q, s);
+                  TableIndices<3>(s, k, q)) =
+                  ky_mapping_data.shape(
+                    q, ky_mapping_poly_space_inverse_numbering[s]);
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
                     ky_mapping_shape_grad_matrix_table_for_common_vertex(
                       TableIndices<2>(k, q))(s, d) =
-                      ky_mapping_data.derivative(q, s)[d];
+                      ky_mapping_data.derivative(
+                        q, ky_mapping_poly_space_inverse_numbering[s])[d];
                   }
               }
           }
@@ -1367,9 +1433,25 @@ namespace IdeoBEM
 
     /**
      * Compute mapping shape function values and their derivatives in batch.
-     * \mynote{Remember that the shape functions held by the mapping object
-     * are already in the tensor product order.}
+     * \mynote{Even though the internally generated polynomials are in the
+     * tensor product order, the shape function values and derivatives are
+     * still in the hierarchic order.}
      */
+    // Get the numbering for accessing the support points in the
+    // lexicographic ordering which are stored in the hierarchic ordering.
+    const std::vector<unsigned int> kx_mapping_poly_space_inverse_numbering(
+      FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+        ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+          kx_mapping_data.polynomial_degree),
+        1,
+        kx_mapping_data.polynomial_degree)));
+    const std::vector<unsigned int> ky_mapping_poly_space_inverse_numbering(
+      FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
+        ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
+          ky_mapping_data.polynomial_degree),
+        1,
+        ky_mapping_data.polynomial_degree)));
+
     kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
     ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
 
@@ -1378,26 +1460,30 @@ namespace IdeoBEM
         for (unsigned int s = 0; s < kx_mapping_n_shape_functions; s++)
           {
             kx_mapping_shape_value_table_for_regular(TableIndices<3>(s, 0, q)) =
-              kx_mapping_data.shape(q, s);
+              kx_mapping_data.shape(q,
+                                    kx_mapping_poly_space_inverse_numbering[s]);
 
             for (unsigned int d = 0; d < dim; d++)
               {
                 kx_mapping_shape_grad_matrix_table_for_regular(
                   TableIndices<2>(0, q))(s, d) =
-                  kx_mapping_data.derivative(q, s)[d];
+                  kx_mapping_data.derivative(
+                    q, kx_mapping_poly_space_inverse_numbering[s])[d];
               }
           }
 
         for (unsigned int s = 0; s < ky_mapping_n_shape_functions; s++)
           {
             ky_mapping_shape_value_table_for_regular(TableIndices<3>(s, 0, q)) =
-              ky_mapping_data.shape(q, s);
+              ky_mapping_data.shape(q,
+                                    ky_mapping_poly_space_inverse_numbering[s]);
 
             for (unsigned int d = 0; d < dim; d++)
               {
                 ky_mapping_shape_grad_matrix_table_for_regular(
                   TableIndices<2>(0, q))(s, d) =
-                  ky_mapping_data.derivative(q, s)[d];
+                  ky_mapping_data.derivative(
+                    q, ky_mapping_poly_space_inverse_numbering[s])[d];
               }
           }
       }
@@ -1559,19 +1645,6 @@ namespace IdeoBEM
       common_vertex_pair_local_indices;
 
     /**
-     * List of support points in the real cell \f$K_x\f$ in the default DoF
-     * order.
-     */
-    std::vector<Point<spacedim, RangeNumberType>>
-      kx_support_points_in_default_dof_order;
-    /**
-     * List of support points in the real cell \f$K_y\f$ in the default DoF
-     * order.
-     */
-    std::vector<Point<spacedim, RangeNumberType>>
-      ky_support_points_in_default_dof_order;
-
-    /**
      * List of mapping support points in the real cell \f$K_x\f$ in the
      * tensor product order.
      */
@@ -1583,21 +1656,6 @@ namespace IdeoBEM
      */
     std::vector<Point<spacedim, RangeNumberType>>
       ky_mapping_support_points_in_default_order;
-
-    /**
-     * Permuted list of support points in the real cell \f$K_x\f$ in the
-     * lexicographic order in the same panel case and regular case, and
-     * determined by @p kx_local_dof_permutation in the common edge case and
-     * common vertex case.
-     */
-    std::vector<Point<spacedim, RangeNumberType>> kx_support_points_permuted;
-    /**
-     * Permuted list of support points in the real cell \f$K_y\f$ in the
-     * lexicographic order in the same panel case and regular case, and
-     * determined by @p ky_local_dof_permutation in the common edge case and
-     * common vertex case.
-     */
-    std::vector<Point<spacedim, RangeNumberType>> ky_support_points_permuted;
 
     /**
      * Permuted list of mapping support points in the real cell \f$K_x\f$.
@@ -1846,14 +1904,10 @@ namespace IdeoBEM
         &                             ky_mapping_data,
       const BEMValues<dim, spacedim> &bem_values)
       : common_vertex_pair_local_indices(0)
-      , kx_support_points_in_default_dof_order(kx_fe.dofs_per_cell)
-      , ky_support_points_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_mapping_support_points_in_default_order(
           kx_mapping_data.n_shape_functions)
       , ky_mapping_support_points_in_default_order(
           ky_mapping_data.n_shape_functions)
-      , kx_support_points_permuted(kx_fe.dofs_per_cell)
-      , ky_support_points_permuted(ky_fe.dofs_per_cell)
       , kx_mapping_support_points_permuted(kx_mapping_data.n_shape_functions)
       , ky_mapping_support_points_permuted(ky_mapping_data.n_shape_functions)
       , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
@@ -1948,16 +2002,10 @@ namespace IdeoBEM
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch)
       : common_vertex_pair_local_indices(
           scratch.common_vertex_pair_local_indices)
-      , kx_support_points_in_default_dof_order(
-          scratch.kx_support_points_in_default_dof_order)
-      , ky_support_points_in_default_dof_order(
-          scratch.ky_support_points_in_default_dof_order)
       , kx_mapping_support_points_in_default_order(
           scratch.kx_mapping_support_points_in_default_order)
       , ky_mapping_support_points_in_default_order(
           scratch.ky_mapping_support_points_in_default_order)
-      , kx_support_points_permuted(scratch.kx_support_points_permuted)
-      , ky_support_points_permuted(scratch.ky_support_points_permuted)
       , kx_mapping_support_points_permuted(
           scratch.kx_mapping_support_points_permuted)
       , ky_mapping_support_points_permuted(
