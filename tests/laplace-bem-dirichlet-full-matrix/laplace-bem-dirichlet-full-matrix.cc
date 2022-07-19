@@ -101,7 +101,7 @@ main()
   const unsigned int spacedim = 3;
 
   LaplaceBEM<dim, spacedim> bem(
-    2, 1, 2, 2, LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem, 4);
+    1, 0, 1, 1, LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem, 4);
   bem.read_volume_mesh("sphere-from-gmsh-fine_hex.msh");
   DirichletBC dirichlet_bc;
   bem.assign_dirichlet_bc(dirichlet_bc);

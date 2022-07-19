@@ -384,9 +384,14 @@ namespace IdeoBEM
     for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
       {
         /**
-         * Calculate Kx related data here.
+         * Calculate Kx related data so that they won't be redundantly
+         * calculated within @p sauter_assemble_on_one_pair_of_cells.
          */
-        // kx_mapping.compute_mapping_support_points(e);
+        kx_mapping.compute_mapping_support_points(e);
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping.get_support_points();
+        e->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
 
         /**
          * Apply parallelization to the inner loop.
@@ -398,21 +403,23 @@ namespace IdeoBEM
         WorkStream::run(
           dof_handler_for_trial_space.begin_active(),
           dof_handler_for_trial_space.end(),
-          std::bind(&sauter_assemble_on_one_pair_of_cells<dim,
-                                                          spacedim,
-                                                          RangeNumberType>,
-                    std::cref(kernel),
-                    factor,
-                    std::cref(e),
-                    std::placeholders::_1,
-                    std::cref(kx_mapping),
-                    std::cref(ky_mapping),
-                    std::cref(map_from_test_space_mesh_to_volume_mesh),
-                    std::cref(map_from_trial_space_mesh_to_volume_mesh),
-                    method_for_cell_neighboring_type,
-                    std::cref(bem_values),
-                    std::placeholders::_2,
-                    std::placeholders::_3),
+          std::bind(
+            &sauter_assemble_on_one_pair_of_cells<dim,
+                                                  spacedim,
+                                                  RangeNumberType>,
+            std::cref(kernel),
+            factor,
+            std::cref(e),
+            std::placeholders::_1,
+            std::cref(kx_mapping),
+            std::cref(ky_mapping),
+            std::cref(map_from_test_space_mesh_to_volume_mesh),
+            std::cref(map_from_trial_space_mesh_to_volume_mesh),
+            method_for_cell_neighboring_type,
+            std::cref(bem_values),
+            std::placeholders::_2,
+            std::placeholders::_3,
+            false), // Disable calculation of the scratch data for Kx within @p sauter_assemble_on_one_pair_of_cells
           std::bind(&copy_pair_of_cells_local_to_global_for_bem_full_matrix<
                       dim,
                       spacedim,

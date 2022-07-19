@@ -326,7 +326,8 @@ namespace IdeoBEM
     const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
     const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
     const MappingQGenericExt<dim, spacedim> &                kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &                ky_mapping)
+    const MappingQGenericExt<dim, spacedim> &                ky_mapping,
+    const bool is_scratch_data_for_kx_uncalculated = true)
   {
     // Geometry information.
     const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
@@ -337,8 +338,11 @@ namespace IdeoBEM
     // N.B. The vector holding local DoF indices has to have the right size
     // before being passed to the function <code>get_dof_indices</code>. And
     // this has been performed during the initialization of the scratch data.
-    kx_cell_iter->get_dof_indices(
-      scratch.kx_local_dof_indices_in_default_dof_order);
+    if (is_scratch_data_for_kx_uncalculated)
+      {
+        kx_cell_iter->get_dof_indices(
+          scratch.kx_local_dof_indices_in_default_dof_order);
+      }
     ky_cell_iter->get_dof_indices(
       scratch.ky_local_dof_indices_in_default_dof_order);
 
@@ -3205,6 +3209,7 @@ namespace IdeoBEM
    * @param bem_values
    * @param scratch
    * @param data
+   * @param is_scratch_data_for_kx_uncalculated
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
@@ -3226,7 +3231,8 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const bool is_scratch_data_for_kx_uncalculated = true)
   {
     CellNeighboringType cell_neighboring_type;
     scratch.common_vertex_pair_local_indices.clear();
@@ -3282,12 +3288,18 @@ namespace IdeoBEM
     const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
 
     MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
-    kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+    if (is_scratch_data_for_kx_uncalculated)
+      {
+        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+      }
     MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
     ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
 
-    scratch.kx_mapping_support_points_in_default_order =
-      kx_mapping_copy.get_support_points();
+    if (is_scratch_data_for_kx_uncalculated)
+      {
+        scratch.kx_mapping_support_points_in_default_order =
+          kx_mapping_copy.get_support_points();
+      }
     scratch.ky_mapping_support_points_in_default_order =
       ky_mapping_copy.get_support_points();
 
@@ -3298,7 +3310,8 @@ namespace IdeoBEM
       kx_cell_iter,
       ky_cell_iter,
       kx_mapping_copy,
-      ky_mapping_copy);
+      ky_mapping_copy,
+      is_scratch_data_for_kx_uncalculated);
 
     calc_jacobian_normals_for_sauter_quad(scratch,
                                           cell_neighboring_type,
