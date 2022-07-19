@@ -1,5 +1,6 @@
 # Ignore temporary CMake files
 CTestTestfile.cmake
+CMakeCache.txt
 Makefile
 cmake_install.cmake
 CMakeFiles/
@@ -33,6 +34,7 @@ fontconfig/
 *.tm
 *.gpl
 octave-workspace
+\#*#
 
 # Ignore binary files
 *.a
@@ -45,3 +47,20 @@ core
 # Ignore generated documentation
 latex/
 html/
+
+# Other manually added files to be ignored
+src/generate_block_cluster_tree
+tests/aca-full-matrix-approximation/2022-03-19-aca-plus-for-full-matrix
+tests/erichsen1996efficient-example2/2022-03-08-verify-assemble-on-dof-pair
+tests/erichsen1996efficient-example2/2nd-order-dof-results.txt
+tests/erichsen1996efficient-example2/cell_neighboring_type.txt
+tests/erichsen1996efficient-example2/visitlog.py
+tests/hmatrix-build-from-aca/2022-03-23-aca-plus-for-slp-dlp-kernel
+tests/hmatrix-solve-cholesky/scratch.m
+tests/sauter-quad-common-edge/sauter-quad-common-edge-with-bem-values.txt
+tests/sauter-quad-common-edge/sauter-quad-common-edge-without-bem-values.txt
+tests/sauter-quad-regular/sauter-quad-regular-without-bem-values.txt
+tests/sauter-quad-same-panel/quadrature-i=0-j=0.txt
+tests/sauter-quad-same-panel/quadrature-i=0-j=2.txt
+tests/sauter-quad-same-panel/sauter-quad-same-panel-with-bem-values.txt
+tests/sauter-quad-same-panel/sauter-quad-same-panel-with-precalculation.txt
