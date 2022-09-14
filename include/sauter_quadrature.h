@@ -705,8 +705,7 @@ namespace IdeoBEM
                         bem_values
                           .kx_mapping_shape_grad_matrix_table_for_same_panel,
                         scratch.kx_mapping_support_points_permuted,
-                        scratch.kx_normals_same_panel(k3_index, q),
-                        true);
+                        scratch.kx_normals_same_panel(k3_index, q));
 
                     scratch.ky_jacobians_same_panel(k3_index, q) =
                       surface_jacobian_det_and_normal_vector(
@@ -715,8 +714,7 @@ namespace IdeoBEM
                         bem_values
                           .ky_mapping_shape_grad_matrix_table_for_same_panel,
                         scratch.ky_mapping_support_points_permuted,
-                        scratch.ky_normals_same_panel(k3_index, q),
-                        true);
+                        scratch.ky_normals_same_panel(k3_index, q));
 
                     scratch.kx_quad_points_same_panel(k3_index, q) =
                       transform_unit_to_permuted_real_cell(
@@ -754,8 +752,7 @@ namespace IdeoBEM
                         bem_values
                           .kx_mapping_shape_grad_matrix_table_for_common_edge,
                         scratch.kx_mapping_support_points_permuted,
-                        scratch.kx_normals_common_edge(k3_index, q),
-                        true);
+                        scratch.kx_normals_common_edge(k3_index, q));
 
                     scratch.ky_jacobians_common_edge(k3_index, q) =
                       surface_jacobian_det_and_normal_vector(
@@ -764,8 +761,7 @@ namespace IdeoBEM
                         bem_values
                           .ky_mapping_shape_grad_matrix_table_for_common_edge,
                         scratch.ky_mapping_support_points_permuted,
-                        scratch.ky_normals_common_edge(k3_index, q),
-                        true);
+                        scratch.ky_normals_common_edge(k3_index, q));
 
                     scratch.kx_quad_points_common_edge(k3_index, q) =
                       transform_unit_to_permuted_real_cell(
@@ -802,8 +798,7 @@ namespace IdeoBEM
                         bem_values
                           .kx_mapping_shape_grad_matrix_table_for_common_vertex,
                         scratch.kx_mapping_support_points_permuted,
-                        scratch.kx_normals_common_vertex(k3_index, q),
-                        true);
+                        scratch.kx_normals_common_vertex(k3_index, q));
 
                     scratch.ky_jacobians_common_vertex(k3_index, q) =
                       surface_jacobian_det_and_normal_vector(
@@ -812,8 +807,7 @@ namespace IdeoBEM
                         bem_values
                           .ky_mapping_shape_grad_matrix_table_for_common_vertex,
                         scratch.ky_mapping_support_points_permuted,
-                        scratch.ky_normals_common_vertex(k3_index, q),
-                        true);
+                        scratch.ky_normals_common_vertex(k3_index, q));
 
                     scratch.kx_quad_points_common_vertex(k3_index, q) =
                       transform_unit_to_permuted_real_cell(
@@ -849,8 +843,7 @@ namespace IdeoBEM
                     q,
                     bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
                     scratch.kx_mapping_support_points_permuted,
-                    scratch.kx_normals_regular(0, q),
-                    true);
+                    scratch.kx_normals_regular(0, q));
 
                 scratch.ky_jacobians_regular(0, q) =
                   surface_jacobian_det_and_normal_vector(
@@ -858,8 +851,7 @@ namespace IdeoBEM
                     q,
                     bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
                     scratch.ky_mapping_support_points_permuted,
-                    scratch.ky_normals_regular(0, q),
-                    true);
+                    scratch.ky_normals_regular(0, q));
 
                 scratch.kx_quad_points_regular(0, q) =
                   transform_unit_to_permuted_real_cell(

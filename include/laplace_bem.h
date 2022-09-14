@@ -123,6 +123,7 @@ namespace IdeoBEM
                unsigned int mapping_order_for_dirichlet_domain,
                unsigned int mapping_order_for_neumann_domain,
                ProblemType  problem_type,
+               bool         is_interior_problem,
                unsigned int thread_num);
 
     /**
@@ -145,6 +146,7 @@ namespace IdeoBEM
                unsigned int mapping_order_for_dirichlet_domain,
                unsigned int mapping_order_for_neumann_domain,
                ProblemType  problem_type,
+               bool         is_interior_problem,
                unsigned int n_min_for_ct,
                unsigned int n_min_for_bct,
                double       eta,
@@ -239,6 +241,11 @@ namespace IdeoBEM
      * Laplace problem type to be solved.
      */
     ProblemType problem_type;
+
+    /**
+     * Whether the problem is interior or exterior.
+     */
+    bool is_interior_problem;
 
     /**
      * Number of threads
@@ -513,8 +520,23 @@ namespace IdeoBEM
      */
     Vector<double> system_rhs;
 
+    /**
+     * Numerical solution for the Dirichlet domain.
+     */
     Vector<double> solution_for_dirichlet_domain;
+    /**
+     * Numerical solution for the Neumann domain.
+     */
     Vector<double> solution_for_neumann_domain;
+
+    /**
+     * Analytical solution for the Dirichlet domain.
+     */
+    Vector<double> analytical_solution_for_dirichlet_domain;
+    /**
+     * Analytical solution for the Neumann domain.
+     */
+    Vector<double> analytical_solution_for_neumann_domain;
   };
 
 
@@ -523,6 +545,7 @@ namespace IdeoBEM
     : fe_order_for_dirichlet_space(0)
     , fe_order_for_neumann_space(0)
     , problem_type(UndefinedProblem)
+    , is_interior_problem(true)
     , thread_num(0)
     , fe_for_dirichlet_space(0)
     , fe_for_neumann_space(0)
@@ -554,10 +577,12 @@ namespace IdeoBEM
     unsigned int mapping_order_for_dirichlet_domain,
     unsigned int mapping_order_for_neumann_domain,
     ProblemType  problem_type,
+    bool         is_interior_problem,
     unsigned int thread_num)
     : fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_order_for_neumann_space(fe_order_for_neumann_space)
     , problem_type(problem_type)
+    , is_interior_problem(is_interior_problem)
     , thread_num(thread_num)
     , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_for_neumann_space(fe_order_for_neumann_space)
@@ -591,6 +616,7 @@ namespace IdeoBEM
     unsigned int mapping_order_for_dirichlet_domain,
     unsigned int mapping_order_for_neumann_domain,
     ProblemType  problem_type,
+    bool         is_interior_problem,
     unsigned int n_min_for_ct,
     unsigned int n_min_for_bct,
     double       eta,
@@ -600,6 +626,7 @@ namespace IdeoBEM
     : fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_order_for_neumann_space(fe_order_for_neumann_space)
     , problem_type(problem_type)
+    , is_interior_problem(is_interior_problem)
     , thread_num(thread_num)
     , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_for_neumann_space(fe_order_for_neumann_space)
@@ -797,6 +824,15 @@ namespace IdeoBEM
             solution_for_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
 
+            // DEBUG: export analytical solution for comparison.
+            neumann_bc.reinit(n_dofs_for_neumann_space_on_dirichlet_domain);
+            VectorTools::interpolate(
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              *neumann_bc_functor_ptr,
+              neumann_bc);
+            analytical_solution_for_dirichlet_domain.reinit(
+              n_dofs_for_neumann_space_on_dirichlet_domain);
+
             break;
           }
         case NeumannBCProblem:
@@ -956,12 +992,32 @@ namespace IdeoBEM
              * number of quadrature points in 1D.}
              */
             std::cerr << "=== Assemble scaled mass matrix ===" << std::endl;
-            assemble_fem_scaled_mass_matrix(
-              dof_handler_for_neumann_space_on_dirichlet_domain,
-              dof_handler_for_dirichlet_space_on_dirichlet_domain,
-              0.5,
-              QGauss<2>(fe_for_dirichlet_space.degree + 1),
-              K2_matrix_with_mass_matrix);
+
+            /**
+             * For the interior Laplace problem, \f$\frac{1}{2}I\f$ is
+             * assembled, while for the exterior Laplace problem,
+             * \f$-\frac{1}{2}I\f$ is assembled. It is also assumed that the
+             * potential reference \f$u_0\f$ is zero when \f$\abs{x} \rightarrow
+             * \infty\f$.
+             */
+            if (is_interior_problem)
+              {
+                assemble_fem_scaled_mass_matrix(
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  0.5,
+                  QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                  K2_matrix_with_mass_matrix);
+              }
+            else
+              {
+                assemble_fem_scaled_mass_matrix(
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  -0.5,
+                  QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                  K2_matrix_with_mass_matrix);
+              }
 
             // DEBUG
             print_matrix_to_mat(
@@ -1292,6 +1348,14 @@ namespace IdeoBEM
       {
         case DirichletBCProblem:
           {
+            /**
+             * Interpolate the analytical solution.
+             */
+            VectorTools::interpolate(
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              *neumann_bc_functor_ptr,
+              analytical_solution_for_dirichlet_domain);
+
             vtk_output.open("solution_for_dirichlet_bc.vtk",
                             std::ofstream::out);
 
@@ -1299,6 +1363,13 @@ namespace IdeoBEM
               dof_handler_for_neumann_space_on_dirichlet_domain,
               solution_for_dirichlet_domain,
               "solution");
+
+            // DEBUG: export analytical solution for comparison.
+            data_out.add_data_vector(
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              analytical_solution_for_dirichlet_domain,
+              "analytical_solution");
+
             data_out.add_data_vector(
               dof_handler_for_dirichlet_space_on_dirichlet_domain,
               dirichlet_bc,

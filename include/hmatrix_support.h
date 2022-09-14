@@ -21,12 +21,14 @@ using namespace dealii;
 namespace HMatrixSupport
 {
   /**
-   * Most functions one can apply to an \hmatrix (e.g., by calling the member
-   * functions of this class) change its content in some ways. For example, they
-   * may invert the matrix, or may replace it by a matrix whose columns
-   * represent the eigenvectors of the original content of the matrix. The
-   * elements of this enumeration are therefore used to track what is currently
-   * being stored by this object.
+   * Most functions that one can apply to an \hmatrix (e.g., by calling the
+   * member functions of this class) change the content of the \hmatrix in some
+   * ways. For example, they may invert the matrix, or may replace it by a
+   * matrix whose columns represent the eigenvectors of the original content of
+   * the matrix. The elements of this enumeration are therefore used to track
+   * what is currently being stored by this object.
+   *
+   * \comment{This above documentation is extracted from deal.ii.}
    */
   enum State
   {
@@ -85,23 +87,24 @@ namespace HMatrixSupport
    *
    * <ul>
    * <li>@p general: the \hmatrix is general and all the \hmatnodes in the
-   * \hmatrix hierarchy are created and stored.
+   * \hmatrix hierarchy are created and allocated with memory.
    * <li>@p symmetric: the \hmatrix is symmetric and only the diagonal blocks
    * in the near field and matrix blocks in the lower triangular part are
-   * created and stored. For the matrix blocks in the upper triangular part,
-   * basic matrix information, such as dimension, is stored but the memory is
-   * not allocated. The matrix blocks in the upper triangular part is assumed to
-   * be symmetric to those in the lower triangular part.
+   * created and allocated with memory. For the matrix blocks in the upper
+   * triangular part, basic matrix information, such as dimension, is still
+   * maintained but the memory for data is not allocated. The matrix blocks in
+   * the upper triangular part is assumed to be symmetric to those related
+   * blocks in the lower triangular part.
    * <li>@p upper_triangular: only the matrix blocks in the upper triangular
-   * part and the diagonal blocks in the near field are created and stored.The
-   * matrix blocks in the lower triangular part are zero valued. Their basic
-   * matrix information, such as dimension, is stored but the memory is not
-   * allocated.
+   * part and the diagonal blocks in the near field are created and allocated
+   * with memory.The matrix blocks in the lower triangular part are zero valued.
+   * Their basic matrix information, such as dimension, is still maintained but
+   * the memory for the data is not allocated.
    * <li>@p lower_triangular: only the matrix blocks in the lower triangular
-   * part and the diagonal blocks in the near field are created and stored.The
-   * matrix blocks in the upper triangular part are zero valued. Their basic
-   * matrix information, such as dimension, is stored but the memory is not
-   * allocated.
+   * part and the diagonal blocks in the near field are created and allocated
+   * with memory.The matrix blocks in the upper triangular part are zero valued.
+   * Their basic matrix information, such as dimension, is still stored but the
+   * memory for the data is not allocated.
    * </ul>
    */
   enum Property

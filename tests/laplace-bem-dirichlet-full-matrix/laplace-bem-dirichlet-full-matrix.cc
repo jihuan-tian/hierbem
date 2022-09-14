@@ -54,8 +54,8 @@ private:
  * Function object for the Neumann boundary condition data, which is also
  * the solution of the Dirichlet problem. The analytical expression is
  * \f[
- * \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{\langle x-x_c,x-x_0
- * \rangle}{4\pi\norm{x-x_0}^3\rho}
+ * \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{\langle x-x_c,x_0-x
+ * \rangle}{4\pi\norm{x_0-x}^3\rho}
  * \f]
  */
 class NeumannBC : public Function<3>
@@ -82,13 +82,16 @@ public:
   {
     (void)component;
 
-    Tensor<1, 3> diff_vector = p - x0;
+    Tensor<1, 3> diff_vector = x0 - p;
 
     return ((p - model_sphere_center) * diff_vector) / 4.0 / numbers::PI /
            std::pow(diff_vector.norm(), 3) / model_sphere_radius;
   }
 
 private:
+  /**
+   * Location of the Dirac point source \f$\delta(x-x_0)\f$.
+   */
   Point<3> x0;
   Point<3> model_sphere_center;
   double   model_sphere_radius;
@@ -101,10 +104,24 @@ main()
   const unsigned int spacedim = 3;
 
   LaplaceBEM<dim, spacedim> bem(
-    1, 0, 1, 1, LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem, 4);
+    1,
+    0,
+    1,
+    1,
+    LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
+    true,
+    MultithreadInfo::n_cores());
   bem.read_volume_mesh("sphere-from-gmsh-fine_hex.msh");
-  DirichletBC dirichlet_bc;
+
+  const Point<3> source_loc(1, 1, 1);
+  const Point<3> center(0, 0, 0);
+  const double   radius(1);
+
+  DirichletBC dirichlet_bc(source_loc);
+  NeumannBC   neumann_bc(source_loc, center, radius);
+
   bem.assign_dirichlet_bc(dirichlet_bc);
+  bem.assign_neumann_bc(neumann_bc);
 
   bem.run();
 

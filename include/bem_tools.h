@@ -2947,6 +2947,8 @@ namespace IdeoBEM
      * @param normal_vector [out] The calculated normal vector. If it belongs to
      * \f$K_y\f$ and the cell neighboring type is common edge, it should be
      * negated in the subsequent calculation.
+     * @param is_normal_vector_negated Whether the direction of the computed
+     * normal vector should be negated.
      * @return Surface Jacobian determinant or surface metric tensor
      */
     template <int dim, int spacedim>
@@ -3033,6 +3035,8 @@ namespace IdeoBEM
      * @param support_points_in_real_cell A list of support points in the real
      * cell in the lexicographic order.
      * @param normal_vector
+     * @param is_normal_vector_negated Whether the direction of the computed
+     * normal vector should be negated.
      * @return Surface Jacobian determinant or surface metric tensor
      */
     template <int spacedim>
