@@ -217,7 +217,9 @@ namespace LaplaceKernel
   }
 
 
-  // Class for the hyper singular kernel.
+  /**
+   * Kernel function for the hyper singular boundary integral operator.
+   */
   template <int dim, typename RangeNumberType = double>
   class HyperSingularKernel : public KernelFunction<dim, RangeNumberType>
   {
@@ -263,7 +265,7 @@ namespace LaplaceKernel
             double r4 = r2 * r2;
 
             return 0.5 / numbers::PI *
-                   (nx * ny / r2 - 2.0 * (nx * (y - x)) * (ny * (y - x)) / r4);
+                   (-nx * ny / r2 + 2.0 * (nx * (x - y)) * (ny * (x - y)) / r4);
           }
 
         case 3:
@@ -272,7 +274,7 @@ namespace LaplaceKernel
             double r5 = r2 * r3;
 
             return 0.25 / numbers::PI *
-                   (nx * ny / r3 - 3.0 * (nx * (x - y)) * (ny * (x - y)) / r5);
+                   (-nx * ny / r3 + 3.0 * (nx * (x - y)) * (ny * (x - y)) / r5);
           }
 
         default:
