@@ -279,7 +279,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=8
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$dofs_per_cell*spacedim\f$.
+     * \f$dofs_per_cell*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_same_panel;
@@ -289,7 +289,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=8
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$dofs_per_cell*spacedim\f$.
+     * \f$dofs_per_cell*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_same_panel;
@@ -299,7 +299,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$dofs_per_cell*spacedim\f$.
+     * \f$dofs_per_cell*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_edge;
@@ -309,7 +309,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$dofs_per_cell*spacedim\f$.
+     * \f$dofs_per_cell*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_edge;
@@ -319,7 +319,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$dofs_per_cell*spacedim\f$.
+     * \f$dofs_per_cell*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_vertex;
@@ -329,7 +329,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$dofs_per_cell*spacedim\f$.
+     * \f$dofs_per_cell*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_vertex;
@@ -339,7 +339,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=1
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$dofs_per_cell*spacedim\f$.
+     * \f$dofs_per_cell*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       kx_shape_grad_matrix_table_for_regular;
@@ -349,7 +349,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=1
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$dofs_per_cell*spacedim\f$.
+     * \f$dofs_per_cell*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       ky_shape_grad_matrix_table_for_regular;
@@ -360,7 +360,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=8
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_same_panel;
@@ -370,7 +370,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=8
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_same_panel;
@@ -380,7 +380,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_common_edge;
@@ -390,7 +390,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=6
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_common_edge;
@@ -400,7 +400,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_common_vertex;
@@ -410,7 +410,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=4
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_common_vertex;
@@ -420,7 +420,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=1
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_regular;
@@ -430,7 +430,7 @@ namespace IdeoBEM
      * 1. \f$k_3\f$ term index: size=1
      * 2. Quadrature point index: size=number of quadrature points
      * N.B. Each data item in the table is itself a matrix with the dimension
-     * \f$MappingQGeneric::InternalData.n_shape_functions*spacedim\f$.
+     * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
     Table<2, FullMatrix<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_regular;
@@ -1495,7 +1495,7 @@ namespace IdeoBEM
    * used for SMP parallel computation of the scaled FEM mass matrix.
    */
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
-  struct CellWisePerTaskData
+  struct CellWiseCopyDataForMassMatrix
   {
     FullMatrix<RangeNumberType> local_matrix;
     // N.B. Memory should be preallocated for this vector before calling
@@ -1509,8 +1509,9 @@ namespace IdeoBEM
      * @param fe_for_test_space
      * @param fe_for_trial_space
      */
-    CellWisePerTaskData(const FiniteElement<dim, spacedim> &fe_for_test_space,
-                        const FiniteElement<dim, spacedim> &fe_for_trial_space)
+    CellWiseCopyDataForMassMatrix(
+      const FiniteElement<dim, spacedim> &fe_for_test_space,
+      const FiniteElement<dim, spacedim> &fe_for_trial_space)
       : local_matrix(fe_for_test_space.dofs_per_cell,
                      fe_for_trial_space.dofs_per_cell)
       , local_dof_indices_for_test_space(fe_for_test_space.dofs_per_cell)
@@ -1520,15 +1521,63 @@ namespace IdeoBEM
     /**
      * Copy constructor
      *
-     * @param task_data
+     * @param copy_data
      */
-    CellWisePerTaskData(
-      const CellWisePerTaskData<dim, spacedim, RangeNumberType> &task_data)
-      : local_matrix(task_data.local_matrix)
+    CellWiseCopyDataForMassMatrix(
+      const CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType>
+        &copy_data)
+      : local_matrix(copy_data.local_matrix)
       , local_dof_indices_for_test_space(
-          task_data.local_dof_indices_for_test_space)
+          copy_data.local_dof_indices_for_test_space)
       , local_dof_indices_for_trial_space(
-          task_data.local_dof_indices_for_trial_space)
+          copy_data.local_dof_indices_for_trial_space)
+    {}
+  };
+
+
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
+  struct CellWiseCopyDataForMassMatrixVmult
+  {
+    FullMatrix<RangeNumberType> local_matrix;
+    Vector<RangeNumberType>     local_u, local_v;
+
+    // N.B. Memory should be preallocated for this vector before calling
+    // <code>get_dof_indices</code>.
+    std::vector<types::global_dof_index> local_dof_indices_for_test_space;
+    std::vector<types::global_dof_index> local_dof_indices_for_trial_space;
+
+    /**
+     * Constructor. Allocate memory for internal members.
+     *
+     * @param fe_for_test_space
+     * @param fe_for_trial_space
+     */
+    CellWiseCopyDataForMassMatrixVmult(
+      const FiniteElement<dim, spacedim> &fe_for_test_space,
+      const FiniteElement<dim, spacedim> &fe_for_trial_space)
+      : local_matrix(fe_for_test_space.dofs_per_cell,
+                     fe_for_trial_space.dofs_per_cell)
+      , local_u(fe_for_test_space.dofs_per_cell)
+      , local_v(fe_for_trial_space.dofs_per_cell)
+      , local_dof_indices_for_test_space(fe_for_test_space.dofs_per_cell)
+      , local_dof_indices_for_trial_space(fe_for_trial_space.dofs_per_cell)
+    {}
+
+    /**
+     * Copy constructor
+     *
+     * @param copy_data
+     */
+    CellWiseCopyDataForMassMatrixVmult(
+      const CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType>
+        &copy_data)
+      : local_matrix(copy_data.local_matrix)
+      , local_u(copy_data.local_u)
+      , local_v(copy_data.local_v)
+      , local_dof_indices_for_test_space(
+          copy_data.local_dof_indices_for_test_space)
+      , local_dof_indices_for_trial_space(
+          copy_data.local_dof_indices_for_trial_space)
     {}
   };
 
@@ -1539,7 +1588,7 @@ namespace IdeoBEM
    * u)\f$.
    */
   template <int dim, int spacedim = dim>
-  struct CellWiseScratchData
+  struct CellWiseScratchDataForMassMatrix
   {
     FEValues<dim, spacedim> fe_values_for_test_space;
     FEValues<dim, spacedim> fe_values_for_trial_space;
@@ -1552,10 +1601,11 @@ namespace IdeoBEM
      * @param quadrature
      * @param update_flags
      */
-    CellWiseScratchData(const FiniteElement<dim, spacedim> &fe_for_test_space,
-                        const FiniteElement<dim, spacedim> &fe_for_trial_space,
-                        const Quadrature<dim> &             quadrature,
-                        const UpdateFlags                   update_flags)
+    CellWiseScratchDataForMassMatrix(
+      const FiniteElement<dim, spacedim> &fe_for_test_space,
+      const FiniteElement<dim, spacedim> &fe_for_trial_space,
+      const Quadrature<dim> &             quadrature,
+      const UpdateFlags                   update_flags)
       : fe_values_for_test_space(fe_for_test_space, quadrature, update_flags)
       , fe_values_for_trial_space(fe_for_trial_space, quadrature, update_flags)
     {}
@@ -1568,7 +1618,8 @@ namespace IdeoBEM
      *
      * @param scratch_data
      */
-    CellWiseScratchData(const CellWiseScratchData<dim, spacedim> &scratch_data)
+    CellWiseScratchDataForMassMatrix(
+      const CellWiseScratchDataForMassMatrix<dim, spacedim> &scratch_data)
       : fe_values_for_test_space(
           scratch_data.fe_values_for_test_space.get_fe(),
           scratch_data.fe_values_for_test_space.get_quadrature(),
@@ -1763,128 +1814,170 @@ namespace IdeoBEM
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the same panel case.
      */
-    Table<dim, RangeNumberType> kx_jacobians_same_panel;
+    Table<2, RangeNumberType> kx_jacobians_same_panel;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common edge case.
      */
-    Table<dim, RangeNumberType> kx_jacobians_common_edge;
+    Table<2, RangeNumberType> kx_jacobians_common_edge;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common vertex case.
      */
-    Table<dim, RangeNumberType> kx_jacobians_common_vertex;
+    Table<2, RangeNumberType> kx_jacobians_common_vertex;
     /**
      * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the regular case.
      */
-    Table<dim, RangeNumberType> kx_jacobians_regular;
+    Table<2, RangeNumberType> kx_jacobians_regular;
 
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the same panel case.
      */
-    Table<dim, Tensor<1, spacedim, RangeNumberType>> kx_normals_same_panel;
+    Table<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_same_panel;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the common edge case.
      */
-    Table<dim, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_edge;
+    Table<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_edge;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the common vertex case.
      */
-    Table<dim, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_vertex;
+    Table<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_common_vertex;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_x\f$ for
      * the regular case.
      */
-    Table<dim, Tensor<1, spacedim, RangeNumberType>> kx_normals_regular;
+    Table<2, Tensor<1, spacedim, RangeNumberType>> kx_normals_regular;
+
+    /**
+     * Covariant transformation matrix for each \f$k_3\f$ term and each
+     * quadrature point in the real cell \f$K_x\f$ for the same panel case.
+     */
+    Table<2, FullMatrix<RangeNumberType>> kx_covariants_same_panel;
+    /**
+     * Covariant transformation matrix for each \f$k_3\f$ term and each
+     * quadrature point in the real cell \f$K_x\f$ for the common edge case.
+     */
+    Table<2, FullMatrix<RangeNumberType>> kx_covariants_common_edge;
+    /**
+     * Covariant transformation matrix for each \f$k_3\f$ term and each
+     * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
+     */
+    Table<2, FullMatrix<RangeNumberType>> kx_covariants_common_vertex;
+    /**
+     * Covariant transformation matrix for each \f$k_3\f$ term and each
+     * quadrature point in the real cell \f$K_x\f$ for the regular case.
+     */
+    Table<2, FullMatrix<RangeNumberType>> kx_covariants_regular;
 
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the same panel case.
      */
-    Table<dim, Point<spacedim, RangeNumberType>> kx_quad_points_same_panel;
+    Table<2, Point<spacedim, RangeNumberType>> kx_quad_points_same_panel;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common edge case.
      */
-    Table<dim, Point<spacedim, RangeNumberType>> kx_quad_points_common_edge;
+    Table<2, Point<spacedim, RangeNumberType>> kx_quad_points_common_edge;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common vertex case.
      */
-    Table<dim, Point<spacedim, RangeNumberType>> kx_quad_points_common_vertex;
+    Table<2, Point<spacedim, RangeNumberType>> kx_quad_points_common_vertex;
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
      * quadrature point for the regular case.
      */
-    Table<dim, Point<spacedim, RangeNumberType>> kx_quad_points_regular;
+    Table<2, Point<spacedim, RangeNumberType>> kx_quad_points_regular;
 
 
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the same panel case.
      */
-    Table<dim, RangeNumberType> ky_jacobians_same_panel;
+    Table<2, RangeNumberType> ky_jacobians_same_panel;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common edge case.
      */
-    Table<dim, RangeNumberType> ky_jacobians_common_edge;
+    Table<2, RangeNumberType> ky_jacobians_common_edge;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the common vertex case.
      */
-    Table<dim, RangeNumberType> ky_jacobians_common_vertex;
+    Table<2, RangeNumberType> ky_jacobians_common_vertex;
     /**
      * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
      * \f$k_3\f$ term and at each quadrature point for the regular case.
      */
-    Table<dim, RangeNumberType> ky_jacobians_regular;
+    Table<2, RangeNumberType> ky_jacobians_regular;
 
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the same panel case.
      */
-    Table<dim, Tensor<1, spacedim, RangeNumberType>> ky_normals_same_panel;
+    Table<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_same_panel;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the common edge case.
      */
-    Table<dim, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_edge;
+    Table<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_edge;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the common vertex case.
      */
-    Table<dim, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_vertex;
+    Table<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_common_vertex;
     /**
      * Normal vector at each quadrature point in the real cell \f$K_y\f$ for
      * the regular case.
      */
-    Table<dim, Tensor<1, spacedim, RangeNumberType>> ky_normals_regular;
+    Table<2, Tensor<1, spacedim, RangeNumberType>> ky_normals_regular;
+
+    /**
+     * Covariant transformation matrix for each \f$k_3\f$ term and each
+     * quadrature point in the real cell \f$K_x\f$ for the same panel case.
+     */
+    Table<2, FullMatrix<RangeNumberType>> ky_covariants_same_panel;
+    /**
+     * Covariant transformation matrix for each \f$k_3\f$ term and each
+     * quadrature point in the real cell \f$K_x\f$ for the common edge case.
+     */
+    Table<2, FullMatrix<RangeNumberType>> ky_covariants_common_edge;
+    /**
+     * Covariant transformation matrix for each \f$k_3\f$ term and each
+     * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
+     */
+    Table<2, FullMatrix<RangeNumberType>> ky_covariants_common_vertex;
+    /**
+     * Covariant transformation matrix for each \f$k_3\f$ term and each
+     * quadrature point in the real cell \f$K_x\f$ for the regular case.
+     */
+    Table<2, FullMatrix<RangeNumberType>> ky_covariants_regular;
 
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the same panel case.
      */
-    Table<dim, Point<spacedim, RangeNumberType>> ky_quad_points_same_panel;
+    Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_same_panel;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common edge case.
      */
-    Table<dim, Point<spacedim, RangeNumberType>> ky_quad_points_common_edge;
+    Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_common_edge;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the common vertex case.
      */
-    Table<dim, Point<spacedim, RangeNumberType>> ky_quad_points_common_vertex;
+    Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_common_vertex;
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
      * quadrature point for the regular case.
      */
-    Table<dim, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
+    Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
 
     /**
      * Constructor
@@ -1935,6 +2028,13 @@ namespace IdeoBEM
       , kx_normals_common_vertex(4,
                                  bem_values.quad_rule_for_common_vertex.size())
       , kx_normals_regular(1, bem_values.quad_rule_for_regular.size())
+      , kx_covariants_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , kx_covariants_common_edge(6,
+                                  bem_values.quad_rule_for_common_edge.size())
+      , kx_covariants_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , kx_covariants_regular(1, bem_values.quad_rule_for_regular.size())
       , kx_quad_points_same_panel(8, bem_values.quad_rule_for_same_panel.size())
       , kx_quad_points_common_edge(6,
                                    bem_values.quad_rule_for_common_edge.size())
@@ -1953,6 +2053,13 @@ namespace IdeoBEM
       , ky_normals_common_vertex(4,
                                  bem_values.quad_rule_for_common_vertex.size())
       , ky_normals_regular(1, bem_values.quad_rule_for_regular.size())
+      , ky_covariants_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , ky_covariants_common_edge(6,
+                                  bem_values.quad_rule_for_common_edge.size())
+      , ky_covariants_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , ky_covariants_regular(1, bem_values.quad_rule_for_regular.size())
       , ky_quad_points_same_panel(8, bem_values.quad_rule_for_same_panel.size())
       , ky_quad_points_common_edge(6,
                                    bem_values.quad_rule_for_common_edge.size())
@@ -2038,6 +2145,10 @@ namespace IdeoBEM
       , kx_normals_common_edge(scratch.kx_normals_common_edge)
       , kx_normals_common_vertex(scratch.kx_normals_common_vertex)
       , kx_normals_regular(scratch.kx_normals_regular)
+      , kx_covariants_same_panel(scratch.kx_covariants_same_panel)
+      , kx_covariants_common_edge(scratch.kx_covariants_common_edge)
+      , kx_covariants_common_vertex(scratch.kx_covariants_common_vertex)
+      , kx_covariants_regular(scratch.kx_covariants_regular)
       , kx_quad_points_same_panel(scratch.kx_quad_points_same_panel)
       , kx_quad_points_common_edge(scratch.kx_quad_points_common_edge)
       , kx_quad_points_common_vertex(scratch.kx_quad_points_common_vertex)
@@ -2050,6 +2161,10 @@ namespace IdeoBEM
       , ky_normals_common_edge(scratch.ky_normals_common_edge)
       , ky_normals_common_vertex(scratch.ky_normals_common_vertex)
       , ky_normals_regular(scratch.ky_normals_regular)
+      , ky_covariants_same_panel(scratch.ky_covariants_same_panel)
+      , ky_covariants_common_edge(scratch.ky_covariants_common_edge)
+      , ky_covariants_common_vertex(scratch.ky_covariants_common_vertex)
+      , ky_covariants_regular(scratch.ky_covariants_regular)
       , ky_quad_points_same_panel(scratch.ky_quad_points_same_panel)
       , ky_quad_points_common_edge(scratch.ky_quad_points_common_edge)
       , ky_quad_points_common_vertex(scratch.ky_quad_points_common_vertex)

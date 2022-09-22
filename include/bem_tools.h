@@ -9,6 +9,7 @@
 #ifndef INCLUDE_BEM_TOOLS_H_
 #define INCLUDE_BEM_TOOLS_H_
 
+#include <deal.II/base/derivative_form.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/table.h>
@@ -591,6 +592,47 @@ namespace IdeoBEM
         }
 
       return two_component_coords;
+    }
+
+
+    /**
+     * Collect coordinate components from the list of points in
+     * \f$\mathbb{R}^d\f$. The obtained coordinate matrix has this format:
+     * \f[
+     * \begin{pmatrix}
+     * x_1(1) & \cdots & x_1(k) \\
+     * \vdots & \vdots & \vdots \\
+     * x_d(1) & \cdots & x_d(k)
+     * \end{pmatrix}
+     * \f]
+     * where \f$k\f$ is the number of points and \f$x(i)\f$ is the i-th point in
+     * the list.
+     *
+     * \mynote{This function will be used for calculating the Jacobian matrix.
+     * Let \f$DN\f$ be the matrix of first order derivatives of shape functions
+     * and \f$P\f$ be the resulted coordinate matrix. Then
+     * \[
+     * J = P \cdot DN
+     * \]}
+     *
+     * @param points
+     * @return
+     */
+    template <int spacedim>
+    FullMatrix<double>
+    collect_components_from_points(const std::vector<Point<spacedim>> &points)
+    {
+      FullMatrix<double> point_coords(spacedim, points.size());
+
+      for (unsigned int i = 0; i < points.size(); i++)
+        {
+          for (unsigned int j = 0; j < spacedim; j++)
+            {
+              point_coords(j, i) = points[i](j);
+            }
+        }
+
+      return point_coords;
     }
 
 
@@ -3099,6 +3141,55 @@ namespace IdeoBEM
         }
 
       return surface_jacobian_det;
+    }
+
+
+    /**
+     * Calculate the covariant transformation matrix for mapping the gradient in
+     * local coordinate chart to global coordinates.
+     *
+     * @param k3_index
+     * @param quad_no
+     * @param shape_grad_matrix_table
+     * @param support_points_in_real_cell
+     * @return
+     */
+    template <int spacedim, typename Number>
+    FullMatrix<Number>
+    surface_covariant_transformation(
+      const unsigned int                          k3_index,
+      const unsigned int                          quad_no,
+      const Table<2, FullMatrix<Number>> &        shape_grad_matrix_table,
+      const std::vector<Point<spacedim, Number>> &support_points_in_real_cell)
+    {
+      // Currently, only spacedim=3 is supported.
+      Assert(spacedim == 3, ExcInternalError());
+
+      /**
+       * Extract the shape function's gradient matrix under the specified
+       * \f$k_3\f$ index and quadrature point, which will then be used for
+       * calculating the Jacobian matrix.
+       */
+      const FullMatrix<Number> &shape_grad_matrix_at_quad_point =
+        shape_grad_matrix_table(k3_index, quad_no);
+
+      FullMatrix<Number> support_point_components =
+        collect_components_from_points(support_points_in_real_cell);
+
+      const unsigned int dim = shape_grad_matrix_at_quad_point.n();
+      FullMatrix<Number> jacobian_matrix(spacedim, dim);
+      support_point_components.mmult(jacobian_matrix,
+                                     shape_grad_matrix_at_quad_point);
+
+      FullMatrix<Number> G(dim, dim);
+      FullMatrix<Number> G_inv(dim, dim);
+      jacobian_matrix.Tmmult(G, jacobian_matrix);
+      G_inv.invert(G);
+
+      FullMatrix<Number> covariant(spacedim, dim);
+      jacobian_matrix.mmult(covariant, G_inv);
+
+      return covariant;
     }
 
 

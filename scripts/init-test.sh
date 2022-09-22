@@ -2,10 +2,11 @@
 
 # In the folder of the created test case, this script can be called as below
 #
-# $ ../../scripts/init-test.sh $(basename $(pwd))
+# $ ../../scripts/init-test.sh $(basename $(pwd)) build_type
 #
 # This will create (touch) the source code file and output file with their base
 # names being the folder name of the test case. 
+# build_type can be either Debug or Release.
 
 # Enter the test folder to execute this script.
 
@@ -61,5 +62,5 @@ git add CMakeLists.txt
 cd ../../
 # Here we add the command line argument -Wno-dev to suppress the
 # developer warnings given by CMake.
-cmake -Wno-dev -DCMAKE_BUILD_TYPE=Debug -DDEAL_II_DIR=/home/jihuan/Projects/deal.ii/program/dealii-9.1.1 .
+cmake -Wno-dev -DCMAKE_BUILD_TYPE=$2 -DDEAL_II_DIR=/home/jihuan/Projects/deal.ii/program/dealii-9.1.1 .
 cd "tests/$test_folder_name"

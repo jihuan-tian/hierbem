@@ -1,6 +1,7 @@
 /**
  * \file laplace-bem-dirichlet-full-matrix.cc
- * \brief Verify solving the Laplace problem using full matrix based BEM.
+ * \brief Verify solving the Laplace problem with Dirichlet boundary condition
+ * using full matrix based BEM.
  *
  * \ingroup testers
  * \author Jihuan Tian

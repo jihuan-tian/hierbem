@@ -2195,7 +2195,7 @@ namespace IdeoBEM
     std::vector<HMatrix<spacedim, RangeNumberType> *> leaf_mat_for_kernels,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    CellWiseScratchData<dim, spacedim> &                     fem_scratch,
+    CellWiseScratchDataForMassMatrix<dim, spacedim> &                     fem_scratch,
     const std::vector<RangeNumberType> &             mass_matrix_factors,
     const ACAConfig &                                aca_config,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
@@ -2691,7 +2691,7 @@ namespace IdeoBEM
     /**
      * Define @p CellWiseScratchData which is local to the current working thread.
      */
-    CellWiseScratchData<dim, spacedim> fem_scratch_data(kx_dof_handler.get_fe(),
+    CellWiseScratchDataForMassMatrix<dim, spacedim> fem_scratch_data(kx_dof_handler.get_fe(),
                                                         fem_quadrature_formula,
                                                         update_values |
                                                           update_JxW_values);

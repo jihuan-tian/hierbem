@@ -35,6 +35,7 @@
 
 #include "bem_tools.h"
 #include "bem_values.h"
+#include "generic_functors.h"
 
 namespace IdeoBEM
 {
@@ -47,6 +48,7 @@ namespace IdeoBEM
     DoubleLayer,
     AdjointDoubleLayer,
     HyperSingular,
+    HyperSingularRegular,
     NoneType
   };
 
@@ -476,16 +478,41 @@ namespace IdeoBEM
   {
     Assert(dim == 2 && spacedim == 3, ExcNotImplemented());
 
-    const Table<3, RangeNumberType> *kx_shape_value_table;
-    const Table<3, RangeNumberType> *ky_shape_value_table;
+    /**
+     * N.B. The shape function value and their gradient value data tables are
+     * related to the finite element objects. Because the values in these tables
+     * are directly evaluated in the unit cell, which do not depend on the real
+     * cells, i.e. when coming to a new cell, these values need not be updated,
+     * hence they are members of @p BEMValues instead of @p ScratchData.
+     */
+    const Table<3, RangeNumberType> *            kx_shape_value_table = nullptr;
+    const Table<3, RangeNumberType> *            ky_shape_value_table = nullptr;
+    const Table<2, FullMatrix<RangeNumberType>> *kx_shape_grad_matrix_table =
+      nullptr;
+    const Table<2, FullMatrix<RangeNumberType>> *ky_shape_grad_matrix_table =
+      nullptr;
 
-    Point<spacedim>     x, y;
-    RangeNumberType     Jx = 0;
-    RangeNumberType     Jy = 0;
-    Tensor<1, spacedim> nx, ny;
+    /**
+     * N.B. The covariant transformation matrix data tables are related to the
+     * mapping objects instead of the finite element objects. This is natural to
+     * understand, the covariant transformation is caused by the coordinate
+     * mapping from the unit cell to the real cell.
+     *
+     * Because the mapping is dependent on real cells, these data should be
+     * updated when coming to a new cell. Hence, they are members of
+     * @p ScratchData instead of @p BEMValues.
+     */
+    const Table<2, FullMatrix<RangeNumberType>> *kx_covariants_table = nullptr;
+    const Table<2, FullMatrix<RangeNumberType>> *ky_covariants_table = nullptr;
 
-    // Select shape function value table according to the cell neighboring
-    // type.
+    Point<spacedim>                      x, y;
+    RangeNumberType                      Jx = 0;
+    RangeNumberType                      Jy = 0;
+    Tensor<1, spacedim, RangeNumberType> nx, ny;
+
+    /**
+     * Select data tables according to the cell neighboring type.
+     */
     switch (cell_neighboring_type)
       {
         case SamePanel:
@@ -493,6 +520,21 @@ namespace IdeoBEM
             &(bem_values->kx_shape_value_table_for_same_panel);
           ky_shape_value_table =
             &(bem_values->ky_shape_value_table_for_same_panel);
+
+          /**
+           * When the kernel type is regularized hyper singular, extract
+           * covariant transformation matrices from @p ScratchData and
+           * gradient of shape functions from @p BEMValues.
+           */
+          if (kernel_function.kernel_type == HyperSingularRegular)
+            {
+              kx_shape_grad_matrix_table =
+                &(bem_values->kx_shape_grad_matrix_table_for_same_panel);
+              ky_shape_grad_matrix_table =
+                &(bem_values->ky_shape_grad_matrix_table_for_same_panel);
+              kx_covariants_table = &(scratch->kx_covariants_same_panel);
+              ky_covariants_table = &(scratch->ky_covariants_same_panel);
+            }
 
           x  = scratch->kx_quad_points_same_panel(k3_index, quad_no);
           y  = scratch->ky_quad_points_same_panel(k3_index, quad_no);
@@ -508,6 +550,21 @@ namespace IdeoBEM
           ky_shape_value_table =
             &(bem_values->ky_shape_value_table_for_common_edge);
 
+          /**
+           * When the kernel type is regularized hyper singular, extract
+           * covariant transformation matrices from @p ScratchData and
+           * gradient of shape functions from @p BEMValues.
+           */
+          if (kernel_function.kernel_type == HyperSingularRegular)
+            {
+              kx_shape_grad_matrix_table =
+                &(bem_values->kx_shape_grad_matrix_table_for_common_edge);
+              ky_shape_grad_matrix_table =
+                &(bem_values->ky_shape_grad_matrix_table_for_common_edge);
+              kx_covariants_table = &(scratch->kx_covariants_common_edge);
+              ky_covariants_table = &(scratch->ky_covariants_common_edge);
+            }
+
           x  = scratch->kx_quad_points_common_edge(k3_index, quad_no);
           y  = scratch->ky_quad_points_common_edge(k3_index, quad_no);
           Jx = scratch->kx_jacobians_common_edge(k3_index, quad_no);
@@ -521,6 +578,21 @@ namespace IdeoBEM
             &(bem_values->kx_shape_value_table_for_common_vertex);
           ky_shape_value_table =
             &(bem_values->ky_shape_value_table_for_common_vertex);
+
+          /**
+           * When the kernel type is regularized hyper singular, extract
+           * covariant transformation matrices from @p ScratchData and
+           * gradient of shape functions from @p BEMValues.
+           */
+          if (kernel_function.kernel_type == HyperSingularRegular)
+            {
+              kx_shape_grad_matrix_table =
+                &(bem_values->kx_shape_grad_matrix_table_for_common_vertex);
+              ky_shape_grad_matrix_table =
+                &(bem_values->ky_shape_grad_matrix_table_for_common_vertex);
+              kx_covariants_table = &(scratch->kx_covariants_common_vertex);
+              ky_covariants_table = &(scratch->ky_covariants_common_vertex);
+            }
 
           x  = scratch->kx_quad_points_common_vertex(k3_index, quad_no);
           y  = scratch->ky_quad_points_common_vertex(k3_index, quad_no);
@@ -536,6 +608,21 @@ namespace IdeoBEM
           ky_shape_value_table =
             &(bem_values->ky_shape_value_table_for_regular);
 
+          /**
+           * When the kernel type is regularized hyper singular, extract
+           * covariant transformation matrices from @p ScratchData and
+           * gradient of shape functions from @p BEMValues.
+           */
+          if (kernel_function.kernel_type == HyperSingularRegular)
+            {
+              kx_shape_grad_matrix_table =
+                &(bem_values->kx_shape_grad_matrix_table_for_regular);
+              ky_shape_grad_matrix_table =
+                &(bem_values->ky_shape_grad_matrix_table_for_regular);
+              kx_covariants_table = &(scratch->kx_covariants_regular);
+              ky_covariants_table = &(scratch->ky_covariants_regular);
+            }
+
           x  = scratch->kx_quad_points_regular(k3_index, quad_no);
           y  = scratch->ky_quad_points_regular(k3_index, quad_no);
           Jx = scratch->kx_jacobians_regular(k3_index, quad_no);
@@ -548,25 +635,86 @@ namespace IdeoBEM
           kx_shape_value_table = nullptr;
           ky_shape_value_table = nullptr;
 
+          if (kernel_function.kernel_type == HyperSingularRegular)
+            {
+              kx_shape_grad_matrix_table = nullptr;
+              ky_shape_grad_matrix_table = nullptr;
+              kx_covariants_table        = nullptr;
+              ky_covariants_table        = nullptr;
+            }
+
           Assert(false, ExcInternalError());
       }
 
-    // Negate the normal vector in \f$K_y\f$ when the cell neighboring type is
-    // common edge. This is because the cell \f$K_y\f$'s orientation has been
-    // reversed.
+    /**
+     * Negate the normal vector in \f$K_y\f$ when the cell neighboring type is
+     * common edge. This is because the cell \f$K_y\f$'s orientation has been
+     * reversed.
+     */
     if (cell_neighboring_type == CommonEdge)
       {
         ny = -ny;
       }
 
-    /**
-     * Evaluate the original kernel function at the specified pair of points in
-     * the real cells with their normal vectors, the result of which is then
-     * multiplied by the Jacobians and shape function values.
-     */
-    return kernel_function.value(x, y, nx, ny, component) * Jx * Jy *
-           (*kx_shape_value_table)(kx_dof_index, k3_index, quad_no) *
-           (*ky_shape_value_table)(ky_dof_index, k3_index, quad_no);
+    if (kernel_function.kernel_type == HyperSingularRegular)
+      {
+        /**
+         * Extract the gradient values of the current shape function in the unit
+         * cell for \f$K_x\f$ as well as \f$K_y\f$.
+         */
+        Vector<RangeNumberType> kx_shape_grad_in_unit_cell(dim);
+        Vector<RangeNumberType> ky_shape_grad_in_unit_cell(dim);
+
+        for (unsigned int i = 0; i < dim; i++)
+          {
+            kx_shape_grad_in_unit_cell(i) =
+              (*kx_shape_grad_matrix_table)(k3_index, quad_no)(kx_dof_index, i);
+            ky_shape_grad_in_unit_cell(i) =
+              (*ky_shape_grad_matrix_table)(k3_index, quad_no)(ky_dof_index, i);
+          }
+
+        /**
+         * Apply covariant transformation to the gradient tensors.
+         */
+        Vector<RangeNumberType> kx_shape_grad_in_real_cell(spacedim);
+        Vector<RangeNumberType> ky_shape_grad_in_real_cell(spacedim);
+        (*kx_covariants_table)(k3_index, quad_no)
+          .vmult(kx_shape_grad_in_real_cell, kx_shape_grad_in_unit_cell);
+        (*ky_covariants_table)(k3_index, quad_no)
+          .vmult(ky_shape_grad_in_real_cell, ky_shape_grad_in_unit_cell);
+
+        /**
+         * Calculate the surface gradient tensor of the shape functions, which
+         * is the cross product of normal vector and the volume gradient vector.
+         *
+         * \mynote{The cross product operation requires the input vectors be
+         * transformed to tensors.}
+         */
+        Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+          cross_product_3d(
+            nx,
+            VectorToTensor<spacedim, RangeNumberType, Vector<RangeNumberType>>(
+              kx_shape_grad_in_real_cell));
+        Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+          cross_product_3d(
+            ny,
+            VectorToTensor<spacedim, RangeNumberType, Vector<RangeNumberType>>(
+              ky_shape_grad_in_real_cell));
+
+        return kernel_function.value(x, y, nx, ny, component) * Jx * Jy *
+               scalar_product(kx_shape_surface_curl, ky_shape_surface_curl);
+      }
+    else
+      {
+        /**
+         * Evaluate the original kernel function at the specified pair of points
+         * in the real cells with their normal vectors, the result of which is
+         * then multiplied by the Jacobians and shape function values.
+         */
+        return kernel_function.value(x, y, nx, ny, component) * Jx * Jy *
+               (*kx_shape_value_table)(kx_dof_index, k3_index, quad_no) *
+               (*ky_shape_value_table)(ky_dof_index, k3_index, quad_no);
+      }
   }
 
 

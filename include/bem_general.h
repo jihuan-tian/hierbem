@@ -37,17 +37,17 @@ namespace IdeoBEM
     const typename std::vector<std::pair<
       typename DoFHandler<dim, spacedim>::active_cell_iterator,
       typename DoFHandler<dim, spacedim>::active_cell_iterator>>::const_iterator
-      &                                 iterator_for_cell_iterator_pairs,
-    CellWiseScratchData<dim, spacedim> &scratch,
-    CellWisePerTaskData<dim, spacedim, RangeNumberType> &data)
+      &iterator_for_cell_iterator_pairs,
+    CellWiseScratchDataForMassMatrix<dim, spacedim> &              scratch_data,
+    CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &copy_data)
   {
     /**
      * Clear the local matrix in case that it is reused from another finished
      * task. N.B. Its memory has already been allocated in the constructor of
      * @p CellWisePerTaskData.
      */
-    data.local_matrix.reinit(data.local_dof_indices_for_test_space.size(),
-                             data.local_dof_indices_for_trial_space.size());
+    copy_data.local_matrix.reinit(copy_data.local_dof_indices_for_test_space.size(),
+                             copy_data.local_dof_indices_for_trial_space.size());
 
     /**
      * N.B. The construction of the object <code>scratch.fe_values</code> is
@@ -68,18 +68,18 @@ namespace IdeoBEM
      * Reinitialize the @p FEValues objects for test space and trial space
      * for the current cell.
      */
-    scratch.fe_values_for_test_space.reinit(cell_iter_for_test_space_domain);
-    scratch.fe_values_for_trial_space.reinit(cell_iter_for_trial_space_domain);
+    scratch_data.fe_values_for_test_space.reinit(cell_iter_for_test_space_domain);
+    scratch_data.fe_values_for_trial_space.reinit(cell_iter_for_trial_space_domain);
 
-    AssertDimension(scratch.fe_values_for_test_space.get_quadrature().size(),
-                    scratch.fe_values_for_trial_space.get_quadrature().size());
+    AssertDimension(scratch_data.fe_values_for_test_space.get_quadrature().size(),
+                    scratch_data.fe_values_for_trial_space.get_quadrature().size());
     const unsigned int n_q_points =
-      scratch.fe_values_for_test_space.get_quadrature().size();
+      scratch_data.fe_values_for_test_space.get_quadrature().size();
 
     const unsigned int dofs_per_cell_for_test_space =
-      scratch.fe_values_for_test_space.get_fe().dofs_per_cell;
+      scratch_data.fe_values_for_test_space.get_fe().dofs_per_cell;
     const unsigned int dofs_per_cell_for_trial_space =
-      scratch.fe_values_for_trial_space.get_fe().dofs_per_cell;
+      scratch_data.fe_values_for_trial_space.get_fe().dofs_per_cell;
 
     /**
      * Calculate the local mass matrix multiplied by a factor in the
@@ -88,8 +88,8 @@ namespace IdeoBEM
     for (unsigned int q = 0; q < n_q_points; q++)
       {
         Assert(
-          scratch.fe_values_for_test_space.JxW(q) ==
-            scratch.fe_values_for_trial_space.JxW(q),
+          scratch_data.fe_values_for_test_space.JxW(q) ==
+            scratch_data.fe_values_for_trial_space.JxW(q),
           ExcMessage(
             "The JxW values in test space domain and trial space domain should be the same!"));
 
@@ -103,10 +103,10 @@ namespace IdeoBEM
              */
             for (unsigned int j = 0; j < dofs_per_cell_for_trial_space; j++)
               {
-                data.local_matrix(i, j) +=
-                  factor * scratch.fe_values_for_test_space.shape_value(i, q) *
-                  scratch.fe_values_for_trial_space.shape_value(j, q) *
-                  scratch.fe_values_for_test_space.JxW(q);
+                copy_data.local_matrix(i, j) +=
+                  factor * scratch_data.fe_values_for_test_space.shape_value(i, q) *
+                  scratch_data.fe_values_for_trial_space.shape_value(j, q) *
+                  scratch_data.fe_values_for_test_space.JxW(q);
               }
           }
       }
@@ -119,9 +119,9 @@ namespace IdeoBEM
      * constructor of <code>CellWisePerTaskData</code>.
      */
     cell_iter_for_test_space_domain->get_dof_indices(
-      data.local_dof_indices_for_test_space);
+      copy_data.local_dof_indices_for_test_space);
     cell_iter_for_trial_space_domain->get_dof_indices(
-      data.local_dof_indices_for_trial_space);
+      copy_data.local_dof_indices_for_trial_space);
   }
 
   template <int dim,
@@ -130,7 +130,7 @@ namespace IdeoBEM
             typename MatrixType>
   void
   copy_cell_local_to_global_for_fem_matrix(
-    const CellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    const CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &data,
     MatrixType &target_full_matrix)
   {
     const unsigned int dofs_per_cell_for_test_space  = data.local_matrix.m();
@@ -145,6 +145,141 @@ namespace IdeoBEM
                                    data.local_matrix(i, j));
           }
       }
+  }
+
+
+
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename VectorType>
+  void
+  assemble_fem_mass_matrix_vmult_on_one_cell(
+    const VectorType &v,
+    const typename std::vector<std::pair<
+      typename DoFHandler<dim, spacedim>::active_cell_iterator,
+      typename DoFHandler<dim, spacedim>::active_cell_iterator>>::const_iterator
+      &iterator_for_cell_iterator_pairs,
+    CellWiseScratchDataForMassMatrix<dim, spacedim> &scratch_data,
+    CellWiseCopyDataForMassMatrixVmult<dim, spacedim, RangeNumberType>
+      &copy_data)
+  {
+    /**
+     * Clear the local matrix in case that it is reused from another finished
+     * task. N.B. Its memory has already been allocated in the constructor of
+     * @p CellWisePerTaskData.
+     */
+    copy_data.local_matrix.reinit(
+      copy_data.local_dof_indices_for_test_space.size(),
+      copy_data.local_dof_indices_for_trial_space.size());
+
+    /**
+     * N.B. The construction of the object <code>scratch.fe_values</code> is
+     * carried out in the constructor of <code>CellWiseScratchData</code>.
+     *
+     * \comment{2022-06-27 I added a @p const keyword at the front to protect
+     * the internal data in the cell. Since the vector of cell iterator pairs
+     * persists at least in this function, I create references to the two cell
+     * iterators instead of making copies.}
+     */
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator &
+      cell_iter_for_test_space_domain = iterator_for_cell_iterator_pairs->first;
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator
+      &cell_iter_for_trial_space_domain =
+        iterator_for_cell_iterator_pairs->second;
+
+    /**
+     * Reinitialize the @p FEValues objects for test space and trial space
+     * for the current cell.
+     */
+    scratch_data.fe_values_for_test_space.reinit(
+      cell_iter_for_test_space_domain);
+    scratch_data.fe_values_for_trial_space.reinit(
+      cell_iter_for_trial_space_domain);
+
+    AssertDimension(
+      scratch_data.fe_values_for_test_space.get_quadrature().size(),
+      scratch_data.fe_values_for_trial_space.get_quadrature().size());
+    const unsigned int n_q_points =
+      scratch_data.fe_values_for_test_space.get_quadrature().size();
+
+    const unsigned int dofs_per_cell_for_test_space =
+      scratch_data.fe_values_for_test_space.get_fe().dofs_per_cell;
+    const unsigned int dofs_per_cell_for_trial_space =
+      scratch_data.fe_values_for_trial_space.get_fe().dofs_per_cell;
+
+    /**
+     *  Extract the DoF indices. N.B. Before calling
+     * <code>get_dof_indices</code>, the memory for the argument vector should
+     * have been allocated. Here, the memory for
+     * <code>data.local_dof_indices</code> has been allocated in the
+     * constructor of <code>CellWisePerTaskData</code>.
+     */
+    cell_iter_for_test_space_domain->get_dof_indices(
+      copy_data.local_dof_indices_for_test_space);
+    cell_iter_for_trial_space_domain->get_dof_indices(
+      copy_data.local_dof_indices_for_trial_space);
+
+    /**
+     * Calculate the local mass matrix in the current cell.
+     */
+    for (unsigned int q = 0; q < n_q_points; q++)
+      {
+        Assert(
+          scratch_data.fe_values_for_test_space.JxW(q) ==
+            scratch_data.fe_values_for_trial_space.JxW(q),
+          ExcMessage(
+            "The JxW values in test space domain and trial space domain should be the same!"));
+
+        /**
+         * Iterate over test function DoFs.
+         */
+        for (unsigned int i = 0; i < dofs_per_cell_for_test_space; i++)
+          {
+            /**
+             * Iterate over trial function DoFs.
+             */
+            for (unsigned int j = 0; j < dofs_per_cell_for_trial_space; j++)
+              {
+                copy_data.local_matrix(i, j) +=
+                  scratch_data.fe_values_for_test_space.shape_value(i, q) *
+                  scratch_data.fe_values_for_trial_space.shape_value(j, q) *
+                  scratch_data.fe_values_for_test_space.JxW(q);
+              }
+          }
+      }
+
+    /**
+     * Extract local vector from \f$v\f$ in the current cell.
+     */
+    for (unsigned int j = 0; j < dofs_per_cell_for_trial_space; j++)
+      {
+        copy_data.local_v(j) =
+          v(copy_data.local_dof_indices_for_trial_space[j]);
+      }
+
+    /**
+     * Perform the multiplication \f$u=Mv\f$.
+     */
+    copy_data.local_matrix.vmult(copy_data.local_u, copy_data.local_v);
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename VectorType>
+  void
+  copy_cell_local_to_global_for_fem_matrix_vmult(
+    const CellWiseCopyDataForMassMatrixVmult<dim, spacedim, RangeNumberType>
+      &         copy_data,
+    VectorType &target_vector)
+  {
+    AssertDimension(copy_data.local_dof_indices_for_test_space.size(),
+                    copy_data.local_u.size());
+
+    target_vector.add(copy_data.local_dof_indices_for_test_space,
+                      copy_data.local_u);
   }
 
 
@@ -220,6 +355,24 @@ namespace IdeoBEM
   }
 
 
+  /**
+   * \mynote{We should bear in mind the following points.
+   * 1. The test and ansatz function spaces related to the mass matrix may
+   * be two different function spaces but residing on a same triangulation;
+   * 2. Unlike a full matrix involved in BEM, a non-zero cellwise integration
+   * for the assembly of the mass matrix requires the test and ansatz basis
+   * functions have overlapping supports.
+   * 3. Since the two function spaces on a same triangulation are different
+   * spaces, there are two DoF handlers and two cell iterators. And the two cell
+   * iterators should step forward synchronously. Therefore, in this function,
+   * there is the definition of cell iterator pair.}
+   *
+   * @param dof_handler_for_test_space
+   * @param dof_handler_for_trial_space
+   * @param factor
+   * @param quad_rule
+   * @param target_full_matrix
+   */
   template <int dim,
             int spacedim,
             typename RangeNumberType,
@@ -232,6 +385,9 @@ namespace IdeoBEM
     const Quadrature<dim> &          quad_rule,
     MatrixType &                     target_full_matrix)
   {
+    // Because the test and ansatz function spaces related to the mass matrix
+    // are on a same spatial domain, here we make an assertion about the
+    // equality of the number of cells in their respective triangulations.
     AssertDimension(
       dof_handler_for_test_space.get_triangulation().n_active_cells(),
       dof_handler_for_trial_space.get_triangulation().n_active_cells());
@@ -264,11 +420,71 @@ namespace IdeoBEM
 
                 std::placeholders::_1,
                 std::ref(target_full_matrix)),
-      CellWiseScratchData<dim, spacedim>(dof_handler_for_test_space.get_fe(),
-                                         dof_handler_for_trial_space.get_fe(),
-                                         quad_rule,
-                                         update_values | update_JxW_values),
-      CellWisePerTaskData<dim, spacedim, RangeNumberType>(
+      CellWiseScratchDataForMassMatrix<dim, spacedim>(
+        dof_handler_for_test_space.get_fe(),
+        dof_handler_for_trial_space.get_fe(),
+        quad_rule,
+        update_values | update_JxW_values),
+      CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType>(
+        dof_handler_for_test_space.get_fe(),
+        dof_handler_for_trial_space.get_fe()));
+  }
+
+
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename VectorType>
+  void
+  assemble_fem_mass_matrix_vmult(
+    const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+    const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
+    const VectorType &               v,
+    const Quadrature<dim> &          quad_rule,
+    VectorType &                     target_vector)
+  {
+    // Because the test and ansatz function spaces related to the mass matrix
+    // are on a same spatial domain, here we make an assertion about the
+    // equality of the number of cells in their respective triangulations.
+    AssertDimension(
+      dof_handler_for_test_space.get_triangulation().n_active_cells(),
+      dof_handler_for_trial_space.get_triangulation().n_active_cells());
+
+    std::vector<
+      std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
+                typename DoFHandler<dim, spacedim>::active_cell_iterator>>
+      cell_iterator_pairs_for_mass_matrix(
+        dof_handler_for_test_space.get_triangulation().n_active_cells());
+
+    initialize_cell_iterator_pairs_for_mass_matrix(
+      dof_handler_for_test_space,
+      dof_handler_for_trial_space,
+      cell_iterator_pairs_for_mass_matrix);
+
+    WorkStream::run(
+      cell_iterator_pairs_for_mass_matrix.begin(),
+      cell_iterator_pairs_for_mass_matrix.end(),
+      std::bind(&assemble_fem_mass_matrix_vmult_on_one_cell<dim,
+                                                            spacedim,
+                                                            RangeNumberType,
+                                                            VectorType>,
+                std::cref(v),
+                std::placeholders::_1,
+                std::placeholders::_2,
+                std::placeholders::_3),
+      std::bind(&copy_cell_local_to_global_for_fem_matrix_vmult<dim,
+                                                                spacedim,
+                                                                RangeNumberType,
+                                                                VectorType>,
+
+                std::placeholders::_1,
+                std::ref(target_vector)),
+      CellWiseScratchDataForMassMatrix<dim, spacedim>(
+        dof_handler_for_test_space.get_fe(),
+        dof_handler_for_trial_space.get_fe(),
+        quad_rule,
+        update_values | update_JxW_values),
+      CellWiseCopyDataForMassMatrixVmult<dim, spacedim, RangeNumberType>(
         dof_handler_for_test_space.get_fe(),
         dof_handler_for_trial_space.get_fe()));
   }
@@ -297,6 +513,25 @@ namespace IdeoBEM
       }
   }
 
+
+
+  /**
+   * Assemble a full matrix for a bilinear form in BEM.
+   *
+   * @param kernel
+   * @param factor
+   * @param dof_handler_for_test_space
+   * @param dof_handler_for_trial_space
+   * @param kx_mapping
+   * @param ky_mapping
+   * @param kx_mapping_data
+   * @param ky_mapping_data
+   * @param map_from_test_space_mesh_to_volume_mesh
+   * @param map_from_trial_space_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param sauter_quad_rule
+   * @param target_full_matrix
+   */
   template <int dim,
             int spacedim,
             typename RangeNumberType,
@@ -334,7 +569,7 @@ namespace IdeoBEM
      * \f$k_3\f$ (except the regular cell neighboring type), each of
      * which should be evaluated at a different set of quadrature
      * points in the unit cell after coordinate transformation from
-     * the parametric space. Therefore, a dimension with respect to
+     * the parametric space. Therefore, an additional dimension with respect to
      * \f$k_3\f$ term index should be added to the data table compared
      * to the usual FEValues and this brings about
      * the class @p BEMValues.
@@ -360,10 +595,9 @@ namespace IdeoBEM
     /**
      * Create data structure for parallel matrix assembly.
      *
-     * \alert{Since @p scratch_data and @p per_task_data should be copied to
+     * \alert{Since @p scratch_data and @p per_task_data should be copied into
      * each thread and will further be modified in the working
-     * function
-     * @p assemble_on_one_pair_of_cells, they should be passed-by-value.}
+     * function @p assemble_on_one_pair_of_cells, they should be passed by value.}
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
       dof_handler_for_test_space.get_fe(),
@@ -432,6 +666,294 @@ namespace IdeoBEM
 
         ++pd;
       }
+  }
+
+
+  /**
+   * @p ScratchData for assembling the right hand side vector related to a
+   * linear form, i.e. \f$\left\langle f, v \right\rangle\f$, where \f$f\f$ is a
+   * linear operator and \f$v\f$ is the test function.
+   */
+  template <int dim, int spacedim = dim>
+  struct CellWiseScratchDataForRHSLinearForm
+  {
+    FEValues<dim, spacedim> fe_values_for_test_space;
+
+    /**
+     * Constructor
+     *
+     * @param fe_for_test_space
+     * @param quadrature
+     * @param update_flags
+     */
+    CellWiseScratchDataForRHSLinearForm(
+      const FiniteElement<dim, spacedim> &fe_for_test_space,
+      const Quadrature<dim> &             quadrature,
+      const UpdateFlags                   update_flags)
+      : fe_values_for_test_space(fe_for_test_space, quadrature, update_flags)
+    {}
+
+    /**
+     * Copy constructor
+     *
+     * \mynote{@p FEValues class itself does not have a copy constructor, thus
+     * it cannot be copied but should be reconstructed from the input object.}
+     *
+     * @param scratch_data
+     */
+    CellWiseScratchDataForRHSLinearForm(
+      const CellWiseScratchDataForRHSLinearForm<dim, spacedim> &scratch_data)
+      : fe_values_for_test_space(
+          scratch_data.fe_values_for_test_space.get_fe(),
+          scratch_data.fe_values_for_test_space.get_quadrature(),
+          scratch_data.fe_values_for_test_space.get_update_flags())
+    {}
+  };
+
+
+  /**
+   * @p CopyData for assembling the right hand side vector related to a linear
+   * form, i.e. \f$\left\langle f, v \right\rangle\f$, where \f$f\f$ is a linear
+   * operator and \f$v\f$ is the test function.
+   */
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
+  struct CellWiseCopyDataForRHSLinearForm
+  {
+    /**
+     * The local right hand side vector related to the DoFs in the current cell.
+     */
+    Vector<RangeNumberType> local_rhs_vector;
+
+    /**
+     * \mynote{Memory should be preallocated for this vector before calling
+     * <code>get_dof_indices</code>.}
+     */
+    std::vector<types::global_dof_index> local_dof_indices_for_test_space;
+
+    /**
+     * Constructor
+     *
+     * @param fe_for_test_space
+     */
+    CellWiseCopyDataForRHSLinearForm(
+      const FiniteElement<dim, spacedim> &fe_for_test_space)
+      : local_rhs_vector(fe_for_test_space.dofs_per_cell)
+      , local_dof_indices_for_test_space(fe_for_test_space.dofs_per_cell)
+    {}
+
+    /**
+     * Copy constructor
+     *
+     * @param copy_data
+     */
+    CellWiseCopyDataForRHSLinearForm(
+      const CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType>
+        &copy_data)
+      : local_rhs_vector(copy_data.local_rhs_vector)
+      , local_dof_indices_for_test_space(
+          copy_data.local_dof_indices_for_test_space)
+    {}
+  };
+
+
+  /**
+   * Assemble the RHS linear form vector on a local cell, which will be the
+   * working function in the parallel assembly process. This version computes
+   * the quadrature points in the real cell, at which the linear operator is to
+   * be evaluated.
+   *
+   * @param f The linear operator on the right hand side
+   * @param cell_iter
+   * @param scratch_data
+   * @param copy_data
+   */
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
+  void
+  local_assemble_rhs_linear_form_vector(
+    const Function<spacedim, RangeNumberType> &                     f,
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
+    CellWiseScratchDataForRHSLinearForm<dim, spacedim> &scratch_data,
+    CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    scratch_data.fe_values_for_test_space.reinit(cell_iter);
+
+    const unsigned int n_q_points =
+      scratch_data.fe_values_for_test_space.get_quadrature().size();
+
+    const unsigned int dofs_per_cell =
+      scratch_data.fe_values_for_test_space.get_fe().dofs_per_cell;
+
+    copy_data.local_rhs_vector.reinit(dofs_per_cell);
+
+    for (unsigned int q = 0; q < n_q_points; q++)
+      {
+        for (unsigned int i = 0; i < dofs_per_cell; i++)
+          {
+            copy_data.local_rhs_vector(i) +=
+              scratch_data.fe_values_for_test_space.shape_value(i, q) *
+              f(scratch_data.fe_values_for_test_space.quadrature_point(q)) *
+              scratch_data.fe_values_for_test_space.JxW(q);
+          }
+      }
+
+    cell_iter->get_dof_indices(copy_data.local_dof_indices_for_test_space);
+  }
+
+
+  /**
+   * Assemble the RHS linear form vector on a local cell, which will be the
+   * working function in the parallel assembly process. In this version, the
+   * linear functional \f$f\f$ is a constant, which does not need computation of
+   * the quadrature point coordinates in the real cell.
+   *
+   * @param f The value of the constant function
+   * @param cell_iter
+   * @param scratch_data
+   * @param copy_data
+   */
+  template <int dim, int spacedim = dim, typename RangeNumberType = double>
+  void
+  local_assemble_const_rhs_linear_form_vector(
+    const RangeNumberType                                           f,
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
+    CellWiseScratchDataForRHSLinearForm<dim, spacedim> &scratch_data,
+    CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    scratch_data.fe_values_for_test_space.reinit(cell_iter);
+
+    const unsigned int n_q_points =
+      scratch_data.fe_values_for_test_space.get_quadrature().size();
+
+    const unsigned int dofs_per_cell =
+      scratch_data.fe_values_for_test_space.get_fe().dofs_per_cell;
+
+    copy_data.local_rhs_vector.reinit(dofs_per_cell);
+
+    for (unsigned int q = 0; q < n_q_points; q++)
+      {
+        for (unsigned int i = 0; i < dofs_per_cell; i++)
+          {
+            copy_data.local_rhs_vector(i) +=
+              scratch_data.fe_values_for_test_space.shape_value(i, q) * f *
+              scratch_data.fe_values_for_test_space.JxW(q);
+          }
+      }
+
+    cell_iter->get_dof_indices(copy_data.local_dof_indices_for_test_space);
+  }
+
+
+  /**
+   * Copy the RHS linear form vector on a local cell to the global vector.
+   *
+   * @param copy_data
+   * @param rhs_vector
+   */
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename VectorType>
+  void
+  copy_cell_local_to_global_rhs_linear_form_vector(
+    const CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType>
+      &         copy_data,
+    VectorType &rhs_vector)
+  {
+    AssertDimension(copy_data.local_dof_indices_for_test_space.size(),
+                    copy_data.local_rhs_vector.size());
+
+    rhs_vector.add(copy_data.local_dof_indices_for_test_space,
+                   copy_data.local_rhs_vector);
+  }
+
+
+  /**
+   * Assemble the RHS linear form vector with respect to the linear operator
+   * \f$f\f$. This version computes the quadrature points in the real cell, at
+   * which the linear operator \f$f\f$ is to be evaluated.
+   *
+   * @param f
+   * @param dof_handler_for_test_space
+   * @param quad_rule
+   * @param rhs_vector
+   */
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename VectorType>
+  void
+  assemble_rhs_linear_form_vector(
+    const Function<spacedim, RangeNumberType> &f,
+    const DoFHandler<dim, spacedim> &          dof_handler_for_test_space,
+    const Quadrature<dim> &                    quad_rule,
+    VectorType &                               rhs_vector)
+  {
+    WorkStream::run(
+      dof_handler_for_test_space.begin_active(),
+      dof_handler_for_test_space.end(),
+      std::bind(
+        &local_assemble_rhs_linear_form_vector<dim, spacedim, RangeNumberType>,
+        f,
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3),
+      std::bind(&copy_cell_local_to_global_rhs_linear_form_vector,
+                std::placeholders::_1,
+                std::ref(rhs_vector)),
+      CellWiseScratchDataForRHSLinearForm<dim, spacedim>(
+        dof_handler_for_test_space.get_fe(),
+        quad_rule,
+        update_values | update_JxW_values | update_quadrature_points),
+      CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType>(
+        dof_handler_for_test_space.get_fe()));
+  }
+
+
+  /**
+   * Assemble the RHS linear form vector with respect to the linear operator
+   * \f$f\f$. In this version, the linear functional \f$f\f$ is a constant,
+   * which does not need computation of the quadrature point coordinates in the
+   * real cell.
+   *
+   * @param f
+   * @param dof_handler_for_test_space
+   * @param quad_rule
+   * @param rhs_vector
+   */
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename VectorType>
+  void
+  assemble_rhs_linear_form_vector(
+    const RangeNumberType            f,
+    const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+    const Quadrature<dim> &          quad_rule,
+    VectorType &                     rhs_vector)
+  {
+    WorkStream::run(
+      dof_handler_for_test_space.begin_active(),
+      dof_handler_for_test_space.end(),
+      std::bind(&local_assemble_const_rhs_linear_form_vector<dim,
+                                                             spacedim,
+                                                             RangeNumberType>,
+                f,
+                std::placeholders::_1,
+                std::placeholders::_2,
+                std::placeholders::_3),
+      std::bind(&copy_cell_local_to_global_rhs_linear_form_vector<
+                  dim,
+                  spacedim,
+                  RangeNumberType,
+                  Vector<RangeNumberType>>,
+                std::placeholders::_1,
+                std::ref(rhs_vector)),
+      CellWiseScratchDataForRHSLinearForm<dim, spacedim>(
+        dof_handler_for_test_space.get_fe(),
+        quad_rule,
+        update_values | update_JxW_values),
+      CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType>(
+        dof_handler_for_test_space.get_fe()));
   }
 
 
@@ -525,11 +1047,14 @@ namespace IdeoBEM
   void
   copy_cell_local_to_global_for_potential_eval(
     const CellWisePerTaskDataForPotentialEval<dim, spacedim, RangeNumberType>
-      &         data,
+      &         copy_data,
     VectorType &result_vector)
   {
-    result_vector.add(data.local_dof_indices_for_trial_space,
-                      data.local_vector);
+    AssertDimension(copy_data.local_dof_indices_for_trial_space.size(),
+                    copy_data.local_vector.size());
+
+    result_vector.add(copy_data.local_dof_indices_for_trial_space,
+                      copy_data.local_vector);
   }
 
 

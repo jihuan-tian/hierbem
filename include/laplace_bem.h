@@ -220,12 +220,38 @@ namespace IdeoBEM
     void
     run();
 
+    /**
+     * Verify if the calculated Neumann solution is in the space
+     * \f$H^{1/2}_*(\Gamma)\f$.
+     */
+    void
+    verify_neumann_solution_in_space();
+
+    double
+    get_alpha_for_neumann() const
+    {
+      return alpha_for_neumann;
+    }
+
+    void
+    set_alpha_for_neumann(double alphaForNeumann)
+    {
+      alpha_for_neumann = alphaForNeumann;
+    }
+
   private:
     /**
      * Initialize the mapping data object.
      */
     void
     initialize_mapping_data();
+
+    /**
+     * Solve the equation \f$Vw_{\rm eq}=1\f$ for the natural density \f$w_{\rm
+     * eq}\f$.
+     */
+    void
+    solve_natural_density();
 
     /**
      * Finite element order for the Dirichlet space.
@@ -366,7 +392,7 @@ namespace IdeoBEM
     /**
      * Kernel function for the hyper-singular potential.
      */
-    LaplaceKernel::HyperSingularKernel<3> hyper_singular_kernel;
+    LaplaceKernel::HyperSingularKernelRegular<3> hyper_singular_kernel;
 
     /**
      * Full matrices for verification purpose.
@@ -506,6 +532,12 @@ namespace IdeoBEM
     Vector<double> neumann_bc;
 
     /**
+     * The free parameter \f$\alpha\f$ in the variational formulation of the
+     * Laplace problem with Neumann boundary condition.
+     */
+    double alpha_for_neumann;
+
+    /**
      * Pointer to the Dirichlet boundary condition function object.
      */
     Function<spacedim> *dirichlet_bc_functor_ptr;
@@ -519,6 +551,20 @@ namespace IdeoBEM
      * Right hand side vector.
      */
     Vector<double> system_rhs;
+
+    /**
+     * Natural density \f$w_{rm eq}\f$, which is an intermediate solution used
+     * in the Neumann boundary problem.
+     */
+    Vector<double> natural_density;
+
+    /**
+     * Right hand side vector, which is used in the equation \f$\mathscr{V}
+     * w_{\rm eq} = 1\f$ for solving the natural density \f$w_{\rm eq}\f$. Each
+     * component in this vector is actually an integration of each test
+     * function.
+     */
+    Vector<double> system_rhs_for_natural_density;
 
     /**
      * Numerical solution for the Dirichlet domain.
@@ -566,6 +612,7 @@ namespace IdeoBEM
     , max_hmat_rank(0)
     , aca_relative_error(0)
     , neumann_bc_functor_ptr(nullptr)
+    , alpha_for_neumann(1.0)
     , dirichlet_bc_functor_ptr(nullptr)
   {}
 
@@ -603,6 +650,7 @@ namespace IdeoBEM
     , max_hmat_rank(0)
     , aca_relative_error(0)
     , neumann_bc_functor_ptr(nullptr)
+    , alpha_for_neumann(1.0)
     , dirichlet_bc_functor_ptr(nullptr)
   {
     initialize_mapping_data();
@@ -647,6 +695,7 @@ namespace IdeoBEM
     , max_hmat_rank(max_hmat_rank)
     , aca_relative_error(aca_relative_error)
     , neumann_bc_functor_ptr(nullptr)
+    , alpha_for_neumann(1.0)
     , dirichlet_bc_functor_ptr(nullptr)
   {
     initialize_mapping_data();
@@ -825,11 +874,6 @@ namespace IdeoBEM
               n_dofs_for_neumann_space_on_dirichlet_domain);
 
             // DEBUG: export analytical solution for comparison.
-            neumann_bc.reinit(n_dofs_for_neumann_space_on_dirichlet_domain);
-            VectorTools::interpolate(
-              dof_handler_for_neumann_space_on_dirichlet_domain,
-              *neumann_bc_functor_ptr,
-              neumann_bc);
             analytical_solution_for_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
 
@@ -837,8 +881,69 @@ namespace IdeoBEM
           }
         case NeumannBCProblem:
           {
-            // TODO
-            Assert(false, ExcNotImplemented());
+            dof_handler_for_dirichlet_space_on_neumann_domain.initialize(
+              triangulation_for_neumann_domain, fe_for_dirichlet_space);
+            dof_handler_for_neumann_space_on_neumann_domain.initialize(
+              triangulation_for_neumann_domain, fe_for_neumann_space);
+
+            const unsigned int n_dofs_for_dirichlet_space_on_neumann_domain =
+              dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs();
+            const unsigned int n_dofs_for_neumann_space_on_neumann_domain =
+              dof_handler_for_neumann_space_on_neumann_domain.n_dofs();
+
+            if (!is_use_hmat)
+              {
+                /**
+                 * If full matrices are used for verification purpose,
+                 * allocate memory for them here.
+                 */
+                D1_matrix.reinit(n_dofs_for_dirichlet_space_on_neumann_domain,
+                                 n_dofs_for_dirichlet_space_on_neumann_domain);
+                K_prime2_matrix_with_mass_matrix.reinit(
+                  n_dofs_for_dirichlet_space_on_neumann_domain,
+                  n_dofs_for_neumann_space_on_neumann_domain);
+
+                /**
+                 * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
+                 */
+                V1_matrix.reinit(n_dofs_for_neumann_space_on_neumann_domain,
+                                 n_dofs_for_neumann_space_on_neumann_domain);
+              }
+            else
+              {
+                /**
+                 * TODO Setup for Neumann problem solved by \hmatrix.
+                 */
+              }
+
+            /**
+             * Interpolate the Neumann boundary data.
+             */
+            neumann_bc.reinit(n_dofs_for_neumann_space_on_neumann_domain);
+            VectorTools::interpolate(
+              dof_handler_for_neumann_space_on_neumann_domain,
+              *neumann_bc_functor_ptr,
+              neumann_bc);
+
+            /**
+             * Allocate memory for the natural density \f$w_{\rm eq}\in
+             * H^{-1/2}(\Gamma)\f$ and its associated right hand side vector.
+             */
+            natural_density.reinit(n_dofs_for_neumann_space_on_neumann_domain);
+            system_rhs_for_natural_density.reinit(
+              n_dofs_for_neumann_space_on_neumann_domain);
+
+            /**
+             * Allocate memory for the right-hand-side vector and solution
+             * vector.
+             */
+            system_rhs.reinit(n_dofs_for_dirichlet_space_on_neumann_domain);
+            solution_for_neumann_domain.reinit(
+              n_dofs_for_dirichlet_space_on_neumann_domain);
+
+            // DEBUG: export analytical solution for comparison.
+            analytical_solution_for_neumann_domain.reinit(
+              n_dofs_for_dirichlet_space_on_neumann_domain);
 
             break;
           }
@@ -1073,9 +1178,107 @@ namespace IdeoBEM
           }
         case NeumannBCProblem:
           {
-            // TODO Assemble full mass matrices for NeumannBCProblem. The
-            // formulation of the representation formula and the boundary
-            // integral equation should be determined.
+            std::cerr << "=== Assemble scaled mass matrix ===" << std::endl;
+
+            /**
+             * For the interior Laplace problem, \f$\frac{1}{2}I\f$ is
+             * assembled, while for the exterior Laplace problem,
+             * \f$-\frac{1}{2}I\f$ is assembled.
+             */
+            if (is_interior_problem)
+              {
+                assemble_fem_scaled_mass_matrix(
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  0.5,
+                  QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                  K_prime2_matrix_with_mass_matrix);
+              }
+            else
+              {
+                assemble_fem_scaled_mass_matrix(
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  -0.5,
+                  QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                  K_prime2_matrix_with_mass_matrix);
+              }
+
+            /**
+             * Assemble the ADLP matrix, which is added with the
+             * previous
+             * scaled FEM mass matrix.
+             */
+            std::cerr << "=== Assemble ADLP matrix ===" << std::endl;
+            assemble_bem_full_matrix(
+              adjoint_double_layer_kernel,
+              -1.0,
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              dof_handler_for_neumann_space_on_neumann_domain,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_neumann_domain,
+              map_from_neumann_boundary_mesh_to_volume_mesh,
+              map_from_neumann_boundary_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              SauterQuadratureRule<dim>(5, 4, 4, 3),
+              K_prime2_matrix_with_mass_matrix);
+
+            /**
+             * Assemble the matrix for the hyper singular operator, where the
+             * regularization method is adopted.
+             */
+            std::cerr << "=== Assemble D matrix ===" << std::endl;
+            assemble_bem_full_matrix(
+              hyper_singular_kernel,
+              1.0,
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_neumann_domain,
+              map_from_neumann_boundary_mesh_to_volume_mesh,
+              map_from_neumann_boundary_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              SauterQuadratureRule<dim>(5, 4, 4, 3),
+              D1_matrix);
+
+            /**
+             * Calculate the RHS vector.
+             */
+            K_prime2_matrix_with_mass_matrix.vmult(system_rhs, neumann_bc);
+
+            /**
+             * Solve the natural density.
+             */
+            solve_natural_density();
+
+            /**
+             * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$.
+             */
+            Vector<double> a(
+              dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
+            assemble_fem_mass_matrix_vmult<dim,
+                                           spacedim,
+                                           double,
+                                           Vector<double>>(
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              dof_handler_for_neumann_space_on_neumann_domain,
+              natural_density,
+              QGauss<2>(fe_order_for_dirichlet_space + 1),
+              a);
+
+            /**
+             * Add the matrix \f$\alpha a a^T\f$ to \f$D\f$.
+             */
+            FullMatrix<double> aaT(D1_matrix.m(), D1_matrix.n());
+            aaT.outer_product(a, a);
+            D1_matrix.add(alpha_for_neumann, aaT);
+
             break;
           }
         case MixedBCProblem:
@@ -1290,7 +1493,10 @@ namespace IdeoBEM
               }
             case NeumannBCProblem:
               {
-                // TODO Solve full matrix for Neumann problem
+                solver.solve(D1_matrix,
+                             solution_for_neumann_domain,
+                             system_rhs,
+                             PreconditionIdentity());
 
                 break;
               }
@@ -1348,9 +1554,7 @@ namespace IdeoBEM
       {
         case DirichletBCProblem:
           {
-            /**
-             * Interpolate the analytical solution.
-             */
+            // DEBUG: Interpolate the analytical solution.
             VectorTools::interpolate(
               dof_handler_for_neumann_space_on_dirichlet_domain,
               *neumann_bc_functor_ptr,
@@ -1384,12 +1588,25 @@ namespace IdeoBEM
           }
         case NeumannBCProblem:
           {
+            // DEBUG: Interpolate the analytical solution.
+            VectorTools::interpolate(
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              *dirichlet_bc_functor_ptr,
+              analytical_solution_for_neumann_domain);
+
             vtk_output.open("solution_for_neumann_bc.vtk", std::ofstream::out);
 
             data_out.add_data_vector(
               dof_handler_for_dirichlet_space_on_neumann_domain,
               solution_for_neumann_domain,
               "solution");
+
+            // DEBUG: export analytical solution for comparison.
+            data_out.add_data_vector(
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              analytical_solution_for_neumann_domain,
+              "analytical_solution");
+
             data_out.add_data_vector(
               dof_handler_for_neumann_space_on_neumann_domain,
               neumann_bc,
@@ -1491,40 +1708,181 @@ namespace IdeoBEM
      */
     Vector<double> potential_values(potential_grid_points.size());
 
-    /**
-     * Evaluate the double layer potential, which is the negated double
-     * layer potential integral operator applied to the Dirichlet data.
-     * \f[
-     * -\int_{\Gamma} \widetilde{\gamma}_{1,y} G(x,y) \gamma_0^{\rm
-     * int} u(y) \intd s_y
-     * \f]
-     */
-    std::cerr << "=== Evaluate DLP potential values ===" << std::endl;
-    evaluate_potential_at_points(
-      double_layer_kernel,
-      -1.0,
-      dof_handler_for_dirichlet_space_on_dirichlet_domain,
-      dirichlet_bc,
-      true,
-      potential_grid_points,
-      potential_values);
+    switch (problem_type)
+      {
+        case DirichletBCProblem:
+          {
+            if (is_interior_problem)
+              {
+                /**
+                 * Evaluate the double layer potential, which is the negated
+                 * double layer potential integral operator applied to the
+                 * Dirichlet data. \f[
+                 * -\int_{\Gamma} \widetilde{\gamma}_{1,y} G(x,y) \gamma_0^{\rm
+                 * int} u(y) \intd s_y
+                 * \f]
+                 */
+                std::cerr << "=== Evaluate DLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  double_layer_kernel,
+                  -1.0,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  dirichlet_bc,
+                  false,
+                  potential_grid_points,
+                  potential_values);
 
-    /**
-     * Evaluate the single layer potential, which is the single layer
-     * potential integral operator applied to the Neumann data.
-     * \f[
-     * \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y) \intd s_y
-     * \f]
-     */
-    std::cerr << "=== Evaluate SLP potential values ===" << std::endl;
-    evaluate_potential_at_points(
-      single_layer_kernel,
-      1.0,
-      dof_handler_for_neumann_space_on_dirichlet_domain,
-      solution_for_dirichlet_domain,
-      true,
-      potential_grid_points,
-      potential_values);
+                /**
+                 * Evaluate the single layer potential, which is the single
+                 * layer potential integral operator applied to the Neumann
+                 * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
+                 * \intd s_y \f]
+                 */
+                std::cerr << "=== Evaluate SLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  single_layer_kernel,
+                  1.0,
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  solution_for_dirichlet_domain,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+              }
+            else
+              {
+                /**
+                 * Evaluate the double layer potential, which is the negated
+                 * double layer potential integral operator applied to the
+                 * Dirichlet data. \f[
+                 * -\int_{\Gamma} \widetilde{\gamma}_{1,y} G(x,y) \gamma_0^{\rm
+                 * int} u(y) \intd s_y
+                 * \f]
+                 */
+                std::cerr << "=== Evaluate DLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  double_layer_kernel,
+                  1.0,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  dirichlet_bc,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                /**
+                 * Evaluate the single layer potential, which is the single
+                 * layer potential integral operator applied to the Neumann
+                 * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
+                 * \intd s_y \f]
+                 */
+                std::cerr << "=== Evaluate SLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  single_layer_kernel,
+                  -1.0,
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  solution_for_dirichlet_domain,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+              }
+
+            break;
+          }
+        case NeumannBCProblem:
+          {
+            if (is_interior_problem)
+              {
+                /**
+                 * Evaluate the double layer potential, which is the negated
+                 * double layer potential integral operator applied to the
+                 * Dirichlet data. \f[
+                 * -\int_{\Gamma} \widetilde{\gamma}_{1,y} G(x,y) \gamma_0^{\rm
+                 * int} u(y) \intd s_y
+                 * \f]
+                 */
+                std::cerr << "=== Evaluate DLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  double_layer_kernel,
+                  -1.0,
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  solution_for_neumann_domain,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                /**
+                 * Evaluate the single layer potential, which is the single
+                 * layer potential integral operator applied to the Neumann
+                 * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
+                 * \intd s_y \f]
+                 */
+                std::cerr << "=== Evaluate SLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  single_layer_kernel,
+                  1.0,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  neumann_bc,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+              }
+            else
+              {
+                /**
+                 * Evaluate the double layer potential, which is the negated
+                 * double layer potential integral operator applied to the
+                 * Dirichlet data. \f[
+                 * -\int_{\Gamma} \widetilde{\gamma}_{1,y} G(x,y) \gamma_0^{\rm
+                 * int} u(y) \intd s_y
+                 * \f]
+                 */
+                std::cerr << "=== Evaluate DLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  double_layer_kernel,
+                  1.0,
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  solution_for_neumann_domain,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                /**
+                 * Evaluate the single layer potential, which is the single
+                 * layer potential integral operator applied to the Neumann
+                 * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
+                 * \intd s_y \f]
+                 */
+                std::cerr << "=== Evaluate SLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  single_layer_kernel,
+                  -1.0,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  neumann_bc,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+              }
+
+            break;
+          }
+        case MixedBCProblem:
+          {
+            // TODO
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcInternalError());
+            break;
+          }
+      }
 
     print_vector_to_mat(std::cout, "potential_values", potential_values, false);
   }
@@ -1554,6 +1912,31 @@ namespace IdeoBEM
     solve();
     output_results();
     output_potential_at_target_points();
+
+    // DEBUG
+    verify_neumann_solution_in_space();
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::verify_neumann_solution_in_space()
+  {
+    /**
+     * Calculate the inner product of the solution and the natural density.
+     */
+    Vector<double> v(
+      dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
+    assemble_fem_mass_matrix_vmult<dim, spacedim, double, Vector<double>>(
+      dof_handler_for_dirichlet_space_on_neumann_domain,
+      dof_handler_for_neumann_space_on_neumann_domain,
+      natural_density,
+      QGauss<2>(fe_order_for_dirichlet_space + 1),
+      v);
+    std::cout << "Analytical solution <gamma_0 u, weq>="
+              << analytical_solution_for_neumann_domain * v << "\n";
+    std::cout << "Numerical solution <gamma_0 u, weq>="
+              << solution_for_neumann_domain * v << std::endl;
   }
 
 
@@ -1561,14 +1944,19 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::initialize_mapping_data()
   {
+    /**
+     * Initialize the @p InternalData objects in the mapping objects for the
+     * Dirichlet domain.
+     */
     if (problem_type == DirichletBCProblem || problem_type == MixedBCProblem)
       {
         /**
-         * Create the internal data object in the @p Mapping object. N.B. A dummy
-         * quadrature object is passed to the @p get_data function. The
-         * @p UpdateFlags is set to @p update_default, which at the moment disables
-         * any memory allocation, because this operation will be manually taken
-         * care of later on.
+         * Create the internal data object in the parent @p Mapping object.
+         *
+         * N.B. A dummy quadrature object is passed to the @p get_data function. The
+         * @p UpdateFlags is set to @p update_default (it means no update),
+         * which at the moment disables any memory allocation, because this
+         * operation will be manually taken care of later on.
          */
         std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
           kx_mapping_database_for_dirichlet_domain =
@@ -1576,8 +1964,9 @@ namespace IdeoBEM
                                                      QGauss<dim>(1));
 
         /**
-         * Downcast the pointer of Mapping<dim, spacedim>::InternalDataBase to
-         * MappingQGeneric<dim,spacedim>::InternalData.
+         * Downcast the smart pointer of @p Mapping<dim, spacedim>::InternalDataBase to
+         * @p MappingQGeneric<dim,spacedim>::InternalData by first unwrapping
+         * the original smart pointer via @p static_cast then wrapping it again.
          */
         kx_mapping_data_for_dirichlet_domain = std::unique_ptr<
           typename MappingQGeneric<dim, spacedim>::InternalData>(
@@ -1595,6 +1984,10 @@ namespace IdeoBEM
             ky_mapping_database_for_dirichlet_domain.release()));
       }
 
+    /**
+     * Initialize the @p InternalData objects in the mapping objects for the
+     * Neumann domain.
+     */
     if (problem_type == NeumannBCProblem || problem_type == MixedBCProblem)
       {
         std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
@@ -1617,6 +2010,54 @@ namespace IdeoBEM
           static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
             ky_mapping_database_for_neumann_domain.release()));
       }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::solve_natural_density()
+  {
+    /**
+     * Assemble the SLP matrix which is used for solving the natural
+     * density \f$w_{\rm eq}\f$.
+     */
+    std::cerr << "=== Assemble SLP matrix for natural density === "
+              << std::endl;
+    assemble_bem_full_matrix(
+      single_layer_kernel,
+      1.0,
+      dof_handler_for_neumann_space_on_neumann_domain,
+      dof_handler_for_neumann_space_on_neumann_domain,
+      kx_mapping_for_neumann_domain,
+      ky_mapping_for_neumann_domain,
+      *kx_mapping_data_for_neumann_domain,
+      *ky_mapping_data_for_neumann_domain,
+      map_from_neumann_boundary_mesh_to_volume_mesh,
+      map_from_neumann_boundary_mesh_to_volume_mesh,
+      IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::SameTriangulations,
+      SauterQuadratureRule<dim>(5, 4, 4, 3),
+      V1_matrix);
+
+    /**
+     * Assemble the RHS vector for solving the natural density \f$w_{\rm
+     * eq}\f$.
+     */
+    std::cerr << "=== Assemble RHS vector for natural density ===" << std::endl;
+    assemble_rhs_linear_form_vector(
+      1.0,
+      dof_handler_for_neumann_space_on_neumann_domain,
+      QGauss<2>(fe_for_neumann_space.degree + 1),
+      system_rhs_for_natural_density);
+
+    /**
+     * Solve the natural density \f$w_{\rm eq}\f$.
+     */
+    SolverControl solver_control(500, 1e-8);
+    SolverCG<>    solver(solver_control);
+    solver.solve(V1_matrix,
+                 natural_density,
+                 system_rhs_for_natural_density,
+                 PreconditionIdentity());
   }
 } // namespace IdeoBEM
 

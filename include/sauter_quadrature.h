@@ -664,7 +664,14 @@ namespace IdeoBEM
 
 
   /**
-   * Precalculate surface Jacobians and normal vectors for Sauter quadrature.
+   * Precalculate surface Jacobians and normal vectors to be used in the Sauter
+   * quadrature.
+   *
+   * \alert{Computation of the Jacobian matrix as well as related quantities
+   * such as normal vector, covariant transformation matrix, metric tensor,
+   * etc., is related to the mapping object and has nothing to do with the
+   * finite element. A mapping object is used to describe geometry, while a
+   * finite element object is used describe the ansatz or test functions.}
    *
    * \mynote{This version involves @p PairCellWiseScratchData.}
    *
@@ -865,6 +872,137 @@ namespace IdeoBEM
                     0,
                     q,
                     bem_values.ky_mapping_shape_value_table_for_regular,
+                    scratch.ky_mapping_support_points_permuted);
+              }
+
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcNotImplemented());
+          }
+      }
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  calc_covariant_transformations(
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    const CellNeighboringType                        cell_neighboring_type,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const QGauss<dim * 2> &                          active_quad_rule)
+  {
+    switch (cell_neighboring_type)
+      {
+        case SamePanel:
+          {
+            Assert(scratch.common_vertex_pair_local_indices.size() ==
+                     GeometryInfo<dim>::vertices_per_cell,
+                   ExcInternalError());
+
+            for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
+              {
+                for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+                  {
+                    scratch.kx_covariants_same_panel(k3_index, q) =
+                      surface_covariant_transformation(
+                        k3_index,
+                        q,
+                        bem_values
+                          .kx_mapping_shape_grad_matrix_table_for_same_panel,
+                        scratch.kx_mapping_support_points_permuted);
+
+                    scratch.ky_covariants_same_panel(k3_index, q) =
+                      surface_covariant_transformation(
+                        k3_index,
+                        q,
+                        bem_values
+                          .ky_mapping_shape_grad_matrix_table_for_same_panel,
+                        scratch.ky_mapping_support_points_permuted);
+                  }
+              }
+
+            break;
+          }
+        case CommonEdge:
+          {
+            Assert(scratch.common_vertex_pair_local_indices.size() ==
+                     GeometryInfo<2>::vertices_per_face,
+                   ExcInternalError());
+
+            for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
+              {
+                for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+                  {
+                    scratch.kx_covariants_common_edge(k3_index, q) =
+                      surface_covariant_transformation(
+                        k3_index,
+                        q,
+                        bem_values
+                          .kx_mapping_shape_grad_matrix_table_for_common_edge,
+                        scratch.kx_mapping_support_points_permuted);
+
+                    scratch.ky_covariants_common_edge(k3_index, q) =
+                      surface_covariant_transformation(
+                        k3_index,
+                        q,
+                        bem_values
+                          .ky_mapping_shape_grad_matrix_table_for_common_edge,
+                        scratch.ky_mapping_support_points_permuted);
+                  }
+              }
+
+            break;
+          }
+        case CommonVertex:
+          {
+            Assert(scratch.common_vertex_pair_local_indices.size() == 1,
+                   ExcInternalError());
+
+            for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
+              {
+                for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+                  {
+                    scratch.kx_covariants_common_vertex(k3_index, q) =
+                      surface_covariant_transformation(
+                        k3_index,
+                        q,
+                        bem_values
+                          .kx_mapping_shape_grad_matrix_table_for_common_vertex,
+                        scratch.kx_mapping_support_points_permuted);
+
+                    scratch.ky_covariants_common_vertex(k3_index, q) =
+                      surface_covariant_transformation(
+                        k3_index,
+                        q,
+                        bem_values
+                          .ky_mapping_shape_grad_matrix_table_for_common_vertex,
+                        scratch.ky_mapping_support_points_permuted);
+                  }
+              }
+
+            break;
+          }
+        case Regular:
+          {
+            Assert(scratch.common_vertex_pair_local_indices.size() == 0,
+                   ExcInternalError());
+
+            for (unsigned int q = 0; q < active_quad_rule.size(); q++)
+              {
+                scratch.kx_covariants_regular(0, q) =
+                  surface_covariant_transformation(
+                    0,
+                    q,
+                    bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
+                    scratch.kx_mapping_support_points_permuted);
+
+                scratch.ky_covariants_regular(0, q) =
+                  surface_covariant_transformation(
+                    0,
+                    q,
+                    bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
                     scratch.ky_mapping_support_points_permuted);
               }
 
@@ -3180,6 +3318,17 @@ namespace IdeoBEM
    * Sauter's quadrature for the DoFs in a pair of cells \f$K_x\f$ and
    * \f$K_y\f$.
    *
+   * \mynote{When the boundary integral operator is the hyper singular operator,
+   * the regularized bilinear form in \f$\mathbb{R}^3\f$ is
+   * \f[
+   * \left\langle Du,v \right\rangle_{\Gamma} =
+   * \frac{1}{4\pi}\int_{\Gamma}\int_{\Gamma}
+   * \frac{\underline{\curl}_{\Gamma}u(y)\cdot\underline{\curl}_{\Gamma}v(x)}{\abs{x-y}}
+   * ds_x ds_y.
+   * \f]
+   * It needs special treatment, i.e. calculation of the surface curl of the
+   * basis functions for ansatz and test functions.}
+   *
    * \mynote{This is only applicable to the case when a full matrix for a
    * boundary integral operator is to be constructed. Therefore, this function
    * is only meaningful for algorithm verification. In real application, an
@@ -3223,7 +3372,7 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool is_scratch_data_for_kx_uncalculated = true)
   {
     CellNeighboringType cell_neighboring_type;
@@ -3279,6 +3428,12 @@ namespace IdeoBEM
     const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
     const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
 
+    /**
+     * Calculate the real support points in the cell \f$K_x\f$ as well as
+     * \f$K_y\f$ via the mapping object. Since such data will be held and
+     * updated in-situ in the mapping object, which has been passed into this
+     * working function by const reference, a copy of it should be made.
+     */
     MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
     if (is_scratch_data_for_kx_uncalculated)
       {
@@ -3287,6 +3442,9 @@ namespace IdeoBEM
     MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
     ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
 
+    /**
+     * Copy the newly calculated support points into @p ScratchData.
+     */
     if (is_scratch_data_for_kx_uncalculated)
       {
         scratch.kx_mapping_support_points_in_default_order =
@@ -3297,7 +3455,7 @@ namespace IdeoBEM
 
     permute_dofs_and_mapping_support_points_for_sauter_quad(
       scratch,
-      data,
+      copy_data,
       cell_neighboring_type,
       kx_cell_iter,
       ky_cell_iter,
@@ -3311,13 +3469,25 @@ namespace IdeoBEM
                                           active_quad_rule);
 
     /**
+     * When the bilinear form for the hyper singular operator is evaluated, the
+     * covariant transformation is required.
+     */
+    if (kernel.kernel_type == HyperSingularRegular)
+      {
+        calc_covariant_transformations(scratch,
+                                       cell_neighboring_type,
+                                       bem_values,
+                                       active_quad_rule);
+      }
+
+    /**
      *  Clear the local matrix in case that it is reused from another
      *  finished task. N.B. Its memory has already been allocated in the
      *  constructor of @p CellPairWisePerTaskData.
      */
-    data.local_pair_cell_matrix.reinit(
-      data.kx_local_dof_indices_permuted.size(),
-      data.ky_local_dof_indices_permuted.size());
+    copy_data.local_pair_cell_matrix.reinit(
+      copy_data.kx_local_dof_indices_permuted.size(),
+      copy_data.ky_local_dof_indices_permuted.size());
 
     // Iterate over DoFs for test function space in \f$K_x\f$.
     for (unsigned int i = 0; i < kx_n_dofs; i++)
@@ -3337,7 +3507,7 @@ namespace IdeoBEM
                                         &bem_values);
 
             // Apply Sauter numerical quadrature.
-            data.local_pair_cell_matrix(i, j) =
+            copy_data.local_pair_cell_matrix(i, j) =
               ApplyQuadratureUsingBEMValues(active_quad_rule,
                                             kernel_pullback_on_sauter,
                                             factor);
@@ -3725,7 +3895,7 @@ namespace IdeoBEM
     Vector<RangeNumberType> &                                results,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    CellWiseScratchData<dim, spacedim> &                     fem_scratch,
+    CellWiseScratchDataForMassMatrix<dim, spacedim> &                     fem_scratch,
     const std::vector<RangeNumberType> &             mass_matrix_factors,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
     const std::vector<bool> &                        enable_kernel_evaluations,

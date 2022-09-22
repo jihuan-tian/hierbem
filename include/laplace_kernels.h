@@ -291,6 +291,76 @@ namespace LaplaceKernel
   {
     return true;
   }
+
+
+  /**
+   * Kernel function for the regularized hyper singular boundary integral
+   * operator.
+   */
+  template <int dim, typename RangeNumberType = double>
+  class HyperSingularKernelRegular : public KernelFunction<dim, RangeNumberType>
+  {
+  public:
+    HyperSingularKernelRegular()
+      : KernelFunction<dim, RangeNumberType>(HyperSingularRegular)
+    {}
+
+    virtual RangeNumberType
+    value(const Point<dim> &    x,
+          const Point<dim> &    y,
+          const Tensor<1, dim> &nx,
+          const Tensor<1, dim> &ny,
+          const unsigned int    component = 0) const override;
+
+    /**
+     * Return whether the kernel function is symmetric.
+     *
+     * @return
+     */
+    virtual bool
+    is_symmetric() const override;
+  };
+
+
+  template <int dim, typename RangeNumberType>
+  RangeNumberType
+  HyperSingularKernelRegular<dim, RangeNumberType>::value(
+    const Point<dim> &    x,
+    const Point<dim> &    y,
+    const Tensor<1, dim> &nx,
+    const Tensor<1, dim> &ny,
+    const unsigned int    component) const
+  {
+    (void)nx;
+    (void)ny;
+    (void)component;
+
+    switch (dim)
+      {
+        case 2:
+          {
+            return (-0.5 / numbers::PI * std::log((x - y).norm()));
+          }
+
+        case 3:
+          {
+            return (0.25 / numbers::PI / (x - y).norm());
+          }
+
+        default:
+          {
+            Assert(false, ExcInternalError());
+            return 0.;
+          }
+      }
+  }
+
+  template <int dim, typename RangeNumberType>
+  bool
+  HyperSingularKernelRegular<dim, RangeNumberType>::is_symmetric() const
+  {
+    return true;
+  }
 } // namespace LaplaceKernel
 
 #endif /* INCLUDE_LAPLACE_KERNELS_H_ */

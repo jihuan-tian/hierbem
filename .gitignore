@@ -36,6 +36,9 @@ fontconfig/
 octave-workspace
 \#*#
 
+# Ignore temporary output files from the testers.
+*.output[0-9]
+
 # Ignore binary files
 *.a
 

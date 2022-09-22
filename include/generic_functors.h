@@ -9,6 +9,7 @@
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/lac/lapack_support.h>
@@ -267,6 +268,42 @@ is_equal(const Point<spacedim, Number> &p1,
     }
 
   return equality;
+}
+
+
+/**
+ * Convert a vector to a rank-1 tensor.
+ *
+ * @param v
+ * @param t
+ */
+template <int dim, typename Number, typename VectorType>
+void
+VectorToTensor(const VectorType &v, Tensor<1, dim, Number> &t)
+{
+  AssertDimension(v.size(), dim);
+
+  for (unsigned int i = 0; i < dim; i++)
+    {
+      t[i] = v[i];
+    }
+}
+
+
+template <int dim, typename Number, typename VectorType>
+Tensor<1, dim, Number>
+VectorToTensor(const VectorType &v)
+{
+  AssertDimension(v.size(), dim);
+
+  Tensor<1, dim, Number> t;
+
+  for (unsigned int i = 0; i < dim; i++)
+    {
+      t[i] = v[i];
+    }
+
+  return t;
 }
 
 #endif /* INCLUDE_GENERIC_FUNCTORS_H_ */

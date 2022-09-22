@@ -83,6 +83,12 @@ public:
    * @p support_points have already been computed using the function
    * @p MappingQGenericExt<dim, spacedim>::compute_mapping_support_points.
    *
+   * \alert{Because this function has non-covariant return type and different
+   * cv-qualifier (non-const here) from the function with the same name in the
+   * parent class, it overloads but not overrides the function in the parent
+   * class. So here we explicitly declare the function in the parent class via
+   * @p using, which eliminates the compiler warning @p -Woverloaded-virtual.}
+   *
    * @param p
    * @return
    */
