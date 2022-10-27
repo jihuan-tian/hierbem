@@ -547,7 +547,7 @@ public:
           const unsigned int                        fixed_rank_k = 1,
           const HMatrixSupport::Property  property = HMatrixSupport::general,
           const HMatrixSupport::BlockType block_type =
-            HMatrixSupport::undefined_block);
+            HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct the hierarchical structure without data from a TreeNode in a
@@ -562,7 +562,7 @@ public:
           const unsigned int              fixed_rank_k = 1,
           const HMatrixSupport::Property  property = HMatrixSupport::general,
           const HMatrixSupport::BlockType block_type =
-            HMatrixSupport::undefined_block);
+            HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while copying the data
@@ -578,7 +578,7 @@ public:
           const LAPACKFullMatrixExt<Number> &       M,
           const unsigned int                        fixed_rank_k,
           const HMatrixSupport::BlockType           block_type =
-            HMatrixSupport::diagonal_block);
+            HMatrixSupport::BlockType::diagonal_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while copying the data
@@ -595,7 +595,7 @@ public:
   HMatrix(const BlockClusterTree<spacedim, Number> &bct,
           const LAPACKFullMatrixExt<Number> &       M,
           const HMatrixSupport::BlockType           block_type =
-            HMatrixSupport::diagonal_block);
+            HMatrixSupport::BlockType::diagonal_block);
 
   /**
    * Construct from a TreeNode in a BlockClusterTree while copying the data of a
@@ -615,7 +615,7 @@ public:
           const unsigned int                 fixed_rank_k,
           const HMatrixSupport::Property     property = HMatrixSupport::general,
           const HMatrixSupport::BlockType    block_type =
-            HMatrixSupport::undefined_block);
+            HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct from a TreeNode in a BlockClusterTree while copying the data of a
@@ -636,7 +636,7 @@ public:
           const LAPACKFullMatrixExt<Number> &M,
           const HMatrixSupport::Property     property = HMatrixSupport::general,
           const HMatrixSupport::BlockType    block_type =
-            HMatrixSupport::undefined_block);
+            HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct from a \p TreeNode in a \p BlockClusterTree while moving the data
@@ -650,7 +650,7 @@ public:
           HMatrix<spacedim, Number> &&    H,
           const HMatrixSupport::Property  property = HMatrixSupport::general,
           const HMatrixSupport::BlockType block_type =
-            HMatrixSupport::undefined_block);
+            HMatrixSupport::BlockType::undefined_block);
 
   /**
    * Construct from the root node of a BlockClusterTree while moving the data
@@ -667,7 +667,7 @@ public:
           HMatrix<spacedim, Number> &&              H,
           const HMatrixSupport::Property  property = HMatrixSupport::general,
           const HMatrixSupport::BlockType block_type =
-            HMatrixSupport::diagonal_block);
+            HMatrixSupport::BlockType::diagonal_block);
 
   /**
    * Deep copy constructor.
@@ -698,7 +698,7 @@ public:
          const unsigned int                        fixed_rank_k = 1,
          const HMatrixSupport::Property  property = HMatrixSupport::general,
          const HMatrixSupport::BlockType block_type =
-           HMatrixSupport::diagonal_block);
+           HMatrixSupport::BlockType::diagonal_block);
 
   /**
    * Reinitialize the hierarchical structure without data from a TreeNode in a
@@ -1162,13 +1162,10 @@ public:
     const bool is_compensate_diag_blocks = true);
 
   /**
-   * Calculate matrix-vector multiplication as \f$y = y +
-   * M \cdot x\f$.
+   * Calculate matrix-vector multiplication as \f$y = y + M \cdot x\f$.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   *   1. The recursive algorithm for \hmatrix-vector
+   * \mynote{
+   * 1. The recursive algorithm for \hmatrix-vector
    * multiplication needs to collect the results from different components in
    * the leaf set and corresponding vector block in \f$x\f$. More importantly,
    * there will be a series of such results contributing to a same block in the
@@ -1178,11 +1175,8 @@ public:
    * first one, this \p add flag should be set to \p true, irrespective of the
    * original flag value passed into the first call of \p vmult. Hence, we do
    * not include the \p add flag in the \p vmult function.
-   *
-   *   2. The input vectors \p x and \p y are to be accessed via global DoF
-   * indices.
-   *   </dd>
-   * </dl>
+   * 2. The input vectors \p x and \p y are to be accessed via global DoF
+   * indices.}
    *
    * @param y
    * @param x
@@ -1207,13 +1201,10 @@ public:
   vmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
 
   /**
-   * Calculate matrix-vector multiplication as \f$y = y +
-   * M \cdot x\f$.
+   * Calculate matrix-vector multiplication as \f$y = y + M \cdot x\f$.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   *   1. The recursive algorithm for \hmatrix-vector
+   * \mynote{
+   * 1. The recursive algorithm for \hmatrix-vector
    * multiplication needs to collect the results from different components in
    * the leaf set and corresponding vector block in \f$x\f$. More importantly,
    * there will be a series of such results contributing to a same block in the
@@ -1223,11 +1214,9 @@ public:
    * first one, this \p add flag should be set to \p true, irrespective of the
    * original flag value passed into the first call of \p vmult. Hence, we do
    * not include the \p add flag in the \p vmult function.
-   *
-   *   2. The input vectors \p x and \p y are to be accessed via local indices
+   * 2. The input vectors \p x and \p y are to be accessed via local indices
    * with the assistance of \p row_index_global_to_local_map and \p
-   * col_index_global_to_local_map.</dd>
-   * </dl>
+   * col_index_global_to_local_map.}
    *
    * @param y
    * @param x
@@ -1265,6 +1254,7 @@ public:
    *
    * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
    * \p col_indices should be swapped. Also refer to HMatrix::vmult.
+   *
    * @param y
    * @param x
    */

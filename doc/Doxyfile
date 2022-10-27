@@ -1537,7 +1537,7 @@ USE_MATHJAX            = YES
 # The default value is: HTML-CSS.
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
-MATHJAX_FORMAT         = HTML-CSS
+MATHJAX_FORMAT         = SVG
 
 # When MathJax is enabled you need to specify the location relative to the HTML
 # output directory using the MATHJAX_RELPATH option. The destination directory
@@ -1557,7 +1557,7 @@ MATHJAX_RELPATH        = http://localhost/js/MathJax
 # MATHJAX_EXTENSIONS = TeX/AMSmath TeX/AMSsymbols
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
-MATHJAX_EXTENSIONS     = tex2jax TeX/AMSmath TeX/AMSsymbols TeX/noUndefined
+MATHJAX_EXTENSIONS     = tex2jax TeX/AMSmath TeX/AMSsymbols TeX/noUndefined TeX/AMScd.js
 
 # The MATHJAX_CODEFILE tag can be used to specify a file with javascript pieces
 # of code that will be used on startup of the MathJax code. See the MathJax site

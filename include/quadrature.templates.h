@@ -218,42 +218,46 @@ Quadrature<dim>::memory_consumption() const
 }
 
 
-template <int dim>
-typename std::conditional<dim == 1,
-                          std::array<Quadrature<1>, dim>,
-                          const std::array<Quadrature<1>, dim> &>::type
-Quadrature<dim>::get_tensor_basis() const
-{
-  Assert(this->is_tensor_product_flag == true,
-         ExcMessage("This function only makes sense if "
-                    "this object represents a tensor product!"));
-  Assert(tensor_basis != nullptr, ExcInternalError());
-
-  return *tensor_basis;
-}
+// template <int dim>
+// typename std::conditional<dim == 1,
+//                          std::array<Quadrature<1>, dim>,
+//                          const std::array<Quadrature<1>, dim> &>::type
+// Quadrature<dim>::get_tensor_basis() const
+//{
+//  Assert(this->is_tensor_product_flag == true,
+//         ExcMessage("This function only makes sense if "
+//                    "this object represents a tensor product!"));
+//  Assert(tensor_basis != nullptr, ExcInternalError());
+//
+//  return *tensor_basis;
+//}
 
 
 // construct the quadrature formulae in higher dimensions by
 // tensor product of lower dimensions
 template <int dim>
- QGauss<dim>::QGauss(const unsigned int n)
-   : Quadrature<dim>(QGauss<dim - 1>(n), QGauss<1>(n))
- {}
+QGauss<dim>::QGauss(const unsigned int n)
+  : Quadrature<dim>(QGauss<dim - 1>(n), QGauss<1>(n))
+{}
 
-template <>
-std::array<Quadrature<1>, 1>
-Quadrature<1>::get_tensor_basis() const
-{
-  Assert(this->is_tensor_product_flag == true,
-         ExcMessage("This function only makes sense if "
-                    "this object represents a tensor product!"));
+/**
+ * 2022-09-26 Explicit instantiation of the function @p get_tensor_basis for
+ * @p dim=1. However, this has already been instantiated in deal.ii's library
+ * in @p quadrature.cc, therefore, we comment out the code here.
+ */
+// template <>
+// std::array<Quadrature<1>, 1>
+// Quadrature<1>::get_tensor_basis() const
+//{
+//  Assert(this->is_tensor_product_flag == true,
+//         ExcMessage("This function only makes sense if "
+//                    "this object represents a tensor product!"));
+//
+//  return std::array<Quadrature<1>, 1>{{*this}};
+//}
 
-  return std::array<Quadrature<1>, 1>{{*this}};
-}
-
-
-template class Quadrature<4>;
-template class QGauss<4>;
+// template class Quadrature<4>;
+// template class QGauss<4>;
 
 DEAL_II_NAMESPACE_CLOSE
 

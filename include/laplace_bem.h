@@ -41,11 +41,15 @@
 #include <cmath>
 #include <vector>
 
+#include "aca_plus.h"
 #include "bem_general.h"
 #include "bem_tools.h"
+#include "bem_values.h"
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 #include "hmatrix.h"
+#include "hmatrix_symm.h"
+#include "hmatrix_symm_preconditioner.h"
 #include "laplace_kernels.h"
 #include "mapping_q_generic_ext.h"
 #include "quadrature.templates.h"
@@ -152,6 +156,9 @@ namespace IdeoBEM
                double       eta,
                unsigned int max_hmat_rank,
                double       aca_relative_error,
+               double       eta_for_preconditioner,
+               unsigned int max_hmat_rank_for_preconditioner,
+               double       aca_relative_error_for_preconditioner,
                unsigned int thread_num);
 
     /**
@@ -207,6 +214,18 @@ namespace IdeoBEM
      */
     void
     assemble_full_matrix_system();
+
+    /**
+     * Assemble \hmatrix system.
+     */
+    void
+    assemble_hmatrix_system();
+
+    /**
+     * Assemble \hmatrix preconditioner.
+     */
+    void
+    assemble_hmatrix_preconditioner();
 
     void
     solve();
@@ -341,6 +360,19 @@ namespace IdeoBEM
     DoFHandler<dim, spacedim> dof_handler_for_neumann_space_on_neumann_domain;
 
     /**
+     * DoF-to-cell topologies for various DoF handlers, which are used for
+     * matrix assembly on a pair of DoFs.
+     */
+    std::vector<std::vector<unsigned int>>
+      dof_to_cell_topo_for_dirichlet_space_on_dirichlet_domain;
+    std::vector<std::vector<unsigned int>>
+      dof_to_cell_topo_for_dirichlet_space_on_neumann_domain;
+    std::vector<std::vector<unsigned int>>
+      dof_to_cell_topo_for_neumann_space_on_dirichlet_domain;
+    std::vector<std::vector<unsigned int>>
+      dof_to_cell_topo_for_neumann_space_on_neumann_domain;
+
+    /**
      * Polynomial order for describing the geometric mapping for the Dirichlet
      * domain, i.e. the transformation from the unit cell to a real cell.
      */
@@ -414,10 +446,10 @@ namespace IdeoBEM
     /**
      * Cluster trees
      */
-    ClusterTree<spacedim> ct_for_neumann_space_on_dirichlet_domain;
-    ClusterTree<spacedim> ct_for_neumann_space_on_neumann_domain;
     ClusterTree<spacedim> ct_for_dirichlet_space_on_dirichlet_domain;
+    ClusterTree<spacedim> ct_for_neumann_space_on_dirichlet_domain;
     ClusterTree<spacedim> ct_for_dirichlet_space_on_neumann_domain;
+    ClusterTree<spacedim> ct_for_neumann_space_on_neumann_domain;
 
     /**
      * Block cluster trees corresponding to discretized bilinear forms in
@@ -449,30 +481,37 @@ namespace IdeoBEM
      * \hmatrices corresponding to discretized bilinear forms in the
      * mixed boundary value problem, which contain all possible cases.
      */
-    HMatrix<spacedim> V1_hmat;
-    HMatrix<spacedim> K1_hmat;
-    HMatrix<spacedim> K_prime1_hmat;
-    HMatrix<spacedim> D1_hmat;
-    HMatrix<spacedim> V2_hmat;
-    HMatrix<spacedim> K2_hmat_with_mass_matrix;
-    HMatrix<spacedim> K_prime2_hmat_with_mass_matrix;
-    HMatrix<spacedim> D2_hmat;
+    HMatrixSymm<spacedim> V1_hmat;
+    HMatrix<spacedim>     K1_hmat;
+    HMatrix<spacedim>     K_prime1_hmat;
+    HMatrixSymm<spacedim> D1_hmat;
+    HMatrix<spacedim>     V2_hmat;
+    HMatrix<spacedim>     K2_hmat_with_mass_matrix;
+    HMatrix<spacedim>     K_prime2_hmat_with_mass_matrix;
+    HMatrix<spacedim>     D2_hmat;
+
+    /**
+     * Preconditioners
+     */
+    HMatrixSymmPreconditioner<spacedim> V1_hmat_preconditioner;
+    HMatrixSymmPreconditioner<spacedim> D1_hmat_preconditioner;
 
     /**
      * The sequence of all DoF indices with the values \f$0, 1, \cdots\f$ for
      * different DoFHandlers.
      */
     std::vector<types::global_dof_index>
+      dof_indices_for_dirichlet_space_on_dirichlet_domain;
+    std::vector<types::global_dof_index>
       dof_indices_for_neumann_space_on_dirichlet_domain;
     std::vector<types::global_dof_index>
       dof_indices_for_dirichlet_space_on_neumann_domain;
     std::vector<types::global_dof_index>
-      dof_indices_for_dirichlet_space_on_dirichlet_domain;
-    std::vector<types::global_dof_index>
       dof_indices_for_neumann_space_on_neumann_domain;
 
     /**
-     * The list of all support points associated with @p dof_indices.
+     * The list of all support points associated with @p dof_indices held
+     * within different DoF handlers.
      */
     std::vector<Point<spacedim>>
       support_points_for_dirichlet_space_on_dirichlet_domain;
@@ -484,15 +523,16 @@ namespace IdeoBEM
       support_points_for_neumann_space_on_neumann_domain;
 
     /**
-     * Estimated average cell size values associated with @p dof_indices.
+     * Estimated average cell size values associated with @p dof_indices held
+     * within different DoF handlers.
      */
-    std::vector<float>
+    std::vector<double>
       dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain;
-    std::vector<float>
-      dof_average_cell_size_for_dirichlet_space_on_neumann_domain;
-    std::vector<float>
+    std::vector<double>
       dof_average_cell_size_for_neumann_space_on_dirichlet_domain;
-    std::vector<float>
+    std::vector<double>
+      dof_average_cell_size_for_dirichlet_space_on_neumann_domain;
+    std::vector<double>
       dof_average_cell_size_for_neumann_space_on_neumann_domain;
 
     /**
@@ -520,6 +560,18 @@ namespace IdeoBEM
      * \hmatrices share this same parameter.
      */
     double aca_relative_error;
+    /**
+     * Admissibility constant for the preconditioner.
+     */
+    double eta_for_preconditioner;
+    /**
+     * Maximum rank of the \hmatrices to be built for the preconditioner.
+     */
+    unsigned int max_hmat_rank_for_preconditioner;
+    /**
+     * Relative approximation error used in ACA+ for the preconditioner.
+     */
+    double aca_relative_error_for_preconditioner;
 
     /**
      * Pointer to the Neumann boundary condition function object.
@@ -670,6 +722,9 @@ namespace IdeoBEM
     double       eta,
     unsigned int max_hmat_rank,
     double       aca_relative_error,
+    double       eta_for_preconditioner,
+    unsigned int max_hmat_rank_for_preconditioner,
+    double       aca_relative_error_for_preconditioner,
     unsigned int thread_num)
     : fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_order_for_neumann_space(fe_order_for_neumann_space)
@@ -694,6 +749,10 @@ namespace IdeoBEM
     , eta(eta)
     , max_hmat_rank(max_hmat_rank)
     , aca_relative_error(aca_relative_error)
+    , eta_for_preconditioner(eta_for_preconditioner)
+    , max_hmat_rank_for_preconditioner(max_hmat_rank_for_preconditioner)
+    , aca_relative_error_for_preconditioner(
+        aca_relative_error_for_preconditioner)
     , neumann_bc_functor_ptr(nullptr)
     , alpha_for_neumann(1.0)
     , dirichlet_bc_functor_ptr(nullptr)
@@ -852,8 +911,131 @@ namespace IdeoBEM
             else
               {
                 /**
-                 * TODO Setup for Dirichlet problem solved by \hmatrix.
+                 * Build the DoF-to-cell topology.
                  */
+                build_dof_to_cell_topology(
+                  dof_to_cell_topo_for_dirichlet_space_on_dirichlet_domain,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain);
+                build_dof_to_cell_topology(
+                  dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
+                  dof_handler_for_neumann_space_on_dirichlet_domain);
+
+                /**
+                 * Generate lists of DoF indices.
+                 */
+                dof_indices_for_dirichlet_space_on_dirichlet_domain.resize(
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
+                dof_indices_for_neumann_space_on_dirichlet_domain.resize(
+                  dof_handler_for_neumann_space_on_dirichlet_domain.n_dofs());
+                gen_linear_indices<vector_uta, types::global_dof_index>(
+                  dof_indices_for_dirichlet_space_on_dirichlet_domain);
+                gen_linear_indices<vector_uta, types::global_dof_index>(
+                  dof_indices_for_neumann_space_on_dirichlet_domain);
+
+                /**
+                 * Get the spatial coordinates of the support points.
+                 */
+                support_points_for_dirichlet_space_on_dirichlet_domain.resize(
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
+                DoFTools::map_dofs_to_support_points(
+                  kx_mapping_for_dirichlet_domain,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  support_points_for_dirichlet_space_on_dirichlet_domain);
+
+                support_points_for_neumann_space_on_dirichlet_domain.resize(
+                  dof_handler_for_neumann_space_on_dirichlet_domain.n_dofs());
+                DoFTools::map_dofs_to_support_points(
+                  kx_mapping_for_dirichlet_domain,
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  support_points_for_neumann_space_on_dirichlet_domain);
+
+                /**
+                 * Calculate the average mesh cell size at each support point.
+                 */
+                dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain
+                  .assign(dof_handler_for_dirichlet_space_on_dirichlet_domain
+                            .n_dofs(),
+                          0);
+                map_dofs_to_average_cell_size(
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
+
+                dof_average_cell_size_for_neumann_space_on_dirichlet_domain
+                  .assign(
+                    dof_handler_for_neumann_space_on_dirichlet_domain.n_dofs(),
+                    0);
+                map_dofs_to_average_cell_size(
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
+
+                /**
+                 * Initialize the cluster trees.
+                 */
+                ct_for_dirichlet_space_on_dirichlet_domain = ClusterTree<
+                  spacedim>(
+                  dof_indices_for_dirichlet_space_on_dirichlet_domain,
+                  support_points_for_dirichlet_space_on_dirichlet_domain,
+                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain,
+                  n_min_for_ct);
+                ct_for_neumann_space_on_dirichlet_domain =
+                  ClusterTree<spacedim>(
+                    dof_indices_for_neumann_space_on_dirichlet_domain,
+                    support_points_for_neumann_space_on_dirichlet_domain,
+                    dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
+                    n_min_for_ct);
+
+                /**
+                 * Partition the cluster trees.
+                 */
+                ct_for_dirichlet_space_on_dirichlet_domain.partition(
+                  support_points_for_dirichlet_space_on_dirichlet_domain,
+                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
+                ct_for_neumann_space_on_dirichlet_domain.partition(
+                  support_points_for_neumann_space_on_dirichlet_domain,
+                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
+
+                /**
+                 * Create the block cluster trees.
+                 */
+                bct_for_bilinear_form_V1 = BlockClusterTree<spacedim>(
+                  ct_for_neumann_space_on_dirichlet_domain,
+                  ct_for_neumann_space_on_dirichlet_domain,
+                  eta,
+                  n_min_for_bct);
+                bct_for_bilinear_form_K2 = BlockClusterTree<spacedim>(
+                  ct_for_neumann_space_on_dirichlet_domain,
+                  ct_for_dirichlet_space_on_dirichlet_domain,
+                  eta,
+                  n_min_for_bct);
+
+                /**
+                 * Partition the block cluster trees.
+                 */
+                bct_for_bilinear_form_V1.partition(
+                  support_points_for_neumann_space_on_dirichlet_domain,
+                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
+                bct_for_bilinear_form_K2.partition(
+                  support_points_for_neumann_space_on_dirichlet_domain,
+                  support_points_for_dirichlet_space_on_dirichlet_domain,
+                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
+                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
+
+                /**
+                 * Initialize \hmatrices.
+                 */
+                V1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_V1,
+                                                max_hmat_rank);
+                K2_hmat_with_mass_matrix =
+                  HMatrix<spacedim>(bct_for_bilinear_form_K2,
+                                    max_hmat_rank,
+                                    HMatrixSupport::Property::general,
+                                    HMatrixSupport::BlockType::diagonal_block);
+
+                /**
+                 * Initialize the preconditioner.
+                 */
+                V1_hmat_preconditioner = HMatrixSymmPreconditioner<spacedim>(
+                  bct_for_bilinear_form_V1, max_hmat_rank_for_preconditioner);
               }
 
             /**
@@ -912,8 +1094,125 @@ namespace IdeoBEM
             else
               {
                 /**
-                 * TODO Setup for Neumann problem solved by \hmatrix.
+                 * Build the DoF-to-cell topology.
                  */
+                build_dof_to_cell_topology(
+                  dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain);
+                build_dof_to_cell_topology(
+                  dof_to_cell_topo_for_neumann_space_on_neumann_domain,
+                  dof_handler_for_neumann_space_on_dirichlet_domain);
+
+                /**
+                 * Generate lists of DoF indices.
+                 */
+                dof_indices_for_dirichlet_space_on_neumann_domain.resize(
+                  dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
+                dof_indices_for_neumann_space_on_neumann_domain.resize(
+                  dof_handler_for_neumann_space_on_neumann_domain.n_dofs());
+
+                /**
+                 * Get the spatial coordinates of the support points.
+                 */
+                support_points_for_dirichlet_space_on_neumann_domain.resize(
+                  dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
+                DoFTools::map_dofs_to_support_points(
+                  kx_mapping_for_neumann_domain,
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  support_points_for_dirichlet_space_on_neumann_domain);
+
+                support_points_for_neumann_space_on_neumann_domain.resize(
+                  dof_handler_for_neumann_space_on_neumann_domain.n_dofs());
+                DoFTools::map_dofs_to_support_points(
+                  ky_mapping_for_neumann_domain,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  support_points_for_neumann_space_on_neumann_domain);
+
+                /**
+                 * Calculate the average mesh cell size at each support point.
+                 */
+                dof_average_cell_size_for_dirichlet_space_on_neumann_domain
+                  .assign(
+                    dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs(),
+                    0);
+                map_dofs_to_average_cell_size(
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
+
+                dof_average_cell_size_for_neumann_space_on_neumann_domain
+                  .assign(
+                    dof_handler_for_neumann_space_on_neumann_domain.n_dofs(),
+                    0);
+                map_dofs_to_average_cell_size(
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  dof_average_cell_size_for_neumann_space_on_neumann_domain);
+
+                /**
+                 * Initialize the cluster trees.
+                 */
+                ct_for_dirichlet_space_on_neumann_domain =
+                  ClusterTree<spacedim>(
+                    dof_indices_for_dirichlet_space_on_neumann_domain,
+                    support_points_for_dirichlet_space_on_neumann_domain,
+                    dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
+                    n_min_for_ct);
+                ct_for_neumann_space_on_neumann_domain = ClusterTree<spacedim>(
+                  dof_indices_for_neumann_space_on_neumann_domain,
+                  support_points_for_neumann_space_on_neumann_domain,
+                  dof_average_cell_size_for_neumann_space_on_neumann_domain,
+                  n_min_for_ct);
+
+                /**
+                 * Partition the cluster trees.
+                 */
+                ct_for_dirichlet_space_on_neumann_domain.partition(
+                  support_points_for_dirichlet_space_on_neumann_domain,
+                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
+                ct_for_neumann_space_on_neumann_domain.partition(
+                  support_points_for_neumann_space_on_neumann_domain,
+                  dof_average_cell_size_for_neumann_space_on_neumann_domain);
+
+                /**
+                 * Create the block cluster trees.
+                 */
+                bct_for_bilinear_form_D1 = BlockClusterTree<spacedim>(
+                  ct_for_dirichlet_space_on_neumann_domain,
+                  ct_for_dirichlet_space_on_neumann_domain,
+                  eta,
+                  n_min_for_bct);
+                bct_for_bilinear_form_K_prime2 = BlockClusterTree<spacedim>(
+                  ct_for_dirichlet_space_on_neumann_domain,
+                  ct_for_neumann_space_on_neumann_domain,
+                  eta,
+                  n_min_for_bct);
+                bct_for_bilinear_form_V1 = BlockClusterTree<spacedim>(
+                  ct_for_neumann_space_on_neumann_domain,
+                  ct_for_neumann_space_on_neumann_domain,
+                  eta,
+                  n_min_for_bct);
+
+                /**
+                 * Initialize \hmatrices.
+                 */
+                D1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_D1,
+                                                max_hmat_rank);
+                K_prime2_hmat_with_mass_matrix =
+                  HMatrix<spacedim>(bct_for_bilinear_form_K_prime2,
+                                    max_hmat_rank);
+
+                /**
+                 * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
+                 */
+                V1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_V1,
+                                                max_hmat_rank);
+
+                /**
+                 * Initialize the preconditioner.
+                 */
+                V1_hmat_preconditioner = HMatrixSymmPreconditioner<spacedim>(
+                  bct_for_bilinear_form_V1, max_hmat_rank_for_preconditioner);
+                D1_hmat_preconditioner = HMatrixSymmPreconditioner<spacedim>(
+                  bct_for_bilinear_form_D1, max_hmat_rank_for_preconditioner);
               }
 
             /**
@@ -1124,10 +1423,6 @@ namespace IdeoBEM
                   K2_matrix_with_mass_matrix);
               }
 
-            // DEBUG
-            print_matrix_to_mat(
-              std::cout, "I", K2_matrix_with_mass_matrix, 15, false, 25, "0");
-
             /**
              * Assemble the DLP matrix, which is added with the previous
              * scaled FEM mass matrix.
@@ -1273,7 +1568,7 @@ namespace IdeoBEM
               a);
 
             /**
-             * Add the matrix \f$\alpha a a^T\f$ to \f$D\f$.
+             * Add the matrix \f$\alpha a a^T\f$ into \f$D\f$.
              */
             FullMatrix<double> aaT(D1_matrix.m(), D1_matrix.n());
             aaT.outer_product(a, a);
@@ -1473,6 +1768,193 @@ namespace IdeoBEM
 
   template <int dim, int spacedim>
   void
+  LaplaceBEM<dim, spacedim>::assemble_hmatrix_system()
+  {
+    MultithreadInfo::set_thread_limit(thread_num);
+
+    /**
+     * Define the @p ACAConfig object.
+     */
+    ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
+
+    switch (problem_type)
+      {
+        case DirichletBCProblem:
+          {
+            if (is_interior_problem)
+              {
+                std::cerr << "=== Assemble sigma I + K" << std::endl;
+
+                fill_hmatrix_with_aca_plus_smp(
+                  thread_num,
+                  K2_hmat_with_mass_matrix,
+                  aca_config,
+                  double_layer_kernel,
+                  1.0,
+                  0.5,
+                  dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
+                  dof_to_cell_topo_for_dirichlet_space_on_dirichlet_domain,
+                  SauterQuadratureRule<dim>(5, 4, 4, 3),
+                  QGauss<dim>(fe_order_for_dirichlet_space + 1),
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  kx_mapping_for_dirichlet_domain,
+                  ky_mapping_for_dirichlet_domain,
+                  *kx_mapping_data_for_dirichlet_domain,
+                  *ky_mapping_data_for_dirichlet_domain,
+                  map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                  map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                    SameTriangulations,
+                  false);
+              }
+            else
+              {
+                std::cerr << "=== Assemble (sigma-1) I + K" << std::endl;
+
+                fill_hmatrix_with_aca_plus_smp(
+                  thread_num,
+                  K2_hmat_with_mass_matrix,
+                  aca_config,
+                  double_layer_kernel,
+                  1.0,
+                  -0.5,
+                  dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
+                  dof_to_cell_topo_for_dirichlet_space_on_dirichlet_domain,
+                  SauterQuadratureRule<dim>(5, 4, 4, 3),
+                  QGauss<dim>(fe_order_for_dirichlet_space + 1),
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  kx_mapping_for_dirichlet_domain,
+                  ky_mapping_for_dirichlet_domain,
+                  *kx_mapping_data_for_dirichlet_domain,
+                  *ky_mapping_data_for_dirichlet_domain,
+                  map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                  map_from_dirichlet_boundary_mesh_to_volume_mesh,
+                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                    SameTriangulations,
+                  false);
+              }
+
+            std::cerr << "=== Assemble SLP matrix ===" << std::endl;
+
+            fill_hmatrix_with_aca_plus_smp(
+              thread_num,
+              V1_hmat,
+              aca_config,
+              single_layer_kernel,
+              1.0,
+              dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
+              dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
+              SauterQuadratureRule<dim>(5, 4, 4, 3),
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_dirichlet_domain,
+              map_from_dirichlet_boundary_mesh_to_volume_mesh,
+              map_from_dirichlet_boundary_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              true);
+
+            /**
+             * Calculate the RHS vector.
+             */
+            K2_hmat_with_mass_matrix.vmult(system_rhs,
+                                           dirichlet_bc,
+                                           HMatrixSupport::Property::general);
+
+            break;
+          }
+        case NeumannBCProblem:
+          {
+            break;
+          }
+        case MixedBCProblem:
+          {
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcInternalError());
+
+            break;
+          }
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::assemble_hmatrix_preconditioner()
+  {
+    MultithreadInfo::set_thread_limit(thread_num);
+
+    /**
+     * Define the @p ACAConfig object.
+     */
+    ACAConfig aca_config(max_hmat_rank_for_preconditioner,
+                         aca_relative_error_for_preconditioner,
+                         eta_for_preconditioner);
+
+    switch (problem_type)
+      {
+        case DirichletBCProblem:
+          {
+            std::cerr << "=== Assemble preconditioner for the SLP matrix ==="
+                      << std::endl;
+
+            fill_hmatrix_with_aca_plus_smp(
+              thread_num,
+              V1_hmat_preconditioner,
+              aca_config,
+              single_layer_kernel,
+              1.0,
+              dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
+              dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
+              SauterQuadratureRule<dim>(4, 3, 3, 2),
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_dirichlet_domain,
+              map_from_dirichlet_boundary_mesh_to_volume_mesh,
+              map_from_dirichlet_boundary_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              true);
+
+            /**
+             * Perform Cholesky factorisation of the preconditioner.
+             */
+            V1_hmat_preconditioner.compute_cholesky_factorization(
+              max_hmat_rank_for_preconditioner);
+
+            break;
+          }
+        case NeumannBCProblem:
+          {
+            break;
+          }
+        case MixedBCProblem:
+          {
+            Assert(false, ExcNotImplemented());
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcInternalError());
+            break;
+          }
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
   LaplaceBEM<dim, spacedim>::solve()
   {
     if (!is_use_hmat)
@@ -1514,11 +1996,17 @@ namespace IdeoBEM
       }
     else
       {
+        SolverControl            solver_control(1000, 1e-10, true, true);
+        SolverCG<Vector<double>> solver(solver_control);
+
         switch (problem_type)
           {
             case DirichletBCProblem:
               {
-                // TODO Solve H-matrix for Dirichlet problem
+                solver.solve(V1_hmat,
+                             solution_for_dirichlet_domain,
+                             system_rhs,
+                             V1_hmat_preconditioner);
 
                 break;
               }
@@ -1900,21 +2388,19 @@ namespace IdeoBEM
       }
     else
       {
-        // TODO Assemble \hmatrix system
+        assemble_hmatrix_system();
+        assemble_hmatrix_preconditioner();
       }
-
-    // DEBUG
-    print_matrix_to_mat(std::cout, "V", V1_matrix, 15, false, 25, "0");
-    print_matrix_to_mat(
-      std::cout, "IK", K2_matrix_with_mass_matrix, 15, false, 25, "0");
-    print_vector_to_mat(std::cout, "b", system_rhs, false);
 
     solve();
     output_results();
     output_potential_at_target_points();
 
     // DEBUG
-    verify_neumann_solution_in_space();
+    if (problem_type == ProblemType::NeumannBCProblem)
+      {
+        verify_neumann_solution_in_space();
+      }
   }
 
 

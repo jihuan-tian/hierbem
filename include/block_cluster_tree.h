@@ -297,6 +297,10 @@ public:
   void
   partition(const std::vector<Point<spacedim>> &all_support_points);
 
+  void
+  partition(const std::vector<Point<spacedim>> &all_support_points_in_I,
+            const std::vector<Point<spacedim>> &all_support_points_in_J);
+
   /**
    * Perform a recursive partition by starting from the root node. The
    * evaluation of the admissibility condition has mesh cell size correction.
@@ -306,6 +310,12 @@ public:
   void
   partition(const std::vector<Point<spacedim>> &all_support_points,
             const std::vector<Number> &         cell_size_at_dofs);
+
+  void
+  partition(const std::vector<Point<spacedim>> &all_support_points_in_I,
+            const std::vector<Point<spacedim>> &all_support_points_in_J,
+            const std::vector<Number> &         cell_size_at_dofs_in_I,
+            const std::vector<Number> &         cell_size_at_dofs_in_J);
 
   /**
    * Extend the current block cluster tree to be finer than the given partition.
@@ -655,6 +665,13 @@ private:
     const std::vector<Point<spacedim>> &all_support_points,
     std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
+  void
+  partition_from_block_cluster_node(
+    node_pointer_type                   current_block_cluster_node,
+    const std::vector<Point<spacedim>> &all_support_points_in_I,
+    const std::vector<Point<spacedim>> &all_support_points_in_J,
+    std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
+
   /**
    * Same as above but the evaluation of the admissibility condition has mesh
    * cell size correction.
@@ -664,6 +681,15 @@ private:
     node_pointer_type                   current_block_cluster_node,
     const std::vector<Point<spacedim>> &all_support_points,
     const std::vector<Number> &         cell_size_at_dofs,
+    std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
+
+  void
+  partition_from_block_cluster_node(
+    node_pointer_type                   current_block_cluster_node,
+    const std::vector<Point<spacedim>> &all_support_points_in_I,
+    const std::vector<Point<spacedim>> &all_support_points_in_J,
+    const std::vector<Number> &         cell_size_at_dofs_in_I,
+    const std::vector<Number> &         cell_size_at_dofs_in_J,
     std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
   /**
@@ -1481,12 +1507,50 @@ BlockClusterTree<spacedim, Number>::partition(
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition(
+  const std::vector<Point<spacedim>> &all_support_points_in_I,
+  const std::vector<Point<spacedim>> &all_support_points_in_J)
+{
+  partition_from_block_cluster_node(root_node,
+                                    all_support_points_in_I,
+                                    all_support_points_in_J,
+                                    leaf_set);
+
+  categorize_near_and_far_field_sets();
+
+  calc_depth_and_max_level();
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::partition(
   const std::vector<Point<spacedim>> &all_support_points,
   const std::vector<Number> &         cell_size_at_dofs)
 {
   partition_from_block_cluster_node(root_node,
                                     all_support_points,
                                     cell_size_at_dofs,
+                                    leaf_set);
+
+  categorize_near_and_far_field_sets();
+
+  calc_depth_and_max_level();
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::partition(
+  const std::vector<Point<spacedim>> &all_support_points_in_I,
+  const std::vector<Point<spacedim>> &all_support_points_in_J,
+  const std::vector<Number> &         cell_size_at_dofs_in_I,
+  const std::vector<Number> &         cell_size_at_dofs_in_J)
+{
+  partition_from_block_cluster_node(root_node,
+                                    all_support_points_in_I,
+                                    all_support_points_in_J,
+                                    cell_size_at_dofs_in_I,
+                                    cell_size_at_dofs_in_J,
                                     leaf_set);
 
   categorize_near_and_far_field_sets();
@@ -2756,6 +2820,133 @@ template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
   node_pointer_type                   current_block_cluster_node,
+  const std::vector<Point<spacedim>> &all_support_points_in_I,
+  const std::vector<Point<spacedim>> &all_support_points_in_J,
+  std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
+{
+  leaf_set_wrt_current_node.clear();
+
+  if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
+        eta, all_support_points_in_I, all_support_points_in_J, n_min))
+    {
+      /**
+       * Push back the current cluster node, which is small, to the leaf set and
+       * set its split mode as \p UnsplitMode.
+       */
+      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
+      current_block_cluster_node->set_split_mode(UnsplitMode);
+    }
+  else
+    {
+      unsigned int child_counter = 0;
+
+      // Iterate over each child of the cluster \f$\tau\f$.
+      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
+           i++)
+        {
+          typename ClusterTree<spacedim, Number>::node_pointer_type
+            tau_son_node_pointer =
+              current_block_cluster_node->get_data_pointer()
+                ->get_tau_node()
+                ->get_child_pointer(i);
+          Assert(tau_son_node_pointer != nullptr, ExcInternalError());
+
+          // Iterate over each child of the cluster \f$\sigma\f$.
+          for (unsigned int j = 0;
+               j < (ClusterTree<spacedim, Number>::child_num);
+               j++)
+            {
+              typename ClusterTree<spacedim, Number>::node_pointer_type
+                sigma_son_node_pointer =
+                  current_block_cluster_node->get_data_pointer()
+                    ->get_sigma_node()
+                    ->get_child_pointer(j);
+              Assert(sigma_son_node_pointer != nullptr, ExcInternalError());
+
+              /**
+               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+               * have the same level in their respective cluster trees, i.e.
+               * level preserving property should be satisfied.
+               */
+              Assert(
+                tau_son_node_pointer->get_level() ==
+                  sigma_son_node_pointer->get_level(),
+                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
+                                        sigma_son_node_pointer->get_level()));
+
+              /**
+               * Create a new block cluster node as child and recursively
+               * partition from it.
+               */
+              const std::array<node_pointer_type,
+                               BlockClusterTree<spacedim, Number>::child_num>
+                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+              node_pointer_type child_block_cluster_node =
+                CreateTreeNode<data_value_type,
+                               BlockClusterTree<spacedim, Number>::child_num>(
+                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
+                  current_block_cluster_node->get_level() + 1,
+                  empty_child_pointers,
+                  current_block_cluster_node,
+                  UnsplitMode);
+
+              /**
+               * Append this new node as one of the children of the current
+               * block cluster node.
+               */
+              current_block_cluster_node->set_child_pointer(
+                child_counter, child_block_cluster_node);
+
+              /**
+               * Update the total number of nodes in the tree.
+               */
+              node_num++;
+              child_counter++;
+
+              std::vector<node_pointer_type> leaf_set_wrt_child_node;
+              partition_from_block_cluster_node(child_block_cluster_node,
+                                                all_support_points_in_I,
+                                                all_support_points_in_J,
+                                                leaf_set_wrt_child_node);
+
+              /**
+               * Merge the leaf set wrt. the child block cluster node into the
+               * leaf set of the current block cluster node.
+               */
+              for (node_pointer_type block_cluster_node :
+                   leaf_set_wrt_child_node)
+                {
+                  leaf_set_wrt_current_node.push_back(block_cluster_node);
+                }
+            }
+        }
+
+      /**
+       * Make sure the current block cluster have four children, which is
+       * ensured by the tensor product construction.
+       *
+       * <dl class="section note">
+       *   <dt>Note</dt>
+       *   <dd>The second argument \p BlockClusterTree<spacedim,
+       * Number>::child_num should be wrapped between the brackets, otherwise,
+       * the program cannot be compiled.</dd>
+       * </dl>
+       */
+      AssertDimension(current_block_cluster_node->get_child_num(),
+                      (BlockClusterTree<spacedim, Number>::child_num));
+
+      /**
+       * Set the split mode of the current block cluster node as cross.
+       */
+      current_block_cluster_node->set_split_mode(CrossSplitMode);
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
+  node_pointer_type                   current_block_cluster_node,
   const std::vector<Point<spacedim>> &all_support_points,
   const std::vector<Number> &         cell_size_at_dofs,
   std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
@@ -2840,6 +3031,139 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
               partition_from_block_cluster_node(child_block_cluster_node,
                                                 all_support_points,
                                                 cell_size_at_dofs,
+                                                leaf_set_wrt_child_node);
+
+              /**
+               * Merge the leaf set wrt. the child block cluster node into the
+               * leaf set of the current block cluster node.
+               */
+              for (node_pointer_type block_cluster_node :
+                   leaf_set_wrt_child_node)
+                {
+                  leaf_set_wrt_current_node.push_back(block_cluster_node);
+                }
+            }
+        }
+
+      /**
+       * Make sure the current block cluster have four children, which is
+       * ensured by the tensor product construction.
+       *
+       * <dl class="section note">
+       *   <dt>Note</dt>
+       *   <dd>The second argument \p BlockClusterTree<spacedim,
+       * Number>::child_num should be wrapped between the brackets, otherwise,
+       * the program cannot be compiled.</dd>
+       * </dl>
+       */
+      AssertDimension(current_block_cluster_node->get_child_num(),
+                      (BlockClusterTree<spacedim, Number>::child_num));
+
+      /**
+       * Set the split mode of the current block cluster node as cross.
+       */
+      current_block_cluster_node->set_split_mode(CrossSplitMode);
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
+  node_pointer_type                   current_block_cluster_node,
+  const std::vector<Point<spacedim>> &all_support_points_in_I,
+  const std::vector<Point<spacedim>> &all_support_points_in_J,
+  const std::vector<Number> &         cell_size_at_dofs_in_I,
+  const std::vector<Number> &         cell_size_at_dofs_in_J,
+  std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
+{
+  leaf_set_wrt_current_node.clear();
+
+  if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
+        eta,
+        all_support_points_in_I,
+        all_support_points_in_J,
+        cell_size_at_dofs_in_I,
+        cell_size_at_dofs_in_J,
+        n_min))
+    {
+      /**
+       * Push back the current cluster node, which is small, to the leaf set and
+       * set its split mode as \p UnsplitMode.
+       */
+      leaf_set_wrt_current_node.push_back(current_block_cluster_node);
+      current_block_cluster_node->set_split_mode(UnsplitMode);
+    }
+  else
+    {
+      unsigned int child_counter = 0;
+
+      // Iterate over each child of the cluster \f$\tau\f$.
+      for (unsigned int i = 0; i < (ClusterTree<spacedim, Number>::child_num);
+           i++)
+        {
+          typename ClusterTree<spacedim, Number>::node_pointer_type
+            tau_son_node_pointer =
+              current_block_cluster_node->get_data_pointer()
+                ->get_tau_node()
+                ->get_child_pointer(i);
+          Assert(tau_son_node_pointer != nullptr, ExcInternalError());
+
+          // Iterate over each child of the cluster \f$\sigma\f$.
+          for (unsigned int j = 0;
+               j < (ClusterTree<spacedim, Number>::child_num);
+               j++)
+            {
+              typename ClusterTree<spacedim, Number>::node_pointer_type
+                sigma_son_node_pointer =
+                  current_block_cluster_node->get_data_pointer()
+                    ->get_sigma_node()
+                    ->get_child_pointer(j);
+              Assert(sigma_son_node_pointer != nullptr, ExcInternalError());
+
+              /**
+               * Make sure that the two clusters \f$\tau\f$ and \f$\sigma\f$
+               * have the same level in their respective cluster trees, i.e.
+               * level preserving property should be satisfied.
+               */
+              Assert(
+                tau_son_node_pointer->get_level() ==
+                  sigma_son_node_pointer->get_level(),
+                ExcClusterLevelMismatch(tau_son_node_pointer->get_level(),
+                                        sigma_son_node_pointer->get_level()));
+
+              /**
+               * Create a new block cluster node as child and recursively
+               * partition from it.
+               */
+              const std::array<node_pointer_type,
+                               BlockClusterTree<spacedim, Number>::child_num>
+                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+              node_pointer_type child_block_cluster_node =
+                CreateTreeNode<data_value_type,
+                               BlockClusterTree<spacedim, Number>::child_num>(
+                  data_value_type(tau_son_node_pointer, sigma_son_node_pointer),
+                  current_block_cluster_node->get_level() + 1,
+                  empty_child_pointers,
+                  current_block_cluster_node,
+                  UnsplitMode);
+
+              /**
+               * Append this new node as one of the children of the current
+               * block cluster node.
+               */
+              current_block_cluster_node->set_child_pointer(
+                child_counter, child_block_cluster_node);
+
+              node_num++;
+              child_counter++;
+
+              std::vector<node_pointer_type> leaf_set_wrt_child_node;
+              partition_from_block_cluster_node(child_block_cluster_node,
+                                                all_support_points_in_I,
+                                                all_support_points_in_J,
+                                                cell_size_at_dofs_in_I,
+                                                cell_size_at_dofs_in_J,
                                                 leaf_set_wrt_child_node);
 
               /**

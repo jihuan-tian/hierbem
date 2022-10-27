@@ -155,6 +155,12 @@ public:
     Number                                      eta,
     const std::vector<Point<spacedim, Number>> &all_support_points);
 
+  void
+  check_is_admissible(
+    Number                                      eta,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_J);
+
   /**
    * Determine if the block cluster is admissible. The admissibility condition
    * is evaluated with mesh cell size correction.
@@ -167,6 +173,14 @@ public:
     Number                                      eta,
     const std::vector<Point<spacedim, Number>> &all_support_points,
     const std::vector<Number> &                 cell_size_at_dofs);
+
+  void
+  check_is_admissible(
+    Number                                      eta,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+    const std::vector<Number> &                 cell_size_at_dofs_in_I,
+    const std::vector<Number> &                 cell_size_at_dofs_in_J);
 
   /**
    * Determine if the block cluster is either admissible or small. The
@@ -182,6 +196,13 @@ public:
     const std::vector<Point<spacedim, Number>> &all_support_points,
     unsigned int                                n_min);
 
+  bool
+  is_admissible_or_small(
+    Number                                      eta,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+    unsigned int                                n_min);
+
   /**
    * Determine if the block cluster is either admissible or small. The
    * admissibility condition is evaluated with mesh cell size correction.
@@ -195,6 +216,15 @@ public:
     Number                                      eta,
     const std::vector<Point<spacedim, Number>> &all_support_points,
     const std::vector<Number> &                 cell_size_at_dofs,
+    unsigned int                                n_min);
+
+  bool
+  is_admissible_or_small(
+    Number                                      eta,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+    const std::vector<Number> &                 cell_size_at_dofs_in_I,
+    const std::vector<Number> &                 cell_size_at_dofs_in_J,
     unsigned int                                n_min);
 
   /**
@@ -480,6 +510,32 @@ BlockCluster<spacedim, Number>::check_is_admissible(
     }
 }
 
+
+template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::check_is_admissible(
+  Number                                      eta,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_J)
+{
+  cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
+    (*sigma_node->get_data_pointer()),
+    all_support_points_in_I,
+    all_support_points_in_J);
+
+  if (std::min(tau_node->get_data_pointer()->get_diameter(),
+               sigma_node->get_data_pointer()->get_diameter()) <=
+      eta * cluster_distance)
+    {
+      is_admissible = true;
+    }
+  else
+    {
+      is_admissible = false;
+    }
+}
+
+
 template <int spacedim, typename Number>
 void
 BlockCluster<spacedim, Number>::check_is_admissible(
@@ -508,6 +564,42 @@ BlockCluster<spacedim, Number>::check_is_admissible(
     }
 }
 
+
+template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::check_is_admissible(
+  Number                                      eta,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+  const std::vector<Number> &                 cell_size_at_dofs_in_I,
+  const std::vector<Number> &                 cell_size_at_dofs_in_J)
+{
+  cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
+    (*sigma_node->get_data_pointer()),
+    all_support_points_in_I,
+    all_support_points_in_J,
+    cell_size_at_dofs_in_I,
+    cell_size_at_dofs_in_J);
+
+  /**
+   * N.B. The contained clusters \f$\tau\f$ and \f$\sigma\f$ in the block
+   * cluster should be created with the parameter \p cell_size_at_dofs. In this
+   * way, the returned cluster diameter is calculated with mesh cell size
+   * correction. This is achieved when creating the two cluster trees.
+   */
+  if (std::min(tau_node->get_data_pointer()->get_diameter(),
+               sigma_node->get_data_pointer()->get_diameter()) <=
+      eta * cluster_distance)
+    {
+      is_admissible = true;
+    }
+  else
+    {
+      is_admissible = false;
+    }
+}
+
+
 template <int spacedim, typename Number>
 bool
 BlockCluster<spacedim, Number>::is_admissible_or_small(
@@ -527,6 +619,29 @@ BlockCluster<spacedim, Number>::is_admissible_or_small(
       return false;
     }
 }
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_admissible_or_small(
+  Number                                      eta,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+  unsigned int                                n_min)
+{
+  check_is_admissible(eta, all_support_points_in_I, all_support_points_in_J);
+  check_is_near_field(n_min);
+
+  if (is_admissible || is_near_field)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
 
 template <int spacedim, typename Number>
 bool
@@ -548,6 +663,35 @@ BlockCluster<spacedim, Number>::is_admissible_or_small(
       return false;
     }
 }
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_admissible_or_small(
+  Number                                      eta,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+  const std::vector<Number> &                 cell_size_at_dofs_in_I,
+  const std::vector<Number> &                 cell_size_at_dofs_in_J,
+  unsigned int                                n_min)
+{
+  check_is_admissible(eta,
+                      all_support_points_in_I,
+                      all_support_points_in_J,
+                      cell_size_at_dofs_in_I,
+                      cell_size_at_dofs_in_J);
+  check_is_near_field(n_min);
+
+  if (is_admissible || is_near_field)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
 
 template <int spacedim, typename Number>
 bool

@@ -2825,46 +2825,79 @@ namespace IdeoBEM
     }
 
 
-    //    template <int dim, int spacedim = dim>
-    //    CellNeighboringType
-    //    detect_cell_neighboring_type_for_same_triangulations(
-    //      const typename DoFHandler<dim, spacedim>::active_cell_iterator
-    //        &first_cell_iter,
-    //      const typename DoFHandler<dim, spacedim>::active_cell_iterator
-    //        &                           second_cell_iter,
-    //      const Mapping<dim, spacedim> &first_cell_mapping,
-    //      const Mapping<dim, spacedim> &second_cell_mapping,
-    //      std::vector<std::pair<types::global_dof_index,
-    //      types::global_dof_index>>
-    //        &          common_vertex_dof_indices,
-    //      const double threshold = 1e-12)
-    //    {
-    //      const unsigned int vertices_per_cell =
-    //        GeometryInfo<dim>::vertices_per_cell;
-    //
-    //      /**
-    //       * Get the vertex indices in each cell.
-    //       */
-    //      std::array<types::global_vertex_index, vertices_per_cell>
-    //        first_cell_vertex_indices(
-    //          get_vertex_indices_in_cell<dim, spacedim>(first_cell_iter));
-    //
-    //      std::array<types::global_vertex_index, vertices_per_cell>
-    //        second_cell_vertex_indices(
-    //          get_vertex_indices_in_cell<dim, spacedim>(second_cell_iter));
-    //
-    //      /**
-    //       * Calculate the intersection of the two cells' vertex indices. This
-    //       * operation is meaningful because the triangulations for the two
-    //       cells
-    //       * are the same.
-    //       */
-    //      std::vector<types::global_vertex_index> vertex_index_intersection;
-    //      detect_cell_neighboring_type_for_same_triangulations<dim>(
-    //        first_cell_vertex_indices,
-    //        second_cell_vertex_indices,
-    //        vertex_index_intersection);
-    //    }
+    /**
+     * Detect the neighboring type of two cells based on their vertex indices.
+     *
+     * \mynote{This is the function actually being called in my program.}
+     *
+     * @param method_for_cell_neighboring_type
+     * @param first_cell_iter
+     * @param second_cell_iter
+     * @param map_from_first_boundary_mesh_to_volume_mesh
+     * @param map_from_second_boundary_mesh_to_volume_mesh
+     * @param common_vertex_pair_local_indices
+     * @return
+     */
+    template <int dim, int spacedim>
+    CellNeighboringType
+    detect_cell_neighboring_type(
+      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+      const typename Triangulation<dim, spacedim>::active_cell_iterator
+        &first_cell_iter,
+      const typename Triangulation<dim, spacedim>::active_cell_iterator
+        &second_cell_iter,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_first_boundary_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_second_boundary_mesh_to_volume_mesh,
+      std::vector<std::pair<unsigned int, unsigned int>>
+        &common_vertex_pair_local_indices)
+    {
+      common_vertex_pair_local_indices.clear();
+
+      CellNeighboringType cell_neighboring_type;
+
+      switch (method_for_cell_neighboring_type)
+        {
+          case DetectCellNeighboringTypeMethod::SameTriangulations:
+            {
+              cell_neighboring_type =
+                detect_cell_neighboring_type_for_same_triangulations<dim,
+                                                                     spacedim>(
+                  first_cell_iter,
+                  second_cell_iter,
+                  common_vertex_pair_local_indices);
+
+              break;
+            }
+          case DetectCellNeighboringTypeMethod::DifferentTriangulations:
+            {
+              cell_neighboring_type =
+                detect_cell_neighboring_type_for_different_triangulations<
+                  dim,
+                  spacedim>(first_cell_iter,
+                            second_cell_iter,
+                            map_from_first_boundary_mesh_to_volume_mesh,
+                            map_from_second_boundary_mesh_to_volume_mesh,
+                            common_vertex_pair_local_indices);
+
+              break;
+            }
+          default:
+            {
+              Assert(false,
+                     ExcMessage(
+                       "Invalid cell neighboring type detection method!"));
+              cell_neighboring_type = CellNeighboringType::None;
+
+              break;
+            }
+        }
+
+      return cell_neighboring_type;
+    }
 
 
     /**

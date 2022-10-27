@@ -1,17 +1,18 @@
 /**
- * \file hmatrix-vmult-symm.cc
+ * \file hmatrix-symm-vmult-symm.cc
  * \brief Verify \hmatrix matrix-vector multiplication. The \hmatrix is
- * symmetric and only its lower triangular part is stored.
+ * symmetric and only its lower triangular part is stored. In this version, the
+ * \hmatrix type is @p HMatrixSymm.
  *
- * \ingroup testers hierarchical_matrices
+ * \ingroup testers
  * \author Jihuan Tian
- * \date 2022-05-14
+ * \date 2022-10-27
  */
 
 #include <fstream>
 #include <iostream>
 
-#include "hmatrix.h"
+#include "hmatrix_symm.h"
 #include "lapack_full_matrix_ext.h"
 #include "read_octave_data.h"
 
@@ -66,10 +67,7 @@ main()
   BlockClusterTree<3, double> block_cluster_tree(cluster_tree, cluster_tree);
   block_cluster_tree.partition_fine_non_tensor_product();
 
-  HMatrix<3, double> H(block_cluster_tree,
-                       M,
-                       fixed_rank_k,
-                       HMatrixSupport::diagonal_block);
+  HMatrixSymm<3, double> H(block_cluster_tree, M, fixed_rank_k);
 
   LAPACKFullMatrixExt<double> H_full;
   H.convertToFullMatrix(H_full);
@@ -81,7 +79,7 @@ main()
    * to @p vmult.}
    */
   Vector<double> y(n);
-  H.vmult(y, x, H.get_property());
+  H.vmult(y, x);
   print_vector_to_mat(std::cout, "y", y, false);
 
   return 0;

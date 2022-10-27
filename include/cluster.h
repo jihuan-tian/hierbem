@@ -190,8 +190,26 @@ public:
   calc_cluster_distance(
     const Cluster<spacedim1, Number1> &           cluster1,
     const Cluster<spacedim1, Number1> &           cluster2,
+    const std::vector<Point<spacedim1, Number1>> &all_support_points1,
+    const std::vector<Point<spacedim1, Number1>> &all_support_points2);
+
+  template <int spacedim1, typename Number1>
+  friend Number1
+  calc_cluster_distance(
+    const Cluster<spacedim1, Number1> &           cluster1,
+    const Cluster<spacedim1, Number1> &           cluster2,
     const std::vector<Point<spacedim1, Number1>> &all_support_points,
     const std::vector<Number1> &                  cell_size_at_dofs);
+
+  template <int spacedim1, typename Number1>
+  friend Number1
+  calc_cluster_distance(
+    const Cluster<spacedim1, Number1> &           cluster1,
+    const Cluster<spacedim1, Number1> &           cluster2,
+    const std::vector<Point<spacedim1, Number1>> &all_support_points1,
+    const std::vector<Point<spacedim1, Number1>> &all_support_points2,
+    const std::vector<Number1> &                  cell_size_at_dofs1,
+    const std::vector<Number1> &                  cell_size_at_dofs2);
 
   /**
    * Check the equality of two clusters by comparing their index sets.
@@ -336,6 +354,12 @@ public:
     const Cluster &                             cluster,
     const std::vector<Point<spacedim, Number>> &all_support_points) const;
 
+  Number
+  distance_to_cluster(
+    const Cluster &                             cluster,
+    const std::vector<Point<spacedim, Number>> &all_support_points1,
+    const std::vector<Point<spacedim, Number>> &all_support_points2) const;
+
   /**
    * Calculate the minimum distance of the current cluster to the given cluster.
    * Cell size correction is applied.
@@ -345,6 +369,14 @@ public:
     const Cluster &                             cluster,
     const std::vector<Point<spacedim, Number>> &all_support_points,
     const std::vector<Number> &                 cell_size_at_dofs) const;
+
+  Number
+  distance_to_cluster(
+    const Cluster &                             cluster,
+    const std::vector<Point<spacedim, Number>> &all_support_points1,
+    const std::vector<Point<spacedim, Number>> &all_support_points2,
+    const std::vector<Number> &                 cell_size_at_dofs1,
+    const std::vector<Number> &                 cell_size_at_dofs2) const;
 
   /**
    * Check if the index set of the current cluster is a subset of that of the
@@ -534,6 +566,39 @@ calc_cluster_distance(
 }
 
 
+template <int spacedim, typename Number = double>
+Number
+calc_cluster_distance(
+  const Cluster<spacedim, Number> &           cluster1,
+  const Cluster<spacedim, Number> &           cluster2,
+  const std::vector<Point<spacedim, Number>> &all_support_points1,
+  const std::vector<Point<spacedim, Number>> &all_support_points2)
+{
+  // Calculate the total number of point pairs.
+  const unsigned int point_pair_num =
+    cluster1.get_index_set().size() * cluster2.get_index_set().size();
+
+  // Create a linearized list storing all the distance values.
+  std::vector<Number> point_pair_distance(point_pair_num);
+
+  unsigned int counter = 0;
+  for (const auto &index1 : cluster1.get_index_set())
+    {
+      for (const auto &index2 : cluster2.get_index_set())
+        {
+          point_pair_distance.at(counter) =
+            all_support_points1.at(index1).distance(
+              all_support_points2.at(index2));
+
+          counter++;
+        }
+    }
+
+  return (*std::min_element(point_pair_distance.cbegin(),
+                            point_pair_distance.cend()));
+}
+
+
 /**
  * Calculate the minimum distance between two clusters. This calculation has
  * the mesh size correction.
@@ -580,6 +645,60 @@ calc_cluster_distance(
       if (cell_size_at_dofs.at(index) > max_dof_cell_size)
         {
           max_dof_cell_size = cell_size_at_dofs.at(index);
+        }
+    }
+
+  Number distance_correction = max_dof_cell_size * 2;
+
+  /**
+   * Ensure the positivity of the returned cluster distance.
+   */
+  if (uncorrected_cluster_distance > distance_correction)
+    {
+      return uncorrected_cluster_distance - distance_correction;
+    }
+  else
+    {
+      return uncorrected_cluster_distance;
+    }
+}
+
+
+template <int spacedim, typename Number = double>
+Number
+calc_cluster_distance(
+  const Cluster<spacedim, Number> &           cluster1,
+  const Cluster<spacedim, Number> &           cluster2,
+  const std::vector<Point<spacedim, Number>> &all_support_points1,
+  const std::vector<Point<spacedim, Number>> &all_support_points2,
+  const std::vector<Number> &                 cell_size_at_dofs1,
+  const std::vector<Number> &                 cell_size_at_dofs2)
+{
+  /**
+   * Calculate the uncorrected cluster distance.
+   */
+  Number uncorrected_cluster_distance = calc_cluster_distance(
+    cluster1, cluster2, all_support_points1, all_support_points2);
+
+  /**
+   * Get the maximum diameter of the support sets for different DoFs, which is 2
+   * times of the cell size associated with the corresponding DoF.
+   */
+  Number max_dof_cell_size = 0.0;
+
+  for (const auto &index : cluster1.get_index_set())
+    {
+      if (cell_size_at_dofs1.at(index) > max_dof_cell_size)
+        {
+          max_dof_cell_size = cell_size_at_dofs1.at(index);
+        }
+    }
+
+  for (const auto &index : cluster2.get_index_set())
+    {
+      if (cell_size_at_dofs2.at(index) > max_dof_cell_size)
+        {
+          max_dof_cell_size = cell_size_at_dofs2.at(index);
         }
     }
 
@@ -783,6 +902,21 @@ Cluster<spacedim, Number>::distance_to_cluster(
   return calc_cluster_distance((*this), cluster, all_support_points);
 }
 
+
+template <int spacedim, typename Number>
+Number
+Cluster<spacedim, Number>::distance_to_cluster(
+  const Cluster &                             cluster,
+  const std::vector<Point<spacedim, Number>> &all_support_points1,
+  const std::vector<Point<spacedim, Number>> &all_support_points2) const
+{
+  return calc_cluster_distance((*this),
+                               cluster,
+                               all_support_points1,
+                               all_support_points2);
+}
+
+
 template <int spacedim, typename Number>
 Number
 Cluster<spacedim, Number>::distance_to_cluster(
@@ -794,6 +928,24 @@ Cluster<spacedim, Number>::distance_to_cluster(
                                cluster,
                                all_support_points,
                                cell_size_at_dofs);
+}
+
+
+template <int spacedim, typename Number>
+Number
+Cluster<spacedim, Number>::distance_to_cluster(
+  const Cluster &                             cluster,
+  const std::vector<Point<spacedim, Number>> &all_support_points1,
+  const std::vector<Point<spacedim, Number>> &all_support_points2,
+  const std::vector<Number> &                 cell_size_at_dofs1,
+  const std::vector<Number> &                 cell_size_at_dofs2) const
+{
+  return calc_cluster_distance((*this),
+                               cluster,
+                               all_support_points1,
+                               all_support_points2,
+                               cell_size_at_dofs1,
+                               cell_size_at_dofs2);
 }
 
 

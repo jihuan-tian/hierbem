@@ -56,9 +56,10 @@ axis equal;
 axis tight;
 view(2);
 
+potential_shift = average(potential_values - potential_values_analytical);
 figure;
 plot(potential_values, "r-o");
 hold on;
-plot(potential_values_analytical, "b-+");
-legend({"Numerical solution", "Analytical solution"});
+plot(potential_values_analytical + potential_shift, "b-+");
+legend({"Numerical solution", "Analytical solution (shifted)"});
 title("Potential distribution on a plane");

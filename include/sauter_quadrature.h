@@ -308,7 +308,11 @@ namespace IdeoBEM
    * detected cell neighboring types.
    *
    * \mynote{This version involves @p PairCellWiseScratchData and
-   * @p PairCellWisePerTaskData.}
+   * @p PairCellWisePerTaskData.
+   *
+   * Inside this function, whether DoF indices in \f$K_x\f$ will be extracted
+   * depends on the flag @p is_scratch_data_for_kx_uncalculated. The DoF
+   * indices in \f$K_y\f$ will always be extracted.}
    *
    * @param scratch
    * @param data
@@ -3356,7 +3360,7 @@ namespace IdeoBEM
   void
   sauter_assemble_on_one_pair_of_cells(
     const KernelFunction<spacedim> &kernel,
-    const RangeNumberType           factor,
+    const RangeNumberType           kernel_factor,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
       &kx_cell_iter,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
@@ -3365,55 +3369,28 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim> &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_mesh_to_volume_mesh,
+      &map_from_kx_boundary_mesh_to_volume_mesh,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &                                   map_from_ky_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const BEMTools::DetectCellNeighboringTypeMethod
+                                                             method_for_cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool is_scratch_data_for_kx_uncalculated = true)
   {
-    CellNeighboringType cell_neighboring_type;
-    scratch.common_vertex_pair_local_indices.clear();
-
-    switch (method_for_cell_neighboring_type)
-      {
-        case DetectCellNeighboringTypeMethod::SameTriangulations:
-          {
-            cell_neighboring_type =
-              detect_cell_neighboring_type_for_same_triangulations<dim,
-                                                                   spacedim>(
-                kx_cell_iter,
-                ky_cell_iter,
-                scratch.common_vertex_pair_local_indices);
-
-            break;
-          }
-        case DetectCellNeighboringTypeMethod::DifferentTriangulations:
-          {
-            cell_neighboring_type =
-              detect_cell_neighboring_type_for_different_triangulations<
-                dim,
-                spacedim>(kx_cell_iter,
-                          ky_cell_iter,
-                          map_from_kx_mesh_to_volume_mesh,
-                          map_from_ky_mesh_to_volume_mesh,
-                          scratch.common_vertex_pair_local_indices);
-
-            break;
-          }
-        default:
-          {
-            Assert(false,
-                   ExcMessage(
-                     "Invalid cell neighboring type detection method!"));
-            cell_neighboring_type = CellNeighboringType::None;
-
-            break;
-          }
-      }
+    /**
+     * Detect the cell neighboring type based on cell vertex indices.
+     */
+    CellNeighboringType cell_neighboring_type =
+      detect_cell_neighboring_type<dim, spacedim>(
+        method_for_cell_neighboring_type,
+        kx_cell_iter,
+        ky_cell_iter,
+        map_from_kx_boundary_mesh_to_volume_mesh,
+        map_from_ky_boundary_mesh_to_volume_mesh,
+        scratch_data.common_vertex_pair_local_indices);
 
     /**
      * Create a quadrature rule, which depends on the cell neighboring type.
@@ -3447,14 +3424,14 @@ namespace IdeoBEM
      */
     if (is_scratch_data_for_kx_uncalculated)
       {
-        scratch.kx_mapping_support_points_in_default_order =
+        scratch_data.kx_mapping_support_points_in_default_order =
           kx_mapping_copy.get_support_points();
       }
-    scratch.ky_mapping_support_points_in_default_order =
+    scratch_data.ky_mapping_support_points_in_default_order =
       ky_mapping_copy.get_support_points();
 
     permute_dofs_and_mapping_support_points_for_sauter_quad(
-      scratch,
+      scratch_data,
       copy_data,
       cell_neighboring_type,
       kx_cell_iter,
@@ -3463,7 +3440,7 @@ namespace IdeoBEM
       ky_mapping_copy,
       is_scratch_data_for_kx_uncalculated);
 
-    calc_jacobian_normals_for_sauter_quad(scratch,
+    calc_jacobian_normals_for_sauter_quad(scratch_data,
                                           cell_neighboring_type,
                                           bem_values,
                                           active_quad_rule);
@@ -3474,7 +3451,7 @@ namespace IdeoBEM
      */
     if (kernel.kernel_type == HyperSingularRegular)
       {
-        calc_covariant_transformations(scratch,
+        calc_covariant_transformations(scratch_data,
                                        cell_neighboring_type,
                                        bem_values,
                                        active_quad_rule);
@@ -3497,8 +3474,12 @@ namespace IdeoBEM
           {
             // Pullback the kernel function to unit cell.
             KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-              kernel_pullback_on_unit(
-                kernel, cell_neighboring_type, &bem_values, &scratch, i, j);
+              kernel_pullback_on_unit(kernel,
+                                      cell_neighboring_type,
+                                      &bem_values,
+                                      &scratch_data,
+                                      i,
+                                      j);
 
             // Pullback the kernel function to Sauter parameter space.
             KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
@@ -3510,7 +3491,7 @@ namespace IdeoBEM
             copy_data.local_pair_cell_matrix(i, j) =
               ApplyQuadratureUsingBEMValues(active_quad_rule,
                                             kernel_pullback_on_sauter,
-                                            factor);
+                                            kernel_factor);
           }
       }
   }
@@ -3526,121 +3507,181 @@ namespace IdeoBEM
    * will be over each cell pair which is comprised of an arbitrary cell in
    * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
    *
-   * @param scratch
-   * @param data
    * @param kernel
+   * @param factor
    * @param i
    * @param j
-   * @param dof_to_cell_topo
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param scratch_data
+   * @param copy_data
    * @return
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   RangeNumberType
   sauter_assemble_on_one_pair_of_dofs(
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const KernelFunction<spacedim> &                         kernel,
-    const types::global_dof_index                            i,
-    const types::global_dof_index                            j,
-    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
-    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            kernel_factor,
+    const types::global_dof_index                    i,
+    const types::global_dof_index                    j,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     RangeNumberType double_integral = 0.0;
 
-    // Geometry information.
-    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
-
     /**
-     * Iterate over each cell in the support of the basis function for the
-     * i-th DoF.
+     * Iterate over each cell in the support of the basis function associated
+     * with the i-th DoF.
      */
-    for (unsigned int kx_cell_index : dof_to_cell_topo[i])
+    for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
       {
         typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
           kx_dof_handler.active_cell_iterators().begin();
         std::advance(kx_cell_iter, kx_cell_index);
+
         /**
-         * Iterate over each cell in the support of the basis function for the
-         * j-th DoF.
+         * Calculate the real support points in the cell \f$K_x\f$ via the
+         * mapping object. Since such data will be held and updated in-situ in
+         * the mapping object, which has been passed into this working function
+         * by const reference, a copy of it should be made.
          */
-        for (unsigned int ky_cell_index : dof_to_cell_topo[j])
+        MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+        /**
+         * Copy the newly calculated support points into @p ScratchData.
+         */
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping_copy.get_support_points();
+        /**
+         * Update the DoF indices.
+         */
+        kx_cell_iter->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+        /**
+         * Iterate over each cell in the support of the basis function
+         * associated with the j-th DoF.
+         */
+        for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
           {
             typename DoFHandler<dim, spacedim>::active_cell_iterator
               ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
             std::advance(ky_cell_iter, ky_cell_index);
 
-            // Determine the cell neighboring type based on the vertex dof
-            // indices. The common dof indices will be stored into the vector
-            // <code>vertex_dof_index_intersection</code> if there is any.
-            std::vector<types::global_dof_index> kx_vertex_dof_indices(
-              get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
-            std::vector<types::global_dof_index> ky_vertex_dof_indices(
-              get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
-
-            scratch.common_vertex_dof_indices.clear();
+            /**
+             * Detect the cell neighboring type based on cell vertex indices.
+             */
             CellNeighboringType cell_neighboring_type =
-              detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
-                kx_vertex_dof_indices,
-                ky_vertex_dof_indices,
-                scratch.common_vertex_dof_indices);
+              detect_cell_neighboring_type<dim, spacedim>(
+                method_for_cell_neighboring_type,
+                kx_cell_iter,
+                ky_cell_iter,
+                map_from_kx_boundary_mesh_to_volume_mesh,
+                map_from_ky_boundary_mesh_to_volume_mesh,
+                scratch_data.common_vertex_pair_local_indices);
+
             // Quadrature rule to be adopted depending on the cell neighboring
             // type.
             const QGauss<dim * 2> active_quad_rule =
               select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
                                                       bem_values);
 
-            const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
-            const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+            /**
+             * Calculate the real support points in the cell \f$K_y\f$ via the
+             * mapping object. Since such data will be held and updated in-situ
+             * in the mapping object, which has been passed into this working
+             * function by const reference, a copy of it should be made.
+             */
+            MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+            ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+            /**
+             * Copy the newly calculated support points into @p ScratchData.
+             */
+            scratch_data.ky_mapping_support_points_in_default_order =
+              ky_mapping_copy.get_support_points();
 
-            permute_dofs_for_sauter_quad(scratch,
-                                         data,
-                                         cell_neighboring_type,
-                                         kx_cell_iter,
-                                         ky_cell_iter,
-                                         kx_mapping,
-                                         ky_mapping);
+            /**
+             * \mynote{Inside this function, whether DoF indices in \f$K_x\f$
+             * will be extracted depends on the flag
+             * @p is_scratch_data_for_kx_uncalculated. The DoF indices in
+             * \f$K_y\f$ will always be extracted.}
+             */
+            permute_dofs_and_mapping_support_points_for_sauter_quad(
+              scratch_data,
+              copy_data,
+              cell_neighboring_type,
+              kx_cell_iter,
+              ky_cell_iter,
+              kx_mapping_copy,
+              ky_mapping_copy,
+              false);
 
-            calc_jacobian_normals_for_sauter_quad(scratch,
+            calc_jacobian_normals_for_sauter_quad(scratch_data,
                                                   cell_neighboring_type,
                                                   bem_values,
                                                   active_quad_rule);
+
+            /**
+             * When the bilinear form for the hyper singular operator is
+             * evaluated, the covariant transformation is required.
+             */
+            if (kernel.kernel_type == HyperSingularRegular)
+              {
+                calc_covariant_transformations(scratch_data,
+                                               cell_neighboring_type,
+                                               bem_values,
+                                               active_quad_rule);
+              }
 
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
              * \f$K_x\f$.
              */
             typename std::vector<types::global_dof_index>::const_iterator
-              i_iter = std::find(data.kx_local_dof_indices_permuted.begin(),
-                                 data.kx_local_dof_indices_permuted.end(),
-                                 i);
-            Assert(i_iter != data.kx_local_dof_indices_permuted.end(),
+              i_iter =
+                std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                          copy_data.kx_local_dof_indices_permuted.end(),
+                          i);
+            Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
                    ExcInternalError());
             unsigned int i_index =
-              i_iter - data.kx_local_dof_indices_permuted.begin();
+              i_iter - copy_data.kx_local_dof_indices_permuted.begin();
 
             /**
              * Find the index of the j-th DoF in the permuted DoF indices of
              * \f$K_y\f$.
              */
             typename std::vector<types::global_dof_index>::const_iterator
-              j_iter = std::find(data.ky_local_dof_indices_permuted.begin(),
-                                 data.ky_local_dof_indices_permuted.end(),
-                                 j);
-            Assert(j_iter != data.ky_local_dof_indices_permuted.end(),
+              j_iter =
+                std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                          copy_data.ky_local_dof_indices_permuted.end(),
+                          j);
+            Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
                    ExcInternalError());
             unsigned int j_index =
-              j_iter - data.ky_local_dof_indices_permuted.begin();
+              j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
 
             /**
@@ -3649,12 +3690,8 @@ namespace IdeoBEM
             KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
               kernel_pullback_on_unit(kernel,
                                       cell_neighboring_type,
-                                      scratch.kx_support_points_permuted,
-                                      scratch.ky_support_points_permuted,
-                                      kx_fe,
-                                      ky_fe,
                                       &bem_values,
-                                      &scratch,
+                                      &scratch_data,
                                       i_index,
                                       j_index);
 
@@ -3669,7 +3706,301 @@ namespace IdeoBEM
             // Apply 4d Sauter numerical quadrature.
             double_integral +=
               ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                            kernel_pullback_on_sauter);
+                                            kernel_pullback_on_sauter,
+                                            kernel_factor);
+          }
+      }
+
+    return double_integral;
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  RangeNumberType
+  sauter_assemble_on_one_pair_of_dofs(
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            kernel_factor,
+    const RangeNumberType                            mass_matrix_factor,
+    const types::global_dof_index                    i,
+    const types::global_dof_index                    j,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    RangeNumberType double_integral = 0.0;
+
+    /**
+     * Iterate over each cell in the support of the basis function associated
+     * with the i-th DoF.
+     */
+    for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
+      {
+        /**
+         * When the FEM mass matrix is to be computed and appended, this
+         * indicates whether the @p FEValues for the current cell \f$K_x\f$
+         * should be recalculated. When we come to a new \f$K_x\f$, this flag
+         * is set to true.
+         */
+        bool is_update_kx_fe_values = true;
+
+        typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
+          kx_dof_handler.active_cell_iterators().begin();
+        std::advance(kx_cell_iter, kx_cell_index);
+
+        /**
+         * Calculate the real support points in the cell \f$K_x\f$ via the
+         * mapping object. Since such data will be held and updated in-situ in
+         * the mapping object, which has been passed into this working function
+         * by const reference, a copy of it should be made.
+         */
+        MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+        /**
+         * Copy the newly calculated support points into @p ScratchData.
+         */
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping_copy.get_support_points();
+        /**
+         * Update the DoF indices.
+         */
+        kx_cell_iter->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+        /**
+         * Iterate over each cell in the support of the basis function
+         * associated with the j-th DoF.
+         */
+        for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
+          {
+            typename DoFHandler<dim, spacedim>::active_cell_iterator
+              ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
+            std::advance(ky_cell_iter, ky_cell_index);
+
+            /**
+             * Detect the cell neighboring type based on cell vertex indices.
+             */
+            CellNeighboringType cell_neighboring_type =
+              detect_cell_neighboring_type<dim, spacedim>(
+                method_for_cell_neighboring_type,
+                kx_cell_iter,
+                ky_cell_iter,
+                map_from_kx_boundary_mesh_to_volume_mesh,
+                map_from_ky_boundary_mesh_to_volume_mesh,
+                scratch_data.common_vertex_pair_local_indices);
+
+            // Quadrature rule to be adopted depending on the cell neighboring
+            // type.
+            const QGauss<dim * 2> active_quad_rule =
+              select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
+                                                      bem_values);
+
+            /**
+             * Calculate the real support points in the cell \f$K_y\f$ via the
+             * mapping object. Since such data will be held and updated in-situ
+             * in the mapping object, which has been passed into this working
+             * function by const reference, a copy of it should be made.
+             */
+            MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+            ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+            /**
+             * Copy the newly calculated support points into @p ScratchData.
+             */
+            scratch_data.ky_mapping_support_points_in_default_order =
+              ky_mapping_copy.get_support_points();
+
+            /**
+             * \mynote{Inside this function, whether DoF indices in \f$K_x\f$
+             * will be extracted depends on the flag
+             * @p is_scratch_data_for_kx_uncalculated. The DoF indices in
+             * \f$K_y\f$ will always be extracted.}
+             */
+            permute_dofs_and_mapping_support_points_for_sauter_quad(
+              scratch_data,
+              copy_data,
+              cell_neighboring_type,
+              kx_cell_iter,
+              ky_cell_iter,
+              kx_mapping_copy,
+              ky_mapping_copy,
+              false);
+
+            calc_jacobian_normals_for_sauter_quad(scratch_data,
+                                                  cell_neighboring_type,
+                                                  bem_values,
+                                                  active_quad_rule);
+
+            /**
+             * When the bilinear form for the hyper singular operator is
+             * evaluated, the covariant transformation is required.
+             */
+            if (kernel.kernel_type == HyperSingularRegular)
+              {
+                calc_covariant_transformations(scratch_data,
+                                               cell_neighboring_type,
+                                               bem_values,
+                                               active_quad_rule);
+              }
+
+            /**
+             * Find the index of the i-th DoF in the permuted DoF indices of
+             * \f$K_x\f$.
+             */
+            typename std::vector<types::global_dof_index>::const_iterator
+              i_iter =
+                std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                          copy_data.kx_local_dof_indices_permuted.end(),
+                          i);
+            Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                   ExcInternalError());
+            unsigned int i_index =
+              i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+            /**
+             * Find the index of the j-th DoF in the permuted DoF indices of
+             * \f$K_y\f$.
+             */
+            typename std::vector<types::global_dof_index>::const_iterator
+              j_iter =
+                std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                          copy_data.ky_local_dof_indices_permuted.end(),
+                          j);
+            Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                   ExcInternalError());
+            unsigned int j_index =
+              j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+
+            /**
+             * Pullback the kernel function to unit cell.
+             */
+            KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
+              kernel_pullback_on_unit(kernel,
+                                      cell_neighboring_type,
+                                      &bem_values,
+                                      &scratch_data,
+                                      i_index,
+                                      j_index);
+
+            /**
+             * Pullback the kernel function to Sauter parameter space.
+             */
+            KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
+              kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                        cell_neighboring_type,
+                                        &bem_values);
+
+            // Apply 4d Sauter numerical quadrature.
+            double_integral +=
+              ApplyQuadratureUsingBEMValues(active_quad_rule,
+                                            kernel_pullback_on_sauter,
+                                            kernel_factor);
+
+            /**
+             * Append the FEM mass matrix contribution.
+             */
+            if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
+              {
+                if (is_update_kx_fe_values)
+                  {
+                    mass_matrix_scratch_data.fe_values_for_test_space.reinit(
+                      kx_cell_iter);
+                    is_update_kx_fe_values = false;
+                  }
+
+                /**
+                 * \mynote{N.B. The @p FEValues related to the trial
+                 * space must also be updated, since the trial space may
+                 * be different from the test space.}
+                 */
+                mass_matrix_scratch_data.fe_values_for_trial_space.reinit(
+                  ky_cell_iter);
+
+                const unsigned int n_q_points =
+                  mass_matrix_scratch_data.fe_values_for_test_space
+                    .get_quadrature()
+                    .size();
+                AssertDimension(n_q_points,
+                                mass_matrix_scratch_data
+                                  .fe_values_for_trial_space.get_quadrature()
+                                  .size());
+
+                /**
+                 * Get the index of the global DoF index \f$i\f$ in
+                 * the current cell \f$K_x\f$.
+                 *
+                 * \mynote{N.B. The local DoF index in \f$K_x\f$ is
+                 * searched from the list from DoF indices held in the
+                 * @p ScratchData for BEM. This is valid because the
+                 * test and trial spaces associated with the mass matrix
+                 * and the BEM bilinear form are the same.
+                 *
+                 * Since there is no support point permutation during FEM mass
+                 * matrix assembly, the DoF indices here are in the default
+                 * order.}
+                 */
+                auto i_local_dof_iter = std::find(
+                  scratch_data.kx_local_dof_indices_in_default_dof_order
+                    .begin(),
+                  scratch_data.kx_local_dof_indices_in_default_dof_order.end(),
+                  i);
+                Assert(i_local_dof_iter !=
+                         scratch_data.kx_local_dof_indices_in_default_dof_order
+                           .end(),
+                       ExcMessage(
+                         std::string("Cannot find the global DoF index ") +
+                         std::to_string(i) +
+                         std::string(" in the list of cell DoF indices!")));
+                const unsigned int i_local_dof_index =
+                  i_local_dof_iter -
+                  scratch_data.kx_local_dof_indices_in_default_dof_order
+                    .begin();
+
+                /**
+                 * Get the index of the global DoF index \f$j\f$ in
+                 * the current cell \f$K_y\f$.
+                 */
+                auto j_local_dof_iter = std::find(
+                  scratch_data.ky_local_dof_indices_in_default_dof_order
+                    .begin(),
+                  scratch_data.ky_local_dof_indices_in_default_dof_order.end(),
+                  j);
+                Assert(j_local_dof_iter !=
+                         scratch_data.ky_local_dof_indices_in_default_dof_order
+                           .end(),
+                       ExcMessage(
+                         std::string("Cannot find the global DoF index ") +
+                         std::to_string(j) +
+                         std::string(" in the list of cell DoF indices!")));
+                const unsigned int j_local_dof_index =
+                  j_local_dof_iter -
+                  scratch_data.ky_local_dof_indices_in_default_dof_order
+                    .begin();
+
+                for (unsigned int q = 0; q < n_q_points; q++)
+                  {
+                    double_integral +=
+                      mass_matrix_factor *
+                      mass_matrix_scratch_data.fe_values_for_test_space
+                        .shape_value(i_local_dof_index, q) *
+                      mass_matrix_scratch_data.fe_values_for_trial_space
+                        .shape_value(j_local_dof_index, q) *
+                      mass_matrix_scratch_data.fe_values_for_test_space.JxW(q);
+                  }
+              }
           }
       }
 
@@ -3679,7 +4010,8 @@ namespace IdeoBEM
 
   /**
    * Perform Galerkin-BEM double integral with respect to a list of kernels on
-   * a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature.
+   * a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature. N.B. These
+   * bilinear forms should have the same trial and ansatz spaces.
    *
    * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
    * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
@@ -3687,130 +4019,198 @@ namespace IdeoBEM
    * will be over each cell pair which is comprised of an arbitrary cell in
    * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
    *
-   * @param results The vector of values returned for the integral with respect
-   * to the vector of kernel functions
-   * @param scratch
-   * @param data
    * @param kernels A vector of kernel function pointers
+   * @param factors
    * @param enable_kernel_evaluations A list of flags indicating if each kernel
    * is to be evaluated.
+   * @param results The vector of values returned for the integral with respect
+   * to the vector of kernel functions
    * @param i
    * @param j
-   * @param dof_to_cell_topo
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param scratch_data
+   * @param copy_data
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   sauter_assemble_on_one_pair_of_dofs(
-    Vector<RangeNumberType> &                                results,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const std::vector<KernelFunction<spacedim> *> &          kernels,
+    const std::vector<KernelFunction<spacedim> *> &  kernels,
+    const std::vector<RangeNumberType> &             kernel_factors,
     const std::vector<bool> &                        enable_kernel_evaluations,
+    Vector<RangeNumberType> &                        results,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
+    AssertDimension(kernels.size(), kernel_factors.size());
+    AssertDimension(kernels.size(), enable_kernel_evaluations.size());
+
     /**
      * Reinitialize the result vector to zero.
      */
     results.reinit(kernels.size());
 
-    // Geometry information.
-    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
-
     /**
      * Iterate over each cell in the support of the basis function for the
      * i-th DoF.
      */
-    for (unsigned int kx_cell_index : dof_to_cell_topo[i])
+    for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
       {
         typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
           kx_dof_handler.active_cell_iterators().begin();
         std::advance(kx_cell_iter, kx_cell_index);
+
+        /**
+         * Calculate the real support points in the cell \f$K_x\f$ via the
+         * mapping object. Since such data will be held and updated in-situ in
+         * the mapping object, which has been passed into this working function
+         * by const reference, a copy of it should be made.
+         */
+        MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+        /**
+         * Copy the newly calculated support points into @p ScratchData.
+         */
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping_copy.get_support_points();
+        /**
+         * Update the DoF indices.
+         */
+        kx_cell_iter->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
+
         /**
          * Iterate over each cell in the support of the basis function for the
          * j-th DoF.
          */
-        for (unsigned int ky_cell_index : dof_to_cell_topo[j])
+        for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
           {
             typename DoFHandler<dim, spacedim>::active_cell_iterator
               ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
             std::advance(ky_cell_iter, ky_cell_index);
 
-            // Determine the cell neighboring type based on the vertex dof
-            // indices. The common dof indices will be stored into the vector
-            // <code>vertex_dof_index_intersection</code> if there is any.
-            std::vector<types::global_dof_index> kx_vertex_dof_indices(
-              get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
-            std::vector<types::global_dof_index> ky_vertex_dof_indices(
-              get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
-
-            scratch.common_vertex_dof_indices.clear();
+            /**
+             * Detect the cell neighboring type based on cell vertex indices.
+             */
             CellNeighboringType cell_neighboring_type =
-              detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
-                kx_vertex_dof_indices,
-                ky_vertex_dof_indices,
-                scratch.common_vertex_dof_indices);
+              detect_cell_neighboring_type<dim, spacedim>(
+                method_for_cell_neighboring_type,
+                kx_cell_iter,
+                ky_cell_iter,
+                map_from_kx_boundary_mesh_to_volume_mesh,
+                map_from_ky_boundary_mesh_to_volume_mesh,
+                scratch_data.common_vertex_pair_local_indices);
+
             // Quadrature rule to be adopted depending on the cell neighboring
             // type.
             const QGauss<dim * 2> active_quad_rule =
               select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
                                                       bem_values);
 
-            const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
-            const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+            /**
+             * Calculate the real support points in the cell \f$K_y\f$ via the
+             * mapping object. Since such data will be held and updated in-situ
+             * in the mapping object, which has been passed into this working
+             * function by const reference, a copy of it should be made.
+             */
+            MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+            ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+            /**
+             * Copy the newly calculated support points into @p ScratchData.
+             */
+            scratch_data.ky_mapping_support_points_in_default_order =
+              ky_mapping_copy.get_support_points();
 
-            permute_dofs_for_sauter_quad(scratch,
-                                         data,
-                                         cell_neighboring_type,
-                                         kx_cell_iter,
-                                         ky_cell_iter,
-                                         kx_mapping,
-                                         ky_mapping);
+            /**
+             * \mynote{Inside this function, whether DoF indices in \f$K_x\f$
+             * will be extracted depends on the flag
+             * @p is_scratch_data_for_kx_uncalculated. The DoF indices in
+             * \f$K_y\f$ will always be extracted.}
+             */
+            permute_dofs_and_mapping_support_points_for_sauter_quad(
+              scratch_data,
+              copy_data,
+              cell_neighboring_type,
+              kx_cell_iter,
+              ky_cell_iter,
+              kx_mapping_copy,
+              ky_mapping_copy,
+              false);
 
-            calc_jacobian_normals_for_sauter_quad(scratch,
+            calc_jacobian_normals_for_sauter_quad(scratch_data,
                                                   cell_neighboring_type,
                                                   bem_values,
                                                   active_quad_rule);
+
+            /**
+             * When there is at least one bilinear form for the hyper singular
+             * operator is to be evaluated, the covariant transformation is
+             * computed.
+             */
+            for (auto kernel : kernels)
+              {
+                if (kernel->kernel_type == HyperSingularRegular)
+                  {
+                    calc_covariant_transformations(scratch_data,
+                                                   cell_neighboring_type,
+                                                   bem_values,
+                                                   active_quad_rule);
+
+                    break;
+                  }
+              }
 
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
              * \f$K_x\f$.
              */
             typename std::vector<types::global_dof_index>::const_iterator
-              i_iter = std::find(data.kx_local_dof_indices_permuted.begin(),
-                                 data.kx_local_dof_indices_permuted.end(),
-                                 i);
-            Assert(i_iter != data.kx_local_dof_indices_permuted.end(),
+              i_iter =
+                std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                          copy_data.kx_local_dof_indices_permuted.end(),
+                          i);
+            Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
                    ExcInternalError());
             unsigned int i_index =
-              i_iter - data.kx_local_dof_indices_permuted.begin();
+              i_iter - copy_data.kx_local_dof_indices_permuted.begin();
 
             /**
              * Find the index of the j-th DoF in the permuted DoF indices of
              * \f$K_y\f$.
              */
             typename std::vector<types::global_dof_index>::const_iterator
-              j_iter = std::find(data.ky_local_dof_indices_permuted.begin(),
-                                 data.ky_local_dof_indices_permuted.end(),
-                                 j);
-            Assert(j_iter != data.ky_local_dof_indices_permuted.end(),
+              j_iter =
+                std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                          copy_data.ky_local_dof_indices_permuted.end(),
+                          j);
+            Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
                    ExcInternalError());
             unsigned int j_index =
-              j_iter - data.ky_local_dof_indices_permuted.begin();
-
+              j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
             /**
              * Iterate over each kernel.
@@ -3824,17 +4224,12 @@ namespace IdeoBEM
                      * Pullback the kernel function to unit cell.
                      */
                     KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                      kernel_pullback_on_unit(
-                        *kernel,
-                        cell_neighboring_type,
-                        scratch.kx_support_points_permuted,
-                        scratch.ky_support_points_permuted,
-                        kx_fe,
-                        ky_fe,
-                        &bem_values,
-                        &scratch,
-                        i_index,
-                        j_index);
+                      kernel_pullback_on_unit(*kernel,
+                                              cell_neighboring_type,
+                                              &bem_values,
+                                              &scratch_data,
+                                              i_index,
+                                              j_index);
 
                     /**
                      * Pullback the kernel function to Sauter parameter space.
@@ -3851,7 +4246,8 @@ namespace IdeoBEM
                      */
                     results(counter) +=
                       ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                                    kernel_pullback_on_sauter);
+                                                    kernel_pullback_on_sauter,
+                                                    kernel_factors[counter]);
                   }
 
                 counter++;
@@ -3892,37 +4288,45 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   sauter_assemble_on_one_pair_of_dofs(
-    Vector<RangeNumberType> &                                results,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    CellWiseScratchDataForMassMatrix<dim, spacedim> &                     fem_scratch,
-    const std::vector<RangeNumberType> &             mass_matrix_factors,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
+    const std::vector<RangeNumberType> &             kernel_factors,
+    const std::vector<RangeNumberType> &             mass_matrix_factors,
     const std::vector<bool> &                        enable_kernel_evaluations,
+    Vector<RangeNumberType> &                        results,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
+    AssertDimension(kernels.size(), kernel_factors.size());
+    AssertDimension(kernels.size(), mass_matrix_factors.size());
+    AssertDimension(kernels.size(), enable_kernel_evaluations.size());
+
     /**
      * Reinitialize the result vector to zero.
      */
     results.reinit(kernels.size());
 
-    // Geometry information.
-    const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
-
     /**
      * Iterate over each cell in the support of the basis function for the
      * i-th DoF.
      */
-    for (unsigned int kx_cell_index : dof_to_cell_topo[i])
+    for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
       {
         /**
          * When the FEM mass matrix is to be computed and appended, this
@@ -3935,78 +4339,134 @@ namespace IdeoBEM
         typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
           kx_dof_handler.active_cell_iterators().begin();
         std::advance(kx_cell_iter, kx_cell_index);
+
+        /**
+         * Calculate the real support points in the cell \f$K_x\f$ via the
+         * mapping object. Since such data will be held and updated in-situ in
+         * the mapping object, which has been passed into this working function
+         * by const reference, a copy of it should be made.
+         */
+        MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+        /**
+         * Copy the newly calculated support points into @p ScratchData.
+         */
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping_copy.get_support_points();
+        /**
+         * Update the DoF indices.
+         */
+        kx_cell_iter->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
+
         /**
          * Iterate over each cell in the support of the basis function for the
          * j-th DoF.
          */
-        for (unsigned int ky_cell_index : dof_to_cell_topo[j])
+        for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
           {
             typename DoFHandler<dim, spacedim>::active_cell_iterator
               ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
             std::advance(ky_cell_iter, ky_cell_index);
 
-            // Determine the cell neighboring type based on the vertex dof
-            // indices. The common dof indices will be stored into the vector
-            // <code>vertex_dof_index_intersection</code> if there is any.
-            std::vector<types::global_dof_index> kx_vertex_dof_indices(
-              get_vertex_dof_indices_in_cell(kx_cell_iter, kx_mapping));
-            std::vector<types::global_dof_index> ky_vertex_dof_indices(
-              get_vertex_dof_indices_in_cell(ky_cell_iter, ky_mapping));
-
-            scratch.common_vertex_dof_indices.clear();
+            /**
+             * Detect the cell neighboring type based on cell vertex indices.
+             */
             CellNeighboringType cell_neighboring_type =
-              detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
-                kx_vertex_dof_indices,
-                ky_vertex_dof_indices,
-                scratch.common_vertex_dof_indices);
+              detect_cell_neighboring_type<dim, spacedim>(
+                method_for_cell_neighboring_type,
+                kx_cell_iter,
+                ky_cell_iter,
+                map_from_kx_boundary_mesh_to_volume_mesh,
+                map_from_ky_boundary_mesh_to_volume_mesh,
+                scratch_data.common_vertex_pair_local_indices);
+
             // Quadrature rule to be adopted depending on the cell neighboring
             // type.
             const QGauss<dim * 2> active_quad_rule =
               select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
                                                       bem_values);
 
-            const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
-            const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+            /**
+             * Calculate the real support points in the cell \f$K_y\f$ via the
+             * mapping object. Since such data will be held and updated in-situ
+             * in the mapping object, which has been passed into this working
+             * function by const reference, a copy of it should be made.
+             */
+            MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+            ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+            /**
+             * Copy the newly calculated support points into @p ScratchData.
+             */
+            scratch_data.ky_mapping_support_points_in_default_order =
+              ky_mapping_copy.get_support_points();
 
-            permute_dofs_for_sauter_quad(scratch,
-                                         data,
-                                         cell_neighboring_type,
-                                         kx_cell_iter,
-                                         ky_cell_iter,
-                                         kx_mapping,
-                                         ky_mapping);
+            /**
+             * \mynote{Inside this function, whether DoF indices in \f$K_x\f$
+             * will be extracted depends on the flag
+             * @p is_scratch_data_for_kx_uncalculated. The DoF indices in
+             * \f$K_y\f$ will always be extracted.}
+             */
+            permute_dofs_and_mapping_support_points_for_sauter_quad(
+              scratch_data,
+              copy_data,
+              cell_neighboring_type,
+              kx_cell_iter,
+              ky_cell_iter,
+              kx_mapping_copy,
+              ky_mapping_copy,
+              false);
 
-            calc_jacobian_normals_for_sauter_quad(scratch,
+            calc_jacobian_normals_for_sauter_quad(scratch_data,
                                                   cell_neighboring_type,
                                                   bem_values,
                                                   active_quad_rule);
+
+            /**
+             * When there is at least one bilinear form for the hyper singular
+             * operator is to be evaluated, the covariant transformation is
+             * computed.
+             */
+            for (auto kernel : kernels)
+              {
+                if (kernel->kernel_type == HyperSingularRegular)
+                  {
+                    calc_covariant_transformations(scratch_data,
+                                                   cell_neighboring_type,
+                                                   bem_values,
+                                                   active_quad_rule);
+
+                    break;
+                  }
+              }
 
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
              * \f$K_x\f$.
              */
             typename std::vector<types::global_dof_index>::const_iterator
-              i_iter = std::find(data.kx_local_dof_indices_permuted.begin(),
-                                 data.kx_local_dof_indices_permuted.end(),
-                                 i);
-            Assert(i_iter != data.kx_local_dof_indices_permuted.end(),
+              i_iter =
+                std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                          copy_data.kx_local_dof_indices_permuted.end(),
+                          i);
+            Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
                    ExcInternalError());
             unsigned int i_index =
-              i_iter - data.kx_local_dof_indices_permuted.begin();
+              i_iter - copy_data.kx_local_dof_indices_permuted.begin();
 
             /**
              * Find the index of the j-th DoF in the permuted DoF indices of
              * \f$K_y\f$.
              */
             typename std::vector<types::global_dof_index>::const_iterator
-              j_iter = std::find(data.ky_local_dof_indices_permuted.begin(),
-                                 data.ky_local_dof_indices_permuted.end(),
-                                 j);
-            Assert(j_iter != data.ky_local_dof_indices_permuted.end(),
+              j_iter =
+                std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                          copy_data.ky_local_dof_indices_permuted.end(),
+                          j);
+            Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
                    ExcInternalError());
             unsigned int j_index =
-              j_iter - data.ky_local_dof_indices_permuted.begin();
-
+              j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
             /**
              * Iterate over each kernel.
@@ -4020,17 +4480,12 @@ namespace IdeoBEM
                      * Pullback the kernel function to unit cell.
                      */
                     KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                      kernel_pullback_on_unit(
-                        *kernel,
-                        cell_neighboring_type,
-                        scratch.kx_support_points_permuted,
-                        scratch.ky_support_points_permuted,
-                        kx_fe,
-                        ky_fe,
-                        &bem_values,
-                        &scratch,
-                        i_index,
-                        j_index);
+                      kernel_pullback_on_unit(*kernel,
+                                              cell_neighboring_type,
+                                              &bem_values,
+                                              &scratch_data,
+                                              i_index,
+                                              j_index);
 
                     /**
                      * Pullback the kernel function to Sauter parameter space.
@@ -4047,7 +4502,8 @@ namespace IdeoBEM
                      */
                     results(counter) +=
                       ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                                    kernel_pullback_on_sauter);
+                                                    kernel_pullback_on_sauter,
+                                                    kernel_factors[counter]);
 
                     /**
                      * Append the FEM mass matrix contribution.
@@ -4057,70 +4513,95 @@ namespace IdeoBEM
                       {
                         if (is_update_kx_fe_values)
                           {
-                            fem_scratch.fe_values_for_test_space.reinit(
-                              kx_cell_iter);
+                            mass_matrix_scratch_data.fe_values_for_test_space
+                              .reinit(kx_cell_iter);
                             is_update_kx_fe_values = false;
                           }
 
+                        /**
+                         * \mynote{N.B. The @p FEValues related to the trial
+                         * space must also be updated, since the trial space may
+                         * be different from the test space.}
+                         */
+                        mass_matrix_scratch_data.fe_values_for_trial_space
+                          .reinit(ky_cell_iter);
+
                         const unsigned int n_q_points =
-                          fem_scratch.fe_values_for_test_space.get_quadrature()
+                          mass_matrix_scratch_data.fe_values_for_test_space
+                            .get_quadrature()
                             .size();
+                        AssertDimension(
+                          n_q_points,
+                          mass_matrix_scratch_data.fe_values_for_trial_space
+                            .get_quadrature()
+                            .size());
 
                         /**
                          * Get the index of the global DoF index \f$i\f$ in
                          * the current cell \f$K_x\f$.
+                         *
+                         * \mynote{N.B. The local DoF index in \f$K_x\f$ is
+                         * searched from the list from DoF indices held in the
+                         * @p ScratchData for BEM. This is valid because the
+                         * test and trial spaces associated with the mass matrix
+                         * and the BEM bilinear form are the same.
+                         *
+                         * Since there is no support point permutation during
+                         * FEM mass matrix assembly, the DoF indices here are in
+                         * the default order.}
                          */
                         auto i_local_dof_iter = std::find(
-                          scratch.kx_local_dof_indices_in_default_dof_order
+                          scratch_data.kx_local_dof_indices_in_default_dof_order
                             .begin(),
-                          scratch.kx_local_dof_indices_in_default_dof_order
+                          scratch_data.kx_local_dof_indices_in_default_dof_order
                             .end(),
                           i);
                         Assert(
                           i_local_dof_iter !=
-                            scratch.kx_local_dof_indices_in_default_dof_order
-                              .end(),
+                            scratch_data
+                              .kx_local_dof_indices_in_default_dof_order.end(),
                           ExcMessage(
                             std::string("Cannot find the global DoF index ") +
                             std::to_string(i) +
                             std::string(" in the list of cell DoF indices!")));
                         const unsigned int i_local_dof_index =
                           i_local_dof_iter -
-                          scratch.kx_local_dof_indices_in_default_dof_order
+                          scratch_data.kx_local_dof_indices_in_default_dof_order
                             .begin();
 
                         /**
                          * Get the index of the global DoF index \f$j\f$ in
-                         * the current cell \f$K_x\f$.
+                         * the current cell \f$K_y\f$.
                          */
                         auto j_local_dof_iter = std::find(
-                          scratch.kx_local_dof_indices_in_default_dof_order
+                          scratch_data.ky_local_dof_indices_in_default_dof_order
                             .begin(),
-                          scratch.kx_local_dof_indices_in_default_dof_order
+                          scratch_data.ky_local_dof_indices_in_default_dof_order
                             .end(),
                           j);
                         Assert(
                           j_local_dof_iter !=
-                            scratch.kx_local_dof_indices_in_default_dof_order
-                              .end(),
+                            scratch_data
+                              .ky_local_dof_indices_in_default_dof_order.end(),
                           ExcMessage(
                             std::string("Cannot find the global DoF index ") +
                             std::to_string(j) +
                             std::string(" in the list of cell DoF indices!")));
                         const unsigned int j_local_dof_index =
                           j_local_dof_iter -
-                          scratch.kx_local_dof_indices_in_default_dof_order
+                          scratch_data.ky_local_dof_indices_in_default_dof_order
                             .begin();
 
                         for (unsigned int q = 0; q < n_q_points; q++)
                           {
                             results(counter) +=
                               mass_matrix_factors[counter] *
-                              fem_scratch.fe_values_for_test_space.shape_value(
-                                i_local_dof_index, q) *
-                              fem_scratch.fe_values_for_test_space.shape_value(
-                                j_local_dof_index, q) *
-                              fem_scratch.fe_values_for_test_space.JxW(q);
+                              mass_matrix_scratch_data.fe_values_for_test_space
+                                .shape_value(i_local_dof_index, q) *
+                              mass_matrix_scratch_data.fe_values_for_trial_space
+                                .shape_value(j_local_dof_index, q) *
+                              mass_matrix_scratch_data.fe_values_for_test_space
+                                .JxW(q);
                           }
                       }
                   }

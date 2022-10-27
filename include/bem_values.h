@@ -1986,37 +1986,36 @@ namespace IdeoBEM
      * @param ky_fe
      * @param bem_values
      */
-    PairCellWiseScratchData(
-      const FiniteElement<dim, spacedim> &     kx_fe,
-      const FiniteElement<dim, spacedim> &     ky_fe,
-      const MappingQGenericExt<dim, spacedim> &kx_mapping,
-      const MappingQGenericExt<dim, spacedim> &ky_mapping,
-      const typename MappingQGeneric<dim, spacedim>::InternalData
-        &kx_mapping_data,
-      const typename MappingQGeneric<dim, spacedim>::InternalData
-        &                             ky_mapping_data,
-      const BEMValues<dim, spacedim> &bem_values)
+    PairCellWiseScratchData(const FiniteElement<dim, spacedim> &     kx_fe,
+                            const FiniteElement<dim, spacedim> &     ky_fe,
+                            const MappingQGenericExt<dim, spacedim> &kx_mapping,
+                            const MappingQGenericExt<dim, spacedim> &ky_mapping,
+                            const BEMValues<dim, spacedim> &         bem_values)
       : common_vertex_pair_local_indices(0)
       , kx_mapping_support_points_in_default_order(
-          kx_mapping_data.n_shape_functions)
+          bem_values.kx_mapping_data.n_shape_functions)
       , ky_mapping_support_points_in_default_order(
-          ky_mapping_data.n_shape_functions)
-      , kx_mapping_support_points_permuted(kx_mapping_data.n_shape_functions)
-      , ky_mapping_support_points_permuted(ky_mapping_data.n_shape_functions)
+          bem_values.ky_mapping_data.n_shape_functions)
+      , kx_mapping_support_points_permuted(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_points_permuted(
+          bem_values.ky_mapping_data.n_shape_functions)
       , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
       , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)
       , ky_fe_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
       , kx_mapping_poly_space_numbering_inverse(
-          kx_mapping_data.n_shape_functions)
+          bem_values.kx_mapping_data.n_shape_functions)
       , ky_mapping_poly_space_numbering_inverse(
-          ky_mapping_data.n_shape_functions)
+          bem_values.ky_mapping_data.n_shape_functions)
       , ky_mapping_reversed_poly_space_numbering_inverse(
-          ky_mapping_data.n_shape_functions)
+          bem_values.ky_mapping_data.n_shape_functions)
       , kx_local_dof_permutation(kx_fe.dofs_per_cell)
       , ky_local_dof_permutation(ky_fe.dofs_per_cell)
-      , kx_mapping_support_point_permutation(kx_mapping_data.n_shape_functions)
-      , ky_mapping_support_point_permutation(ky_mapping_data.n_shape_functions)
+      , kx_mapping_support_point_permutation(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_point_permutation(
+          bem_values.ky_mapping_data.n_shape_functions)
       , kx_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
       , kx_jacobians_common_edge(6, bem_values.quad_rule_for_common_edge.size())
       , kx_jacobians_common_vertex(

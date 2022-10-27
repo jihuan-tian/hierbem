@@ -46,8 +46,9 @@ namespace IdeoBEM
      * task. N.B. Its memory has already been allocated in the constructor of
      * @p CellWisePerTaskData.
      */
-    copy_data.local_matrix.reinit(copy_data.local_dof_indices_for_test_space.size(),
-                             copy_data.local_dof_indices_for_trial_space.size());
+    copy_data.local_matrix.reinit(
+      copy_data.local_dof_indices_for_test_space.size(),
+      copy_data.local_dof_indices_for_trial_space.size());
 
     /**
      * N.B. The construction of the object <code>scratch.fe_values</code> is
@@ -68,11 +69,14 @@ namespace IdeoBEM
      * Reinitialize the @p FEValues objects for test space and trial space
      * for the current cell.
      */
-    scratch_data.fe_values_for_test_space.reinit(cell_iter_for_test_space_domain);
-    scratch_data.fe_values_for_trial_space.reinit(cell_iter_for_trial_space_domain);
+    scratch_data.fe_values_for_test_space.reinit(
+      cell_iter_for_test_space_domain);
+    scratch_data.fe_values_for_trial_space.reinit(
+      cell_iter_for_trial_space_domain);
 
-    AssertDimension(scratch_data.fe_values_for_test_space.get_quadrature().size(),
-                    scratch_data.fe_values_for_trial_space.get_quadrature().size());
+    AssertDimension(
+      scratch_data.fe_values_for_test_space.get_quadrature().size(),
+      scratch_data.fe_values_for_trial_space.get_quadrature().size());
     const unsigned int n_q_points =
       scratch_data.fe_values_for_test_space.get_quadrature().size();
 
@@ -104,7 +108,8 @@ namespace IdeoBEM
             for (unsigned int j = 0; j < dofs_per_cell_for_trial_space; j++)
               {
                 copy_data.local_matrix(i, j) +=
-                  factor * scratch_data.fe_values_for_test_space.shape_value(i, q) *
+                  factor *
+                  scratch_data.fe_values_for_test_space.shape_value(i, q) *
                   scratch_data.fe_values_for_trial_space.shape_value(j, q) *
                   scratch_data.fe_values_for_test_space.JxW(q);
               }
@@ -604,8 +609,6 @@ namespace IdeoBEM
       dof_handler_for_trial_space.get_fe(),
       kx_mapping,
       ky_mapping,
-      kx_mapping_data,
-      ky_mapping_data,
       bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
       dof_handler_for_test_space.get_fe(),

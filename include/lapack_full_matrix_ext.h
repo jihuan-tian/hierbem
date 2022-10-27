@@ -1040,6 +1040,14 @@ public:
    * Matrix-vector multiplication which also handles the case when the matrix is
    * symmetric.
    *
+   * \mynote{When the matrix is symmetric, the LAPACK function @p symv is
+   * adopted. In my implementation, only those lower triangular entries in a
+   * symmetric full matrix are used by @p symv.
+   *
+   * At the moment, there is no counterpart @p Tvmult implemented which handles
+   * the case of symmetric matrix, because there is no difference between
+   * \f$Av\f$ and \f$A^T v\f$.}
+   *
    * @param w
    * @param v
    * @param adding
@@ -4563,7 +4571,8 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
       case LAPACKSupport::general:
         {
           /**
-           * Call the normal matrix-vector multiplication.
+           * Call the normal matrix-vector multiplication member function of the
+           * parent class.
            */
           this->LAPACKFullMatrix<Number>::vmult(w, v, adding);
 

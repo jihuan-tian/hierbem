@@ -104,20 +104,27 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   assemble_kernel_row(
-    Vector<RangeNumberType> &                                row_vector,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const KernelFunction<spacedim> &                         kernel,
-    const types::global_dof_index                            row_dof_index,
-    const std::vector<types::global_dof_index> &             column_dof_indices,
-    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
-    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+    Vector<RangeNumberType> &                        row_vector,
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            factor,
+    const types::global_dof_index                    row_dof_index,
+    const std::vector<types::global_dof_index> &     column_dof_indices,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(row_vector.size(), column_dof_indices.size());
 
@@ -126,18 +133,23 @@ namespace IdeoBEM
      */
     for (size_type j = 0; j < column_dof_indices.size(); j++)
       {
-        row_vector(j) =
-          sauter_assemble_on_one_pair_of_dofs(scratch,
-                                              data,
-                                              kernel,
-                                              row_dof_index,
-                                              column_dof_indices[j],
-                                              dof_to_cell_topo,
-                                              bem_values,
-                                              kx_dof_handler,
-                                              ky_dof_handler,
-                                              kx_mapping,
-                                              ky_mapping);
+        row_vector(j) = sauter_assemble_on_one_pair_of_dofs(
+          kernel,
+          factor,
+          row_dof_index,
+          column_dof_indices[j],
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          method_for_cell_neighboring_type,
+          scratch_data,
+          copy_data);
       }
   }
 
@@ -159,20 +171,27 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   assemble_kernel_column(
-    Vector<RangeNumberType> &                                col_vector,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const KernelFunction<spacedim> &                         kernel,
-    const std::vector<types::global_dof_index> &             row_dof_indices,
-    const types::global_dof_index                            col_dof_index,
-    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
-    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+    Vector<RangeNumberType> &                        col_vector,
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            factor,
+    const std::vector<types::global_dof_index> &     row_dof_indices,
+    const types::global_dof_index                    col_dof_index,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -181,17 +200,23 @@ namespace IdeoBEM
      */
     for (size_type i = 0; i < row_dof_indices.size(); i++)
       {
-        col_vector(i) = sauter_assemble_on_one_pair_of_dofs(scratch,
-                                                            data,
-                                                            kernel,
-                                                            row_dof_indices[i],
-                                                            col_dof_index,
-                                                            dof_to_cell_topo,
-                                                            bem_values,
-                                                            kx_dof_handler,
-                                                            ky_dof_handler,
-                                                            kx_mapping,
-                                                            ky_mapping);
+        col_vector(i) = sauter_assemble_on_one_pair_of_dofs(
+          kernel,
+          factor,
+          row_dof_indices[i],
+          col_dof_index,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          method_for_cell_neighboring_type,
+          scratch_data,
+          copy_data);
       }
   }
 
@@ -228,22 +253,29 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   size_type
   random_select_ref_row(
-    Vector<RangeNumberType> &                                row_vector,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const KernelFunction<spacedim> &                         kernel,
+    Vector<RangeNumberType> &                        row_vector,
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            factor,
     std::forward_list<size_type> &                   remaining_row_indices,
     const size_type                                  current_ref_row_index,
     const std::vector<types::global_dof_index> &     row_dof_indices,
     const std::vector<types::global_dof_index> &     col_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(row_vector.size(), col_dof_indices.size());
 
@@ -276,17 +308,22 @@ namespace IdeoBEM
              * Get the @p next_ref_row_index'th row from the kernel evaluation.
              */
             assemble_kernel_row(row_vector,
-                                scratch,
-                                data,
                                 kernel,
+                                factor,
                                 next_ref_row_dof_index,
                                 col_dof_indices,
-                                dof_to_cell_topo,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_mapping,
-                                ky_mapping);
+                                ky_mapping,
+                                map_from_kx_boundary_mesh_to_volume_mesh,
+                                map_from_ky_boundary_mesh_to_volume_mesh,
+                                method_for_cell_neighboring_type,
+                                scratch_data,
+                                copy_data);
 
             if (LinAlg::is_all_zero(row_vector))
               {
@@ -462,22 +499,29 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   size_type
   random_select_ref_column(
-    Vector<RangeNumberType> &                                col_vector,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const KernelFunction<spacedim> &                         kernel,
+    Vector<RangeNumberType> &                        col_vector,
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            factor,
     std::forward_list<size_type> &                   remaining_col_indices,
     const size_type                                  current_ref_col_index,
     const std::vector<types::global_dof_index> &     row_dof_indices,
     const std::vector<types::global_dof_index> &     col_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1))
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -510,17 +554,22 @@ namespace IdeoBEM
              * Get the @p next_ref_col_index'th column from the kernel evaluation.
              */
             assemble_kernel_column(col_vector,
-                                   scratch,
-                                   data,
                                    kernel,
+                                   factor,
                                    row_dof_indices,
                                    next_ref_col_dof_index,
-                                   dof_to_cell_topo,
+                                   kx_dof_to_cell_topo,
+                                   ky_dof_to_cell_topo,
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_mapping,
-                                   ky_mapping);
+                                   ky_mapping,
+                                   map_from_kx_boundary_mesh_to_volume_mesh,
+                                   map_from_ky_boundary_mesh_to_volume_mesh,
+                                   method_for_cell_neighboring_type,
+                                   scratch_data,
+                                   copy_data);
 
             if (LinAlg::is_all_zero(col_vector))
               {
@@ -675,36 +724,49 @@ namespace IdeoBEM
    * @param rkmat The rank-k matrix to be constructed for the current block,
    * the memory of which should be preallocated and the formal rank of which
    * should be the same as the maximum iteration number in @p aca_config.
-   * @param scratch
-   * @param data
    * @param aca_config
    * @param kernel
+   * @param factor
    * @param row_dof_indices
    * @param col_dof_indices
-   * @param dof_to_cell_topo
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param scratch_data
+   * @param copy_data
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
-  aca_plus(RkMatrix<RangeNumberType> &                              rkmat,
-           PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-           PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-           const ACAConfig &                                        aca_config,
-           const KernelFunction<spacedim> &                         kernel,
-           const std::vector<types::global_dof_index> &     row_dof_indices,
-           const std::vector<types::global_dof_index> &     col_dof_indices,
-           const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
-           const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-           const DoFHandler<dim, spacedim> &                kx_dof_handler,
-           const DoFHandler<dim, spacedim> &                ky_dof_handler,
-           const MappingQGeneric<dim, spacedim> &           kx_mapping =
-             MappingQGeneric<dim, spacedim>(1),
-           const MappingQGeneric<dim, spacedim> &ky_mapping =
-             MappingQGeneric<dim, spacedim>(1))
+  aca_plus(
+    RkMatrix<RangeNumberType> &                      rkmat,
+    const ACAConfig &                                aca_config,
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            factor,
+    const std::vector<types::global_dof_index> &     row_dof_indices,
+    const std::vector<types::global_dof_index> &     col_dof_indices,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(rkmat.get_m(), row_dof_indices.size());
     AssertDimension(rkmat.get_n(), col_dof_indices.size());
@@ -743,34 +805,46 @@ namespace IdeoBEM
      */
     Vector<RangeNumberType> vr(n);
     Vector<RangeNumberType> uc(m);
-    size_type               r = random_select_ref_row(vr,
-                                        scratch,
-                                        data,
-                                        kernel,
-                                        remaining_row_indices,
-                                        m + 1,
-                                        row_dof_indices,
-                                        col_dof_indices,
-                                        dof_to_cell_topo,
-                                        bem_values,
-                                        kx_dof_handler,
-                                        ky_dof_handler,
-                                        kx_mapping,
-                                        ky_mapping);
-    size_type               c = random_select_ref_column(uc,
-                                           scratch,
-                                           data,
-                                           kernel,
-                                           remaining_col_indices,
-                                           n + 1,
-                                           row_dof_indices,
-                                           col_dof_indices,
-                                           dof_to_cell_topo,
-                                           bem_values,
-                                           kx_dof_handler,
-                                           ky_dof_handler,
-                                           kx_mapping,
-                                           ky_mapping);
+    size_type               r =
+      random_select_ref_row(vr,
+                            kernel,
+                            factor,
+                            remaining_row_indices,
+                            m + 1,
+                            row_dof_indices,
+                            col_dof_indices,
+                            kx_dof_to_cell_topo,
+                            ky_dof_to_cell_topo,
+                            bem_values,
+                            kx_dof_handler,
+                            ky_dof_handler,
+                            kx_mapping,
+                            ky_mapping,
+                            map_from_kx_boundary_mesh_to_volume_mesh,
+                            map_from_ky_boundary_mesh_to_volume_mesh,
+                            method_for_cell_neighboring_type,
+                            scratch_data,
+                            copy_data);
+    size_type c =
+      random_select_ref_column(uc,
+                               kernel,
+                               factor,
+                               remaining_col_indices,
+                               n + 1,
+                               row_dof_indices,
+                               col_dof_indices,
+                               kx_dof_to_cell_topo,
+                               ky_dof_to_cell_topo,
+                               bem_values,
+                               kx_dof_handler,
+                               ky_dof_handler,
+                               kx_mapping,
+                               ky_mapping,
+                               map_from_kx_boundary_mesh_to_volume_mesh,
+                               map_from_ky_boundary_mesh_to_volume_mesh,
+                               method_for_cell_neighboring_type,
+                               scratch_data,
+                               copy_data);
 
     /**
      * The absolute values for the reference row and column vectors.
@@ -858,17 +932,22 @@ namespace IdeoBEM
              * Extract the \f$i_k\f$'th row of \f$A\f$.
              */
             assemble_kernel_row(vk,
-                                scratch,
-                                data,
                                 kernel,
+                                factor,
                                 row_dof_indices[ik],
                                 col_dof_indices,
-                                dof_to_cell_topo,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_mapping,
-                                ky_mapping);
+                                ky_mapping,
+                                map_from_kx_boundary_mesh_to_volume_mesh,
+                                map_from_ky_boundary_mesh_to_volume_mesh,
+                                method_for_cell_neighboring_type,
+                                scratch_data,
+                                copy_data);
 
             /**
              * \mynote{Here the counter \f$l\f$ iterates over all the previous
@@ -911,17 +990,22 @@ namespace IdeoBEM
              * Extract the \f$j_k\f$'th column from \f$A\f$.
              */
             assemble_kernel_column(uk,
-                                   scratch,
-                                   data,
                                    kernel,
+                                   factor,
                                    row_dof_indices,
                                    col_dof_indices[jk],
-                                   dof_to_cell_topo,
+                                   kx_dof_to_cell_topo,
+                                   ky_dof_to_cell_topo,
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_mapping,
-                                   ky_mapping);
+                                   ky_mapping,
+                                   map_from_kx_boundary_mesh_to_volume_mesh,
+                                   map_from_ky_boundary_mesh_to_volume_mesh,
+                                   method_for_cell_neighboring_type,
+                                   scratch_data,
+                                   copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -945,17 +1029,22 @@ namespace IdeoBEM
              * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
              */
             assemble_kernel_column(uk,
-                                   scratch,
-                                   data,
                                    kernel,
+                                   factor,
                                    row_dof_indices,
                                    col_dof_indices[jk],
-                                   dof_to_cell_topo,
+                                   kx_dof_to_cell_topo,
+                                   ky_dof_to_cell_topo,
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_mapping,
-                                   ky_mapping);
+                                   ky_mapping,
+                                   map_from_kx_boundary_mesh_to_volume_mesh,
+                                   map_from_ky_boundary_mesh_to_volume_mesh,
+                                   method_for_cell_neighboring_type,
+                                   scratch_data,
+                                   copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -984,17 +1073,22 @@ namespace IdeoBEM
              * Extract the \f$i_k\f$'th row from \f$A\f$.
              */
             assemble_kernel_row(vk,
-                                scratch,
-                                data,
                                 kernel,
+                                factor,
                                 row_dof_indices[ik],
                                 col_dof_indices,
-                                dof_to_cell_topo,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_mapping,
-                                ky_mapping);
+                                ky_mapping,
+                                map_from_kx_boundary_mesh_to_volume_mesh,
+                                map_from_ky_boundary_mesh_to_volume_mesh,
+                                method_for_cell_neighboring_type,
+                                scratch_data,
+                                copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -1039,19 +1133,24 @@ namespace IdeoBEM
              * reference row, reselect a reference row.
              */
             r = random_select_ref_row(vr,
-                                      scratch,
-                                      data,
                                       kernel,
+                                      factor,
                                       remaining_row_indices,
                                       r,
                                       row_dof_indices,
                                       col_dof_indices,
-                                      dof_to_cell_topo,
+                                      kx_dof_to_cell_topo,
+                                      ky_dof_to_cell_topo,
                                       bem_values,
                                       kx_dof_handler,
                                       ky_dof_handler,
                                       kx_mapping,
-                                      ky_mapping);
+                                      ky_mapping,
+                                      map_from_kx_boundary_mesh_to_volume_mesh,
+                                      map_from_ky_boundary_mesh_to_volume_mesh,
+                                      method_for_cell_neighboring_type,
+                                      scratch_data,
+                                      copy_data);
 
             for (unsigned int l = 1; l <= k; l++)
               {
@@ -1087,20 +1186,26 @@ namespace IdeoBEM
              * When the index of the selected column is the same as that of the
              * reference column, reselect a reference column.
              */
-            c = random_select_ref_column(uc,
-                                         scratch,
-                                         data,
-                                         kernel,
-                                         remaining_col_indices,
-                                         c,
-                                         row_dof_indices,
-                                         col_dof_indices,
-                                         dof_to_cell_topo,
-                                         bem_values,
-                                         kx_dof_handler,
-                                         ky_dof_handler,
-                                         kx_mapping,
-                                         ky_mapping);
+            c =
+              random_select_ref_column(uc,
+                                       kernel,
+                                       factor,
+                                       remaining_col_indices,
+                                       c,
+                                       row_dof_indices,
+                                       col_dof_indices,
+                                       kx_dof_to_cell_topo,
+                                       ky_dof_to_cell_topo,
+                                       bem_values,
+                                       kx_dof_handler,
+                                       ky_dof_handler,
+                                       kx_mapping,
+                                       ky_mapping,
+                                       map_from_kx_boundary_mesh_to_volume_mesh,
+                                       map_from_ky_boundary_mesh_to_volume_mesh,
+                                       method_for_cell_neighboring_type,
+                                       scratch_data,
+                                       copy_data);
 
             for (unsigned int l = 1; l <= k; l++)
               {
@@ -1579,35 +1684,46 @@ namespace IdeoBEM
    * construction using ACA+.}
    *
    * @param leaf_mat
-   * @param scratch
-   * @param data
    * @param aca_config
    * @param kernel
-   * @param dof_to_cell_topo
+   * @param kernel_factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
-   * \hmatrix will be built when the kernel function is symmetric.
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param scratch_data
+   * @param copy_data
+   * @param enable_build_symmetric_hmat
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> *                     leaf_mat,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const ACAConfig &                                        aca_config,
-    const KernelFunction<spacedim> &                         kernel,
-    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
-    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
+    HMatrix<spacedim, RangeNumberType> *             leaf_mat,
+    const ACAConfig &                                aca_config,
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            kernel_factor,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
     const std::vector<types::global_dof_index> *row_dof_indices =
@@ -1664,17 +1780,22 @@ namespace IdeoBEM
                                            col_index_global_to_local_map.at(
                                              (*col_dof_indices)[j])) =
                                   sauter_assemble_on_one_pair_of_dofs(
-                                    scratch,
-                                    data,
                                     kernel,
+                                    kernel_factor,
                                     (*row_dof_indices)[i],
                                     (*col_dof_indices)[j],
-                                    dof_to_cell_topo,
+                                    kx_dof_to_cell_topo,
+                                    ky_dof_to_cell_topo,
                                     bem_values,
                                     kx_dof_handler,
                                     ky_dof_handler,
                                     kx_mapping,
-                                    ky_mapping);
+                                    ky_mapping,
+                                    map_from_kx_boundary_mesh_to_volume_mesh,
+                                    map_from_ky_boundary_mesh_to_volume_mesh,
+                                    method_for_cell_neighboring_type,
+                                    scratch_data,
+                                    copy_data);
                               }
                           }
 
@@ -1707,17 +1828,22 @@ namespace IdeoBEM
                                            col_index_global_to_local_map.at(
                                              col_dof_index)) =
                                   sauter_assemble_on_one_pair_of_dofs(
-                                    scratch,
-                                    data,
                                     kernel,
+                                    kernel_factor,
                                     row_dof_index,
                                     col_dof_index,
-                                    dof_to_cell_topo,
+                                    kx_dof_to_cell_topo,
+                                    ky_dof_to_cell_topo,
                                     bem_values,
                                     kx_dof_handler,
                                     ky_dof_handler,
                                     kx_mapping,
-                                    ky_mapping);
+                                    ky_mapping,
+                                    map_from_kx_boundary_mesh_to_volume_mesh,
+                                    map_from_ky_boundary_mesh_to_volume_mesh,
+                                    method_for_cell_neighboring_type,
+                                    scratch_data,
+                                    copy_data);
                               }
                           }
 
@@ -1743,17 +1869,23 @@ namespace IdeoBEM
                         (*fullmat)(
                           row_index_global_to_local_map.at(row_dof_index),
                           col_index_global_to_local_map.at(col_dof_index)) =
-                          sauter_assemble_on_one_pair_of_dofs(scratch,
-                                                              data,
-                                                              kernel,
-                                                              row_dof_index,
-                                                              col_dof_index,
-                                                              dof_to_cell_topo,
-                                                              bem_values,
-                                                              kx_dof_handler,
-                                                              ky_dof_handler,
-                                                              kx_mapping,
-                                                              ky_mapping);
+                          sauter_assemble_on_one_pair_of_dofs(
+                            kernel,
+                            kernel_factor,
+                            row_dof_index,
+                            col_dof_index,
+                            kx_dof_to_cell_topo,
+                            ky_dof_to_cell_topo,
+                            bem_values,
+                            kx_dof_handler,
+                            ky_dof_handler,
+                            kx_mapping,
+                            ky_mapping,
+                            map_from_kx_boundary_mesh_to_volume_mesh,
+                            map_from_ky_boundary_mesh_to_volume_mesh,
+                            method_for_cell_neighboring_type,
+                            scratch_data,
+                            copy_data);
                       }
                   }
               }
@@ -1762,6 +1894,14 @@ namespace IdeoBEM
           }
         case RkMatrixType:
           {
+            /**
+             * When the \hmatrix block type is rank-k matrix, when the top
+             * level \hmatrix is symmetric and the flag
+             * @p enable_build_symmetric_hmat is true, only those matrix blocks
+             * belong to the lower triangular part will be computed. Otherwise,
+             * the rank-k matrix block will always be computed. ACA+ will be
+             * used for building the rank-k matrix.
+             */
             RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
 
             if (enable_build_symmetric_hmat && kernel.is_symmetric())
@@ -1775,18 +1915,23 @@ namespace IdeoBEM
                          * triangular part using ACA+.
                          */
                         aca_plus((*rkmat),
-                                 scratch,
-                                 data,
                                  aca_config,
                                  kernel,
+                                 kernel_factor,
                                  (*row_dof_indices),
                                  (*col_dof_indices),
-                                 dof_to_cell_topo,
+                                 kx_dof_to_cell_topo,
+                                 ky_dof_to_cell_topo,
                                  bem_values,
                                  kx_dof_handler,
                                  ky_dof_handler,
                                  kx_mapping,
-                                 ky_mapping);
+                                 ky_mapping,
+                                 map_from_kx_boundary_mesh_to_volume_mesh,
+                                 map_from_ky_boundary_mesh_to_volume_mesh,
+                                 method_for_cell_neighboring_type,
+                                 scratch_data,
+                                 copy_data);
 
                         break;
                       }
@@ -1816,18 +1961,349 @@ namespace IdeoBEM
             else
               {
                 aca_plus((*rkmat),
-                         scratch,
-                         data,
                          aca_config,
                          kernel,
+                         kernel_factor,
                          (*row_dof_indices),
                          (*col_dof_indices),
-                         dof_to_cell_topo,
+                         kx_dof_to_cell_topo,
+                         ky_dof_to_cell_topo,
                          bem_values,
                          kx_dof_handler,
                          ky_dof_handler,
                          kx_mapping,
-                         ky_mapping);
+                         ky_mapping,
+                         map_from_kx_boundary_mesh_to_volume_mesh,
+                         map_from_ky_boundary_mesh_to_volume_mesh,
+                         method_for_cell_neighboring_type,
+                         scratch_data,
+                         copy_data);
+              }
+
+            break;
+          }
+        default:
+          {
+            Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
+          }
+      }
+  }
+
+
+  /**
+   * Fill a single leaf node of the \hmatrix using ACA+.
+   *
+   * In the mean time, the FEM mass matrix multiplied by a factor will be added
+   * to the near field matrix block.
+   *
+   * If the matrix type is @p RkMatrixType, the memory for the full or rank-k
+   * matrix in the leaf node has been allocated.
+   *
+   * For the near field matrix, full matrices will be built whose elements will
+   * be obtained from the evaluation of the double integral in Galerkin-BEM. For
+   * the far field admissible matrix, rank-k matrices will be built using ACA+.
+   *
+   * \mynote{This is used as the work function for parallel \hmatrix
+   * construction using ACA+.}
+   *
+   * @param leaf_mat
+   * @param aca_config
+   * @param kernel
+   * @param kernel_factor
+   * @param mass_matrix_factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
+   * @param bem_values
+   * @param mass_matrix_quadrature_formula
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param mass_matrix_scratch_data
+   * @param scratch_data
+   * @param copy_data
+   * @param enable_build_symmetric_hmat
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_leaf_node_with_aca_plus(
+    HMatrix<spacedim, RangeNumberType> *             leaf_mat,
+    const ACAConfig &                                aca_config,
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            kernel_factor,
+    const RangeNumberType                            mass_matrix_factor,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    const bool enable_build_symmetric_hmat = false)
+  {
+    const std::vector<types::global_dof_index> *row_dof_indices =
+      leaf_mat->get_row_indices();
+    const std::vector<types::global_dof_index> *col_dof_indices =
+      leaf_mat->get_col_indices();
+    const std::map<types::global_dof_index, size_t>
+      &row_index_global_to_local_map =
+        leaf_mat->get_row_index_global_to_local_map();
+    const std::map<types::global_dof_index, size_t>
+      &col_index_global_to_local_map =
+        leaf_mat->get_col_index_global_to_local_map();
+
+    switch (leaf_mat->get_type())
+      {
+        case FullMatrixType:
+          {
+            LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+              leaf_mat->get_fullmatrix();
+
+            if (enable_build_symmetric_hmat && kernel.is_symmetric())
+              {
+                /**
+                 * When the flag @p enable_build_symmetric_hmat is true and the
+                 * kernel function is symmetric, try to build a symmetric
+                 * \hmatrix. Otherwise, the whole full matrix will be built.
+                 */
+                switch (leaf_mat->get_block_type())
+                  {
+                    case HMatrixSupport::diagonal_block:
+                      {
+                        /**
+                         * A diagonal \hmatrix block as well as its associated
+                         * full matrix should be symmetric.
+                         */
+                        Assert(
+                          leaf_mat->get_property() == HMatrixSupport::symmetric,
+                          ExcInvalidHMatrixProperty(leaf_mat->get_property()));
+                        Assert(fullmat->get_property() ==
+                                 LAPACKSupport::symmetric,
+                               ExcInvalidLAPACKFullMatrixProperty(
+                                 fullmat->get_property()));
+
+                        /**
+                         * Only evaluate the diagonal and lower triangular
+                         * elements in the full matrix.
+                         */
+                        for (size_t i = 0; i < row_dof_indices->size(); i++)
+                          {
+                            for (size_t j = 0; j <= i; j++)
+                              {
+                                (*fullmat)(row_index_global_to_local_map.at(
+                                             (*row_dof_indices)[i]),
+                                           col_index_global_to_local_map.at(
+                                             (*col_dof_indices)[j])) =
+                                  sauter_assemble_on_one_pair_of_dofs(
+                                    kernel,
+                                    kernel_factor,
+                                    mass_matrix_factor,
+                                    (*row_dof_indices)[i],
+                                    (*col_dof_indices)[j],
+                                    kx_dof_to_cell_topo,
+                                    ky_dof_to_cell_topo,
+                                    bem_values,
+                                    kx_dof_handler,
+                                    ky_dof_handler,
+                                    kx_mapping,
+                                    ky_mapping,
+                                    map_from_kx_boundary_mesh_to_volume_mesh,
+                                    map_from_ky_boundary_mesh_to_volume_mesh,
+                                    method_for_cell_neighboring_type,
+                                    mass_matrix_scratch_data,
+                                    scratch_data,
+                                    copy_data);
+                              }
+                          }
+
+                        break;
+                      }
+                    case HMatrixSupport::upper_triangular_block:
+                      {
+                        /**
+                         * Do not build \hmatrix block belonging to the upper
+                         * triangular part.
+                         */
+
+                        break;
+                      }
+                    case HMatrixSupport::lower_triangular_block:
+                      {
+                        /**
+                         * When the current \hmatrix block belongs to the lower
+                         * triangular part, evaluate all of its elements as
+                         * usual.
+                         */
+                        for (types::global_dof_index row_dof_index :
+                             (*row_dof_indices))
+                          {
+                            for (types::global_dof_index col_dof_index :
+                                 (*col_dof_indices))
+                              {
+                                (*fullmat)(row_index_global_to_local_map.at(
+                                             row_dof_index),
+                                           col_index_global_to_local_map.at(
+                                             col_dof_index)) =
+                                  sauter_assemble_on_one_pair_of_dofs(
+                                    kernel,
+                                    kernel_factor,
+                                    mass_matrix_factor,
+                                    row_dof_index,
+                                    col_dof_index,
+                                    kx_dof_to_cell_topo,
+                                    ky_dof_to_cell_topo,
+                                    bem_values,
+                                    kx_dof_handler,
+                                    ky_dof_handler,
+                                    kx_mapping,
+                                    ky_mapping,
+                                    map_from_kx_boundary_mesh_to_volume_mesh,
+                                    map_from_ky_boundary_mesh_to_volume_mesh,
+                                    method_for_cell_neighboring_type,
+                                    mass_matrix_scratch_data,
+                                    scratch_data,
+                                    copy_data);
+                              }
+                          }
+
+                        break;
+                      }
+                    case HMatrixSupport::undefined_block:
+                      {
+                        Assert(false,
+                               ExcInvalidHMatrixBlockType(
+                                 leaf_mat->get_block_type()));
+
+                        break;
+                      }
+                  }
+              }
+            else
+              {
+                for (types::global_dof_index row_dof_index : (*row_dof_indices))
+                  {
+                    for (types::global_dof_index col_dof_index :
+                         (*col_dof_indices))
+                      {
+                        (*fullmat)(
+                          row_index_global_to_local_map.at(row_dof_index),
+                          col_index_global_to_local_map.at(col_dof_index)) =
+                          sauter_assemble_on_one_pair_of_dofs(
+                            kernel,
+                            kernel_factor,
+                            mass_matrix_factor,
+                            row_dof_index,
+                            col_dof_index,
+                            kx_dof_to_cell_topo,
+                            ky_dof_to_cell_topo,
+                            bem_values,
+                            kx_dof_handler,
+                            ky_dof_handler,
+                            kx_mapping,
+                            ky_mapping,
+                            map_from_kx_boundary_mesh_to_volume_mesh,
+                            map_from_ky_boundary_mesh_to_volume_mesh,
+                            method_for_cell_neighboring_type,
+                            mass_matrix_scratch_data,
+                            scratch_data,
+                            copy_data);
+                      }
+                  }
+              }
+
+            break;
+          }
+        case RkMatrixType:
+          {
+            RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
+
+            if (enable_build_symmetric_hmat && kernel.is_symmetric())
+              {
+                switch (leaf_mat->get_block_type())
+                  {
+                    case HMatrixSupport::lower_triangular_block:
+                      {
+                        /**
+                         * Build the \hmatrix block when it belongs to the lower
+                         * triangular part using ACA+.
+                         */
+                        aca_plus((*rkmat),
+                                 aca_config,
+                                 kernel,
+                                 kernel_factor,
+                                 (*row_dof_indices),
+                                 (*col_dof_indices),
+                                 kx_dof_to_cell_topo,
+                                 ky_dof_to_cell_topo,
+                                 bem_values,
+                                 kx_dof_handler,
+                                 ky_dof_handler,
+                                 kx_mapping,
+                                 ky_mapping,
+                                 map_from_kx_boundary_mesh_to_volume_mesh,
+                                 map_from_ky_boundary_mesh_to_volume_mesh,
+                                 method_for_cell_neighboring_type,
+                                 scratch_data,
+                                 copy_data);
+
+                        break;
+                      }
+                    case HMatrixSupport::upper_triangular_block:
+                      {
+                        /**
+                         * Do not build \hmatrix block belonging to the upper
+                         * triangular part.
+                         */
+
+                        break;
+                      }
+                    case HMatrixSupport::diagonal_block:
+                      /**
+                       * An rank-k matrix cannot belong to the diagonal part.
+                       */
+                    case HMatrixSupport::undefined_block:
+                      {
+                        Assert(false,
+                               ExcInvalidHMatrixBlockType(
+                                 leaf_mat->get_block_type()));
+
+                        break;
+                      }
+                  }
+              }
+            else
+              {
+                aca_plus((*rkmat),
+                         aca_config,
+                         kernel,
+                         kernel_factor,
+                         (*row_dof_indices),
+                         (*col_dof_indices),
+                         kx_dof_to_cell_topo,
+                         ky_dof_to_cell_topo,
+                         bem_values,
+                         kx_dof_handler,
+                         ky_dof_handler,
+                         kx_mapping,
+                         ky_mapping,
+                         map_from_kx_boundary_mesh_to_volume_mesh,
+                         map_from_ky_boundary_mesh_to_volume_mesh,
+                         method_for_cell_neighboring_type,
+                         scratch_data,
+                         copy_data);
               }
 
             break;
@@ -1842,47 +2318,65 @@ namespace IdeoBEM
 
   /**
    * Fill a vector of leaf \hmatrices corresponding to the given vector of
-   * kernel functions using ACA+. If the matrix type is @p RkMatrixType, the
-   * memory for the full or rank-k matrix in the leaf node has been allocated.
-   * This version is applied to a list of kernels.
+   * kernel functions using ACA+.
+   *
+   * If the matrix type is @p RkMatrixType, the memory for the full or rank-k
+   * matrix in the leaf node has been allocated. This version is applied to a
+   * list of kernels.
    *
    * For the near field matrix, full matrices will be built whose elements will
    * be obtained from the evaluation of the double integral in Galerkin-BEM. For
    * the far field admissible matrix, rank-k matrices will be built using ACA+.
    *
-   * \mynote{This is used as the work function for parallel \hmatrix
-   * construction using ACA+.}
+   * \mynote{This is used as the working function for parallel \hmatrix
+   * construction using ACA+.
+   *
+   * The list of bilinear forms related to the kernels have the same test and
+   * trial spaces. Therefore, the list \hmatrices have the same \bct structure.}
    *
    * @param leaf_mat_for_kernels A vector of leaf \hmatrix pointers
-   * @param scratch
-   * @param data
    * @param aca_config
    * @param kernels A vector of kernel function pointers
-   * @param dof_to_cell_topo
+   * @param kernel_factors
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param scratch_data
+   * @param copy_data
    * @param enable_build_symmetric_hmat Flag indicating whether symmetric
    * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
-    std::vector<HMatrix<spacedim, RangeNumberType> *> leaf_mat_for_kernels,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const ACAConfig &                                        aca_config,
-    const std::vector<KernelFunction<spacedim> *> &          kernels,
-    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
-    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
+    const std::vector<HMatrix<spacedim, RangeNumberType> *>
+      &                                              leaf_mat_for_kernels,
+    const ACAConfig &                                aca_config,
+    const std::vector<KernelFunction<spacedim> *> &  kernels,
+    const std::vector<RangeNumberType> &             kernel_factors,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DoFHandler<dim, spacedim> &                kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(leaf_mat_for_kernels.size(), kernels.size());
@@ -2027,19 +2521,24 @@ namespace IdeoBEM
                      * results are collected into the vector @p fullmat_coeffs.
                      */
                     sauter_assemble_on_one_pair_of_dofs(
-                      fullmat_coeffs,
-                      scratch,
-                      data,
                       kernels,
+                      kernel_factors,
                       enable_kernel_evaluations,
+                      fullmat_coeffs,
                       (*row_dof_indices)[i],
                       (*col_dof_indices)[j],
-                      dof_to_cell_topo,
+                      kx_dof_to_cell_topo,
+                      ky_dof_to_cell_topo,
                       bem_values,
                       kx_dof_handler,
                       ky_dof_handler,
                       kx_mapping,
-                      ky_mapping);
+                      ky_mapping,
+                      map_from_kx_boundary_mesh_to_volume_mesh,
+                      map_from_ky_boundary_mesh_to_volume_mesh,
+                      method_for_cell_neighboring_type,
+                      scratch_data,
+                      copy_data);
 
                     /**
                      * Assign the vector of returned values to each full matrix
@@ -2131,18 +2630,23 @@ namespace IdeoBEM
                       leaf_mat_for_kernels[counter]->get_rkmatrix();
 
                     aca_plus((*rkmat),
-                             scratch,
-                             data,
                              aca_config,
                              *kernel,
+                             kernel_factors[counter],
                              (*row_dof_indices),
                              (*col_dof_indices),
-                             dof_to_cell_topo,
+                             kx_dof_to_cell_topo,
+                             ky_dof_to_cell_topo,
                              bem_values,
                              kx_dof_handler,
                              ky_dof_handler,
                              kx_mapping,
-                             ky_mapping);
+                             ky_mapping,
+                             map_from_kx_boundary_mesh_to_volume_mesh,
+                             map_from_ky_boundary_mesh_to_volume_mesh,
+                             method_for_cell_neighboring_type,
+                             scratch_data,
+                             copy_data);
                   }
 
                 counter++;
@@ -2161,9 +2665,12 @@ namespace IdeoBEM
 
   /**
    * Fill a vector of leaf \hmatrices corresponding to the given vector of
-   * kernel functions using ACA+. In the meantime, the FEM mass matrix
-   * multiplied by a factor will be added to the near field matrix block. If
-   * the matrix type is @p RkMatrixType, the memory for the full or rank-k
+   * kernel functions using ACA+.
+   *
+   * In the meantime, the FEM mass matrix multiplied by a factor will be added
+   * to the near field matrix block.
+   *
+   * If the matrix type is @p RkMatrixType, the memory for the full or rank-k
    * matrix in the leaf node has been allocated. This version is applied to a
    * list of kernels.
    *
@@ -2175,38 +2682,52 @@ namespace IdeoBEM
    * construction using ACA+.}
    *
    * @param leaf_mat_for_kernels
-   * @param scratch
-   * @param data
-   * @param mass_matrix_factors
    * @param aca_config
    * @param kernels
-   * @param dof_to_cell_topo
+   * @param kernel_factors
+   * @param mass_matrix_factors
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param mass_matrix__scratch_data
+   * @param scratch_data
+   * @param copy_data
    * @param enable_build_symmetric_hmat Flag indicating whether symmetric
    * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
-    std::vector<HMatrix<spacedim, RangeNumberType> *> leaf_mat_for_kernels,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    CellWiseScratchDataForMassMatrix<dim, spacedim> &                     fem_scratch,
-    const std::vector<RangeNumberType> &             mass_matrix_factors,
+    const std::vector<HMatrix<spacedim, RangeNumberType> *>
+      &                                              leaf_mat_for_kernels,
     const ACAConfig &                                aca_config,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const std::vector<RangeNumberType> &             kernel_factors,
+    const std::vector<RangeNumberType> &             mass_matrix_factors,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(leaf_mat_for_kernels.size(), kernels.size());
@@ -2351,21 +2872,26 @@ namespace IdeoBEM
                      * results are collected into the vector @p fullmat_coeffs.
                      */
                     sauter_assemble_on_one_pair_of_dofs(
-                      fullmat_coeffs,
-                      scratch,
-                      data,
-                      fem_scratch,
-                      mass_matrix_factors,
                       kernels,
+                      kernel_factors,
+                      mass_matrix_factors,
                       enable_kernel_evaluations,
+                      fullmat_coeffs,
                       (*row_dof_indices)[i],
                       (*col_dof_indices)[j],
-                      dof_to_cell_topo,
+                      kx_dof_to_cell_topo,
+                      ky_dof_to_cell_topo,
                       bem_values,
                       kx_dof_handler,
                       ky_dof_handler,
                       kx_mapping,
-                      ky_mapping);
+                      ky_mapping,
+                      map_from_kx_boundary_mesh_to_volume_mesh,
+                      map_from_ky_boundary_mesh_to_volume_mesh,
+                      method_for_cell_neighboring_type,
+                      mass_matrix_scratch_data,
+                      scratch_data,
+                      copy_data);
 
                     /**
                      * Assign the vector of returned values to each full matrix
@@ -2457,18 +2983,23 @@ namespace IdeoBEM
                       leaf_mat_for_kernels[counter]->get_rkmatrix();
 
                     aca_plus((*rkmat),
-                             scratch,
-                             data,
                              aca_config,
                              *kernel,
+                             kernel_factors[counter],
                              (*row_dof_indices),
                              (*col_dof_indices),
-                             dof_to_cell_topo,
+                             kx_dof_to_cell_topo,
+                             ky_dof_to_cell_topo,
                              bem_values,
                              kx_dof_handler,
                              ky_dof_handler,
                              kx_mapping,
-                             ky_mapping);
+                             ky_mapping,
+                             map_from_kx_boundary_mesh_to_volume_mesh,
+                             map_from_ky_boundary_mesh_to_volume_mesh,
+                             method_for_cell_neighboring_type,
+                             scratch_data,
+                             copy_data);
                   }
 
                 counter++;
@@ -2491,16 +3022,19 @@ namespace IdeoBEM
    * \mynote{This function is to be used for TBB parallelization.}
    *
    * @param range
-   * @param scratch
-   * @param data
    * @param aca_config
    * @param kernel
-   * @param dof_to_cell_topo
+   * @param kernel_factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
    * @param enable_build_symmetric_hmat Flag indicating whether symmetric
    * \hmatrix will be built when the kernel function is symmetric.
    */
@@ -2512,15 +3046,22 @@ namespace IdeoBEM
       &                                              range,
     const ACAConfig &                                aca_config,
     const KernelFunction<spacedim> &                 kernel,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const RangeNumberType                            kernel_factor,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const bool enable_build_symmetric_hmat = false)
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
   {
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
@@ -2528,8 +3069,12 @@ namespace IdeoBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
-      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), bem_values);
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
@@ -2537,18 +3082,129 @@ namespace IdeoBEM
          iter != range.end();
          iter++)
       {
-        fill_hmatrix_leaf_node_with_aca_plus((*iter),
-                                             scratch_data,
-                                             per_task_data,
-                                             aca_config,
-                                             kernel,
-                                             dof_to_cell_topo,
-                                             bem_values,
-                                             kx_dof_handler,
-                                             ky_dof_handler,
-                                             kx_mapping,
-                                             ky_mapping,
-                                             enable_build_symmetric_hmat);
+        fill_hmatrix_leaf_node_with_aca_plus(
+          (*iter),
+          aca_config,
+          kernel,
+          kernel_factor,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          method_for_cell_neighboring_type,
+          scratch_data,
+          copy_data,
+          enable_build_symmetric_hmat);
+      }
+  }
+
+
+  /**
+   * Fill the leaf nodes in a subrange of an \hmatrix using ACA+.
+   *
+   * In the mean time, the FEM mass matrix multiplied by a factor will be added
+   * to the near field matrix block.
+   *
+   * \mynote{This function is to be used for TBB parallelization.}
+   *
+   * @param range
+   * @param aca_config
+   * @param kernel
+   * @param kernel_factor
+   * @param mass_matrix_factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
+   * @param bem_values
+   * @param mass_matrix_quadrature_formula
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param enable_build_symmetric_hmat
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_leaf_node_subrange_with_aca_plus(
+    const tbb::blocked_range<
+      typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
+      &                                              range,
+    const ACAConfig &                                aca_config,
+    const KernelFunction<spacedim> &                 kernel,
+    const RangeNumberType                            kernel_factor,
+    const RangeNumberType                            mass_matrix_factor,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const QGauss<dim> &                      mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &        ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
+  {
+    /**
+     * Define @p CellWiseScratchData which is local to the current working thread.
+     */
+    CellWiseScratchDataForMassMatrix<dim, spacedim> mass_matrix_scratch_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      mass_matrix_quadrature_formula,
+      update_values | update_JxW_values);
+
+    /**
+     * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
+     * are local to the current working thread. This is mandatory because
+     * each current working thread should have its own copy of these data.
+     */
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+    for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
+           iter = range.begin();
+         iter != range.end();
+         iter++)
+      {
+        fill_hmatrix_leaf_node_with_aca_plus(
+          (*iter),
+          aca_config,
+          kernel,
+          kernel_factor,
+          mass_matrix_factor,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          method_for_cell_neighboring_type,
+          mass_matrix_scratch_data,
+          scratch_data,
+          copy_data,
+          enable_build_symmetric_hmat);
       }
   }
 
@@ -2557,40 +3213,56 @@ namespace IdeoBEM
    * Fill the leaf nodes in a subrange for a list of \hmatrices, each of which
    * corresponds to a kernel function in the list @p kernels using ACA+.
    *
-   * \mynote{This function is to be used for TBB parallelization.}
+   * \mynote{This function is to be used for TBB parallelization.
+   *
+   * As regards the leaf sets for the collection of \hmatrices, they are stored
+   * in a vector of vectors, i.e.
+   * @p std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>. For
+   * the outer vector, its size is equal to the number of kernels or \hmatrices
+   * to be built. For the inner vector, it is the leaf set related to each
+   * \hmatrix.}
    *
    * @param range
-   * @param collection_of_leaf_sets A vector of pointers to the leaf sets of a
-   * list of \hmatrices.
+   * @param collection_of_leaf_sets
    * @param aca_config
-   * @param kernels A vector of kernel function corresponding to the list of
-   * \hmatrices.
-   * @param dof_to_cell_topo
+   * @param kernels
+   * @param kernel_factors
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
-   * \hmatrix will be built when the kernel function is symmetric.
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param enable_build_symmetric_hmat
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
-  fill_hmatrix_leaf_node_subrange_with_aca_plus_for_kernel_list(
+  fill_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<size_t> &range,
     const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
       &                                              collection_of_leaf_sets,
     const ACAConfig &                                aca_config,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const std::vector<RangeNumberType> &             kernel_factors,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const bool enable_build_symmetric_hmat = false)
+    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
   {
     AssertDimension(collection_of_leaf_sets.size(), kernels.size());
 
@@ -2602,8 +3274,12 @@ namespace IdeoBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
-      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), bem_values);
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     /**
@@ -2626,63 +3302,82 @@ namespace IdeoBEM
             leaf_mat_list[k] = (*collection_of_leaf_sets[k])[i];
           }
 
-        fill_hmatrix_leaf_node_with_aca_plus(leaf_mat_list,
-                                             scratch_data,
-                                             per_task_data,
-                                             aca_config,
-                                             kernels,
-                                             dof_to_cell_topo,
-                                             bem_values,
-                                             kx_dof_handler,
-                                             ky_dof_handler,
-                                             kx_mapping,
-                                             ky_mapping,
-                                             enable_build_symmetric_hmat);
+        fill_hmatrix_leaf_node_with_aca_plus(
+          leaf_mat_list,
+          aca_config,
+          kernels,
+          kernel_factors,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          method_for_cell_neighboring_type,
+          scratch_data,
+          copy_data,
+          enable_build_symmetric_hmat);
       }
   }
 
 
   /**
    * Fill the leaf nodes in a subrange for a list of \hmatrices, each of which
-   * corresponds to a kernel function in the list @p kernels using ACA+. In the
-   * meantime, the FEM mass matrix multiplied by a factor will be added to the
-   * near field matrix block.
+   * corresponds to a kernel function in the list @p kernels using ACA+.
+   *
+   * In the meantime, the FEM mass matrix multiplied by a factor will be added
+   * to the near field matrix block.
    *
    * \mynote{This function is to be used for TBB parallelization.}
    *
    * @param range
    * @param collection_of_leaf_sets
-   * @param mass_matrix_factors
    * @param aca_config
    * @param kernels
-   * @param dof_to_cell_topo
+   * @param kernel_factors
+   * @param mass_matrix_factors
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
+   * @param mass_matrix_quadrature_formula
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
-   * \hmatrix will be built when the kernel function is symmetric.
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param enable_build_symmetric_hmat
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
-  fill_hmatrix_leaf_node_subrange_with_aca_plus_for_kernel_list(
+  fill_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<size_t> &range,
     const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
       &                                              collection_of_leaf_sets,
-    const std::vector<RangeNumberType> &             mass_matrix_factors,
     const ACAConfig &                                aca_config,
     const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
+    const std::vector<RangeNumberType> &             kernel_factors,
+    const std::vector<RangeNumberType> &             mass_matrix_factors,
+    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const QGauss<dim> &                              fem_quadrature_formula,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const bool enable_build_symmetric_hmat = false)
+    const QGauss<dim> &                      mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &        ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &ky_mapping,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
   {
     AssertDimension(collection_of_leaf_sets.size(), kernels.size());
 
@@ -2691,10 +3386,11 @@ namespace IdeoBEM
     /**
      * Define @p CellWiseScratchData which is local to the current working thread.
      */
-    CellWiseScratchDataForMassMatrix<dim, spacedim> fem_scratch_data(kx_dof_handler.get_fe(),
-                                                        fem_quadrature_formula,
-                                                        update_values |
-                                                          update_JxW_values);
+    CellWiseScratchDataForMassMatrix<dim, spacedim> mass_matrix_scratch_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      mass_matrix_quadrature_formula,
+      update_values | update_JxW_values);
 
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
@@ -2702,8 +3398,12 @@ namespace IdeoBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
-      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), bem_values);
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     /**
@@ -2726,20 +3426,25 @@ namespace IdeoBEM
             leaf_mat_list[k] = (*collection_of_leaf_sets[k])[i];
           }
 
-        fill_hmatrix_leaf_node_with_aca_plus(leaf_mat_list,
-                                             scratch_data,
-                                             per_task_data,
-                                             fem_scratch_data,
-                                             mass_matrix_factors,
-                                             aca_config,
-                                             kernels,
-                                             dof_to_cell_topo,
-                                             bem_values,
-                                             kx_dof_handler,
-                                             ky_dof_handler,
-                                             kx_mapping,
-                                             ky_mapping,
-                                             enable_build_symmetric_hmat);
+        fill_hmatrix_leaf_node_with_aca_plus(
+          leaf_mat_list,
+          aca_config,
+          kernels,
+          kernel_factors,
+          mass_matrix_factors,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          mass_matrix_scratch_data,
+          scratch_data,
+          copy_data,
+          enable_build_symmetric_hmat);
       }
   }
 
@@ -2754,52 +3459,215 @@ namespace IdeoBEM
    * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
    * rank-k matrices will be built using ACA+.
    *
+   * This version serially processes each \hmatnode in the leaf set one-by-one.
+   *
    * @param hmat
-   * @param scratch
-   * @param data
    * @param aca_config
    * @param kernel
-   * @param dof_to_cell_topo
+   * @param factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
    * @param enable_build_symmetric_hmat Flag indicating whether symmetric
    * \hmatrix will be built when the kernel function is symmetric.
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> &                     hmat,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &data,
-    const ACAConfig &                                        aca_config,
-    const KernelFunction<spacedim> &                         kernel,
-    const std::vector<std::vector<unsigned int>> &           dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
-    const DoFHandler<dim, spacedim> &                        kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                        ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &                   kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const bool enable_build_symmetric_hmat = false)
+    HMatrix<spacedim, RangeNumberType> &                   hmat,
+    const ACAConfig &                                      aca_config,
+    const KernelFunction<spacedim> &                       kernel,
+    const RangeNumberType                                  kernel_factor,
+    const std::vector<std::vector<unsigned int>> &         kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &         ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &                      sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &                      kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                      ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
   {
+    /**
+     * Precalculate data tables for shape values at quadrature points.
+     *
+     * \mynote{Precalculate shape function values and their gradient values
+     * at each quadrature point. N.B.
+     * 1. The data tables for shape function values and their gradient
+     * values should be calculated for both function space on \f$K_x\f$ and
+     * function space on \f$K_y\f$.
+     * 2. Being different from the integral in FEM, the integral in BEM
+     * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+     * (except the regular cell neighboring type), each of which should be
+     * evaluated at a different set of quadrature points in the unit cell
+     * after coordinate transformation from the parametric space. Therefore,
+     * a dimension with respect to \f$k_3\f$ term index should be added to
+     * the data table compared to the usual FEValues and this brings about
+     * the class @p BEMValues.}
+     */
+    BEMValues<dim, spacedim, RangeNumberType> bem_values(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
+      sauter_quad_rule.quad_rule_for_same_panel,
+      sauter_quad_rule.quad_rule_for_common_edge,
+      sauter_quad_rule.quad_rule_for_common_vertex,
+      sauter_quad_rule.quad_rule_for_regular);
+
+    bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
+     * are local to the current working thread. This is mandatory because
+     * each current working thread should have its own copy of these data.
+     */
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
-        fill_hmatrix_leaf_node_with_aca_plus(leaf_mat,
-                                             scratch,
-                                             data,
-                                             aca_config,
-                                             kernel,
-                                             dof_to_cell_topo,
-                                             bem_values,
-                                             kx_dof_handler,
-                                             ky_dof_handler,
-                                             kx_mapping,
-                                             ky_mapping,
-                                             enable_build_symmetric_hmat);
+        fill_hmatrix_leaf_node_with_aca_plus(
+          leaf_mat,
+          aca_config,
+          kernel,
+          kernel_factor,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          method_for_cell_neighboring_type,
+          scratch_data,
+          copy_data,
+          enable_build_symmetric_hmat);
+      }
+  }
+
+
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_with_aca_plus(
+    HMatrix<spacedim, RangeNumberType> &          hmat,
+    const ACAConfig &                             aca_config,
+    const KernelFunction<spacedim> &              kernel,
+    const RangeNumberType                         kernel_factor,
+    const RangeNumberType                         mass_matrix_factor,
+    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &             sauter_quad_rule,
+    const QGauss<dim> &                      mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &        ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
+  {
+    /**
+     * Precalculate data tables for shape values at quadrature points.
+     *
+     * \mynote{Precalculate shape function values and their gradient values
+     * at each quadrature point. N.B.
+     * 1. The data tables for shape function values and their gradient
+     * values should be calculated for both function space on \f$K_x\f$ and
+     * function space on \f$K_y\f$.
+     * 2. Being different from the integral in FEM, the integral in BEM
+     * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+     * (except the regular cell neighboring type), each of which should be
+     * evaluated at a different set of quadrature points in the unit cell
+     * after coordinate transformation from the parametric space. Therefore,
+     * a dimension with respect to \f$k_3\f$ term index should be added to
+     * the data table compared to the usual FEValues and this brings about
+     * the class @p BEMValues.}
+     */
+    BEMValues<dim, spacedim, RangeNumberType> bem_values(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
+      sauter_quad_rule.quad_rule_for_same_panel,
+      sauter_quad_rule.quad_rule_for_common_edge,
+      sauter_quad_rule.quad_rule_for_common_vertex,
+      sauter_quad_rule.quad_rule_for_regular);
+
+    bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Define @p CellWiseScratchDataForMassMatrix which is local to current
+     * working thread.
+     */
+    CellWiseScratchDataForMassMatrix<dim, spacedim> mass_matrix_scratch_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      mass_matrix_quadrature_formula,
+      update_values | update_JxW_values);
+
+    /**
+     * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
+     * are local to the current working thread. This is mandatory because
+     * each current working thread should have its own copy of these data.
+     */
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+    for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
+      {
+        fill_hmatrix_leaf_node_with_aca_plus(
+          leaf_mat,
+          aca_config,
+          kernel,
+          kernel_factor,
+          mass_matrix_factor,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          method_for_cell_neighboring_type,
+          mass_matrix_scratch_data,
+          scratch_data,
+          copy_data,
+          enable_build_symmetric_hmat);
       }
   }
 
@@ -2814,39 +3682,81 @@ namespace IdeoBEM
    * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
    * rank-k matrices will be built using ACA+.
    *
-   * \mynote{This version utilizes SMP parallelization.}
+   * \mynote{In this version, the computation of the list of \hmatnodes in the
+   * leaf set is parallelized.}
    *
+   * @param thread_num
    * @param hmat
-   * @param scratch
-   * @param data
    * @param aca_config
    * @param kernel
-   * @param dof_to_cell_topo
+   * @param kernel_factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
-   * \hmatrix will be built when the kernel function is symmetric.
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param enable_build_symmetric_hmat
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
-    const unsigned int                               thread_num,
-    HMatrix<spacedim, RangeNumberType> &             hmat,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const std::vector<std::vector<unsigned int>> &   dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &           kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const bool enable_build_symmetric_hmat = false)
+    const unsigned int                                     thread_num,
+    HMatrix<spacedim, RangeNumberType> &                   hmat,
+    const ACAConfig &                                      aca_config,
+    const KernelFunction<spacedim> &                       kernel,
+    const RangeNumberType                                  kernel_factor,
+    const std::vector<std::vector<unsigned int>> &         kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &         ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &                      sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &                      kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                      ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
   {
+    /**
+     * Precalculate data tables for shape values at quadrature points.
+     *
+     * \mynote{Precalculate shape function values and their gradient values
+     * at each quadrature point. N.B.
+     * 1. The data tables for shape function values and their gradient
+     * values should be calculated for both function space on \f$K_x\f$ and
+     * function space on \f$K_y\f$.
+     * 2. Being different from the integral in FEM, the integral in BEM
+     * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+     * (except the regular cell neighboring type), each of which should be
+     * evaluated at a different set of quadrature points in the unit cell
+     * after coordinate transformation from the parametric space. Therefore,
+     * a dimension with respect to \f$k_3\f$ term index should be added to
+     * the data table compared to the usual FEValues and this brings about
+     * the class @p BEMValues.}
+     */
+    BEMValues<dim, spacedim, RangeNumberType> bem_values(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
+      sauter_quad_rule.quad_rule_for_same_panel,
+      sauter_quad_rule.quad_rule_for_common_edge,
+      sauter_quad_rule.quad_rule_for_common_vertex,
+      sauter_quad_rule.quad_rule_for_regular);
+
+    bem_values.fill_shape_function_value_tables();
+
     std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
       hmat.get_leaf_set();
     /**
@@ -2858,98 +3768,243 @@ namespace IdeoBEM
         grain_size = 1;
       }
 
-    //    /**
-    //     * Implementation of the parallelism using C++ lambda.
-    //     */
-    //    auto f = [&](tbb::blocked_range<typename std::vector<
-    //                   HMatrix<spacedim, RangeNumberType> *>::iterator>
-    //                   &range) {
-    //      /**
-    //       * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
-    //       * are local to the current working thread. This is mandatory
-    //       because
-    //       * each current working thread should have its own copy of these
-    //       data.
-    //       */
-    //      PairCellWiseScratchData scratch_data(kx_dof_handler.get_fe(),
-    //                                           ky_dof_handler.get_fe(),
-    //                                           bem_values);
-    //      PairCellWisePerTaskData per_task_data(kx_dof_handler.get_fe(),
-    //                                            ky_dof_handler.get_fe());
-    //
-    //      /**
-    //       * Iterate over each \hmatrix node in the subrange.
-    //       */
-    //      for (typename std::vector<HMatrix<spacedim, RangeNumberType>
-    //      *>::iterator
-    //             iter = range.begin();
-    //           iter != range.end();
-    //           iter++)
-    //        {
-    //          fill_hmatrix_leaf_node_with_aca_plus((*iter),
-    //                                               scratch_data,
-    //                                               per_task_data,
-    //                                               aca_config,
-    //                                               kernel,
-    //                                               dof_to_cell_topo,
-    //                                               bem_values,
-    //                                               kx_dof_handler,
-    //                                               ky_dof_handler,
-    //                                               kx_mapping,
-    //                                               ky_mapping);
-    //        }
-    //    };
-    //
-    //    parallel::internal::parallel_for(leaf_set.begin(),
-    //                                     leaf_set.end(),
-    //                                     f,
-    //                                     grain_size);
-
     /**
-     * \mynote{Local variables captured by @p std::bind are by default
-     * pass-by-value. Hence, for capturing large objects,
-     * pass-by-reference should be adopted, which is realized by adding the
-     * prefix @p std::cref or @p std::ref depending on whether const reference
-     * is required. Because @p PairCellWiseScratchData and
-     * @p PairCellWisePerTaskData will be modified in each call of the work
-     * function passed to @p std::bind, they should be captured by @p std::bind
-     * via pass-by-value.
+     * \mynote{N.B. There are two places where argument passing for
+     * parallelization is involved: 1. passing to @p std::bind; 2. passing to
+     * the working function.
      *
-     * Meanwhile, in a same working thread, the work function will be
+     * Local variables captured by @p std::bind are by default pass-by-value.
+     * Hence, for capturing large objects, pass-by-reference should be adopted
+     * instead of pass-by-value, which is realized by adding the prefix
+     * @p std::cref for const reference or @p std::ref for mutable reference.
+     *
+     * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
+     * captured by @p std::bind via pass-by-value, then for each working thread,
+     * a copy of them will automatically be made.
+     *
+     * Meanwhile, in a same working thread, the working function will be
      * called for each object specified by the index or iterator in
      * the blocked range, during which @p PairCellWiseScratchData and
      * @p PairCellWisePerTaskData can be reused. Therefore, they should be
-     * passed into the work function by non-const reference.
+     * passed into the working function by non-const reference.
      *
-     * For other variables to be captured like @p bem_values, @p kx_dof_handler
-     * and @p kx_mapping, since they will be not modified at all, they are
-     * captured by const reference and passed to the work function by const
-     * reference.}
+     * For other variables to be captured like @p bem_values,
+     * @p kx/ky_dof_handler, * @p kx/ky_mapping and
+     * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+     * modified at all, they are captured by @p std::bind via const reference
+     * and then passed to the working function by const reference.}
      */
     parallel::internal::parallel_for(
       leaf_set.begin(),
       leaf_set.end(),
-      std::bind(static_cast<
-                  void (*)(const tbb::blocked_range<typename std::vector<
-                             HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-                           const ACAConfig &,
-                           const KernelFunction<spacedim> &,
-                           const std::vector<std::vector<unsigned int>> &,
-                           const BEMValues<dim, spacedim, RangeNumberType> &,
-                           const DoFHandler<dim, spacedim> &,
-                           const DoFHandler<dim, spacedim> &,
-                           const MappingQGeneric<dim, spacedim> &,
-                           const MappingQGeneric<dim, spacedim> &)>(
-                  fill_hmatrix_leaf_node_subrange_with_aca_plus),
+      std::bind(static_cast<void (*)(
+                  const tbb::blocked_range<typename std::vector<
+                    HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+                  const ACAConfig &,
+                  const KernelFunction<spacedim> &,
+                  const RangeNumberType,
+                  const std::vector<std::vector<unsigned int>> &,
+                  const std::vector<std::vector<unsigned int>> &,
+                  const BEMValues<dim, spacedim, RangeNumberType> &,
+                  const DoFHandler<dim, spacedim> &,
+                  const DoFHandler<dim, spacedim> &,
+                  const MappingQGenericExt<dim, spacedim> &,
+                  const MappingQGenericExt<dim, spacedim> &,
+                  const std::map<
+                    typename Triangulation<dim, spacedim>::cell_iterator,
+                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+                  const std::map<
+                    typename Triangulation<dim, spacedim>::cell_iterator,
+                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+                  const DetectCellNeighboringTypeMethod,
+                  const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
                 std::placeholders::_1,
                 std::cref(aca_config),
                 std::cref(kernel),
-                std::cref(dof_to_cell_topo),
+                kernel_factor,
+                std::cref(kx_dof_to_cell_topo),
+                std::cref(ky_dof_to_cell_topo),
                 std::cref(bem_values),
                 std::cref(kx_dof_handler),
                 std::cref(ky_dof_handler),
                 std::cref(kx_mapping),
                 std::cref(ky_mapping),
+                std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+                std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+                method_for_cell_neighboring_type,
+                enable_build_symmetric_hmat),
+      grain_size);
+  }
+
+
+  /**
+   * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
+   * structure of the \hmatrix has been built with respect to a block cluster
+   * tree and the memory for the matrices in the leaf set has been allocated.
+   *
+   * In the mean time, the FEM mass matrix multiplied by a factor will be added
+   * to the near field matrix block.
+   *
+   * For the near field matrices in the leaf set, full matrices will be built
+   * whose elements will be obtained from the evaluation of the double integral
+   * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
+   * rank-k matrices will be built using ACA+.
+   *
+   * @param thread_num
+   * @param hmat
+   * @param aca_config
+   * @param kernel
+   * @param kernel_factor
+   * @param mass_matrix_factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
+   * @param bem_values
+   * @param mass_matrix_quadrature_formula
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param enable_build_symmetric_hmat
+   */
+  template <int dim, int spacedim, typename RangeNumberType = double>
+  void
+  fill_hmatrix_with_aca_plus_smp(
+    const unsigned int                            thread_num,
+    HMatrix<spacedim, RangeNumberType> &          hmat,
+    const ACAConfig &                             aca_config,
+    const KernelFunction<spacedim> &              kernel,
+    const RangeNumberType                         kernel_factor,
+    const RangeNumberType                         mass_matrix_factor,
+    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &             sauter_quad_rule,
+    const QGauss<dim> &                      mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &        ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
+  {
+    /**
+     * Precalculate data tables for shape values at quadrature points.
+     *
+     * \mynote{Precalculate shape function values and their gradient values
+     * at each quadrature point. N.B.
+     * 1. The data tables for shape function values and their gradient
+     * values should be calculated for both function space on \f$K_x\f$ and
+     * function space on \f$K_y\f$.
+     * 2. Being different from the integral in FEM, the integral in BEM
+     * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+     * (except the regular cell neighboring type), each of which should be
+     * evaluated at a different set of quadrature points in the unit cell
+     * after coordinate transformation from the parametric space. Therefore,
+     * a dimension with respect to \f$k_3\f$ term index should be added to
+     * the data table compared to the usual FEValues and this brings about
+     * the class @p BEMValues.}
+     */
+    BEMValues<dim, spacedim, RangeNumberType> bem_values(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
+      sauter_quad_rule.quad_rule_for_same_panel,
+      sauter_quad_rule.quad_rule_for_common_edge,
+      sauter_quad_rule.quad_rule_for_common_vertex,
+      sauter_quad_rule.quad_rule_for_regular);
+
+    bem_values.fill_shape_function_value_tables();
+
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
+      hmat.get_leaf_set();
+    /**
+     * Estimate the grain size.
+     */
+    unsigned int grain_size = leaf_set.size() / thread_num;
+    if (grain_size == 0)
+      {
+        grain_size = 1;
+      }
+
+    /**
+     * \mynote{N.B. There are two places where argument passing for
+     * parallelization is involved: 1. passing to @p std::bind; 2. passing to
+     * the working function.
+     *
+     * Local variables captured by @p std::bind are by default pass-by-value.
+     * Hence, for capturing large objects, pass-by-reference should be adopted
+     * instead of pass-by-value, which is realized by adding the prefix
+     * @p std::cref for const reference or @p std::ref for mutable reference.
+     *
+     * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
+     * captured by @p std::bind via pass-by-value, then for each working thread,
+     * a copy of them will automatically be made.
+     *
+     * Meanwhile, in a same working thread, the working function will be
+     * called for each object specified by the index or iterator in
+     * the blocked range, during which @p PairCellWiseScratchData and
+     * @p PairCellWisePerTaskData can be reused. Therefore, they should be
+     * passed into the working function by non-const reference.
+     *
+     * For other variables to be captured like @p bem_values,
+     * @p kx/ky_dof_handler, * @p kx/ky_mapping and
+     * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+     * modified at all, they are captured by @p std::bind via const reference
+     * and then passed to the working function by const reference.}
+     */
+    parallel::internal::parallel_for(
+      leaf_set.begin(),
+      leaf_set.end(),
+      std::bind(static_cast<void (*)(
+                  const tbb::blocked_range<typename std::vector<
+                    HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+                  const ACAConfig &,
+                  const KernelFunction<spacedim> &,
+                  const RangeNumberType,
+                  const RangeNumberType,
+                  const std::vector<std::vector<unsigned int>> &,
+                  const std::vector<std::vector<unsigned int>> &,
+                  const BEMValues<dim, spacedim, RangeNumberType> &,
+                  const QGauss<dim> &,
+                  const DoFHandler<dim, spacedim> &,
+                  const DoFHandler<dim, spacedim> &,
+                  const MappingQGenericExt<dim, spacedim> &,
+                  const MappingQGenericExt<dim, spacedim> &,
+                  const std::map<
+                    typename Triangulation<dim, spacedim>::cell_iterator,
+                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+                  const std::map<
+                    typename Triangulation<dim, spacedim>::cell_iterator,
+                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+                  const DetectCellNeighboringTypeMethod,
+                  const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
+                std::placeholders::_1,
+                std::cref(aca_config),
+                std::cref(kernel),
+                kernel_factor,
+                mass_matrix_factor,
+                std::cref(kx_dof_to_cell_topo),
+                std::cref(ky_dof_to_cell_topo),
+                std::cref(bem_values),
+                std::cref(mass_matrix_quadrature_formula),
+                std::cref(kx_dof_handler),
+                std::cref(ky_dof_handler),
+                std::cref(kx_mapping),
+                std::cref(ky_mapping),
+                std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+                std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+                method_for_cell_neighboring_type,
                 enable_build_symmetric_hmat),
       grain_size);
   }
@@ -2957,50 +4012,101 @@ namespace IdeoBEM
 
   /**
    * Fill the leaf sets for a collection of \hmatrices using ACA+ with respect
-   * to a list of kernel functions. The hierarchical structures for all the
-   * \hmatrices should be the same, which should have been built with respect to
-   * a block cluster tree. The memory for the matrices in the leaf set should
-   * have been allocated.
+   * to a list of kernel functions.
+   *
+   * \mynote{This requires the trial spaces as well as the ansatz spaces of
+   * these \hmatrices to be the same. Therefore, the hierarchical structures for
+   * all the \hmatrices should be the same, which should have been built with
+   * respect to a same \bct. The memory for the matrices in the leaf set should
+   * have been allocated beforehand.
    *
    * For the near field matrices in the leaf set, full matrices will be built
    * whose elements will be obtained from the evaluation of the double integral
    * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
    * rank-k matrices will be built using ACA+.
    *
+   * As regards the leaf sets for the collection of \hmatrices, they are stored
+   * in a vector of vectors, i.e.
+   * @p std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>. For
+   * the outer vector, its size is equal to the number of kernels or \hmatrices
+   * to be built. For the inner vector, it is the leaf set related to each
+   * \hmatrix.}
+   *
    * @param thread_num
-   * @param hmats A vector of \hmatrix pointers
+   * @param hmats
    * @param aca_config
-   * @param kernels A vector of kernel function pointers associated with the vector of
-   * \hmatrix pointers stored in @p hmats
-   * @param dof_to_cell_topo
+   * @param kernels
+   * @param kernel_factors
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
-   * \hmatrix will be built when the kernel function is symmetric.
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param enable_build_symmetric_hmat
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
-    const unsigned int                                 thread_num,
-    std::vector<HMatrix<spacedim, RangeNumberType> *> &hmats,
-    const ACAConfig &                                  aca_config,
-    const std::vector<KernelFunction<spacedim> *> &    kernels,
-    const std::vector<std::vector<unsigned int>> &     dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &  bem_values,
-    const DoFHandler<dim, spacedim> &                  kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                  ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &             kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const bool enable_build_symmetric_hmat = false)
+    const unsigned int                                     thread_num,
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &    hmats,
+    const ACAConfig &                                      aca_config,
+    const std::vector<KernelFunction<spacedim> *> &        kernels,
+    const std::vector<RangeNumberType> &                   kernel_factors,
+    const std::vector<std::vector<unsigned int>> &         kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &         ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &                      sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &                      kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                      ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
   {
     AssertDimension(hmats.size(), kernels.size());
 
     const unsigned int kernel_num = kernels.size();
+
+    /**
+     * Precalculate data tables for shape values at quadrature points.
+     *
+     * \mynote{Precalculate shape function values and their gradient values
+     * at each quadrature point. N.B.
+     * 1. The data tables for shape function values and their gradient
+     * values should be calculated for both function space on \f$K_x\f$ and
+     * function space on \f$K_y\f$.
+     * 2. Being different from the integral in FEM, the integral in BEM
+     * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+     * (except the regular cell neighboring type), each of which should be
+     * evaluated at a different set of quadrature points in the unit cell
+     * after coordinate transformation from the parametric space. Therefore,
+     * a dimension with respect to \f$k_3\f$ term index should be added to
+     * the data table compared to the usual FEValues and this brings about
+     * the class @p BEMValues.}
+     */
+    BEMValues<dim, spacedim, RangeNumberType> bem_values(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
+      sauter_quad_rule.quad_rule_for_same_panel,
+      sauter_quad_rule.quad_rule_for_common_edge,
+      sauter_quad_rule.quad_rule_for_common_vertex,
+      sauter_quad_rule.quad_rule_for_regular);
+
+    bem_values.fill_shape_function_value_tables();
 
     /**
      * Extract the collection of leaf sets from the vector of \hmatrices.
@@ -3023,54 +4129,76 @@ namespace IdeoBEM
       }
 
     /**
-     * \mynote{Local variables captured by @p std::bind are by default
-     * <strong>pass-by-value</strong>. Hence, for capturing large objects,
-     * <strong>pass-by-reference</strong> should be adopted, which is realized
-     * by adding the prefix @p std::cref or @p std::ref to the variables. Which
-     * one should be used depends on whether the const reference is required.
-     * Because @p PairCellWiseScratchData and @p PairCellWisePerTaskData will
-     * be modified in each call of the work function that passed to
-     * @p std::bind, they should be captured by @p std::bind via pass-by-value.
+     * \mynote{N.B. There are two places where argument passing for
+     * parallelization is involved: 1. passing to @p std::bind; 2. passing to
+     * the working function.
      *
-     * Meanwhile, in a same working thread, the work function will be
+     * Local variables captured by @p std::bind are by default pass-by-value.
+     * Hence, for capturing large objects, pass-by-reference should be adopted
+     * instead of pass-by-value, which is realized by adding the prefix
+     * @p std::cref for const reference or @p std::ref for mutable reference.
+     *
+     * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
+     * captured by @p std::bind via pass-by-value, then for each working thread,
+     * a copy of them will automatically be made.
+     *
+     * Meanwhile, in a same working thread, the working function will be
      * called for each object specified by the index or iterator in
      * the blocked range, during which @p PairCellWiseScratchData and
      * @p PairCellWisePerTaskData can be reused. Therefore, they should be
-     * passed into the work function by non-const reference.
+     * passed into the working function by non-const reference.
      *
-     * For other variables to be captured like @p bem_values, @p kx_dof_handler
-     * and @p kx_mapping, since they will be not modified at all, they are
-     * captured by const reference by @p std::bind first and then passed to the
-     * work function by const reference.}
+     * For other variables to be captured like @p bem_values,
+     * @p kx/ky_dof_handler, * @p kx/ky_mapping and
+     * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+     * modified at all, they are captured by @p std::bind via const reference
+     * and then passed to the working function by const reference.}
      */
-    // Here we use <code>unsigned int</code> index to refer to the \hmatrix in
-    // the leaf set and the kernel function in the provided list @p kernels.
+
+    /**
+     * Here we use @p size_t index to refer to the \hmatrix in the leaf set
+     * and the kernel function in the provided list @p kernels.
+     */
     tbb::parallel_for(
       tbb::blocked_range<size_t>(0, leaf_set_size, grain_size),
       std::bind(
-        static_cast<void (*)(const tbb::blocked_range<size_t> &,
-                             const std::vector<std::vector<
-                               HMatrix<spacedim, RangeNumberType> *> *> &,
-                             const ACAConfig &,
-                             const std::vector<KernelFunction<spacedim> *> &,
-                             const std::vector<std::vector<unsigned int>> &,
-                             const BEMValues<dim, spacedim, RangeNumberType> &,
-                             const DoFHandler<dim, spacedim> &,
-                             const DoFHandler<dim, spacedim> &,
-                             const MappingQGeneric<dim, spacedim> &,
-                             const MappingQGeneric<dim, spacedim> &,
-                             const bool)>(
-          fill_hmatrix_leaf_node_subrange_with_aca_plus_for_kernel_list),
+        static_cast<void (*)(
+          const tbb::blocked_range<size_t> &,
+          const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
+            &,
+          const ACAConfig &,
+          const std::vector<KernelFunction<spacedim> *> &,
+          const std::vector<RangeNumberType> &,
+          const std::vector<std::vector<unsigned int>> &,
+          const std::vector<std::vector<unsigned int>> &,
+          const BEMValues<dim, spacedim, RangeNumberType> &,
+          const DoFHandler<dim, spacedim> &,
+          const DoFHandler<dim, spacedim> &,
+          const MappingQGenericExt<dim, spacedim> &,
+          const MappingQGenericExt<dim, spacedim> &,
+          const std::map<
+            typename Triangulation<dim, spacedim>::cell_iterator,
+            typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+          const std::map<
+            typename Triangulation<dim, spacedim>::cell_iterator,
+            typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+          const DetectCellNeighboringTypeMethod,
+          const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
         std::placeholders::_1,
         std::cref(collection_of_leaf_sets),
         std::cref(aca_config),
         std::cref(kernels),
-        std::cref(dof_to_cell_topo),
+        std::cref(kernel_factors),
+        std::cref(kx_dof_to_cell_topo),
+        std::cref(ky_dof_to_cell_topo),
         std::cref(bem_values),
         std::cref(kx_dof_handler),
         std::cref(ky_dof_handler),
         std::cref(kx_mapping),
         std::cref(ky_mapping),
+        std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+        std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+        method_for_cell_neighboring_type,
         enable_build_symmetric_hmat),
       tbb::auto_partitioner());
   }
@@ -3078,56 +4206,108 @@ namespace IdeoBEM
 
   /**
    * Fill the leaf sets for a collection of \hmatrices using ACA+ with respect
-   * to a list of kernel functions. In the meantime, the FEM mass matrix
-   * multiplied by a factor will be added to the near field matrix block. The
-   * hierarchical structures for all the \hmatrices should be the same, which
-   * should have been built with respect to a block cluster tree. The memory for
-   * the matrices in the leaf set should have been allocated.
+   * to a list of kernel functions.
+   *
+   * In the meantime, the FEM mass matrix multiplied by a factor will be added
+   * to the near field matrix block.
+   *
+   * \mynote{This requires the trial spaces as well as the ansatz spaces of
+   * these \hmatrices to be the same. Therefore, the hierarchical structures for
+   * all the \hmatrices should be the same, which should have been built with
+   * respect to a same \bct. The memory for the matrices in the leaf set should
+   * have been allocated beforehand.
    *
    * For the near field matrices in the leaf set, full matrices will be built
    * whose elements will be obtained from the evaluation of the double integral
    * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
    * rank-k matrices will be built using ACA+.
    *
+   * As regards the leaf sets for the collection of \hmatrices, they are stored
+   * in a vector of vectors, i.e.
+   * @p std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>. For
+   * the outer vector, its size is equal to the number of kernels or \hmatrices
+   * to be built. For the inner vector, it is the leaf set related to each
+   * \hmatrix.}
+   *
    * @param thread_num
-   * @param hmats A vector of \hmatrix pointers
-   * @param mass_matrix_factors A vector of mass matrix factors for the
-   * \hmatrices. When a factor is zero, the addition of the FEM mass matrix to
-   * the \hmatrix will be disabled.
+   * @param hmats
    * @param aca_config
-   * @param kernels A vector of kernel function pointers associated with the vector of
-   * \hmatrix pointers stored in @p hmats
-   * @param dof_to_cell_topo
+   * @param kernels
+   * @param kernel_factors
+   * @param mass_matrix_factors
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
    * @param bem_values
+   * @param mass_matrix_quadrature_formula
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
-   * \hmatrix will be built when the kernel function is symmetric.
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param enable_build_symmetric_hmat
    */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
     const unsigned int                                 thread_num,
     std::vector<HMatrix<spacedim, RangeNumberType> *> &hmats,
-    const std::vector<RangeNumberType> &               mass_matrix_factors,
     const ACAConfig &                                  aca_config,
     const std::vector<KernelFunction<spacedim> *> &    kernels,
-    const std::vector<std::vector<unsigned int>> &     dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &  bem_values,
-    const QGauss<dim> &                                fem_quadrature_formula,
-    const DoFHandler<dim, spacedim> &                  kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                  ky_dof_handler,
-    const MappingQGeneric<dim, spacedim> &             kx_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const MappingQGeneric<dim, spacedim> &ky_mapping =
-      MappingQGeneric<dim, spacedim>(1),
-    const bool enable_build_symmetric_hmat = false)
+    const std::vector<RangeNumberType> &               kernel_factors,
+    const std::vector<RangeNumberType> &               mass_matrix_factors,
+    const std::vector<std::vector<unsigned int>> &     kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &     ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &                  sauter_quad_rule,
+    const QGauss<dim> &                      mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &        kx_dof_handler,
+    const DoFHandler<dim, spacedim> &        ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim> &kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
   {
     AssertDimension(hmats.size(), kernels.size());
 
     const unsigned int kernel_num = kernels.size();
+
+    /**
+     * Precalculate data tables for shape values at quadrature points.
+     *
+     * \mynote{Precalculate shape function values and their gradient values
+     * at each quadrature point. N.B.
+     * 1. The data tables for shape function values and their gradient
+     * values should be calculated for both function space on \f$K_x\f$ and
+     * function space on \f$K_y\f$.
+     * 2. Being different from the integral in FEM, the integral in BEM
+     * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+     * (except the regular cell neighboring type), each of which should be
+     * evaluated at a different set of quadrature points in the unit cell
+     * after coordinate transformation from the parametric space. Therefore,
+     * a dimension with respect to \f$k_3\f$ term index should be added to
+     * the data table compared to the usual FEValues and this brings about
+     * the class @p BEMValues.}
+     */
+    BEMValues<dim, spacedim, RangeNumberType> bem_values(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
+      sauter_quad_rule.quad_rule_for_same_panel,
+      sauter_quad_rule.quad_rule_for_common_edge,
+      sauter_quad_rule.quad_rule_for_common_vertex,
+      sauter_quad_rule.quad_rule_for_regular);
+
+    bem_values.fill_shape_function_value_tables();
 
     /**
      * Extract the collection of leaf sets from the vector of \hmatrices.
@@ -3150,58 +4330,80 @@ namespace IdeoBEM
       }
 
     /**
-     * \mynote{Local variables captured by @p std::bind are by default
-     * <strong>pass-by-value</strong>. Hence, for capturing large objects,
-     * <strong>pass-by-reference</strong> should be adopted, which is realized
-     * by adding the prefix @p std::cref or @p std::ref to the variables. Which
-     * one should be used depends on whether the const reference is required.
-     * Because @p PairCellWiseScratchData and @p PairCellWisePerTaskData will
-     * be modified in each call of the work function that passed to
-     * @p std::bind, they should be captured by @p std::bind via pass-by-value.
+     * \mynote{N.B. There are two places where argument passing for
+     * parallelization is involved: 1. passing to @p std::bind; 2. passing to
+     * the working function.
      *
-     * Meanwhile, in a same working thread, the work function will be
+     * Local variables captured by @p std::bind are by default pass-by-value.
+     * Hence, for capturing large objects, pass-by-reference should be adopted
+     * instead of pass-by-value, which is realized by adding the prefix
+     * @p std::cref for const reference or @p std::ref for mutable reference.
+     *
+     * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
+     * captured by @p std::bind via pass-by-value, then for each working thread,
+     * a copy of them will automatically be made.
+     *
+     * Meanwhile, in a same working thread, the working function will be
      * called for each object specified by the index or iterator in
      * the blocked range, during which @p PairCellWiseScratchData and
      * @p PairCellWisePerTaskData can be reused. Therefore, they should be
-     * passed into the work function by non-const reference.
+     * passed into the working function by non-const reference.
      *
-     * For other variables to be captured like @p bem_values, @p kx_dof_handler
-     * and @p kx_mapping, since they will be not modified at all, they are
-     * captured by const reference by @p std::bind first and then passed to the
-     * work function by const reference.}
+     * For other variables to be captured like @p bem_values,
+     * @p kx/ky_dof_handler, * @p kx/ky_mapping and
+     * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+     * modified at all, they are captured by @p std::bind via const reference
+     * and then passed to the working function by const reference.}
      */
-    // Here we use <code>unsigned int</code> index to refer to the \hmatrix in
-    // the leaf set and the kernel function in the provided list @p kernels.
+
+    /**
+     * Here we use @p size_t index to refer to the \hmatrix in the leaf set
+     * and the kernel function in the provided list @p kernels.
+     */
     tbb::parallel_for(
       tbb::blocked_range<size_t>(0, leaf_set_size, grain_size),
       std::bind(
-        static_cast<void (*)(const tbb::blocked_range<size_t> &,
-                             const std::vector<std::vector<
-                               HMatrix<spacedim, RangeNumberType> *> *> &,
-                             const std::vector<RangeNumberType> &,
-                             const ACAConfig &,
-                             const std::vector<KernelFunction<spacedim> *> &,
-                             const std::vector<std::vector<unsigned int>> &,
-                             const BEMValues<dim, spacedim, RangeNumberType> &,
-                             const QGauss<dim> &,
-                             const DoFHandler<dim, spacedim> &,
-                             const DoFHandler<dim, spacedim> &,
-                             const MappingQGeneric<dim, spacedim> &,
-                             const MappingQGeneric<dim, spacedim> &,
-                             const bool)>(
-          fill_hmatrix_leaf_node_subrange_with_aca_plus_for_kernel_list),
+        static_cast<void (*)(
+          const tbb::blocked_range<size_t> &,
+          const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
+            &,
+          const ACAConfig &,
+          const std::vector<KernelFunction<spacedim> *> &,
+          const std::vector<RangeNumberType> &,
+          const std::vector<RangeNumberType> &,
+          const std::vector<std::vector<unsigned int>> &,
+          const std::vector<std::vector<unsigned int>> &,
+          const BEMValues<dim, spacedim, RangeNumberType> &,
+          const QGauss<dim> &,
+          const DoFHandler<dim, spacedim> &,
+          const DoFHandler<dim, spacedim> &,
+          const MappingQGenericExt<dim, spacedim> &,
+          const MappingQGenericExt<dim, spacedim> &,
+          const std::map<
+            typename Triangulation<dim, spacedim>::cell_iterator,
+            typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+          const std::map<
+            typename Triangulation<dim, spacedim>::cell_iterator,
+            typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+          const DetectCellNeighboringTypeMethod,
+          const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
         std::placeholders::_1,
         std::cref(collection_of_leaf_sets),
-        std::cref(mass_matrix_factors),
         std::cref(aca_config),
         std::cref(kernels),
-        std::cref(dof_to_cell_topo),
+        std::cref(kernel_factors),
+        std::cref(mass_matrix_factors),
+        std::cref(kx_dof_to_cell_topo),
+        std::cref(ky_dof_to_cell_topo),
         std::cref(bem_values),
-        std::cref(fem_quadrature_formula),
+        std::cref(mass_matrix_quadrature_formula),
         std::cref(kx_dof_handler),
         std::cref(ky_dof_handler),
         std::cref(kx_mapping),
         std::cref(ky_mapping),
+        std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+        std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+        method_for_cell_neighboring_type,
         enable_build_symmetric_hmat),
       tbb::auto_partitioner());
   }
