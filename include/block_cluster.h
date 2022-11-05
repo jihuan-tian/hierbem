@@ -117,8 +117,23 @@ public:
     std::vector<types::global_dof_index> &sigma_index_set_intersection) const;
 
   /**
-   * Determine if the index set of the current block cluster has a nonempty
-   * intersection with the index set of the given block cluster.
+   * Calculate the intersection of the index ranges of the current and the given
+   * block clusters.
+   *
+   * @param block_cluster
+   * @param tau_index_range_intersection
+   * @param sigma_index_range_intersection
+   */
+  void
+  intersect(
+    const BlockCluster &                    block_cluster,
+    std::array<types::global_dof_index, 2> &tau_index_range_intersection,
+    std::array<types::global_dof_index, 2> &sigma_index_range_intersection)
+    const;
+
+  /**
+   * Determine if the index set or index range of the current block cluster has
+   * a nonempty intersection with that of the given block cluster.
    * @return
    */
   bool
@@ -147,6 +162,9 @@ public:
    * Determine if the block cluster is admissible. The admissibility condition
    * is evaluated without mesh cell size correction.
    *
+   * \mynote{The index sets held by the two clusters share a same external
+   * DoF numbering.}
+   *
    * @param eta Admissibility constant.
    * @return
    */
@@ -155,6 +173,37 @@ public:
     Number                                      eta,
     const std::vector<Point<spacedim, Number>> &all_support_points);
 
+  /**
+   * Determine if the block cluster is admissible. The admissibility condition
+   * is evaluated without mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters share a same internal DoF numbering, which need to be mapped to
+   * the external numbering for accessing the list of support point
+   * coordinates.}
+   *
+   * @param eta
+   * @param internal_to_external_dof_numbering
+   * @param all_support_points
+   */
+  void
+  check_is_admissible(
+    Number eta,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering,
+    const std::vector<Point<spacedim, Number>> &all_support_points);
+
+  /**
+   * Determine if the block cluster is admissible. The admissibility condition
+   * is evaluated without mesh cell size correction.
+   *
+   * \mynote{The index sets held by the two clusters refer to two different
+   * external DoF numberings.}
+   *
+   * @param eta
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   */
   void
   check_is_admissible(
     Number                                      eta,
@@ -163,9 +212,39 @@ public:
 
   /**
    * Determine if the block cluster is admissible. The admissibility condition
+   * is evaluated without mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters refer to two different internal DoF numberings, which need to be
+   * mapped to their corresponding external numberings for accessing the list of
+   * support point coordinates.}
+   *
+   * @param eta
+   * @param internal_to_external_dof_numbering_I
+   * @param internal_to_external_dof_numbering_J
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   */
+  void
+  check_is_admissible(
+    Number eta,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_I,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_J,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_J);
+
+  /**
+   * Determine if the block cluster is admissible. The admissibility condition
    * is evaluated with mesh cell size correction.
    *
+   * \mynote{The index sets held by the two clusters share a same external
+   * DoF numbering.}
+   *
    * @param eta Admissibility constant.
+   * @param all_support_points
+   * @param cell_size_at_dofs
    * @return
    */
   void
@@ -174,6 +253,41 @@ public:
     const std::vector<Point<spacedim, Number>> &all_support_points,
     const std::vector<Number> &                 cell_size_at_dofs);
 
+  /**
+   * Determine if the block cluster is admissible. The admissibility condition
+   * is evaluated with mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters share a same internal DoF numbering, which need to be mapped to
+   * the external numbering for accessing the list of support point
+   * coordinates.}
+   *
+   * @param eta
+   * @param internal_to_external_dof_numbering
+   * @param all_support_points
+   * @param cell_size_at_dofs
+   */
+  void
+  check_is_admissible(
+    Number eta,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering,
+    const std::vector<Point<spacedim, Number>> &all_support_points,
+    const std::vector<Number> &                 cell_size_at_dofs);
+
+  /**
+   * Determine if the block cluster is admissible. The admissibility condition
+   * is evaluated with mesh cell size correction.
+   *
+   * \mynote{The index sets held by the two clusters refer to two different
+   * external DoF numberings.}
+   *
+   * @param eta
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param cell_size_at_dofs_in_I
+   * @param cell_size_at_dofs_in_J
+   */
   void
   check_is_admissible(
     Number                                      eta,
@@ -183,10 +297,43 @@ public:
     const std::vector<Number> &                 cell_size_at_dofs_in_J);
 
   /**
+   * Determine if the block cluster is admissible. The admissibility condition
+   * is evaluated with mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters refer to two different internal DoF numberings, which need to be
+   * mapped to their corresponding external numberings for accessing the list of
+   * support point coordinates.}
+   *
+   * @param eta
+   * @param internal_to_external_dof_numbering_I
+   * @param internal_to_external_dof_numbering_J
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param cell_size_at_dofs_in_I
+   * @param cell_size_at_dofs_in_J
+   */
+  void
+  check_is_admissible(
+    Number eta,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_I,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_J,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+    const std::vector<Number> &                 cell_size_at_dofs_in_I,
+    const std::vector<Number> &                 cell_size_at_dofs_in_J);
+
+  /**
    * Determine if the block cluster is either admissible or small. The
    * admissibility condition is evaluated without mesh cell size correction.
    *
+   * \mynote{The index sets held by the two clusters share a same external
+   * DoF numbering.}
+   *
    * @param eta Admissibility constant.
+   * @param all_support_points
    * @param n_min The size threshold value for determining if a cluster is large.
    * @return
    */
@@ -196,6 +343,42 @@ public:
     const std::vector<Point<spacedim, Number>> &all_support_points,
     unsigned int                                n_min);
 
+  /**
+   * Determine if the block cluster is either admissible or small. The
+   * admissibility condition is evaluated without mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters share a same internal DoF numbering, which need to be mapped to
+   * the external numbering for accessing the list of support point
+   * coordinates.}
+   *
+   * @param eta
+   * @param internal_to_external_dof_numbering
+   * @param all_support_points
+   * @param n_min
+   * @return
+   */
+  bool
+  is_admissible_or_small(
+    Number eta,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering,
+    const std::vector<Point<spacedim, Number>> &all_support_points,
+    unsigned int                                n_min);
+
+  /**
+   * Determine if the block cluster is either admissible or small. The
+   * admissibility condition is evaluated without mesh cell size correction.
+   *
+   * \mynote{The index sets held by the two clusters refer to two different
+   * external DoF numberings.}
+   *
+   * @param eta
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param n_min
+   * @return
+   */
   bool
   is_admissible_or_small(
     Number                                      eta,
@@ -205,7 +388,38 @@ public:
 
   /**
    * Determine if the block cluster is either admissible or small. The
+   * admissibility condition is evaluated without mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters refer to two different internal DoF numberings, which need to be
+   * mapped to their corresponding external numberings for accessing the list of
+   * support point coordinates.}
+   *
+   * @param eta
+   * @param internal_to_external_dof_numbering_I
+   * @param internal_to_external_dof_numbering_J
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param n_min
+   * @return
+   */
+  bool
+  is_admissible_or_small(
+    Number eta,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_I,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_J,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+    unsigned int                                n_min);
+
+  /**
+   * Determine if the block cluster is either admissible or small. The
    * admissibility condition is evaluated with mesh cell size correction.
+   *
+   * \mynote{The index sets held by the two clusters share a same external
+   * DoF numbering.}
    *
    * @param eta Admissibility constant.
    * @param n_min The size threshold value for determining if a cluster is large.
@@ -218,9 +432,81 @@ public:
     const std::vector<Number> &                 cell_size_at_dofs,
     unsigned int                                n_min);
 
+  /**
+   * Determine if the block cluster is either admissible or small. The
+   * admissibility condition is evaluated with mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters share a same internal DoF numbering, which need to be mapped to
+   * the external numbering for accessing the list of support point
+   * coordinates.}
+   *
+   * @param eta
+   * @param internal_to_external_dof_numbering
+   * @param all_support_points
+   * @param cell_size_at_dofs
+   * @param n_min
+   * @return
+   */
+  bool
+  is_admissible_or_small(
+    Number eta,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering,
+    const std::vector<Point<spacedim, Number>> &all_support_points,
+    const std::vector<Number> &                 cell_size_at_dofs,
+    unsigned int                                n_min);
+
+  /**
+   * Determine if the block cluster is either admissible or small. The
+   * admissibility condition is evaluated with mesh cell size correction.
+   *
+   * \mynote{The index sets held by the two clusters refer to two different
+   * external DoF numberings.}
+   *
+   * @param eta
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param cell_size_at_dofs_in_I
+   * @param cell_size_at_dofs_in_J
+   * @param n_min
+   * @return
+   */
   bool
   is_admissible_or_small(
     Number                                      eta,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+    const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+    const std::vector<Number> &                 cell_size_at_dofs_in_I,
+    const std::vector<Number> &                 cell_size_at_dofs_in_J,
+    unsigned int                                n_min);
+
+  /**
+   * Determine if the block cluster is either admissible or small. The
+   * admissibility condition is evaluated with mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters refer to two different internal DoF numberings, which need to be
+   * mapped to their corresponding external numberings for accessing the list of
+   * support point coordinates.}
+   *
+   * @param eta
+   * @param internal_to_external_dof_numbering_I
+   * @param internal_to_external_dof_numbering_J
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param cell_size_at_dofs_in_I
+   * @param cell_size_at_dofs_in_J
+   * @param n_min
+   * @return
+   */
+  bool
+  is_admissible_or_small(
+    Number eta,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_I,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_J,
     const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
     const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
     const std::vector<Number> &                 cell_size_at_dofs_in_I,
@@ -440,25 +726,74 @@ BlockCluster<spacedim, Number>::intersect(
 
 
 template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::intersect(
+  const BlockCluster &                    block_cluster,
+  std::array<types::global_dof_index, 2> &tau_index_range_intersection,
+  std::array<types::global_dof_index, 2> &sigma_index_range_intersection) const
+{
+  this->tau_node->get_data_reference().intersect(
+    block_cluster.tau_node->get_data_reference(), tau_index_range_intersection);
+  this->sigma_node->get_data_reference().intersect(
+    block_cluster.sigma_node->get_data_reference(),
+    sigma_index_range_intersection);
+}
+
+
+template <int spacedim, typename Number>
 bool
 BlockCluster<spacedim, Number>::has_intersection(
   const BlockCluster &block_cluster) const
 {
-  std::vector<types::global_dof_index> tau_index_set_intersection;
-  std::vector<types::global_dof_index> sigma_index_set_intersection;
-
-  this->intersect(block_cluster,
-                  tau_index_set_intersection,
-                  sigma_index_set_intersection);
-
-  if (tau_index_set_intersection.size() > 0 &&
-      sigma_index_set_intersection.size() > 0)
+  if (this->tau_node->get_data_reference().get_index_set().size() > 0 &&
+      this->sigma_node->get_data_reference().get_index_set().size() > 0 &&
+      block_cluster.tau_node->get_data_reference().get_index_set().size() > 0 &&
+      block_cluster.sigma_node->get_data_reference().get_index_set().size() > 0)
     {
-      return true;
+      /**
+       * When the index sets are non-empty.
+       */
+      std::vector<types::global_dof_index> tau_index_set_intersection;
+      std::vector<types::global_dof_index> sigma_index_set_intersection;
+
+      this->intersect(block_cluster,
+                      tau_index_set_intersection,
+                      sigma_index_set_intersection);
+
+      if (tau_index_set_intersection.size() > 0 &&
+          sigma_index_set_intersection.size() > 0)
+        {
+          return true;
+        }
+      else
+        {
+          return false;
+        }
     }
   else
     {
-      return false;
+      /**
+       * When the index sets are empty, we check the intersection of index
+       * ranges.
+       */
+      std::array<types::global_dof_index, 2> tau_index_range_intersection;
+      std::array<types::global_dof_index, 2> sigma_index_range_intersection;
+
+      this->intersect(block_cluster,
+                      tau_index_range_intersection,
+                      sigma_index_range_intersection);
+
+      if (((tau_index_range_intersection[1] - tau_index_range_intersection[0]) >
+           0) &&
+          ((sigma_index_range_intersection[1] -
+            sigma_index_range_intersection[0]) > 0))
+        {
+          return true;
+        }
+      else
+        {
+          return false;
+        }
     }
 }
 
@@ -496,7 +831,33 @@ BlockCluster<spacedim, Number>::check_is_admissible(
   const std::vector<Point<spacedim, Number>> &all_support_points)
 {
   cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
-    (*sigma_node->get_data_pointer()), all_support_points);
+    sigma_node->get_data_reference(), all_support_points);
+
+  if (std::min(tau_node->get_data_pointer()->get_diameter(),
+               sigma_node->get_data_pointer()->get_diameter()) <=
+      eta * cluster_distance)
+    {
+      is_admissible = true;
+    }
+  else
+    {
+      is_admissible = false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::check_is_admissible(
+  Number eta,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering,
+  const std::vector<Point<spacedim, Number>> &all_support_points)
+{
+  cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
+    sigma_node->get_data_reference(),
+    internal_to_external_dof_numbering,
+    all_support_points);
 
   if (std::min(tau_node->get_data_pointer()->get_diameter(),
                sigma_node->get_data_pointer()->get_diameter()) <=
@@ -519,7 +880,38 @@ BlockCluster<spacedim, Number>::check_is_admissible(
   const std::vector<Point<spacedim, Number>> &all_support_points_in_J)
 {
   cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
-    (*sigma_node->get_data_pointer()),
+    sigma_node->get_data_reference(),
+    all_support_points_in_I,
+    all_support_points_in_J);
+
+  if (std::min(tau_node->get_data_pointer()->get_diameter(),
+               sigma_node->get_data_pointer()->get_diameter()) <=
+      eta * cluster_distance)
+    {
+      is_admissible = true;
+    }
+  else
+    {
+      is_admissible = false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::check_is_admissible(
+  Number eta,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_I,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_J,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_J)
+{
+  cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
+    sigma_node->get_data_reference(),
+    internal_to_external_dof_numbering_I,
+    internal_to_external_dof_numbering_J,
     all_support_points_in_I,
     all_support_points_in_J);
 
@@ -544,7 +936,41 @@ BlockCluster<spacedim, Number>::check_is_admissible(
   const std::vector<Number> &                 cell_size_at_dofs)
 {
   cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
-    (*sigma_node->get_data_pointer()), all_support_points, cell_size_at_dofs);
+    sigma_node->get_data_reference(), all_support_points, cell_size_at_dofs);
+
+  /**
+   * N.B. The contained clusters \f$\tau\f$ and \f$\sigma\f$ in the block
+   * cluster should be created with the parameter \p cell_size_at_dofs. In this
+   * way, the returned cluster diameter is calculated with mesh cell size
+   * correction. This is achieved when creating the two cluster trees.
+   */
+  if (std::min(tau_node->get_data_pointer()->get_diameter(),
+               sigma_node->get_data_pointer()->get_diameter()) <=
+      eta * cluster_distance)
+    {
+      is_admissible = true;
+    }
+  else
+    {
+      is_admissible = false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::check_is_admissible(
+  Number eta,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  const std::vector<Number> &                 cell_size_at_dofs)
+{
+  cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
+    sigma_node->get_data_reference(),
+    internal_to_external_dof_numbering,
+    all_support_points,
+    cell_size_at_dofs);
 
   /**
    * N.B. The contained clusters \f$\tau\f$ and \f$\sigma\f$ in the block
@@ -575,7 +1001,48 @@ BlockCluster<spacedim, Number>::check_is_admissible(
   const std::vector<Number> &                 cell_size_at_dofs_in_J)
 {
   cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
-    (*sigma_node->get_data_pointer()),
+    sigma_node->get_data_reference(),
+    all_support_points_in_I,
+    all_support_points_in_J,
+    cell_size_at_dofs_in_I,
+    cell_size_at_dofs_in_J);
+
+  /**
+   * N.B. The contained clusters \f$\tau\f$ and \f$\sigma\f$ in the block
+   * cluster should be created with the parameter \p cell_size_at_dofs. In this
+   * way, the returned cluster diameter is calculated with mesh cell size
+   * correction. This is achieved when creating the two cluster trees.
+   */
+  if (std::min(tau_node->get_data_pointer()->get_diameter(),
+               sigma_node->get_data_pointer()->get_diameter()) <=
+      eta * cluster_distance)
+    {
+      is_admissible = true;
+    }
+  else
+    {
+      is_admissible = false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+BlockCluster<spacedim, Number>::check_is_admissible(
+  Number eta,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_I,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_J,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+  const std::vector<Number> &                 cell_size_at_dofs_in_I,
+  const std::vector<Number> &                 cell_size_at_dofs_in_J)
+{
+  cluster_distance = tau_node->get_data_pointer()->distance_to_cluster(
+    sigma_node->get_data_reference(),
+    internal_to_external_dof_numbering_I,
+    internal_to_external_dof_numbering_J,
     all_support_points_in_I,
     all_support_points_in_J,
     cell_size_at_dofs_in_I,
@@ -624,12 +1091,67 @@ BlockCluster<spacedim, Number>::is_admissible_or_small(
 template <int spacedim, typename Number>
 bool
 BlockCluster<spacedim, Number>::is_admissible_or_small(
+  Number eta,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  unsigned int                                n_min)
+{
+  check_is_admissible(eta,
+                      internal_to_external_dof_numbering,
+                      all_support_points);
+  check_is_near_field(n_min);
+
+  if (is_admissible || is_near_field)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_admissible_or_small(
   Number                                      eta,
   const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
   const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
   unsigned int                                n_min)
 {
   check_is_admissible(eta, all_support_points_in_I, all_support_points_in_J);
+  check_is_near_field(n_min);
+
+  if (is_admissible || is_near_field)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_admissible_or_small(
+  Number eta,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_I,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_J,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+  unsigned int                                n_min)
+{
+  check_is_admissible(eta,
+                      internal_to_external_dof_numbering_I,
+                      internal_to_external_dof_numbering_J,
+                      all_support_points_in_I,
+                      all_support_points_in_J);
   check_is_near_field(n_min);
 
   if (is_admissible || is_near_field)
@@ -668,6 +1190,33 @@ BlockCluster<spacedim, Number>::is_admissible_or_small(
 template <int spacedim, typename Number>
 bool
 BlockCluster<spacedim, Number>::is_admissible_or_small(
+  Number eta,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering,
+  const std::vector<Point<spacedim, Number>> &all_support_points,
+  const std::vector<Number> &                 cell_size_at_dofs,
+  unsigned int                                n_min)
+{
+  check_is_admissible(eta,
+                      internal_to_external_dof_numbering,
+                      all_support_points,
+                      cell_size_at_dofs);
+  check_is_near_field(n_min);
+
+  if (is_admissible || is_near_field)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_admissible_or_small(
   Number                                      eta,
   const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
   const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
@@ -676,6 +1225,40 @@ BlockCluster<spacedim, Number>::is_admissible_or_small(
   unsigned int                                n_min)
 {
   check_is_admissible(eta,
+                      all_support_points_in_I,
+                      all_support_points_in_J,
+                      cell_size_at_dofs_in_I,
+                      cell_size_at_dofs_in_J);
+  check_is_near_field(n_min);
+
+  if (is_admissible || is_near_field)
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+template <int spacedim, typename Number>
+bool
+BlockCluster<spacedim, Number>::is_admissible_or_small(
+  Number eta,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_I,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_J,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_I,
+  const std::vector<Point<spacedim, Number>> &all_support_points_in_J,
+  const std::vector<Number> &                 cell_size_at_dofs_in_I,
+  const std::vector<Number> &                 cell_size_at_dofs_in_J,
+  unsigned int                                n_min)
+{
+  check_is_admissible(eta,
+                      internal_to_external_dof_numbering_I,
+                      internal_to_external_dof_numbering_J,
                       all_support_points_in_I,
                       all_support_points_in_J,
                       cell_size_at_dofs_in_I,
@@ -765,7 +1348,7 @@ BlockCluster<spacedim, Number>::get_sigma_node() const
  *   <dt>Note</dt>
  *   <dd>This method is valid in the following two cases.
  *
- * 1. The two block clusters to be compared belong a same block cluster
+ * 1. The two block clusters to be compared belong to a same block cluster
  * tree. In this scenario, because in either cluster tree, \f$T(I)\f$ or
  * \f$T(J)\f$, comprising the block cluster tree, the cluster nodes contained
  * are created on the heap, hence each of them has an address in the memory

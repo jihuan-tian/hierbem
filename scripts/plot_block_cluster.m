@@ -7,8 +7,8 @@ function plot_block_cluster(bc, unit_size, enable_display_rank, is_fill)
     is_fill = true;
   endif
 
-  yrange = [(bc.tau(1) - 0.5) * unit_size, (bc.tau(end) + 0.5) * unit_size] + 1;
-  xrange = [(bc.sigma(1) - 0.5) * unit_size, (bc.sigma(end) + 0.5) * unit_size] + 1;
+  yrange = [(bc.tau(1) - 0.5) * unit_size, (bc.tau(end) - 1 + 0.5) * unit_size] + 1;
+  xrange = [(bc.sigma(1) - 0.5) * unit_size, (bc.sigma(end) - 1 + 0.5) * unit_size] + 1;
   xlength = xrange(2) - xrange(1);
 
   block_shape = [xrange(1), yrange(1);

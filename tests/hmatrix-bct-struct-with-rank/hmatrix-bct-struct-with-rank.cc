@@ -62,6 +62,12 @@ main()
   for (unsigned int k = 1; k <= 10; k++)
     {
       HMatrix<3, double> H(block_cluster_tree, M, k);
+      
+      // Print the leaf sets to console.
+      std::cout << "* rank=" << k << "\n";
+      H.write_leaf_set(std::cout, 1e-12);
+      
+      // Save the leaf sets to files.
       std::ofstream      output(std::string("bct-struct-with-rank=") +
                            std::to_string(k) + std::string(".dat"));
       H.write_leaf_set(output, 1e-12);

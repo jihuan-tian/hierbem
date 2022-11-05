@@ -17,6 +17,8 @@
 int
 main()
 {
+  std::ofstream out("hmatrix-check-parent-and-submatrix-index.dat");
+  
   const unsigned int                   p = 5;
   const unsigned int                   n = std::pow(2, p);
   std::vector<types::global_dof_index> index_set(n);
@@ -50,11 +52,13 @@ main()
    * Create the \hmatrix and print its information.
    */
   HMatrix<3, double> hmat(block_cluster_tree, M, fixed_rank_k);
-  hmat.print_matrix_info(std::cout);
+  hmat.print_matrix_info(out);
 
   std::ofstream hmat_digraph("hmat.puml");
   hmat.print_matrix_info_as_dot(hmat_digraph);
   hmat_digraph.close();
+
+  out.close();
 
   return 0;
 }

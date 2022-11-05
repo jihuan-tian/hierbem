@@ -1,17 +1,5 @@
 H's state before Cholesky factorization: matrix
 H's property before Cholesky factorization: general
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
-||D||_2=0,||C||_2=0
 # name: H_full
 # type: matrix
 # rows: 32

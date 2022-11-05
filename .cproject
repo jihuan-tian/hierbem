@@ -2917,36 +2917,6 @@
                 			
             </target>
             			
-            <target name="hmatrix-solve-cholesky-in-situ-for-erichsen1996efficient-example2.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-                				
-                <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
-                				
-                <buildTarget>hmatrix-solve-cholesky-in-situ-for-erichsen1996efficient-example2.debug</buildTarget>
-                				
-                <stopOnError>true</stopOnError>
-                				
-                <useDefaultCommand>true</useDefaultCommand>
-                				
-                <runAllBuilders>true</runAllBuilders>
-                			
-            </target>
-            			
-            <target name="hmatrix-solve-cholesky-in-situ-for-erichsen1996efficient-example2.release" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-                				
-                <buildCommand>make</buildCommand>
-                				
-                <buildTarget>hmatrix-solve-cholesky-in-situ-for-erichsen1996efficient-example2.release</buildTarget>
-                				
-                <stopOnError>true</stopOnError>
-                				
-                <useDefaultCommand>true</useDefaultCommand>
-                				
-                <runAllBuilders>true</runAllBuilders>
-                			
-            </target>
-            			
             <target name="dof-to-cell-topology.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
                 				
                 <buildCommand>make</buildCommand>
@@ -3288,22 +3258,6 @@
                 <buildArguments/>
                 				
                 <buildTarget>hmatrix-memory-consumption.debug</buildTarget>
-                				
-                <stopOnError>true</stopOnError>
-                				
-                <useDefaultCommand>true</useDefaultCommand>
-                				
-                <runAllBuilders>true</runAllBuilders>
-                			
-            </target>
-            			
-            <target name="hmatrix-memory-consumption.release" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-                				
-                <buildCommand>make</buildCommand>
-                				
-                <buildArguments/>
-                				
-                <buildTarget>hmatrix-memory-consumption.release</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
                 				
@@ -3920,6 +3874,20 @@
                 <buildArguments/>
                 				
                 <buildTarget>hmatrix-symm-vmult-symm.debug</buildTarget>
+                				
+                <stopOnError>true</stopOnError>
+                				
+                <useDefaultCommand>true</useDefaultCommand>
+                				
+                <runAllBuilders>true</runAllBuilders>
+                			
+            </target>
+            			
+            <target name="lapack-matrix-fill-rows.debug" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+                				
+                <buildCommand>make</buildCommand>
+                				
+                <buildTarget>lapack-matrix-fill-rows.debug</buildTarget>
                 				
                 <stopOnError>true</stopOnError>
                 				

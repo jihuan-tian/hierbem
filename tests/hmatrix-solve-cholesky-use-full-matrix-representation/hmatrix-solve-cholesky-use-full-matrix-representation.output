@@ -36,12 +36,12 @@
        -1.155219272335527        -7.949728699291637         0.921759191469384        -8.303508901357770         4.033502576475059        -2.373258122867532        -2.865124827563439        -6.596831798326390        -8.801663588458638        -3.168229479842812        -6.453750851587330        -9.208986226241512        -4.695185628036562        -4.201199816005305         0.708585342863090        -2.484769562787568        -0.050852099026711        -3.645021919126364        -0.739363054006012         0.923515516148033        -3.513444510338184         9.043526566008575        -1.623096073850664        10.764170345944981        -3.212288499474079         0.304518685477448        -4.652399665978511        -0.806768940794791        -9.371824272755566         1.372062218925704        -5.705828122771379        38.965717347599409 
 
 
-LLT memory consumption before Cholesky factorization: 57436
+LLT memory consumption before Cholesky factorization: 50332
 H's state after Cholesky factorization: unusable
 H's property after Cholesky factorization: symmetric
 LLT's state after Cholesky factorization: cholesky decomposition
 LLT's property after Cholesky factorization: lower triangular
-LLT memory consumption: 58876
+LLT memory consumption: 50332
 LLT coarse memory consumption: 13568
 # name: LLT_full
 # type: matrix

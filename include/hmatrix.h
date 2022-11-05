@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -112,8 +111,7 @@ public:
   InitAndCreateHMatrixChildrenWithoutAlloc(
     HMatrix<spacedim1, Number1> *hmat,
     typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-               bc_node,
-    const bool is_build_index_set_global_to_local_map);
+      bc_node);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -122,7 +120,6 @@ public:
     typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
                                    bc_node,
     const unsigned int             fixed_rank_k,
-    const bool                     is_build_index_set_global_to_local_map,
     const HMatrixSupport::Property top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
@@ -133,7 +130,6 @@ public:
                                         bc_node,
     const unsigned int                  fixed_rank_k,
     const LAPACKFullMatrixExt<Number1> &M,
-    const bool                          is_build_index_set_global_to_local_map,
     const HMatrixSupport::Property      top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
@@ -143,7 +139,6 @@ public:
     typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
                                         bc_node,
     const LAPACKFullMatrixExt<Number1> &M,
-    const bool                          is_build_index_set_global_to_local_map,
     const HMatrixSupport::Property      top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
@@ -151,29 +146,23 @@ public:
   InitAndCreateHMatrixChildren(
     HMatrix<spacedim1, Number1> *hmat,
     typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                        bc_node,
-    const unsigned int                  fixed_rank_k,
-    const LAPACKFullMatrixExt<Number1> &M,
-    const std::map<types::global_dof_index, size_t>
-      &row_index_global_to_local_map_for_M,
-    const std::map<types::global_dof_index, size_t>
-      &                            col_index_global_to_local_map_for_M,
-    const bool                     is_build_index_set_global_to_local_map,
-    const HMatrixSupport::Property top_hmat_node_property);
+                                                  bc_node,
+    const unsigned int                            fixed_rank_k,
+    const LAPACKFullMatrixExt<Number1> &          M,
+    const std::array<types::global_dof_index, 2> &M_row_index_range,
+    const std::array<types::global_dof_index, 2> &M_col_index_range,
+    const HMatrixSupport::Property                top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
   InitAndCreateHMatrixChildren(
     HMatrix<spacedim1, Number1> *hmat,
     typename BlockClusterTree<spacedim1, Number1>::node_const_pointer_type
-                                        bc_node,
-    const LAPACKFullMatrixExt<Number1> &M,
-    const std::map<types::global_dof_index, size_t>
-      &row_index_global_to_local_map_for_M,
-    const std::map<types::global_dof_index, size_t>
-      &                            col_index_global_to_local_map_for_M,
-    const bool                     is_build_index_set_global_to_local_map,
-    const HMatrixSupport::Property top_hmat_node_property);
+                                                  bc_node,
+    const LAPACKFullMatrixExt<Number1> &          M,
+    const std::array<types::global_dof_index, 2> &M_row_index_range,
+    const std::array<types::global_dof_index, 2> &M_col_index_range,
+    const HMatrixSupport::Property                top_hmat_node_property);
 
   template <int spacedim1, typename Number1>
   friend void
@@ -196,12 +185,6 @@ public:
                              const HMatrix<spacedim1, Number1> *hmat_root_block,
                              size_t *                           calling_counter,
                              const std::string &output_file_base_name);
-
-  friend void
-  build_index_set_global_to_local_map(
-    const std::vector<types::global_dof_index>
-      &                                        index_set_as_local_to_global_map,
-    std::map<types::global_dof_index, size_t> &global_to_local_map);
 
   // Friend functions for \hmatrix arithmetic operations.
   template <int spacedim1, typename Number1>
@@ -1175,8 +1158,8 @@ public:
    * first one, this \p add flag should be set to \p true, irrespective of the
    * original flag value passed into the first call of \p vmult. Hence, we do
    * not include the \p add flag in the \p vmult function.
-   * 2. The input vectors \p x and \p y are to be accessed via global DoF
-   * indices.}
+   * 2. The input vectors \p x and \p y are with respect to root cluster nodes
+   * and should be directly accessed via **global** DoF indices.}
    *
    * @param y
    * @param x
@@ -1193,60 +1176,55 @@ public:
    * Calculate matrix-vector multiplication as \f$y = y + \alpha \cdot M \cdot
    * x\f$.
    *
+   * \mynote{The input vectors \p x and \p y are with respect to root cluster
+   * nodes and should be directly accessed via **global** DoF indices.}
+   *
    * @param y
    * @param alpha
    * @param x
    */
   void
-  vmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
+  vmult(Vector<Number> &               y,
+        const Number                   alpha,
+        const Vector<Number> &         x,
+        const HMatrixSupport::Property top_hmat_property =
+          HMatrixSupport::general) const;
 
   /**
-   * Calculate matrix-vector multiplication as \f$y = y + M \cdot x\f$.
-   *
-   * \mynote{
-   * 1. The recursive algorithm for \hmatrix-vector
-   * multiplication needs to collect the results from different components in
-   * the leaf set and corresponding vector block in \f$x\f$. More importantly,
-   * there will be a series of such results contributing to a same block in the
-   * result vector \f$y\f$. Therefore, if the interface of this function is
-   * designed with the parameter \p add as that in the \p vmult function of \p
-   * LAPACKFullMatrix in deal.ii, in all recursive calls of \p vmult except the
-   * first one, this \p add flag should be set to \p true, irrespective of the
-   * original flag value passed into the first call of \p vmult. Hence, we do
-   * not include the \p add flag in the \p vmult function.
-   * 2. The input vectors \p x and \p y are to be accessed via local indices
-   * with the assistance of \p row_index_global_to_local_map and \p
-   * col_index_global_to_local_map.}
+   * Calculate matrix-vector multiplication as \f$y = y + M \cdot x\f$ by
+   * starting from a block in the matrix and vector. Therefore, the starting
+   * \hmat is specified.
    *
    * @param y
    * @param x
+   * @param starting_hmat
+   * @param top_hmat_property
    */
   void
-  vmult(Vector<Number> &y,
-        const std::map<types::global_dof_index, size_t>
-          &                   y_index_global_to_local_map,
-        const Vector<Number> &x,
-        const std::map<types::global_dof_index, size_t>
-          &x_index_global_to_local_map) const;
+  vmult(Vector<Number> &                 y,
+        const Vector<Number> &           x,
+        const HMatrix<spacedim, Number> &starting_hmat,
+        const HMatrixSupport::Property   top_hmat_property =
+          HMatrixSupport::general) const;
 
   /**
    * Calculate matrix-vector multiplication as \f$y = y + \alpha \cdot M \cdot
-   * x\f$.
+   * x\f$ by starting from a block in the matrix and vector. Therefore, the
+   * starting \hmat is specified.
    *
    * @param y
-   * @param y_index_global_to_local_map
    * @param alpha
    * @param x
-   * @param x_index_global_to_local_map
+   * @param starting_hmat
+   * @param top_hmat_property
    */
   void
-  vmult(Vector<Number> &y,
-        const std::map<types::global_dof_index, size_t>
-          &                   y_index_global_to_local_map,
-        const Number          alpha,
-        const Vector<Number> &x,
-        const std::map<types::global_dof_index, size_t>
-          &x_index_global_to_local_map) const;
+  vmult(Vector<Number> &                 y,
+        const Number                     alpha,
+        const Vector<Number> &           x,
+        const HMatrix<spacedim, Number> &starting_hmat,
+        const HMatrixSupport::Property   top_hmat_property =
+          HMatrixSupport::general) const;
 
   /**
    * Calculate matrix-vector multiplication as \f$y = y +
@@ -1254,6 +1232,9 @@ public:
    *
    * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
    * \p col_indices should be swapped. Also refer to HMatrix::vmult.
+   *
+   * \mynote{The input vectors \p x and \p y are with respect to root cluster
+   * nodes and should be directly accessed via **global** DoF indices.}
    *
    * @param y
    * @param x
@@ -1267,6 +1248,10 @@ public:
    *
    * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
    * \p col_indices should be swapped. Also refer to HMatrix::vmult.
+   *
+   * \mynote{The input vectors \p x and \p y are with respect to root cluster
+   * nodes and should be directly accessed via **global** DoF indices.}
+   *
    * @param y
    * @param alpha
    * @param x
@@ -1275,57 +1260,36 @@ public:
   Tvmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
 
   /**
-   * Calculate matrix-vector multiplication as \f$y = y +
-   * M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+   * Calculate matrix-vector multiplication as \f$y = y + M^T \cdot x\f$ by
+   * starting from a block in the matrix and vector. Therefore, the starting
+   * \hmat is specified.
    *
-   * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
-   * \p col_indices should be swapped.
-   *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The input vectors \p x and \p y are to be accessed via local indices
-   * with the assistance of \p row_index_global_to_local_map and \p
-   * col_index_global_to_local_map.</dd>
-   * </dl>
-   *
-   * Also refer to HMatrix::vmult.
    * @param y
    * @param x
+   * @param starting_hmat
+   * @param top_hmat_property
    */
   void
-  Tvmult(Vector<Number> &y,
-         const std::map<types::global_dof_index, size_t>
-           &                   y_index_global_to_local_map,
-         const Vector<Number> &x,
-         const std::map<types::global_dof_index, size_t>
-           &x_index_global_to_local_map) const;
+  Tvmult(Vector<Number> &                 y,
+         const Vector<Number> &           x,
+         const HMatrix<spacedim, Number> &starting_hmat) const;
 
   /**
-   * Calculate matrix-vector multiplication as \f$y = y +
-   * \alpha \cdot M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+   * Calculate matrix-vector multiplication as \f$y = y + \alpha \cdot M^T \cdot
+   * x\f$ by starting from a block in the matrix and vector. Therefore, the
+   * starting \hmat is specified.
    *
-   * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
-   * \p col_indices should be swapped.
-   *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The input vectors \p x and \p y are to be accessed via local indices
-   * with the assistance of \p row_index_global_to_local_map and \p
-   * col_index_global_to_local_map.</dd>
-   * </dl>
-   *
-   * Also refer to HMatrix::vmult.
    * @param y
+   * @param alpha
    * @param x
+   * @param starting_hmat
+   * @param top_hmat_property
    */
   void
-  Tvmult(Vector<Number> &y,
-         const std::map<types::global_dof_index, size_t>
-           &                   y_index_global_to_local_map,
-         const Number          alpha,
-         const Vector<Number> &x,
-         const std::map<types::global_dof_index, size_t>
-           &x_index_global_to_local_map) const;
+  Tvmult(Vector<Number> &                 y,
+         const Number                     alpha,
+         const Vector<Number> &           x,
+         const HMatrix<spacedim, Number> &starting_hmat) const;
 
   /**
    * Perform \hmatrix MM multiplication reduction. This is
@@ -1537,13 +1501,11 @@ public:
    * @param fixed_rank_k
    */
   void
-  add(const RkMatrix<Number> &B,
-      const std::map<types::global_dof_index, size_t>
-        &row_index_global_to_local_map_for_rk,
-      const std::map<types::global_dof_index, size_t>
-        &             col_index_global_to_local_map_for_rk,
-      const size_type fixed_rank_k,
-      const bool      is_result_matrix_store_tril_only = false) const;
+  add(const RkMatrix<Number> &                      B,
+      const std::array<types::global_dof_index, 2> &B_row_index_range,
+      const std::array<types::global_dof_index, 2> &B_col_index_range,
+      const size_type                               fixed_rank_k,
+      const bool is_result_matrix_store_tril_only = false) const;
 
   /**
    * Add a rank-k matrix multiplied by a factor into the current \hmatnode.
@@ -1558,21 +1520,19 @@ public:
    * @param fixed_rank_k
    */
   void
-  add(const Number            b,
-      const RkMatrix<Number> &B,
-      const std::map<types::global_dof_index, size_t>
-        &row_index_global_to_local_map_for_rk,
-      const std::map<types::global_dof_index, size_t>
-        &             col_index_global_to_local_map_for_rk,
-      const size_type fixed_rank_k,
-      const bool      is_result_matrix_symm_apriori = false) const;
+  add(const Number                                  b,
+      const RkMatrix<Number> &                      B,
+      const std::array<types::global_dof_index, 2> &B_row_index_range,
+      const std::array<types::global_dof_index, 2> &B_col_index_range,
+      const size_type                               fixed_rank_k,
+      const bool is_result_matrix_store_tril_only = false) const;
 
   /**
    * Add a rank-k matrix into the current \hmatnode.
    *
    * The rank-k matrix will be restricted to each leaf node of the \hmatnode
    * and the addition will be performed there respectively. In this
-   * implementation, the row and column global to local index maps with respect
+   * implementation, the row and column index ranges with respect
    * to \p B are the same as those associated with the \hmatrix, i.e. the
    * rank-k matrix and \hmatrix are on a same block.
    *
@@ -1596,7 +1556,7 @@ public:
    *
    * The rank-k matrix will be restricted to each leaf node of the \hmatnode
    * and the addition will be performed there. In this implementation, the row
-   * and column global to local index maps with respect to \p B are the same as
+   * and column index ranges with respect to \p B are the same as
    * those associated with the \hmatrix, i.e. the rank-k matrix and \hmatrix are
    * on a same block.
    *
@@ -1608,7 +1568,7 @@ public:
   add(const Number            b,
       const RkMatrix<Number> &B,
       const size_type         fixed_rank_k,
-      const bool              is_result_matrix_symm_apriori = false);
+      const bool              is_result_matrix_store_tril_only = false);
 
   /**
    * Add the error matrix \f$EE^H\f$ recursively to the leaf diagonal blocks of
@@ -1664,8 +1624,8 @@ public:
    * The right hand side vector \f$b\f$ will be overwritten by the solution
    * vector \f$x\f$.
    *
-   * \alert{The vector \p b is accessed directly by using the DoF index stored
-   * in clusters.}
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
    *
    * @param b Right hand side global vector. After execution, it stores the
    * result vector.
@@ -1677,8 +1637,8 @@ public:
   /**
    * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution.
    *
-   * \alert{The vectors \p b and \p x are accessed directly by using the DoF
-   * index stored in clusters.}
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
    *
    * @param x
    * @param b Right hand side global vector.
@@ -1695,32 +1655,32 @@ public:
    * The right hand side vector \f$b\f$ will be overwritten by the solution
    * vector \f$x\f$.
    *
-   * \alert{The vector \p b is to be accessed via local indices with the
-   * assistance of \p vector_index_global_to_local_map.}
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
-   * @param b Right hand side vector and after execution, it stores the result vector.
+   * @param b Right hand side global vector. After execution, it stores the
+   * result vector.
+   * @param starting_hmat
+   * @param is_unit_diagonal
    */
   void
-  solve_by_forward_substitution(Vector<Number> &b,
-                                const std::map<types::global_dof_index, size_t>
-                                  &        vector_index_global_to_local_map,
+  solve_by_forward_substitution(Vector<Number> &                 b,
+                                const HMatrix<spacedim, Number> &starting_hmat,
                                 const bool is_unit_diagonal = true) const;
 
   /**
    * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution.
    *
-   * \alert{The vectors \p x and \p b are to be accessed via local indices with
-   * the assistance of \p vector_index_global_to_local_map.}
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
    * @param x
    * @param b
+   * @param starting_hmat
    * @param is_unit_diagonal
    */
   void
-  solve_by_forward_substitution(Vector<Number> &      x,
-                                const Vector<Number> &b,
-                                const std::map<types::global_dof_index, size_t>
-                                  &        vector_index_global_to_local_map,
+  solve_by_forward_substitution(Vector<Number> &                 x,
+                                const Vector<Number> &           b,
+                                const HMatrix<spacedim, Number> &starting_hmat,
                                 const bool is_unit_diagonal = true) const;
 
   /**
@@ -1731,12 +1691,7 @@ public:
    * \alert{The problem to be solved is restricted to specific \bcs. Hence, when
    * this recursive algorithm for forward substitution comes to a leaf node of
    * \f$Z\f$, it implies the column vectors stored in \f$Z\f$ are to be accessed
-   * via local indices. Therefore, when calling the procedure \p HMAtrix<spacedim, Number>::solve_by_forward_substitution,
-   * the version with the argument \p vector_index_global_to_local_map should be used, i.e.
-   * @p HMatrix<spacedim, Number>::solve_by_forward_substitution(Vector<Number> &b, const std::map<types::global_dof_index, size_t> & vector_index_global_to_local_map, const bool is_unit_diagonal) const.}
-   *
-   * \mynote{Because the \p col_index_global_to_local_map in in some diagonal
-   * \hmatnode in \f$L\f$ may be built, this member function is not \p const.}
+   * via local indices.}
    *
    * @param X
    * @param Z
@@ -1748,7 +1703,7 @@ public:
     HMatrix<spacedim, Number> &X,
     HMatrix<spacedim, Number> &Z,
     const unsigned int         fixed_rank,
-    const bool                 is_unit_diagonal = true);
+    const bool                 is_unit_diagonal = true) const;
 
   /**
    * Solve the matrix-valued problem
@@ -1770,7 +1725,7 @@ public:
   solve_cholesky_by_forward_substitution_matrix_valued(
     HMatrix<spacedim, Number> &X,
     HMatrix<spacedim, Number> &Z,
-    const unsigned int         fixed_rank);
+    const unsigned int         fixed_rank) const;
 
   /**
    * Solve the transpose of an upper triangular matrix \f$U^Tx=b\f$ by forward
@@ -1778,6 +1733,9 @@ public:
    *
    * The right hand side vector \f$b\f$ will be overwritten by the solution
    * vector \f$x\f$.
+   *
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
    *
    * @param b Right hand side vector and after execution, it stores the result vector.
    */
@@ -1787,6 +1745,9 @@ public:
   /**
    * Solve the transpose of an upper triangular matrix \f$U^Tx=b\f$ by forward
    * substitution.
+   *
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
    *
    * @param x Result vector.
    * @param b Right hand side vector.
@@ -1802,33 +1763,31 @@ public:
    * The right hand side vector \f$b\f$ will be overwritten by the solution
    * vector \f$x\f$.
    *
-   * \alert{The vector \p b is to be accessed via local indices with the
-   * assistance of \p vector_index_global_to_local_map.}
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
-   * @param b Right hand side vector and after execution, it stores the result vector.
+   * @param b
+   * @param starting_hmat
    */
   void
   solve_transpose_by_forward_substitution(
-    Vector<Number> &b,
-    const std::map<types::global_dof_index, size_t>
-      &vector_index_global_to_local_map) const;
+    Vector<Number> &                 b,
+    const HMatrix<spacedim, Number> &starting_hmat) const;
 
   /**
    * Solve the transpose of an upper triangular matrix \f$U^Tx=b\f$ by forward
    * substitution.
    *
-   * \alert{The vectors \p x and \p b are to be accessed via local indices with
-   * the assistance of \p vector_index_global_to_local_map.}
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
-   * @param x Result vector.
-   * @param b Right hand side vector.
+   * @param x
+   * @param b
+   * @param starting_hmat
    */
   void
   solve_transpose_by_forward_substitution(
-    Vector<Number> &      x,
-    const Vector<Number> &b,
-    const std::map<types::global_dof_index, size_t>
-      &vector_index_global_to_local_map) const;
+    Vector<Number> &                 x,
+    const Vector<Number> &           b,
+    const HMatrix<spacedim, Number> &starting_hmat) const;
 
   /**
    * Solve the matrix-valued problem
@@ -1849,7 +1808,7 @@ public:
   solve_transpose_by_forward_substitution_matrix_valued(
     HMatrix<spacedim, Number> &X,
     HMatrix<spacedim, Number> &Z,
-    const unsigned int         fixed_rank);
+    const unsigned int         fixed_rank) const;
 
   /**
    * Solve the matrix-valued problem
@@ -1874,7 +1833,7 @@ public:
   solve_cholesky_transpose_by_forward_substitution_matrix_valued(
     HMatrix<spacedim, Number> &X,
     HMatrix<spacedim, Number> &Z,
-    const unsigned int         fixed_rank);
+    const unsigned int         fixed_rank) const;
 
   /**
    * Solve the block lower triangular matrix \f$Lx=b\f$ by forward substitution.
@@ -1928,7 +1887,11 @@ public:
    * solve_by_forward_substitution(Vector<Number> &b, const bool
    * is_unit_diagonal = false) with \p is_unit_diagonal being \p false.
    *
-   * @param b Right hand side vector and after execution, it stores the result vector.
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
+   *
+   * @param b Right hand side vector and after execution, it stores the result
+   * vector.
    */
   void
   solve_cholesky_by_forward_substitution(Vector<Number> &b) const;
@@ -1943,6 +1906,9 @@ public:
    * const bool is_unit_diagonal = false) const with \p is_unit_diagonal being
    * \p false.
    *
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
+   *
    * @param x Solution vector.
    * @param b Right hand side vector.
    */
@@ -1955,46 +1921,42 @@ public:
    * \f$L\f$ is obtained from a Cholesky decomposition. Hence, \f$L\f$ is not
    * normed.
    *
-   * This function directly calls \p
-   * solve_by_forward_substitution(Vector<Number> &b, const
-   * std::map<types::global_dof_index, size_t> &
-   * vector_index_global_to_local_map, const bool is_unit_diagonal = false) with
-   * \p is_unit_diagonal being \p false.
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
-   * @param b Right hand side vector and after execution, it stores the result vector.
+   * @param b Right hand side vector and after execution, it stores the result
+   * vector.
+   * @param starting_hmat
    */
   void
   solve_cholesky_by_forward_substitution(
-    Vector<Number> &b,
-    const std::map<types::global_dof_index, size_t>
-      &vector_index_global_to_local_map) const;
+    Vector<Number> &                 b,
+    const HMatrix<spacedim, Number> &starting_hmat) const;
 
   /**
    * Solve the lower triangular matrix \f$Lx=b\f$ by forward substitution, where
    * \f$L\f$ is obtained from a Cholesky decomposition. Hence, \f$L\f$ is not
    * normed.
    *
-   * This function directly calls \p
-   * solve_by_forward_substitution(Vector<Number> &      x, const Vector<Number>
-   * &b, const std::map<types::global_dof_index, size_t> &
-   * vector_index_global_to_local_map, const bool is_unit_diagonal = false) with
-   * \p is_unit_diagonal being \p false.
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
-   * @param x Solution vector.
-   * @param b Right hand side vector.
+   * @param x
+   * @param b
+   * @param starting_hmat
    */
   void
   solve_cholesky_by_forward_substitution(
-    Vector<Number> &      x,
-    const Vector<Number> &b,
-    const std::map<types::global_dof_index, size_t>
-      &vector_index_global_to_local_map) const;
+    Vector<Number> &                 x,
+    const Vector<Number> &           b,
+    const HMatrix<spacedim, Number> &starting_hmat) const;
 
   /**
    * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
    *
    * The right hand side vector \f$b\f$ will be overwritten by the solution
    * vector \f$x\f$.
+   *
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
    *
    * @param b Right hand side vector and after execution, it stores the result vector.
    */
@@ -2004,6 +1966,9 @@ public:
 
   /**
    * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
+   *
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
    *
    * @param x
    * @param b
@@ -2020,32 +1985,31 @@ public:
    * The right hand side vector \f$b\f$ will be overwritten by the solution
    * vector \f$x\f$.
    *
-   * \alert{The vector \p b is to be accessed via local indices with the
-   * assistance of \p vector_index_global_to_local_map.}
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
-   * @param b Right hand side vector and after execution, it stores the result vector.
+   * @param b
+   * @param starting_hmat
+   * @param is_unit_diagonal
    */
   void
-  solve_by_backward_substitution(Vector<Number> &b,
-                                 const std::map<types::global_dof_index, size_t>
-                                   &        vector_index_global_to_local_map,
+  solve_by_backward_substitution(Vector<Number> &                 b,
+                                 const HMatrix<spacedim, Number> &starting_hmat,
                                  const bool is_unit_diagonal = false) const;
 
   /**
    * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution.
    *
-   * \alert{The vectors \p x and \p b are to be accessed via local indices with
-   * the assistance of \p vector_index_global_to_local_map.}
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
    * @param x
    * @param b
+   * @param starting_hmat
    * @param is_unit_diagonal
    */
   void
-  solve_by_backward_substitution(Vector<Number> &      x,
-                                 const Vector<Number> &b,
-                                 const std::map<types::global_dof_index, size_t>
-                                   &        vector_index_global_to_local_map,
+  solve_by_backward_substitution(Vector<Number> &                 x,
+                                 const Vector<Number> &           b,
+                                 const HMatrix<spacedim, Number> &starting_hmat,
                                  const bool is_unit_diagonal = false) const;
 
   /**
@@ -2100,6 +2064,9 @@ public:
    * The right hand side vector \f$b\f$ will be overwritten by the solution
    * vector \f$x\f$.
    *
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
+   *
    * @param b Right hand side vector and after execution, it stores the result vector.
    */
   void
@@ -2108,6 +2075,9 @@ public:
   /**
    * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution,
    * where \f$U\f$ is the transpose of the current matrix \f$L\f$.
+   *
+   * \alert{The vector \p b is **global**, which can be directly accessed by
+   * DoF indices in the cluster's index range.}
    *
    * @param x Result vector.
    * @param b Right hand side vector.
@@ -2123,33 +2093,31 @@ public:
    * The right hand side vector \f$b\f$ will be overwritten by the solution
    * vector \f$x\f$.
    *
-   * \alert{The vector \p b is to be accessed via local indices with the
-   * assistance of \p vector_index_global_to_local_map.}
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
-   * @param b Right hand side vector and after execution, it stores the result vector.
+   * @param b
+   * @param starting_hmat
    */
   void
   solve_cholesky_by_backward_substitution(
-    Vector<Number> &b,
-    const std::map<types::global_dof_index, size_t>
-      &vector_index_global_to_local_map) const;
+    Vector<Number> &                 b,
+    const HMatrix<spacedim, Number> &starting_hmat) const;
 
   /**
    * Solve the upper triangular matrix \f$Ux=b\f$ by backward substitution,
    * where \f$U\f$ is the transpose of the current matrix \f$L\f$.
    *
-   * \alert{The vectors \p x and \p b are to be accessed via local indices with
-   * the assistance of \p vector_index_global_to_local_map.}
+   * \alert{The vector \p b is **local**, i.e. associated with a cluster.}
    *
-   * @param x Result vector.
-   * @param b Right hand side vector.
+   * @param x
+   * @param b
+   * @param starting_hmat
    */
   void
   solve_cholesky_by_backward_substitution(
-    Vector<Number> &      x,
-    const Vector<Number> &b,
-    const std::map<types::global_dof_index, size_t>
-      &vector_index_global_to_local_map) const;
+    Vector<Number> &                 x,
+    const Vector<Number> &           b,
+    const HMatrix<spacedim, Number> &starting_hmat) const;
 
   /**
    * Compute the LU factorization of an \hmatrix. The resulted \f$L\f$ and
@@ -2299,7 +2267,7 @@ public:
    *
    * @return
    */
-  std::vector<types::global_dof_index> *
+  std::array<types::global_dof_index, 2> *
   get_row_indices();
 
   /**
@@ -2307,7 +2275,7 @@ public:
    *
    * @return
    */
-  const std::vector<types::global_dof_index> *
+  const std::array<types::global_dof_index, 2> *
   get_row_indices() const;
 
   /**
@@ -2315,7 +2283,7 @@ public:
    *
    * @return
    */
-  std::vector<types::global_dof_index> *
+  std::array<types::global_dof_index, 2> *
   get_col_indices();
 
   /**
@@ -2323,20 +2291,8 @@ public:
    *
    * @return
    */
-  const std::vector<types::global_dof_index> *
+  const std::array<types::global_dof_index, 2> *
   get_col_indices() const;
-
-  std::map<types::global_dof_index, size_t> &
-  get_row_index_global_to_local_map();
-
-  const std::map<types::global_dof_index, size_t> &
-  get_row_index_global_to_local_map() const;
-
-  std::map<types::global_dof_index, size_t> &
-  get_col_index_global_to_local_map();
-
-  const std::map<types::global_dof_index, size_t> &
-  get_col_index_global_to_local_map() const;
 
   /**
    * Find a block cluster in the leaf set of the current
@@ -2655,48 +2611,16 @@ private:
   typename BlockClusterTree<spacedim, Number>::node_pointer_type bc_node;
 
   /**
-   * Pointer to the vector of global row indices, which is stored as the index
-   * in the cluster \f$\tau\f$. It is a subset of \f$I\f$. By accessing this
-   * vector using indices starting from 0, we actually obtain the mapping from
-   * the current matrix's local row indices to the global row indices.
+   * Pointer to the range of row indices (in internal DoF numbering), which has
+   * been stored in the cluster \f$\tau\f$. It is a subset of \f$I\f$.
    */
-  std::vector<types::global_dof_index> *row_indices;
+  std::array<types::global_dof_index, 2> *row_indices;
 
   /**
-   * Pointer to the vector of global column indices, which is stored as the
-   * index set in the cluster \f$\sigma\f$. It is a subset of \f$J\f$. By
-   * accessing this vector using indices starting from 0, we actually obtain the
-   * mapping from the current matrix's local column indices to the global column
-   * indices.
+   * Pointer to the range of column indices (in internal DoF numbering), which
+   * has been stored in the cluster \f$\sigma\f$. It is a subset of \f$J\f$.
    */
-  std::vector<types::global_dof_index> *col_indices;
-
-  /**
-   * Map from global row indices to local row indices for the cluster
-   * \f$\tau\f$. The set of local row indices is the range \f$[0, \#\tau -
-   * 1]\f$. The corresponding set of global row indices is a subset of \f$I\f$.
-   *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>This mapping is only constructed for H-matrices in the leaf set by
-   * default.</dd>
-   * </dl>
-   */
-  std::map<types::global_dof_index, size_t> row_index_global_to_local_map;
-
-  /**
-   * Map from global column indices to local column indices for the cluster
-   * \f$\sigma\f$. The set of local column indices is the range \f$[0, \#\sigma
-   * - 1]\f$. The corresponding set of global column indices is a subset of
-   * \f$J\f$.
-   *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>This mapping is only constructed for H-matrices in the leaf set by
-   * default.</dd>
-   * </dl>
-   */
-  std::map<types::global_dof_index, size_t> col_index_global_to_local_map;
+  std::array<types::global_dof_index, 2> *col_indices;
 
   /**
    * Total number of rows in the matrix.
@@ -2761,22 +2685,22 @@ InitHMatrixWrtBlockClusterNode(
    * Link row and column indices stored in the clusters \f$\tau\f$ and
    * \f$\sigma\f$ respectively.
    */
-  hmat.row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat.row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat.bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat.col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat.col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat.bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat.m = hmat.row_indices->size();
-  hmat.n = hmat.col_indices->size();
+  hmat.m = (*hmat.row_indices)[1] - (*hmat.row_indices)[0];
+  hmat.n = (*hmat.col_indices)[1] - (*hmat.col_indices)[0];
 
   hmat.Sigma_P.clear();
   hmat.Sigma_R.clear();
@@ -2812,22 +2736,22 @@ InitHMatrixWrtBlockClusterNode(
    * Link row and column indices stored in the clusters \f$\tau\f$ and
    * \f$\sigma\f$ respectively.
    */
-  hmat.row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat.row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat.bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat.col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat.col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat.bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat.m = hmat.row_indices->size();
-  hmat.n = hmat.col_indices->size();
+  hmat.m = (*hmat.row_indices)[1] - (*hmat.row_indices)[0];
+  hmat.n = (*hmat.col_indices)[1] - (*hmat.col_indices)[0];
 
   for (std::pair<HMatrix<spacedim, Number> *, HMatrix<spacedim, Number> *>
          &hmat_pair : Sigma_P)
@@ -2868,22 +2792,22 @@ InitHMatrixWrtBlockClusterNode(
    * Link row and column indices stored in the clusters \f$\tau\f$ and
    * \f$\sigma\f$ respectively.
    */
-  hmat.row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat.row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat.bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat.col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat.col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat.bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat.m = hmat.row_indices->size();
-  hmat.n = hmat.col_indices->size();
+  hmat.m = (*hmat.row_indices)[1] - (*hmat.row_indices)[0];
+  hmat.n = (*hmat.col_indices)[1] - (*hmat.col_indices)[0];
 
   hmat.Sigma_P.push_back(hmat_pair);
   hmat.Sigma_R.clear();
@@ -2905,8 +2829,7 @@ template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildrenWithoutAlloc(
   HMatrix<spacedim, Number> *                                          hmat,
-  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const bool is_build_index_set_global_to_local_map = true)
+  typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node)
 {
   /**
    * Link \p hmat with \p bc_node.
@@ -2919,22 +2842,22 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
    * Link row and column indices stored in the clusters \f$\tau\f$ and
    * \f$\sigma\f$ respectively.
    */
-  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat->m = hmat->row_indices->size();
-  hmat->n = hmat->col_indices->size();
+  hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
+  hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
 
   const unsigned int bc_node_child_num = bc_node->get_child_num();
   if (bc_node_child_num > 0)
@@ -3134,9 +3057,7 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
             }
 
           InitAndCreateHMatrixChildrenWithoutAlloc(
-            child_hmat,
-            bc_node->get_child_pointer(i),
-            is_build_index_set_global_to_local_map);
+            child_hmat, bc_node->get_child_pointer(i));
 
           /**
            * Append the initialized child to the list of submatrices of \p hmat.
@@ -3154,18 +3075,6 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
     }
   else
     {
-      if (is_build_index_set_global_to_local_map)
-        {
-          /**
-           * Build the maps from global row and column indices respectively to
-           * local indices.
-           */
-          build_index_set_global_to_local_map(
-            *(hmat->row_indices), hmat->row_index_global_to_local_map);
-          build_index_set_global_to_local_map(
-            *(hmat->col_indices), hmat->col_index_global_to_local_map);
-        }
-
       /**
        * Update the current matrix type according to the identity of the block
        * cluster node. When the block cluster belongs to the near field, \p hmat
@@ -3248,7 +3157,6 @@ InitAndCreateHMatrixChildrenWithoutAlloc(
  * created on the heap but with its internal data left empty.</strong>
  * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
  * associated with \p hmat.
- * @param is_build_index_set_global_to_local_map
  * @param top_hmat_node_property The property of the \hmatnode on the top level
  */
 template <int spacedim, typename Number = double>
@@ -3257,7 +3165,6 @@ InitAndCreateHMatrixChildren(
   HMatrix<spacedim, Number> *                                          hmat,
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const unsigned int             fixed_rank_k,
-  const bool                     is_build_index_set_global_to_local_map = true,
   const HMatrixSupport::Property top_hmat_node_property =
     HMatrixSupport::general)
 {
@@ -3272,22 +3179,22 @@ InitAndCreateHMatrixChildren(
    * Link row and column indices stored in the clusters \f$\tau\f$ and
    * \f$\sigma\f$ respectively.
    */
-  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat->m = hmat->row_indices->size();
-  hmat->n = hmat->col_indices->size();
+  hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
+  hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
 
   const unsigned int bc_node_child_num = bc_node->get_child_num();
   if (bc_node_child_num > 0)
@@ -3488,7 +3395,6 @@ InitAndCreateHMatrixChildren(
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        fixed_rank_k,
-                                       is_build_index_set_global_to_local_map,
                                        top_hmat_node_property);
 
           /**
@@ -3507,18 +3413,6 @@ InitAndCreateHMatrixChildren(
     }
   else
     {
-      if (is_build_index_set_global_to_local_map)
-        {
-          /**
-           * Build the maps from global row and column indices respectively to
-           * local indices.
-           */
-          build_index_set_global_to_local_map(
-            *(hmat->row_indices), hmat->row_index_global_to_local_map);
-          build_index_set_global_to_local_map(
-            *(hmat->col_indices), hmat->col_index_global_to_local_map);
-        }
-
       /**
        * Update the current matrix type according to the identity of the block
        * cluster node. When the block cluster belongs to the near field, \p hmat
@@ -3890,7 +3784,7 @@ InitAndCreateHMatrixChildren(
  * associated with the current \hmatrix.
  *
  * The matrices in the leaf set are initialized with the data in the given
- * global full matrix \p M, which is created on the complete block cluster index
+ * global full matrix \p M. @p M is created on the complete block cluster index
  * set \f$I \times J\f$ and whose elements should be accessed via indices stored
  * in the block cluster. The rank of the far field matrices are predefined
  * fixed values.
@@ -3898,9 +3792,8 @@ InitAndCreateHMatrixChildren(
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
  *
- * \mynote{The full matrix @p M is global, while @p hmat may not be global, but
- * only a block in the global matrix, and @p bc_node in this case is not the
- * root node of the \bct.}
+ * \mynote{@p hmat may not be global, but only a block in the global matrix, and
+ * @p bc_node in this case is not the root node of the \bct.}
  *
  * @param hmat Pointer to the current \hmatnode, <strong>which has already been
  * created on the heap but with its internal data left empty.</strong>
@@ -3916,8 +3809,7 @@ InitAndCreateHMatrixChildren(
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const unsigned int                 fixed_rank_k,
   const LAPACKFullMatrixExt<Number> &M,
-  const bool                     is_build_index_set_global_to_local_map = true,
-  const HMatrixSupport::Property top_hmat_node_property =
+  const HMatrixSupport::Property     top_hmat_node_property =
     HMatrixSupport::general)
 {
   /**
@@ -3930,22 +3822,22 @@ InitAndCreateHMatrixChildren(
   /**
    * Link row and column indices.
    */
-  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat->m = hmat->row_indices->size();
-  hmat->n = hmat->col_indices->size();
+  hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
+  hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
 
   const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -4056,9 +3948,7 @@ InitAndCreateHMatrixChildren(
                 }
               default:
                 {
-                  Assert(false,
-                         ExcMessage("Invalid H-matrix block type: " +
-                                    std::to_string(hmat->block_type)));
+                  Assert(false, ExcInvalidHMatrixBlockType(hmat->block_type));
                 }
             }
 
@@ -4136,9 +4026,7 @@ InitAndCreateHMatrixChildren(
                 }
               default:
                 {
-                  Assert(false,
-                         ExcMessage("Invalid H-matrix property: " +
-                                    std::to_string(hmat->property)));
+                  Assert(false, ExcInvalidHMatrixProperty(hmat->property));
                 }
             }
 
@@ -4146,7 +4034,6 @@ InitAndCreateHMatrixChildren(
                                        bc_node->get_child_pointer(i),
                                        fixed_rank_k,
                                        M,
-                                       is_build_index_set_global_to_local_map,
                                        top_hmat_node_property);
 
           /**
@@ -4165,18 +4052,6 @@ InitAndCreateHMatrixChildren(
     }
   else
     {
-      if (is_build_index_set_global_to_local_map)
-        {
-          /**
-           * Build the maps from global row and column indices respectively to
-           * local indices.
-           */
-          build_index_set_global_to_local_map(
-            *(hmat->row_indices), hmat->row_index_global_to_local_map);
-          build_index_set_global_to_local_map(
-            *(hmat->col_indices), hmat->col_index_global_to_local_map);
-        }
-
       /**
        * Update the current matrix type according to the identity of the block
        * cluster node. When the block cluster belongs to the near field, \p hmat
@@ -4202,15 +4077,15 @@ InitAndCreateHMatrixChildren(
                     new LAPACKFullMatrixExt<Number>(hmat->m, hmat->n);
 
                   /**
-                   * Assign matrix values from \p M to the current HMatrix.
+                   * Assign matrix values from \p M to the current \hmat.
                    */
                   for (unsigned int i = 0; i < hmat->m; i++)
                     {
                       for (unsigned int j = 0; j < hmat->n; j++)
                         {
                           (*hmat->fullmatrix)(i, j) =
-                            M(hmat->row_indices->at(i),
-                              hmat->col_indices->at(j));
+                            M((*hmat->row_indices)[0] + i,
+                              (*hmat->col_indices)[0] + j);
                         }
                     }
                 }
@@ -4277,8 +4152,8 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(hmat->row_indices->at(i),
-                                  hmat->col_indices->at(j));
+                                M((*hmat->row_indices)[0] + i,
+                                  (*hmat->col_indices)[0] + j);
                             }
                         }
 
@@ -4307,8 +4182,8 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(hmat->row_indices->at(i),
-                                      hmat->col_indices->at(j));
+                                    M((*hmat->row_indices)[0] + i,
+                                      (*hmat->col_indices)[0] + j);
                                 }
                             }
                         }
@@ -4412,8 +4287,8 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(hmat->row_indices->at(i),
-                                  hmat->col_indices->at(j));
+                                M((*hmat->row_indices)[0] + i,
+                                  (*hmat->col_indices)[0] + j);
                             }
                         }
 
@@ -4442,8 +4317,8 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(hmat->row_indices->at(i),
-                                      hmat->col_indices->at(j));
+                                    M((*hmat->row_indices)[0] + i,
+                                      (*hmat->col_indices)[0] + j);
                                 }
                             }
                         }
@@ -4546,8 +4421,8 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(hmat->row_indices->at(i),
-                                  hmat->col_indices->at(j));
+                                M((*hmat->row_indices)[0] + i,
+                                  (*hmat->col_indices)[0] + j);
                             }
                         }
 
@@ -4576,8 +4451,8 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(hmat->row_indices->at(i),
-                                      hmat->col_indices->at(j));
+                                    M((*hmat->row_indices)[0] + i,
+                                      (*hmat->col_indices)[0] + j);
                                 }
                             }
                         }
@@ -4665,7 +4540,6 @@ InitAndCreateHMatrixChildren(
  * associated with \p hmat. It is not necessarily the root node.
  * @param M The global full matrix containing all the data required to initialize the
  * \hmatrix.
- * @param is_build_index_set_global_to_local_map
  */
 template <int spacedim, typename Number = double>
 void
@@ -4673,7 +4547,6 @@ InitAndCreateHMatrixChildren(
   HMatrix<spacedim, Number> *                                          hmat,
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const LAPACKFullMatrixExt<Number> &                                  M,
-  const bool                     is_build_index_set_global_to_local_map = true,
   const HMatrixSupport::Property top_hmat_node_property =
     HMatrixSupport::general)
 {
@@ -4687,22 +4560,22 @@ InitAndCreateHMatrixChildren(
   /**
    * Link row and column indices.
    */
-  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat->m = hmat->row_indices->size();
-  hmat->n = hmat->col_indices->size();
+  hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
+  hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
 
   const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -4902,7 +4775,6 @@ InitAndCreateHMatrixChildren(
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        M,
-                                       is_build_index_set_global_to_local_map,
                                        top_hmat_node_property);
 
           /**
@@ -4921,18 +4793,6 @@ InitAndCreateHMatrixChildren(
     }
   else
     {
-      if (is_build_index_set_global_to_local_map)
-        {
-          /**
-           * Build the maps from global row and column indices respectively to
-           * local indices.
-           */
-          build_index_set_global_to_local_map(
-            *(hmat->row_indices), hmat->row_index_global_to_local_map);
-          build_index_set_global_to_local_map(
-            *(hmat->col_indices), hmat->col_index_global_to_local_map);
-        }
-
       /**
        * Update the current matrix type according to the identity of the block
        * cluster node. When the block cluster belongs to the near field, \p hmat
@@ -4965,8 +4825,8 @@ InitAndCreateHMatrixChildren(
                       for (unsigned int j = 0; j < hmat->n; j++)
                         {
                           (*hmat->fullmatrix)(i, j) =
-                            M(hmat->row_indices->at(i),
-                              hmat->col_indices->at(j));
+                            M((*hmat->row_indices)[0] + i,
+                              (*hmat->col_indices)[0] + j);
                         }
                     }
                 }
@@ -5032,8 +4892,8 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(hmat->row_indices->at(i),
-                                  hmat->col_indices->at(j));
+                                M((*hmat->row_indices)[0] + i,
+                                  (*hmat->col_indices)[0] + j);
                             }
                         }
 
@@ -5062,8 +4922,8 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(hmat->row_indices->at(i),
-                                      hmat->col_indices->at(j));
+                                    M((*hmat->row_indices)[0] + i,
+                                      (*hmat->col_indices)[0] + j);
                                 }
                             }
                         }
@@ -5163,8 +5023,8 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(hmat->row_indices->at(i),
-                                  hmat->col_indices->at(j));
+                                M((*hmat->row_indices)[0] + i,
+                                  (*hmat->col_indices)[0] + j);
                             }
                         }
 
@@ -5193,8 +5053,8 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(hmat->row_indices->at(i),
-                                      hmat->col_indices->at(j));
+                                    M((*hmat->row_indices)[0] + i,
+                                      (*hmat->col_indices)[0] + j);
                                 }
                             }
                         }
@@ -5293,8 +5153,8 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(hmat->row_indices->at(i),
-                                  hmat->col_indices->at(j));
+                                M((*hmat->row_indices)[0] + i,
+                                  (*hmat->col_indices)[0] + j);
                             }
                         }
 
@@ -5323,8 +5183,8 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(hmat->row_indices->at(i),
-                                      hmat->col_indices->at(j));
+                                    M((*hmat->row_indices)[0] + i,
+                                      (*hmat->col_indices)[0] + j);
                                 }
                             }
                         }
@@ -5398,60 +5258,31 @@ InitAndCreateHMatrixChildren(
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
  *
- * @param hmat Pointer to the current \hmatnode, <strong>which has already been
- * created on the heap but with its internal data left empty.</strong>
- * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
- * associated with \p hmat.
- * @param M The full matrix, as a submatrix of the global full matrix,
- * containing all the data required to initialize the \hmatrix.
- * @param row_index_global_to_local_map_for_M The map from the global row
- * indices to the local indices of the matrix associated the
- * \hmatrix when first calling this recursive function.
- * @param col_index_global_to_local_map_for_M The map from the global column
- * indices to the local indices of the matrix associated the
- * \hmatrix when first calling this recursive function.
+ * @param hmat
+ * @param bc_node
+ * @param fixed_rank_k
+ * @param M
+ * @param M_tau_index_range
+ * @param M_sigma_index_range
+ * @param top_hmat_node_property
  */
 template <int spacedim, typename Number = double>
 void
 InitAndCreateHMatrixChildren(
   HMatrix<spacedim, Number> *                                          hmat,
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
-  const unsigned int                 fixed_rank_k,
-  const LAPACKFullMatrixExt<Number> &M,
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_M,
-  const std::map<types::global_dof_index, size_t>
-    &                            col_index_global_to_local_map_for_M,
-  const bool                     is_build_index_set_global_to_local_map = true,
-  const HMatrixSupport::Property top_hmat_node_property =
+  const unsigned int                            fixed_rank_k,
+  const LAPACKFullMatrixExt<Number> &           M,
+  const std::array<types::global_dof_index, 2> &M_row_index_range,
+  const std::array<types::global_dof_index, 2> &M_col_index_range,
+  const HMatrixSupport::Property                top_hmat_node_property =
     HMatrixSupport::general)
 {
   /**
-   * Link \p hmat with \p bc_node.
-   */
-  hmat->bc_node =
-    const_cast<typename BlockClusterTree<spacedim, Number>::node_pointer_type>(
-      bc_node);
-
-  /**
-   * Link row and column indices.
-   */
-  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
-    &(hmat->bc_node->get_data_reference()
-        .get_tau_node()
-        ->get_data_reference()
-        .get_index_set()));
-  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
-    &(hmat->bc_node->get_data_reference()
-        .get_sigma_node()
-        ->get_data_reference()
-        .get_index_set()));
-
-  /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat->m = hmat->row_indices->size();
-  hmat->n = hmat->col_indices->size();
+  hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
+  hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
 
   const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -5648,9 +5479,8 @@ InitAndCreateHMatrixChildren(
                                        bc_node->get_child_pointer(i),
                                        fixed_rank_k,
                                        M,
-                                       row_index_global_to_local_map_for_M,
-                                       col_index_global_to_local_map_for_M,
-                                       is_build_index_set_global_to_local_map,
+                                       M_row_index_range,
+                                       M_col_index_range,
                                        top_hmat_node_property);
 
           /**
@@ -5669,18 +5499,6 @@ InitAndCreateHMatrixChildren(
     }
   else
     {
-      if (is_build_index_set_global_to_local_map)
-        {
-          /**
-           * Build the maps from global row and column indices respectively to
-           * local indices.
-           */
-          build_index_set_global_to_local_map(
-            *(hmat->row_indices), hmat->row_index_global_to_local_map);
-          build_index_set_global_to_local_map(
-            *(hmat->col_indices), hmat->col_index_global_to_local_map);
-        }
-
       /**
        * Update the current matrix type according to the identity of the block
        * cluster node. When the block cluster belongs to the near field, \p hmat
@@ -5712,23 +5530,21 @@ InitAndCreateHMatrixChildren(
                     {
                       for (unsigned int j = 0; j < hmat->n; j++)
                         {
-                          (*hmat->fullmatrix)(i, j) =
-                            M(row_index_global_to_local_map_for_M.at(
-                                hmat->row_indices->at(i)),
-                              col_index_global_to_local_map_for_M.at(
-                                hmat->col_indices->at(j)));
+                          (*hmat->fullmatrix)(i, j) = M(
+                            (*hmat->row_indices)[0] - M_row_index_range[0] + i,
+                            (*hmat->col_indices)[0] - M_col_index_range[0] + j);
                         }
                     }
                 }
               else
                 {
-                  hmat->rkmatrix =
-                    new RkMatrix<Number>(*(hmat->row_indices),
-                                         *(hmat->col_indices),
-                                         fixed_rank_k,
-                                         M,
-                                         row_index_global_to_local_map_for_M,
-                                         col_index_global_to_local_map_for_M);
+                  hmat->type     = RkMatrixType;
+                  hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
+                                                        *(hmat->col_indices),
+                                                        fixed_rank_k,
+                                                        M,
+                                                        M_row_index_range,
+                                                        M_col_index_range);
                 }
 
               break;
@@ -5785,10 +5601,10 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(row_index_global_to_local_map_for_M.at(
-                                    hmat->row_indices->at(i)),
-                                  col_index_global_to_local_map_for_M.at(
-                                    hmat->col_indices->at(j)));
+                                M((*hmat->row_indices)[0] -
+                                    M_row_index_range[0] + i,
+                                  (*hmat->col_indices)[0] -
+                                    M_col_index_range[0] + j);
                             }
                         }
 
@@ -5817,22 +5633,23 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(row_index_global_to_local_map_for_M.at(
-                                        hmat->row_indices->at(i)),
-                                      col_index_global_to_local_map_for_M.at(
-                                        hmat->col_indices->at(j)));
+                                    M((*hmat->row_indices)[0] -
+                                        M_row_index_range[0] + i,
+                                      (*hmat->col_indices)[0] -
+                                        M_col_index_range[0] + j);
                                 }
                             }
                         }
                       else
                         {
-                          hmat->rkmatrix = new RkMatrix<Number>(
-                            *(hmat->row_indices),
-                            *(hmat->col_indices),
-                            fixed_rank_k,
-                            M,
-                            row_index_global_to_local_map_for_M,
-                            col_index_global_to_local_map_for_M);
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 fixed_rank_k,
+                                                 M,
+                                                 M_row_index_range,
+                                                 M_col_index_range);
                         }
 
                       break;
@@ -5922,10 +5739,10 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(row_index_global_to_local_map_for_M.at(
-                                    hmat->row_indices->at(i)),
-                                  col_index_global_to_local_map_for_M.at(
-                                    hmat->col_indices->at(j)));
+                                M((*hmat->row_indices)[0] -
+                                    M_row_index_range[0] + i,
+                                  (*hmat->col_indices)[0] -
+                                    M_col_index_range[0] + j);
                             }
                         }
 
@@ -5954,23 +5771,23 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(row_index_global_to_local_map_for_M.at(
-                                        hmat->row_indices->at(i)),
-                                      col_index_global_to_local_map_for_M.at(
-                                        hmat->col_indices->at(j)));
+                                    M((*hmat->row_indices)[0] -
+                                        M_row_index_range[0] + i,
+                                      (*hmat->col_indices)[0] -
+                                        M_col_index_range[0] + j);
                                 }
                             }
                         }
                       else
                         {
-                          hmat->type     = RkMatrixType;
-                          hmat->rkmatrix = new RkMatrix<Number>(
-                            *(hmat->row_indices),
-                            *(hmat->col_indices),
-                            fixed_rank_k,
-                            M,
-                            row_index_global_to_local_map_for_M,
-                            col_index_global_to_local_map_for_M);
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 fixed_rank_k,
+                                                 M,
+                                                 M_row_index_range,
+                                                 M_col_index_range);
                         }
 
                       break;
@@ -6059,10 +5876,10 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(row_index_global_to_local_map_for_M.at(
-                                    hmat->row_indices->at(i)),
-                                  col_index_global_to_local_map_for_M.at(
-                                    hmat->col_indices->at(j)));
+                                M((*hmat->row_indices)[0] -
+                                    M_row_index_range[0] + i,
+                                  (*hmat->col_indices)[0] -
+                                    M_col_index_range[0] + j);
                             }
                         }
 
@@ -6091,23 +5908,23 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(row_index_global_to_local_map_for_M.at(
-                                        hmat->row_indices->at(i)),
-                                      col_index_global_to_local_map_for_M.at(
-                                        hmat->col_indices->at(j)));
+                                    M((*hmat->row_indices)[0] -
+                                        M_row_index_range[0] + i,
+                                      (*hmat->col_indices)[0] -
+                                        M_col_index_range[0] + j);
                                 }
                             }
                         }
                       else
                         {
-                          hmat->type     = RkMatrixType;
-                          hmat->rkmatrix = new RkMatrix<Number>(
-                            *(hmat->row_indices),
-                            *(hmat->col_indices),
-                            fixed_rank_k,
-                            M,
-                            row_index_global_to_local_map_for_M,
-                            col_index_global_to_local_map_for_M);
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 fixed_rank_k,
+                                                 M,
+                                                 M_row_index_range,
+                                                 M_col_index_range);
                         }
 
                       break;
@@ -6166,19 +5983,6 @@ InitAndCreateHMatrixChildren(
  *
  * During the recursive calling of this function, the source data matrix \p M is
  * kept intact, which will not be restricted to small matrix blocks.
- *
- * @param hmat Pointer to the current \hmatnode, <strong>which has already been
- * created on the heap but with its internal data left empty.</strong>
- * @param bc_node Pointer to a TreeNode in a BlockClusterTree, which is to be
- * associated with \p hmat.
- * @param M The full matrix, as a submatrix of the global full matrix,
- * containing all the data required to initialize the \hmatrix.
- * @param row_index_global_to_local_map_for_M The map from the global row
- * indices to the local indices of the matrix associated the
- * \hmatrix when first calling this recursive function.
- * @param col_index_global_to_local_map_for_M The map from the global column
- * indices to the local indices of the matrix associated the
- * \hmatrix when first calling this recursive function.
  */
 template <int spacedim, typename Number = double>
 void
@@ -6186,12 +5990,9 @@ InitAndCreateHMatrixChildren(
   HMatrix<spacedim, Number> *                                          hmat,
   typename BlockClusterTree<spacedim, Number>::node_const_pointer_type bc_node,
   const LAPACKFullMatrixExt<Number> &                                  M,
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_M,
-  const std::map<types::global_dof_index, size_t>
-    &                            col_index_global_to_local_map_for_M,
-  const bool                     is_build_index_set_global_to_local_map = true,
-  const HMatrixSupport::Property top_hmat_node_property =
+  const std::array<types::global_dof_index, 2> &M_row_index_range,
+  const std::array<types::global_dof_index, 2> &M_col_index_range,
+  const HMatrixSupport::Property                top_hmat_node_property =
     HMatrixSupport::general)
 {
   /**
@@ -6204,22 +6005,22 @@ InitAndCreateHMatrixChildren(
   /**
    * Link row and column indices.
    */
-  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat->m = hmat->row_indices->size();
-  hmat->n = hmat->col_indices->size();
+  hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
+  hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
 
   const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -6415,9 +6216,8 @@ InitAndCreateHMatrixChildren(
           InitAndCreateHMatrixChildren(child_hmat,
                                        bc_node->get_child_pointer(i),
                                        M,
-                                       row_index_global_to_local_map_for_M,
-                                       col_index_global_to_local_map_for_M,
-                                       is_build_index_set_global_to_local_map,
+                                       M_row_index_range,
+                                       M_col_index_range,
                                        top_hmat_node_property);
 
           /**
@@ -6436,18 +6236,6 @@ InitAndCreateHMatrixChildren(
     }
   else
     {
-      if (is_build_index_set_global_to_local_map)
-        {
-          /**
-           * Build the maps from global row and column indices respectively to
-           * local indices.
-           */
-          build_index_set_global_to_local_map(
-            *(hmat->row_indices), hmat->row_index_global_to_local_map);
-          build_index_set_global_to_local_map(
-            *(hmat->col_indices), hmat->col_index_global_to_local_map);
-        }
-
       /**
        * Update the current matrix type according to the identity of the block
        * cluster node. When the block cluster belongs to the near field, \p hmat
@@ -6479,22 +6267,20 @@ InitAndCreateHMatrixChildren(
                     {
                       for (unsigned int j = 0; j < hmat->n; j++)
                         {
-                          (*hmat->fullmatrix)(i, j) =
-                            M(row_index_global_to_local_map_for_M.at(
-                                hmat->row_indices->at(i)),
-                              col_index_global_to_local_map_for_M.at(
-                                hmat->col_indices->at(j)));
+                          (*hmat->fullmatrix)(i, j) = M(
+                            (*hmat->row_indices)[0] - M_row_index_range[0] + i,
+                            (*hmat->col_indices)[0] - M_col_index_range[0] + j);
                         }
                     }
                 }
               else
                 {
-                  hmat->rkmatrix =
-                    new RkMatrix<Number>(*(hmat->row_indices),
-                                         *(hmat->col_indices),
-                                         M,
-                                         row_index_global_to_local_map_for_M,
-                                         col_index_global_to_local_map_for_M);
+                  hmat->type     = RkMatrixType;
+                  hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
+                                                        *(hmat->col_indices),
+                                                        M,
+                                                        M_row_index_range,
+                                                        M_col_index_range);
                 }
 
               break;
@@ -6551,10 +6337,10 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(row_index_global_to_local_map_for_M.at(
-                                    hmat->row_indices->at(i)),
-                                  col_index_global_to_local_map_for_M.at(
-                                    hmat->col_indices->at(j)));
+                                M((*hmat->row_indices)[0] -
+                                    M_row_index_range[0] + i,
+                                  (*hmat->col_indices)[0] -
+                                    M_col_index_range[0] + j);
                             }
                         }
 
@@ -6583,21 +6369,22 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(row_index_global_to_local_map_for_M.at(
-                                        hmat->row_indices->at(i)),
-                                      col_index_global_to_local_map_for_M.at(
-                                        hmat->col_indices->at(j)));
+                                    M((*hmat->row_indices)[0] -
+                                        M_row_index_range[0] + i,
+                                      (*hmat->col_indices)[0] -
+                                        M_col_index_range[0] + j);
                                 }
                             }
                         }
                       else
                         {
-                          hmat->rkmatrix = new RkMatrix<Number>(
-                            *(hmat->row_indices),
-                            *(hmat->col_indices),
-                            M,
-                            row_index_global_to_local_map_for_M,
-                            col_index_global_to_local_map_for_M);
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 M,
+                                                 M_row_index_range,
+                                                 M_col_index_range);
                         }
 
                       break;
@@ -6687,10 +6474,10 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(row_index_global_to_local_map_for_M.at(
-                                    hmat->row_indices->at(i)),
-                                  col_index_global_to_local_map_for_M.at(
-                                    hmat->col_indices->at(j)));
+                                M((*hmat->row_indices)[0] -
+                                    M_row_index_range[0] + i,
+                                  (*hmat->col_indices)[0] -
+                                    M_col_index_range[0] + j);
                             }
                         }
 
@@ -6719,22 +6506,22 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(row_index_global_to_local_map_for_M.at(
-                                        hmat->row_indices->at(i)),
-                                      col_index_global_to_local_map_for_M.at(
-                                        hmat->col_indices->at(j)));
+                                    M((*hmat->row_indices)[0] -
+                                        M_row_index_range[0] + i,
+                                      (*hmat->col_indices)[0] -
+                                        M_col_index_range[0] + j);
                                 }
                             }
                         }
                       else
                         {
-                          hmat->type     = RkMatrixType;
-                          hmat->rkmatrix = new RkMatrix<Number>(
-                            *(hmat->row_indices),
-                            *(hmat->col_indices),
-                            M,
-                            row_index_global_to_local_map_for_M,
-                            col_index_global_to_local_map_for_M);
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 M,
+                                                 M_row_index_range,
+                                                 M_col_index_range);
                         }
 
                       break;
@@ -6823,10 +6610,10 @@ InitAndCreateHMatrixChildren(
                           for (unsigned int j = 0; j < hmat->n; j++)
                             {
                               (*hmat->fullmatrix)(i, j) =
-                                M(row_index_global_to_local_map_for_M.at(
-                                    hmat->row_indices->at(i)),
-                                  col_index_global_to_local_map_for_M.at(
-                                    hmat->col_indices->at(j)));
+                                M((*hmat->row_indices)[0] -
+                                    M_row_index_range[0] + i,
+                                  (*hmat->col_indices)[0] -
+                                    M_col_index_range[0] + j);
                             }
                         }
 
@@ -6855,22 +6642,22 @@ InitAndCreateHMatrixChildren(
                               for (unsigned int j = 0; j < hmat->n; j++)
                                 {
                                   (*hmat->fullmatrix)(i, j) =
-                                    M(row_index_global_to_local_map_for_M.at(
-                                        hmat->row_indices->at(i)),
-                                      col_index_global_to_local_map_for_M.at(
-                                        hmat->col_indices->at(j)));
+                                    M((*hmat->row_indices)[0] -
+                                        M_row_index_range[0] + i,
+                                      (*hmat->col_indices)[0] -
+                                        M_col_index_range[0] + j);
                                 }
                             }
                         }
                       else
                         {
-                          hmat->type     = RkMatrixType;
-                          hmat->rkmatrix = new RkMatrix<Number>(
-                            *(hmat->row_indices),
-                            *(hmat->col_indices),
-                            M,
-                            row_index_global_to_local_map_for_M,
-                            col_index_global_to_local_map_for_M);
+                          hmat->type = RkMatrixType;
+                          hmat->rkmatrix =
+                            new RkMatrix<Number>(*(hmat->row_indices),
+                                                 *(hmat->col_indices),
+                                                 M,
+                                                 M_row_index_range,
+                                                 M_col_index_range);
                         }
 
                       break;
@@ -6920,8 +6707,8 @@ InitAndCreateHMatrixChildren(
  * respect to a block cluster tree by starting from a tree node which is
  * associated with the current \hmatnode.
  *
- * The matrices in the leaf set take the data migrated from the leaf set of the
- * given \hmatrix \p H.
+ * The matrices in the leaf set take the data **migrated** from the leaf set of
+ * the given \hmatrix \p H.
  *
  * @param hmat The \hmatnode to be associated with the \bcn @p bc_node.
  * @param bc_node The \bcn to be associated with the \hmatnode @p hmat
@@ -6946,22 +6733,22 @@ InitAndCreateHMatrixChildren(
    * Link row and column indices stored in the clusters \f$\tau\f$ and
    * \f$\sigma\f$ respectively..
    */
-  hmat->row_indices = const_cast<std::vector<types::global_dof_index> *>(
+  hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_tau_node()
         ->get_data_reference()
-        .get_index_set()));
-  hmat->col_indices = const_cast<std::vector<types::global_dof_index> *>(
+        .get_index_range()));
+  hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
     &(hmat->bc_node->get_data_reference()
         .get_sigma_node()
         ->get_data_reference()
-        .get_index_set()));
+        .get_index_range()));
 
   /**
    * Update the matrix dimension of \p hmat.
    */
-  hmat->m = hmat->row_indices->size();
-  hmat->n = hmat->col_indices->size();
+  hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
+  hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
 
   const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -7454,24 +7241,26 @@ RefineHMatrixWrtExtendedBlockClusterTree(
            * node to those index sets stored in clusters.
            */
           child_hmat->row_indices =
-            const_cast<std::vector<types::global_dof_index> *>(
+            const_cast<std::array<types::global_dof_index, 2> *>(
               &(child_hmat->bc_node->get_data_reference()
                   .get_tau_node()
                   ->get_data_reference()
-                  .get_index_set()));
+                  .get_index_range()));
           child_hmat->col_indices =
-            const_cast<std::vector<types::global_dof_index> *>(
+            const_cast<std::array<types::global_dof_index, 2> *>(
               &(child_hmat->bc_node->get_data_reference()
                   .get_sigma_node()
                   ->get_data_reference()
-                  .get_index_set()));
+                  .get_index_range()));
 
           /**
            * Update the matrix dimension of the child \hmatrix
            * node.
            */
-          child_hmat->m = child_hmat->row_indices->size();
-          child_hmat->n = child_hmat->col_indices->size();
+          child_hmat->m =
+            (*child_hmat->row_indices)[1] - (*child_hmat->row_indices)[0];
+          child_hmat->n =
+            (*child_hmat->col_indices)[1] - (*child_hmat->col_indices)[0];
 
           /**
            * Set the pointer to the parent \hmatnode of the current child
@@ -7527,26 +7316,32 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                 {
                   case FullMatrixType:
                     {
+                      /**
+                       * Restrict full matrix to full matrix.
+                       */
                       current_hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>(
                           *(current_hmat->row_indices),
                           *(current_hmat->col_indices),
                           *(starting_hmat->fullmatrix),
-                          starting_hmat->row_index_global_to_local_map,
-                          starting_hmat->col_index_global_to_local_map);
+                          *starting_hmat->row_indices,
+                          *starting_hmat->col_indices);
 
                       break;
                     }
                   case RkMatrixType:
                     {
+                      /**
+                       * Restrict rank-k matrix to full matrix.
+                       */
                       current_hmat->fullmatrix =
                         new LAPACKFullMatrixExt<Number>();
                       starting_hmat->rkmatrix->restrictToFullMatrix(
+                        *starting_hmat->row_indices,
+                        *starting_hmat->col_indices,
+                        *(current_hmat->fullmatrix),
                         *(current_hmat->row_indices),
-                        *(current_hmat->col_indices),
-                        starting_hmat->row_index_global_to_local_map,
-                        starting_hmat->col_index_global_to_local_map,
-                        *(current_hmat->fullmatrix));
+                        *(current_hmat->col_indices));
 
                       break;
                     }
@@ -7621,23 +7416,29 @@ RefineHMatrixWrtExtendedBlockClusterTree(
                 {
                   case FullMatrixType:
                     {
-                      current_hmat->rkmatrix = new RkMatrix<Number>(
-                        *(current_hmat->row_indices),
-                        *(current_hmat->col_indices),
-                        *(starting_hmat->fullmatrix),
-                        starting_hmat->row_index_global_to_local_map,
-                        starting_hmat->col_index_global_to_local_map);
+                      /**
+                       * Restrict full matrix to rank-k matrix.
+                       */
+                      current_hmat->rkmatrix =
+                        new RkMatrix<Number>(*(current_hmat->row_indices),
+                                             *(current_hmat->col_indices),
+                                             *(starting_hmat->fullmatrix),
+                                             *starting_hmat->row_indices,
+                                             *starting_hmat->col_indices);
 
                       break;
                     }
                   case RkMatrixType:
                     {
-                      current_hmat->rkmatrix = new RkMatrix<Number>(
-                        *(current_hmat->row_indices),
-                        *(current_hmat->col_indices),
-                        *(starting_hmat->rkmatrix),
-                        starting_hmat->row_index_global_to_local_map,
-                        starting_hmat->col_index_global_to_local_map);
+                      /**
+                       * Restrict rank-k matrix to rank-k matrix.
+                       */
+                      current_hmat->rkmatrix =
+                        new RkMatrix<Number>(*(current_hmat->row_indices),
+                                             *(current_hmat->col_indices),
+                                             *(starting_hmat->rkmatrix),
+                                             *starting_hmat->row_indices,
+                                             *starting_hmat->col_indices);
 
                       break;
                     }
@@ -7838,28 +7639,6 @@ convertHMatBlockToRkMatrix(
                      ExcInvalidHMatrixType(submatrix->type));
             }
 
-          /**
-           * Build the map from the global DoF indices to the local row indices
-           * of the current \hmatnode, if necessary.
-           */
-          if (hmat_block->row_index_global_to_local_map.size() == 0)
-            {
-              build_index_set_global_to_local_map(
-                *(hmat_block->row_indices),
-                hmat_block->row_index_global_to_local_map);
-            }
-
-          /**
-           * Build the map from the global DoF indices to the local column
-           * indices of the current \hmatnode, if necessary.
-           */
-          if (hmat_block->col_index_global_to_local_map.size() == 0)
-            {
-              build_index_set_global_to_local_map(
-                *(hmat_block->col_indices),
-                hmat_block->col_index_global_to_local_map);
-            }
-
           LAPACKFullMatrixExt<Number> *fullmatrix;
 
           switch (hmat_block->bc_node->get_split_mode())
@@ -7869,20 +7648,10 @@ convertHMatBlockToRkMatrix(
                   AssertDimension(hmat_block->submatrices.size(), 4);
 
                   fullmatrix = new LAPACKFullMatrixExt<Number>(
-                    hmat_block->row_index_global_to_local_map,
-                    hmat_block->col_index_global_to_local_map,
                     *(hmat_block->submatrices[0]->fullmatrix),
-                    *(hmat_block->submatrices[0]->row_indices),
-                    *(hmat_block->submatrices[0]->col_indices),
                     *(hmat_block->submatrices[1]->fullmatrix),
-                    *(hmat_block->submatrices[1]->row_indices),
-                    *(hmat_block->submatrices[1]->col_indices),
                     *(hmat_block->submatrices[2]->fullmatrix),
-                    *(hmat_block->submatrices[2]->row_indices),
-                    *(hmat_block->submatrices[2]->col_indices),
-                    *(hmat_block->submatrices[3]->fullmatrix),
-                    *(hmat_block->submatrices[3]->row_indices),
-                    *(hmat_block->submatrices[3]->col_indices));
+                    *(hmat_block->submatrices[3]->fullmatrix));
 
                   break;
                 }
@@ -7891,14 +7660,8 @@ convertHMatBlockToRkMatrix(
                   AssertDimension(hmat_block->submatrices.size(), 2);
 
                   fullmatrix = new LAPACKFullMatrixExt<Number>(
-                    hmat_block->row_index_global_to_local_map,
-                    hmat_block->col_index_global_to_local_map,
                     *(hmat_block->submatrices[0]->fullmatrix),
-                    *(hmat_block->submatrices[0]->row_indices),
-                    *(hmat_block->submatrices[0]->col_indices),
                     *(hmat_block->submatrices[1]->fullmatrix),
-                    *(hmat_block->submatrices[1]->row_indices),
-                    *(hmat_block->submatrices[1]->col_indices),
                     true);
 
                   break;
@@ -7908,14 +7671,8 @@ convertHMatBlockToRkMatrix(
                   AssertDimension(hmat_block->submatrices.size(), 2);
 
                   fullmatrix = new LAPACKFullMatrixExt<Number>(
-                    hmat_block->row_index_global_to_local_map,
-                    hmat_block->col_index_global_to_local_map,
                     *(hmat_block->submatrices[0]->fullmatrix),
-                    *(hmat_block->submatrices[0]->row_indices),
-                    *(hmat_block->submatrices[0]->col_indices),
                     *(hmat_block->submatrices[1]->fullmatrix),
-                    *(hmat_block->submatrices[1]->row_indices),
-                    *(hmat_block->submatrices[1]->col_indices),
                     false);
 
                   break;
@@ -7952,28 +7709,6 @@ convertHMatBlockToRkMatrix(
            */
           RkMatrix<Number> *rkmatrix;
 
-          /**
-           * Build the map from the global DoF indices to the local row indices
-           * of the current \hmatnode, if necessary.
-           */
-          if (hmat_block->row_index_global_to_local_map.size() == 0)
-            {
-              build_index_set_global_to_local_map(
-                *(hmat_block->row_indices),
-                hmat_block->row_index_global_to_local_map);
-            }
-
-          /**
-           * Build the map from the global DoF indices to the local column
-           * indices of the current \hmatnode, if necessary.
-           */
-          if (hmat_block->col_index_global_to_local_map.size() == 0)
-            {
-              build_index_set_global_to_local_map(
-                *(hmat_block->col_indices),
-                hmat_block->col_index_global_to_local_map);
-            }
-
           switch (hmat_block->bc_node->get_split_mode())
             {
               case CrossSplitMode:
@@ -7992,20 +7727,10 @@ convertHMatBlockToRkMatrix(
                        */
                       rkmatrix = new RkMatrix<Number>(
                         fixed_rank_k,
-                        hmat_block->row_index_global_to_local_map,
-                        hmat_block->col_index_global_to_local_map,
                         *(hmat_block->submatrices[0]->rkmatrix),
-                        *(hmat_block->submatrices[0]->row_indices),
-                        *(hmat_block->submatrices[0]->col_indices),
                         *(hmat_block->submatrices[1]->rkmatrix),
-                        *(hmat_block->submatrices[1]->row_indices),
-                        *(hmat_block->submatrices[1]->col_indices),
                         *(hmat_block->submatrices[2]->rkmatrix),
-                        *(hmat_block->submatrices[2]->row_indices),
-                        *(hmat_block->submatrices[2]->col_indices),
-                        *(hmat_block->submatrices[3]->rkmatrix),
-                        *(hmat_block->submatrices[3]->row_indices),
-                        *(hmat_block->submatrices[3]->col_indices));
+                        *(hmat_block->submatrices[3]->rkmatrix));
                     }
                   else if (hmat_block->submatrices[0]->type == FullMatrixType &&
                            hmat_block->submatrices[1]->type == FullMatrixType &&
@@ -8031,22 +7756,11 @@ convertHMatBlockToRkMatrix(
                         fixed_rank_k,
                         *(hmat_block->submatrices[3]->fullmatrix));
 
-                      rkmatrix = new RkMatrix<Number>(
-                        fixed_rank_k,
-                        hmat_block->row_index_global_to_local_map,
-                        hmat_block->col_index_global_to_local_map,
-                        rkmatrix11,
-                        *(hmat_block->submatrices[0]->row_indices),
-                        *(hmat_block->submatrices[0]->col_indices),
-                        rkmatrix12,
-                        *(hmat_block->submatrices[1]->row_indices),
-                        *(hmat_block->submatrices[1]->col_indices),
-                        rkmatrix21,
-                        *(hmat_block->submatrices[2]->row_indices),
-                        *(hmat_block->submatrices[2]->col_indices),
-                        rkmatrix22,
-                        *(hmat_block->submatrices[3]->row_indices),
-                        *(hmat_block->submatrices[3]->col_indices));
+                      rkmatrix = new RkMatrix<Number>(fixed_rank_k,
+                                                      rkmatrix11,
+                                                      rkmatrix12,
+                                                      rkmatrix21,
+                                                      rkmatrix22);
                     }
                   else
                     {
@@ -8072,14 +7786,8 @@ convertHMatBlockToRkMatrix(
                        */
                       rkmatrix = new RkMatrix<Number>(
                         fixed_rank_k,
-                        hmat_block->row_index_global_to_local_map,
-                        hmat_block->col_index_global_to_local_map,
                         *(hmat_block->submatrices[0]->rkmatrix),
-                        *(hmat_block->submatrices[0]->row_indices),
-                        *(hmat_block->submatrices[0]->col_indices),
                         *(hmat_block->submatrices[1]->rkmatrix),
-                        *(hmat_block->submatrices[1]->row_indices),
-                        *(hmat_block->submatrices[1]->col_indices),
                         true);
                     }
                   else if (hmat_block->submatrices[0]->type == FullMatrixType &&
@@ -8098,17 +7806,10 @@ convertHMatBlockToRkMatrix(
                         fixed_rank_k,
                         *(hmat_block->submatrices[1]->fullmatrix));
 
-                      rkmatrix = new RkMatrix<Number>(
-                        fixed_rank_k,
-                        hmat_block->row_index_global_to_local_map,
-                        hmat_block->col_index_global_to_local_map,
-                        rkmatrix1,
-                        *(hmat_block->submatrices[0]->row_indices),
-                        *(hmat_block->submatrices[0]->col_indices),
-                        rkmatrix2,
-                        *(hmat_block->submatrices[1]->row_indices),
-                        *(hmat_block->submatrices[1]->col_indices),
-                        true);
+                      rkmatrix = new RkMatrix<Number>(fixed_rank_k,
+                                                      rkmatrix1,
+                                                      rkmatrix2,
+                                                      true);
                     }
                   else
                     {
@@ -8134,14 +7835,8 @@ convertHMatBlockToRkMatrix(
                        */
                       rkmatrix = new RkMatrix<Number>(
                         fixed_rank_k,
-                        hmat_block->row_index_global_to_local_map,
-                        hmat_block->col_index_global_to_local_map,
                         *(hmat_block->submatrices[0]->rkmatrix),
-                        *(hmat_block->submatrices[0]->row_indices),
-                        *(hmat_block->submatrices[0]->col_indices),
                         *(hmat_block->submatrices[1]->rkmatrix),
-                        *(hmat_block->submatrices[1]->row_indices),
-                        *(hmat_block->submatrices[1]->col_indices),
                         false);
                     }
                   else if (hmat_block->submatrices[0]->type == FullMatrixType &&
@@ -8160,17 +7855,10 @@ convertHMatBlockToRkMatrix(
                         fixed_rank_k,
                         *(hmat_block->submatrices[1]->fullmatrix));
 
-                      rkmatrix = new RkMatrix<Number>(
-                        fixed_rank_k,
-                        hmat_block->row_index_global_to_local_map,
-                        hmat_block->col_index_global_to_local_map,
-                        rkmatrix1,
-                        *(hmat_block->submatrices[0]->row_indices),
-                        *(hmat_block->submatrices[0]->col_indices),
-                        rkmatrix2,
-                        *(hmat_block->submatrices[1]->row_indices),
-                        *(hmat_block->submatrices[1]->col_indices),
-                        false);
+                      rkmatrix = new RkMatrix<Number>(fixed_rank_k,
+                                                      rkmatrix1,
+                                                      rkmatrix2,
+                                                      false);
                     }
                   else
                     {
@@ -8280,21 +7968,6 @@ h_rk_mmult(HMatrix<spacedim, Number> &M1,
   M.B = M2.B;
 
   /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M1.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.row_indices),
-                                          M1.row_index_global_to_local_map);
-    }
-
-  if (M1.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.col_indices),
-                                          M1.col_index_global_to_local_map);
-    }
-
-  /**
    * Then we calculate the \p A component matrix of \p M, which is \p
    * M1*M2.A.
    */
@@ -8302,10 +7975,7 @@ h_rk_mmult(HMatrix<spacedim, Number> &M1,
     {
       M2.A.get_column(j, col_vect_in_A);
       result_vect = 0.;
-      M1.vmult(result_vect,
-               M1.row_index_global_to_local_map,
-               col_vect_in_A,
-               M1.col_index_global_to_local_map);
+      M1.vmult(result_vect, col_vect_in_A, M1, M1.get_property());
 
       /**
        * Fill the result vector into the \p A component matrix of \p M.
@@ -8371,21 +8041,6 @@ h_rk_mmult(const Number               alpha,
   M.B = M2.B;
 
   /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M1.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.row_indices),
-                                          M1.row_index_global_to_local_map);
-    }
-
-  if (M1.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.col_indices),
-                                          M1.col_index_global_to_local_map);
-    }
-
-  /**
    * Then we calculate the \p A component matrix of \p M, which is \p
    * M1*M2.A.
    */
@@ -8397,11 +8052,7 @@ h_rk_mmult(const Number               alpha,
        * \p result_vect should be reset to zero beforehand.}
        */
       result_vect = 0.;
-      M1.vmult(result_vect,
-               M1.row_index_global_to_local_map,
-               alpha,
-               col_vect_in_A,
-               M1.col_index_global_to_local_map);
+      M1.vmult(result_vect, alpha, col_vect_in_A, M1, M1.get_property());
 
       /**
        * Fill the result vector into the \p A component matrix of \p M.
@@ -8465,21 +8116,6 @@ h_rk_mTmult(HMatrix<spacedim, Number> &M1,
   M.B = M2.A;
 
   /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M1.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.row_indices),
-                                          M1.row_index_global_to_local_map);
-    }
-
-  if (M1.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.col_indices),
-                                          M1.col_index_global_to_local_map);
-    }
-
-  /**
    * Then we calculate the \p A component matrix of \p M, which is \p
    * M1*M2.B.
    */
@@ -8487,10 +8123,7 @@ h_rk_mTmult(HMatrix<spacedim, Number> &M1,
     {
       M2.B.get_column(j, col_vect_in_B);
       result_vect = 0.;
-      M1.vmult(result_vect,
-               M1.row_index_global_to_local_map,
-               col_vect_in_B,
-               M1.col_index_global_to_local_map);
+      M1.vmult(result_vect, col_vect_in_B, M1, M1.get_property());
 
       /**
        * Fill the result vector into the \p A component matrix of \p M.
@@ -8557,21 +8190,6 @@ h_rk_mTmult(const Number               alpha,
   M.B = M2.A;
 
   /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M1.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.row_indices),
-                                          M1.row_index_global_to_local_map);
-    }
-
-  if (M1.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.col_indices),
-                                          M1.col_index_global_to_local_map);
-    }
-
-  /**
    * Then we calculate the \p A component matrix of \p M, which is \p
    * M1*M2.B.
    */
@@ -8579,11 +8197,7 @@ h_rk_mTmult(const Number               alpha,
     {
       M2.B.get_column(j, col_vect_in_B);
       result_vect = 0.;
-      M1.vmult(result_vect,
-               M1.row_index_global_to_local_map,
-               alpha,
-               col_vect_in_B,
-               M1.col_index_global_to_local_map);
+      M1.vmult(result_vect, alpha, col_vect_in_B, M1, M1.get_property());
 
       /**
        * Fill the result vector into the \p A component matrix of \p M.
@@ -8694,21 +8308,6 @@ rk_h_mmult(const RkMatrix<Number> &   M1,
   M.A = M1.A;
 
   /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M2.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.row_indices),
-                                          M2.row_index_global_to_local_map);
-    }
-
-  if (M2.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.col_indices),
-                                          M2.col_index_global_to_local_map);
-    }
-
-  /**
    * Then we calculate the \p B component matrix of \p M, which is \p
    * M2^T*M1_rk.B.
    */
@@ -8716,10 +8315,7 @@ rk_h_mmult(const RkMatrix<Number> &   M1,
     {
       M1.B.get_column(j, col_vect_in_B);
       result_vect = 0.;
-      M2.Tvmult(result_vect,
-                M2.col_index_global_to_local_map,
-                col_vect_in_B,
-                M2.row_index_global_to_local_map);
+      M2.Tvmult(result_vect, col_vect_in_B, M2);
 
       /**
        * Fill the result vector into the \p B component matrix of \p M.
@@ -8785,21 +8381,6 @@ rk_h_mmult(const Number               alpha,
   M.A = M1.A;
 
   /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M2.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.row_indices),
-                                          M2.row_index_global_to_local_map);
-    }
-
-  if (M2.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.col_indices),
-                                          M2.col_index_global_to_local_map);
-    }
-
-  /**
    * Then we calculate the \p B component matrix of \p M, which is \p
    * M2^T*M1_rk.B.
    */
@@ -8811,11 +8392,7 @@ rk_h_mmult(const Number               alpha,
        * \p result_vect should be reset to zero beforehand.}
        */
       result_vect = 0.;
-      M2.Tvmult(result_vect,
-                M2.col_index_global_to_local_map,
-                alpha,
-                col_vect_in_B,
-                M2.row_index_global_to_local_map);
+      M2.Tvmult(result_vect, alpha, col_vect_in_B, M2);
 
       /**
        * Fill the result vector into the \p B component matrix of \p M.
@@ -8877,21 +8454,6 @@ rk_h_mTmult(const RkMatrix<Number> &   M1,
   M.A = M1.A;
 
   /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M2.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.row_indices),
-                                          M2.row_index_global_to_local_map);
-    }
-
-  if (M2.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.col_indices),
-                                          M2.col_index_global_to_local_map);
-    }
-
-  /**
    * Then we calculate the \p B component matrix of \p M, which is \p
    * M2*M1_rk.B.
    */
@@ -8899,10 +8461,7 @@ rk_h_mTmult(const RkMatrix<Number> &   M1,
     {
       M1.B.get_column(j, col_vect_in_B);
       result_vect = 0.;
-      M2.vmult(result_vect,
-               M2.row_index_global_to_local_map,
-               col_vect_in_B,
-               M2.col_index_global_to_local_map);
+      M2.vmult(result_vect, col_vect_in_B, M2, M2.get_property());
 
       /**
        * Fill the result vector into the \p B component matrix of \p M.
@@ -8966,21 +8525,6 @@ rk_h_mTmult(const Number               alpha,
   M.A = M1.A;
 
   /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M2.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.row_indices),
-                                          M2.row_index_global_to_local_map);
-    }
-
-  if (M2.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.col_indices),
-                                          M2.col_index_global_to_local_map);
-    }
-
-  /**
    * Then we calculate the \p B component matrix of \p M, which is \p
    * M2*M1_rk.B.
    */
@@ -8988,11 +8532,7 @@ rk_h_mTmult(const Number               alpha,
     {
       M1.B.get_column(j, col_vect_in_B);
       result_vect = 0.;
-      M2.vmult(result_vect,
-               M2.row_index_global_to_local_map,
-               alpha,
-               col_vect_in_B,
-               M2.col_index_global_to_local_map);
+      M2.vmult(result_vect, alpha, col_vect_in_B, M2, M2.get_property());
 
       /**
        * Fill the result vector into the \p B component matrix of \p M.
@@ -9073,30 +8613,12 @@ h_f_mmult(HMatrix<spacedim, Number> &        M1,
   const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m;
   const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.n();
 
-  /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M1.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.row_indices),
-                                          M1.row_index_global_to_local_map);
-    }
-
-  if (M1.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.col_indices),
-                                          M1.col_index_global_to_local_map);
-    }
-
   M.reinit(n_rows, n_cols);
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_column(j, col_vect_in_M2);
       result_vect = 0.;
-      M1.vmult(result_vect,
-               M1.row_index_global_to_local_map,
-               col_vect_in_M2,
-               M1.col_index_global_to_local_map);
+      M1.vmult(result_vect, col_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
 }
@@ -9128,31 +8650,12 @@ h_f_mmult(const Number                       alpha,
   const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m;
   const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.n();
 
-  /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M1.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.row_indices),
-                                          M1.row_index_global_to_local_map);
-    }
-
-  if (M1.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.col_indices),
-                                          M1.col_index_global_to_local_map);
-    }
-
   M.reinit(n_rows, n_cols);
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_column(j, col_vect_in_M2);
       result_vect = 0.;
-      M1.vmult(result_vect,
-               M1.row_index_global_to_local_map,
-               alpha,
-               col_vect_in_M2,
-               M1.col_index_global_to_local_map);
+      M1.vmult(result_vect, alpha, col_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
 }
@@ -9182,30 +8685,12 @@ h_f_mTmult(HMatrix<spacedim, Number> &        M1,
   const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m;
   const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.m();
 
-  /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M1.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.row_indices),
-                                          M1.row_index_global_to_local_map);
-    }
-
-  if (M1.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.col_indices),
-                                          M1.col_index_global_to_local_map);
-    }
-
   M.reinit(n_rows, n_cols);
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_row(j, row_vect_in_M2);
       result_vect = 0.;
-      M1.vmult(result_vect,
-               M1.row_index_global_to_local_map,
-               row_vect_in_M2,
-               M1.col_index_global_to_local_map);
+      M1.vmult(result_vect, row_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
 }
@@ -9236,31 +8721,12 @@ h_f_mTmult(const Number                       alpha,
   const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m;
   const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.m();
 
-  /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M1.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.row_indices),
-                                          M1.row_index_global_to_local_map);
-    }
-
-  if (M1.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M1.col_indices),
-                                          M1.col_index_global_to_local_map);
-    }
-
   M.reinit(n_rows, n_cols);
   for (typename LAPACKFullMatrixExt<Number>::size_type j = 0; j < n_cols; j++)
     {
       M2.get_row(j, row_vect_in_M2);
       result_vect = 0.;
-      M1.vmult(result_vect,
-               M1.row_index_global_to_local_map,
-               alpha,
-               row_vect_in_M2,
-               M1.col_index_global_to_local_map);
+      M1.vmult(result_vect, alpha, row_vect_in_M2, M1, M1.get_property());
       M.fill_col(j, result_vect);
     }
 }
@@ -9504,30 +8970,12 @@ f_h_mmult(const LAPACKFullMatrixExt<Number> &M1,
   const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m();
   const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.n;
 
-  /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M2.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.row_indices),
-                                          M2.row_index_global_to_local_map);
-    }
-
-  if (M2.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.col_indices),
-                                          M2.col_index_global_to_local_map);
-    }
-
   M.reinit(n_rows, n_cols);
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
       M1.get_row(i, row_vect_in_M1);
       result_vect = 0.;
-      M2.Tvmult(result_vect,
-                M2.col_index_global_to_local_map,
-                row_vect_in_M1,
-                M2.row_index_global_to_local_map);
+      M2.Tvmult(result_vect, row_vect_in_M1, M2);
       M.fill_row(i, result_vect);
     }
 }
@@ -9557,21 +9005,6 @@ f_h_mmult(const Number                       alpha,
   const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m();
   const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.n;
 
-  /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M2.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.row_indices),
-                                          M2.row_index_global_to_local_map);
-    }
-
-  if (M2.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.col_indices),
-                                          M2.col_index_global_to_local_map);
-    }
-
   M.reinit(n_rows, n_cols);
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
@@ -9581,11 +9014,7 @@ f_h_mmult(const Number                       alpha,
        * \p result_vect should be reset to zero beforehand.}
        */
       result_vect = 0.;
-      M2.Tvmult(result_vect,
-                M2.col_index_global_to_local_map,
-                alpha,
-                row_vect_in_M1,
-                M2.row_index_global_to_local_map);
+      M2.Tvmult(result_vect, alpha, row_vect_in_M1, M2);
       M.fill_row(i, result_vect);
     }
 }
@@ -9613,30 +9042,12 @@ f_h_mTmult(const LAPACKFullMatrixExt<Number> &M1,
   const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m();
   const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.m;
 
-  /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M2.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.row_indices),
-                                          M2.row_index_global_to_local_map);
-    }
-
-  if (M2.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.col_indices),
-                                          M2.col_index_global_to_local_map);
-    }
-
   M.reinit(n_rows, n_cols);
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
       M1.get_row(i, row_vect_in_M1);
       result_vect = 0.;
-      M2.vmult(result_vect,
-               M2.row_index_global_to_local_map,
-               row_vect_in_M1,
-               M2.col_index_global_to_local_map);
+      M2.vmult(result_vect, row_vect_in_M1, M2, M2.get_property());
       M.fill_row(i, result_vect);
     }
 }
@@ -9666,31 +9077,12 @@ f_h_mTmult(const Number                       alpha,
   const typename LAPACKFullMatrixExt<Number>::size_type n_rows = M1.m();
   const typename LAPACKFullMatrixExt<Number>::size_type n_cols = M2.m;
 
-  /**
-   * Build the map from global DoF indices to local matrix indices if necessary.
-   */
-  if (M2.row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.row_indices),
-                                          M2.row_index_global_to_local_map);
-    }
-
-  if (M2.col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(M2.col_indices),
-                                          M2.col_index_global_to_local_map);
-    }
-
   M.reinit(n_rows, n_cols);
   for (typename LAPACKFullMatrixExt<Number>::size_type i = 0; i < n_rows; i++)
     {
       M1.get_row(i, row_vect_in_M1);
       result_vect = 0.;
-      M2.vmult(result_vect,
-               M2.row_index_global_to_local_map,
-               alpha,
-               row_vect_in_M1,
-               M2.col_index_global_to_local_map);
+      M2.vmult(result_vect, alpha, row_vect_in_M1, M2, M2.get_property());
       M.fill_row(i, result_vect);
     }
 }
@@ -10396,11 +9788,13 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &     M0,
            M.block_type != HMatrixSupport::upper_triangular_block &&
            Z.block_type != HMatrixSupport::upper_triangular_block))
         {
-          M.fullmatrix->fill(M.row_index_global_to_local_map,
-                             M.col_index_global_to_local_map,
-                             *(Z.fullmatrix),
-                             *(Z.row_indices),
-                             *(Z.col_indices),
+          M.fullmatrix->fill(*(Z.fullmatrix),
+                             (*Z.row_indices)[0] - (*M.row_indices)[0],
+                             (*Z.col_indices)[0] - (*M.col_indices)[0],
+                             0,
+                             0,
+                             1.0,
+                             false,
                              true);
         }
     }
@@ -10419,8 +9813,8 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &     M0,
            M.block_type != HMatrixSupport::upper_triangular_block &&
            Z.block_type != HMatrixSupport::upper_triangular_block))
         {
-          M.rkmatrix->assemble_from_rkmatrix(M.row_index_global_to_local_map,
-                                             M.col_index_global_to_local_map,
+          M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
+                                             *M.col_indices,
                                              *(Z.rkmatrix),
                                              *(Z.row_indices),
                                              *(Z.col_indices),
@@ -10806,11 +10200,13 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &     M0,
            M.block_type != HMatrixSupport::upper_triangular_block &&
            Z.block_type != HMatrixSupport::upper_triangular_block))
         {
-          M.fullmatrix->fill(M.row_index_global_to_local_map,
-                             M.col_index_global_to_local_map,
-                             *(Z.fullmatrix),
-                             *(Z.row_indices),
-                             *(Z.col_indices),
+          M.fullmatrix->fill(*(Z.fullmatrix),
+                             (*Z.row_indices)[0] - (*M.row_indices)[0],
+                             (*Z.col_indices)[0] - (*M.col_indices)[0],
+                             0,
+                             0,
+                             1.0,
+                             false,
                              true);
         }
     }
@@ -10829,8 +10225,8 @@ h_h_mmult_from_leaf_node(HMatrix<spacedim, Number> &     M0,
            M.block_type != HMatrixSupport::upper_triangular_block &&
            Z.block_type != HMatrixSupport::upper_triangular_block))
         {
-          M.rkmatrix->assemble_from_rkmatrix(M.row_index_global_to_local_map,
-                                             M.col_index_global_to_local_map,
+          M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
+                                             *M.col_indices,
                                              *(Z.rkmatrix),
                                              *(Z.row_indices),
                                              *(Z.col_indices),
@@ -11207,11 +10603,13 @@ h_h_mTmult_from_leaf_node(
            M.block_type != HMatrixSupport::upper_triangular_block &&
            Z.block_type != HMatrixSupport::upper_triangular_block))
         {
-          M.fullmatrix->fill(M.row_index_global_to_local_map,
-                             M.col_index_global_to_local_map,
-                             *(Z.fullmatrix),
-                             *(Z.row_indices),
-                             *(Z.col_indices),
+          M.fullmatrix->fill(*(Z.fullmatrix),
+                             (*Z.row_indices)[0] - (*M.row_indices)[0],
+                             (*Z.col_indices)[0] - (*M.col_indices)[0],
+                             0,
+                             0,
+                             1.0,
+                             false,
                              true);
         }
     }
@@ -11230,8 +10628,8 @@ h_h_mTmult_from_leaf_node(
            M.block_type != HMatrixSupport::upper_triangular_block &&
            Z.block_type != HMatrixSupport::upper_triangular_block))
         {
-          M.rkmatrix->assemble_from_rkmatrix(M.row_index_global_to_local_map,
-                                             M.col_index_global_to_local_map,
+          M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
+                                             *M.col_indices,
                                              *(Z.rkmatrix),
                                              *(Z.row_indices),
                                              *(Z.col_indices),
@@ -11620,11 +11018,13 @@ h_h_mTmult_from_leaf_node(
            M.block_type != HMatrixSupport::upper_triangular_block &&
            Z.block_type != HMatrixSupport::upper_triangular_block))
         {
-          M.fullmatrix->fill(M.row_index_global_to_local_map,
-                             M.col_index_global_to_local_map,
-                             *(Z.fullmatrix),
-                             *(Z.row_indices),
-                             *(Z.col_indices),
+          M.fullmatrix->fill(*(Z.fullmatrix),
+                             (*Z.row_indices)[0] - (*M.row_indices)[0],
+                             (*Z.col_indices)[0] - (*M.col_indices)[0],
+                             0,
+                             0,
+                             1.0,
+                             false,
                              true);
         }
     }
@@ -11643,8 +11043,8 @@ h_h_mTmult_from_leaf_node(
            M.block_type != HMatrixSupport::upper_triangular_block &&
            Z.block_type != HMatrixSupport::upper_triangular_block))
         {
-          M.rkmatrix->assemble_from_rkmatrix(M.row_index_global_to_local_map,
-                                             M.col_index_global_to_local_map,
+          M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
+                                             *M.col_indices,
                                              *(Z.rkmatrix),
                                              *(Z.row_indices),
                                              *(Z.col_indices),
@@ -12382,12 +11782,8 @@ copy_hmatrix_node(HMatrix<spacedim, Number> &      hmat_dst,
   hmat_dst.bc_node     = hmat_src.bc_node;
   hmat_dst.row_indices = hmat_src.row_indices;
   hmat_dst.col_indices = hmat_src.col_indices;
-  hmat_dst.row_index_global_to_local_map =
-    hmat_src.row_index_global_to_local_map;
-  hmat_dst.col_index_global_to_local_map =
-    hmat_src.col_index_global_to_local_map;
-  hmat_dst.m = hmat_src.m;
-  hmat_dst.n = hmat_src.n;
+  hmat_dst.m           = hmat_src.m;
+  hmat_dst.n           = hmat_src.n;
 }
 
 
@@ -12418,16 +11814,12 @@ copy_hmatrix_node(HMatrix<spacedim, Number> & hmat_dst,
   hmat_dst.bc_node         = hmat_src.bc_node;
   hmat_dst.row_indices     = hmat_src.row_indices;
   hmat_dst.col_indices     = hmat_src.col_indices;
-  hmat_dst.row_index_global_to_local_map =
-    hmat_src.row_index_global_to_local_map;
-  hmat_dst.col_index_global_to_local_map =
-    hmat_src.col_index_global_to_local_map;
-  hmat_dst.m       = hmat_src.m;
-  hmat_dst.n       = hmat_src.n;
-  hmat_dst.Sigma_P = hmat_src.Sigma_P;
-  hmat_dst.Sigma_R = hmat_src.Sigma_R;
-  hmat_dst.Sigma_F = hmat_src.Sigma_F;
-  hmat_dst.Tind    = std::move(hmat_src.Tind);
+  hmat_dst.m               = hmat_src.m;
+  hmat_dst.n               = hmat_src.n;
+  hmat_dst.Sigma_P         = hmat_src.Sigma_P;
+  hmat_dst.Sigma_R         = hmat_src.Sigma_R;
+  hmat_dst.Sigma_F         = hmat_src.Sigma_F;
+  hmat_dst.Tind            = std::move(hmat_src.Tind);
 }
 
 
@@ -12534,8 +11926,6 @@ HMatrix<spacedim, Number>::HMatrix()
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind()
@@ -12564,8 +11954,6 @@ HMatrix<spacedim, Number>::HMatrix(
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind()
@@ -12573,8 +11961,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  InitAndCreateHMatrixChildren(
-    this, bct.get_root(), fixed_rank_k, true, property);
+  InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k, property);
   build_leaf_set();
 }
 
@@ -12598,8 +11985,6 @@ HMatrix<spacedim, Number>::HMatrix(
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind()
@@ -12607,7 +11992,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, true, property);
+  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, property);
   build_leaf_set();
 }
 
@@ -12631,8 +12016,6 @@ HMatrix<spacedim, Number>::HMatrix(
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind()
@@ -12645,8 +12028,7 @@ HMatrix<spacedim, Number>::HMatrix(
    */
   set_current_matrix_property(M);
 
-  InitAndCreateHMatrixChildren(
-    this, bct.get_root(), fixed_rank_k, M, true, property);
+  InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k, M, property);
   build_leaf_set();
 }
 
@@ -12669,8 +12051,6 @@ HMatrix<spacedim, Number>::HMatrix(
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind()
@@ -12683,7 +12063,7 @@ HMatrix<spacedim, Number>::HMatrix(
    */
   set_current_matrix_property(M);
 
-  InitAndCreateHMatrixChildren(this, bct.get_root(), M, true, property);
+  InitAndCreateHMatrixChildren(this, bct.get_root(), M, property);
   build_leaf_set();
 }
 
@@ -12708,8 +12088,6 @@ HMatrix<spacedim, Number>::HMatrix(
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind()
@@ -12717,7 +12095,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, M, true, property);
+  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, M, property);
   build_leaf_set();
 }
 
@@ -12741,8 +12119,6 @@ HMatrix<spacedim, Number>::HMatrix(
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind()
@@ -12750,7 +12126,7 @@ HMatrix<spacedim, Number>::HMatrix(
   , Sigma_R(0)
   , Sigma_F(0)
 {
-  InitAndCreateHMatrixChildren(this, bc_node, M, true, property);
+  InitAndCreateHMatrixChildren(this, bc_node, M, property);
   build_leaf_set();
 }
 
@@ -12774,8 +12150,6 @@ HMatrix<spacedim, Number>::HMatrix(
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind(std::move(H.Tind))
@@ -12807,8 +12181,6 @@ HMatrix<spacedim, Number>::HMatrix(
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind(std::move(H.Tind))
@@ -12836,8 +12208,6 @@ HMatrix<spacedim, Number>::HMatrix(const HMatrix<spacedim, Number> &H)
   , bc_node(nullptr)
   , row_indices(nullptr)
   , col_indices(nullptr)
-  , row_index_global_to_local_map()
-  , col_index_global_to_local_map()
   , m(0)
   , n(0)
   , Tind()
@@ -12865,8 +12235,6 @@ HMatrix<spacedim, Number>::HMatrix(HMatrix<spacedim, Number> &&H) noexcept
   , bc_node(H.bc_node)
   , row_indices(H.row_indices)
   , col_indices(H.col_indices)
-  , row_index_global_to_local_map(H.row_index_global_to_local_map)
-  , col_index_global_to_local_map(H.col_index_global_to_local_map)
   , m(H.m)
   , n(H.n)
   , Tind(std::move(H.Tind))
@@ -12890,8 +12258,10 @@ HMatrix<spacedim, Number>::reinit(const BlockClusterTree<spacedim, Number> &bct,
   this->property   = property;
   this->block_type = block_type;
 
-  InitAndCreateHMatrixChildren(
-    this, bct.get_root(), fixed_rank_k, true, this->property);
+  InitAndCreateHMatrixChildren(this,
+                               bct.get_root(),
+                               fixed_rank_k,
+                               this->property);
   build_leaf_set();
 }
 
@@ -12909,8 +12279,7 @@ HMatrix<spacedim, Number>::reinit(
   this->property   = property;
   this->block_type = block_type;
 
-  InitAndCreateHMatrixChildren(
-    this, bc_node, fixed_rank_k, true, this->property);
+  InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, this->property);
   build_leaf_set();
 }
 
@@ -12952,6 +12321,11 @@ HMatrix<spacedim, Number>::convertToFullMatrix(MatrixType &M) const
 {
   M.reinit(m, n);
   _convertToFullMatrix(M, property);
+
+  /**
+   * Set the property of the full matrix according to the top level \hmat.
+   */
+  set_property_for_converted_fullmatrix(M);
 }
 
 
@@ -12977,7 +12351,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                   {
                     for (size_type j = 0; j < n; j++)
                       {
-                        M(row_indices->at(i), col_indices->at(j)) =
+                        M((*row_indices)[0] + i, (*col_indices)[0] + j) =
                           (*fullmatrix)(i, j);
                       }
                   }
@@ -13001,7 +12375,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                       {
                         for (size_type j = 0; j <= i; j++)
                           {
-                            M(row_indices->at(i), col_indices->at(j)) =
+                            M((*row_indices)[0] + i, (*col_indices)[0] + j) =
                               (*fullmatrix)(i, j);
                           }
                       }
@@ -13013,7 +12387,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                       {
                         for (size_type j = 0; j < n; j++)
                           {
-                            M(row_indices->at(i), col_indices->at(j)) =
+                            M((*row_indices)[0] + i, (*col_indices)[0] + j) =
                               (*fullmatrix)(i, j);
                           }
                       }
@@ -13037,7 +12411,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                       {
                         for (size_type j = i; j < n; j++)
                           {
-                            M(row_indices->at(i), col_indices->at(j)) =
+                            M((*row_indices)[0] + i, (*col_indices)[0] + j) =
                               (*fullmatrix)(i, j);
                           }
                       }
@@ -13049,7 +12423,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                       {
                         for (size_type j = 0; j < n; j++)
                           {
-                            M(row_indices->at(i), col_indices->at(j)) =
+                            M((*row_indices)[0] + i, (*col_indices)[0] + j) =
                               (*fullmatrix)(i, j);
                           }
                       }
@@ -13083,7 +12457,7 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                       {
                         for (size_type j = 0; j < n; j++)
                           {
-                            M(row_indices->at(i), col_indices->at(j)) =
+                            M((*row_indices)[0] + i, (*col_indices)[0] + j) =
                               matrix_block(i, j);
                           }
                       }
@@ -13123,8 +12497,8 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                           {
                             for (size_type j = 0; j < n; j++)
                               {
-                                M(row_indices->at(i), col_indices->at(j)) =
-                                  matrix_block(i, j);
+                                M((*row_indices)[0] + i,
+                                  (*col_indices)[0] + j) = matrix_block(i, j);
                               }
                           }
                       }
@@ -13163,8 +12537,8 @@ HMatrix<spacedim, Number>::_convertToFullMatrix(
                           {
                             for (size_type j = 0; j < n; j++)
                               {
-                                M(row_indices->at(i), col_indices->at(j)) =
-                                  matrix_block(i, j);
+                                M((*row_indices)[0] + i,
+                                  (*col_indices)[0] + j) = matrix_block(i, j);
                               }
                           }
                       }
@@ -13279,18 +12653,6 @@ HMatrix<spacedim, Number>::distribute_sigma_r_and_f_to_leaves(
 {
   if (Sigma_R.size() > 0 || Sigma_F.size() > 0)
     {
-      if (row_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(*row_indices,
-                                              row_index_global_to_local_map);
-        }
-
-      if (col_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(*col_indices,
-                                              col_index_global_to_local_map);
-        }
-
       _distribute_sigma_r_and_f_to_leaves(*this, fixed_rank);
 
       for (auto &rkmatrix_in_starting_hmat : Sigma_R)
@@ -13350,11 +12712,11 @@ HMatrix<spacedim, Number>::_distribute_sigma_r_and_f_to_leaves(
                   LAPACKFullMatrixExt<Number> fullmatrix_restricted;
 
                   rkmatrix_in_starting_hmat->restrictToFullMatrix(
+                    *starting_hmat.row_indices,
+                    *starting_hmat.col_indices,
+                    fullmatrix_restricted,
                     *row_indices,
-                    *col_indices,
-                    starting_hmat.row_index_global_to_local_map,
-                    starting_hmat.col_index_global_to_local_map,
-                    fullmatrix_restricted);
+                    *col_indices);
 
                   fullmatrix->add(fullmatrix_restricted);
                 }
@@ -13372,8 +12734,8 @@ HMatrix<spacedim, Number>::_distribute_sigma_r_and_f_to_leaves(
                     *row_indices,
                     *col_indices,
                     *fullmatrix_in_starting_hmat,
-                    starting_hmat.row_index_global_to_local_map,
-                    starting_hmat.col_index_global_to_local_map);
+                    *starting_hmat.row_indices,
+                    *starting_hmat.col_indices);
 
                   fullmatrix->add(fullmatrix_restricted);
                 }
@@ -13395,8 +12757,8 @@ HMatrix<spacedim, Number>::_distribute_sigma_r_and_f_to_leaves(
                     *row_indices,
                     *col_indices,
                     *rkmatrix_in_starting_hmat,
-                    starting_hmat.row_index_global_to_local_map,
-                    starting_hmat.col_index_global_to_local_map);
+                    *starting_hmat.row_indices,
+                    *starting_hmat.col_indices);
 
                   if (fixed_rank == 0)
                     {
@@ -13421,8 +12783,8 @@ HMatrix<spacedim, Number>::_distribute_sigma_r_and_f_to_leaves(
                     *row_indices,
                     *col_indices,
                     *fullmatrix_in_starting_hmat,
-                    starting_hmat.row_index_global_to_local_map,
-                    starting_hmat.col_index_global_to_local_map);
+                    *starting_hmat.row_indices,
+                    *starting_hmat.col_indices);
 
                   if (fixed_rank == 0)
                     {
@@ -13488,10 +12850,8 @@ HMatrix<spacedim, Number>::release()
   submatrix_index = submatrix_index_invalid;
   row_indices     = nullptr;
   col_indices     = nullptr;
-  row_index_global_to_local_map.clear();
-  col_index_global_to_local_map.clear();
-  m = 0;
-  n = 0;
+  m               = 0;
+  n               = 0;
 
   Sigma_P.clear();
 
@@ -13560,10 +12920,8 @@ HMatrix<spacedim, Number>::clear_hmat_node()
   bc_node     = nullptr;
   row_indices = nullptr;
   col_indices = nullptr;
-  row_index_global_to_local_map.clear();
-  col_index_global_to_local_map.clear();
-  m = 0;
-  n = 0;
+  m           = 0;
+  n           = 0;
   Sigma_P.clear();
   Sigma_R.clear();
   Sigma_F.clear();
@@ -14328,7 +13686,7 @@ HMatrix<spacedim, Number>::print_current_matrix_info(std::ostream &out) const
    * Print the size of \f$\Sigma_b^P\f$, \f$\Sigma_b^R\f$ and
    * \f$\Sigma_b^F\f$.
    */
-  print_h_submatrix_accessor(std::cout, "M", *this);
+  print_h_submatrix_accessor(out, "M", *this);
   out << std::endl;
   out << "(#level, #Sigma_b^P, #Sigma_b^R, #Sigma_b^F)=("
       << bc_node->get_level() << "," << Sigma_P.size() << "," << Sigma_R.size()
@@ -14339,7 +13697,7 @@ HMatrix<spacedim, Number>::print_current_matrix_info(std::ostream &out) const
     {
       out << "  Sigma_P products: ";
       print_h_h_submatrix_mmult_accessor(
-        std::cout, "M1", *(hmat_pair.first), "M2", *(hmat_pair.second));
+        out, "M1", *(hmat_pair.first), "M2", *(hmat_pair.second));
     }
 }
 
@@ -14388,11 +13746,10 @@ HMatrix<spacedim, Number>::_print_matrix_info_as_dot_node(
    */
   out << "\"" << std::hex << this << "\""
       << "[label=<<b>" << std::hex << this << "</b><br/>" << std::dec
-      << "tau: [";
-  print_vector_values(out, *row_indices, ",", false);
-  out << "]<br/>sigma: [";
-  print_vector_values(out, *col_indices, ",", false);
-  out << "]<br/>Level: " << bc_node->get_level() << "<br/>";
+      << "tau: [" << (*row_indices)[0] << "," << (*row_indices)[1] << ")<br/>";
+  out << "sigma: [" << (*col_indices)[0] << "," << (*col_indices)[1]
+      << ")<br/>";
+  out << "Level: " << bc_node->get_level() << "<br/>";
   out << "Parent: " << std::hex << parent << "<br/>";
   out << "Submatrix index: " << std::dec << submatrix_index << "<br/>";
   out << "H-matrix state: " << HMatrixSupport::state_name(this->state)
@@ -14490,30 +13847,30 @@ HMatrix<spacedim, Number>::write_fullmatrix_leaf_node(
 {
   Assert(type == FullMatrixType, ExcInvalidHMatrixType(type));
 
-  const std::vector<types::global_dof_index> &tau_index_set =
+  const std::array<types::global_dof_index, 2> &tau_index_range =
     bc_node->get_data_reference()
       .get_tau_node()
       ->get_data_reference()
-      .get_index_set();
-  const std::vector<types::global_dof_index> &sigma_index_set =
+      .get_index_range();
+  const std::array<types::global_dof_index, 2> &sigma_index_range =
     bc_node->get_data_reference()
       .get_sigma_node()
       ->get_data_reference()
-      .get_index_set();
+      .get_index_range();
 
   /**
-   * Print index set of cluster \f$\tau\f$.
+   * Print index range of cluster \f$\tau\f$.
    */
   out << "[";
-  print_vector_values(out, tau_index_set, " ", false);
-  out << "],";
+  print_vector_values(out, tau_index_range, " ", false);
+  out << "),";
 
   /**
-   * Print index set of cluster \f$\sigma\f$.
+   * Print index range of cluster \f$\sigma\f$.
    */
   out << "[";
-  print_vector_values(out, sigma_index_set, " ", false);
-  out << "],";
+  print_vector_values(out, sigma_index_range, " ", false);
+  out << "),";
 
   /**
    * Print the \p is_near_field flag.
@@ -14548,30 +13905,30 @@ HMatrix<spacedim, Number>::write_rkmatrix_leaf_node(std::ostream &out) const
 {
   Assert(type == RkMatrixType, ExcInvalidHMatrixType(type));
 
-  const std::vector<types::global_dof_index> &tau_index_set =
+  const std::array<types::global_dof_index, 2> &tau_index_range =
     bc_node->get_data_reference()
       .get_tau_node()
       ->get_data_reference()
-      .get_index_set();
-  const std::vector<types::global_dof_index> &sigma_index_set =
+      .get_index_range();
+  const std::array<types::global_dof_index, 2> &sigma_index_range =
     bc_node->get_data_reference()
       .get_sigma_node()
       ->get_data_reference()
-      .get_index_set();
+      .get_index_range();
 
   /**
-   * Print index set of cluster \f$\tau\f$.
+   * Print index range of cluster \f$\tau\f$.
    */
   out << "[";
-  print_vector_values(out, tau_index_set, " ", false);
-  out << "],";
+  print_vector_values(out, tau_index_range, " ", false);
+  out << "),";
 
   /**
-   * Print index set of cluster \f$\sigma\f$.
+   * Print index range of cluster \f$\sigma\f$.
    */
   out << "[";
-  print_vector_values(out, sigma_index_set, " ", false);
-  out << "],";
+  print_vector_values(out, sigma_index_range, " ", false);
+  out << "),";
 
   /**
    * Print the \p is_near_field flag.
@@ -15176,8 +14533,9 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
               submatrices[1]->rkmatrix->truncate_to_rank(new_rank, D, C);
 
               // DEBUG
-              std::cout << "||D||_2=" << D.frobenius_norm()
-                        << ",||C||_2=" << C.frobenius_norm() << std::endl;
+              //              std::cout << "||D||_2=" << D.frobenius_norm()
+              //                        << ",||C||_2=" << C.frobenius_norm() <<
+              //                        std::endl;
 
               /**
                * The error matrices will be added to the diagonal blocks
@@ -15227,8 +14585,9 @@ HMatrix<spacedim, Number>::truncate_to_rank_diag_preserve_positive_definite(
           submatrices[3]->addsym_diag(D);
 
           // DEBUG
-          std::cout << "||D||_2=" << D.frobenius_norm()
-                    << ",||C||_2=" << C.frobenius_norm() << std::endl;
+          //          std::cout << "||D||_2=" << D.frobenius_norm()
+          //                    << ",||C||_2=" << C.frobenius_norm() <<
+          //                    std::endl;
 
           break;
         }
@@ -15314,8 +14673,10 @@ HMatrix<spacedim, Number>::truncate_to_rank_off_diag_preserve_positive_definite(
                   diag_bottom_right->addsym_diag(D);
 
                   // DEBUG
-                  std::cout << "||D||_2=" << D.frobenius_norm()
-                            << ",||C||_2=" << C.frobenius_norm() << std::endl;
+                  //                  std::cout << "||D||_2=" <<
+                  //                  D.frobenius_norm()
+                  //                            << ",||C||_2=" <<
+                  //                            C.frobenius_norm() << std::endl;
                 }
 
               break;
@@ -15374,7 +14735,7 @@ HMatrix<spacedim, Number>::vmult(
                    */
                   for (size_type j = 0; j < n; j++)
                     {
-                      local_x(j) = x(col_indices->at(j));
+                      local_x(j) = x((*col_indices)[0] + j);
                     }
 
                   fullmatrix->vmult(local_y, local_x);
@@ -15384,7 +14745,7 @@ HMatrix<spacedim, Number>::vmult(
                    */
                   for (size_type i = 0; i < m; i++)
                     {
-                      y(row_indices->at(i)) += local_y(i);
+                      y((*row_indices)[0] + i) += local_y(i);
                     }
 
                   break;
@@ -15429,7 +14790,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type j = 0; j < n; j++)
                             {
-                              local_x(j) = x(col_indices->at(j));
+                              local_x(j) = x((*col_indices)[0] + j);
                             }
 
                           fullmatrix->vmult(local_y, local_x);
@@ -15439,7 +14800,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type i = 0; i < m; i++)
                             {
-                              y(row_indices->at(i)) += local_y(i);
+                              y((*row_indices)[0] + i) += local_y(i);
                             }
 
                           break;
@@ -15467,7 +14828,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type j = 0; j < n; j++)
                             {
-                              local_x(j) = x(col_indices->at(j));
+                              local_x(j) = x((*col_indices)[0] + j);
                             }
 
                           fullmatrix->vmult(local_y, local_x);
@@ -15477,7 +14838,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type i = 0; i < m; i++)
                             {
-                              y(row_indices->at(i)) += local_y(i);
+                              y((*row_indices)[0] + i) += local_y(i);
                             }
 
                           Vector<Number> local_y_for_Tvmult(n);
@@ -15489,7 +14850,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type i = 0; i < m; i++)
                             {
-                              local_x_for_Tvmult(i) = x(row_indices->at(i));
+                              local_x_for_Tvmult(i) = x((*row_indices)[0] + i);
                             }
 
                           fullmatrix->Tvmult(local_y_for_Tvmult,
@@ -15501,7 +14862,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type j = 0; j < n; j++)
                             {
-                              y(col_indices->at(j)) += local_y_for_Tvmult(j);
+                              y((*col_indices)[0] + j) += local_y_for_Tvmult(j);
                             }
 
                           break;
@@ -15556,7 +14917,7 @@ HMatrix<spacedim, Number>::vmult(
                    */
                   for (size_type j = 0; j < n; j++)
                     {
-                      local_x(j) = x(col_indices->at(j));
+                      local_x(j) = x((*col_indices)[0] + j);
                     }
 
                   rkmatrix->vmult(local_y, local_x);
@@ -15566,7 +14927,7 @@ HMatrix<spacedim, Number>::vmult(
                    */
                   for (size_type i = 0; i < m; i++)
                     {
-                      y(row_indices->at(i)) += local_y(i);
+                      y((*row_indices)[0] + i) += local_y(i);
                     }
 
                   break;
@@ -15611,7 +14972,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type j = 0; j < n; j++)
                             {
-                              local_x(j) = x(col_indices->at(j));
+                              local_x(j) = x((*col_indices)[0] + j);
                             }
 
                           rkmatrix->vmult(local_y, local_x);
@@ -15621,7 +14982,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type i = 0; i < m; i++)
                             {
-                              y(row_indices->at(i)) += local_y(i);
+                              y((*row_indices)[0] + i) += local_y(i);
                             }
 
                           Vector<Number> local_y_for_Tvmult(n);
@@ -15633,7 +14994,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type i = 0; i < m; i++)
                             {
-                              local_x_for_Tvmult(i) = x(row_indices->at(i));
+                              local_x_for_Tvmult(i) = x((*row_indices)[0] + i);
                             }
 
                           rkmatrix->Tvmult(local_y_for_Tvmult,
@@ -15645,7 +15006,7 @@ HMatrix<spacedim, Number>::vmult(
                            */
                           for (size_type j = 0; j < n; j++)
                             {
-                              y(col_indices->at(j)) += local_y_for_Tvmult(j);
+                              y((*col_indices)[0] + j) += local_y_for_Tvmult(j);
                             }
 
                           break;
@@ -15690,74 +15051,363 @@ HMatrix<spacedim, Number>::vmult(
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::vmult(Vector<Number> &      y,
-                                 const Number          alpha,
-                                 const Vector<Number> &x) const
+HMatrix<spacedim, Number>::vmult(
+  Vector<Number> &               y,
+  const Number                   alpha,
+  const Vector<Number> &         x,
+  const HMatrixSupport::Property top_hmat_property) const
 {
   switch (type)
     {
       case HierarchicalMatrixType:
         {
+          /**
+           * When the current \hmatnode is hierarchical, recursively call
+           * @p vmult of its children.
+           */
           for (HMatrix *submatrix : submatrices)
             {
-              submatrix->vmult(y, alpha, x);
+              submatrix->vmult(y, alpha, x, top_hmat_property);
             }
 
           break;
         }
       case FullMatrixType:
         {
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
           /**
-           * Restrict vector x to the current matrix block.
+           * Here we comes to the matrix-vector multiplication with respect to a
+           * near field leaf \hmatnode.
            */
-          for (size_type j = 0; j < n; j++)
+          switch (top_hmat_property)
             {
-              local_x(j) = x(col_indices->at(j));
-            }
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the top level \hmatnode is general, perform the
+                   * matrix-vector multiplication as usual.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
 
-          fullmatrix->vmult(local_y, local_x);
+                  /**
+                   * Restrict vector x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) = x((*col_indices)[0] + j);
+                    }
 
-          /**
-           * Merge back the result vector \p local_y to \p y.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              y(row_indices->at(i)) += alpha * local_y(i);
+                  fullmatrix->vmult(local_y, local_x);
+
+                  /**
+                   * Merge back the result vector \p local_y to \p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y((*row_indices)[0] + i) += alpha * local_y(i);
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the top level \hmatnode is symmetric, the operation
+                   * depends on the block type of the current leaf \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                      case HMatrixSupport::diagonal_block:
+                        {
+                          /**
+                           * A leaf \hmatnode belonging to the diagonal block
+                           * should also be symmetric, when the top level
+                           * \hmatnode is symmetric.
+                           */
+                          Assert(property == HMatrixSupport::symmetric,
+                                 ExcInvalidHMatrixProperty(property));
+                          /**
+                           * The full matrix associated with the current
+                           * \hmatnode should also be symmetric.
+                           */
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::symmetric,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          /**
+                           * Perform the matrix-vector multiplication using the
+                           * LAPACK function @p symv. In my implementation, only
+                           * those lower triangular elements in a symmetric full
+                           * matrix are used by the function.
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x((*col_indices)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] + i) += alpha * local_y(i);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped when handling
+                           * \f$M^Tx\f$.}
+                           */
+
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x((*col_indices)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] + i) += alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Tvmult(n);
+                          Vector<Number> local_x_for_Tvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed matrix
+                           * block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Tvmult(i) = x((*row_indices)[0] + i);
+                            }
+
+                          fullmatrix->Tvmult(local_y_for_Tvmult,
+                                             local_x_for_Tvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Tvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_indices)[0] + j) +=
+                                alpha * local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  break;
+                }
             }
 
           break;
         }
       case RkMatrixType:
         {
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
           /**
-           * Restrict vector x to the current matrix block.
+           * Here we comes to the matrix-vector multiplication with respect to a
+           * far field leaf \hmatnode.
            */
-          for (size_type j = 0; j < n; j++)
+          switch (top_hmat_property)
             {
-              local_x(j) = x(col_indices->at(j));
-            }
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the top level \hmatnode is general, perform the
+                   * matrix-vector multiplication as usual.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
 
-          rkmatrix->vmult(local_y, local_x);
+                  /**
+                   * Restrict vector x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) = x((*col_indices)[0] + j);
+                    }
 
-          /**
-           * Merge back the result vector \p local_y to \p y.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              y(row_indices->at(i)) += alpha * local_y(i);
+                  rkmatrix->vmult(local_y, local_x);
+
+                  /**
+                   * Merge back the result vector \p local_y to \p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y((*row_indices)[0] + i) += alpha * local_y(i);
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the top level \hmatnode is symmetric, the operation
+                   * depends on the block type of the current leaf \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                      case HMatrixSupport::diagonal_block:
+                        {
+                          /**
+                           * When the current \hmatnode is rank-k matrix, it can
+                           * never belong to the diagonal part.
+                           */
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped when handling
+                           * \f$M^Tx\f$.}
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) = x((*col_indices)[0] + j);
+                            }
+
+                          rkmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] + i) += alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Tvmult(n);
+                          Vector<Number> local_x_for_Tvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed matrix
+                           * block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Tvmult(i) = x((*row_indices)[0] + i);
+                            }
+
+                          rkmatrix->Tvmult(local_y_for_Tvmult,
+                                           local_x_for_Tvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Tvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_indices)[0] + j) +=
+                                alpha * local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  break;
+                }
             }
 
           break;
         }
       case UndefinedMatrixType:
       default:
-        Assert(false, ExcInvalidHMatrixType(type));
+        {
+          Assert(false, ExcInvalidHMatrixType(type));
+          break;
+        }
     }
 }
 
@@ -15765,83 +15415,382 @@ HMatrix<spacedim, Number>::vmult(Vector<Number> &      y,
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::vmult(
-  Vector<Number> &                                 y,
-  const std::map<types::global_dof_index, size_t> &y_index_global_to_local_map,
-  const Vector<Number> &                           x,
-  const std::map<types::global_dof_index, size_t> &x_index_global_to_local_map)
-  const
+  Vector<Number> &                 y,
+  const Vector<Number> &           x,
+  const HMatrix<spacedim, Number> &starting_hmat,
+  const HMatrixSupport::Property   top_hmat_property) const
 {
   switch (type)
     {
       case HierarchicalMatrixType:
         {
+          /**
+           * When the current \hmatnode is hierarchical, recursively call
+           * @p vmult of its children.
+           */
           for (HMatrix *submatrix : submatrices)
             {
-              submatrix->vmult(y,
-                               y_index_global_to_local_map,
-                               x,
-                               x_index_global_to_local_map);
+              submatrix->vmult(y, x, starting_hmat, top_hmat_property);
             }
 
           break;
         }
       case FullMatrixType:
         {
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
           /**
-           * Restrict vector x to the current matrix block.
+           * Here we comes to the matrix-vector multiplication with respect to a
+           * near field leaf \hmatnode.
            */
-          for (size_type j = 0; j < n; j++)
+          switch (top_hmat_property)
             {
-              local_x(j) =
-                x(x_index_global_to_local_map.at(col_indices->at(j)));
-            }
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the top level \hmatnode is general, perform the
+                   * matrix-vector multiplication as usual.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
 
-          fullmatrix->vmult(local_y, local_x);
+                  /**
+                   * Restrict vector x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) = x((*col_indices)[0] -
+                                     (*starting_hmat.col_indices)[0] + j);
+                    }
 
-          /**
-           * Merge back the result vector \p local_y to \p y.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              y(y_index_global_to_local_map.at(row_indices->at(i))) +=
-                local_y(i);
+                  fullmatrix->vmult(local_y, local_x);
+
+                  /**
+                   * Merge back the result vector \p local_y to \p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y((*row_indices)[0] - (*starting_hmat.row_indices)[0] +
+                        i) += local_y(i);
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the top level \hmatnode is symmetric, the operation
+                   * depends on the block type of the current leaf \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                      case HMatrixSupport::diagonal_block:
+                        {
+                          /**
+                           * A leaf \hmatnode belonging to the diagonal block
+                           * should also be symmetric, when the top level
+                           * \hmatnode is symmetric.
+                           */
+                          Assert(property == HMatrixSupport::symmetric,
+                                 ExcInvalidHMatrixProperty(property));
+                          /**
+                           * The full matrix associated with the current
+                           * \hmatnode should also be symmetric.
+                           */
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::symmetric,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          /**
+                           * Perform the matrix-vector multiplication using the
+                           * LAPACK function @p symv. In my implementation, only
+                           * those lower triangular elements in a symmetric full
+                           * matrix are used by the function.
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_indices)[0] -
+                                  (*starting_hmat.col_indices)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] -
+                                (*starting_hmat.row_indices)[0] + i) +=
+                                local_y(i);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_indices)[0] -
+                                  (*starting_hmat.col_indices)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] -
+                                (*starting_hmat.row_indices)[0] + i) +=
+                                local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Tvmult(n);
+                          Vector<Number> local_x_for_Tvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed matrix
+                           * block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Tvmult(i) =
+                                x((*row_indices)[0] -
+                                  (*starting_hmat.row_indices)[0] + i);
+                            }
+
+                          fullmatrix->Tvmult(local_y_for_Tvmult,
+                                             local_x_for_Tvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Tvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_indices)[0] -
+                                (*starting_hmat.col_indices)[0] + j) +=
+                                local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  break;
+                }
             }
 
           break;
         }
       case RkMatrixType:
         {
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
           /**
-           * Restrict vector x to the current matrix block.
+           * Here we comes to the matrix-vector multiplication with respect to a
+           * far field leaf \hmatnode.
            */
-          for (size_type j = 0; j < n; j++)
+          switch (top_hmat_property)
             {
-              local_x(j) =
-                x(x_index_global_to_local_map.at(col_indices->at(j)));
-            }
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the top level \hmatnode is general, perform the
+                   * matrix-vector multiplication as usual.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
 
-          rkmatrix->vmult(local_y, local_x);
+                  /**
+                   * Restrict vector x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) = x((*col_indices)[0] -
+                                     (*starting_hmat.col_indices)[0] + j);
+                    }
 
-          /**
-           * Merge back the result vector \p local_y to \p y.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              y(y_index_global_to_local_map.at(row_indices->at(i))) +=
-                local_y(i);
+                  rkmatrix->vmult(local_y, local_x);
+
+                  /**
+                   * Merge back the result vector \p local_y to \p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y((*row_indices)[0] - (*starting_hmat.row_indices)[0] +
+                        i) += local_y(i);
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the top level \hmatnode is symmetric, the operation
+                   * depends on the block type of the current leaf \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                      case HMatrixSupport::diagonal_block:
+                        {
+                          /**
+                           * When the current \hmatnode is rank-k matrix, it can
+                           * never belong to the diagonal part.
+                           */
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped.}
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_indices)[0] -
+                                  (*starting_hmat.col_indices)[0] + j);
+                            }
+
+                          rkmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] -
+                                (*starting_hmat.row_indices)[0] + i) +=
+                                local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Tvmult(n);
+                          Vector<Number> local_x_for_Tvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed matrix
+                           * block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Tvmult(i) =
+                                x((*row_indices)[0] -
+                                  (*starting_hmat.row_indices)[0] + i);
+                            }
+
+                          rkmatrix->Tvmult(local_y_for_Tvmult,
+                                           local_x_for_Tvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Tvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_indices)[0] -
+                                (*starting_hmat.col_indices)[0] + j) +=
+                                local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  break;
+                }
             }
 
           break;
         }
       case UndefinedMatrixType:
       default:
-        Assert(false, ExcInvalidHMatrixType(type));
+        {
+          Assert(false, ExcInvalidHMatrixType(type));
+          break;
+        }
     }
 }
 
@@ -15849,85 +15798,385 @@ HMatrix<spacedim, Number>::vmult(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::vmult(
-  Vector<Number> &                                 y,
-  const std::map<types::global_dof_index, size_t> &y_index_global_to_local_map,
-  const Number                                     alpha,
-  const Vector<Number> &                           x,
-  const std::map<types::global_dof_index, size_t> &x_index_global_to_local_map)
-  const
+  Vector<Number> &                 y,
+  const Number                     alpha,
+  const Vector<Number> &           x,
+  const HMatrix<spacedim, Number> &starting_hmat,
+  const HMatrixSupport::Property   top_hmat_property) const
 {
   switch (type)
     {
       case HierarchicalMatrixType:
         {
+          /**
+           * When the current \hmatnode is hierarchical, recursively call
+           * @p vmult of its children.
+           */
           for (HMatrix *submatrix : submatrices)
             {
-              submatrix->vmult(y,
-                               y_index_global_to_local_map,
-                               alpha,
-                               x,
-                               x_index_global_to_local_map);
+              submatrix->vmult(y, alpha, x, starting_hmat, top_hmat_property);
             }
 
           break;
         }
       case FullMatrixType:
         {
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
           /**
-           * Restrict vector x to the current matrix block.
+           * Here we comes to the matrix-vector multiplication with respect to a
+           * near field leaf \hmatnode.
            */
-          for (size_type j = 0; j < n; j++)
+          switch (top_hmat_property)
             {
-              local_x(j) =
-                x(x_index_global_to_local_map.at(col_indices->at(j)));
-            }
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the top level \hmatnode is general, perform the
+                   * matrix-vector multiplication as usual.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
 
-          fullmatrix->vmult(local_y, local_x);
+                  /**
+                   * Restrict vector x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) = x((*col_indices)[0] -
+                                     (*starting_hmat.col_indices)[0] + j);
+                    }
 
-          /**
-           * Merge back the result vector \p local_y to \p y.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              y(y_index_global_to_local_map.at(row_indices->at(i))) +=
-                alpha * local_y(i);
+                  fullmatrix->vmult(local_y, local_x);
+
+                  /**
+                   * Merge back the result vector \p local_y to \p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y((*row_indices)[0] - (*starting_hmat.row_indices)[0] +
+                        i) += alpha * local_y(i);
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the top level \hmatnode is symmetric, the operation
+                   * depends on the block type of the current leaf \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                      case HMatrixSupport::diagonal_block:
+                        {
+                          /**
+                           * A leaf \hmatnode belonging to the diagonal block
+                           * should also be symmetric, when the top level
+                           * \hmatnode is symmetric.
+                           */
+                          Assert(property == HMatrixSupport::symmetric,
+                                 ExcInvalidHMatrixProperty(property));
+                          /**
+                           * The full matrix associated with the current
+                           * \hmatnode should also be symmetric.
+                           */
+                          Assert(fullmatrix->get_property() ==
+                                   LAPACKSupport::symmetric,
+                                 ExcInvalidLAPACKFullMatrixProperty(
+                                   fullmatrix->get_property()));
+
+                          /**
+                           * Perform the matrix-vector multiplication using the
+                           * LAPACK function @p symv. In my implementation, only
+                           * those lower triangular elements in a symmetric full
+                           * matrix are used by the function.
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_indices)[0] -
+                                  (*starting_hmat.col_indices)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] -
+                                (*starting_hmat.row_indices)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped when handling
+                           * \f$M^Tx\f$.}
+                           */
+
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_indices)[0] -
+                                  (*starting_hmat.col_indices)[0] + j);
+                            }
+
+                          fullmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] -
+                                (*starting_hmat.row_indices)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Tvmult(n);
+                          Vector<Number> local_x_for_Tvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed matrix
+                           * block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Tvmult(i) =
+                                x((*row_indices)[0] -
+                                  (*starting_hmat.row_indices)[0] + i);
+                            }
+
+                          fullmatrix->Tvmult(local_y_for_Tvmult,
+                                             local_x_for_Tvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Tvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_indices)[0] -
+                                (*starting_hmat.col_indices)[0] + j) +=
+                                alpha * local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  break;
+                }
             }
 
           break;
         }
       case RkMatrixType:
         {
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
           /**
-           * Restrict vector x to the current matrix block.
+           * Here we comes to the matrix-vector multiplication with respect to a
+           * far field leaf \hmatnode.
            */
-          for (size_type j = 0; j < n; j++)
+          switch (top_hmat_property)
             {
-              local_x(j) =
-                x(x_index_global_to_local_map.at(col_indices->at(j)));
-            }
+              case HMatrixSupport::general:
+                {
+                  /**
+                   * When the top level \hmatnode is general, perform the
+                   * matrix-vector multiplication as usual.
+                   */
+                  Vector<Number> local_y(m);
+                  Vector<Number> local_x(n);
 
-          rkmatrix->vmult(local_y, local_x);
+                  /**
+                   * Restrict vector x to the current matrix block.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      local_x(j) = x((*col_indices)[0] -
+                                     (*starting_hmat.col_indices)[0] + j);
+                    }
 
-          /**
-           * Merge back the result vector \p local_y to \p y.
-           */
-          for (size_type i = 0; i < m; i++)
-            {
-              y(y_index_global_to_local_map.at(row_indices->at(i))) +=
-                alpha * local_y(i);
+                  rkmatrix->vmult(local_y, local_x);
+
+                  /**
+                   * Merge back the result vector \p local_y to \p y.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      y((*row_indices)[0] - (*starting_hmat.row_indices)[0] +
+                        i) += alpha * local_y(i);
+                    }
+
+                  break;
+                }
+              case HMatrixSupport::symmetric:
+                {
+                  /**
+                   * When the top level \hmatnode is symmetric, the operation
+                   * depends on the block type of the current leaf \hmatnode.
+                   */
+                  switch (block_type)
+                    {
+                      case HMatrixSupport::diagonal_block:
+                        {
+                          /**
+                           * When the current \hmatnode is rank-k matrix, it can
+                           * never belong to the diagonal part.
+                           */
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                      case HMatrixSupport::lower_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the lower
+                           * triangular part, we first perform the
+                           * multiplication \f$Mx\f$ and then perform the
+                           * multiplication \f$M^Tx\f$. This treatment considers
+                           * both the contribution of the current matrix block
+                           * as well as its symmetric counterpart.
+                           *
+                           * \alert{Not only should the full matrix itself be
+                           * transposed, the roles of row indices and column
+                           * indices should also be swapped when handling
+                           * \f$M^Tx\f$.}
+                           */
+                          Vector<Number> local_y(m);
+                          Vector<Number> local_x(n);
+
+                          /**
+                           * Restrict vector x to the current matrix block.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              local_x(j) =
+                                x((*col_indices)[0] -
+                                  (*starting_hmat.col_indices)[0] + j);
+                            }
+
+                          rkmatrix->vmult(local_y, local_x);
+
+                          /**
+                           * Merge back the result vector \p local_y to \p y.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              y((*row_indices)[0] -
+                                (*starting_hmat.row_indices)[0] + i) +=
+                                alpha * local_y(i);
+                            }
+
+                          Vector<Number> local_y_for_Tvmult(n);
+                          Vector<Number> local_x_for_Tvmult(m);
+
+                          /**
+                           * Restrict vector x to the current transposed matrix
+                           * block.
+                           */
+                          for (size_type i = 0; i < m; i++)
+                            {
+                              local_x_for_Tvmult(i) =
+                                x((*row_indices)[0] -
+                                  (*starting_hmat.row_indices)[0] + i);
+                            }
+
+                          rkmatrix->Tvmult(local_y_for_Tvmult,
+                                           local_x_for_Tvmult);
+
+                          /**
+                           * Merge back the result vector \p local_y_for_Tvmult
+                           * to \p y.
+                           */
+                          for (size_type j = 0; j < n; j++)
+                            {
+                              y((*col_indices)[0] -
+                                (*starting_hmat.col_indices)[0] + j) +=
+                                alpha * local_y_for_Tvmult(j);
+                            }
+
+                          break;
+                        }
+                      case HMatrixSupport::upper_triangular_block:
+                        {
+                          /**
+                           * When the current \hmatnode belongs to the upper
+                           * triangular part, do nothing.
+                           */
+                          break;
+                        }
+                      default:
+                        {
+                          Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                          break;
+                        }
+                    }
+
+                  break;
+                }
+              default:
+                {
+                  Assert(false, ExcNotImplemented());
+
+                  break;
+                }
             }
 
           break;
         }
       case UndefinedMatrixType:
       default:
-        Assert(false, ExcInvalidHMatrixType(type));
+        {
+          Assert(false, ExcInvalidHMatrixType(type));
+          break;
+        }
     }
 }
 
@@ -15955,7 +16204,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
          */
         for (size_type j = 0; j < m; j++)
           {
-            local_x(j) = x(row_indices->at(j));
+            local_x(j) = x((*row_indices)[0] + j);
           }
 
         fullmatrix->Tvmult(local_y, local_x);
@@ -15965,7 +16214,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
          */
         for (size_type i = 0; i < n; i++)
           {
-            y(col_indices->at(i)) += local_y(i);
+            y((*col_indices)[0] + i) += local_y(i);
           }
 
         break;
@@ -15975,7 +16224,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
          */
         for (size_type j = 0; j < m; j++)
           {
-            local_x(j) = x(row_indices->at(j));
+            local_x(j) = x((*row_indices)[0] + j);
           }
 
         rkmatrix->Tvmult(local_y, local_x);
@@ -15985,7 +16234,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
          */
         for (size_type i = 0; i < n; i++)
           {
-            y(col_indices->at(i)) += local_y(i);
+            y((*col_indices)[0] + i) += local_y(i);
           }
 
         break;
@@ -16020,7 +16269,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
          */
         for (size_type j = 0; j < m; j++)
           {
-            local_x(j) = x(row_indices->at(j));
+            local_x(j) = x((*row_indices)[0] + j);
           }
 
         fullmatrix->Tvmult(local_y, local_x);
@@ -16030,7 +16279,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
          */
         for (size_type i = 0; i < n; i++)
           {
-            y(col_indices->at(i)) += alpha * local_y(i);
+            y((*col_indices)[0] + i) += alpha * local_y(i);
           }
 
         break;
@@ -16040,7 +16289,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
          */
         for (size_type j = 0; j < m; j++)
           {
-            local_x(j) = x(row_indices->at(j));
+            local_x(j) = x((*row_indices)[0] + j);
           }
 
         rkmatrix->Tvmult(local_y, local_x);
@@ -16050,7 +16299,7 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
          */
         for (size_type i = 0; i < n; i++)
           {
-            y(col_indices->at(i)) += alpha * local_y(i);
+            y((*col_indices)[0] + i) += alpha * local_y(i);
           }
 
         break;
@@ -16064,11 +16313,9 @@ HMatrix<spacedim, Number>::Tvmult(Vector<Number> &      y,
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::Tvmult(
-  Vector<Number> &                                 y,
-  const std::map<types::global_dof_index, size_t> &y_index_global_to_local_map,
-  const Vector<Number> &                           x,
-  const std::map<types::global_dof_index, size_t> &x_index_global_to_local_map)
-  const
+  Vector<Number> &                 y,
+  const Vector<Number> &           x,
+  const HMatrix<spacedim, Number> &starting_hmat) const
 {
   Vector<Number> local_y(n);
   Vector<Number> local_x(m);
@@ -16078,10 +16325,7 @@ HMatrix<spacedim, Number>::Tvmult(
       case HierarchicalMatrixType:
         for (HMatrix *submatrix : submatrices)
           {
-            submatrix->Tvmult(y,
-                              y_index_global_to_local_map,
-                              x,
-                              x_index_global_to_local_map);
+            submatrix->Tvmult(y, x, starting_hmat);
           }
 
         break;
@@ -16091,7 +16335,8 @@ HMatrix<spacedim, Number>::Tvmult(
          */
         for (size_type j = 0; j < m; j++)
           {
-            local_x(j) = x(x_index_global_to_local_map.at(row_indices->at(j)));
+            local_x(j) =
+              x((*row_indices)[0] - (*starting_hmat.row_indices)[0] + j);
           }
 
         fullmatrix->Tvmult(local_y, local_x);
@@ -16101,7 +16346,8 @@ HMatrix<spacedim, Number>::Tvmult(
          */
         for (size_type i = 0; i < n; i++)
           {
-            y(y_index_global_to_local_map.at(col_indices->at(i))) += local_y(i);
+            y((*col_indices)[0] - (*starting_hmat.col_indices)[0] + i) +=
+              local_y(i);
           }
 
         break;
@@ -16111,7 +16357,8 @@ HMatrix<spacedim, Number>::Tvmult(
          */
         for (size_type j = 0; j < m; j++)
           {
-            local_x(j) = x(x_index_global_to_local_map.at(row_indices->at(j)));
+            local_x(j) =
+              x((*row_indices)[0] - (*starting_hmat.row_indices)[0] + j);
           }
 
         rkmatrix->Tvmult(local_y, local_x);
@@ -16121,7 +16368,8 @@ HMatrix<spacedim, Number>::Tvmult(
          */
         for (size_type i = 0; i < n; i++)
           {
-            y(y_index_global_to_local_map.at(col_indices->at(i))) += local_y(i);
+            y((*col_indices)[0] - (*starting_hmat.col_indices)[0] + i) +=
+              local_y(i);
           }
 
         break;
@@ -16135,12 +16383,10 @@ HMatrix<spacedim, Number>::Tvmult(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::Tvmult(
-  Vector<Number> &                                 y,
-  const std::map<types::global_dof_index, size_t> &y_index_global_to_local_map,
-  const Number                                     alpha,
-  const Vector<Number> &                           x,
-  const std::map<types::global_dof_index, size_t> &x_index_global_to_local_map)
-  const
+  Vector<Number> &                 y,
+  const Number                     alpha,
+  const Vector<Number> &           x,
+  const HMatrix<spacedim, Number> &starting_hmat) const
 {
   Vector<Number> local_y(n);
   Vector<Number> local_x(m);
@@ -16150,11 +16396,7 @@ HMatrix<spacedim, Number>::Tvmult(
       case HierarchicalMatrixType:
         for (HMatrix *submatrix : submatrices)
           {
-            submatrix->Tvmult(y,
-                              y_index_global_to_local_map,
-                              alpha,
-                              x,
-                              x_index_global_to_local_map);
+            submatrix->Tvmult(y, alpha, x, starting_hmat);
           }
 
         break;
@@ -16164,7 +16406,8 @@ HMatrix<spacedim, Number>::Tvmult(
          */
         for (size_type j = 0; j < m; j++)
           {
-            local_x(j) = x(x_index_global_to_local_map.at(row_indices->at(j)));
+            local_x(j) =
+              x((*row_indices)[0] - (*starting_hmat.row_indices)[0] + j);
           }
 
         fullmatrix->Tvmult(local_y, local_x);
@@ -16174,7 +16417,7 @@ HMatrix<spacedim, Number>::Tvmult(
          */
         for (size_type i = 0; i < n; i++)
           {
-            y(y_index_global_to_local_map.at(col_indices->at(i))) +=
+            y((*col_indices)[0] - (*starting_hmat.col_indices)[0] + i) +=
               alpha * local_y(i);
           }
 
@@ -16185,7 +16428,8 @@ HMatrix<spacedim, Number>::Tvmult(
          */
         for (size_type j = 0; j < m; j++)
           {
-            local_x(j) = x(x_index_global_to_local_map.at(row_indices->at(j)));
+            local_x(j) =
+              x((*row_indices)[0] - (*starting_hmat.row_indices)[0] + j);
           }
 
         rkmatrix->Tvmult(local_y, local_x);
@@ -16195,7 +16439,7 @@ HMatrix<spacedim, Number>::Tvmult(
          */
         for (size_type i = 0; i < n; i++)
           {
-            y(y_index_global_to_local_map.at(col_indices->at(i))) +=
+            y((*col_indices)[0] - (*starting_hmat.col_indices)[0] + i) +=
               alpha * local_y(i);
           }
 
@@ -17058,13 +17302,11 @@ HMatrix<spacedim, Number>::add(const Number                     b,
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::add(
-  const RkMatrix<Number> &B,
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_rk,
-  const std::map<types::global_dof_index, size_t>
-    &             col_index_global_to_local_map_for_rk,
-  const size_type fixed_rank_k,
-  const bool      is_result_matrix_store_tril_only) const
+  const RkMatrix<Number> &                      B,
+  const std::array<types::global_dof_index, 2> &B_row_index_range,
+  const std::array<types::global_dof_index, 2> &B_col_index_range,
+  const size_type                               fixed_rank_k,
+  const bool is_result_matrix_store_tril_only) const
 {
   if (is_result_matrix_store_tril_only)
     {
@@ -17101,8 +17343,8 @@ HMatrix<spacedim, Number>::add(
                       HMatrixSupport::upper_triangular_block)
                     {
                       submatrices[i]->add(B,
-                                          row_index_global_to_local_map_for_rk,
-                                          col_index_global_to_local_map_for_rk,
+                                          B_row_index_range,
+                                          B_col_index_range,
                                           fixed_rank_k,
                                           submatrices[i]->property ==
                                               HMatrixSupport::symmetric ||
@@ -17116,8 +17358,8 @@ HMatrix<spacedim, Number>::add(
               for (size_type i = 0; i < submatrices.size(); i++)
                 {
                   submatrices[i]->add(B,
-                                      row_index_global_to_local_map_for_rk,
-                                      col_index_global_to_local_map_for_rk,
+                                      B_row_index_range,
+                                      B_col_index_range,
                                       fixed_rank_k,
                                       false);
                 }
@@ -17139,11 +17381,11 @@ HMatrix<spacedim, Number>::add(
            * the lower triangular part only.
            */
           LAPACKFullMatrixExt<Number> fullmatrix_from_rk;
-          B.restrictToFullMatrix(*(row_indices),
-                                 *(col_indices),
-                                 row_index_global_to_local_map_for_rk,
-                                 col_index_global_to_local_map_for_rk,
-                                 fullmatrix_from_rk);
+          B.restrictToFullMatrix(B_row_index_range,
+                                 B_col_index_range,
+                                 fullmatrix_from_rk,
+                                 *(row_indices),
+                                 *(col_indices));
 
           /**
            * \alert{2022-05-06 The explicit type cast here for
@@ -17175,24 +17417,13 @@ HMatrix<spacedim, Number>::add(
            * Create a local rank-k matrix by restricting from the original
            * large rank-k matrix.
            */
-          RkMatrix<Number> rkmatrix_by_restriction(
-            *(row_indices),
-            *(col_indices),
-            B,
-            row_index_global_to_local_map_for_rk,
-            col_index_global_to_local_map_for_rk);
-
-          //          // DEBUG
-          //          std::cout << "rkmatrix rank before addition: "
-          //                    << this->rkmatrix->get_rank() <<
-          //                    std::endl;
+          RkMatrix<Number> rkmatrix_by_restriction(*(row_indices),
+                                                   *(col_indices),
+                                                   B,
+                                                   B_row_index_range,
+                                                   B_col_index_range);
 
           this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
-
-          //          // DEBUG
-          //          std::cout << "rkmatrix rank after addition: "
-          //                    << this->rkmatrix->get_rank() <<
-          //                    std::endl;
 
           break;
         }
@@ -17205,34 +17436,25 @@ HMatrix<spacedim, Number>::add(
 
 template <int spacedim, typename Number>
 void
-HMatrix<spacedim, Number>::add(const Number            b,
-                               const RkMatrix<Number> &B,
-                               const std::map<types::global_dof_index, size_t>
-                                 &row_index_global_to_local_map_for_rk,
-                               const std::map<types::global_dof_index, size_t>
-                                 &col_index_global_to_local_map_for_rk,
-                               const size_type fixed_rank_k,
-                               const bool is_result_matrix_symm_apriori) const
+HMatrix<spacedim, Number>::add(
+  const Number                                  b,
+  const RkMatrix<Number> &                      B,
+  const std::array<types::global_dof_index, 2> &B_row_index_range,
+  const std::array<types::global_dof_index, 2> &B_col_index_range,
+  const size_type                               fixed_rank_k,
+  const bool is_result_matrix_store_tril_only) const
 {
-  if (is_result_matrix_symm_apriori)
+  if (is_result_matrix_store_tril_only)
     {
       /**
-       * When the result matrix is expected to be symmetric, we perform
-       * assertions about its property and block type.
+       * When the result matrix is expected to be symmetric or lower triangular,
+       * we perform assertions about its property and block type.
        */
-      Assert(
-        this->property == HMatrixSupport::symmetric,
-        ExcMessage(
-          std::string(
-            "When the option is_result_matrix_symm_apriori is true, the property of the result matrix should be ") +
-          std::string(
-            HMatrixSupport::property_name(HMatrixSupport::symmetric))));
-      Assert(
-        this->block_type == HMatrixSupport::diagonal_block,
-        ExcMessage(
-          std::string(
-            "When the result matrix is symmetric, its block type should be ") +
-          std::string(HMatrixSupport::diagonal_block)));
+      Assert(this->property == HMatrixSupport::symmetric ||
+               this->property == HMatrixSupport::lower_triangular,
+             ExcInvalidHMatrixProperty(this->property));
+      Assert(this->block_type == HMatrixSupport::diagonal_block,
+             ExcInvalidHMatrixBlockType(this->block_type));
     }
 
   switch (type)
@@ -17245,7 +17467,7 @@ HMatrix<spacedim, Number>::add(const Number            b,
            * out for the upper triangular part. Otherwise, perform the
            * recursive addition as usual.
            */
-          if (is_result_matrix_symm_apriori)
+          if (is_result_matrix_store_tril_only)
             {
               for (size_type i = 0; i < submatrices.size(); i++)
                 {
@@ -17254,10 +17476,13 @@ HMatrix<spacedim, Number>::add(const Number            b,
                     {
                       submatrices[i]->add(b,
                                           B,
-                                          row_index_global_to_local_map_for_rk,
-                                          col_index_global_to_local_map_for_rk,
+                                          B_row_index_range,
+                                          B_col_index_range,
                                           fixed_rank_k,
-                                          is_result_matrix_symm_apriori);
+                                          submatrices[i]->property ==
+                                              HMatrixSupport::symmetric ||
+                                            submatrices[i]->property ==
+                                              HMatrixSupport::lower_triangular);
                     }
                 }
             }
@@ -17267,10 +17492,10 @@ HMatrix<spacedim, Number>::add(const Number            b,
                 {
                   submatrices[i]->add(b,
                                       B,
-                                      row_index_global_to_local_map_for_rk,
-                                      col_index_global_to_local_map_for_rk,
+                                      B_row_index_range,
+                                      B_col_index_range,
                                       fixed_rank_k,
-                                      is_result_matrix_symm_apriori);
+                                      false);
                 }
             }
 
@@ -17290,14 +17515,16 @@ HMatrix<spacedim, Number>::add(const Number            b,
            * the lower triangular part only.
            */
           LAPACKFullMatrixExt<Number> fullmatrix_from_rk;
-          B.restrictToFullMatrix(*(row_indices),
-                                 *(col_indices),
-                                 row_index_global_to_local_map_for_rk,
-                                 col_index_global_to_local_map_for_rk,
-                                 fullmatrix_from_rk);
+          B.restrictToFullMatrix(B_row_index_range,
+                                 B_col_index_range,
+                                 fullmatrix_from_rk,
+                                 *(row_indices),
+                                 *(col_indices));
+
           this->fullmatrix->add(b,
-                                fullmatrix_from_rk,
-                                is_result_matrix_symm_apriori);
+                                (const LAPACKFullMatrixExt<Number> &)
+                                  fullmatrix_from_rk,
+                                is_result_matrix_store_tril_only);
 
           break;
         }
@@ -17316,24 +17543,13 @@ HMatrix<spacedim, Number>::add(const Number            b,
            * Create a local rank-k matrix by restricting from the original
            * large rank-k matrix.
            */
-          RkMatrix<Number> rkmatrix_by_restriction(
-            *(row_indices),
-            *(col_indices),
-            B,
-            row_index_global_to_local_map_for_rk,
-            col_index_global_to_local_map_for_rk);
-
-          //          // DEBUG
-          //          std::cout << "rkmatrix rank before addition: "
-          //                    << this->rkmatrix->get_rank() <<
-          //                    std::endl;
+          RkMatrix<Number> rkmatrix_by_restriction(*(row_indices),
+                                                   *(col_indices),
+                                                   B,
+                                                   B_row_index_range,
+                                                   B_col_index_range);
 
           this->rkmatrix->add(b, rkmatrix_by_restriction, fixed_rank_k);
-
-          //          // DEBUG
-          //          std::cout << "rkmatrix rank after addition: "
-          //                    << this->rkmatrix->get_rank() <<
-          //                    std::endl;
 
           break;
         }
@@ -17353,21 +17569,9 @@ HMatrix<spacedim, Number>::add(const RkMatrix<Number> &B,
   AssertDimension(m, B.get_m());
   AssertDimension(n, B.get_n());
 
-  if (row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(row_indices),
-                                          row_index_global_to_local_map);
-    }
-
-  if (col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(col_indices),
-                                          col_index_global_to_local_map);
-    }
-
   this->add(B,
-            row_index_global_to_local_map,
-            col_index_global_to_local_map,
+            *row_indices,
+            *col_indices,
             fixed_rank_k,
             is_result_matrix_store_tril_only);
 }
@@ -17378,29 +17582,17 @@ void
 HMatrix<spacedim, Number>::add(const Number            b,
                                const RkMatrix<Number> &B,
                                const size_type         fixed_rank_k,
-                               const bool is_result_matrix_symm_apriori)
+                               const bool is_result_matrix_store_tril_only)
 {
   AssertDimension(m, B.get_m());
   AssertDimension(n, B.get_n());
 
-  if (row_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(row_indices),
-                                          row_index_global_to_local_map);
-    }
-
-  if (col_index_global_to_local_map.size() == 0)
-    {
-      build_index_set_global_to_local_map(*(col_indices),
-                                          col_index_global_to_local_map);
-    }
-
   this->add(b,
             B,
-            row_index_global_to_local_map,
-            col_index_global_to_local_map,
+            *row_indices,
+            *col_indices,
             fixed_rank_k,
-            is_result_matrix_symm_apriori);
+            is_result_matrix_store_tril_only);
 }
 
 
@@ -17444,19 +17636,15 @@ HMatrix<spacedim, Number>::addsym_diag(const LAPACKFullMatrixExt<Number> &E)
            */
           Assert(type == HierarchicalMatrixType, ExcInvalidHMatrixType(type));
 
-          if (row_index_global_to_local_map.size() == 0)
-            {
-              build_index_set_global_to_local_map(
-                *(row_indices), row_index_global_to_local_map);
-            }
-
-          std::vector<types::global_dof_index> &t1_cluster =
+          std::array<types::global_dof_index, 2> &t1_index_range =
             *(submatrices[0]->row_indices);
-          std::vector<types::global_dof_index> &t2_cluster =
+          std::array<types::global_dof_index, 2> &t2_index_range =
             *(submatrices[3]->row_indices);
 
-          LAPACKFullMatrixExt<Number> E1(t1_cluster.size(), E.n());
-          LAPACKFullMatrixExt<Number> E2(t2_cluster.size(), E.n());
+          LAPACKFullMatrixExt<Number> E1(t1_index_range[1] - t1_index_range[0],
+                                         E.n());
+          LAPACKFullMatrixExt<Number> E2(t2_index_range[1] - t2_index_range[0],
+                                         E.n());
 
           /**
            * Restrict the rows of the error matrix \f$E\f$ to the cluster
@@ -17465,7 +17653,7 @@ HMatrix<spacedim, Number>::addsym_diag(const LAPACKFullMatrixExt<Number> &E)
           for (size_type i = 0; i < E1.m(); i++)
             {
               E1.fill_row(i,
-                          row_index_global_to_local_map.at(t1_cluster[i]),
+                          t1_index_range[0] - (*this->row_indices)[0] + i,
                           E,
                           std::sqrt(2.0));
             }
@@ -17477,7 +17665,7 @@ HMatrix<spacedim, Number>::addsym_diag(const LAPACKFullMatrixExt<Number> &E)
           for (size_type i = 0; i < E2.m(); i++)
             {
               E2.fill_row(i,
-                          row_index_global_to_local_map.at(t2_cluster[i]),
+                          t2_index_range[0] - (*this->row_indices)[0] + i,
                           E,
                           std::sqrt(2.0));
             }
@@ -17555,7 +17743,7 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
        */
       for (size_type j = 0; j < n; j++)
         {
-          local_b(j) = b(col_indices->at(j));
+          local_b(j) = b((*col_indices)[0] + j);
         }
 
       /**
@@ -17574,7 +17762,7 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
        */
       for (size_type i = 0; i < m; i++)
         {
-          b(row_indices->at(i)) = local_b(i);
+          b((*row_indices)[0] + i) = local_b(i);
         }
     }
   else
@@ -17622,13 +17810,13 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
 }
 
 
+
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_by_forward_substitution(
-  Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &        vector_index_global_to_local_map,
-  const bool is_unit_diagonal) const
+  Vector<Number> &                 b,
+  const HMatrix<spacedim, Number> &starting_hmat,
+  const bool                       is_unit_diagonal) const
 {
   /**
    * The current \hmatnode should be square.
@@ -17652,7 +17840,7 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
       for (size_type j = 0; j < n; j++)
         {
           local_b(j) =
-            b(vector_index_global_to_local_map.at(col_indices->at(j)));
+            b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j);
         }
 
       /**
@@ -17671,7 +17859,7 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
        */
       for (size_type i = 0; i < m; i++)
         {
-          b(vector_index_global_to_local_map.at(row_indices->at(i))) =
+          b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i) =
             local_b(i);
         }
     }
@@ -17695,19 +17883,17 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
            */
           for (size_type j = 0; j < i; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(
-                b,
-                vector_index_global_to_local_map,
-                -1.0,
-                b,
-                vector_index_global_to_local_map);
+              submatrices[i * n_col_blocks + j]->vmult(b,
+                                                       -1.0,
+                                                       b,
+                                                       starting_hmat);
             }
 
           /**
            * Solve the current diagonal block using forward substitution.
            */
           submatrices[i * n_col_blocks + i]->solve_by_forward_substitution(
-            b, vector_index_global_to_local_map, is_unit_diagonal);
+            b, starting_hmat, is_unit_diagonal);
         }
     }
 }
@@ -17716,16 +17902,13 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_by_forward_substitution(
-  Vector<Number> &      x,
-  const Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &        vector_index_global_to_local_map,
-  const bool is_unit_diagonal) const
+  Vector<Number> &                 x,
+  const Vector<Number> &           b,
+  const HMatrix<spacedim, Number> &starting_hmat,
+  const bool                       is_unit_diagonal) const
 {
   x = b;
-  solve_by_forward_substitution(x,
-                                vector_index_global_to_local_map,
-                                is_unit_diagonal);
+  solve_by_forward_substitution(x, starting_hmat, is_unit_diagonal);
 }
 
 
@@ -17735,7 +17918,7 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution_matrix_valued(
   HMatrix<spacedim, Number> &X,
   HMatrix<spacedim, Number> &Z,
   const unsigned int         fixed_rank,
-  const bool                 is_unit_diagonal)
+  const bool                 is_unit_diagonal) const
 {
   AssertDimension(Z.m, X.m);
   AssertDimension(Z.n, X.n);
@@ -17748,12 +17931,6 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution_matrix_valued(
 
   if (Z.type == FullMatrixType)
     {
-      if (this->col_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(
-            *(this->col_indices), this->col_index_global_to_local_map);
-        }
-
       /**
        * When the current \hmatnode of \p X or \p Z is a full matrix, we need to
        * solve a multiple RHS problem.
@@ -17773,11 +17950,10 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution_matrix_valued(
            * \f$L\vert_{\tau,\tau}X\vert_{\tau,j}=Z\vert_{\tau,j}\f$ using
            * the forward substitution for \hmatrices.
            */
-          this->solve_by_forward_substitution(
-            X_col,
-            Z_col,
-            this->col_index_global_to_local_map,
-            is_unit_diagonal);
+          this->solve_by_forward_substitution(X_col,
+                                              Z_col,
+                                              (*this),
+                                              is_unit_diagonal);
 
           /**
            * Merge back the solution vector \p X_col into \p X, while the matrix
@@ -17788,12 +17964,6 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution_matrix_valued(
     }
   else if (Z.type == RkMatrixType)
     {
-      if (this->col_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(
-            *(this->col_indices), this->col_index_global_to_local_map);
-        }
-
       /**
        * When the current \hmatnode of \p X or \p Z is a rank-k matrix, we
        * iterate over each column of its component matrix \p A and solve a
@@ -17818,8 +17988,9 @@ HMatrix<spacedim, Number>::solve_by_forward_substitution_matrix_valued(
         {
           Z.rkmatrix->get_A().get_column(j, A_prime_col);
 
-          this->solve_by_forward_substitution(
-            A_prime_col, this->col_index_global_to_local_map, is_unit_diagonal);
+          this->solve_by_forward_substitution(A_prime_col,
+                                              (*this),
+                                              is_unit_diagonal);
 
           /**
            * Merge back the column vector of \p A' into \p A'.
@@ -17919,7 +18090,7 @@ void
 HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution_matrix_valued(
   HMatrix<spacedim, Number> &X,
   HMatrix<spacedim, Number> &Z,
-  const unsigned int         fixed_rank)
+  const unsigned int         fixed_rank) const
 {
   solve_by_forward_substitution_matrix_valued(X, Z, fixed_rank, false);
 }
@@ -17952,7 +18123,7 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
        */
       for (size_type i = 0; i < m; i++)
         {
-          local_b(i) = b(row_indices->at(i));
+          local_b(i) = b((*row_indices)[0] + i);
         }
 
       /**
@@ -17966,7 +18137,7 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
        */
       for (size_type j = 0; j < n; j++)
         {
-          b(col_indices->at(j)) = local_b(j);
+          b((*col_indices)[0] + j) = local_b(j);
         }
     }
   else
@@ -18019,9 +18190,8 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
-  Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &vector_index_global_to_local_map) const
+  Vector<Number> &                 b,
+  const HMatrix<spacedim, Number> &starting_hmat) const
 {
   /**
    * The current \hmatnode should be square.
@@ -18046,7 +18216,7 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
       for (size_type i = 0; i < m; i++)
         {
           local_b(i) =
-            b(vector_index_global_to_local_map.at(row_indices->at(i)));
+            b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i);
         }
 
       /**
@@ -18060,7 +18230,7 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
        */
       for (size_type j = 0; j < n; j++)
         {
-          b(vector_index_global_to_local_map.at(col_indices->at(j))) =
+          b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j) =
             local_b(j);
         }
     }
@@ -18087,20 +18257,17 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
            */
           for (size_type i = 0; i < j; i++)
             {
-              submatrices[i * n_col_blocks + j]->Tvmult(
-                b,
-                vector_index_global_to_local_map,
-                -1.0,
-                b,
-                vector_index_global_to_local_map);
+              submatrices[i * n_col_blocks + j]->Tvmult(b,
+                                                        -1.0,
+                                                        b,
+                                                        starting_hmat);
             }
 
           /**
            * Solve the current diagonal block using forward substitution.
            */
           submatrices[j * n_col_blocks + j]
-            ->solve_transpose_by_forward_substitution(
-              b, vector_index_global_to_local_map);
+            ->solve_transpose_by_forward_substitution(b, starting_hmat);
         }
     }
 }
@@ -18109,13 +18276,12 @@ HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_transpose_by_forward_substitution(
-  Vector<Number> &      x,
-  const Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &vector_index_global_to_local_map) const
+  Vector<Number> &                 x,
+  const Vector<Number> &           b,
+  const HMatrix<spacedim, Number> &starting_hmat) const
 {
   x = b;
-  solve_transpose_by_forward_substitution(x, vector_index_global_to_local_map);
+  solve_transpose_by_forward_substitution(x, starting_hmat);
 }
 
 
@@ -18125,7 +18291,7 @@ HMatrix<spacedim, Number>::
   solve_transpose_by_forward_substitution_matrix_valued(
     HMatrix<spacedim, Number> &X,
     HMatrix<spacedim, Number> &Z,
-    const unsigned int         fixed_rank)
+    const unsigned int         fixed_rank) const
 {
   AssertDimension(Z.m, X.m);
   AssertDimension(Z.n, X.n);
@@ -18138,12 +18304,6 @@ HMatrix<spacedim, Number>::
 
   if (Z.type == FullMatrixType)
     {
-      if (this->row_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(
-            *(this->row_indices), this->row_index_global_to_local_map);
-        }
-
       /**
        * When the current \hmatnode of \p X or \p Z is a full matrix, we need to
        * solve a multiple RHS problem.
@@ -18164,8 +18324,7 @@ HMatrix<spacedim, Number>::
            * Z\vert_{i,\sigma}\f$ using the transposed forward
            * substitution for \hmatrices.
            */
-          this->solve_transpose_by_forward_substitution(
-            X_row, Z_row, this->row_index_global_to_local_map);
+          this->solve_transpose_by_forward_substitution(X_row, Z_row, (*this));
 
           /**
            * Merge back the solution vector \p X_row into \p X, while the matrix
@@ -18176,12 +18335,6 @@ HMatrix<spacedim, Number>::
     }
   else if (Z.type == RkMatrixType)
     {
-      if (this->row_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(
-            *(this->row_indices), this->row_index_global_to_local_map);
-        }
-
       (*X.rkmatrix) = (*Z.rkmatrix);
 
       Vector<Number> B_prime_col(X.n);
@@ -18193,8 +18346,7 @@ HMatrix<spacedim, Number>::
            * Solve the problem using the transposed forward substitution
            * for \hmatrices.
            */
-          this->solve_transpose_by_forward_substitution(
-            B_prime_col, this->row_index_global_to_local_map);
+          this->solve_transpose_by_forward_substitution(B_prime_col, (*this));
 
           /**
            * Merge back the column vector of \p B' into \p B'.
@@ -18296,7 +18448,7 @@ HMatrix<spacedim, Number>::
   solve_cholesky_transpose_by_forward_substitution_matrix_valued(
     HMatrix<spacedim, Number> &X,
     HMatrix<spacedim, Number> &Z,
-    const unsigned int         fixed_rank)
+    const unsigned int         fixed_rank) const
 {
   AssertDimension(Z.m, X.m);
   AssertDimension(Z.n, X.n);
@@ -18316,12 +18468,6 @@ HMatrix<spacedim, Number>::
 
   if (Z.type == FullMatrixType)
     {
-      if (this->col_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(
-            *(this->col_indices), this->col_index_global_to_local_map);
-        }
-
       /**
        * When the current \hmatnode of \p X or \p Z is a full matrix, we need to
        * solve a multiple RHS problem.
@@ -18342,8 +18488,7 @@ HMatrix<spacedim, Number>::
            * Z\vert_{\sigma,i}\f$ using the forward substitution for
            * \hmatrices, while the lower triangular matrix is not unit.
            */
-          this->solve_by_forward_substitution(
-            X_row, Z_row, this->col_index_global_to_local_map, false);
+          this->solve_by_forward_substitution(X_row, Z_row, (*this), false);
 
           /**
            * Merge back the solution vector \p X_row into \p X, while the matrix
@@ -18354,12 +18499,6 @@ HMatrix<spacedim, Number>::
     }
   else if (Z.type == RkMatrixType)
     {
-      if (this->col_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(
-            *(this->col_indices), this->col_index_global_to_local_map);
-        }
-
       (*X.rkmatrix) = (*Z.rkmatrix);
 
       Vector<Number> B_prime_col(X.n);
@@ -18372,8 +18511,7 @@ HMatrix<spacedim, Number>::
            * substitution for \hmatrices, while the matrix does not have
            * unit diagonal.
            */
-          this->solve_by_forward_substitution(
-            B_prime_col, this->col_index_global_to_local_map, false);
+          this->solve_by_forward_substitution(B_prime_col, (*this), false);
 
           /**
            * Merge back the column vector into \p B'.
@@ -18512,7 +18650,7 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_forward_substitution(
            */
           for (size_type j = 0; j < n; j++)
             {
-              local_b(j) = b(col_indices->at(j));
+              local_b(j) = b((*col_indices)[0] + j);
             }
 
           /**
@@ -18527,7 +18665,7 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_forward_substitution(
            */
           for (size_type i = 0; i < m; i++)
             {
-              b(row_indices->at(i)) = local_b(i);
+              b((*row_indices)[0] + i) = local_b(i);
             }
         }
     }
@@ -18582,9 +18720,7 @@ void
 HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
   Vector<Number> &b) const
 {
-  Assert(state == HMatrixSupport::cholesky,
-         ExcMessage(std::string("Invalid H-matrix state: ") +
-                    std::string(HMatrixSupport::state_name(state))));
+  Assert(state == HMatrixSupport::cholesky, ExcInvalidHMatrixState(state));
 
   solve_by_forward_substitution(b, false);
 }
@@ -18596,6 +18732,8 @@ HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
   Vector<Number> &      x,
   const Vector<Number> &b) const
 {
+  Assert(state == HMatrixSupport::cholesky, ExcInvalidHMatrixState(state));
+
   solve_by_forward_substitution(x, b, false);
 }
 
@@ -18603,23 +18741,25 @@ HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
-  Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &vector_index_global_to_local_map) const
+  Vector<Number> &                 b,
+  const HMatrix<spacedim, Number> &starting_hmat) const
 {
-  solve_by_forward_substitution(b, vector_index_global_to_local_map, false);
+  Assert(state == HMatrixSupport::cholesky, ExcInvalidHMatrixState(state));
+
+  solve_by_forward_substitution(b, starting_hmat, false);
 }
 
 
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_cholesky_by_forward_substitution(
-  Vector<Number> &      x,
-  const Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &vector_index_global_to_local_map) const
+  Vector<Number> &                 x,
+  const Vector<Number> &           b,
+  const HMatrix<spacedim, Number> &starting_hmat) const
 {
-  solve_by_forward_substitution(x, b, vector_index_global_to_local_map, false);
+  Assert(state == HMatrixSupport::cholesky, ExcInvalidHMatrixState(state));
+
+  solve_by_forward_substitution(x, b, starting_hmat, false);
 }
 
 
@@ -18650,7 +18790,7 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
        */
       for (size_type j = 0; j < n; j++)
         {
-          local_b(j) = b(col_indices->at(j));
+          local_b(j) = b((*col_indices)[0] + j);
         }
 
       /**
@@ -18665,7 +18805,7 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
        */
       for (size_type i = 0; i < m; i++)
         {
-          b(row_indices->at(i)) = local_b(i);
+          b((*row_indices)[0] + i) = local_b(i);
         }
     }
   else
@@ -18716,10 +18856,9 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_by_backward_substitution(
-  Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &        vector_index_global_to_local_map,
-  const bool is_unit_diagonal) const
+  Vector<Number> &                 b,
+  const HMatrix<spacedim, Number> &starting_hmat,
+  const bool                       is_unit_diagonal) const
 {
   /**
    * The current \hmatnode should be square.
@@ -18743,7 +18882,7 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
       for (size_type j = 0; j < n; j++)
         {
           local_b(j) =
-            b(vector_index_global_to_local_map.at(col_indices->at(j)));
+            b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j);
         }
 
       /**
@@ -18758,7 +18897,7 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
        */
       for (size_type i = 0; i < m; i++)
         {
-          b(vector_index_global_to_local_map.at(row_indices->at(i))) =
+          b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i) =
             local_b(i);
         }
     }
@@ -18782,19 +18921,17 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
            */
           for (size_type j = i + 1; j < n_col_blocks; j++)
             {
-              submatrices[i * n_col_blocks + j]->vmult(
-                b,
-                vector_index_global_to_local_map,
-                -1.0,
-                b,
-                vector_index_global_to_local_map);
+              submatrices[i * n_col_blocks + j]->vmult(b,
+                                                       -1.0,
+                                                       b,
+                                                       starting_hmat);
             }
 
           /**
            * Solve the current diagonal block using backward substitution.
            */
           submatrices[i * n_col_blocks + i]->solve_by_backward_substitution(
-            b, vector_index_global_to_local_map, is_unit_diagonal);
+            b, starting_hmat, is_unit_diagonal);
         }
     }
 }
@@ -18803,16 +18940,13 @@ HMatrix<spacedim, Number>::solve_by_backward_substitution(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_by_backward_substitution(
-  Vector<Number> &      x,
-  const Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &        vector_index_global_to_local_map,
-  const bool is_unit_diagonal) const
+  Vector<Number> &                 x,
+  const Vector<Number> &           b,
+  const HMatrix<spacedim, Number> &starting_hmat,
+  const bool                       is_unit_diagonal) const
 {
   x = b;
-  solve_by_backward_substitution(x,
-                                 vector_index_global_to_local_map,
-                                 is_unit_diagonal);
+  solve_by_backward_substitution(x, starting_hmat, is_unit_diagonal);
 }
 
 
@@ -18859,7 +18993,7 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_backward_substitution(
            */
           for (size_type j = 0; j < n; j++)
             {
-              local_b(j) = b(col_indices->at(j));
+              local_b(j) = b((*col_indices)[0] + j);
             }
 
           /**
@@ -18874,7 +19008,7 @@ HMatrix<spacedim, Number>::solve_block_triangular_by_backward_substitution(
            */
           for (size_type i = 0; i < m; i++)
             {
-              b(row_indices->at(i)) = local_b(i);
+              b((*row_indices)[0] + i) = local_b(i);
             }
         }
     }
@@ -18929,9 +19063,7 @@ void
 HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
   Vector<Number> &b) const
 {
-  Assert(state == HMatrixSupport::cholesky,
-         ExcMessage(std::string("Invalid H-matrix state: ") +
-                    std::string(HMatrixSupport::state_name(state))));
+  Assert(state == HMatrixSupport::cholesky, ExcInvalidHMatrixState(state));
 
   /**
    * The current \hmatnode should be square.
@@ -18956,7 +19088,7 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
        */
       for (size_type i = 0; i < m; i++)
         {
-          local_b(i) = b(row_indices->at(i));
+          local_b(i) = b((*row_indices)[0] + i);
         }
 
       /**
@@ -18970,7 +19102,7 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
        */
       for (size_type j = 0; j < n; j++)
         {
-          b(col_indices->at(j)) = local_b(j);
+          b((*col_indices)[0] + j) = local_b(j);
         }
     }
   else
@@ -19025,9 +19157,8 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
-  Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &vector_index_global_to_local_map) const
+  Vector<Number> &                 b,
+  const HMatrix<spacedim, Number> &starting_hmat) const
 {
   /**
    * The current \hmatnode should be square.
@@ -19053,7 +19184,7 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
       for (size_type i = 0; i < m; i++)
         {
           local_b(i) =
-            b(vector_index_global_to_local_map.at(row_indices->at(i)));
+            b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i);
         }
 
       /**
@@ -19067,7 +19198,7 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
        */
       for (size_type j = 0; j < n; j++)
         {
-          b(vector_index_global_to_local_map.at(col_indices->at(j))) =
+          b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j) =
             local_b(j);
         }
     }
@@ -19096,20 +19227,17 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
                * solved, \p
                * Tvmult is used here instead of \p vmult.
                */
-              submatrices[i * n_col_blocks + j]->Tvmult(
-                b,
-                vector_index_global_to_local_map,
-                -1.0,
-                b,
-                vector_index_global_to_local_map);
+              submatrices[i * n_col_blocks + j]->Tvmult(b,
+                                                        -1.0,
+                                                        b,
+                                                        starting_hmat);
             }
 
           /**
            * Solve the current diagonal block using backward substitution.
            */
           submatrices[j * n_col_blocks + j]
-            ->solve_cholesky_by_backward_substitution(
-              b, vector_index_global_to_local_map);
+            ->solve_cholesky_by_backward_substitution(b, starting_hmat);
         }
     }
 }
@@ -19118,13 +19246,12 @@ HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
 template <int spacedim, typename Number>
 void
 HMatrix<spacedim, Number>::solve_cholesky_by_backward_substitution(
-  Vector<Number> &      x,
-  const Vector<Number> &b,
-  const std::map<types::global_dof_index, size_t>
-    &vector_index_global_to_local_map) const
+  Vector<Number> &                 x,
+  const Vector<Number> &           b,
+  const HMatrix<spacedim, Number> &starting_hmat) const
 {
   x = b;
-  solve_cholesky_by_backward_substitution(x, vector_index_global_to_local_map);
+  solve_cholesky_by_backward_substitution(x, starting_hmat);
 }
 
 
@@ -19967,7 +20094,7 @@ HMatrix<spacedim, Number>::get_leaf_set() const
 
 
 template <int spacedim, typename Number>
-std::vector<types::global_dof_index> *
+std::array<types::global_dof_index, 2> *
 HMatrix<spacedim, Number>::get_row_indices()
 {
   return row_indices;
@@ -19975,7 +20102,7 @@ HMatrix<spacedim, Number>::get_row_indices()
 
 
 template <int spacedim, typename Number>
-const std::vector<types::global_dof_index> *
+const std::array<types::global_dof_index, 2> *
 HMatrix<spacedim, Number>::get_row_indices() const
 {
   return row_indices;
@@ -19983,7 +20110,7 @@ HMatrix<spacedim, Number>::get_row_indices() const
 
 
 template <int spacedim, typename Number>
-std::vector<types::global_dof_index> *
+std::array<types::global_dof_index, 2> *
 HMatrix<spacedim, Number>::get_col_indices()
 {
   return col_indices;
@@ -19991,42 +20118,10 @@ HMatrix<spacedim, Number>::get_col_indices()
 
 
 template <int spacedim, typename Number>
-const std::vector<types::global_dof_index> *
+const std::array<types::global_dof_index, 2> *
 HMatrix<spacedim, Number>::get_col_indices() const
 {
   return col_indices;
-}
-
-
-template <int spacedim, typename Number>
-std::map<types::global_dof_index, size_t> &
-HMatrix<spacedim, Number>::get_row_index_global_to_local_map()
-{
-  return row_index_global_to_local_map;
-}
-
-
-template <int spacedim, typename Number>
-const std::map<types::global_dof_index, size_t> &
-HMatrix<spacedim, Number>::get_row_index_global_to_local_map() const
-{
-  return row_index_global_to_local_map;
-}
-
-
-template <int spacedim, typename Number>
-std::map<types::global_dof_index, size_t> &
-HMatrix<spacedim, Number>::get_col_index_global_to_local_map()
-{
-  return col_index_global_to_local_map;
-}
-
-
-template <int spacedim, typename Number>
-const std::map<types::global_dof_index, size_t> &
-HMatrix<spacedim, Number>::get_col_index_global_to_local_map() const
-{
-  return col_index_global_to_local_map;
 }
 
 
@@ -20114,20 +20209,6 @@ HMatrix<spacedim, Number>::refine_to_supertree()
       /**
        * Refine from the current \hmatrix leaf node.
        */
-      if (hmat_leaf_node->row_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(
-            *(hmat_leaf_node->row_indices),
-            hmat_leaf_node->row_index_global_to_local_map);
-        }
-
-      if (hmat_leaf_node->col_index_global_to_local_map.size() == 0)
-        {
-          build_index_set_global_to_local_map(
-            *(hmat_leaf_node->col_indices),
-            hmat_leaf_node->col_index_global_to_local_map);
-        }
-
       RefineHMatrixWrtExtendedBlockClusterTree(hmat_leaf_node, hmat_leaf_node);
 
       /**
@@ -20405,12 +20486,9 @@ HMatrix<spacedim, Number>::memory_consumption_of_current_hmat_node() const
    * Count the memory for other members in the current \hmatnode.
    */
   memory_for_hmat_node +=
-    sizeof(bc_node) + sizeof(block_type) +
-    memory_consumption_of_map(col_index_global_to_local_map) +
-    sizeof(col_indices) + sizeof(fullmatrix) +
-    memory_consumption_of_vector(leaf_set) + sizeof(m) + sizeof(n) +
-    sizeof(parent) + sizeof(property) + sizeof(rkmatrix) +
-    memory_consumption_of_map(row_index_global_to_local_map) +
+    sizeof(bc_node) + sizeof(block_type) + sizeof(col_indices) +
+    sizeof(fullmatrix) + memory_consumption_of_vector(leaf_set) + sizeof(m) +
+    sizeof(n) + sizeof(parent) + sizeof(property) + sizeof(rkmatrix) +
     sizeof(row_indices) + memory_consumption_of_vector(Sigma_F) +
     memory_consumption_of_vector(Sigma_P) +
     memory_consumption_of_vector(Sigma_R) + sizeof(state) +

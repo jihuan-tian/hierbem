@@ -42,6 +42,7 @@ main()
                             Point<3>(0., 0., 0.),
                             2.0,
                             true);
+  triangulation.refine_global(1);
 
   /**
    * Save the mesh to a file for visualization.
@@ -114,4 +115,11 @@ main()
    */
   deallog << "=== Cluster tree ===\n";
   deallog << cluster_tree << std::endl;
+
+  /**
+   * Export the cluster tree as a directional graph.
+   */
+  std::ofstream graph("cluster-tree.puml");
+  cluster_tree.print_tree_info_as_dot(graph);
+  graph.close();
 }

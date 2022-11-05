@@ -244,6 +244,40 @@ public:
   build_leaf_set();
 
   /**
+   * Get the reference to the internal-to-external DoF numbering.
+   *
+   * @return
+   */
+  std::vector<types::global_dof_index> &
+  get_internal_to_external_dof_numbering();
+
+  /**
+   * Get the reference to the internal-to-external DoF numbering (const
+   * version).
+   *
+   * @return
+   */
+  const std::vector<types::global_dof_index> &
+  get_internal_to_external_dof_numbering() const;
+
+  /**
+   * Get the reference to the external-to-internal DoF numbering.
+   *
+   * @return
+   */
+  std::vector<types::global_dof_index> &
+  get_external_to_internal_dof_numbering();
+
+  /**
+   * Get the reference to the external-to-internal DoF numbering (const
+   * version).
+   *
+   * @return
+   */
+  const std::vector<types::global_dof_index> &
+  get_external_to_internal_dof_numbering() const;
+
+  /**
    * Get the minimum cluster size.
    */
   unsigned int
@@ -267,7 +301,37 @@ public:
   unsigned int
   get_node_num() const;
 
+  /**
+   * Print the \bct hierarchy information in the directional graph in GraphViz
+   * dot format.
+   *
+   * @param out
+   */
+  void
+  print_tree_info_as_dot(std::ostream &out) const;
+
+  /**
+   * Return the flag indicating whether the index sets have been cleared.
+   *
+   * @return
+   */
+  bool
+  is_index_sets_cleared() const
+  {
+    return index_sets_cleared;
+  }
+
 private:
+  /**
+   * Print the \bct hierarchy information recursively as a node in the
+   * directional graph in GraphViz dot format.
+   *
+   * @param out
+   */
+  void
+  _print_tree_info_as_dot_node(std::ostream &          out,
+                               node_const_pointer_type cluster_node) const;
+
   /**
    * Perform a pure cardinality based recursive partition by starting from a
    * cluster node.
@@ -351,16 +415,62 @@ private:
     const std::vector<Number> &         cell_size_at_dofs,
     std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
+  /**
+   * Build the internal-to-external and external-to-internal DoF numberings by
+   * iterating over the leaf set.
+   *
+   * \mynote{Since the leaf set has been constructed using recursion and
+   * whenever we come to a cluster node, its left child node is processed before
+   * the right child node, the cluster nodes in the leaf set are naturally
+   * ordered.}
+   */
+  void
+  build_internal_and_external_dof_numbering_mappings();
+
+  /**
+   * Set the index range (in internal DoF numbering) of each cluster node in the
+   * cluster tree from its associated index set based on the mapping from the
+   * external numbering to internal numbering. Then, clear the index set (in
+   * external DoF numbering) for saving memory.
+   */
+  void
+  set_index_ranges_and_clear_index_sets();
+
+  /**
+   * Set index ranges and clear index sets recursively by starting from a
+   * cluster node in the cluster tree.
+   *
+   * @param current_cluster_node
+   */
+  void
+  set_index_ranges_and_clear_index_sets_from_cluster_node(
+    node_pointer_type current_cluster_node);
+
   node_pointer_type              root_node;
   std::vector<node_pointer_type> leaf_set;
 
   /**
+   * The numbering mapping from internal DoF indices to external DoF indices.
+   */
+  std::vector<types::global_dof_index> internal_to_external_dof_numbering;
+  /**
+   * The numbering mapping from external DoF indices to internal DoF indices.
+   */
+  std::vector<types::global_dof_index> external_to_internal_dof_numbering;
+
+  /**
    * Depth of the tree, which is the maximum level plus one.
+   *
+   * \mynote{The level number starts from 0, which is assigned to the root
+   * node.}
    */
   unsigned int depth;
 
   /**
    * Maximum level of the cluster tree, which is \p depth - 1.
+   *
+   * \mynote{The level number starts from 0, which is assigned to the root
+   * node.}
    */
   int max_level;
 
@@ -374,6 +484,11 @@ private:
    * Total number of clusters in the tree.
    */
   unsigned int node_num;
+
+  /**
+   * Whether the index sets for all cluster nodes are cleared.
+   */
+  bool index_sets_cleared;
 };
 
 template <int spacedim, typename Number>
@@ -395,6 +510,20 @@ operator<<(std::ostream &out, const ClusterTree<spacedim, Number> &cluster_tree)
                                            cluster_tree.get_leaf_set(),
                                            "\n");
 
+  out << "* Internal-to-external DoF numbering: [";
+  print_vector_values(out,
+                      cluster_tree.internal_to_external_dof_numbering,
+                      " ",
+                      false);
+  out << "]\n";
+
+  out << "* External-to-internal DoF numbering: [";
+  print_vector_values(out,
+                      cluster_tree.external_to_internal_dof_numbering,
+                      " ",
+                      false);
+  out << "]\n";
+
   return out;
 }
 
@@ -402,10 +531,13 @@ template <int spacedim, typename Number>
 ClusterTree<spacedim, Number>::ClusterTree()
   : root_node(nullptr)
   , leaf_set(0)
+  , internal_to_external_dof_numbering(0)
+  , external_to_internal_dof_numbering(0)
   , depth(0)
   , max_level(-1)
   , n_min(2)
   , node_num(0)
+  , index_sets_cleared(false)
 {}
 
 
@@ -415,13 +547,19 @@ ClusterTree<spacedim, Number>::ClusterTree(
   const unsigned int                          n_min)
   : root_node(nullptr)
   , leaf_set(0)
+  , internal_to_external_dof_numbering(0)
+  , external_to_internal_dof_numbering(0)
   , depth(0)
   , max_level(-1)
   , n_min(n_min)
   , node_num(0)
+  , index_sets_cleared(false)
 {
   root_node = CreateTreeNode<data_value_type>(
     Cluster<spacedim, Number>(index_set), 0, nullptr, nullptr, nullptr);
+
+  internal_to_external_dof_numbering.resize(index_set.size());
+  external_to_internal_dof_numbering.resize(index_set.size());
 
   depth     = 1;
   max_level = 0;
@@ -439,10 +577,13 @@ ClusterTree<spacedim, Number>::ClusterTree(
   const unsigned int                          n_min)
   : root_node(nullptr)
   , leaf_set(0)
+  , internal_to_external_dof_numbering(0)
+  , external_to_internal_dof_numbering(0)
   , depth(0)
   , max_level(-1)
   , n_min(n_min)
   , node_num(0)
+  , index_sets_cleared(false)
 {
   root_node = CreateTreeNode<data_value_type>(
     Cluster<spacedim, Number>(index_set, all_support_points),
@@ -450,6 +591,9 @@ ClusterTree<spacedim, Number>::ClusterTree(
     nullptr,
     nullptr,
     nullptr);
+
+  internal_to_external_dof_numbering.resize(index_set.size());
+  external_to_internal_dof_numbering.resize(index_set.size());
 
   depth     = 1;
   max_level = 0;
@@ -467,10 +611,13 @@ ClusterTree<spacedim, Number>::ClusterTree(
   const unsigned int                          n_min)
   : root_node(nullptr)
   , leaf_set(0)
+  , internal_to_external_dof_numbering(0)
+  , external_to_internal_dof_numbering(0)
   , depth(0)
   , max_level(-1)
   , n_min(n_min)
   , node_num(0)
+  , index_sets_cleared(false)
 {
   root_node = CreateTreeNode<data_value_type>(
     Cluster<spacedim, Number>(index_set, all_support_points, cell_size_at_dofs),
@@ -478,6 +625,9 @@ ClusterTree<spacedim, Number>::ClusterTree(
     nullptr,
     nullptr,
     nullptr);
+
+  internal_to_external_dof_numbering.resize(index_set.size());
+  external_to_internal_dof_numbering.resize(index_set.size());
 
   depth     = 1;
   max_level = 0;
@@ -493,10 +643,15 @@ ClusterTree<spacedim, Number>::ClusterTree(
   const ClusterTree<spacedim, Number> &cluster_tree)
   : root_node(nullptr)
   , leaf_set(0)
+  , internal_to_external_dof_numbering(
+      cluster_tree.internal_to_external_dof_numbering)
+  , external_to_internal_dof_numbering(
+      cluster_tree.external_to_internal_dof_numbering)
   , depth(cluster_tree.depth)
   , max_level(cluster_tree.max_level)
   , n_min(cluster_tree.n_min)
   , node_num(cluster_tree.node_num)
+  , index_sets_cleared(cluster_tree.index_sets_cleared)
 {
   root_node = CopyTree(cluster_tree.get_root());
   build_leaf_set();
@@ -506,7 +661,7 @@ ClusterTree<spacedim, Number>::ClusterTree(
 template <int spacedim, typename Number>
 ClusterTree<spacedim, Number>::~ClusterTree()
 {
-  DeleteTree(root_node);
+  release();
 }
 
 
@@ -518,11 +673,14 @@ ClusterTree<spacedim, Number>::release()
 
   root_node = nullptr;
   leaf_set.clear();
+  internal_to_external_dof_numbering.clear();
+  external_to_internal_dof_numbering.clear();
 
-  depth     = 0;
-  max_level = -1;
-  n_min     = 2;
-  node_num  = 0;
+  depth              = 0;
+  max_level          = -1;
+  n_min              = 2;
+  node_num           = 0;
+  index_sets_cleared = false;
 }
 
 
@@ -535,11 +693,16 @@ operator=(const ClusterTree<spacedim, Number> &cluster_tree)
 
   root_node = CopyTree(cluster_tree.get_root());
   build_leaf_set();
+  internal_to_external_dof_numbering =
+    cluster_tree.internal_to_external_dof_numbering;
+  external_to_internal_dof_numbering =
+    cluster_tree.external_to_internal_dof_numbering;
 
-  depth     = cluster_tree.depth;
-  max_level = cluster_tree.max_level;
-  n_min     = cluster_tree.n_min;
-  node_num  = cluster_tree.node_num;
+  depth              = cluster_tree.depth;
+  max_level          = cluster_tree.max_level;
+  n_min              = cluster_tree.n_min;
+  node_num           = cluster_tree.node_num;
+  index_sets_cleared = cluster_tree.index_sets_cleared;
 
   return (*this);
 }
@@ -554,19 +717,27 @@ operator=(ClusterTree<spacedim, Number> &&cluster_tree)
 
   root_node = cluster_tree.get_root();
   leaf_set  = cluster_tree.leaf_set;
+  internal_to_external_dof_numbering =
+    cluster_tree.internal_to_external_dof_numbering;
+  external_to_internal_dof_numbering =
+    cluster_tree.external_to_internal_dof_numbering;
 
-  depth     = cluster_tree.depth;
-  max_level = cluster_tree.max_level;
-  n_min     = cluster_tree.n_min;
-  node_num  = cluster_tree.node_num;
+  depth              = cluster_tree.depth;
+  max_level          = cluster_tree.max_level;
+  n_min              = cluster_tree.n_min;
+  node_num           = cluster_tree.node_num;
+  index_sets_cleared = cluster_tree.index_sets_cleared;
 
   cluster_tree.root_node = nullptr;
   cluster_tree.leaf_set.clear();
+  cluster_tree.internal_to_external_dof_numbering.clear();
+  cluster_tree.external_to_internal_dof_numbering.clear();
 
-  cluster_tree.depth     = 0;
-  cluster_tree.max_level = -1;
-  cluster_tree.n_min     = 2;
-  cluster_tree.node_num  = 0;
+  cluster_tree.depth              = 0;
+  cluster_tree.max_level          = -1;
+  cluster_tree.n_min              = 2;
+  cluster_tree.node_num           = 0;
+  cluster_tree.index_sets_cleared = false;
 
   return (*this);
 }
@@ -986,9 +1157,84 @@ ClusterTree<spacedim, Number>::partition_from_cluster_node(
 
 template <int spacedim, typename Number>
 void
+ClusterTree<spacedim,
+            Number>::build_internal_and_external_dof_numbering_mappings()
+{
+  types::global_dof_index internal_index = 0;
+  for (node_const_pointer_type leaf_node : leaf_set)
+    {
+      for (types::global_dof_index external_index :
+           leaf_node->get_data_reference().get_index_set())
+        {
+          internal_to_external_dof_numbering[internal_index] = external_index;
+          external_to_internal_dof_numbering[external_index] = internal_index;
+
+          internal_index++;
+        }
+    }
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::set_index_ranges_and_clear_index_sets()
+{
+  Assert(external_to_internal_dof_numbering.size() > 0,
+         ExcLowerRange(external_to_internal_dof_numbering.size(), 1));
+
+  set_index_ranges_and_clear_index_sets_from_cluster_node(root_node);
+  index_sets_cleared = true;
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::
+  set_index_ranges_and_clear_index_sets_from_cluster_node(
+    node_pointer_type current_cluster_node)
+{
+  Assert(external_to_internal_dof_numbering.size() > 0,
+         ExcLowerRange(external_to_internal_dof_numbering.size(), 1));
+
+  std::vector<types::global_dof_index> &index_set =
+    current_cluster_node->get_data_reference().get_index_set();
+  std::array<types::global_dof_index, 2> &index_range =
+    current_cluster_node->get_data_reference().get_index_range();
+
+  if (current_cluster_node->get_child_num() > 0)
+    {
+      set_index_ranges_and_clear_index_sets_from_cluster_node(
+        current_cluster_node->get_child_pointer(0));
+      set_index_ranges_and_clear_index_sets_from_cluster_node(
+        current_cluster_node->get_child_pointer(1));
+
+      index_range[0] = current_cluster_node->get_child_pointer(0)
+                         ->get_data_reference()
+                         .get_index_range()[0];
+      index_range[1] = current_cluster_node->get_child_pointer(1)
+                         ->get_data_reference()
+                         .get_index_range()[1];
+    }
+  else
+    {
+      // N.B. For the index set in a leaf cluster node, it must be an increasing
+      // set of integers.
+      index_range[0] = external_to_internal_dof_numbering[index_set[0]];
+      index_range[1] =
+        external_to_internal_dof_numbering[index_set[index_set.size() - 1]] + 1;
+    }
+
+  index_set.clear();
+}
+
+
+template <int spacedim, typename Number>
+void
 ClusterTree<spacedim, Number>::partition()
 {
   partition_from_cluster_node(root_node, leaf_set);
+  build_internal_and_external_dof_numbering_mappings();
+  set_index_ranges_and_clear_index_sets();
 
   depth     = calc_depth(root_node);
   max_level = depth - 1;
@@ -1001,6 +1247,8 @@ ClusterTree<spacedim, Number>::partition(
   const std::vector<Point<spacedim>> &all_support_points)
 {
   partition_from_cluster_node(root_node, all_support_points, leaf_set);
+  build_internal_and_external_dof_numbering_mappings();
+  set_index_ranges_and_clear_index_sets();
 
   depth     = calc_depth(root_node);
   max_level = depth - 1;
@@ -1016,6 +1264,8 @@ ClusterTree<spacedim, Number>::partition(
                               all_support_points,
                               cell_size_at_dofs,
                               leaf_set);
+  build_internal_and_external_dof_numbering_mappings();
+  set_index_ranges_and_clear_index_sets();
 
   depth     = calc_depth(root_node);
   max_level = depth - 1;
@@ -1056,6 +1306,38 @@ ClusterTree<spacedim, Number>::build_leaf_set()
 
 
 template <int spacedim, typename Number>
+std::vector<types::global_dof_index> &
+ClusterTree<spacedim, Number>::get_internal_to_external_dof_numbering()
+{
+  return internal_to_external_dof_numbering;
+}
+
+
+template <int spacedim, typename Number>
+const std::vector<types::global_dof_index> &
+ClusterTree<spacedim, Number>::get_internal_to_external_dof_numbering() const
+{
+  return internal_to_external_dof_numbering;
+}
+
+
+template <int spacedim, typename Number>
+std::vector<types::global_dof_index> &
+ClusterTree<spacedim, Number>::get_external_to_internal_dof_numbering()
+{
+  return external_to_internal_dof_numbering;
+}
+
+
+template <int spacedim, typename Number>
+const std::vector<types::global_dof_index> &
+ClusterTree<spacedim, Number>::get_external_to_internal_dof_numbering() const
+{
+  return external_to_internal_dof_numbering;
+}
+
+
+template <int spacedim, typename Number>
 unsigned int
 ClusterTree<spacedim, Number>::get_n_min() const
 {
@@ -1082,6 +1364,103 @@ unsigned int
 ClusterTree<spacedim, Number>::get_node_num() const
 {
   return node_num;
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::print_tree_info_as_dot(std::ostream &out) const
+{
+  /**
+   * Write the header of the Graphviz dot file.
+   */
+  out << "#@startdot\n";
+  out << "digraph clustertree {\n";
+
+  /**
+   * Define the node style.
+   */
+  out << "node [style=filled, shape=box]\n";
+
+  /**
+   * Add comment nodes.
+   */
+  out << "\"Non-leaf cluster\" [fillcolor=white]\n";
+  out << "\"Leaf cluster\" [fillcolor=red]\n";
+
+  _print_tree_info_as_dot_node(out, root_node);
+
+  /**
+   * Finalize the Graphviz dot file.
+   */
+  out << "}\n";
+  out << "#@enddot" << std::endl;
+}
+
+
+template <int spacedim, typename Number>
+void
+ClusterTree<spacedim, Number>::_print_tree_info_as_dot_node(
+  std::ostream &          out,
+  node_const_pointer_type cluster_node) const
+{
+  /**
+   * Create the graph node for the current cluster node.
+   */
+  out << "\"" << std::hex << cluster_node << "\""
+      << "[label=<<b>" << std::hex << cluster_node << "</b><br/>" << std::dec
+      << "Level: " << cluster_node->get_level() << "<br/>";
+  out << "Index set: [";
+  print_vector_values(out,
+                      cluster_node->get_data_reference().get_index_set(),
+                      ",",
+                      false);
+  out << "]<br/>";
+  out << "Index range: [";
+  print_vector_values(out,
+                      cluster_node->get_data_reference().get_index_range(),
+                      ",",
+                      false);
+  out << ")<br/>";
+  out << "Diameter: " << cluster_node->get_data_reference().get_diameter()
+      << ">,";
+
+  std::string node_color;
+
+  if (cluster_node->is_leaf())
+    {
+      node_color = "red";
+    }
+  else
+    {
+      node_color = "white";
+    }
+
+  out << "fillcolor = " << node_color << "]\n\n";
+
+  /**
+   * Construct the relationship between the current node and its children.
+   */
+  for (unsigned int i = 0; i < cluster_node->get_child_num(); i++)
+    {
+      Assert(cluster_node->get_child_pointer(i) != nullptr, ExcInternalError());
+
+      out << "\"" << std::hex << cluster_node << "\""
+          << "->"
+          << "\"" << std::hex << cluster_node->get_child_pointer(i) << "\"\n";
+    }
+
+  out << "\n";
+
+  /**
+   * Print each child node.
+   */
+  for (unsigned int i = 0; i < cluster_node->get_child_num(); i++)
+    {
+      Assert(cluster_node->get_child_pointer(i) != nullptr, ExcInternalError());
+
+      _print_tree_info_as_dot_node(out, cluster_node->get_child_pointer(i));
+    }
 }
 
 #endif /* INCLUDE_CLUSTER_TREE_H_ */

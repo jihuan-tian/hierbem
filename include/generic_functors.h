@@ -14,6 +14,7 @@
 
 #include <deal.II/lac/lapack_support.h>
 
+#include <array>
 #include <cmath>
 #include <forward_list>
 #include <iterator>
@@ -53,19 +54,6 @@ find_pointer_data(InputIterator first,
 
   return last;
 }
-
-
-/**
- * Build a map from global indices to local indices based on the given index
- * set, which is actually a map from local indices to global indices.
- * @param index_set_as_local_to_global_map
- * @param global_to_local_map
- */
-void
-build_index_set_global_to_local_map(
-  const std::vector<dealii::types::global_dof_index>
-    &index_set_as_local_to_global_map,
-  std::map<dealii::types::global_dof_index, size_t> &global_to_local_map);
 
 
 /**
@@ -304,6 +292,93 @@ VectorToTensor(const VectorType &v)
     }
 
   return t;
+}
+
+
+/**
+ * Check if @p range1 is a subset of @p range2.
+ *
+ * @param range1
+ * @param range2
+ * @return
+ */
+template <typename Value>
+bool
+is_subset(const std::array<Value, 2> &range1,
+          const std::array<Value, 2> &range2)
+{
+  return ((range1[0] >= range2[0]) && (range1[1] <= range2[1]));
+}
+
+
+/**
+ * Check if @p range1 is a proper subset of @p range2.
+ *
+ * @param range1
+ * @param range2
+ * @return
+ */
+template <typename Value>
+bool
+is_proper_subset(const std::array<Value, 2> &range1,
+                 const std::array<Value, 2> &range2)
+{
+  return (((range1[0] >= range2[0]) && (range1[1] < range2[1])) ||
+          ((range1[0] > range2[0]) && (range1[1] <= range2[1])));
+}
+
+
+/**
+ * Check if @p range1 is a super set of @p range2.
+ *
+ * @param range1
+ * @param range2
+ * @return
+ */
+template <typename Value>
+bool
+is_superset(const std::array<Value, 2> &range1,
+            const std::array<Value, 2> &range2)
+{
+  return ((range1[0] <= range2[0]) && (range1[1] >= range2[1]));
+}
+
+
+/**
+ * Check if @p range1 is a proper super set of @p range2.
+ *
+ * @param range1
+ * @param range2
+ * @return
+ */
+template <typename Value>
+bool
+is_proper_superset(const std::array<Value, 2> &range1,
+                   const std::array<Value, 2> &range2)
+{
+  return (((range1[0] <= range2[0]) && (range1[1] > range2[1])) ||
+          ((range1[0] < range2[0]) && (range1[1] >= range2[1])));
+}
+
+
+template <typename Value>
+void
+intersect(const std::array<Value, 2> &range1,
+          const std::array<Value, 2> &range2,
+          std::array<Value, 2> &      range_intersection)
+{
+  range_intersection[0] = 0;
+  range_intersection[1] = 0;
+
+  types::global_dof_index larger_lower_bound  = std::max(range1[0], range2[0]);
+  types::global_dof_index smaller_upper_bound = std::min(range1[1], range2[1]);
+
+  if (smaller_upper_bound > larger_lower_bound)
+    {
+      // When a non-empty range is obtained.
+      range_intersection[0] = larger_lower_bound;
+      range_intersection[1] = smaller_upper_bound;
+    }
 }
 
 #endif /* INCLUDE_GENERIC_FUNCTORS_H_ */

@@ -292,27 +292,75 @@ public:
    * Perform a recursive partition by starting from the root node. The
    * evaluation of the admissibility condition has no mesh cell size correction.
    *
+   * \mynote{The index sets held by the two clusters share a same external
+   * DoF numbering.}
+   *
    * @param all_support_points All the support points.
    */
   void
-  partition(const std::vector<Point<spacedim>> &all_support_points);
+  partition(const std::vector<types::global_dof_index>
+              &internal_to_external_dof_numbering,
+            const std::vector<Point<spacedim>> &all_support_points);
 
+  /**
+   * Perform a recursive partition by starting from the root node. The
+   * evaluation of the admissibility condition has no mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters share a same internal DoF numbering, which need to be mapped to
+   * the external numbering for accessing the list of support point
+   * coordinates.}
+   *
+   * @param internal_to_external_dof_numbering_I
+   * @param internal_to_external_dof_numbering_J
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   */
   void
-  partition(const std::vector<Point<spacedim>> &all_support_points_in_I,
+  partition(const std::vector<types::global_dof_index>
+              &internal_to_external_dof_numbering_I,
+            const std::vector<types::global_dof_index>
+              &internal_to_external_dof_numbering_J,
+            const std::vector<Point<spacedim>> &all_support_points_in_I,
             const std::vector<Point<spacedim>> &all_support_points_in_J);
 
   /**
    * Perform a recursive partition by starting from the root node. The
    * evaluation of the admissibility condition has mesh cell size correction.
    *
+   * \mynote{The index sets held by the two clusters share a same external
+   * DoF numbering.}
+   *
    * @param all_support_points All the support points.
    */
   void
-  partition(const std::vector<Point<spacedim>> &all_support_points,
+  partition(const std::vector<types::global_dof_index>
+              &internal_to_external_dof_numbering,
+            const std::vector<Point<spacedim>> &all_support_points,
             const std::vector<Number> &         cell_size_at_dofs);
 
+  /**
+   * Perform a recursive partition by starting from the root node. The
+   * evaluation of the admissibility condition has mesh cell size correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters share a same internal DoF numbering, which need to be mapped to
+   * the external numbering for accessing the list of support point
+   * coordinates.}
+   *
+   * @param internal_to_external_dof_numbering_I
+   * @param internal_to_external_dof_numbering_J
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param cell_size_at_dofs_in_I
+   * @param cell_size_at_dofs_in_J
+   */
   void
-  partition(const std::vector<Point<spacedim>> &all_support_points_in_I,
+  partition(const std::vector<types::global_dof_index>
+              &internal_to_external_dof_numbering_I,
+            const std::vector<types::global_dof_index>
+              &internal_to_external_dof_numbering_J,
+            const std::vector<Point<spacedim>> &all_support_points_in_I,
             const std::vector<Point<spacedim>> &all_support_points_in_J,
             const std::vector<Number> &         cell_size_at_dofs_in_I,
             const std::vector<Number> &         cell_size_at_dofs_in_J);
@@ -414,11 +462,11 @@ public:
    * Each leaf node is written in the following format:
    *
    * >
-   * [list-of-indices-in-cluster-tau],[list-of-indices-in-cluster-sigma],is_near_field
+   * [index-range-in-cluster-tau],[index-range-in-cluster-sigma],is_near_field
    *
    * For example,
    *
-   * > [1 2 3 ...],[7 8 9 ...],1
+   * > [0 15),[15 20),1
    * @param out
    */
   void
@@ -431,11 +479,11 @@ public:
    * Each leaf node is written in the following format:
    *
    * >
-   * [list-of-indices-in-cluster-tau],[list-of-indices-in-cluster-sigma],is_near_field,rank
+   * [index-range-in-cluster-tau],[index-range-in-cluster-sigma],is_near_field,rank
    *
    * For example,
    *
-   * > [1 2 3 ...],[7 8 9 ...],1,1
+   * > [0 15),[15 20),1,1
    * @param out
    */
   template <typename Number1 = double>
@@ -647,6 +695,9 @@ private:
    * N.B. The evaluation of the admissibility condition has no mesh cell size
    * correction.
    *
+   * \mynote{The index sets held by the two clusters share a same external
+   * DoF numbering.}
+   *
    * The algorithm performs an iteration over all the
    * children of the current block cluster \f$b = \tau \times \sigma\f$.
    * Because the map \f$S\f$ for generating the children of \f$b\f$ is
@@ -655,37 +706,102 @@ private:
    *
    * @param current_block_cluster_node The pointer to the block cluster node in
    * the tree, from which the admissible partition will be performed.
+   * @param internal_to_external_dof_numbering
    * @param all_support_points Spatial coordinates for all the support points.
    * @param leaf_set A list of block cluster node pointers which comprise the
    * leaf set with respect to \p current_block_cluster_node.
    */
   void
   partition_from_block_cluster_node(
-    node_pointer_type                   current_block_cluster_node,
+    node_pointer_type current_block_cluster_node,
+    const std::vector<types::global_dof_index>
+      &                                 internal_to_external_dof_numbering,
     const std::vector<Point<spacedim>> &all_support_points,
     std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
+  /**
+   * Perform a recursive partition by starting from a block cluster node in
+   * the tree.
+   *
+   * N.B. The evaluation of the admissibility condition has no mesh cell size
+   * correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters share a same internal DoF numbering, which need to be mapped to
+   * the external numbering for accessing the list of support point
+   * coordinates.}
+   *
+   * @param current_block_cluster_node
+   * @param internal_to_external_dof_numbering_I
+   * @param internal_to_external_dof_numbering_J
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param leaf_set_wrt_current_node
+   */
   void
   partition_from_block_cluster_node(
-    node_pointer_type                   current_block_cluster_node,
+    node_pointer_type current_block_cluster_node,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_I,
+    const std::vector<types::global_dof_index>
+      &                                 internal_to_external_dof_numbering_J,
     const std::vector<Point<spacedim>> &all_support_points_in_I,
     const std::vector<Point<spacedim>> &all_support_points_in_J,
     std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
   /**
-   * Same as above but the evaluation of the admissibility condition has mesh
-   * cell size correction.
+   * Perform a recursive partition by starting from a block cluster node in
+   * the tree.
+   *
+   * N.B. The evaluation of the admissibility condition has the mesh cell size
+   * correction.
+   *
+   * \mynote{The index sets held by the two clusters share a same external
+   * DoF numbering.}
+   *
+   * @param current_block_cluster_node
+   * @param internal_to_external_dof_numbering
+   * @param all_support_points
+   * @param cell_size_at_dofs
+   * @param leaf_set_wrt_current_node
    */
   void
   partition_from_block_cluster_node(
-    node_pointer_type                   current_block_cluster_node,
+    node_pointer_type current_block_cluster_node,
+    const std::vector<types::global_dof_index>
+      &                                 internal_to_external_dof_numbering,
     const std::vector<Point<spacedim>> &all_support_points,
     const std::vector<Number> &         cell_size_at_dofs,
     std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
 
+  /**
+   * Perform a recursive partition by starting from a block cluster node in
+   * the tree.
+   *
+   * N.B. The evaluation of the admissibility condition has the mesh cell size
+   * correction.
+   *
+   * \mynote{The index sets inferred from the index ranges held by the two
+   * clusters share a same internal DoF numbering, which need to be mapped to
+   * the external numbering for accessing the list of support point
+   * coordinates.}
+   *
+   * @param current_block_cluster_node
+   * @param internal_to_external_dof_numbering_I
+   * @param internal_to_external_dof_numbering_J
+   * @param all_support_points_in_I
+   * @param all_support_points_in_J
+   * @param cell_size_at_dofs_in_I
+   * @param cell_size_at_dofs_in_J
+   * @param leaf_set_wrt_current_node
+   */
   void
   partition_from_block_cluster_node(
-    node_pointer_type                   current_block_cluster_node,
+    node_pointer_type current_block_cluster_node,
+    const std::vector<types::global_dof_index>
+      &internal_to_external_dof_numbering_I,
+    const std::vector<types::global_dof_index>
+      &                                 internal_to_external_dof_numbering_J,
     const std::vector<Point<spacedim>> &all_support_points_in_I,
     const std::vector<Point<spacedim>> &all_support_points_in_J,
     const std::vector<Number> &         cell_size_at_dofs_in_I,
@@ -803,8 +919,8 @@ operator<<(std::ostream &                            out,
  * parent \bcn should firstly be erased from the leaf set. This operation is not
  * included in this function and should be performed beforehand.}
  *
- * @param bc_node
- * @param bc_tree
+ * @param bc_node Pointer to the block cluster node
+ * @param bc_tree Reference to the block cluster tree
  * @param split_mode
  * @param if_add_child_nodes_to_leaf_set If the newly created block cluster
  * nodes will be appended to the leaf set of the block cluster tree.
@@ -860,9 +976,9 @@ split_block_cluster_node(
 
               /**
                * <li> Create a new block cluster node by constructing its
-               * index set as \f$\tau^* \times \sigma\f$ with \f$\tau^*
-               * \in S(\tau)\f$. Its parent node is set to the current block
-               * cluster node.
+               * index set or index range as \f$\tau^* \times \sigma\f$ with
+               * \f$\tau^* \in S(\tau)\f$. Its parent node is set to the current
+               * block cluster node.
                */
               typename BlockClusterTree<spacedim, Number>::node_pointer_type
                 child_block_cluster_node = CreateTreeNode<
@@ -1494,9 +1610,14 @@ BlockClusterTree<spacedim, Number>::partition_fine_non_tensor_product()
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition(
+  const std::vector<types::global_dof_index>
+    &                                 internal_to_external_dof_numbering,
   const std::vector<Point<spacedim>> &all_support_points)
 {
-  partition_from_block_cluster_node(root_node, all_support_points, leaf_set);
+  partition_from_block_cluster_node(root_node,
+                                    internal_to_external_dof_numbering,
+                                    all_support_points,
+                                    leaf_set);
 
   categorize_near_and_far_field_sets();
 
@@ -1507,10 +1628,16 @@ BlockClusterTree<spacedim, Number>::partition(
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition(
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_I,
+  const std::vector<types::global_dof_index>
+    &                                 internal_to_external_dof_numbering_J,
   const std::vector<Point<spacedim>> &all_support_points_in_I,
   const std::vector<Point<spacedim>> &all_support_points_in_J)
 {
   partition_from_block_cluster_node(root_node,
+                                    internal_to_external_dof_numbering_I,
+                                    internal_to_external_dof_numbering_J,
                                     all_support_points_in_I,
                                     all_support_points_in_J,
                                     leaf_set);
@@ -1524,10 +1651,13 @@ BlockClusterTree<spacedim, Number>::partition(
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition(
+  const std::vector<types::global_dof_index>
+    &                                 internal_to_external_dof_numbering,
   const std::vector<Point<spacedim>> &all_support_points,
   const std::vector<Number> &         cell_size_at_dofs)
 {
   partition_from_block_cluster_node(root_node,
+                                    internal_to_external_dof_numbering,
                                     all_support_points,
                                     cell_size_at_dofs,
                                     leaf_set);
@@ -1541,12 +1671,18 @@ BlockClusterTree<spacedim, Number>::partition(
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition(
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_I,
+  const std::vector<types::global_dof_index>
+    &                                 internal_to_external_dof_numbering_J,
   const std::vector<Point<spacedim>> &all_support_points_in_I,
   const std::vector<Point<spacedim>> &all_support_points_in_J,
   const std::vector<Number> &         cell_size_at_dofs_in_I,
   const std::vector<Number> &         cell_size_at_dofs_in_J)
 {
   partition_from_block_cluster_node(root_node,
+                                    internal_to_external_dof_numbering_I,
+                                    internal_to_external_dof_numbering_J,
                                     all_support_points_in_I,
                                     all_support_points_in_J,
                                     cell_size_at_dofs_in_I,
@@ -2694,14 +2830,16 @@ BlockClusterTree<spacedim, Number>::
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
-  node_pointer_type                   current_block_cluster_node,
+  node_pointer_type current_block_cluster_node,
+  const std::vector<types::global_dof_index>
+    &                                 internal_to_external_dof_numbering,
   const std::vector<Point<spacedim>> &all_support_points,
   std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
 {
   leaf_set_wrt_current_node.clear();
 
   if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
-        eta, all_support_points, n_min))
+        eta, internal_to_external_dof_numbering, all_support_points, n_min))
     {
       /**
        * Push back the current cluster node, which is small, to the leaf set and
@@ -2778,9 +2916,11 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
               child_counter++;
 
               std::vector<node_pointer_type> leaf_set_wrt_child_node;
-              partition_from_block_cluster_node(child_block_cluster_node,
-                                                all_support_points,
-                                                leaf_set_wrt_child_node);
+              partition_from_block_cluster_node(
+                child_block_cluster_node,
+                internal_to_external_dof_numbering,
+                all_support_points,
+                leaf_set_wrt_child_node);
 
               /**
                * Merge the leaf set wrt. the child block cluster node into the
@@ -2819,7 +2959,11 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
-  node_pointer_type                   current_block_cluster_node,
+  node_pointer_type current_block_cluster_node,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_I,
+  const std::vector<types::global_dof_index>
+    &                                 internal_to_external_dof_numbering_J,
   const std::vector<Point<spacedim>> &all_support_points_in_I,
   const std::vector<Point<spacedim>> &all_support_points_in_J,
   std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
@@ -2827,7 +2971,12 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
   leaf_set_wrt_current_node.clear();
 
   if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
-        eta, all_support_points_in_I, all_support_points_in_J, n_min))
+        eta,
+        internal_to_external_dof_numbering_I,
+        internal_to_external_dof_numbering_J,
+        all_support_points_in_I,
+        all_support_points_in_J,
+        n_min))
     {
       /**
        * Push back the current cluster node, which is small, to the leaf set and
@@ -2904,10 +3053,13 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
               child_counter++;
 
               std::vector<node_pointer_type> leaf_set_wrt_child_node;
-              partition_from_block_cluster_node(child_block_cluster_node,
-                                                all_support_points_in_I,
-                                                all_support_points_in_J,
-                                                leaf_set_wrt_child_node);
+              partition_from_block_cluster_node(
+                child_block_cluster_node,
+                internal_to_external_dof_numbering_I,
+                internal_to_external_dof_numbering_J,
+                all_support_points_in_I,
+                all_support_points_in_J,
+                leaf_set_wrt_child_node);
 
               /**
                * Merge the leaf set wrt. the child block cluster node into the
@@ -2946,7 +3098,9 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
-  node_pointer_type                   current_block_cluster_node,
+  node_pointer_type current_block_cluster_node,
+  const std::vector<types::global_dof_index>
+    &                                 internal_to_external_dof_numbering,
   const std::vector<Point<spacedim>> &all_support_points,
   const std::vector<Number> &         cell_size_at_dofs,
   std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
@@ -2954,7 +3108,11 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
   leaf_set_wrt_current_node.clear();
 
   if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
-        eta, all_support_points, cell_size_at_dofs, n_min))
+        eta,
+        internal_to_external_dof_numbering,
+        all_support_points,
+        cell_size_at_dofs,
+        n_min))
     {
       /**
        * Push back the current cluster node, which is small, to the leaf set and
@@ -3028,10 +3186,12 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
               child_counter++;
 
               std::vector<node_pointer_type> leaf_set_wrt_child_node;
-              partition_from_block_cluster_node(child_block_cluster_node,
-                                                all_support_points,
-                                                cell_size_at_dofs,
-                                                leaf_set_wrt_child_node);
+              partition_from_block_cluster_node(
+                child_block_cluster_node,
+                internal_to_external_dof_numbering,
+                all_support_points,
+                cell_size_at_dofs,
+                leaf_set_wrt_child_node);
 
               /**
                * Merge the leaf set wrt. the child block cluster node into the
@@ -3070,7 +3230,11 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
 template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
-  node_pointer_type                   current_block_cluster_node,
+  node_pointer_type current_block_cluster_node,
+  const std::vector<types::global_dof_index>
+    &internal_to_external_dof_numbering_I,
+  const std::vector<types::global_dof_index>
+    &                                 internal_to_external_dof_numbering_J,
   const std::vector<Point<spacedim>> &all_support_points_in_I,
   const std::vector<Point<spacedim>> &all_support_points_in_J,
   const std::vector<Number> &         cell_size_at_dofs_in_I,
@@ -3081,6 +3245,8 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
 
   if (current_block_cluster_node->get_data_pointer()->is_admissible_or_small(
         eta,
+        internal_to_external_dof_numbering_I,
+        internal_to_external_dof_numbering_J,
         all_support_points_in_I,
         all_support_points_in_J,
         cell_size_at_dofs_in_I,
@@ -3159,12 +3325,15 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
               child_counter++;
 
               std::vector<node_pointer_type> leaf_set_wrt_child_node;
-              partition_from_block_cluster_node(child_block_cluster_node,
-                                                all_support_points_in_I,
-                                                all_support_points_in_J,
-                                                cell_size_at_dofs_in_I,
-                                                cell_size_at_dofs_in_J,
-                                                leaf_set_wrt_child_node);
+              partition_from_block_cluster_node(
+                child_block_cluster_node,
+                internal_to_external_dof_numbering_I,
+                internal_to_external_dof_numbering_J,
+                all_support_points_in_I,
+                all_support_points_in_J,
+                cell_size_at_dofs_in_I,
+                cell_size_at_dofs_in_J,
+                leaf_set_wrt_child_node);
 
               /**
                * Merge the leaf set wrt. the child block cluster node into the
@@ -3338,6 +3507,9 @@ BlockClusterTree<spacedim, Number>::find_leaf_bc_node_not_in_partition(
 /**
  * Find a block cluster node in the given partition which has nonempty
  * intersection with the current block cluster node.
+ *
+ * @param current_bc_node
+ * @param partition
  * @return
  */
 template <int spacedim, typename Number>
@@ -3426,18 +3598,18 @@ print_block_cluster_node_info_as_dot_node(
                       current_bc_node->get_data_reference()
                         .get_tau_node()
                         ->get_data_reference()
-                        .get_index_set(),
+                        .get_index_range(),
                       ",",
                       false);
-  out << "]<br/>sigma: [";
+  out << ")<br/>sigma: [";
   print_vector_values(out,
                       current_bc_node->get_data_reference()
                         .get_sigma_node()
                         ->get_data_reference()
-                        .get_index_set(),
+                        .get_index_range(),
                       ",",
                       false);
-  out << "]<br/>Level: " << current_bc_node->get_level() << "<br/>";
+  out << ")<br/>Level: " << current_bc_node->get_level() << "<br/>";
   out << "Parent: " << std::hex << current_bc_node->Parent() << ">,";
 
   std::string node_color;
@@ -3540,30 +3712,30 @@ BlockClusterTree<spacedim, Number>::write_leaf_set(std::ostream &out) const
   for (node_pointer_type bc_node : leaf_set)
     {
       /**
-       * Print index set of cluster \f$\tau\f$.
+       * Print index range of cluster \f$\tau\f$.
        */
       out << "[";
       print_vector_values(out,
                           bc_node->get_data_reference()
                             .get_tau_node()
                             ->get_data_reference()
-                            .get_index_set(),
+                            .get_index_range(),
                           " ",
                           false);
-      out << "],";
+      out << "),";
 
       /**
-       * Print index set of cluster \f$\sigma\f$.
+       * Print index range of cluster \f$\sigma\f$.
        */
       out << "[";
       print_vector_values(out,
                           bc_node->get_data_reference()
                             .get_sigma_node()
                             ->get_data_reference()
-                            .get_index_set(),
+                            .get_index_range(),
                           " ",
                           false);
-      out << "],";
+      out << "),";
 
       /**
        * Print the \p is_near_field flag.
@@ -3584,30 +3756,30 @@ BlockClusterTree<spacedim, Number>::write_leaf_set(
 {
   for (node_pointer_type bc_node : leaf_set)
     {
-      const std::vector<types::global_dof_index> &tau_index_set =
+      const std::array<types::global_dof_index, 2> &tau_index_range =
         bc_node->get_data_reference()
           .get_tau_node()
           ->get_data_reference()
-          .get_index_set();
-      const std::vector<types::global_dof_index> &sigma_index_set =
+          .get_index_range();
+      const std::array<types::global_dof_index, 2> &sigma_index_range =
         bc_node->get_data_reference()
           .get_sigma_node()
           ->get_data_reference()
-          .get_index_set();
+          .get_index_range();
 
       /**
-       * Print index set of cluster \f$\tau\f$.
+       * Print index range of cluster \f$\tau\f$.
        */
       out << "[";
-      print_vector_values(out, tau_index_set, " ", false);
-      out << "],";
+      print_vector_values(out, tau_index_range, " ", false);
+      out << "),";
 
       /**
-       * Print index set of cluster \f$\sigma\f$.
+       * Print index range of cluster \f$\sigma\f$.
        */
       out << "[";
-      print_vector_values(out, sigma_index_set, " ", false);
-      out << "],";
+      print_vector_values(out, sigma_index_range, " ", false);
+      out << "),";
 
       /**
        * Print the \p is_near_field flag.
@@ -3617,15 +3789,16 @@ BlockClusterTree<spacedim, Number>::write_leaf_set(
       /**
        * Make a local copy of the matrix block and calculate its rank using SVD.
        */
-      const size_t                 nrows = tau_index_set.size();
-      const size_t                 ncols = sigma_index_set.size();
+      const size_t nrows = tau_index_range[1] - tau_index_range[0];
+      const size_t ncols = sigma_index_range[1] - sigma_index_range[0];
       LAPACKFullMatrixExt<Number1> local_matrix(nrows, ncols);
 
       for (size_t i = 0; i < nrows; i++)
         {
           for (size_t j = 0; j < ncols; j++)
             {
-              local_matrix(i, j) = matrix(tau_index_set[i], sigma_index_set[j]);
+              local_matrix(i, j) =
+                matrix(tau_index_range[0] + i, sigma_index_range[0] + j);
             }
         }
 

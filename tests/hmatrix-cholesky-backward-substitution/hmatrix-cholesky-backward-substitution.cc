@@ -68,6 +68,7 @@ main()
   /**
    * Solve the matrix using forward substitution.
    */
+  H.set_state(HMatrixSupport::State::cholesky);
   Vector<double> x;
   H.solve_cholesky_by_backward_substitution(x, b);
 

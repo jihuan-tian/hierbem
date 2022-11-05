@@ -18,7 +18,7 @@
 using namespace boost::program_options;
 
 int
-main(int argc, char *argv[])
+main()
 {
   const unsigned int p = 4;
   const unsigned int n = std::pow(2, p);
@@ -34,39 +34,39 @@ main(int argc, char *argv[])
     }
 
   const unsigned int n_min = 1;
-  unsigned int       fixed_rank_k;
+  unsigned int       fixed_rank_k = 2;
 
-  options_description opts("hmatrix-hmatrix-mmult-all-fine-ntp options");
-  opts.add_options()("help,h", "Display this help")("rank,r",
-                                                    value<unsigned int>(),
-                                                    "Rank for rank-k matrix");
+  //! options_description opts("hmatrix-hmatrix-mmult-all-fine-ntp options");
+  //! opts.add_options()("help,h", "Display this help")("rank,r",
+  //!                                                   value<unsigned int>(),
+  //!                                                   "Rank for rank-k matrix");
 
-  variables_map vm;
-  store(parse_command_line(argc, argv, opts), vm);
-  notify(vm);
+  //! variables_map vm;
+  //! store(parse_command_line(argc, argv, opts), vm);
+  //! notify(vm);
 
-  if (vm.empty())
-    {
-      std::cout << "Please provide command line options!" << std::endl;
-      std::cout << opts << std::endl;
-      return 0;
-    }
+  //! if (vm.empty())
+  //!   {
+  //!     std::cout << "Please provide command line options!" << std::endl;
+  //!     std::cout << opts << std::endl;
+  //!     return 0;
+  //!   }
 
-  if (vm.count("help"))
-    {
-      std::cout << opts << std::endl;
-      return 0;
-    }
+  //! if (vm.count("help"))
+  //!   {
+  //!     std::cout << opts << std::endl;
+  //!     return 0;
+  //!   }
 
-  if (vm.count("rank"))
-    {
-      fixed_rank_k = vm["rank"].as<unsigned int>();
-    }
-  else
-    {
-      fixed_rank_k = 1;
-    }
-  std::cout << "fixed_rank_k: " << fixed_rank_k << std::endl;
+  //! if (vm.count("rank"))
+  //!   {
+  //!     fixed_rank_k = vm["rank"].as<unsigned int>();
+  //!   }
+  //! else
+  //!   {
+  //!     fixed_rank_k = 1;
+  //!   }
+  //! std::cout << "fixed_rank_k: " << fixed_rank_k << std::endl;
 
   /**
    * Generate cluster tree.

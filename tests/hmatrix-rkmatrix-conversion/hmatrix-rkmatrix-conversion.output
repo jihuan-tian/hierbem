@@ -136,7 +136,7 @@
 # type: scalar struct
 # ndims: 2
 1 1
-# length: 5
+# length: 6
 # name: A
 # type: matrix
 # rows: 128
@@ -406,6 +406,11 @@
 
 
 # name: rank
+# type: scalar
+2
+
+
+# name: formal_rank
 # type: scalar
 2
 

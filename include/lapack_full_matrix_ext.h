@@ -9,7 +9,6 @@
 #define INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 
 #include <limits>
-#include <map>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -246,41 +245,41 @@ public:
 
   /**
    * Construct a full matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ from the global full matrix \p M.
-   * @param tau
-   * @param sigma
+   * \times \sigma\f$ defined by their index ranges from the global full matrix \p M.
+   *
+   * @param row_index_range
+   * @param column_index_range
    * @param M
    */
   LAPACKFullMatrixExt(
-    const std::vector<types::global_dof_index> &tau_index_set,
-    const std::vector<types::global_dof_index> &sigma_index_set,
-    const LAPACKFullMatrixExt<Number> &         M);
+    const std::array<types::global_dof_index, 2> &row_index_range,
+    const std::array<types::global_dof_index, 2> &column_index_range,
+    const LAPACKFullMatrixExt<Number> &           M);
 
   /**
    * Construct a full matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ from the local full matrix \p M.
-   * @param tau
-   * @param sigma
-   * @param M
-   * @param row_index_global_to_local_map_for_M
-   * @param col_index_global_to_local_map_for_M
+   * \times \sigma\f$ defined by their index ranges from the local full matrix \p M.
+   *
+   * @param row_index_range
+   * @param column_index_range
+   * @param M The larger full matrix to be restricted.
+   * @param M_row_index_range
+   * @param M_column_index_range
    */
   LAPACKFullMatrixExt(
-    const std::vector<types::global_dof_index> &tau_index_set,
-    const std::vector<types::global_dof_index> &sigma_index_set,
-    const LAPACKFullMatrixExt<Number> &         M,
-    const std::map<types::global_dof_index, size_t>
-      &row_index_global_to_local_map_for_M,
-    const std::map<types::global_dof_index, size_t>
-      &col_index_global_to_local_map_for_M);
+    const std::array<types::global_dof_index, 2> &row_index_range,
+    const std::array<types::global_dof_index, 2> &column_index_range,
+    const LAPACKFullMatrixExt<Number> &           M,
+    const std::array<types::global_dof_index, 2> &M_row_index_range,
+    const std::array<types::global_dof_index, 2> &M_column_index_range);
 
   /**
    * Construct a full matrix \f$M\f$ from an agglomeration of two full
    * submatrices \f$M_1\f$ and \f$M_2\f$, which have been obtained from either
    * horizontal splitting or vertical splitting.
    *
-   * When the two submatrices have been obtained from horizontal splitting, \p
-   * vstack will be used for the agglomeration. When the two submatrices have
+   * When the two submatrices have been obtained from horizontal splitting,
+   * @p vstack will be used for the agglomeration. When the two submatrices have
    * been obtained from vertical splitting, \p hstack will be used for the
    * agglomeration.
    *
@@ -291,34 +290,6 @@ public:
   LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M1,
                       const LAPACKFullMatrixExt &M2,
                       bool                       is_horizontal_split);
-
-  /**
-   * Construct a full matrix \f$M\f$ from an agglomeration of two full
-   * submatrices \f$M_1\f$ and \f$M_2\f$, which have been obtained from either
-   * horizontal splitting or vertical splitting.
-   *
-   * When the two submatrices have been obtained from horizontal splitting, \p
-   * vstack will be used for the agglomeration. When the two submatrices have
-   * been obtained from vertical splitting, \p hstack will be used for the
-   * agglomeration.
-   *
-   * This method handles the case when the index sets of child clusters are
-   * interwoven together into the index set of the parent cluster. This is based
-   * on the fact that during DoF support point coordinates based cluster tree
-   * partition, the continuity of the index set is not preserved.
-   */
-  LAPACKFullMatrixExt(
-    const std::map<types::global_dof_index, size_t>
-      &row_index_global_to_local_map_for_M,
-    const std::map<types::global_dof_index, size_t>
-      &                        col_index_global_to_local_map_for_M,
-    const LAPACKFullMatrixExt &M1,
-    const std::vector<types::global_dof_index> &M1_tau_index_set,
-    const std::vector<types::global_dof_index> &M1_sigma_index_set,
-    const LAPACKFullMatrixExt &                 M2,
-    const std::vector<types::global_dof_index> &M2_tau_index_set,
-    const std::vector<types::global_dof_index> &M2_sigma_index_set,
-    bool                                        is_horizontal_split);
 
   /**
    * Construct a full matrix \f$M\f$ from an agglomeration of four
@@ -346,63 +317,6 @@ public:
                       const LAPACKFullMatrixExt &M12,
                       const LAPACKFullMatrixExt &M21,
                       const LAPACKFullMatrixExt &M22);
-
-  /**
-   * Construct a full matrix \f$M\f$ from an agglomeration of four
-   * full submatrices, \f$M_{11}, M_{12}, M_{21}, M_{22}\f$.
-   *
-   * \f[
-   * M =
-   * \begin{pmatrix}
-   * M_{11} & M_{12} \\
-   * M_{21} & M_{22}
-   * \end{pmatrix}
-   * \f]
-   *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   * 1. This method implements (7.7) for full matrices in Hackbusch's
-   * \f$\mathcal{H}\f$-matrix book.
-   * 2. This method handles the case when the index sets of several child
-   * clusters are interwoven together into the index set of the parent cluster.
-   * This is based on the fact that during DoF support point coordinates based
-   * cluster tree partition, the continuity of the index set is not preserved.
-   *   </dd>
-   * </dl>
-   *
-   * @param row_index_global_to_local_map_for_M
-   * @param col_index_global_to_local_map_for_M
-   * @param M11
-   * @param M11_tau_index_set
-   * @param M11_sigma_index_set
-   * @param M12
-   * @param M12_tau_index_set
-   * @param M12_sigma_index_set
-   * @param M21
-   * @param M21_tau_index_set
-   * @param M21_sigma_index_set
-   * @param M22
-   * @param M22_tau_index_set
-   * @param M22_sigma_index_set
-   */
-  LAPACKFullMatrixExt(
-    const std::map<types::global_dof_index, size_t>
-      &row_index_global_to_local_map_for_M,
-    const std::map<types::global_dof_index, size_t>
-      &                        col_index_global_to_local_map_for_M,
-    const LAPACKFullMatrixExt &M11,
-    const std::vector<types::global_dof_index> &M11_tau_index_set,
-    const std::vector<types::global_dof_index> &M11_sigma_index_set,
-    const LAPACKFullMatrixExt &                 M12,
-    const std::vector<types::global_dof_index> &M12_tau_index_set,
-    const std::vector<types::global_dof_index> &M12_sigma_index_set,
-    const LAPACKFullMatrixExt &                 M21,
-    const std::vector<types::global_dof_index> &M21_tau_index_set,
-    const std::vector<types::global_dof_index> &M21_sigma_index_set,
-    const LAPACKFullMatrixExt &                 M22,
-    const std::vector<types::global_dof_index> &M22_tau_index_set,
-    const std::vector<types::global_dof_index> &M22_sigma_index_set);
 
   /**
    * Overloaded assignment operator.
@@ -607,7 +521,7 @@ public:
    * Compute the LU factorization of the full matrix.
    *
    * \mynote{This is a copy of the same function in \p LAPACKFullMatrix<Number>
-   * in order that the permutation vector \p ipiv can be accessed, sincie \p
+   * in order that the permutation vector \p ipiv can be accessed, since \p
    * ipiv is private in \p LAPACKFullMatrix<Number>.}
    */
   void
@@ -750,8 +664,9 @@ public:
   transpose(LAPACKFullMatrixExt<Number> &AT) const;
 
   /**
-   * Fill a rectangular block. This function has the similar behavior as
-   * FullMatrix::fill.
+   * Fill a rectangular block into the current matrix. This function has the
+   * similar behavior as FullMatrix::fill.
+   *
    * @param src
    * @param dst_offset_i
    * @param dst_offset_j
@@ -770,45 +685,6 @@ public:
        const Number      factor       = 1.,
        const bool        transpose    = false,
        const bool        is_adding    = false);
-
-  /**
-   * Fill the matrix \p M into the current matrix based on the global block
-   * cluster indices.
-   * @param row_index_global_to_local_map
-   * @param col_index_global_to_local_map
-   * @param M
-   * @param M_tau_index_set
-   * @param M_sigma_index_set
-   */
-  void
-  fill(const std::map<types::global_dof_index, size_t>
-         &row_index_global_to_local_map,
-       const std::map<types::global_dof_index, size_t>
-         &                        col_index_global_to_local_map,
-       const LAPACKFullMatrixExt &M,
-       const std::vector<types::global_dof_index> &M_tau_index_set,
-       const std::vector<types::global_dof_index> &M_sigma_index_set,
-       const bool                                  is_adding = false);
-
-  /**
-   * Fill the data in \p M by rows into the current matrix based on the global
-   * cluster indices.
-   *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>This function will be used in the RkMatrix constructor via an
-   * agglomeration from submatrices.</dd>
-   * </dl>
-   * @param row_index_global_to_local_map
-   * @param M
-   * @param M_row_global_index_set
-   */
-  void
-  fill_rows(const std::map<types::global_dof_index, size_t>
-              &                        row_index_global_to_local_map,
-            const LAPACKFullMatrixExt &M,
-            const std::vector<types::global_dof_index> &M_row_global_index_set,
-            const bool                                  is_adding = false);
 
   /**
    * Fill the \p values to the \p row_index'th row of the current matrix.
@@ -838,18 +714,15 @@ public:
            const bool                         is_adding = false);
 
   /**
-   * Fill the data in \p M by columns into the current matrix based on the
-   * global cluster indices.
-   * @param col_index_global_to_local_map
-   * @param M
-   * @param M_col_global_index_set
+   * Fill the data in \p M by rows into the current matrix based on the their
+   * index ranges.
    */
   void
-  fill_cols(const std::map<types::global_dof_index, size_t>
-              &                        col_index_global_to_local_map,
-            const LAPACKFullMatrixExt &M,
-            const std::vector<types::global_dof_index> &M_col_global_index_set,
-            const bool                                  is_adding = false);
+  fill_rows(const std::array<types::global_dof_index, 2> &row_index_range,
+            const LAPACKFullMatrixExt<Number> &           M,
+            const std::array<types::global_dof_index, 2> &M_row_index_range,
+            const Number                                  factor    = 1.,
+            const bool                                    is_adding = false);
 
   /**
    * Fill the \p values to the \p col_index'th column of the current matrix.
@@ -1034,7 +907,7 @@ public:
   void
   add(const Number                       b,
       const LAPACKFullMatrixExt<Number> &B,
-      const bool                         is_result_matrix_symm_apriori = false);
+      const bool is_result_matrix_store_tril_only = false);
 
   /**
    * Matrix-vector multiplication which also handles the case when the matrix is
@@ -1153,6 +1026,23 @@ public:
    */
   LAPACKSupport::State
   get_state() const;
+
+  /**
+   * Solve the linear system with right hand side @p v and put the solution
+   * back to @p v. The matrix should be either triangular or LU/Cholesky
+   * factorization should be previously computed.
+   *
+   * The flag transposed indicates whether the solution of the transposed
+   * system is to be performed.
+   *
+   * \mynote{This function is copied from @p lapack_full_matrix.cc, so that the
+   * matrix state held by @p LAPACKFullMatrixExt can be accessed.}
+   *
+   * @param v
+   * @param transposed
+   */
+  void
+  solve(Vector<Number> &v, const bool transposed = false) const;
 
   /**
    * Solve the unit lower triangular matrix \f$Lx=b\f$ by forward substitution.
@@ -2274,10 +2164,11 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
 
 template <typename Number>
 LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
-  const std::vector<types::global_dof_index> &tau_index_set,
-  const std::vector<types::global_dof_index> &sigma_index_set,
-  const LAPACKFullMatrixExt<Number> &         M)
-  : LAPACKFullMatrix<Number>(tau_index_set.size(), sigma_index_set.size())
+  const std::array<types::global_dof_index, 2> &row_index_range,
+  const std::array<types::global_dof_index, 2> &column_index_range,
+  const LAPACKFullMatrixExt<Number> &           M)
+  : LAPACKFullMatrix<Number>(row_index_range[1] - row_index_range[0],
+                             column_index_range[1] - column_index_range[0])
   , state(LAPACKSupport::matrix)
   , property(LAPACKSupport::general)
   , tau(0)
@@ -2294,15 +2185,15 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
    * Extract the data for the submatrix defined on the block cluster \f$\tau
    * \times \sigma\f$ from the full global matrix \p M.
    */
-  for (size_type i = 0; i < tau_index_set.size(); i++)
+  for (size_type i = 0; i < LAPACKFullMatrix<Number>::m(); i++)
     {
-      for (size_type j = 0; j < sigma_index_set.size(); j++)
+      for (size_type j = 0; j < LAPACKFullMatrix<Number>::n(); j++)
         {
           /**
            * Because \p M is global, the indices in \f$\tau\f$ and \f$\sigma\f$
            * can be directly used for accessing the elements of \p M.
            */
-          (*this)(i, j) = M(tau_index_set.at(i), sigma_index_set.at(j));
+          (*this)(i, j) = M(row_index_range[0] + i, column_index_range[0] + j);
         }
     }
 }
@@ -2310,14 +2201,13 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
 
 template <typename Number>
 LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
-  const std::vector<types::global_dof_index> &tau_index_set,
-  const std::vector<types::global_dof_index> &sigma_index_set,
-  const LAPACKFullMatrixExt<Number> &         M,
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_M,
-  const std::map<types::global_dof_index, size_t>
-    &col_index_global_to_local_map_for_M)
-  : LAPACKFullMatrix<Number>(tau_index_set.size(), sigma_index_set.size())
+  const std::array<types::global_dof_index, 2> &row_index_range,
+  const std::array<types::global_dof_index, 2> &column_index_range,
+  const LAPACKFullMatrixExt<Number> &           M,
+  const std::array<types::global_dof_index, 2> &M_row_index_range,
+  const std::array<types::global_dof_index, 2> &M_column_index_range)
+  : LAPACKFullMatrix<Number>(row_index_range[1] - row_index_range[0],
+                             column_index_range[1] - column_index_range[0])
   , state(LAPACKSupport::matrix)
   , property(LAPACKSupport::general)
   , tau(0)
@@ -2326,21 +2216,29 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
   , ipiv()
 {
   /**
+   * Make an assertion that the index ranges for the matrix to be built should
+   * be subsets of the index ranges for the local matrix @p M.
+   */
+  Assert(is_subset(row_index_range, M_row_index_range) &&
+           is_subset(column_index_range, M_column_index_range),
+         ExcInternalError());
+
+  /**
    * Set the property of the parent class as well.
    */
   this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
 
   /**
-   * Extract the data for the submatrix block \f$b = \tau \times \sigma\f$ in
+   * Extract the data for the submatrix block \f$b = \tau \times \sigma\f$ from
    * the original matrix \p M.
    */
-  for (size_type i = 0; i < tau_index_set.size(); i++)
+  for (size_type i = 0; i < LAPACKFullMatrix<Number>::m(); i++)
     {
-      for (size_type j = 0; j < sigma_index_set.size(); j++)
+      for (size_type j = 0; j < LAPACKFullMatrix<Number>::n(); j++)
         {
           (*this)(i, j) =
-            M(row_index_global_to_local_map_for_M.at(tau_index_set.at(i)),
-              col_index_global_to_local_map_for_M.at(sigma_index_set.at(j)));
+            M(row_index_range[0] - M_row_index_range[0] + i,
+              column_index_range[0] - M_column_index_range[0] + j);
         }
     }
 }
@@ -2375,81 +2273,6 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M1,
 
 
 template <typename Number>
-LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_M,
-  const std::map<types::global_dof_index, size_t>
-    &                        col_index_global_to_local_map_for_M,
-  const LAPACKFullMatrixExt &M1,
-  const std::vector<types::global_dof_index> &M1_tau_index_set,
-  const std::vector<types::global_dof_index> &M1_sigma_index_set,
-  const LAPACKFullMatrixExt &                 M2,
-  const std::vector<types::global_dof_index> &M2_tau_index_set,
-  const std::vector<types::global_dof_index> &M2_sigma_index_set,
-  bool                                        is_horizontal_split)
-  : LAPACKFullMatrix<Number>()
-  , state(LAPACKSupport::matrix)
-  , property(LAPACKSupport::general)
-  , tau(0)
-  , work()
-  , iwork()
-  , ipiv()
-{
-  /**
-   * Set the property of the parent class as well.
-   */
-  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
-
-  /**
-   * Make assertions about the submatrix sizes and corresponding index sets.
-   */
-  AssertDimension(M1.m(), M1_tau_index_set.size());
-  AssertDimension(M1.n(), M1_sigma_index_set.size());
-  AssertDimension(M2.m(), M2_tau_index_set.size());
-  AssertDimension(M2.n(), M2_sigma_index_set.size());
-
-  if (is_horizontal_split)
-    {
-      /**
-       * Perform vertical stacking of the two submatrices.
-       */
-      AssertDimension(M1.n(), M2.n());
-      Assert(M1_sigma_index_set == M2_sigma_index_set, ExcInternalError());
-      AssertDimension(row_index_global_to_local_map_for_M.size(),
-                      M1.m() + M2.m());
-      AssertDimension(col_index_global_to_local_map_for_M.size(), M1.n());
-
-      this->reinit(M1.m() + M2.m(), M1.n());
-    }
-  else
-    {
-      /**
-       * Perform horizontal stacking of the two submatrices.
-       */
-      AssertDimension(M1.m(), M2.m());
-      Assert(M1_tau_index_set == M2_tau_index_set, ExcInternalError());
-      AssertDimension(row_index_global_to_local_map_for_M.size(), M1.m());
-      AssertDimension(col_index_global_to_local_map_for_M.size(),
-                      M1.n() + M2.n());
-
-      this->reinit(M1.m(), M1.n() + M2.n());
-    }
-
-  this->fill(row_index_global_to_local_map_for_M,
-             col_index_global_to_local_map_for_M,
-             M1,
-             M1_tau_index_set,
-             M1_sigma_index_set);
-
-  this->fill(row_index_global_to_local_map_for_M,
-             col_index_global_to_local_map_for_M,
-             M2,
-             M2_tau_index_set,
-             M2_sigma_index_set);
-}
-
-
-template <typename Number>
 LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M11,
                                                  const LAPACKFullMatrixExt &M12,
                                                  const LAPACKFullMatrixExt &M21,
@@ -2476,100 +2299,6 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M11,
   this->fill(M12, 0, M11.n());
   this->fill(M21, M11.m(), 0);
   this->fill(M22, M11.m(), M11.n());
-}
-
-
-template <typename Number>
-LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_M,
-  const std::map<types::global_dof_index, size_t>
-    &                        col_index_global_to_local_map_for_M,
-  const LAPACKFullMatrixExt &M11,
-  const std::vector<types::global_dof_index> &M11_tau_index_set,
-  const std::vector<types::global_dof_index> &M11_sigma_index_set,
-  const LAPACKFullMatrixExt &                 M12,
-  const std::vector<types::global_dof_index> &M12_tau_index_set,
-  const std::vector<types::global_dof_index> &M12_sigma_index_set,
-  const LAPACKFullMatrixExt &                 M21,
-  const std::vector<types::global_dof_index> &M21_tau_index_set,
-  const std::vector<types::global_dof_index> &M21_sigma_index_set,
-  const LAPACKFullMatrixExt &                 M22,
-  const std::vector<types::global_dof_index> &M22_tau_index_set,
-  const std::vector<types::global_dof_index> &M22_sigma_index_set)
-  : LAPACKFullMatrix<Number>(M11.m() + M21.m(), M11.n() + M12.n())
-  , state(LAPACKSupport::matrix)
-  , property(LAPACKSupport::general)
-  , tau(0)
-  , work()
-  , iwork()
-  , ipiv()
-{
-  /**
-   * Make assertions about the compatibility of row and column numbers of
-   * submatrices.
-   */
-  AssertDimension(M11.m(), M12.m());
-  AssertDimension(M21.m(), M22.m());
-  AssertDimension(M11.n(), M21.n());
-  AssertDimension(M12.n(), M22.n());
-
-  /**
-   * Make further detailed assertions about the cluster index sets of
-   * submatrices.
-   */
-  Assert(M11_tau_index_set == M12_tau_index_set, ExcInternalError());
-  Assert(M21_tau_index_set == M22_tau_index_set, ExcInternalError());
-  Assert(M11_sigma_index_set == M21_sigma_index_set, ExcInternalError());
-  Assert(M12_sigma_index_set == M22_sigma_index_set, ExcInternalError());
-
-  /**
-   * Make assertions about the sizes of row and column index global to local
-   * maps for \p M.
-   */
-  AssertDimension(row_index_global_to_local_map_for_M.size(), this->m());
-  AssertDimension(col_index_global_to_local_map_for_M.size(), this->n());
-
-  /**
-   * Make assertions about the submatrix sizes and corresponding index sets.
-   */
-  AssertDimension(M11.m(), M11_tau_index_set.size());
-  AssertDimension(M11.n(), M11_sigma_index_set.size());
-  AssertDimension(M12.m(), M12_tau_index_set.size());
-  AssertDimension(M12.n(), M12_sigma_index_set.size());
-  AssertDimension(M21.m(), M21_tau_index_set.size());
-  AssertDimension(M21.n(), M21_sigma_index_set.size());
-  AssertDimension(M22.m(), M22_tau_index_set.size());
-  AssertDimension(M22.n(), M22_sigma_index_set.size());
-
-  /**
-   * Set the property of the parent class as well.
-   */
-  this->LAPACKFullMatrix<Number>::set_property(LAPACKSupport::general);
-
-  this->fill(row_index_global_to_local_map_for_M,
-             col_index_global_to_local_map_for_M,
-             M11,
-             M11_tau_index_set,
-             M11_sigma_index_set);
-
-  this->fill(row_index_global_to_local_map_for_M,
-             col_index_global_to_local_map_for_M,
-             M12,
-             M12_tau_index_set,
-             M12_sigma_index_set);
-
-  this->fill(row_index_global_to_local_map_for_M,
-             col_index_global_to_local_map_for_M,
-             M21,
-             M21_tau_index_set,
-             M21_sigma_index_set);
-
-  this->fill(row_index_global_to_local_map_for_M,
-             col_index_global_to_local_map_for_M,
-             M22,
-             M22_tau_index_set,
-             M22_sigma_index_set);
 }
 
 
@@ -2993,7 +2722,7 @@ LAPACKFullMatrixExt<Number>::svd(
    * Integer array as the work space for pivoting, which is the \p IWORK
    * parameter in \p dgesdd.
    */
-  std::vector<types::blas_int> ipiv(8 * mm);
+  ipiv.resize(8 * mm);
 
   /**
    * Return status.
@@ -3560,6 +3289,10 @@ LAPACKFullMatrixExt<Number>::compute_cholesky_factorization()
   Assert(property == LAPACKSupport::symmetric, ExcProperty(property));
   state = LAPACKSupport::unusable;
 
+  /**
+   * Call the member function in the parent class so that the matrix property in
+   * the parent class can be property set.
+   */
   LAPACKFullMatrix<Number>::compute_cholesky_factorization();
 
   state    = LAPACKSupport::cholesky;
@@ -4001,80 +3734,6 @@ LAPACKFullMatrixExt<Number>::fill(const MatrixType &src,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::fill(
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map,
-  const std::map<types::global_dof_index, size_t>
-    &                                         col_index_global_to_local_map,
-  const LAPACKFullMatrixExt &                 M,
-  const std::vector<types::global_dof_index> &M_tau_index_set,
-  const std::vector<types::global_dof_index> &M_sigma_index_set,
-  const bool                                  is_adding)
-{
-  /**
-   * Make assertions about the sizes of row and column index global to local
-   * maps for the current matrix.
-   */
-  AssertDimension(row_index_global_to_local_map.size(), this->m());
-  AssertDimension(col_index_global_to_local_map.size(), this->n());
-
-  for (size_type i = 0; i < M.m(); i++)
-    {
-      for (size_type j = 0; j < M.n(); j++)
-        {
-          if (is_adding)
-            {
-              (*this)(row_index_global_to_local_map.at(M_tau_index_set[i]),
-                      col_index_global_to_local_map.at(M_sigma_index_set[j])) +=
-                M(i, j);
-            }
-          else
-            {
-              (*this)(row_index_global_to_local_map.at(M_tau_index_set[i]),
-                      col_index_global_to_local_map.at(M_sigma_index_set[j])) =
-                M(i, j);
-            }
-        }
-    }
-}
-
-
-template <typename Number>
-void
-LAPACKFullMatrixExt<Number>::fill_rows(
-  const std::map<types::global_dof_index, size_t>
-    &                                         row_index_global_to_local_map,
-  const LAPACKFullMatrixExt &                 M,
-  const std::vector<types::global_dof_index> &M_row_global_index_set,
-  const bool                                  is_adding)
-{
-  AssertDimension(this->m(), row_index_global_to_local_map.size());
-  AssertDimension(this->n(), M.n());
-  AssertDimension(M.m(), M_row_global_index_set.size());
-
-  for (size_type i = 0; i < M.m(); i++)
-    {
-      for (size_type j = 0; j < M.n(); j++)
-        {
-          if (is_adding)
-            {
-              (*this)(row_index_global_to_local_map.at(
-                        M_row_global_index_set[i]),
-                      j) += M(i, j);
-            }
-          else
-            {
-              (*this)(row_index_global_to_local_map.at(
-                        M_row_global_index_set[i]),
-                      j) = M(i, j);
-            }
-        }
-    }
-}
-
-
-template <typename Number>
-void
 LAPACKFullMatrixExt<Number>::fill_row(const size_type       row_index,
                                       const Vector<Number> &values,
                                       const bool            is_adding)
@@ -4128,34 +3787,20 @@ LAPACKFullMatrixExt<Number>::fill_row(const size_type dst_row_index,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::fill_cols(
-  const std::map<types::global_dof_index, size_t>
-    &                                         col_index_global_to_local_map,
-  const LAPACKFullMatrixExt &                 M,
-  const std::vector<types::global_dof_index> &M_col_global_index_set,
-  const bool                                  is_adding)
+LAPACKFullMatrixExt<Number>::fill_rows(
+  const std::array<types::global_dof_index, 2> &row_index_range,
+  const LAPACKFullMatrixExt<Number> &           M,
+  const std::array<types::global_dof_index, 2> &M_row_index_range,
+  const Number                                  factor,
+  const bool                                    is_adding)
 {
-  AssertDimension(this->n(), col_index_global_to_local_map.size());
-  AssertDimension(this->m(), M.m());
-  AssertDimension(M.n(), M_col_global_index_set.size());
+  Assert(is_subset(M_row_index_range, row_index_range), ExcInternalError());
+  AssertDimension(this->n(), M.n());
 
   for (size_type i = 0; i < M.m(); i++)
     {
-      for (size_type j = 0; j < M.n(); j++)
-        {
-          if (is_adding)
-            {
-              (*this)(i,
-                      col_index_global_to_local_map.at(
-                        M_col_global_index_set[j])) += M(i, j);
-            }
-          else
-            {
-              (*this)(i,
-                      col_index_global_to_local_map.at(
-                        M_col_global_index_set[j])) = M(i, j);
-            }
-        }
+      this->fill_row(
+        M_row_index_range[0] - row_index_range[0] + i, i, M, factor, is_adding);
     }
 }
 
@@ -4508,7 +4153,7 @@ template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::add(const Number                       b,
                                  const LAPACKFullMatrixExt<Number> &B,
-                                 const bool is_result_matrix_symm_apriori)
+                                 const bool is_result_matrix_store_tril_only)
 {
   AssertDimension(this->m(), B.m());
   AssertDimension(this->n(), B.n());
@@ -4516,16 +4161,15 @@ LAPACKFullMatrixExt<Number>::add(const Number                       b,
   const size_type nrows = this->m();
   const size_type ncols = this->n();
 
-  if (is_result_matrix_symm_apriori)
+  if (is_result_matrix_store_tril_only)
     {
       /**
        * Perform addition for matrix elements in the diagonal part and in the
        * lower triangular part only.
        */
-      Assert(this->get_property() == LAPACKSupport::symmetric,
-             ExcMessage(std::string("The current matrix should be ") +
-                        std::string(LAPACKSupport::property_name(
-                          LAPACKSupport::symmetric))));
+      Assert(this->get_property() == LAPACKSupport::symmetric ||
+               this->get_property() == LAPACKSupport::lower_triangular,
+             ExcInvalidLAPACKFullMatrixProperty(this->get_property()));
 
       for (size_type i = 0; i < nrows; i++)
         {
@@ -4824,6 +4468,9 @@ LAPACKFullMatrixExt<Number>::set_property(
   const LAPACKSupport::Property property)
 {
   this->property = property;
+  /**
+   * Set the matrix property in the parent class to be the same.
+   */
   this->LAPACKFullMatrix<Number>::set_property(property);
 }
 
@@ -4833,6 +4480,11 @@ void
 LAPACKFullMatrixExt<Number>::set_state(const LAPACKSupport::State state)
 {
   this->state = state;
+  /**
+   * N.B. There is no public or protected member function provided by
+   * @p LAPACKFullMatrix for setting its matrix state. Hence, unlike in the
+   * member function @p set_property, we do nothing here to the parent class.
+   */
 }
 
 
@@ -4848,6 +4500,50 @@ LAPACKSupport::State
 LAPACKFullMatrixExt<Number>::get_state() const
 {
   return state;
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::solve(Vector<Number> &v,
+                                   const bool      transposed) const
+{
+  Assert(this->m() == this->n(), LACExceptions::ExcNotQuadratic());
+  AssertDimension(this->m(), v.size());
+
+  const char *          trans  = transposed ? &T : &N;
+  const types::blas_int nn     = this->n();
+  const Number *const   values = this->values.data();
+  const types::blas_int n_rhs  = 1;
+  types::blas_int       info   = 0;
+
+  if (state == lu)
+    {
+      getrs(
+        trans, &nn, &n_rhs, values, &nn, ipiv.data(), v.begin(), &nn, &info);
+    }
+  else if (state == cholesky)
+    {
+      potrs(&LAPACKSupport::L, &nn, &n_rhs, values, &nn, v.begin(), &nn, &info);
+    }
+  else if (property == upper_triangular || property == lower_triangular)
+    {
+      const char uplo =
+        (property == upper_triangular ? LAPACKSupport::U : LAPACKSupport::L);
+
+      const types::blas_int lda = nn;
+      const types::blas_int ldb = nn;
+      trtrs(
+        &uplo, trans, "N", &nn, &n_rhs, values, &lda, v.begin(), &ldb, &info);
+    }
+  else
+    {
+      Assert(false,
+             ExcMessage(
+               "The matrix has to be either factorized or triangular."));
+    }
+
+  Assert(info == 0, ExcInternalError());
 }
 
 

@@ -80,6 +80,6 @@ main()
    * Try to print H1. Because the data of H1 have been migrated to H2, an
    * exception will be thrown from this function call.
    */
-  std::cout << "=== H1 after shallow copy ===\n";
-  H1.print_formatted(std::cout, 8, false, 16, "0");
+  //! std::cout << "=== H1 after shallow copy ===\n";
+  //! H1.print_formatted(std::cout, 8, false, 16, "0");
 }

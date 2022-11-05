@@ -240,6 +240,7 @@ public:
 
   /**
    * Construct a zero-valued rank-k matrix with the specified matrix dimension
+   *
    * and rank.
    * @param m
    * @param n
@@ -290,18 +291,16 @@ public:
    * Construct a rank-k matrix by conversion from a full matrix \p M without
    * rank truncation.
    *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>The original full matrix \p will be modified since SVD will be
-   * applied to it.</dd>
-   * </dl>
+   * \mynote{The original full matrix \p will be modified since SVD will be
+   * applied to it.}
+   *
    * @param M
    */
   RkMatrix(LAPACKFullMatrixExt<Number> &M);
 
   /**
    * Construct a rank-k matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ with rank truncation from the full global matrix \p M
+   * \times \sigma\f$ with rank truncation from the **full global** matrix @p M
    * defined on the complete block cluster \f$I \times J\f$.
    *
    * <dl class="section note">
@@ -313,15 +312,15 @@ public:
    * @param fixed_rank_k
    * @param M
    */
-  RkMatrix(const std::vector<types::global_dof_index> &tau,
-           const std::vector<types::global_dof_index> &sigma,
-           const size_type                             fixed_rank_k,
-           const LAPACKFullMatrixExt<Number> &         M);
+  RkMatrix(const std::array<types::global_dof_index, 2> &tau_index_range,
+           const std::array<types::global_dof_index, 2> &sigma_index_range,
+           const size_type                               fixed_rank_k,
+           const LAPACKFullMatrixExt<Number> &           M);
 
   /**
    * Construct a rank-k matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ without rank truncation from the full global matrix \p M
-   * defined on the complete block cluster \f$I \times J\f$.
+   * \times \sigma\f$ without rank truncation from the **full global** matrix
+   * @p M defined on the complete block cluster \f$I \times J\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
@@ -331,67 +330,65 @@ public:
    * @param sigma
    * @param M
    */
-  RkMatrix(const std::vector<types::global_dof_index> &tau,
-           const std::vector<types::global_dof_index> &sigma,
-           const LAPACKFullMatrixExt<Number> &         M);
+  RkMatrix(const std::array<types::global_dof_index, 2> &tau_index_range,
+           const std::array<types::global_dof_index, 2> &sigma_index_range,
+           const LAPACKFullMatrixExt<Number> &           M);
 
   /**
    * Construct a rank-k matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ with rank truncation from the full local matrix \p M.
+   * \times \sigma\f$ with rank truncation from the **full local* matrix @p M.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
    *   <dd>The original full local matrix \p M will not be modified.</dd>
    * </dl>
-   * @param tau
-   * @param sigma
+   *
+   * @param tau_index_range
+   * @param sigma_index_range
    * @param fixed_rank_k
    * @param M
-   * @param row_index_global_to_local_map_for_M The map from the global row
-   * indices to the local indices of the matrix associated the H-matrix when
-   * first calling this recursive function.
-   * @param col_index_global_to_local_map_for_M The map from the global column
-   * indices to the local indices of the matrix associated the H-matrix when
-   * first calling this recursive function.
+   * @param M_tau_index_range
+   * @param M_sigma_index_range
    */
-  RkMatrix(const std::vector<types::global_dof_index> &tau,
-           const std::vector<types::global_dof_index> &sigma,
-           const size_type                             fixed_rank_k,
-           const LAPACKFullMatrixExt<Number> &         M,
-           const std::map<types::global_dof_index, size_t>
-             &row_index_global_to_local_map_for_M,
-           const std::map<types::global_dof_index, size_t>
-             &col_index_global_to_local_map_for_M);
+  RkMatrix(const std::array<types::global_dof_index, 2> &tau_index_range,
+           const std::array<types::global_dof_index, 2> &sigma_index_range,
+           const size_type                               fixed_rank_k,
+           const LAPACKFullMatrixExt<Number> &           M,
+           const std::array<types::global_dof_index, 2> &M_tau_index_range,
+           const std::array<types::global_dof_index, 2> &M_sigma_index_range);
 
   /**
    * Construct a rank-k matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ without rank truncation from the full local matrix \p M.
+   * \times \sigma\f$ without rank truncation from the **full local** matrix
+   * @p M.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
    *   <dd>The original full local matrix \p M will not be modified.</dd>
    * </dl>
-   * @param tau
-   * @param sigma
+   *
+   * @param tau_index_range
+   * @param sigma_index_range
    * @param M
-   * @param row_index_global_to_local_map_for_M The map from the global row
-   * indices to the local indices of the matrix associated the H-matrix when
-   * first calling this recursive function.
-   * @param col_index_global_to_local_map_for_M The map from the global column
-   * indices to the local indices of the matrix associated the H-matrix when
-   * first calling this recursive function.
+   * @param M_tau_index_range
+   * @param M_sigma_index_range
    */
-  RkMatrix(const std::vector<types::global_dof_index> &tau,
-           const std::vector<types::global_dof_index> &sigma,
-           const LAPACKFullMatrixExt<Number> &         M,
-           const std::map<types::global_dof_index, size_t>
-             &row_index_global_to_local_map_for_M,
-           const std::map<types::global_dof_index, size_t>
-             &col_index_global_to_local_map_for_M);
+  RkMatrix(const std::array<types::global_dof_index, 2> &tau_index_range,
+           const std::array<types::global_dof_index, 2> &sigma_index_range,
+           const LAPACKFullMatrixExt<Number> &           M,
+           const std::array<types::global_dof_index, 2> &M_tau_index_range,
+           const std::array<types::global_dof_index, 2> &M_sigma_index_range);
 
   /**
    * Construct a rank-k matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ with rank truncation from the global rank-k matrix \p M.
+   * \times \sigma\f$ with rank truncation from the **global rank-k** matrix
+   * @p M.
+   *
+   * For a rank-k matrix \f$M=A\cdot B^T\f$, it is actually the sum of a series
+   * of outer products which are formed by the rows of \f$A\f$ and \f$B\f$, i.e.
+   * \f$M(i,j)=\sum_{i=1}^k A(i,:) B(j,:)^T\f$. Then restricting a rank-k matrix
+   * to a block cluster \f$\tau\times\sigma\f$ is actually computed as
+   * \f$A(\tau,:)\cdot B(\sigma,:)^T\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
@@ -402,15 +399,21 @@ public:
    * @param fixed_rank_k
    * @param M
    */
-  RkMatrix(const std::vector<types::global_dof_index> &tau,
-           const std::vector<types::global_dof_index> &sigma,
-           const size_type                             fixed_rank_k,
-           const RkMatrix<Number> &                    M);
+  RkMatrix(const std::array<types::global_dof_index, 2> &tau_index_range,
+           const std::array<types::global_dof_index, 2> &sigma_index_range,
+           const size_type                               fixed_rank_k,
+           const RkMatrix<Number> &                      M);
 
   /**
    * Construct a rank-k matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ without rank truncation from the global rank-k matrix \p
-   * M.
+   * \times \sigma\f$ without rank truncation from the **global rank-k** matrix
+   * @p M.
+   *
+   * For a rank-k matrix \f$M=A\cdot B^T\f$, it is actually the sum of a series
+   * of outer products which are formed by the rows of \f$A\f$ and \f$B\f$, i.e.
+   * \f$M(i,j)=\sum_{i=1}^k A(i,:) B(j,:)^T\f$. Then restricting a rank-k matrix
+   * to a block cluster \f$\tau\times\sigma\f$ is actually computed as
+   * \f$A(\tau,:)\cdot B(\sigma,:)^T\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
@@ -420,65 +423,62 @@ public:
    * @param sigma
    * @param M
    */
-  RkMatrix(const std::vector<types::global_dof_index> &tau,
-           const std::vector<types::global_dof_index> &sigma,
-           const RkMatrix<Number> &                    M);
+  RkMatrix(const std::array<types::global_dof_index, 2> &tau_index_range,
+           const std::array<types::global_dof_index, 2> &sigma_index_range,
+           const RkMatrix<Number> &                      M);
 
   /**
    * Construct a rank-k matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ with rank truncation from the local rank-k matrix \p M.
+   * \times \sigma\f$ with rank truncation from the **local rank-k** matrix
+   * @p M.
+   *
+   * For a rank-k matrix \f$M=A\cdot B^T\f$, it is actually the sum of a series
+   * of outer products which are formed by the rows of \f$A\f$ and \f$B\f$, i.e.
+   * \f$M(i,j)=\sum_{i=1}^k A(i,:) B(j,:)^T\f$. Then restricting a rank-k matrix
+   * to a block cluster \f$\tau\times\sigma\f$ is actually computed as
+   * \f$A(\tau,:)\cdot B(\sigma,:)^T\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
    *   <dd>The original rank-k local matrix \p M will not be modified.</dd>
    * </dl>
-   * @param tau
-   * @param sigma
+   *
+   * @param tau_index_range
+   * @param sigma_index_range
    * @param fixed_rank_k
    * @param M
-   * @param row_index_global_to_local_map_for_M The map from the global row
-   * indices to the local indices of the matrix associated the H-matrix when
-   * first calling this recursive function.
-   * @param col_index_global_to_local_map_for_M The map from the global column
-   * indices to the local indices of the matrix associated the H-matrix when
-   * first calling this recursive function.
+   * @param M_tau_index_range
+   * @param M_sigma_index_range
    */
-  RkMatrix(const std::vector<types::global_dof_index> &tau,
-           const std::vector<types::global_dof_index> &sigma,
-           const size_type                             fixed_rank_k,
-           const RkMatrix<Number> &                    M,
-           const std::map<types::global_dof_index, size_t>
-             &row_index_global_to_local_map_for_M,
-           const std::map<types::global_dof_index, size_t>
-             &col_index_global_to_local_map_for_M);
+  RkMatrix(const std::array<types::global_dof_index, 2> &tau_index_range,
+           const std::array<types::global_dof_index, 2> &sigma_index_range,
+           const size_type                               fixed_rank_k,
+           const RkMatrix<Number> &                      M,
+           const std::array<types::global_dof_index, 2> &M_tau_index_range,
+           const std::array<types::global_dof_index, 2> &M_sigma_index_range);
 
   /**
    * Construct a rank-k matrix by restriction to the block cluster \f$\tau
-   * \times \sigma\f$ without rank truncation from the local rank-k matrix \p
-   * M. The rank of the rank-k matrix to be constructed is initialized to be the
-   * minimum of its minimum matrix dimension and the rank of M.
+   * \times \sigma\f$ without rank truncation from the **local rank-k** matrix
+   * @p M. The rank of the rank-k matrix to be constructed is initialized to be
+   * the minimum of its minimum matrix dimension and the rank of M.
+   *
+   * For a rank-k matrix \f$M=A\cdot B^T\f$, it is actually the sum of a series
+   * of outer products which are formed by the rows of \f$A\f$ and \f$B\f$, i.e.
+   * \f$M(i,j)=\sum_{i=1}^k A(i,:) B(j,:)^T\f$. Then restricting a rank-k matrix
+   * to a block cluster \f$\tau\times\sigma\f$ is actually computed as
+   * \f$A(\tau,:)\cdot B(\sigma,:)^T\f$.
    *
    * <dl class="section note">
    *   <dt>Note</dt>
    *   <dd>The original rank-k matrix \p M will not be modified.</dd>
    * </dl>
-   * @param tau
-   * @param sigma
-   * @param M
-   * @param row_index_global_to_local_map_for_M The map from the global row
-   * indices to the local indices of the matrix associated the H-matrix when
-   * first calling this recursive function.
-   * @param col_index_global_to_local_map_for_M The map from the global column
-   * indices to the local indices of the matrix associated the H-matrix when
-   * first calling this recursive function.
    */
-  RkMatrix(const std::vector<types::global_dof_index> &tau,
-           const std::vector<types::global_dof_index> &sigma,
-           const RkMatrix<Number> &                    M,
-           const std::map<types::global_dof_index, size_t>
-             &row_index_global_to_local_map_for_M,
-           const std::map<types::global_dof_index, size_t>
-             &col_index_global_to_local_map_for_M);
+  RkMatrix(const std::array<types::global_dof_index, 2> &tau_index_range,
+           const std::array<types::global_dof_index, 2> &sigma_index_range,
+           const RkMatrix<Number> &                      M,
+           const std::array<types::global_dof_index, 2> &M_tau_index_range,
+           const std::array<types::global_dof_index, 2> &M_sigma_index_range);
 
   /**
    * Construct a rank-k matrix from two component matrices.
@@ -501,6 +501,7 @@ public:
    * Construct a rank-k matrix \f$M\f$ from an agglomeration of two rank-k
    * submatrices, \f$M_1\f$ and \f$M_2\f$, which have been obtained from either
    * horizontal splitting or vertical splitting.
+   *
    * @param fixed_rank_k
    * @param M1
    * @param M2
@@ -509,40 +510,6 @@ public:
            const RkMatrix<Number> &M1,
            const RkMatrix<Number> &M2,
            bool                    is_horizontal_split);
-
-  /**
-   * Construct a rank-k matrix \f$M\f$ from an agglomeration of two rank-k
-   * submatrices, \f$M_1\f$ and \f$M_2\f$, which have been obtained from either
-   * horizontal splitting or vertical splitting.
-   *
-   * This method handles the case when the index sets of several child
-   * clusters are interwoven together into the index set of the parent cluster.
-   * This is based on the fact that during DoF support point coordinates based
-   * cluster tree partition, the continuity of the index set is not preserved.
-   *
-   * @param fixed_rank_k
-   * @param row_index_global_to_local_map_for_M
-   * @param col_index_global_to_local_map_for_M
-   * @param M1
-   * @param M1_tau_index_set
-   * @param M1_sigma_index_set
-   * @param M2
-   * @param M2_tau_index_set
-   * @param M2_sigma_index_set
-   * @param is_horizontal_split
-   */
-  RkMatrix(const size_type fixed_rank_k,
-           const std::map<types::global_dof_index, size_t>
-             &row_index_global_to_local_map_for_M,
-           const std::map<types::global_dof_index, size_t>
-             &                     col_index_global_to_local_map_for_M,
-           const RkMatrix<Number> &M1,
-           const std::vector<types::global_dof_index> &M1_tau_index_set,
-           const std::vector<types::global_dof_index> &M1_sigma_index_set,
-           const RkMatrix<Number> &                    M2,
-           const std::vector<types::global_dof_index> &M2_tau_index_set,
-           const std::vector<types::global_dof_index> &M2_sigma_index_set,
-           bool                                        is_horizontal_split);
 
   /**
    * Construct a rank-k matrix \f$M\f$ from an agglomeration of four
@@ -569,51 +536,6 @@ public:
            const RkMatrix<Number> &M21,
            const RkMatrix<Number> &M22,
            const Number            rank_factor = 1.0);
-
-  /**
-   * Construct a rank-k matrix \f$M\f$ from an agglomeration of four
-   * rank-k submatrices, \f$M_{11}, M_{12}, M_{21}, M_{22}\f$.
-   *
-   * \f[
-   * M =
-   * \begin{pmatrix}
-   * M_{11} & M_{12} \\
-   * M_{21} & M_{22}
-   * \end{pmatrix}
-   * \f]
-   *
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>
-   * 1. This method implements the operator \f$\mathcal{T}_{r, {\rm
-   * pairw}}^{\mathcal{R}}\f$ in (2.13) in Hackbusch's \f$\mathcal{H}\f$-matrix
-   * book.
-   * 2. This method handles the case when the index sets of several child
-   * clusters are interwoven together into the index set of the parent cluster.
-   * This is based on the fact that during the cluster tree partition based on
-   * DoF support point coordinates, the continuity of the index set is not
-   * preserved.
-   *   </dd>
-   * </dl>
-   */
-  RkMatrix(const size_type fixed_rank_k,
-           const std::map<types::global_dof_index, size_t>
-             &row_index_global_to_local_map_for_M,
-           const std::map<types::global_dof_index, size_t>
-             &                     col_index_global_to_local_map_for_M,
-           const RkMatrix<Number> &M11,
-           const std::vector<types::global_dof_index> &M11_tau_index_set,
-           const std::vector<types::global_dof_index> &M11_sigma_index_set,
-           const RkMatrix<Number> &                    M12,
-           const std::vector<types::global_dof_index> &M12_tau_index_set,
-           const std::vector<types::global_dof_index> &M12_sigma_index_set,
-           const RkMatrix<Number> &                    M21,
-           const std::vector<types::global_dof_index> &M21_tau_index_set,
-           const std::vector<types::global_dof_index> &M21_sigma_index_set,
-           const RkMatrix<Number> &                    M22,
-           const std::vector<types::global_dof_index> &M22_tau_index_set,
-           const std::vector<types::global_dof_index> &M22_sigma_index_set,
-           const Number                                rank_factor = 1.0);
 
   /**
    * Copy constructor.
@@ -705,31 +627,32 @@ public:
   convertToFullMatrix(LAPACKFullMatrixExt<Number> &matrix) const;
 
   /**
-   * Restrict a global rank-k matrix to a full matrix defined on the block
+   * Restrict a **global rank-k** matrix to a full matrix defined on the block
    * cluster \f$\tau \times \sigma\f$.
    */
   void
-  restrictToFullMatrix(const std::vector<types::global_dof_index> &tau,
-                       const std::vector<types::global_dof_index> &sigma,
-                       LAPACKFullMatrixExt<Number> &matrix) const;
+  restrictToFullMatrix(
+    const std::array<types::global_dof_index, 2> &tau_index_range,
+    const std::array<types::global_dof_index, 2> &sigma_index_range,
+    LAPACKFullMatrixExt<Number> &                 matrix) const;
 
   /**
-   * Restrict a local rank-k matrix to a full matrix defined on the block
+   * Restrict a **local rank-k** matrix to a full matrix defined on the block
    * cluster \f$\tau \times \sigma\f$.
-   * @param tau
-   * @param sigma
-   * @param row_index_global_to_local_map_for_rk
-   * @param col_index_global_to_local_map_for_rk
+   *
+   * @param rk_tau_index_range
+   * @param rk_sigma_index_range
    * @param matrix
+   * @param tau_index_range
+   * @param sigma_index_range
    */
   void
-  restrictToFullMatrix(const std::vector<types::global_dof_index> &tau,
-                       const std::vector<types::global_dof_index> &sigma,
-                       const std::map<types::global_dof_index, size_t>
-                         &row_index_global_to_local_map_for_rk,
-                       const std::map<types::global_dof_index, size_t>
-                         &col_index_global_to_local_map_for_rk,
-                       LAPACKFullMatrixExt<Number> &matrix) const;
+  restrictToFullMatrix(
+    const std::array<types::global_dof_index, 2> &rk_tau_index_range,
+    const std::array<types::global_dof_index, 2> &rk_sigma_index_range,
+    LAPACKFullMatrixExt<Number> &                 M,
+    const std::array<types::global_dof_index, 2> &M_tau_index_range,
+    const std::array<types::global_dof_index, 2> &M_sigma_index_range) const;
 
   /**
    * Print a RkMatrix.
@@ -995,48 +918,49 @@ public:
       LAPACKFullMatrixExt<Number> &D);
 
   /**
-   * Assemble the smaller rank-k matrix \p M into the current rank-k matrix with
-   * respect to the specified \p row_index_global_to_local_map and \p
-   * col_index_global_to_local_map.
+   * Assemble the smaller rank-k matrix \p M into the current rank-k matrix
+   * with respect to their index ranges.
+   *
+   * @param tau_index_range
+   * @param sigma_index_range
+   * @param M
+   * @param M_tau_index_range
+   * @param M_sigma_index_range
+   * @param fixed_rank_k
    */
   void
   assemble_from_rkmatrix(
-    const std::map<types::global_dof_index, size_t>
-      &row_index_global_to_local_map,
-    const std::map<types::global_dof_index, size_t>
-      &                                         col_index_global_to_local_map,
-    const RkMatrix<Number> &                    M,
-    const std::vector<types::global_dof_index> &M_tau_index_set,
-    const std::vector<types::global_dof_index> &M_sigma_index_set,
-    const size_type                             fixed_rank_k);
+    const std::array<types::global_dof_index, 2> &tau_index_range,
+    const std::array<types::global_dof_index, 2> &sigma_index_range,
+    const RkMatrix<Number> &                      M,
+    const std::array<types::global_dof_index, 2> &M_tau_index_range,
+    const std::array<types::global_dof_index, 2> &M_sigma_index_range,
+    const size_type                               fixed_rank_k);
 
   /**
    * Assemble the smaller rank-k matrix \p M into the current rank-k matrix with
-   * respect to the specified \p row_index_global_to_local_map and \p
-   * col_index_global_to_local_map. The truncation error is returned as the
+   * respect to their index ranges The truncation error is returned as the
    * product \f$CD^T\f$.
    *
-   * @param row_index_global_to_local_map
-   * @param col_index_global_to_local_map
+   * @param tau_index_range
+   * @param sigma_index_range
    * @param M
-   * @param M_tau_index_set
-   * @param M_sigma_index_set
+   * @param M_tau_index_range
+   * @param M_sigma_index_range
    * @param fixed_rank_k
    * @param C
    * @param D
    */
   void
   assemble_from_rkmatrix(
-    const std::map<types::global_dof_index, size_t>
-      &row_index_global_to_local_map,
-    const std::map<types::global_dof_index, size_t>
-      &                                         col_index_global_to_local_map,
-    const RkMatrix<Number> &                    M,
-    const std::vector<types::global_dof_index> &M_tau_index_set,
-    const std::vector<types::global_dof_index> &M_sigma_index_set,
-    const size_type                             fixed_rank_k,
-    LAPACKFullMatrixExt<Number> &               C,
-    LAPACKFullMatrixExt<Number> &               D);
+    const std::array<types::global_dof_index, 2> &tau_index_range,
+    const std::array<types::global_dof_index, 2> &sigma_index_range,
+    const RkMatrix<Number> &                      M,
+    const std::array<types::global_dof_index, 2> &M_tau_index_range,
+    const std::array<types::global_dof_index, 2> &M_sigma_index_range,
+    const size_type                               fixed_rank_k,
+    LAPACKFullMatrixExt<Number> &                 C,
+    LAPACKFullMatrixExt<Number> &                 D);
 
   /**
    * Calculate the Frobenius norm of the rank-k matrix.
@@ -1349,16 +1273,17 @@ RkMatrix<Number>::RkMatrix(LAPACKFullMatrixExt<Number> &M)
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
-                           const std::vector<types::global_dof_index> &sigma,
-                           const size_type                    fixed_rank_k,
-                           const LAPACKFullMatrixExt<Number> &M)
+RkMatrix<Number>::RkMatrix(
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const size_type                               fixed_rank_k,
+  const LAPACKFullMatrixExt<Number> &           M)
   : A()
   , B()
   , rank(0)
   , formal_rank(0)
-  , m(tau.size())
-  , n(sigma.size())
+  , m(tau_index_range[1] - tau_index_range[0])
+  , n(sigma_index_range[1] - sigma_index_range[0])
 {
   /**
    * Convert the matrix block \p M_b in full matrix format to rank-k matrix
@@ -1378,7 +1303,7 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
        * Extract the data for the submatrix defined on the block cluster \f$\tau
        * \times \sigma\f$ from the full global matrix \p M.
        */
-      LAPACKFullMatrixExt<Number> M_b(tau, sigma, M);
+      LAPACKFullMatrixExt<Number> M_b(tau_index_range, sigma_index_range, M);
 
       if (m == 1 && n == 1)
         {
@@ -1419,15 +1344,16 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
-                           const std::vector<types::global_dof_index> &sigma,
-                           const LAPACKFullMatrixExt<Number> &         M)
+RkMatrix<Number>::RkMatrix(
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const LAPACKFullMatrixExt<Number> &           M)
   : A()
   , B()
   , rank(0)
   , formal_rank(0)
-  , m(tau.size())
-  , n(sigma.size())
+  , m(tau_index_range[1] - tau_index_range[0])
+  , n(sigma_index_range[1] - sigma_index_range[0])
 {
   /**
    * Convert the matrix block \p M_b in full matrix format to rank-k matrix
@@ -1447,7 +1373,7 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
        * Extract the data for the submatrix defined on the block cluster \f$\tau
        * \times \sigma\f$ from the full global matrix \p M.
        */
-      LAPACKFullMatrixExt<Number> M_b(tau, sigma, M);
+      LAPACKFullMatrixExt<Number> M_b(tau_index_range, sigma_index_range, M);
 
       if (m == 1 && n == 1)
         {
@@ -1488,20 +1414,19 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
-                           const std::vector<types::global_dof_index> &sigma,
-                           const size_type                    fixed_rank_k,
-                           const LAPACKFullMatrixExt<Number> &M,
-                           const std::map<types::global_dof_index, size_t>
-                             &row_index_global_to_local_map_for_M,
-                           const std::map<types::global_dof_index, size_t>
-                             &col_index_global_to_local_map_for_M)
+RkMatrix<Number>::RkMatrix(
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const size_type                               fixed_rank_k,
+  const LAPACKFullMatrixExt<Number> &           M,
+  const std::array<types::global_dof_index, 2> &M_tau_index_range,
+  const std::array<types::global_dof_index, 2> &M_sigma_index_range)
   : A()
   , B()
   , rank(0)
   , formal_rank(0)
-  , m(tau.size())
-  , n(sigma.size())
+  , m(tau_index_range[1] - tau_index_range[0])
+  , n(sigma_index_range[1] - sigma_index_range[0])
 {
   /**
    * Convert the matrix block \p M_b in full matrix format to rank-k
@@ -1521,11 +1446,11 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
        * Extract the data for the submatrix block \f$b = \tau \times \sigma\f$
        * in the original matrix \p M.
        */
-      LAPACKFullMatrixExt<Number> M_b(tau,
-                                      sigma,
+      LAPACKFullMatrixExt<Number> M_b(tau_index_range,
+                                      sigma_index_range,
                                       M,
-                                      row_index_global_to_local_map_for_M,
-                                      col_index_global_to_local_map_for_M);
+                                      M_tau_index_range,
+                                      M_sigma_index_range);
 
       if (m == 1 && n == 1)
         {
@@ -1566,20 +1491,22 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
-                           const std::vector<types::global_dof_index> &sigma,
-                           const LAPACKFullMatrixExt<Number> &         M,
-                           const std::map<types::global_dof_index, size_t>
-                             &row_index_global_to_local_map_for_M,
-                           const std::map<types::global_dof_index, size_t>
-                             &col_index_global_to_local_map_for_M)
+RkMatrix<Number>::RkMatrix(
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const LAPACKFullMatrixExt<Number> &           M,
+  const std::array<types::global_dof_index, 2> &M_tau_index_range,
+  const std::array<types::global_dof_index, 2> &M_sigma_index_range)
   : A()
   , B()
   , rank(0)
   , formal_rank(0)
-  , m(tau.size())
-  , n(sigma.size())
+  , m(tau_index_range[1] - tau_index_range[0])
+  , n(sigma_index_range[1] - sigma_index_range[0])
 {
+  Assert(is_subset(tau_index_range, M_tau_index_range), ExcInternalError());
+  Assert(is_subset(sigma_index_range, M_sigma_index_range), ExcInternalError());
+
   /**
    * Convert the matrix block \p M_b in full matrix format to rank-k
    * format.
@@ -1598,11 +1525,11 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
        * Extract the data for the submatrix block \f$b = \tau \times \sigma\f$
        * in the original matrix \p M.
        */
-      LAPACKFullMatrixExt<Number> M_b(tau,
-                                      sigma,
+      LAPACKFullMatrixExt<Number> M_b(tau_index_range,
+                                      sigma_index_range,
                                       M,
-                                      row_index_global_to_local_map_for_M,
-                                      col_index_global_to_local_map_for_M);
+                                      M_tau_index_range,
+                                      M_sigma_index_range);
 
       if (m == 1 && n == 1)
         {
@@ -1643,18 +1570,19 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
-                           const std::vector<types::global_dof_index> &sigma,
-                           const size_type         fixed_rank_k,
-                           const RkMatrix<Number> &M)
+RkMatrix<Number>::RkMatrix(
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const size_type                               fixed_rank_k,
+  const RkMatrix<Number> &                      M)
   : A()
   , B()
   // Before restriction, set the rank and formal rank of the current
   // rank-k matrix to be the same as \p M.
   , rank(M.rank)
   , formal_rank(M.formal_rank)
-  , m(tau.size())
-  , n(sigma.size())
+  , m(tau_index_range[1] - tau_index_range[0])
+  , n(sigma_index_range[1] - sigma_index_range[0])
 {
   if (formal_rank > 0 && m != 0 && n != 0 && M.m != 0 && M.n != 0)
     {
@@ -1663,8 +1591,8 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
        * zero, there will be actual initialization of component matrices and
        * further restriction operation
        */
-      A.reinit(tau.size(), M.formal_rank);
-      B.reinit(sigma.size(), M.formal_rank);
+      A.reinit(this->m, M.formal_rank);
+      B.reinit(this->n, M.formal_rank);
 
       /**
        * Restrict the component matrix \p A of the original global rank-k matrix
@@ -1674,7 +1602,7 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
         {
           for (size_type j = 0; j < M.formal_rank; j++)
             {
-              A(i, j) = M.A(tau[i], j);
+              A(i, j) = M.A(tau_index_range[0] + i, j);
             }
         }
 
@@ -1686,7 +1614,7 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
         {
           for (size_type j = 0; j < M.formal_rank; j++)
             {
-              B(i, j) = M.B(sigma[i], j);
+              B(i, j) = M.B(sigma_index_range[0] + i, j);
             }
         }
 
@@ -1701,17 +1629,18 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
-                           const std::vector<types::global_dof_index> &sigma,
-                           const RkMatrix<Number> &                    M)
+RkMatrix<Number>::RkMatrix(
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const RkMatrix<Number> &                      M)
   : A()
   , B()
   // Before restriction, set the rank and formal rank of the current
   // rank-k matrix to be the same as \p M.
   , rank(M.rank)
   , formal_rank(M.formal_rank)
-  , m(tau.size())
-  , n(sigma.size())
+  , m(tau_index_range[1] - tau_index_range[0])
+  , n(sigma_index_range[1] - sigma_index_range[0])
 {
   if (formal_rank > 0 && m != 0 && n != 0 && M.m != 0 && M.n != 0)
     {
@@ -1720,8 +1649,8 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
        * zero, there will be actual initialization of component matrices and
        * further restriction operation
        */
-      A.reinit(tau.size(), M.formal_rank);
-      B.reinit(sigma.size(), M.formal_rank);
+      A.reinit(this->m, M.formal_rank);
+      B.reinit(this->n, M.formal_rank);
 
       /**
        * Restrict the component matrix \p A of the original global rank-k matrix
@@ -1731,7 +1660,7 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
         {
           for (size_type j = 0; j < M.formal_rank; j++)
             {
-              A(i, j) = M.A(tau[i], j);
+              A(i, j) = M.A(tau_index_range[0] + i, j);
             }
         }
 
@@ -1743,13 +1672,12 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
         {
           for (size_type j = 0; j < M.formal_rank; j++)
             {
-              B(i, j) = M.B(sigma[i], j);
+              B(i, j) = M.B(sigma_index_range[0] + i, j);
             }
         }
 
       const size_type fixed_rank_k =
-        std::min(static_cast<size_type>(std::min(tau.size(), sigma.size())),
-                 M.rank);
+        std::min(static_cast<size_type>(std::min(this->m, this->n)), M.rank);
       this->truncate_to_rank(fixed_rank_k);
     }
   else
@@ -1761,23 +1689,25 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
-                           const std::vector<types::global_dof_index> &sigma,
-                           const size_type         fixed_rank_k,
-                           const RkMatrix<Number> &M,
-                           const std::map<types::global_dof_index, size_t>
-                             &row_index_global_to_local_map_for_M,
-                           const std::map<types::global_dof_index, size_t>
-                             &col_index_global_to_local_map_for_M)
+RkMatrix<Number>::RkMatrix(
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const size_type                               fixed_rank_k,
+  const RkMatrix<Number> &                      M,
+  const std::array<types::global_dof_index, 2> &M_tau_index_range,
+  const std::array<types::global_dof_index, 2> &M_sigma_index_range)
   : A()
   , B()
   // Before restriction, set the rank and formal rank of the current
   // rank-k matrix to be the same as \p M.
   , rank(M.rank)
   , formal_rank(M.formal_rank)
-  , m(tau.size())
-  , n(sigma.size())
+  , m(tau_index_range[1] - tau_index_range[0])
+  , n(sigma_index_range[1] - sigma_index_range[0])
 {
+  Assert(is_subset(tau_index_range, M_tau_index_range), ExcInternalError());
+  Assert(is_subset(sigma_index_range, M_sigma_index_range), ExcInternalError());
+
   if (formal_rank > 0 && m != 0 && n != 0 && M.m != 0 && M.n != 0 &&
       fixed_rank_k > 0)
     {
@@ -1786,8 +1716,8 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
        * zero, there will be actual initialization of component matrices and
        * further restriction operation
        */
-      A.reinit(tau.size(), M.formal_rank);
-      B.reinit(sigma.size(), M.formal_rank);
+      A.reinit(this->m, M.formal_rank);
+      B.reinit(this->n, M.formal_rank);
 
       /**
        * Restrict the component matrix \p A of the original local rank-k matrix
@@ -1797,7 +1727,7 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
         {
           for (size_type j = 0; j < M.formal_rank; j++)
             {
-              A(i, j) = M.A(row_index_global_to_local_map_for_M.at(tau[i]), j);
+              A(i, j) = M.A(tau_index_range[0] - M_tau_index_range[0] + i, j);
             }
         }
 
@@ -1810,7 +1740,7 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
           for (size_type j = 0; j < M.formal_rank; j++)
             {
               B(i, j) =
-                M.B(col_index_global_to_local_map_for_M.at(sigma[i]), j);
+                M.B(sigma_index_range[0] - M_sigma_index_range[0] + i, j);
             }
         }
 
@@ -1825,22 +1755,24 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
-                           const std::vector<types::global_dof_index> &sigma,
-                           const RkMatrix<Number> &                    M,
-                           const std::map<types::global_dof_index, size_t>
-                             &row_index_global_to_local_map_for_M,
-                           const std::map<types::global_dof_index, size_t>
-                             &col_index_global_to_local_map_for_M)
+RkMatrix<Number>::RkMatrix(
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const RkMatrix<Number> &                      M,
+  const std::array<types::global_dof_index, 2> &M_tau_index_range,
+  const std::array<types::global_dof_index, 2> &M_sigma_index_range)
   : A()
   , B()
   // Before restriction, set the rank and formal rank of the current
   // rank-k matrix to be the same as \p M.
   , rank(M.rank)
   , formal_rank(M.formal_rank)
-  , m(tau.size())
-  , n(sigma.size())
+  , m(tau_index_range[1] - tau_index_range[0])
+  , n(sigma_index_range[1] - sigma_index_range[0])
 {
+  Assert(is_subset(tau_index_range, M_tau_index_range), ExcInternalError());
+  Assert(is_subset(sigma_index_range, M_sigma_index_range), ExcInternalError());
+
   if (formal_rank > 0 && m != 0 && n != 0 && M.m != 0 && M.n != 0)
     {
       /**
@@ -1848,8 +1780,8 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
        * zero, there will be actual initialization of component matrices and
        * further restriction operation
        */
-      A.reinit(tau.size(), M.formal_rank);
-      B.reinit(sigma.size(), M.formal_rank);
+      A.reinit(this->m, M.formal_rank);
+      B.reinit(this->n, M.formal_rank);
 
       /**
        * Restrict the component \p A of the original local rank-k matrix \p M to
@@ -1859,7 +1791,7 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
         {
           for (size_type j = 0; j < M.formal_rank; j++)
             {
-              A(i, j) = M.A(row_index_global_to_local_map_for_M.at(tau[i]), j);
+              A(i, j) = M.A(tau_index_range[0] - M_tau_index_range[0] + i, j);
             }
         }
 
@@ -1872,13 +1804,12 @@ RkMatrix<Number>::RkMatrix(const std::vector<types::global_dof_index> &tau,
           for (size_type j = 0; j < M.formal_rank; j++)
             {
               B(i, j) =
-                M.B(col_index_global_to_local_map_for_M.at(sigma[i]), j);
+                M.B(sigma_index_range[0] - M_sigma_index_range[0] + i, j);
             }
         }
 
       const size_type fixed_rank_k =
-        std::min(static_cast<size_type>(std::min(tau.size(), sigma.size())),
-                 M.rank);
+        std::min(static_cast<size_type>(std::min(this->m, this->n)), M.rank);
       this->truncate_to_rank(fixed_rank_k);
     }
   else
@@ -2073,142 +2004,6 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
 
           m = M1.m;
           n = M1.n + M2.n;
-        }
-    }
-}
-
-
-template <typename Number>
-RkMatrix<Number>::RkMatrix(
-  const size_type fixed_rank_k,
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_M,
-  const std::map<types::global_dof_index, size_t>
-    &                     col_index_global_to_local_map_for_M,
-  const RkMatrix<Number> &M1,
-  const std::vector<types::global_dof_index> &M1_tau_index_set,
-  const std::vector<types::global_dof_index> &M1_sigma_index_set,
-  const RkMatrix<Number> &                    M2,
-  const std::vector<types::global_dof_index> &M2_tau_index_set,
-  const std::vector<types::global_dof_index> &M2_sigma_index_set,
-  bool                                        is_horizontal_split)
-  : A()
-  , B()
-  , rank(0)
-  , formal_rank(0)
-  , m(0)
-  , n(0)
-{
-  AssertDimension(M1.m, M1_tau_index_set.size());
-  AssertDimension(M1.n, M1_sigma_index_set.size());
-  AssertDimension(M2.m, M2_tau_index_set.size());
-  AssertDimension(M2.n, M2_sigma_index_set.size());
-
-
-  /**
-   * <dl class="section note">
-   *   <dt>Note</dt>
-   *   <dd>Because the assembly of the two submatrices into the larger
-   * matrix depends on the global DoF indices, there is no need for a manual
-   * control of the assembly location and the procedures for both horizontal
-   * and vertical stacking cases are the same.</dd>
-   * </dl>
-   */
-  if (is_horizontal_split)
-    {
-      // Vertical stacking the two submatrices.
-      AssertDimension(M1.n, M2.n);
-      Assert(M1_sigma_index_set == M2_sigma_index_set, ExcInternalError());
-
-      m = M1.m + M2.m;
-      n = M1.n;
-    }
-  else
-    {
-      // Horizontal stacking the two submatrices.
-      AssertDimension(M1.m, M2.m);
-      Assert(M1_tau_index_set == M2_tau_index_set, ExcInternalError());
-
-      m = M1.m;
-      n = M1.n + M2.n;
-    }
-
-  if (fixed_rank_k > 0 && m > 0 && n > 0)
-    {
-      /**
-       * Make assertions about the sizes of row and column index global to local
-       * maps for \p M.
-       */
-      AssertDimension(row_index_global_to_local_map_for_M.size(), m);
-      AssertDimension(col_index_global_to_local_map_for_M.size(), n);
-
-      if (M1.rank == 0 && M2.rank == 0)
-        {
-          /**
-           * When both submatrices have zero ranks, the agglomerated matrix also
-           * has a zero rank. And there is nothing to be done.
-           */
-        }
-      else if (M1.rank == 0)
-        {
-          /**
-           * When \p M1 has zero rank, the agglomeration operation is only an
-           * embedding of \p M2.
-           */
-          A.reinit(m, M2.formal_rank);
-          B.reinit(n, M2.formal_rank);
-          A.fill_rows(row_index_global_to_local_map_for_M,
-                      M2.A,
-                      M2_tau_index_set);
-          B.fill_rows(col_index_global_to_local_map_for_M,
-                      M2.B,
-                      M2_sigma_index_set);
-          rank        = M2.rank;
-          formal_rank = M2.formal_rank;
-
-          truncate_to_rank(fixed_rank_k);
-        }
-      else if (M2.rank == 0)
-        {
-          /**
-           * When \p M2 has zero rank, the agglomeration operation is only an
-           * embedding of \p M1.
-           */
-          A.reinit(m, M1.formal_rank);
-          B.reinit(n, M1.formal_rank);
-          A.fill_rows(row_index_global_to_local_map_for_M,
-                      M1.A,
-                      M1_tau_index_set);
-          B.fill_rows(col_index_global_to_local_map_for_M,
-                      M1.B,
-                      M1_sigma_index_set);
-          rank        = M1.rank;
-          formal_rank = M1.formal_rank;
-
-          truncate_to_rank(fixed_rank_k);
-        }
-      else
-        {
-          RkMatrix<Number> M1_embedded(m, n, M1.formal_rank);
-          M1_embedded.A.fill_rows(row_index_global_to_local_map_for_M,
-                                  M1.A,
-                                  M1_tau_index_set);
-          M1_embedded.B.fill_rows(col_index_global_to_local_map_for_M,
-                                  M1.B,
-                                  M1_sigma_index_set);
-
-          RkMatrix<Number> M2_embedded(m, n, M2.formal_rank);
-          M2_embedded.A.fill_rows(row_index_global_to_local_map_for_M,
-                                  M2.A,
-                                  M2_tau_index_set);
-          M2_embedded.B.fill_rows(col_index_global_to_local_map_for_M,
-                                  M2.B,
-                                  M2_sigma_index_set);
-
-          /**
-           * Perform formatted addition of the two embedded matrices.
-           */
-          M1_embedded.add((*this), M2_embedded, fixed_rank_k);
         }
     }
 }
@@ -2439,302 +2234,6 @@ RkMatrix<Number>::RkMatrix(const size_type         fixed_rank_k,
 
 
 template <typename Number>
-RkMatrix<Number>::RkMatrix(
-  const size_type fixed_rank_k,
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_M,
-  const std::map<types::global_dof_index, size_t>
-    &                     col_index_global_to_local_map_for_M,
-  const RkMatrix<Number> &M11,
-  const std::vector<types::global_dof_index> &M11_tau_index_set,
-  const std::vector<types::global_dof_index> &M11_sigma_index_set,
-  const RkMatrix<Number> &                    M12,
-  const std::vector<types::global_dof_index> &M12_tau_index_set,
-  const std::vector<types::global_dof_index> &M12_sigma_index_set,
-  const RkMatrix<Number> &                    M21,
-  const std::vector<types::global_dof_index> &M21_tau_index_set,
-  const std::vector<types::global_dof_index> &M21_sigma_index_set,
-  const RkMatrix<Number> &                    M22,
-  const std::vector<types::global_dof_index> &M22_tau_index_set,
-  const std::vector<types::global_dof_index> &M22_sigma_index_set,
-  const Number                                rank_factor)
-  : A()
-  , B()
-  , rank(0)
-  , formal_rank(0)
-  , m(M11.m + M21.m)
-  , n(M11.n + M12.n)
-{
-  /**
-   * Make assertions about the compatibility of number of rows and columns of
-   * the submatrices.
-   */
-  AssertDimension(M11.m, M12.m);
-  AssertDimension(M21.m, M22.m);
-  AssertDimension(M11.n, M21.n);
-  AssertDimension(M12.n, M22.n);
-
-  /**
-   * Make assertions about the equality of cluster index sets of submatrices.
-   */
-  Assert(M11_tau_index_set == M12_tau_index_set, ExcInternalError());
-  Assert(M21_tau_index_set == M22_tau_index_set, ExcInternalError());
-  Assert(M11_sigma_index_set == M21_sigma_index_set, ExcInternalError());
-  Assert(M12_sigma_index_set == M22_sigma_index_set, ExcInternalError());
-
-  /**
-   * Make assertions about the sizes of row and column index global-to-local
-   * maps for \p M.
-   */
-  AssertDimension(row_index_global_to_local_map_for_M.size(), this->m);
-  AssertDimension(col_index_global_to_local_map_for_M.size(), this->n);
-
-  /**
-   * Make assertions about the submatrix sizes and associated index sets.
-   */
-  AssertDimension(M11.m, M11_tau_index_set.size());
-  AssertDimension(M11.n, M11_sigma_index_set.size());
-  AssertDimension(M12.m, M12_tau_index_set.size());
-  AssertDimension(M12.n, M12_sigma_index_set.size());
-  AssertDimension(M21.m, M21_tau_index_set.size());
-  AssertDimension(M21.n, M21_sigma_index_set.size());
-  AssertDimension(M22.m, M22_tau_index_set.size());
-  AssertDimension(M22.n, M22_sigma_index_set.size());
-
-  if (fixed_rank_k > 0 && m > 0 && n > 0)
-    {
-      if (M11.rank == 0 && M12.rank == 0 && M21.rank == 0 && M22.rank == 0)
-        {
-          /**
-           * When all submatrices have zero ranks, the agglomerated matrix also
-           * has a zero rank. And there is nothing to be done.
-           */
-        }
-      else
-        {
-          /**
-           * Create a rank-k matrix which is an embedding of the submatrix. N.B.
-           * The embedding of a matrix does not change its rank and formal rank.
-           *
-           * At first, each matrix block is embedded into the large matrix by
-           * padding zeros to the component matrices \p A and \p B in a rank-k
-           * matrix. \alert{N.B. When perform rank-k matrix embedding, the
-           * formal rank instead of the real rank should be used since matrix
-           * row copy operation will be performed in which the formal rank will
-           * be involved as the number of columns.}
-           *
-           * Next, pairwise formatted addition will be applied successively to
-           * the four embedded matrices to achieve agglomeration.
-           */
-
-          /**
-           * Calculate the increased rank for pairwise formatted addition.
-           */
-          const size_type increased_rank =
-            static_cast<size_type>(fixed_rank_k * rank_factor);
-
-          /**
-           * Count the total number of effective agglomeration operations to be
-           * performed.
-           */
-          unsigned int total_number_of_agglomerations = 0;
-          if (M11.rank > 0)
-            {
-              total_number_of_agglomerations++;
-            }
-
-          if (M12.rank > 0)
-            {
-              total_number_of_agglomerations++;
-            }
-
-          if (M21.rank > 0)
-            {
-              total_number_of_agglomerations++;
-            }
-
-          if (M22.rank > 0)
-            {
-              total_number_of_agglomerations++;
-            }
-
-          /**
-           * Define a counter for the current agglomeration operation. When it
-           * is 1, directly embed the rank-k submatrix into the current rank-k
-           * matrix. When it is less than \p total_number_of_agglomerations and
-           * larger than 1, perform a formatted addition with a higher rank than
-           * the specified rank. When it is equal to \p
-           * total_number_of_agglomerations, perform a formatted addition with
-           * the specified rank.
-           */
-          unsigned int agglomeration_counter = 1;
-
-          if (M11.rank > 0)
-            {
-              /**
-               * Directly embed the matrix \p M11 into the current rank-k
-               * matrix.
-               */
-              A.reinit(m, M11.formal_rank);
-              B.reinit(n, M11.formal_rank);
-              A.fill_rows(row_index_global_to_local_map_for_M,
-                          M11.A,
-                          M11_tau_index_set);
-              B.fill_rows(col_index_global_to_local_map_for_M,
-                          M11.B,
-                          M11_sigma_index_set);
-              rank        = M11.rank;
-              formal_rank = M11.formal_rank;
-
-              agglomeration_counter++;
-            }
-
-          if (M12.rank > 0)
-            {
-              if (agglomeration_counter == 1)
-                {
-                  /**
-                   * Directly embed the matrix \p M12 into the current rank-k
-                   * matrix.
-                   */
-                  A.reinit(m, M12.formal_rank);
-                  B.reinit(n, M12.formal_rank);
-                  A.fill_rows(row_index_global_to_local_map_for_M,
-                              M12.A,
-                              M12_tau_index_set);
-                  B.fill_rows(col_index_global_to_local_map_for_M,
-                              M12.B,
-                              M12_sigma_index_set);
-                  rank        = M12.rank;
-                  formal_rank = M12.formal_rank;
-                }
-              else
-                {
-                  /**
-                   * Embed the matrix \p M12 then add it into the current rank-k
-                   * matrix.
-                   */
-                  RkMatrix<Number> M12_embedded(m, n, M12.formal_rank);
-                  M12_embedded.A.fill_rows(row_index_global_to_local_map_for_M,
-                                           M12.A,
-                                           M12_tau_index_set);
-                  M12_embedded.B.fill_rows(col_index_global_to_local_map_for_M,
-                                           M12.B,
-                                           M12_sigma_index_set);
-
-                  if (agglomeration_counter < total_number_of_agglomerations)
-                    {
-                      this->add(M12_embedded, increased_rank);
-                    }
-                  else
-                    {
-                      this->add(M12_embedded, fixed_rank_k);
-                    }
-                }
-
-              agglomeration_counter++;
-            }
-
-          if (M21.rank > 0)
-            {
-              if (agglomeration_counter == 1)
-                {
-                  /**
-                   * Directly embed the matrix \p M21 into the current rank-k
-                   * matrix.
-                   */
-                  A.reinit(m, M21.formal_rank);
-                  B.reinit(n, M21.formal_rank);
-                  A.fill_rows(row_index_global_to_local_map_for_M,
-                              M21.A,
-                              M21_tau_index_set);
-                  B.fill_rows(col_index_global_to_local_map_for_M,
-                              M21.B,
-                              M21_sigma_index_set);
-                  rank        = M21.rank;
-                  formal_rank = M21.formal_rank;
-                }
-              else
-                {
-                  /**
-                   * Embed the matrix \p M21 then add it into the current rank-k
-                   * matrix.
-                   */
-                  RkMatrix<Number> M21_embedded(m, n, M21.formal_rank);
-                  M21_embedded.A.fill_rows(row_index_global_to_local_map_for_M,
-                                           M21.A,
-                                           M21_tau_index_set);
-                  M21_embedded.B.fill_rows(col_index_global_to_local_map_for_M,
-                                           M21.B,
-                                           M21_sigma_index_set);
-
-                  if (agglomeration_counter < total_number_of_agglomerations)
-                    {
-                      this->add(M21_embedded, increased_rank);
-                    }
-                  else
-                    {
-                      this->add(M21_embedded, fixed_rank_k);
-                    }
-                }
-
-              agglomeration_counter++;
-            }
-
-          if (M22.rank > 0)
-            {
-              if (agglomeration_counter == 1)
-                {
-                  /**
-                   * Directly embed the matrix \p M22 into the current rank-k
-                   * matrix.
-                   */
-                  A.reinit(m, M22.formal_rank);
-                  B.reinit(n, M22.formal_rank);
-                  A.fill_rows(row_index_global_to_local_map_for_M,
-                              M22.A,
-                              M22_tau_index_set);
-                  B.fill_rows(col_index_global_to_local_map_for_M,
-                              M22.B,
-                              M22_sigma_index_set);
-                  rank        = M22.rank;
-                  formal_rank = M22.formal_rank;
-                }
-              else
-                {
-                  /**
-                   * Embed the matrix \p M22 then add it into the current rank-k
-                   * matrix.
-                   */
-                  RkMatrix<Number> M22_embedded(m, n, M22.formal_rank);
-                  M22_embedded.A.fill_rows(row_index_global_to_local_map_for_M,
-                                           M22.A,
-                                           M22_tau_index_set);
-                  M22_embedded.B.fill_rows(col_index_global_to_local_map_for_M,
-                                           M22.B,
-                                           M22_sigma_index_set);
-
-                  if (agglomeration_counter < total_number_of_agglomerations)
-                    {
-                      this->add(M22_embedded, increased_rank);
-                    }
-                  else
-                    {
-                      this->add(M22_embedded, fixed_rank_k);
-                    }
-                }
-            }
-
-          if (rank > fixed_rank_k)
-            {
-              truncate_to_rank(fixed_rank_k);
-            }
-        }
-    }
-}
-
-
-template <typename Number>
 RkMatrix<Number>::RkMatrix(const RkMatrix<Number> &matrix)
   : A(matrix.A)
   , B(matrix.B)
@@ -2873,11 +2372,13 @@ RkMatrix<Number>::convertToFullMatrix(LAPACKFullMatrixExt<Number> &matrix) const
 template <typename Number>
 void
 RkMatrix<Number>::restrictToFullMatrix(
-  const std::vector<types::global_dof_index> &tau,
-  const std::vector<types::global_dof_index> &sigma,
-  LAPACKFullMatrixExt<Number> &               matrix) const
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  LAPACKFullMatrixExt<Number> &                 matrix) const
 {
-  RkMatrix<Number> rkmatrix_restricted(tau, sigma, (*this));
+  RkMatrix<Number> rkmatrix_restricted(tau_index_range,
+                                       sigma_index_range,
+                                       (*this));
   rkmatrix_restricted.convertToFullMatrix(matrix);
 }
 
@@ -2885,20 +2386,22 @@ RkMatrix<Number>::restrictToFullMatrix(
 template <typename Number>
 void
 RkMatrix<Number>::restrictToFullMatrix(
-  const std::vector<types::global_dof_index> &tau,
-  const std::vector<types::global_dof_index> &sigma,
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map_for_rk,
-  const std::map<types::global_dof_index, size_t>
-    &                          col_index_global_to_local_map_for_rk,
-  LAPACKFullMatrixExt<Number> &matrix) const
+  const std::array<types::global_dof_index, 2> &rk_tau_index_range,
+  const std::array<types::global_dof_index, 2> &rk_sigma_index_range,
+  LAPACKFullMatrixExt<Number> &                 M,
+  const std::array<types::global_dof_index, 2> &M_tau_index_range,
+  const std::array<types::global_dof_index, 2> &M_sigma_index_range) const
 {
-  RkMatrix<Number> rkmatrix_restricted(tau,
-                                       sigma,
+  Assert(is_subset(M_tau_index_range, rk_tau_index_range), ExcInternalError());
+  Assert(is_subset(M_sigma_index_range, rk_sigma_index_range),
+         ExcInternalError());
+
+  RkMatrix<Number> rkmatrix_restricted(M_tau_index_range,
+                                       M_sigma_index_range,
                                        (*this),
-                                       row_index_global_to_local_map_for_rk,
-                                       col_index_global_to_local_map_for_rk);
-  rkmatrix_restricted.convertToFullMatrix(matrix);
+                                       rk_tau_index_range,
+                                       rk_sigma_index_range);
+  rkmatrix_restricted.convertToFullMatrix(M);
 }
 
 
@@ -3485,14 +2988,12 @@ RkMatrix<Number>::add(const Number                 m1,
 template <typename Number>
 void
 RkMatrix<Number>::assemble_from_rkmatrix(
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map,
-  const std::map<types::global_dof_index, size_t>
-    &                                         col_index_global_to_local_map,
-  const RkMatrix<Number> &                    M,
-  const std::vector<types::global_dof_index> &M_tau_index_set,
-  const std::vector<types::global_dof_index> &M_sigma_index_set,
-  const size_type                             fixed_rank_k)
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const RkMatrix<Number> &                      M,
+  const std::array<types::global_dof_index, 2> &M_tau_index_range,
+  const std::array<types::global_dof_index, 2> &M_sigma_index_range,
+  const size_type                               fixed_rank_k)
 {
   /**
    * \alert{When perform rank-k matrix embedding, the formal rank instead of the
@@ -3507,12 +3008,8 @@ RkMatrix<Number>::assemble_from_rkmatrix(
        * the assembly operation will take place.}
        */
       RkMatrix<Number> M_embedded(m, n, M.formal_rank);
-      M_embedded.A.fill_rows(row_index_global_to_local_map,
-                             M.A,
-                             M_tau_index_set);
-      M_embedded.B.fill_rows(col_index_global_to_local_map,
-                             M.B,
-                             M_sigma_index_set);
+      M_embedded.A.fill_rows(tau_index_range, M.A, M_tau_index_range);
+      M_embedded.B.fill_rows(sigma_index_range, M.B, M_sigma_index_range);
 
       this->add(M_embedded, fixed_rank_k);
     }
@@ -3522,16 +3019,14 @@ RkMatrix<Number>::assemble_from_rkmatrix(
 template <typename Number>
 void
 RkMatrix<Number>::assemble_from_rkmatrix(
-  const std::map<types::global_dof_index, size_t>
-    &row_index_global_to_local_map,
-  const std::map<types::global_dof_index, size_t>
-    &                                         col_index_global_to_local_map,
-  const RkMatrix<Number> &                    M,
-  const std::vector<types::global_dof_index> &M_tau_index_set,
-  const std::vector<types::global_dof_index> &M_sigma_index_set,
-  const size_type                             fixed_rank_k,
-  LAPACKFullMatrixExt<Number> &               C,
-  LAPACKFullMatrixExt<Number> &               D)
+  const std::array<types::global_dof_index, 2> &tau_index_range,
+  const std::array<types::global_dof_index, 2> &sigma_index_range,
+  const RkMatrix<Number> &                      M,
+  const std::array<types::global_dof_index, 2> &M_tau_index_range,
+  const std::array<types::global_dof_index, 2> &M_sigma_index_range,
+  const size_type                               fixed_rank_k,
+  LAPACKFullMatrixExt<Number> &                 C,
+  LAPACKFullMatrixExt<Number> &                 D)
 {
   /**
    * \alert{When perform rank-k matrix embedding, the formal rank instead of the
@@ -3546,12 +3041,8 @@ RkMatrix<Number>::assemble_from_rkmatrix(
        * the assembly operation will take place.}
        */
       RkMatrix<Number> M_embedded(m, n, M.formal_rank);
-      M_embedded.A.fill_rows(row_index_global_to_local_map,
-                             M.A,
-                             M_tau_index_set);
-      M_embedded.B.fill_rows(col_index_global_to_local_map,
-                             M.B,
-                             M_sigma_index_set);
+      M_embedded.A.fill_rows(tau_index_range, M.A, M_tau_index_range);
+      M_embedded.B.fill_rows(sigma_index_range, M.B, M_sigma_index_range);
 
       this->add(M_embedded, fixed_rank_k, C, D);
     }
