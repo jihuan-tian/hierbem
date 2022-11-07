@@ -1,5 +1,5 @@
 clear all;
-load svd.output;
+load "lapack-matrix-svd.output";
 
 m = 3;
 n = 5;

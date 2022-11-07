@@ -17,49 +17,59 @@
 using namespace boost::program_options;
 
 int
-main(int argc, char *argv[])
+main()
 {
-  unsigned int n;
+    std::cout
+            << "# Matrix dimension,Memory consumption,Coarse memory consumption\n";
 
-  options_description opts("lapack-matrix-memory-consumption options");
-  opts.add_options()("help,h", "Display this help")("dim,d",
-                                                    value<unsigned int>(),
-                                                    "Matrix dimension");
-  variables_map vm;
-  store(parse_command_line(argc, argv, opts), vm);
-  notify(vm);
-
-  if (vm.empty())
     {
-      std::cout << opts << std::endl;
-      return 0;
+        unsigned int n = 10;
+
+        LAPACKFullMatrixExt<double> M;
+        std::vector<double>         values(n * n);
+        gen_linear_indices<vector_uta, double>(values, 1, 1.5);
+        LAPACKFullMatrixExt<double>::Reshape(n, n, values, M);
+
+        std::cout << n << "," << M.memory_consumption() << ","
+                  << M.memory_consumption_for_core_data() << std::endl;
     }
 
-  if (vm.count("help"))
     {
-      std::cout << opts << std::endl;
-      return 0;
+        unsigned int n = 100;
+
+        LAPACKFullMatrixExt<double> M;
+        std::vector<double>         values(n * n);
+        gen_linear_indices<vector_uta, double>(values, 1, 1.5);
+        LAPACKFullMatrixExt<double>::Reshape(n, n, values, M);
+
+        std::cout << n << "," << M.memory_consumption() << ","
+                  << M.memory_consumption_for_core_data() << std::endl;
     }
 
-  if (vm.count("dim"))
     {
-      n = vm["dim"].as<unsigned int>();
+        unsigned int n = 1000;
+
+        LAPACKFullMatrixExt<double> M;
+        std::vector<double>         values(n * n);
+        gen_linear_indices<vector_uta, double>(values, 1, 1.5);
+        LAPACKFullMatrixExt<double>::Reshape(n, n, values, M);
+
+        std::cout << n << "," << M.memory_consumption() << ","
+                  << M.memory_consumption_for_core_data() << std::endl;
     }
-  else
+
+
     {
-      std::cout << "Please specify the matrix dimension!" << std::endl;
-      return 0;
+        unsigned int n = 10000;
+
+        LAPACKFullMatrixExt<double> M;
+        std::vector<double>         values(n * n);
+        gen_linear_indices<vector_uta, double>(values, 1, 1.5);
+        LAPACKFullMatrixExt<double>::Reshape(n, n, values, M);
+
+        std::cout << n << "," << M.memory_consumption() << ","
+                  << M.memory_consumption_for_core_data() << std::endl;
     }
 
-  LAPACKFullMatrixExt<double> M;
-  std::vector<double>         values(n * n);
-  gen_linear_indices<vector_uta, double>(values, 1, 1.5);
-  LAPACKFullMatrixExt<double>::Reshape(n, n, values, M);
-
-  std::cout
-    << "# Matrix dimension,Memory consumption,Coarse memory consumption\n";
-  std::cout << n << "," << M.memory_consumption() << ","
-            << M.memory_consumption_for_core_data() << std::endl;
-
-  return 0;
+    return 0;
 }

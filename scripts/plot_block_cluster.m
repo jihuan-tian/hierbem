@@ -26,13 +26,13 @@ function plot_block_cluster(bc, unit_size, enable_display_rank, is_fill)
     fillPolygon(block_shape, shape_color);
   endif
   
-  drawPolygon(block_shape, "k", "linewidth", 1);
+  drawPolygon(block_shape, "color", "white", "linewidth", 1);
 
   if (isfield(bc, "rank") && enable_display_rank)
     ## Label the rank of the matrix block.
     text_x_coord = (xrange(2) + xrange(1)) / 2;
     text_y_coord = (yrange(2) + yrange(1)) / 2;
 
-    text(text_x_coord, text_y_coord, num2str(bc.rank), "fontsize", min(xlength * 4, xlength * 8), "horizontalalignment", "center", "verticalalignment", "middle");
+    text(text_x_coord, text_y_coord, num2str(bc.rank), "fontsize", min(xlength * 4, xlength * 8), "horizontalalignment", "center", "verticalalignment", "middle", "color", "white");
   endif
 endfunction

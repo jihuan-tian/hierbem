@@ -26,20 +26,6 @@
 5
 
 
-# name: B1
-# type: matrix
-# rows: 1
-# columns: 1
-      5.00000000 
-
-
-# name: C1
-# type: matrix
-# rows: 1
-# columns: 1
-      1.00000000 
-
-
 # name: A2
 # type: matrix
 # rows: 1
@@ -68,22 +54,6 @@
 # rows: 1
 # columns: 1
 8.3666
-
-
-# name: B2
-# type: matrix
-# rows: 1
-# columns: 1
-     -8.36660027 
-
-
-# name: C2
-# type: matrix
-# rows: 3
-# columns: 1
-     -0.59761430 
-     -0.71713717 
-     -0.35856858 
 
 
 # name: A3
@@ -116,21 +86,5 @@
 # rows: 1
 # columns: 1
 8.3666
-
-
-# name: B3
-# type: matrix
-# rows: 3
-# columns: 1
-      0.59761430 
-      0.71713717 
-      0.35856858 
-
-
-# name: C3
-# type: matrix
-# rows: 1
-# columns: 1
-      8.36660027 
 
 

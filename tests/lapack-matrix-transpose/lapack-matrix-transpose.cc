@@ -21,7 +21,7 @@ main()
   std::cout << "A=\n";
   A.print_formatted(std::cout, 2, false, 5, "0");
 
-  A.tranpose();
+  A.transpose();
 
   std::cout << "A^T=\n";
   A.print_formatted(std::cout, 2, false, 5, "0");

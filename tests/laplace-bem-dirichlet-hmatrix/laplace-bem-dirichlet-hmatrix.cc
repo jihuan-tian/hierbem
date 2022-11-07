@@ -105,22 +105,22 @@ main()
   const unsigned int spacedim = 3;
 
   LaplaceBEM<dim, spacedim> bem(
-    1,
-    0,
-    1,
-    1,
+    1, // fe order for dirichlet space
+    0, // fe order for neumann space
+    1, // mapping order for dirichlet domain
+    1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
-    true,
-    4,
-    8,
-    0.8,
-    8,
-    0.01,
-    1,
-    6,
-    0.01,
+    true, // is interior problem
+    4,    // n_min for cluster tree
+    4,    // n_min for block cluster tree
+    3,    // eta for H-matrix
+    8,    // max rank for H-matrix
+    0.01, // aca epsilon for H-matrix
+    3,    // eta for preconditioner
+    8,    // max rank for preconditioner
+    0.01, // aca epsilon for preconditioner
     MultithreadInfo::n_cores());
-  bem.read_volume_mesh("sphere-from-gmsh_hex.msh");
+  bem.read_volume_mesh("sphere-from-gmsh-fine_hex.msh");
 
   const Point<3> source_loc(1, 1, 1);
   const Point<3> center(0, 0, 0);

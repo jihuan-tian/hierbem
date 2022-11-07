@@ -3509,8 +3509,8 @@ namespace IdeoBEM
    *
    * @param kernel
    * @param factor
-   * @param i
-   * @param j
+   * @param i External DoF numbering
+   * @param j External DoF numbering
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
    * @param bem_values

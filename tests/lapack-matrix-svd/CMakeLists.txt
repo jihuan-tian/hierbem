@@ -1,2 +1,2 @@
-SET(TEST_TARGET svd)
+SET(TEST_TARGET lapack-matrix-svd)
 DEAL_II_PICKUP_TESTS()

@@ -1,4 +1,4 @@
-# name: M
+# name: M_agglomerated1
 # type: matrix
 # rows: 2
 # columns: 5
@@ -6,7 +6,7 @@
    2.00000    4.00000    6.00000    8.00000   10.00000 
 
 
-# name: M
+# name: M_agglomerated2
 # type: matrix
 # rows: 3
 # columns: 3

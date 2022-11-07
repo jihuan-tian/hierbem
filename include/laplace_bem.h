@@ -359,6 +359,23 @@ namespace IdeoBEM
     DoFHandler<dim, spacedim> dof_handler_for_neumann_space_on_dirichlet_domain;
     DoFHandler<dim, spacedim> dof_handler_for_neumann_space_on_neumann_domain;
 
+    const std::vector<types::global_dof_index>
+      *dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain;
+    const std::vector<types::global_dof_index>
+      *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain;
+    const std::vector<types::global_dof_index>
+      *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain;
+    const std::vector<types::global_dof_index>
+      *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain;
+    const std::vector<types::global_dof_index>
+      *dof_e2i_numbering_for_neumann_space_on_dirichlet_domain;
+    const std::vector<types::global_dof_index>
+      *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain;
+    const std::vector<types::global_dof_index>
+      *dof_e2i_numbering_for_neumann_space_on_neumann_domain;
+    const std::vector<types::global_dof_index>
+      *dof_i2e_numbering_for_neumann_space_on_neumann_domain;
+
     /**
      * DoF-to-cell topologies for various DoF handlers, which are used for
      * matrix assembly on a pair of DoFs.
@@ -582,6 +599,7 @@ namespace IdeoBEM
      * Neumann boundary condition data at each DoF support point.
      */
     Vector<double> neumann_bc;
+    Vector<double> neumann_bc_internal_dof_numbering;
 
     /**
      * The free parameter \f$\alpha\f$ in the variational formulation of the
@@ -598,11 +616,13 @@ namespace IdeoBEM
      * Dirichlet boundary condition data at each DoF support point.
      */
     Vector<double> dirichlet_bc;
+    Vector<double> dirichlet_bc_internal_dof_numbering;
 
     /**
      * Right hand side vector.
      */
     Vector<double> system_rhs;
+    Vector<double> system_rhs_internal_dof_numbering;
 
     /**
      * Natural density \f$w_{rm eq}\f$, which is an intermediate solution used
@@ -622,10 +642,12 @@ namespace IdeoBEM
      * Numerical solution for the Dirichlet domain.
      */
     Vector<double> solution_for_dirichlet_domain;
+    Vector<double> solution_for_dirichlet_domain_internal_dof_numbering;
     /**
      * Numerical solution for the Neumann domain.
      */
     Vector<double> solution_for_neumann_domain;
+    Vector<double> solution_for_neumann_domain_internal_dof_numbering;
 
     /**
      * Analytical solution for the Dirichlet domain.
@@ -647,6 +669,14 @@ namespace IdeoBEM
     , thread_num(0)
     , fe_for_dirichlet_space(0)
     , fe_for_neumann_space(0)
+    , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain(nullptr)
+    , dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain(nullptr)
+    , dof_e2i_numbering_for_dirichlet_space_on_neumann_domain(nullptr)
+    , dof_i2e_numbering_for_dirichlet_space_on_neumann_domain(nullptr)
+    , dof_e2i_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
+    , dof_i2e_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
+    , dof_e2i_numbering_for_neumann_space_on_neumann_domain(nullptr)
+    , dof_i2e_numbering_for_neumann_space_on_neumann_domain(nullptr)
     , mapping_order_for_dirichlet_domain(0)
     , mapping_order_for_neumann_domain(0)
     , kx_mapping_for_dirichlet_domain(0)
@@ -688,6 +718,14 @@ namespace IdeoBEM
     , thread_num(thread_num)
     , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_for_neumann_space(fe_order_for_neumann_space)
+    , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain(nullptr)
+    , dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain(nullptr)
+    , dof_e2i_numbering_for_dirichlet_space_on_neumann_domain(nullptr)
+    , dof_i2e_numbering_for_dirichlet_space_on_neumann_domain(nullptr)
+    , dof_e2i_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
+    , dof_i2e_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
+    , dof_e2i_numbering_for_neumann_space_on_neumann_domain(nullptr)
+    , dof_i2e_numbering_for_neumann_space_on_neumann_domain(nullptr)
     , mapping_order_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
     , mapping_order_for_neumann_domain(mapping_order_for_neumann_domain)
     , kx_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
@@ -739,6 +777,14 @@ namespace IdeoBEM
     , thread_num(thread_num)
     , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_for_neumann_space(fe_order_for_neumann_space)
+    , dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain(nullptr)
+    , dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain(nullptr)
+    , dof_e2i_numbering_for_dirichlet_space_on_neumann_domain(nullptr)
+    , dof_i2e_numbering_for_dirichlet_space_on_neumann_domain(nullptr)
+    , dof_e2i_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
+    , dof_i2e_numbering_for_neumann_space_on_dirichlet_domain(nullptr)
+    , dof_e2i_numbering_for_neumann_space_on_neumann_domain(nullptr)
+    , dof_i2e_numbering_for_neumann_space_on_neumann_domain(nullptr)
     , mapping_order_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
     , mapping_order_for_neumann_domain(mapping_order_for_neumann_domain)
     , kx_mapping_for_dirichlet_domain(mapping_order_for_dirichlet_domain)
@@ -777,6 +823,15 @@ namespace IdeoBEM
 
     neumann_bc_functor_ptr   = nullptr;
     dirichlet_bc_functor_ptr = nullptr;
+
+    dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain = nullptr;
+    dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain = nullptr;
+    dof_e2i_numbering_for_dirichlet_space_on_neumann_domain   = nullptr;
+    dof_i2e_numbering_for_dirichlet_space_on_neumann_domain   = nullptr;
+    dof_e2i_numbering_for_neumann_space_on_dirichlet_domain   = nullptr;
+    dof_i2e_numbering_for_neumann_space_on_dirichlet_domain   = nullptr;
+    dof_e2i_numbering_for_neumann_space_on_neumann_domain     = nullptr;
+    dof_i2e_numbering_for_neumann_space_on_neumann_domain     = nullptr;
   }
 
 
@@ -1001,6 +1056,23 @@ namespace IdeoBEM
                   dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
 
                 /**
+                 * Get the external-to-internal and internal-to-external DoF
+                 * numberings.
+                 */
+                dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain =
+                  &(ct_for_dirichlet_space_on_dirichlet_domain
+                      .get_external_to_internal_dof_numbering());
+                dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain =
+                  &(ct_for_dirichlet_space_on_dirichlet_domain
+                      .get_internal_to_external_dof_numbering());
+                dof_e2i_numbering_for_neumann_space_on_dirichlet_domain =
+                  &(ct_for_neumann_space_on_dirichlet_domain
+                      .get_external_to_internal_dof_numbering());
+                dof_i2e_numbering_for_neumann_space_on_dirichlet_domain =
+                  &(ct_for_neumann_space_on_dirichlet_domain
+                      .get_internal_to_external_dof_numbering());
+
+                /**
                  * Create the block cluster trees.
                  */
                 bct_for_bilinear_form_V1 = BlockClusterTree<spacedim>(
@@ -1018,9 +1090,12 @@ namespace IdeoBEM
                  * Partition the block cluster trees.
                  */
                 bct_for_bilinear_form_V1.partition(
+                  *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
                   support_points_for_neumann_space_on_dirichlet_domain,
                   dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
                 bct_for_bilinear_form_K2.partition(
+                  *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+                  *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
                   support_points_for_neumann_space_on_dirichlet_domain,
                   support_points_for_dirichlet_space_on_dirichlet_domain,
                   dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
@@ -1053,6 +1128,20 @@ namespace IdeoBEM
               *dirichlet_bc_functor_ptr,
               dirichlet_bc);
 
+            if (is_use_hmat)
+              {
+                /**
+                 * Permute the Dirichlet boundary data by following the mapping
+                 * from internal to external DoF numbering.
+                 */
+                dirichlet_bc_internal_dof_numbering.reinit(
+                  n_dofs_for_dirichlet_space_on_dirichlet_domain);
+                permute_vector(
+                  dirichlet_bc,
+                  *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
+                  dirichlet_bc_internal_dof_numbering);
+              }
+
             /**
              * Allocate memory for the right-hand-side vector and solution
              * vector.
@@ -1060,6 +1149,13 @@ namespace IdeoBEM
             system_rhs.reinit(n_dofs_for_neumann_space_on_dirichlet_domain);
             solution_for_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
+            if (is_use_hmat)
+              {
+                system_rhs_internal_dof_numbering.reinit(
+                  n_dofs_for_neumann_space_on_dirichlet_domain);
+                solution_for_dirichlet_domain_internal_dof_numbering.reinit(
+                  n_dofs_for_neumann_space_on_dirichlet_domain);
+              }
 
             // DEBUG: export analytical solution for comparison.
             analytical_solution_for_dirichlet_domain.reinit(
@@ -1179,6 +1275,23 @@ namespace IdeoBEM
                   dof_average_cell_size_for_neumann_space_on_neumann_domain);
 
                 /**
+                 * Get the external-to-internal and internal-to-external DoF
+                 * numberings.
+                 */
+                dof_e2i_numbering_for_dirichlet_space_on_neumann_domain =
+                  &(ct_for_dirichlet_space_on_neumann_domain
+                      .get_external_to_internal_dof_numbering());
+                dof_i2e_numbering_for_dirichlet_space_on_neumann_domain =
+                  &(ct_for_dirichlet_space_on_neumann_domain
+                      .get_internal_to_external_dof_numbering());
+                dof_e2i_numbering_for_neumann_space_on_neumann_domain =
+                  &(ct_for_neumann_space_on_neumann_domain
+                      .get_external_to_internal_dof_numbering());
+                dof_i2e_numbering_for_neumann_space_on_neumann_domain =
+                  &(ct_for_neumann_space_on_neumann_domain
+                      .get_internal_to_external_dof_numbering());
+
+                /**
                  * Create the block cluster trees.
                  */
                 bct_for_bilinear_form_D1 = BlockClusterTree<spacedim>(
@@ -1198,13 +1311,34 @@ namespace IdeoBEM
                   n_min_for_bct);
 
                 /**
+                 * Partition the block cluster trees.
+                 */
+                bct_for_bilinear_form_D1.partition(
+                  *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+                  support_points_for_dirichlet_space_on_neumann_domain,
+                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
+                bct_for_bilinear_form_K_prime2.partition(
+                  *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+                  *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+                  support_points_for_dirichlet_space_on_neumann_domain,
+                  support_points_for_neumann_space_on_neumann_domain,
+                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
+                  dof_average_cell_size_for_neumann_space_on_neumann_domain);
+                bct_for_bilinear_form_V1.partition(
+                  *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+                  support_points_for_neumann_space_on_neumann_domain,
+                  dof_average_cell_size_for_neumann_space_on_neumann_domain);
+
+                /**
                  * Initialize \hmatrices.
                  */
                 D1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_D1,
                                                 max_hmat_rank);
                 K_prime2_hmat_with_mass_matrix =
                   HMatrix<spacedim>(bct_for_bilinear_form_K_prime2,
-                                    max_hmat_rank);
+                                    max_hmat_rank,
+                                    HMatrixSupport::Property::general,
+                                    HMatrixSupport::BlockType::diagonal_block);
 
                 /**
                  * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
@@ -1230,6 +1364,20 @@ namespace IdeoBEM
               *neumann_bc_functor_ptr,
               neumann_bc);
 
+            if (is_use_hmat)
+              {
+                /**
+                 * Permute the Neumann boundary data by following the mapping
+                 * from internal to external DoF numbering.
+                 */
+                neumann_bc_internal_dof_numbering.reinit(
+                  n_dofs_for_neumann_space_on_neumann_domain);
+                permute_vector(
+                  neumann_bc,
+                  *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+                  neumann_bc_internal_dof_numbering);
+              }
+
             /**
              * Allocate memory for the natural density \f$w_{\rm eq}\in
              * H^{-1/2}(\Gamma)\f$ and its associated right hand side vector.
@@ -1245,6 +1393,14 @@ namespace IdeoBEM
             system_rhs.reinit(n_dofs_for_dirichlet_space_on_neumann_domain);
             solution_for_neumann_domain.reinit(
               n_dofs_for_dirichlet_space_on_neumann_domain);
+
+            if (is_use_hmat)
+              {
+                system_rhs_internal_dof_numbering.reinit(
+                  n_dofs_for_dirichlet_space_on_neumann_domain);
+                solution_for_neumann_domain_internal_dof_numbering.reinit(
+                  n_dofs_for_dirichlet_space_on_neumann_domain);
+              }
 
             // DEBUG: export analytical solution for comparison.
             analytical_solution_for_neumann_domain.reinit(
@@ -1804,6 +1960,8 @@ namespace IdeoBEM
                   QGauss<dim>(fe_order_for_dirichlet_space + 1),
                   dof_handler_for_neumann_space_on_dirichlet_domain,
                   dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+                  *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
                   kx_mapping_for_dirichlet_domain,
                   ky_mapping_for_dirichlet_domain,
                   *kx_mapping_data_for_dirichlet_domain,
@@ -1831,6 +1989,8 @@ namespace IdeoBEM
                   QGauss<dim>(fe_order_for_dirichlet_space + 1),
                   dof_handler_for_neumann_space_on_dirichlet_domain,
                   dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+                  *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
                   kx_mapping_for_dirichlet_domain,
                   ky_mapping_for_dirichlet_domain,
                   *kx_mapping_data_for_dirichlet_domain,
@@ -1855,6 +2015,8 @@ namespace IdeoBEM
               SauterQuadratureRule<dim>(5, 4, 4, 3),
               dof_handler_for_neumann_space_on_dirichlet_domain,
               dof_handler_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
               kx_mapping_for_dirichlet_domain,
               ky_mapping_for_dirichlet_domain,
               *kx_mapping_data_for_dirichlet_domain,
@@ -1865,11 +2027,33 @@ namespace IdeoBEM
                 SameTriangulations,
               true);
 
+            // DEBUG: Output hmatrices.
+            std::ofstream out("V_bct.dat");
+            V1_hmat.HMatrix<spacedim, double>::write_leaf_set_by_iteration(
+              out, 1e-12);
+            out.close();
+
+            out.open("K_bct.dat");
+            K2_hmat_with_mass_matrix
+              .HMatrix<spacedim, double>::write_leaf_set_by_iteration(out,
+                                                                      1e-12);
+            out.close();
+
+            out.open("matrices.dat");
+            LAPACKFullMatrixExt<double> V_full, K_full;
+            V1_hmat.HMatrix<spacedim, double>::convertToFullMatrix(V_full);
+            K2_hmat_with_mass_matrix
+              .HMatrix<spacedim, double>::convertToFullMatrix(K_full);
+
+            V_full.print_formatted_to_mat(out, "V", 15, true, 25, "0");
+            K_full.print_formatted_to_mat(out, "K", 15, true, 25, "0");
+            out.close();
+
             /**
              * Calculate the RHS vector.
              */
-            K2_hmat_with_mass_matrix.vmult(system_rhs,
-                                           dirichlet_bc,
+            K2_hmat_with_mass_matrix.vmult(system_rhs_internal_dof_numbering,
+                                           dirichlet_bc_internal_dof_numbering,
                                            HMatrixSupport::Property::general);
 
             break;
@@ -1923,6 +2107,8 @@ namespace IdeoBEM
               SauterQuadratureRule<dim>(4, 3, 3, 2),
               dof_handler_for_neumann_space_on_dirichlet_domain,
               dof_handler_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
               kx_mapping_for_dirichlet_domain,
               ky_mapping_for_dirichlet_domain,
               *kx_mapping_data_for_dirichlet_domain,
@@ -2002,17 +2188,27 @@ namespace IdeoBEM
       }
     else
       {
-        SolverControl            solver_control(1000, 1e-10, true, true);
+        SolverControl            solver_control(1000, 1e-6, true, true);
         SolverCG<Vector<double>> solver(solver_control);
 
         switch (problem_type)
           {
             case DirichletBCProblem:
               {
-                solver.solve(V1_hmat,
-                             solution_for_dirichlet_domain,
-                             system_rhs,
-                             V1_hmat_preconditioner);
+                solver.solve(
+                  V1_hmat,
+                  solution_for_dirichlet_domain_internal_dof_numbering,
+                  system_rhs_internal_dof_numbering,
+                  V1_hmat_preconditioner);
+
+                /**
+                 * Permute the solution vector by following the mapping
+                 * from external to internal DoF numbering.
+                 */
+                permute_vector(
+                  solution_for_dirichlet_domain_internal_dof_numbering,
+                  *dof_e2i_numbering_for_neumann_space_on_dirichlet_domain,
+                  solution_for_dirichlet_domain);
 
                 break;
               }

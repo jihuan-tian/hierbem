@@ -1,7 +1,7 @@
 /**
  * \file lapack-matrix-global-to-rkmatrix.cc
  * \brief Verify the restriction of a global full matrix to a rank-k submatrix.
- * \ingroup
+ * \ingroup rkmatrices testers
  * \author Jihuan Tian
  * \date 2021-07-28
  */
@@ -27,8 +27,8 @@ main()
     }
   M.print_formatted_to_mat(std::cout, "M");
 
-  std::vector<types::global_dof_index> tau{2, 5, 7, 10};
-  std::vector<types::global_dof_index> sigma{3, 8, 9, 16};
+  std::array<types::global_dof_index, 2> tau{7,11};
+  std::array<types::global_dof_index, 2> sigma{9,13};
 
   RkMatrix<double> rkmat_no_trunc(tau, sigma, M);
   rkmat_no_trunc.print_formatted_to_mat(

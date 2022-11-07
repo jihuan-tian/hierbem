@@ -1,5 +1,5 @@
 clear all;
-load lapack-matrix-rk-decompose.output;
+load lapack-matrix-rank-k-decompose.output1;
 
 norm(M - A1 * B1', "fro") / norm(M, "fro")
 norm(M - A2 * B2', "fro") / norm(M, "fro")

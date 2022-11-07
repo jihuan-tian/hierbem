@@ -149,6 +149,24 @@ namespace IdeoBEM
     }
 
 
+    template <typename VectorType>
+    void
+    permute_vector(
+      const VectorType &                          input_vector,
+      const std::vector<types::global_dof_index> &permutation_indices,
+      VectorType &                                permuted_vector)
+    {
+      const types::global_dof_index N = input_vector.size();
+      AssertDimension(N, permutation_indices.size());
+      AssertDimension(N, permuted_vector.size());
+
+      for (types::global_dof_index i = 0; i < N; i++)
+        {
+          permuted_vector[i] = input_vector[permutation_indices[i]];
+        }
+    }
+
+
     /**
      * This function returns a list of DoF indices in the given cell iterator,
      * which is used for checking if the two cells have interaction. This

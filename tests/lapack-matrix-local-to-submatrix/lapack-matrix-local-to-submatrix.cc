@@ -1,7 +1,7 @@
 /**
  * \file lapack-matrix-local-to-submatrix.cc
  * \brief Verify the restriction of a local full matrix to sub full matrix.
- * \ingroup
+ * \ingroup linalg testers
  * \author Jihuan Tian
  * \date 2021-07-28
  */
@@ -32,31 +32,22 @@ main()
   /**
    * Create a local matrix as a sub matrix of the original matrix.
    */
-  std::vector<types::global_dof_index> tau{2, 3, 4, 5, 7, 10, 18, 19};
-  std::vector<types::global_dof_index> sigma{3, 4, 8, 9, 11, 13, 15, 16, 17};
+  std::array<types::global_dof_index, 2> tau{5, 13};
+  std::array<types::global_dof_index, 2> sigma{7, 15};
   LAPACKFullMatrixExt<double>          M_b(tau, sigma, M);
   M_b.print_formatted_to_mat(std::cout, "M_b");
-
-  /**
-   * Build the maps from global row and column indices respectively to local
-   * indices wrt. M_b.
-   */
-  std::map<types::global_dof_index, size_t> row_index_global_to_local_map;
-  std::map<types::global_dof_index, size_t> col_index_global_to_local_map;
-  build_index_set_global_to_local_map(tau, row_index_global_to_local_map);
-  build_index_set_global_to_local_map(sigma, col_index_global_to_local_map);
 
   /**
    * Create a sub full matrix of \p M_b by specifying its block cluster as a
    * subset of the block cluster \f$\tau \times \sigma\f$ for \p M_b.
    */
-  std::vector<types::global_dof_index> tau_subset{3, 7, 10, 19};
-  std::vector<types::global_dof_index> sigma_subset{8, 13, 17};
+  std::array<types::global_dof_index, 2> tau_subset{7, 11};
+  std::array<types::global_dof_index, 2> sigma_subset{10, 13};
   LAPACKFullMatrixExt<double>          M_b_submatrix(tau_subset,
                                             sigma_subset,
                                             M_b,
-                                            row_index_global_to_local_map,
-                                            col_index_global_to_local_map);
+                                            tau,
+                                            sigma);
   M_b_submatrix.print_formatted_to_mat(std::cout, "M_b_submatrix");
 
   return 0;

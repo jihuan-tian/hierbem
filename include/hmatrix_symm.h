@@ -269,6 +269,11 @@ HMatrixSymm<spacedim, Number>::vmult(Vector<Number> &      y,
                                      const Vector<Number> &x) const
 {
   /**
+   * Clear the result vector before the multiplication.
+   */
+  y = 0.;
+
+  /**
    * Call the member function @p vmult in the parent class.
    */
   this->HMatrix<spacedim, Number>::vmult(y,

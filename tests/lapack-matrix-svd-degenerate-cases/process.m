@@ -1,4 +1,4 @@
 clear all;
-load svd-degenerate-cases.output;
+load lapack-matrix-svd-degenerate-cases.output;
 
 norm
