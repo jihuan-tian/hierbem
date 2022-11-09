@@ -97,7 +97,7 @@ private:
 };
 
 int
-main()
+main(int argc, char *argv[])
 {
   deallog.depth_console(2);
 
@@ -112,15 +112,23 @@ main()
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     true, // is interior problem
     4,    // n_min for cluster tree
-    4,    // n_min for block cluster tree
-    3,    // eta for H-matrix
-    8,    // max rank for H-matrix
+    10,   // n_min for block cluster tree
+    0.8,  // eta for H-matrix
+    5,    // max rank for H-matrix
     0.01, // aca epsilon for H-matrix
-    3,    // eta for preconditioner
-    8,    // max rank for preconditioner
-    0.01, // aca epsilon for preconditioner
+    1.0,  // eta for preconditioner
+    2,    // max rank for preconditioner
+    0.1,  // aca epsilon for preconditioner
     MultithreadInfo::n_cores());
-  bem.read_volume_mesh("sphere-from-gmsh-fine_hex.msh");
+
+  if (argc > 1)
+    {
+      bem.read_volume_mesh(std::string(argv[1]));
+    }
+  else
+    {
+      bem.read_volume_mesh(std::string("sphere-from-gmsh-refine-2_hex.msh"));
+    }
 
   const Point<3> source_loc(1, 1, 1);
   const Point<3> center(0, 0, 0);

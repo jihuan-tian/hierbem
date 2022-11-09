@@ -361,10 +361,8 @@ namespace IdeoBEM
                  * If there is only one row index left, throw an exception here
                  * that there is no reference row can be selected.
                  */
-                Assert(
-                  false,
-                  ExcMessage(
-                    "There are no remaining row indices to select from, since the current reference row is the only one left!"));
+                throw(ExcMessage(
+                  "There are no remaining row indices to select from, since the current reference row is the only one left!"));
               }
             else
               {
@@ -377,8 +375,7 @@ namespace IdeoBEM
           }
       }
 
-    Assert(false,
-           ExcMessage("There are no remaining row indices to select from!"));
+    throw(ExcMessage("There are no remaining row indices to select from!"));
     return next_ref_row_index;
   }
 
@@ -453,10 +450,8 @@ namespace IdeoBEM
                  * If there is only one row index left, throw an exception here
                  * that there is no reference row can be selected.
                  */
-                Assert(
-                  false,
-                  ExcMessage(
-                    "There are no remaining row indices to select from, since the current reference row is the only one left!"));
+                throw(ExcMessage(
+                  "There are no remaining row indices to select from, since the current reference row is the only one left!"));
               }
             else
               {
@@ -469,8 +464,7 @@ namespace IdeoBEM
           }
       }
 
-    Assert(false,
-           ExcMessage("There are no remaining row indices to select from!"));
+    throw(ExcMessage("There are no remaining row indices to select from!"));
     return next_ref_row_index;
   }
 
@@ -611,10 +605,8 @@ namespace IdeoBEM
                  * If there is only one column index left, throw an exception
                  * here that there is no reference column can be selected.
                  */
-                Assert(
-                  false,
-                  ExcMessage(
-                    "There are no remaining column indices to select from, since the current reference column is the only one left!"));
+                throw(ExcMessage(
+                  "There are no remaining column indices to select from, since the current reference column is the only one left!"));
               }
             else
               {
@@ -627,8 +619,7 @@ namespace IdeoBEM
           }
       }
 
-    Assert(false,
-           ExcMessage("There are no remaining column indices to select from!"));
+    throw(ExcMessage("There are no remaining column indices to select from!"));
     return next_ref_col_index;
   }
 
@@ -701,10 +692,8 @@ namespace IdeoBEM
                  * If there is only one column index left, throw an exception
                  * here that there is no reference column can be selected.
                  */
-                Assert(
-                  false,
-                  ExcMessage(
-                    "There are no remaining column indices to select from, since the current reference column is the only one left!"));
+                throw(ExcMessage(
+                  "There are no remaining column indices to select from, since the current reference column is the only one left!"));
               }
             else
               {
@@ -717,8 +706,7 @@ namespace IdeoBEM
           }
       }
 
-    Assert(false,
-           ExcMessage("There are no remaining column indices to select from!"));
+    throw(ExcMessage("There are no remaining column indices to select from!"));
     return next_ref_col_index;
   }
 
@@ -790,6 +778,15 @@ namespace IdeoBEM
 
     AssertDimension(rkmat.get_m(), m);
     AssertDimension(rkmat.get_n(), n);
+
+    /**
+     * Adjust the maximum ACA+ iteration if is larger than the matrix dimension.
+     */
+    unsigned int effective_max_iter = aca_config.max_iter;
+    if (effective_max_iter > std::min(m, n))
+      {
+        effective_max_iter = std::min(m, n);
+      }
 
     /**
      * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -932,7 +929,7 @@ namespace IdeoBEM
     /**
      * Start the ACA+ iteration from \f$k=1\f$.
      */
-    for (unsigned int k = 1; k <= aca_config.max_iter; k++)
+    for (unsigned int k = 1; k <= effective_max_iter; k++)
       {
         /**
          * Select the row index from the maximizer of the reference column.
@@ -1297,10 +1294,8 @@ namespace IdeoBEM
           {
             if (size(remaining_row_indices) == 0)
               {
-                Assert(
-                  false,
-                  ExcMessage(
-                    "All rows of the block matrix have been tried for selection!"));
+                throw(ExcMessage(
+                  "All rows of the block matrix have been tried for selection!"));
 
                 break;
               }
