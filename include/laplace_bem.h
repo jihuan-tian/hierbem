@@ -267,7 +267,7 @@ namespace IdeoBEM
 
     /**
      * Solve the equation \f$Vw_{\rm eq}=1\f$ for the natural density \f$w_{\rm
-     * eq}\f$.
+     * eq}\f$ and calculate the stabilization factor \f$\alpha\f$.
      */
     void
     solve_natural_density();
@@ -629,6 +629,12 @@ namespace IdeoBEM
      * in the Neumann boundary problem.
      */
     Vector<double> natural_density;
+
+    /**
+     * The result vector for the multiplication of the mass matrix and the
+     * natural density \f$w_{\rm eq}\f$
+     */
+    Vector<double> mass_vmult_weq;
 
     /**
      * Right hand side vector, which is used in the equation \f$\mathscr{V}
@@ -1149,6 +1155,7 @@ namespace IdeoBEM
             system_rhs.reinit(n_dofs_for_neumann_space_on_dirichlet_domain);
             solution_for_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
+
             if (is_use_hmat)
               {
                 system_rhs_internal_dof_numbering.reinit(
@@ -1200,10 +1207,10 @@ namespace IdeoBEM
                  */
                 build_dof_to_cell_topology(
                   dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
-                  dof_handler_for_dirichlet_space_on_dirichlet_domain);
+                  dof_handler_for_dirichlet_space_on_neumann_domain);
                 build_dof_to_cell_topology(
                   dof_to_cell_topo_for_neumann_space_on_neumann_domain,
-                  dof_handler_for_neumann_space_on_dirichlet_domain);
+                  dof_handler_for_neumann_space_on_neumann_domain);
 
                 /**
                  * Generate lists of DoF indices.
@@ -1212,6 +1219,10 @@ namespace IdeoBEM
                   dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
                 dof_indices_for_neumann_space_on_neumann_domain.resize(
                   dof_handler_for_neumann_space_on_neumann_domain.n_dofs());
+                gen_linear_indices<vector_uta, types::global_dof_index>(
+                  dof_indices_for_dirichlet_space_on_neumann_domain);
+                gen_linear_indices<vector_uta, types::global_dof_index>(
+                  dof_indices_for_neumann_space_on_neumann_domain);
 
                 /**
                  * Get the spatial coordinates of the support points.
@@ -1226,7 +1237,7 @@ namespace IdeoBEM
                 support_points_for_neumann_space_on_neumann_domain.resize(
                   dof_handler_for_neumann_space_on_neumann_domain.n_dofs());
                 DoFTools::map_dofs_to_support_points(
-                  ky_mapping_for_neumann_domain,
+                  kx_mapping_for_neumann_domain,
                   dof_handler_for_neumann_space_on_neumann_domain,
                   support_points_for_neumann_space_on_neumann_domain);
 
@@ -1347,7 +1358,7 @@ namespace IdeoBEM
                                                 max_hmat_rank);
 
                 /**
-                 * Initialize the preconditioner.
+                 * Initialize the preconditioners.
                  */
                 V1_hmat_preconditioner = HMatrixSymmPreconditioner<spacedim>(
                   bct_for_bilinear_form_V1, max_hmat_rank_for_preconditioner);
@@ -1385,6 +1396,13 @@ namespace IdeoBEM
             natural_density.reinit(n_dofs_for_neumann_space_on_neumann_domain);
             system_rhs_for_natural_density.reinit(
               n_dofs_for_neumann_space_on_neumann_domain);
+
+            /**
+             * Allocate memory for the product of mass matrix and the natural
+             * density.
+             */
+            mass_vmult_weq.reinit(
+              dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
 
             /**
              * Allocate memory for the right-hand-side vector and solution
@@ -1688,6 +1706,7 @@ namespace IdeoBEM
              * regularization method is adopted.
              */
             std::cerr << "=== Assemble D matrix ===" << std::endl;
+
             assemble_bem_full_matrix(
               hyper_singular_kernel,
               1.0,
@@ -1715,10 +1734,9 @@ namespace IdeoBEM
             solve_natural_density();
 
             /**
-             * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$.
+             * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
+             * is the multiplication of the mass matrix and the natural density.
              */
-            Vector<double> a(
-              dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
             assemble_fem_mass_matrix_vmult<dim,
                                            spacedim,
                                            double,
@@ -1727,13 +1745,13 @@ namespace IdeoBEM
               dof_handler_for_neumann_space_on_neumann_domain,
               natural_density,
               QGauss<2>(fe_order_for_dirichlet_space + 1),
-              a);
+              mass_vmult_weq);
 
             /**
              * Add the matrix \f$\alpha a a^T\f$ into \f$D\f$.
              */
             FullMatrix<double> aaT(D1_matrix.m(), D1_matrix.n());
-            aaT.outer_product(a, a);
+            aaT.outer_product(mass_vmult_weq, mass_vmult_weq);
             D1_matrix.add(alpha_for_neumann, aaT);
 
             break;
@@ -2060,6 +2078,123 @@ namespace IdeoBEM
           }
         case NeumannBCProblem:
           {
+            if (is_interior_problem)
+              {
+                std::cerr << "=== Assemble (1-sigma) I - K'" << std::endl;
+
+                fill_hmatrix_with_aca_plus_smp(
+                  thread_num,
+                  K_prime2_hmat_with_mass_matrix,
+                  aca_config,
+                  adjoint_double_layer_kernel,
+                  -1.0,
+                  0.5,
+                  dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
+                  dof_to_cell_topo_for_neumann_space_on_neumann_domain,
+                  SauterQuadratureRule<dim>(5, 4, 4, 3),
+                  QGauss<dim>(fe_order_for_dirichlet_space + 1),
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+                  *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+                  kx_mapping_for_neumann_domain,
+                  ky_mapping_for_neumann_domain,
+                  *kx_mapping_data_for_neumann_domain,
+                  *ky_mapping_data_for_neumann_domain,
+                  map_from_neumann_boundary_mesh_to_volume_mesh,
+                  map_from_neumann_boundary_mesh_to_volume_mesh,
+                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                    SameTriangulations,
+                  false);
+              }
+            else
+              {
+                std::cerr << "=== Assemble -sigma I - K'" << std::endl;
+
+                fill_hmatrix_with_aca_plus_smp(
+                  thread_num,
+                  K_prime2_hmat_with_mass_matrix,
+                  aca_config,
+                  adjoint_double_layer_kernel,
+                  -1.0,
+                  -0.5,
+                  dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
+                  dof_to_cell_topo_for_neumann_space_on_neumann_domain,
+                  SauterQuadratureRule<dim>(5, 4, 4, 3),
+                  QGauss<dim>(fe_order_for_dirichlet_space + 1),
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+                  *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+                  kx_mapping_for_neumann_domain,
+                  ky_mapping_for_neumann_domain,
+                  *kx_mapping_data_for_neumann_domain,
+                  *ky_mapping_data_for_neumann_domain,
+                  map_from_neumann_boundary_mesh_to_volume_mesh,
+                  map_from_neumann_boundary_mesh_to_volume_mesh,
+                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                    SameTriangulations,
+                  false);
+              }
+
+            /**
+             * Calculate the RHS vector.
+             */
+            K_prime2_hmat_with_mass_matrix.vmult(
+              system_rhs_internal_dof_numbering,
+              neumann_bc_internal_dof_numbering,
+              HMatrixSupport::Property::general);
+
+            /**
+             * Solve the natural density.
+             */
+            solve_natural_density();
+
+            /**
+             * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
+             * is the multiplication of the mass matrix and the natural density.
+             */
+            assemble_fem_mass_matrix_vmult<dim,
+                                           spacedim,
+                                           double,
+                                           Vector<double>>(
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              dof_handler_for_neumann_space_on_neumann_domain,
+              natural_density,
+              QGauss<2>(fe_order_for_dirichlet_space + 1),
+              mass_vmult_weq);
+
+            /**
+             * Assemble the regularized bilinear form for the hyper-singular
+             * operator along with the stabilization term.
+             */
+            std::cerr << "=== Assemble D matrix ===" << std::endl;
+
+            fill_hmatrix_with_aca_plus_smp(
+              thread_num,
+              D1_hmat,
+              aca_config,
+              hyper_singular_kernel,
+              1.0,
+              mass_vmult_weq,
+              alpha_for_neumann,
+              dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
+              dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
+              SauterQuadratureRule<dim>(5, 4, 4, 3),
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_neumann_domain,
+              map_from_neumann_boundary_mesh_to_volume_mesh,
+              map_from_neumann_boundary_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              true);
+
             break;
           }
         case MixedBCProblem:
@@ -2129,6 +2264,40 @@ namespace IdeoBEM
           }
         case NeumannBCProblem:
           {
+            std::cerr << "=== Assemble preconditioner for the D matrix ==="
+                      << std::endl;
+
+            fill_hmatrix_with_aca_plus_smp(
+              thread_num,
+              D1_hmat_preconditioner,
+              aca_config,
+              hyper_singular_kernel,
+              1.0,
+              mass_vmult_weq,
+              alpha_for_neumann,
+              dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
+              dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
+              SauterQuadratureRule<dim>(4, 3, 3, 2),
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_neumann_domain,
+              map_from_neumann_boundary_mesh_to_volume_mesh,
+              map_from_neumann_boundary_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              true);
+
+            /**
+             * Perform Cholesky factorisation of the preconditioner.
+             */
+            D1_hmat_preconditioner.compute_cholesky_factorization(
+              max_hmat_rank_for_preconditioner);
+
             break;
           }
         case MixedBCProblem:
@@ -2214,7 +2383,19 @@ namespace IdeoBEM
               }
             case NeumannBCProblem:
               {
-                // TODO Solve H-matrix for Neumann problem
+                solver.solve(D1_hmat,
+                             solution_for_neumann_domain_internal_dof_numbering,
+                             system_rhs_internal_dof_numbering,
+                             D1_hmat_preconditioner);
+
+                /**
+                 * Permute the solution vector by following the mapping
+                 * from external to internal DoF numbering.
+                 */
+                permute_vector(
+                  solution_for_neumann_domain_internal_dof_numbering,
+                  *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain,
+                  solution_for_neumann_domain);
 
                 break;
               }
@@ -2612,6 +2793,9 @@ namespace IdeoBEM
   {
     /**
      * Calculate the inner product of the solution and the natural density.
+     * Because the numerical solution is sought in the Sobolev space
+     * \f$H^{-1/2}_*(\Gamma)\f$, it is orthogonal to the natural density
+     * \f$w_{\rm eq}\f$. The analytical solution does not obey this constraint.
      */
     Vector<double> v(
       dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
@@ -2705,32 +2889,75 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::solve_natural_density()
   {
-    /**
-     * Assemble the SLP matrix which is used for solving the natural
-     * density \f$w_{\rm eq}\f$.
-     */
-    std::cerr << "=== Assemble SLP matrix for natural density === "
-              << std::endl;
-    assemble_bem_full_matrix(
-      single_layer_kernel,
-      1.0,
-      dof_handler_for_neumann_space_on_neumann_domain,
-      dof_handler_for_neumann_space_on_neumann_domain,
-      kx_mapping_for_neumann_domain,
-      ky_mapping_for_neumann_domain,
-      *kx_mapping_data_for_neumann_domain,
-      *ky_mapping_data_for_neumann_domain,
-      map_from_neumann_boundary_mesh_to_volume_mesh,
-      map_from_neumann_boundary_mesh_to_volume_mesh,
-      IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::SameTriangulations,
-      SauterQuadratureRule<dim>(5, 4, 4, 3),
-      V1_matrix);
+    Assert(problem_type == ProblemType::NeumannBCProblem, ExcInternalError());
+
+    if (!is_use_hmat)
+      {
+        /**
+         * Assemble the SLP matrix which is used for solving the natural
+         * density \f$w_{\rm eq}\f$.
+         */
+        std::cerr
+          << "=== Assemble SLP matrix for solving the natural density === "
+          << std::endl;
+
+        assemble_bem_full_matrix(
+          single_layer_kernel,
+          1.0,
+          dof_handler_for_neumann_space_on_neumann_domain,
+          dof_handler_for_neumann_space_on_neumann_domain,
+          kx_mapping_for_neumann_domain,
+          ky_mapping_for_neumann_domain,
+          *kx_mapping_data_for_neumann_domain,
+          *ky_mapping_data_for_neumann_domain,
+          map_from_neumann_boundary_mesh_to_volume_mesh,
+          map_from_neumann_boundary_mesh_to_volume_mesh,
+          IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+            SameTriangulations,
+          SauterQuadratureRule<dim>(5, 4, 4, 3),
+          V1_matrix);
+      }
+    else
+      {
+        /**
+         * Define the @p ACAConfig object.
+         */
+        ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
+
+        std::cerr
+          << "=== Assemble SLP matrix for solving the natural density ==="
+          << std::endl;
+
+        fill_hmatrix_with_aca_plus_smp(
+          thread_num,
+          V1_hmat,
+          aca_config,
+          single_layer_kernel,
+          1.0,
+          dof_to_cell_topo_for_neumann_space_on_neumann_domain,
+          dof_to_cell_topo_for_neumann_space_on_neumann_domain,
+          SauterQuadratureRule<dim>(5, 4, 4, 3),
+          dof_handler_for_neumann_space_on_neumann_domain,
+          dof_handler_for_neumann_space_on_neumann_domain,
+          *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+          *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+          kx_mapping_for_neumann_domain,
+          ky_mapping_for_neumann_domain,
+          *kx_mapping_data_for_neumann_domain,
+          *ky_mapping_data_for_neumann_domain,
+          map_from_neumann_boundary_mesh_to_volume_mesh,
+          map_from_neumann_boundary_mesh_to_volume_mesh,
+          IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+            SameTriangulations,
+          true);
+      }
 
     /**
      * Assemble the RHS vector for solving the natural density \f$w_{\rm
      * eq}\f$.
      */
     std::cerr << "=== Assemble RHS vector for natural density ===" << std::endl;
+
     assemble_rhs_linear_form_vector(
       1.0,
       dof_handler_for_neumann_space_on_neumann_domain,
@@ -2740,12 +2967,72 @@ namespace IdeoBEM
     /**
      * Solve the natural density \f$w_{\rm eq}\f$.
      */
-    SolverControl solver_control(500, 1e-8);
-    SolverCG<>    solver(solver_control);
-    solver.solve(V1_matrix,
-                 natural_density,
-                 system_rhs_for_natural_density,
-                 PreconditionIdentity());
+    SolverControl            solver_control(1000, 1e-6, true, true);
+    SolverCG<Vector<double>> solver(solver_control);
+
+    if (!is_use_hmat)
+      {
+        solver.solve(V1_matrix,
+                     natural_density,
+                     system_rhs_for_natural_density,
+                     PreconditionIdentity());
+      }
+    else
+      {
+        /**
+         * Define the @p ACAConfig object.
+         */
+        ACAConfig aca_config(max_hmat_rank_for_preconditioner,
+                             aca_relative_error_for_preconditioner,
+                             eta_for_preconditioner);
+
+        std::cerr << "=== Assemble preconditioner for the SLP matrix ==="
+                  << std::endl;
+
+        fill_hmatrix_with_aca_plus_smp(
+          thread_num,
+          V1_hmat_preconditioner,
+          aca_config,
+          single_layer_kernel,
+          1.0,
+          dof_to_cell_topo_for_neumann_space_on_neumann_domain,
+          dof_to_cell_topo_for_neumann_space_on_neumann_domain,
+          SauterQuadratureRule<dim>(4, 3, 3, 2),
+          dof_handler_for_neumann_space_on_neumann_domain,
+          dof_handler_for_neumann_space_on_neumann_domain,
+          *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+          *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+          kx_mapping_for_neumann_domain,
+          ky_mapping_for_neumann_domain,
+          *kx_mapping_data_for_neumann_domain,
+          *ky_mapping_data_for_neumann_domain,
+          map_from_neumann_boundary_mesh_to_volume_mesh,
+          map_from_neumann_boundary_mesh_to_volume_mesh,
+          IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+            SameTriangulations,
+          true);
+
+        /**
+         * Perform Cholesky factorisation of the preconditioner.
+         */
+        V1_hmat_preconditioner.compute_cholesky_factorization(
+          max_hmat_rank_for_preconditioner);
+
+        solver.solve(V1_hmat,
+                     natural_density,
+                     system_rhs_for_natural_density,
+                     V1_hmat_preconditioner);
+      }
+
+    /**
+     * Calculate the stabilization factor \f$\alpha\f$, which is the inner
+     * product of \f$w_{\rm eq}\f$ and the RHS vector \f$\langle 1, \psi_i
+     * \rangle\f$.
+     */
+    alpha_for_neumann =
+      1.0 / 4.0 / (natural_density * system_rhs_for_natural_density);
+    std::cout << "Neumann stabilization factor: " << alpha_for_neumann
+              << std::endl;
   }
 } // namespace IdeoBEM
 

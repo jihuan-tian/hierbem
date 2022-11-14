@@ -659,8 +659,9 @@ namespace IdeoBEM
     if (kernel_function.kernel_type == HyperSingularRegular)
       {
         /**
-         * Extract the gradient values of the current shape function in the unit
-         * cell for \f$K_x\f$ as well as \f$K_y\f$.
+         * Extract the gradient values of the current shape function at the
+         * current quadrature point in the unit cell for \f$K_x\f$ as well as
+         * \f$K_y\f$.
          */
         Vector<RangeNumberType> kx_shape_grad_in_unit_cell(dim);
         Vector<RangeNumberType> ky_shape_grad_in_unit_cell(dim);
@@ -674,7 +675,8 @@ namespace IdeoBEM
           }
 
         /**
-         * Apply covariant transformation to the gradient tensors.
+         * Apply covariant transformation to the gradient tensors in the unit
+         * cell.
          */
         Vector<RangeNumberType> kx_shape_grad_in_real_cell(spacedim);
         Vector<RangeNumberType> ky_shape_grad_in_real_cell(spacedim);

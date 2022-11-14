@@ -889,6 +889,14 @@ namespace IdeoBEM
   }
 
 
+  /**
+   *
+   *
+   * @param scratch
+   * @param cell_neighboring_type
+   * @param bem_values
+   * @param active_quad_rule
+   */
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   calc_covariant_transformations(

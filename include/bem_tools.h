@@ -3232,8 +3232,17 @@ namespace IdeoBEM
       support_point_components.mmult(jacobian_matrix,
                                      shape_grad_matrix_at_quad_point);
 
+      /**
+       * Metric tensor
+       */
       FullMatrix<Number> G(dim, dim);
+      /**
+       * Inverse of the metric tensor
+       */
       FullMatrix<Number> G_inv(dim, dim);
+      /**
+       * \f$G=J^T J\f$
+       */
       jacobian_matrix.Tmmult(G, jacobian_matrix);
       G_inv.invert(G);
 

@@ -12,6 +12,17 @@ ENDIF()
 
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
+# For running with Valgrind.
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  # Disable function inlining.
+  include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
+  ADD_FLAGS(DEAL_II_CXX_FLAGS_DEBUG "-fno-inline")
+
+  # Replace -O0 with -O1.
+  include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
+  REPLACE_FLAG(DEAL_II_CXX_FLAGS_DEBUG "-O0" "-O1")
+endif()
+
 # Project name
 PROJECT("ideobem")
 # Folder for header files

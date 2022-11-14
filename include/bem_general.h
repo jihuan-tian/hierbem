@@ -436,6 +436,16 @@ namespace IdeoBEM
   }
 
 
+  /**
+   * Calculate the mass matrix for the test space and trial space, then multiply
+   * it with the input vector and a new vector is returned.
+   *
+   * @param dof_handler_for_test_space
+   * @param dof_handler_for_trial_space
+   * @param v
+   * @param quad_rule
+   * @param target_vector
+   */
   template <int dim,
             int spacedim,
             typename RangeNumberType,

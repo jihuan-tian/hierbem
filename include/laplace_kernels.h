@@ -305,6 +305,23 @@ namespace LaplaceKernel
       : KernelFunction<dim, RangeNumberType>(HyperSingularRegular)
     {}
 
+    /**
+     * Calculate the value of fundamental solution of the Laplace operator.
+     *
+     * \mynote{Because regularization will be applied to the bilinear form of
+     * the hyper-singular kernel, the value calculated here is actually not the
+     * hyper-singular function itself, but the fundamental solution of the
+     * Laplace operator. The final computing the regularized bilinear form will
+     * be carried out in the pullback in the unit cell, which is handled in the
+     * function @p KernelPulledbackToUnitCell::value.}
+     *
+     * @param x
+     * @param y
+     * @param nx
+     * @param ny
+     * @param component
+     * @return
+     */
     virtual RangeNumberType
     value(const Point<dim> &    x,
           const Point<dim> &    y,
