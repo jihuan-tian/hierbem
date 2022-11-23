@@ -26,8 +26,42 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <utility>
 
 using namespace dealii;
+
+template <int dim, int spacedim>
+void
+print_mesh_info(const Triangulation<dim, spacedim> &triangulation)
+{
+  std::cout << "=== Mesh info ===\n"
+            << "Manifold dimension: " << dim << "\n"
+            << "Space dimension: " << spacedim << "\n"
+            << "No. of cells: " << triangulation.n_active_cells() << std::endl;
+
+  {
+    std::map<types::boundary_id, unsigned int> boundary_count;
+
+    // Loop over each cell using TriaAccessor.
+    for (auto &cell : triangulation.active_cell_iterators())
+      {
+        for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
+             ++face)
+          {
+            if (cell->face(face)->at_boundary())
+              boundary_count[cell->face(face)->boundary_id()]++;
+          }
+      }
+
+    std::cout << "Boundary indicators: ";
+    for (const std::pair<const types::boundary_id, unsigned int> &pair :
+         boundary_count)
+      {
+        std::cout << pair.first << "(" << pair.second << " cells) ";
+      }
+    std::cout << std::endl;
+  }
+}
 
 template <typename VectorType>
 void

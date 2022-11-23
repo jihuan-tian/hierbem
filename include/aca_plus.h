@@ -114,10 +114,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -130,16 +134,29 @@ namespace IdeoBEM
   {
     AssertDimension(row_vector.size(), column_dof_indices.size());
 
+    types::global_dof_index i_global_dof_index =
+      (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+        kx_dof_i2e_numbering[row_dof_index] :
+        kx_local_to_full_dirichlet_dof_indices->at(
+          kx_dof_i2e_numbering[row_dof_index]);
+    types::global_dof_index j_global_dof_index;
+
     /**
      * Iterate over each column DoF index.
      */
     for (size_type j = 0; j < column_dof_indices.size(); j++)
       {
+        j_global_dof_index =
+          (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+            ky_dof_i2e_numbering[column_dof_indices[j]] :
+            ky_local_to_full_dirichlet_dof_indices->at(
+              ky_dof_i2e_numbering[column_dof_indices[j]]);
+
         row_vector(j) = sauter_assemble_on_one_pair_of_dofs(
           kernel,
           kernel_factor,
-          kx_dof_i2e_numbering[row_dof_index],
-          ky_dof_i2e_numbering[column_dof_indices[j]],
+          i_global_dof_index,
+          j_global_dof_index,
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
@@ -202,10 +219,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -218,16 +239,29 @@ namespace IdeoBEM
   {
     AssertDimension(row_vector.size(), column_dof_indices.size());
 
+    types::global_dof_index i_global_dof_index =
+      (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+        kx_dof_i2e_numbering[row_dof_index] :
+        kx_local_to_full_dirichlet_dof_indices->at(
+          kx_dof_i2e_numbering[row_dof_index]);
+    types::global_dof_index j_global_dof_index;
+
     /**
      * Iterate over each column DoF index.
      */
     for (size_type j = 0; j < column_dof_indices.size(); j++)
       {
+        j_global_dof_index =
+          (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+            ky_dof_i2e_numbering[column_dof_indices[j]] :
+            ky_local_to_full_dirichlet_dof_indices->at(
+              ky_dof_i2e_numbering[column_dof_indices[j]]);
+
         row_vector(j) = sauter_assemble_on_one_pair_of_dofs(
           kernel,
           kernel_factor,
-          kx_dof_i2e_numbering[row_dof_index],
-          ky_dof_i2e_numbering[column_dof_indices[j]],
+          i_global_dof_index,
+          j_global_dof_index,
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
@@ -274,10 +308,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -290,16 +328,29 @@ namespace IdeoBEM
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index =
+      (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+        ky_dof_i2e_numbering[col_dof_index] :
+        ky_local_to_full_dirichlet_dof_indices->at(
+          ky_dof_i2e_numbering[col_dof_index]);
+
     /**
      * Iterate over each row DoF index.
      */
     for (size_type i = 0; i < row_dof_indices.size(); i++)
       {
+        i_global_dof_index =
+          (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+            kx_dof_i2e_numbering[row_dof_indices[i]] :
+            kx_local_to_full_dirichlet_dof_indices->at(
+              kx_dof_i2e_numbering[row_dof_indices[i]]);
+
         col_vector(i) = sauter_assemble_on_one_pair_of_dofs(
           kernel,
           factor,
-          kx_dof_i2e_numbering[row_dof_indices[i]],
-          ky_dof_i2e_numbering[col_dof_index],
+          i_global_dof_index,
+          j_global_dof_index,
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
@@ -361,10 +412,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -377,16 +432,29 @@ namespace IdeoBEM
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index =
+      (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+        ky_dof_i2e_numbering[col_dof_index] :
+        ky_local_to_full_dirichlet_dof_indices->at(
+          ky_dof_i2e_numbering[col_dof_index]);
+
     /**
      * Iterate over each row DoF index.
      */
     for (size_type i = 0; i < row_dof_indices.size(); i++)
       {
+        i_global_dof_index =
+          (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+            kx_dof_i2e_numbering[row_dof_indices[i]] :
+            kx_local_to_full_dirichlet_dof_indices->at(
+              kx_dof_i2e_numbering[row_dof_indices[i]]);
+
         col_vector(i) = sauter_assemble_on_one_pair_of_dofs(
           kernel,
           kernel_factor,
-          kx_dof_i2e_numbering[row_dof_indices[i]],
-          ky_dof_i2e_numbering[col_dof_index],
+          i_global_dof_index,
+          j_global_dof_index,
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
@@ -451,10 +519,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -505,6 +577,8 @@ namespace IdeoBEM
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
+                                kx_local_to_full_dirichlet_dof_indices,
+                                ky_local_to_full_dirichlet_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
                                 kx_mapping,
@@ -614,10 +688,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -670,6 +748,8 @@ namespace IdeoBEM
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
+                                kx_local_to_full_dirichlet_dof_indices,
+                                ky_local_to_full_dirichlet_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
                                 kx_mapping,
@@ -860,10 +940,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -914,6 +998,8 @@ namespace IdeoBEM
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
+                                   kx_local_to_full_dirichlet_dof_indices,
+                                   ky_local_to_full_dirichlet_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
                                    kx_mapping,
@@ -1023,10 +1109,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -1079,6 +1169,8 @@ namespace IdeoBEM
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
+                                   kx_local_to_full_dirichlet_dof_indices,
+                                   ky_local_to_full_dirichlet_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
                                    kx_mapping,
@@ -1268,10 +1360,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -1352,6 +1448,8 @@ namespace IdeoBEM
                             bem_values,
                             kx_dof_handler,
                             ky_dof_handler,
+                            kx_local_to_full_dirichlet_dof_indices,
+                            ky_local_to_full_dirichlet_dof_indices,
                             kx_dof_i2e_numbering,
                             ky_dof_i2e_numbering,
                             kx_mapping,
@@ -1374,6 +1472,8 @@ namespace IdeoBEM
                                bem_values,
                                kx_dof_handler,
                                ky_dof_handler,
+                               kx_local_to_full_dirichlet_dof_indices,
+                               ky_local_to_full_dirichlet_dof_indices,
                                kx_dof_i2e_numbering,
                                ky_dof_i2e_numbering,
                                kx_mapping,
@@ -1479,6 +1579,8 @@ namespace IdeoBEM
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
+                                kx_local_to_full_dirichlet_dof_indices,
+                                ky_local_to_full_dirichlet_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
                                 kx_mapping,
@@ -1539,6 +1641,8 @@ namespace IdeoBEM
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
+                                   kx_local_to_full_dirichlet_dof_indices,
+                                   ky_local_to_full_dirichlet_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
                                    kx_mapping,
@@ -1580,6 +1684,8 @@ namespace IdeoBEM
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
+                                   kx_local_to_full_dirichlet_dof_indices,
+                                   ky_local_to_full_dirichlet_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
                                    kx_mapping,
@@ -1626,6 +1732,8 @@ namespace IdeoBEM
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
+                                kx_local_to_full_dirichlet_dof_indices,
+                                ky_local_to_full_dirichlet_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
                                 kx_mapping,
@@ -1690,6 +1798,8 @@ namespace IdeoBEM
                                       bem_values,
                                       kx_dof_handler,
                                       ky_dof_handler,
+                                      kx_local_to_full_dirichlet_dof_indices,
+                                      ky_local_to_full_dirichlet_dof_indices,
                                       kx_dof_i2e_numbering,
                                       ky_dof_i2e_numbering,
                                       kx_mapping,
@@ -1747,6 +1857,8 @@ namespace IdeoBEM
                                        bem_values,
                                        kx_dof_handler,
                                        ky_dof_handler,
+                                       kx_local_to_full_dirichlet_dof_indices,
+                                       ky_local_to_full_dirichlet_dof_indices,
                                        kx_dof_i2e_numbering,
                                        ky_dof_i2e_numbering,
                                        kx_mapping,
@@ -1866,10 +1978,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -1952,6 +2068,8 @@ namespace IdeoBEM
                             bem_values,
                             kx_dof_handler,
                             ky_dof_handler,
+                            kx_local_to_full_dirichlet_dof_indices,
+                            ky_local_to_full_dirichlet_dof_indices,
                             kx_dof_i2e_numbering,
                             ky_dof_i2e_numbering,
                             kx_mapping,
@@ -1976,6 +2094,8 @@ namespace IdeoBEM
                                bem_values,
                                kx_dof_handler,
                                ky_dof_handler,
+                               kx_local_to_full_dirichlet_dof_indices,
+                               ky_local_to_full_dirichlet_dof_indices,
                                kx_dof_i2e_numbering,
                                ky_dof_i2e_numbering,
                                kx_mapping,
@@ -2083,6 +2203,8 @@ namespace IdeoBEM
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
+                                kx_local_to_full_dirichlet_dof_indices,
+                                ky_local_to_full_dirichlet_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
                                 kx_mapping,
@@ -2145,6 +2267,8 @@ namespace IdeoBEM
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
+                                   kx_local_to_full_dirichlet_dof_indices,
+                                   ky_local_to_full_dirichlet_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
                                    kx_mapping,
@@ -2188,6 +2312,8 @@ namespace IdeoBEM
                                    bem_values,
                                    kx_dof_handler,
                                    ky_dof_handler,
+                                   kx_local_to_full_dirichlet_dof_indices,
+                                   ky_local_to_full_dirichlet_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
                                    kx_mapping,
@@ -2236,6 +2362,8 @@ namespace IdeoBEM
                                 bem_values,
                                 kx_dof_handler,
                                 ky_dof_handler,
+                                kx_local_to_full_dirichlet_dof_indices,
+                                ky_local_to_full_dirichlet_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
                                 kx_mapping,
@@ -2302,6 +2430,8 @@ namespace IdeoBEM
                                       bem_values,
                                       kx_dof_handler,
                                       ky_dof_handler,
+                                      kx_local_to_full_dirichlet_dof_indices,
+                                      ky_local_to_full_dirichlet_dof_indices,
                                       kx_dof_i2e_numbering,
                                       ky_dof_i2e_numbering,
                                       kx_mapping,
@@ -2361,6 +2491,8 @@ namespace IdeoBEM
                                        bem_values,
                                        kx_dof_handler,
                                        ky_dof_handler,
+                                       kx_local_to_full_dirichlet_dof_indices,
+                                       ky_local_to_full_dirichlet_dof_indices,
                                        kx_dof_i2e_numbering,
                                        ky_dof_i2e_numbering,
                                        kx_mapping,
@@ -2854,6 +2986,8 @@ namespace IdeoBEM
    * @param bem_values
    * @param kx_dof_handler
    * @param ky_dof_handler
+   * @param kx_local_to_full_dirichlet_dof_indices
+   * @param ky_local_to_full_dirichlet_dof_indices
    * @param kx_mapping
    * @param ky_mapping
    * @param map_from_kx_boundary_mesh_to_volume_mesh
@@ -2875,10 +3009,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -2894,6 +3032,9 @@ namespace IdeoBEM
       leaf_mat->get_row_indices();
     const std::array<types::global_dof_index, 2> *col_indices =
       leaf_mat->get_col_indices();
+
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index;
 
     switch (leaf_mat->get_type())
       {
@@ -2931,14 +3072,30 @@ namespace IdeoBEM
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
+                            i_global_dof_index =
+                              (kx_local_to_full_dirichlet_dof_indices ==
+                               nullptr) ?
+                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_local_to_full_dirichlet_dof_indices->at(
+                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                             for (size_t j = 0; j <= i; j++)
                               {
+                                j_global_dof_index =
+                                  (ky_local_to_full_dirichlet_dof_indices ==
+                                   nullptr) ?
+                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                         j] :
+                                    ky_local_to_full_dirichlet_dof_indices->at(
+                                      ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                           j]);
+
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
-                                    kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                                    ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                                    i_global_dof_index,
+                                    j_global_dof_index,
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
@@ -2974,14 +3131,30 @@ namespace IdeoBEM
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
+                            i_global_dof_index =
+                              (kx_local_to_full_dirichlet_dof_indices ==
+                               nullptr) ?
+                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_local_to_full_dirichlet_dof_indices->at(
+                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                             for (size_t j = 0; j < fullmat->n(); j++)
                               {
+                                j_global_dof_index =
+                                  (ky_local_to_full_dirichlet_dof_indices ==
+                                   nullptr) ?
+                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                         j] :
+                                    ky_local_to_full_dirichlet_dof_indices->at(
+                                      ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                           j]);
+
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
-                                    kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                                    ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                                    i_global_dof_index,
+                                    j_global_dof_index,
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
@@ -3016,13 +3189,25 @@ namespace IdeoBEM
                  */
                 for (size_t i = 0; i < fullmat->m(); i++)
                   {
+                    i_global_dof_index =
+                      (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+                        kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                        kx_local_to_full_dirichlet_dof_indices->at(
+                          kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                     for (size_t j = 0; j < fullmat->n(); j++)
                       {
+                        j_global_dof_index =
+                          (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+                            ky_dof_i2e_numbering[(*col_indices)[0] + j] :
+                            ky_local_to_full_dirichlet_dof_indices->at(
+                              ky_dof_i2e_numbering[(*col_indices)[0] + j]);
+
                         (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
                           kernel,
                           kernel_factor,
-                          kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                          ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                          i_global_dof_index,
+                          j_global_dof_index,
                           kx_dof_to_cell_topo,
                           ky_dof_to_cell_topo,
                           bem_values,
@@ -3074,6 +3259,8 @@ namespace IdeoBEM
                                  bem_values,
                                  kx_dof_handler,
                                  ky_dof_handler,
+                                 kx_local_to_full_dirichlet_dof_indices,
+                                 ky_local_to_full_dirichlet_dof_indices,
                                  kx_dof_i2e_numbering,
                                  ky_dof_i2e_numbering,
                                  kx_mapping,
@@ -3122,6 +3309,8 @@ namespace IdeoBEM
                          bem_values,
                          kx_dof_handler,
                          ky_dof_handler,
+                         kx_local_to_full_dirichlet_dof_indices,
+                         ky_local_to_full_dirichlet_dof_indices,
                          kx_dof_i2e_numbering,
                          ky_dof_i2e_numbering,
                          kx_mapping,
@@ -3161,7 +3350,14 @@ namespace IdeoBEM
    * @param aca_config
    * @param kernel
    * @param kernel_factor
-   * @param mass_vmult_weq
+   * @param mass_vmult_weq This is the multiplication of the mass matrix and
+   * natural density vector. When in the mixed boundary value problem, because
+   * it produces an intermediate result, the DoF indices associated with the
+   * result vector are the local DoF indices, which does not need the
+   * application of the internal-to-external map (which is caused by the
+   * renumbering due to cluster tree construction), nor the external
+   * local-to-full Dirichlet DoF index map (which is caused by selecting a
+   * subset of DoFs from the Dirichlet space.).
    * @param stabilization_factor
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
@@ -3193,10 +3389,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -3212,6 +3412,9 @@ namespace IdeoBEM
       leaf_mat->get_row_indices();
     const std::array<types::global_dof_index, 2> *col_indices =
       leaf_mat->get_col_indices();
+
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index;
 
     switch (leaf_mat->get_type())
       {
@@ -3249,14 +3452,30 @@ namespace IdeoBEM
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
+                            i_global_dof_index =
+                              (kx_local_to_full_dirichlet_dof_indices ==
+                               nullptr) ?
+                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_local_to_full_dirichlet_dof_indices->at(
+                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                             for (size_t j = 0; j <= i; j++)
                               {
+                                j_global_dof_index =
+                                  (ky_local_to_full_dirichlet_dof_indices ==
+                                   nullptr) ?
+                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                         j] :
+                                    ky_local_to_full_dirichlet_dof_indices->at(
+                                      ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                           j]);
+
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
-                                    kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                                    ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                                    i_global_dof_index,
+                                    j_global_dof_index,
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
@@ -3270,6 +3489,9 @@ namespace IdeoBEM
                                     scratch_data,
                                     copy_data);
 
+                                // N.B. The internal and local DoF indices are
+                                // used directly to access the result vector of
+                                // \f$M w_{\rm eq}\f$.
                                 (*fullmat)(i, j) +=
                                   stabilization_factor *
                                   mass_vmult_weq((*row_indices)[0] + i) *
@@ -3297,14 +3519,30 @@ namespace IdeoBEM
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
+                            i_global_dof_index =
+                              (kx_local_to_full_dirichlet_dof_indices ==
+                               nullptr) ?
+                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_local_to_full_dirichlet_dof_indices->at(
+                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                             for (size_t j = 0; j < fullmat->n(); j++)
                               {
+                                j_global_dof_index =
+                                  (ky_local_to_full_dirichlet_dof_indices ==
+                                   nullptr) ?
+                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                         j] :
+                                    ky_local_to_full_dirichlet_dof_indices->at(
+                                      ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                           j]);
+
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
-                                    kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                                    ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                                    i_global_dof_index,
+                                    j_global_dof_index,
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
@@ -3318,6 +3556,9 @@ namespace IdeoBEM
                                     scratch_data,
                                     copy_data);
 
+                                // N.B. The internal and local DoF indices are
+                                // used directly to access the result vector of
+                                // \f$M w_{\rm eq}\f$.
                                 (*fullmat)(i, j) +=
                                   stabilization_factor *
                                   mass_vmult_weq((*row_indices)[0] + i) *
@@ -3344,13 +3585,25 @@ namespace IdeoBEM
                  */
                 for (size_t i = 0; i < fullmat->m(); i++)
                   {
+                    i_global_dof_index =
+                      (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+                        kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                        kx_local_to_full_dirichlet_dof_indices->at(
+                          kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                     for (size_t j = 0; j < fullmat->n(); j++)
                       {
+                        j_global_dof_index =
+                          (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+                            ky_dof_i2e_numbering[(*col_indices)[0] + j] :
+                            ky_local_to_full_dirichlet_dof_indices->at(
+                              ky_dof_i2e_numbering[(*col_indices)[0] + j]);
+
                         (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
                           kernel,
                           kernel_factor,
-                          kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                          ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                          i_global_dof_index,
+                          j_global_dof_index,
                           kx_dof_to_cell_topo,
                           ky_dof_to_cell_topo,
                           bem_values,
@@ -3364,6 +3617,9 @@ namespace IdeoBEM
                           scratch_data,
                           copy_data);
 
+                        // N.B. The internal and local DoF indices are
+                        // used directly to access the result vector of
+                        // \f$M w_{\rm eq}\f$.
                         (*fullmat)(i, j) +=
                           stabilization_factor *
                           mass_vmult_weq((*row_indices)[0] + i) *
@@ -3409,6 +3665,8 @@ namespace IdeoBEM
                                  bem_values,
                                  kx_dof_handler,
                                  ky_dof_handler,
+                                 kx_local_to_full_dirichlet_dof_indices,
+                                 ky_local_to_full_dirichlet_dof_indices,
                                  kx_dof_i2e_numbering,
                                  ky_dof_i2e_numbering,
                                  kx_mapping,
@@ -3459,6 +3717,8 @@ namespace IdeoBEM
                          bem_values,
                          kx_dof_handler,
                          ky_dof_handler,
+                         kx_local_to_full_dirichlet_dof_indices,
+                         ky_local_to_full_dirichlet_dof_indices,
                          kx_dof_i2e_numbering,
                          ky_dof_i2e_numbering,
                          kx_mapping,
@@ -3530,10 +3790,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -3550,6 +3814,9 @@ namespace IdeoBEM
       leaf_mat->get_row_indices();
     const std::array<types::global_dof_index, 2> *col_indices =
       leaf_mat->get_col_indices();
+
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index;
 
     switch (leaf_mat->get_type())
       {
@@ -3587,15 +3854,31 @@ namespace IdeoBEM
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
+                            i_global_dof_index =
+                              (kx_local_to_full_dirichlet_dof_indices ==
+                               nullptr) ?
+                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_local_to_full_dirichlet_dof_indices->at(
+                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                             for (size_t j = 0; j <= i; j++)
                               {
+                                j_global_dof_index =
+                                  (ky_local_to_full_dirichlet_dof_indices ==
+                                   nullptr) ?
+                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                         j] :
+                                    ky_local_to_full_dirichlet_dof_indices->at(
+                                      ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                           j]);
+
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
                                     mass_matrix_factor,
-                                    kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                                    ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                                    i_global_dof_index,
+                                    j_global_dof_index,
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
@@ -3632,15 +3915,31 @@ namespace IdeoBEM
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
+                            i_global_dof_index =
+                              (kx_local_to_full_dirichlet_dof_indices ==
+                               nullptr) ?
+                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_local_to_full_dirichlet_dof_indices->at(
+                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                             for (size_t j = 0; j < fullmat->n(); j++)
                               {
+                                j_global_dof_index =
+                                  (ky_local_to_full_dirichlet_dof_indices ==
+                                   nullptr) ?
+                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                         j] :
+                                    ky_local_to_full_dirichlet_dof_indices->at(
+                                      ky_dof_i2e_numbering[(*col_indices)[0] +
+                                                           j]);
+
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
                                     mass_matrix_factor,
-                                    kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                                    ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                                    i_global_dof_index,
+                                    j_global_dof_index,
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
@@ -3673,14 +3972,26 @@ namespace IdeoBEM
               {
                 for (size_t i = 0; i < fullmat->m(); i++)
                   {
+                    i_global_dof_index =
+                      (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+                        kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                        kx_local_to_full_dirichlet_dof_indices->at(
+                          kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                     for (size_t j = 0; j < fullmat->n(); j++)
                       {
+                        j_global_dof_index =
+                          (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+                            ky_dof_i2e_numbering[(*col_indices)[0] + j] :
+                            ky_local_to_full_dirichlet_dof_indices->at(
+                              ky_dof_i2e_numbering[(*col_indices)[0] + j]);
+
                         (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
                           kernel,
                           kernel_factor,
                           mass_matrix_factor,
-                          kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                          ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                          i_global_dof_index,
+                          j_global_dof_index,
                           kx_dof_to_cell_topo,
                           ky_dof_to_cell_topo,
                           bem_values,
@@ -3725,6 +4036,8 @@ namespace IdeoBEM
                                  bem_values,
                                  kx_dof_handler,
                                  ky_dof_handler,
+                                 kx_local_to_full_dirichlet_dof_indices,
+                                 ky_local_to_full_dirichlet_dof_indices,
                                  kx_dof_i2e_numbering,
                                  ky_dof_i2e_numbering,
                                  kx_mapping,
@@ -3773,6 +4086,8 @@ namespace IdeoBEM
                          bem_values,
                          kx_dof_handler,
                          ky_dof_handler,
+                         kx_local_to_full_dirichlet_dof_indices,
+                         ky_local_to_full_dirichlet_dof_indices,
                          kx_dof_i2e_numbering,
                          ky_dof_i2e_numbering,
                          kx_mapping,
@@ -3844,10 +4159,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -3868,6 +4187,9 @@ namespace IdeoBEM
     const std::array<types::global_dof_index, 2> *col_indices =
       leaf_mat_for_kernels[0]->get_col_indices();
 
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index;
+
     /**
      * Flags indicating whether the kernels are to be evaluated at the pair of
      * DoFs.
@@ -3885,6 +4207,12 @@ namespace IdeoBEM
              */
             for (size_t i = 0; i < ((*row_indices)[1] - (*row_indices)[0]); i++)
               {
+                i_global_dof_index =
+                  (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+                    kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                    kx_local_to_full_dirichlet_dof_indices->at(
+                      kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                 /**
                  * Iterate over each DoF index \f$j\f$ in the cluster
                  * \$\sigma\f$.
@@ -3892,6 +4220,12 @@ namespace IdeoBEM
                 for (size_t j = 0; j < ((*col_indices)[1] - (*col_indices)[0]);
                      j++)
                   {
+                    j_global_dof_index =
+                      (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+                        ky_dof_i2e_numbering[(*col_indices)[0] + j] :
+                        ky_local_to_full_dirichlet_dof_indices->at(
+                          ky_dof_i2e_numbering[(*col_indices)[0] + j]);
+
                     /**
                      * Determine if each kernel is to be evaluated at the
                      * current pair of DoFs.
@@ -4000,8 +4334,8 @@ namespace IdeoBEM
                       kernel_factors,
                       enable_kernel_evaluations,
                       fullmat_coeffs,
-                      kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                      ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                      i_global_dof_index,
+                      j_global_dof_index,
                       kx_dof_to_cell_topo,
                       ky_dof_to_cell_topo,
                       bem_values,
@@ -4111,6 +4445,8 @@ namespace IdeoBEM
                              bem_values,
                              kx_dof_handler,
                              ky_dof_handler,
+                             kx_local_to_full_dirichlet_dof_indices,
+                             ky_local_to_full_dirichlet_dof_indices,
                              kx_dof_i2e_numbering,
                              ky_dof_i2e_numbering,
                              kx_mapping,
@@ -4189,10 +4525,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4214,6 +4554,9 @@ namespace IdeoBEM
     const std::array<types::global_dof_index, 2> *col_indices =
       leaf_mat_for_kernels[0]->get_col_indices();
 
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index;
+
     /**
      * Flags indicating whether the kernels are to be evaluated at the pair of
      * DoFs.
@@ -4231,6 +4574,12 @@ namespace IdeoBEM
              */
             for (size_t i = 0; i < ((*row_indices)[1] - (*row_indices)[0]); i++)
               {
+                i_global_dof_index =
+                  (kx_local_to_full_dirichlet_dof_indices == nullptr) ?
+                    kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                    kx_local_to_full_dirichlet_dof_indices->at(
+                      kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+
                 /**
                  * Iterate over each DoF index \f$j\f$ in the cluster
                  * \$\sigma\f$.
@@ -4238,6 +4587,12 @@ namespace IdeoBEM
                 for (size_t j = 0; j < ((*col_indices)[1] - (*col_indices)[0]);
                      j++)
                   {
+                    j_global_dof_index =
+                      (ky_local_to_full_dirichlet_dof_indices == nullptr) ?
+                        ky_dof_i2e_numbering[(*col_indices)[0] + j] :
+                        ky_local_to_full_dirichlet_dof_indices->at(
+                          ky_dof_i2e_numbering[(*col_indices)[0] + j]);
+
                     /**
                      * Determine if each kernel is to be evaluated at the
                      * current pair of DoFs.
@@ -4347,8 +4702,8 @@ namespace IdeoBEM
                       mass_matrix_factors,
                       enable_kernel_evaluations,
                       fullmat_coeffs,
-                      kx_dof_i2e_numbering[(*row_indices)[0] + i],
-                      ky_dof_i2e_numbering[(*col_indices)[0] + j],
+                      i_global_dof_index,
+                      j_global_dof_index,
                       kx_dof_to_cell_topo,
                       ky_dof_to_cell_topo,
                       bem_values,
@@ -4459,6 +4814,8 @@ namespace IdeoBEM
                              bem_values,
                              kx_dof_handler,
                              ky_dof_handler,
+                             kx_local_to_full_dirichlet_dof_indices,
+                             ky_local_to_full_dirichlet_dof_indices,
                              kx_dof_i2e_numbering,
                              ky_dof_i2e_numbering,
                              kx_mapping,
@@ -4520,10 +4877,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4562,6 +4923,8 @@ namespace IdeoBEM
           bem_values,
           kx_dof_handler,
           ky_dof_handler,
+          kx_local_to_full_dirichlet_dof_indices,
+          ky_local_to_full_dirichlet_dof_indices,
           kx_dof_i2e_numbering,
           ky_dof_i2e_numbering,
           kx_mapping,
@@ -4619,10 +4982,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4663,6 +5030,8 @@ namespace IdeoBEM
           bem_values,
           kx_dof_handler,
           ky_dof_handler,
+          kx_local_to_full_dirichlet_dof_indices,
+          ky_local_to_full_dirichlet_dof_indices,
           kx_dof_i2e_numbering,
           ky_dof_i2e_numbering,
           kx_mapping,
@@ -4716,9 +5085,13 @@ namespace IdeoBEM
     const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
     const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const QGauss<dim> &                         mass_matrix_quadrature_formula,
-    const DoFHandler<dim, spacedim> &           kx_dof_handler,
-    const DoFHandler<dim, spacedim> &           ky_dof_handler,
+    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim> &   kx_mapping,
@@ -4771,6 +5144,8 @@ namespace IdeoBEM
           bem_values,
           kx_dof_handler,
           ky_dof_handler,
+          kx_local_to_full_dirichlet_dof_indices,
+          ky_local_to_full_dirichlet_dof_indices,
           kx_dof_i2e_numbering,
           ky_dof_i2e_numbering,
           kx_mapping,
@@ -4830,10 +5205,14 @@ namespace IdeoBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const DoFHandler<dim, spacedim> &                kx_dof_handler,
     const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const std::vector<types::global_dof_index> &     kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &     ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4891,6 +5270,8 @@ namespace IdeoBEM
           bem_values,
           kx_dof_handler,
           ky_dof_handler,
+          kx_local_to_full_dirichlet_dof_indices,
+          ky_local_to_full_dirichlet_dof_indices,
           kx_dof_i2e_numbering,
           ky_dof_i2e_numbering,
           kx_mapping,
@@ -4946,9 +5327,13 @@ namespace IdeoBEM
     const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
     const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const QGauss<dim> &                         mass_matrix_quadrature_formula,
-    const DoFHandler<dim, spacedim> &           kx_dof_handler,
-    const DoFHandler<dim, spacedim> &           ky_dof_handler,
+    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim> &   kx_mapping,
@@ -5020,6 +5405,8 @@ namespace IdeoBEM
           bem_values,
           kx_dof_handler,
           ky_dof_handler,
+          kx_local_to_full_dirichlet_dof_indices,
+          ky_local_to_full_dirichlet_dof_indices,
           kx_dof_i2e_numbering,
           ky_dof_i2e_numbering,
           kx_mapping,
@@ -5066,15 +5453,21 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> &                   hmat,
-    const ACAConfig &                                      aca_config,
-    const KernelFunction<spacedim> &                       kernel,
-    const RangeNumberType                                  kernel_factor,
-    const std::vector<std::vector<unsigned int>> &         kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &         ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &                      sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &                      kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                      ky_dof_handler,
+    HMatrix<spacedim, RangeNumberType> &          hmat,
+    const ACAConfig &                             aca_config,
+    const KernelFunction<spacedim> &              kernel,
+    const RangeNumberType                         kernel_factor,
+    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &             sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &             kx_dof_handler,
+    const DoFHandler<dim, spacedim> &             ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim> &              kx_mapping,
     const MappingQGenericExt<dim, spacedim> &              ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
@@ -5139,6 +5532,10 @@ namespace IdeoBEM
           bem_values,
           kx_dof_handler,
           ky_dof_handler,
+          kx_local_to_full_dirichlet_dof_indices,
+          ky_local_to_full_dirichlet_dof_indices,
+          kx_dof_i2e_numbering,
+          ky_dof_i2e_numbering,
           kx_mapping,
           ky_mapping,
           map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5162,11 +5559,17 @@ namespace IdeoBEM
     const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
     const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
     const SauterQuadratureRule<dim> &             sauter_quad_rule,
-    const QGauss<dim> &                      mass_matrix_quadrature_formula,
-    const DoFHandler<dim, spacedim> &        kx_dof_handler,
-    const DoFHandler<dim, spacedim> &        ky_dof_handler,
-    const MappingQGenericExt<dim, spacedim> &kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &ky_mapping,
+    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -5244,6 +5647,10 @@ namespace IdeoBEM
           bem_values,
           kx_dof_handler,
           ky_dof_handler,
+          kx_local_to_full_dirichlet_dof_indices,
+          ky_local_to_full_dirichlet_dof_indices,
+          kx_dof_i2e_numbering,
+          ky_dof_i2e_numbering,
           kx_mapping,
           ky_mapping,
           map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5290,16 +5697,20 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
-    const unsigned int                                     thread_num,
-    HMatrix<spacedim, RangeNumberType> &                   hmat,
-    const ACAConfig &                                      aca_config,
-    const KernelFunction<spacedim> &                       kernel,
-    const RangeNumberType                                  kernel_factor,
-    const std::vector<std::vector<unsigned int>> &         kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &         ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &                      sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &                      kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                      ky_dof_handler,
+    const unsigned int                            thread_num,
+    HMatrix<spacedim, RangeNumberType> &          hmat,
+    const ACAConfig &                             aca_config,
+    const KernelFunction<spacedim> &              kernel,
+    const RangeNumberType                         kernel_factor,
+    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &             sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &             kx_dof_handler,
+    const DoFHandler<dim, spacedim> &             ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
     const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim> &              kx_mapping,
@@ -5395,6 +5806,8 @@ namespace IdeoBEM
                   const BEMValues<dim, spacedim, RangeNumberType> &,
                   const DoFHandler<dim, spacedim> &,
                   const DoFHandler<dim, spacedim> &,
+                  const std::vector<types::global_dof_index> *,
+                  const std::vector<types::global_dof_index> *,
                   const std::vector<types::global_dof_index> &,
                   const std::vector<types::global_dof_index> &,
                   const MappingQGenericExt<dim, spacedim> &,
@@ -5416,6 +5829,8 @@ namespace IdeoBEM
                 std::cref(bem_values),
                 std::cref(kx_dof_handler),
                 std::cref(ky_dof_handler),
+                kx_local_to_full_dirichlet_dof_indices,
+                ky_local_to_full_dirichlet_dof_indices,
                 std::cref(kx_dof_i2e_numbering),
                 std::cref(ky_dof_i2e_numbering),
                 std::cref(kx_mapping),
@@ -5469,18 +5884,22 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
-    const unsigned int                                     thread_num,
-    HMatrix<spacedim, RangeNumberType> &                   hmat,
-    const ACAConfig &                                      aca_config,
-    const KernelFunction<spacedim> &                       kernel,
-    const RangeNumberType                                  kernel_factor,
-    const Vector<RangeNumberType> &                        mass_vmult_weq,
-    const RangeNumberType                                  stabilization_factor,
-    const std::vector<std::vector<unsigned int>> &         kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &         ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &                      sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &                      kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                      ky_dof_handler,
+    const unsigned int                            thread_num,
+    HMatrix<spacedim, RangeNumberType> &          hmat,
+    const ACAConfig &                             aca_config,
+    const KernelFunction<spacedim> &              kernel,
+    const RangeNumberType                         kernel_factor,
+    const Vector<RangeNumberType> &               mass_vmult_weq,
+    const RangeNumberType                         stabilization_factor,
+    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &             sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &             kx_dof_handler,
+    const DoFHandler<dim, spacedim> &             ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
     const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim> &              kx_mapping,
@@ -5578,6 +5997,8 @@ namespace IdeoBEM
                   const BEMValues<dim, spacedim, RangeNumberType> &,
                   const DoFHandler<dim, spacedim> &,
                   const DoFHandler<dim, spacedim> &,
+                  const std::vector<types::global_dof_index> *,
+                  const std::vector<types::global_dof_index> *,
                   const std::vector<types::global_dof_index> &,
                   const std::vector<types::global_dof_index> &,
                   const MappingQGenericExt<dim, spacedim> &,
@@ -5601,6 +6022,8 @@ namespace IdeoBEM
                 std::cref(bem_values),
                 std::cref(kx_dof_handler),
                 std::cref(ky_dof_handler),
+                kx_local_to_full_dirichlet_dof_indices,
+                ky_local_to_full_dirichlet_dof_indices,
                 std::cref(kx_dof_i2e_numbering),
                 std::cref(ky_dof_i2e_numbering),
                 std::cref(kx_mapping),
@@ -5657,13 +6080,17 @@ namespace IdeoBEM
     const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
     const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
     const SauterQuadratureRule<dim> &             sauter_quad_rule,
-    const QGauss<dim> &                         mass_matrix_quadrature_formula,
-    const DoFHandler<dim, spacedim> &           kx_dof_handler,
-    const DoFHandler<dim, spacedim> &           ky_dof_handler,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -5757,6 +6184,8 @@ namespace IdeoBEM
                   const QGauss<dim> &,
                   const DoFHandler<dim, spacedim> &,
                   const DoFHandler<dim, spacedim> &,
+                  const std::vector<types::global_dof_index> *,
+                  const std::vector<types::global_dof_index> *,
                   const std::vector<types::global_dof_index> &,
                   const std::vector<types::global_dof_index> &,
                   const MappingQGenericExt<dim, spacedim> &,
@@ -5780,6 +6209,8 @@ namespace IdeoBEM
                 std::cref(mass_matrix_quadrature_formula),
                 std::cref(kx_dof_handler),
                 std::cref(ky_dof_handler),
+                kx_local_to_full_dirichlet_dof_indices,
+                ky_local_to_full_dirichlet_dof_indices,
                 std::cref(kx_dof_i2e_numbering),
                 std::cref(ky_dof_i2e_numbering),
                 std::cref(kx_mapping),
@@ -5834,16 +6265,20 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
-    const unsigned int                                     thread_num,
-    std::vector<HMatrix<spacedim, RangeNumberType> *> &    hmats,
-    const ACAConfig &                                      aca_config,
-    const std::vector<KernelFunction<spacedim> *> &        kernels,
-    const std::vector<RangeNumberType> &                   kernel_factors,
-    const std::vector<std::vector<unsigned int>> &         kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &         ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &                      sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &                      kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                      ky_dof_handler,
+    const unsigned int                                 thread_num,
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &hmats,
+    const ACAConfig &                                  aca_config,
+    const std::vector<KernelFunction<spacedim> *> &    kernels,
+    const std::vector<RangeNumberType> &               kernel_factors,
+    const std::vector<std::vector<unsigned int>> &     kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &     ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &                  sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &                  kx_dof_handler,
+    const DoFHandler<dim, spacedim> &                  ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
     const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim> &              kx_mapping,
@@ -5958,6 +6393,8 @@ namespace IdeoBEM
           const BEMValues<dim, spacedim, RangeNumberType> &,
           const DoFHandler<dim, spacedim> &,
           const DoFHandler<dim, spacedim> &,
+          const std::vector<types::global_dof_index> *,
+          const std::vector<types::global_dof_index> *,
           const std::vector<types::global_dof_index> &,
           const std::vector<types::global_dof_index> &,
           const MappingQGenericExt<dim, spacedim> &,
@@ -5980,6 +6417,8 @@ namespace IdeoBEM
         std::cref(bem_values),
         std::cref(kx_dof_handler),
         std::cref(ky_dof_handler),
+        kx_local_to_full_dirichlet_dof_indices,
+        ky_local_to_full_dirichlet_dof_indices,
         std::cref(kx_dof_i2e_numbering),
         std::cref(ky_dof_i2e_numbering),
         std::cref(kx_mapping),
@@ -6048,13 +6487,17 @@ namespace IdeoBEM
     const std::vector<std::vector<unsigned int>> &     kx_dof_to_cell_topo,
     const std::vector<std::vector<unsigned int>> &     ky_dof_to_cell_topo,
     const SauterQuadratureRule<dim> &                  sauter_quad_rule,
-    const QGauss<dim> &                         mass_matrix_quadrature_formula,
-    const DoFHandler<dim, spacedim> &           kx_dof_handler,
-    const DoFHandler<dim, spacedim> &           ky_dof_handler,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_local_to_full_dirichlet_dof_indices,
+    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
+    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -6167,6 +6610,8 @@ namespace IdeoBEM
           const QGauss<dim> &,
           const DoFHandler<dim, spacedim> &,
           const DoFHandler<dim, spacedim> &,
+          const std::vector<types::global_dof_index> *,
+          const std::vector<types::global_dof_index> *,
           const std::vector<types::global_dof_index> &,
           const std::vector<types::global_dof_index> &,
           const MappingQGenericExt<dim, spacedim> &,
@@ -6191,6 +6636,8 @@ namespace IdeoBEM
         std::cref(mass_matrix_quadrature_formula),
         std::cref(kx_dof_handler),
         std::cref(ky_dof_handler),
+        kx_local_to_full_dirichlet_dof_indices,
+        ky_local_to_full_dirichlet_dof_indices,
         std::cref(kx_dof_i2e_numbering),
         std::cref(ky_dof_i2e_numbering),
         std::cref(kx_mapping),

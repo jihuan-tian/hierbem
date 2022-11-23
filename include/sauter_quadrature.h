@@ -78,6 +78,60 @@ namespace IdeoBEM
 
 
   /**
+   * Build the topology for "DoF support point-to-cell" relation.
+   *
+   * This version handles the case when a subset of the complete DoFs contained
+   * in a DoF handler is selected. This case is met in the DoF handlers for
+   * Dirichlet space in the mixed boundary value problem. Therefore, a map from
+   * local to full DoF indices is passed.
+   *
+   * \mynote{2022-06-06 This topology is needed when the continuous finite
+   * element such as @p FE_Q is adopted. For the discontinuous finite element
+   * such as @p FE_DGQ, the DoFs in a cell are separated from those in other
+   * cells. Hence, such point-to-cell topology is not necessary.}
+   *
+   * @param dof_to_cell_topo
+   * @param dof_handler
+   * @param map_from_local_to_full_dof_indices
+   * @param fe_index
+   */
+  //  template <int dim, int spacedim>
+  //  void
+  //  build_dof_to_cell_topology(
+  //    std::vector<std::vector<unsigned int>> &dof_to_cell_topo,
+  //    const DoFHandler<dim, spacedim> &       dof_handler,
+  //    const std::vector<types::global_dof_index>
+  //      &                map_from_local_to_full_dof_indices,
+  //    const unsigned int fe_index = 0)
+  //  {
+  //    const types::global_dof_index n_dofs =
+  //      map_from_local_to_full_dof_indices.size();
+  //    const FiniteElement<dim, spacedim> & fe = dof_handler.get_fe(fe_index);
+  //    const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+  //    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+  //
+  //    dof_to_cell_topo.resize(n_dofs);
+  //
+  //    /**
+  //     * Iterate over each active cell in the triangulation and extract the
+  //     DoF
+  //     * indices.
+  //     */
+  //    dof_handler.
+  //    for (const typename DoFHandler<dim, spacedim>::active_cell_iterator
+  //    &cell :
+  //         dof_handler.active_cell_iterators())
+  //      {
+  //        cell->get_dof_indices(local_dof_indices);
+  //        for (auto dof_index : local_dof_indices)
+  //          {
+  //            dof_to_cell_topo[dof_index].push_back(cell->active_cell_index());
+  //          }
+  //      }
+  //  }
+
+
+  /**
    * Print out the topological information about DoF support point-to-cell
    * relation.
    *
@@ -3515,6 +3569,14 @@ namespace IdeoBEM
    * will be over each cell pair which is comprised of an arbitrary cell in
    * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
    *
+   * \mynote{The DoF indices \f$(i, j)\f$ are global, i.e. global in the sense
+   * of all DoFs contained in the associated DoF handlers. In mixed boundary
+   * value problem, when dealing with the Dirichlet function space, only a
+   * subset of these DoFs are selected. Hence, the DoF indices in an \hmat are
+   * local, i.e. local in the sense of DoF indices renumbered for the subset.
+   * When coming to this function for Sauter quadrature, the global DoF indices
+   * should be used.}
+   *
    * @param kernel
    * @param factor
    * @param i External DoF numbering
@@ -3723,6 +3785,50 @@ namespace IdeoBEM
   }
 
 
+  /**
+   * Perform Galerkin-BEM double integral with respect to a given kernel on a
+   * pair of DoFs \f$(i, j)\f$ using the Sauter quadrature. In addition, entries
+   * of the mass matrix are calculated and added into this matrix. Because the
+   * evaluation of mass matrix entries involves integrating the product of
+   * two shape functions with compact support, there is no long-range
+   * interaction between them like the case in BEM. Hence, these mass matrix
+   * entries are added into the near field \hmat node.
+   *
+   * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
+   * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
+   * sharing the DoF support point \f$j\f$. Then Galerkin-BEM double integral
+   * will be over each cell pair which is comprised of an arbitrary cell in
+   * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
+   *
+   * \mynote{The DoF indices \f$(i, j)\f$ are global, i.e. global in the sense
+   * of all DoFs contained in the associated DoF handlers. In mixed boundary
+   * value problem, when dealing with the Dirichlet function space, only a
+   * subset of these DoFs are selected. Hence, the DoF indices in an \hmat are
+   * local, i.e. local in the sense of DoF indices renumbered for the subset.
+   * When coming to this function for Sauter quadrature, the global DoF indices
+   * should be used.}
+   *
+   *
+   * @param kernel
+   * @param kernel_factor
+   * @param mass_matrix_factor
+   * @param i
+   * @param j
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
+   * @param bem_values
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_mapping
+   * @param ky_mapping
+   * @param map_from_kx_boundary_mesh_to_volume_mesh
+   * @param map_from_ky_boundary_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param mass_matrix_scratch_data
+   * @param scratch_data
+   * @param copy_data
+   * @return
+   */
   template <int dim, int spacedim, typename RangeNumberType = double>
   RangeNumberType
   sauter_assemble_on_one_pair_of_dofs(

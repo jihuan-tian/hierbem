@@ -96,8 +96,10 @@ public:
    *
    * This constructor will create the root node of the cluster tree based on the
    * given data. There is no mesh cell size correction for the cluster diameter.
+   *
    * @param index_set The full DoF index set, which will be assigned to the root node.
    * @param all_support_points All the support points.
+   * @param n_min
    */
   ClusterTree(const std::vector<types::global_dof_index> &index_set,
               const std::vector<Point<spacedim>> &        all_support_points,
@@ -108,8 +110,11 @@ public:
    *
    * This constructor will create the root node of the cluster tree based on the
    * given data. There is mesh cell size correction for the cluster diameter.
+   *
    * @param index_set The full DoF index set, which will be assigned to the root node.
    * @param all_support_points All the support points.
+   * @param cell_size_at_dofs
+   * @param n_min
    */
   ClusterTree(const std::vector<types::global_dof_index> &index_set,
               const std::vector<Point<spacedim>> &        all_support_points,
