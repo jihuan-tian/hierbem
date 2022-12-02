@@ -37,6 +37,20 @@ using namespace LAPACKSupport;
 
 namespace LAPACKHelpers
 {
+  /**
+   * Multiplication of a symmetric matrix and a vector. Only the triangular part
+   * of the symmetric matrix is stored.
+   *
+   * @param uplo
+   * @param alpha
+   * @param n_rows
+   * @param matrix
+   * @param x_pointer
+   * @param beta
+   * @param y_pointer
+   * @param incx
+   * @param incy
+   */
   template <typename T>
   void
   symv_helper(const char              uplo,
@@ -66,6 +80,35 @@ namespace LAPACKHelpers
          y_pointer,
          &incy);
   }
+
+
+  /**
+   * Multiplication of a triangular matrix with a vector.
+   *
+   * @param uplo
+   * @param trans
+   * @param diag
+   * @param n_rows
+   * @param matrix
+   * @param x_pointer
+   * @param incx
+   */
+  template <typename T>
+  void
+  trmv_helper(const char              uplo,
+              const char              trans,
+              const char              diag,
+              const types::blas_int   n_rows,
+              const AlignedVector<T> &matrix,
+              T *                     x_pointer,
+              const types::blas_int   incx = 1)
+  {
+    Assert(uplo == 'U' || uplo == 'u' || uplo == 'L' || uplo == 'l',
+           ExcInternalError());
+    trmv(
+      &uplo, &trans, &diag, &n_rows, matrix.data(), &n_rows, x_pointer, &incx);
+  }
+
 
   // ZGEEV/CGEEV and DGEEV/SGEEV need different work arrays and different
   // output arrays for eigenvalues. This makes working with generic scalar
@@ -331,13 +374,20 @@ namespace LAPACKHelpers
 
 
   /**
-   * Real valued version of the helper function for \p trsv.
+   * Real valued version of the helper function for \p trsv, which solves a
+   * unit or non-unit, upper or lower triangular matrix.
    *
-   * \alert{Since the \p values member variable of type \p AlignedVector
-   * stored in the right hand side vector is private, which cannot be directly
-   * accessed from \p LAPACKFullMatrixExt, the data pointer to the right hand
-   * side vector is passed as argument, which can be obtained via the member
-   * function \p data of \p Vector.}
+   * \mynote{1. Access the matrix data: the internal data contained within a
+   * @p LAPACKFullMatrixExt has the type @p AlignedVector, which is a
+   * @p protected member variable in the parent class @p TableBase of
+   * @p LAPACKFullMatrixExt. Therefore, this variable can be directly visited
+   * from @p LAPACKFullMatrixExt and passed into this function.
+   * 2. Access the RHS vector data: being different from
+   * @p LAPACKFullMatrixExt, the @p values member variable of type
+   * @p AlignedVector contained in the RHS vector is @p private, which cannot
+   * be accessed from @p LAPACKFullMatrixExt. Therefore, the pointer to the
+   * internal data within the RHS vector can be obtained by calling the member
+   * function @p Vector::data(). Then it is passed to this function.}
    *
    * @param uplo
    * @param is_transposed
@@ -368,7 +418,7 @@ namespace LAPACKHelpers
          &trans,
          &diag,
          &n_rows,
-         matrix.data(), // Get the data pointer to the \p AlignedVector.
+         matrix.data(),
          &n_rows,
          right_vector_pointer,
          &incx);

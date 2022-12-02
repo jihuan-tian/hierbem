@@ -911,7 +911,7 @@ public:
 
   /**
    * Matrix-vector multiplication which also handles the case when the matrix is
-   * symmetric.
+   * symmetric and lower triangular.
    *
    * \mynote{When the matrix is symmetric, the LAPACK function @p symv is
    * adopted. In my implementation, only those lower triangular entries in a
@@ -929,6 +929,25 @@ public:
   vmult(Vector<Number> &      w,
         const Vector<Number> &v,
         const bool            adding = false) const;
+
+  /**
+   * Transposed matrix-vector multiplication which also handles the case when
+   * the matrix is symmetric.
+   *
+   * \mynote{1. When the matrix is symmetric, this function simply calls
+   * @p LAPACKFullMatrixExt::vmult, because there is no difference between
+   * \f$Av\f$ and \f$A^T v\f$.
+   * 2. When the matrix is general, it calls the member function in the member
+   * class @p LAPACKFullMatrix::Tvmult.}
+   *
+   * @param w
+   * @param v
+   * @param adding
+   */
+  void
+  Tvmult(Vector<Number> &      w,
+         const Vector<Number> &v,
+         const bool            adding = false) const;
 
   /**
    * Multiply two matrices, i.e. \f$C = AB\f$ or \f$C = C + AB\f$.
@@ -982,6 +1001,17 @@ public:
    */
   void
   mTmult(LAPACKFullMatrixExt<Number> &      C,
+         const Number                       alpha,
+         const LAPACKFullMatrixExt<Number> &B,
+         const bool                         adding = false) const;
+
+  void
+  Tmmult(LAPACKFullMatrixExt<Number> &      C,
+         const LAPACKFullMatrixExt<Number> &B,
+         const bool                         adding = false) const;
+
+  void
+  Tmmult(LAPACKFullMatrixExt<Number> &      C,
          const Number                       alpha,
          const LAPACKFullMatrixExt<Number> &B,
          const bool                         adding = false) const;
@@ -2703,7 +2733,9 @@ LAPACKFullMatrixExt<Number>::svd(
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
   LAPACKFullMatrixExt<Number> &                                   VT)
 {
-  Assert(state == LAPACKSupport::matrix, LAPACKSupport::ExcState(state));
+  Assert(state == LAPACKSupport::matrix ||
+           state == LAPACKSupport::State::cholesky,
+         LAPACKSupport::ExcState(state));
   state = LAPACKSupport::unusable;
 
   const size_type mm      = this->m();
@@ -4222,6 +4254,84 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
 
           break;
         }
+      case LAPACKSupport::Property::lower_triangular:
+        {
+          w = v;
+          LAPACKHelpers::trmv_helper(LAPACKSupport::L,
+                                     LAPACKSupport::N,
+                                     LAPACKSupport::N,
+                                     this->m(),
+                                     this->values,
+                                     w.data());
+
+          break;
+        }
+      case LAPACKSupport::Property::upper_triangular:
+        {
+          w = v;
+          LAPACKHelpers::trmv_helper(LAPACKSupport::U,
+                                     LAPACKSupport::N,
+                                     LAPACKSupport::N,
+                                     this->m(),
+                                     this->values,
+                                     w.data());
+
+          break;
+        }
+      default:
+        {
+          Assert(false, ExcNotImplemented());
+
+          break;
+        }
+    }
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number> &      w,
+                                    const Vector<Number> &v,
+                                    const bool            adding) const
+{
+  switch (get_property())
+    {
+      case LAPACKSupport::symmetric:
+        {
+          this->vmult(w, v, adding);
+
+          break;
+        }
+      case LAPACKSupport::general:
+        {
+          this->LAPACKFullMatrix<Number>::Tvmult(w, v, adding);
+
+          break;
+        }
+      case LAPACKSupport::Property::lower_triangular:
+        {
+          w = v;
+          LAPACKHelpers::trmv_helper(LAPACKSupport::L,
+                                     LAPACKSupport::T,
+                                     LAPACKSupport::N,
+                                     this->m(),
+                                     this->values,
+                                     w.data());
+
+          break;
+        }
+      case LAPACKSupport::Property::upper_triangular:
+        {
+          w = v;
+          LAPACKHelpers::trmv_helper(LAPACKSupport::U,
+                                     LAPACKSupport::T,
+                                     LAPACKSupport::N,
+                                     this->m(),
+                                     this->values,
+                                     w.data());
+
+          break;
+        }
       default:
         {
           Assert(false, ExcNotImplemented());
@@ -4301,7 +4411,7 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number> &      C,
       C.reinit(nrows, ncols);
     }
 
-  // Call the \p mmult function in the parent class which operates on \p
+  // Call the \p mTmult function in the parent class which operates on \p
   // LAPACKFullMatrix<Number>.
   LAPACKFullMatrix<Number>::mTmult(C, (LAPACKFullMatrix<Number>)B, adding);
 }
@@ -4330,9 +4440,62 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number> &      C,
   LAPACKFullMatrixExt<Number> B_scaled(B);
   B_scaled *= alpha;
 
-  // Call the \p mmult function in the parent class which operates on \p
+  // Call the \p mTmult function in the parent class which operates on \p
   // LAPACKFullMatrix<Number>.
   LAPACKFullMatrix<Number>::mTmult(C,
+                                   (LAPACKFullMatrix<Number>)B_scaled,
+                                   adding);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number> &      C,
+                                    const LAPACKFullMatrixExt<Number> &B,
+                                    const bool adding) const
+{
+  AssertDimension(this->m(), B.m());
+
+  const size_type nrows = this->n();
+  const size_type ncols = B.n();
+
+  if (C.m() != nrows || C.n() != ncols)
+    {
+      C.reinit(nrows, ncols);
+    }
+
+  // Call the \p Tmmult function in the parent class which operates on \p
+  // LAPACKFullMatrix<Number>.
+  LAPACKFullMatrix<Number>::Tmmult(C, (LAPACKFullMatrix<Number>)B, adding);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number> &      C,
+                                    const Number                       alpha,
+                                    const LAPACKFullMatrixExt<Number> &B,
+                                    const bool adding) const
+{
+  AssertDimension(this->m(), B.m());
+
+  const size_type nrows = this->n();
+  const size_type ncols = B.n();
+
+  if (C.m() != nrows || C.n() != ncols)
+    {
+      C.reinit(nrows, ncols);
+    }
+
+  /**
+   * Make a local copy of the matrix \p B and scale it.
+   */
+  LAPACKFullMatrixExt<Number> B_scaled(B);
+  B_scaled *= alpha;
+
+  // Call the \p Tmmult function in the parent class which operates on \p
+  // LAPACKFullMatrix<Number>.
+  LAPACKFullMatrix<Number>::Tmmult(C,
                                    (LAPACKFullMatrix<Number>)B_scaled,
                                    adding);
 }
@@ -4575,6 +4738,8 @@ LAPACKFullMatrixExt<Number>::solve_by_forward_substitution(
    */
   if (state == lu && permute_rhs_vector)
     {
+      // @p ipiv is the vector storing the permutations applied for pivoting in
+      // the LU factorization. Hence, we make an assertion about its size.
       Assert(ipiv.size() > 0, ExcInternalError());
 
       permute_vector_by_ipiv(b, ipiv);

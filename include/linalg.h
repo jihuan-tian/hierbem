@@ -77,6 +77,29 @@ namespace LinAlg
         return true;
       }
   }
+
+
+  /**
+   * Copy a segment of a vector into another vector at the specified location.
+   *
+   * @param dst_vec
+   * @param dst_start_index
+   * @param src_vec
+   * @param start_index
+   * @param number_of_data
+   */
+  template <typename number>
+  void
+  copy_vector(Vector<number> &                         dst_vec,
+              const typename Vector<number>::size_type dst_start_index,
+              const Vector<number> &                   src_vec,
+              const typename Vector<number>::size_type src_start_index,
+              const typename Vector<number>::size_type number_of_data)
+  {
+    std::memcpy(dst_vec.data() + dst_start_index,
+                src_vec.data() + src_start_index,
+                number_of_data * sizeof(number));
+  }
 } // namespace LinAlg
 
 #endif /* INCLUDE_LINALG_H_ */

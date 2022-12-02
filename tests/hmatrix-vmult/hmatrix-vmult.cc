@@ -63,12 +63,9 @@ main()
    */
   Vector<double> y(n);
   hmat.vmult(y, x);
-  print_vector_to_mat(std::cout, "y", y);
+  print_vector_to_mat(std::cout, "y1", y);
 
-  /**
-   * Perform transposed matrix-vector multiplication.
-   */
-  Vector<double> y_trans(n);
-  hmat.Tvmult(y_trans, x);
-  print_vector_to_mat(std::cout, "y_trans", y_trans);
+  y = 0.;
+  hmat.vmult(y, 0.5, x);
+  print_vector_to_mat(std::cout, "y2", y);
 }

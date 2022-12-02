@@ -31,6 +31,7 @@
 
 #include <deal.II/lac/full_matrix.templates.h>
 #include <deal.II/lac/precondition.h>
+#include <deal.II/lac/solver_bicgstab.h>
 #include <deal.II/lac/solver_cg.h>
 
 #include <deal.II/numerics/data_out.h>
@@ -49,12 +50,15 @@
 #include "cluster_tree.h"
 #include "dof_tools_ext.h"
 #include "grid_out_ext.h"
+#include "hblockmatrix_skew_symm.h"
+#include "hblockmatrix_skew_symm_preconditioner.h"
 #include "hmatrix.h"
 #include "hmatrix_symm.h"
 #include "hmatrix_symm_preconditioner.h"
 #include "laplace_kernels.h"
 #include "mapping_q_generic_ext.h"
 #include "quadrature.templates.h"
+#include "read_octave_data.h"
 #include "triangulation_tools.h"
 
 namespace IdeoBEM
@@ -593,20 +597,25 @@ namespace IdeoBEM
      * \hmatrices corresponding to discretized bilinear forms in the
      * mixed boundary value problem, which contain all possible cases.
      */
-    HMatrixSymm<spacedim> V1_hmat;
-    HMatrix<spacedim>     K1_hmat;
-    HMatrix<spacedim>     K_prime1_hmat;
-    HMatrixSymm<spacedim> D1_hmat;
-    HMatrix<spacedim>     V2_hmat;
-    HMatrix<spacedim>     K2_hmat_with_mass_matrix;
-    HMatrix<spacedim>     K_prime2_hmat_with_mass_matrix;
-    HMatrix<spacedim>     D2_hmat;
+    HMatrixSymm<spacedim>          V1_hmat;
+    HMatrix<spacedim>              K1_hmat;
+    HMatrix<spacedim>              K_prime1_hmat;
+    HMatrixSymm<spacedim>          D1_hmat;
+    HMatrix<spacedim>              V2_hmat;
+    HMatrix<spacedim>              K2_hmat_with_mass_matrix;
+    HMatrix<spacedim>              K_prime2_hmat_with_mass_matrix;
+    HMatrix<spacedim>              D2_hmat;
+    HBlockMatrixSkewSymm<spacedim> M_hmat;
 
     /**
      * Preconditioners
      */
-    HMatrixSymmPreconditioner<spacedim> V1_hmat_preconditioner;
-    HMatrixSymmPreconditioner<spacedim> D1_hmat_preconditioner;
+    HMatrixSymmPreconditioner<spacedim>          V1_hmat_preconditioner;
+    HMatrixSymmPreconditioner<spacedim>          D1_hmat_preconditioner;
+    HMatrix<spacedim>                            M11_in_preconditioner;
+    HMatrix<spacedim>                            M12_in_preconditioner;
+    HMatrix<spacedim>                            M22_in_preconditioner;
+    HBlockMatrixSkewSymmPreconditioner<spacedim> M_hmat_preconditioner;
 
     /**
      * The sequence of all DoF indices with the values \f$0, 1, \cdots\f$ for
@@ -691,9 +700,15 @@ namespace IdeoBEM
     Function<spacedim> *neumann_bc_functor_ptr;
 
     /**
-     * Neumann boundary condition data at each DoF support point.
+     * Neumann boundary condition data on all DoFs in the associated DoF
+     * handler. When in the \hmat version, they are in the external DoF
+     * numbering.
      */
     Vector<double> neumann_bc;
+    /**
+     * Neumann boundary condition data on all DoFs in the associated DoF handler
+     * in the internal DoF numbering. Only used in the \hmat version.
+     */
     Vector<double> neumann_bc_internal_dof_numbering;
 
     /**
@@ -708,19 +723,38 @@ namespace IdeoBEM
     Function<spacedim> *dirichlet_bc_functor_ptr;
 
     /**
-     * Dirichlet boundary condition data at each DoF support point.
+     * Dirichlet boundary condition data on all DoFs in the associated DoF
+     * handler.
      */
     Vector<double> dirichlet_bc;
+    /**
+     * Dirichlet boundary condition data on those selected DoFs in the
+     * associated DoF handler. When in the \hamt version, they are in the
+     * external DoF numbering.
+     */
     Vector<double> dirichlet_bc_on_selected_dofs;
+    /**
+     * Dirichlet boundary condition data on those selected DoFs in the
+     * associated DoF handler in the internal DoF numbering. Only used in the
+     * \hmat version.
+     */
     Vector<double> dirichlet_bc_internal_dof_numbering;
 
     /**
-     * Right hand side vector.
+     * Right hand side vector on the Dirichlet domain. When in the \hmat
+     * version, it is in the internal DoF numbering.
      */
     Vector<double> system_rhs_on_dirichlet_domain;
+    /**
+     * Right hand side vector on the Neumann domain. When in the \hmat version,
+     * it is in the internal DoF numbering.
+     */
     Vector<double> system_rhs_on_neumann_domain;
-    Vector<double> system_rhs_on_dirichlet_domain_internal_dof_numbering;
-    Vector<double> system_rhs_on_neumann_domain_internal_dof_numbering;
+    /**
+     * Right hand side vector on both the Dirichlet domain and Neumann domain.
+     * Only used in the mixed boundary value problem.
+     */
+    Vector<double> system_rhs_on_combined_domain;
 
     /**
      * Natural density \f$w_{rm eq}\f$, which is an intermediate solution used
@@ -743,15 +777,37 @@ namespace IdeoBEM
     Vector<double> system_rhs_for_natural_density;
 
     /**
-     * Numerical solution on the Dirichlet domain.
+     * Numerical solution on the Dirichlet domain for full matrix version or in
+     * the external DoF numbering for the \hmat version.
      */
     Vector<double> solution_on_dirichlet_domain;
+    /**
+     * Numerical solution on the Dirichlet domain in the internal DoF numbering.
+     * Only used in the \hmat version.
+     */
     Vector<double> solution_on_dirichlet_domain_internal_dof_numbering;
     /**
-     * Numerical solution on the Neumann domain.
+     * Numerical solution on the Neumann domain on all DoFs in the associated
+     * DoF handler.
      */
     Vector<double> solution_on_neumann_domain;
+    /**
+     * Numerical solution on the Neumann domain only on those selected DoFs in
+     * the associated DoF handler. When in the \hmat version, they are in the
+     * external DoF numbering.
+     */
+    Vector<double> solution_on_selected_dofs_of_neumann_domain;
+    /**
+     * Numerical solution on the Neumann domain only on those selected DoFs in
+     * the associated DoF handler in the internal DoF numbering. Only used in
+     * the \hmat version.
+     */
     Vector<double> solution_on_neumann_domain_internal_dof_numbering;
+    /**
+     * Solution vector on both the Dirichlet domain and Neumann domain. Only
+     * used in the mixed boundary value problem and in the \hmat version.
+     */
+    Vector<double> solution_on_combined_domain_internal_dof_numbering;
 
     /**
      * Analytical solution on the Dirichlet domain.
@@ -1349,14 +1405,6 @@ namespace IdeoBEM
             solution_on_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
 
-            if (is_use_hmat)
-              {
-                system_rhs_on_dirichlet_domain_internal_dof_numbering.reinit(
-                  n_dofs_for_neumann_space_on_dirichlet_domain);
-                solution_on_dirichlet_domain_internal_dof_numbering.reinit(
-                  n_dofs_for_neumann_space_on_dirichlet_domain);
-              }
-
             // DEBUG: export analytical solution for comparison.
             analytical_solution_on_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
@@ -1609,8 +1657,6 @@ namespace IdeoBEM
 
             if (is_use_hmat)
               {
-                system_rhs_on_neumann_domain_internal_dof_numbering.reinit(
-                  n_dofs_for_dirichlet_space_on_neumann_domain);
                 solution_on_neumann_domain_internal_dof_numbering.reinit(
                   n_dofs_for_dirichlet_space_on_neumann_domain);
               }
@@ -1623,6 +1669,8 @@ namespace IdeoBEM
           }
         case MixedBCProblem:
           {
+            Assert(is_use_hmat, ExcInternalError());
+
             // Initialize DoF handlers.
             dof_handler_for_dirichlet_space_on_dirichlet_domain.initialize(
               triangulation_for_extended_dirichlet_domain,
@@ -1634,8 +1682,8 @@ namespace IdeoBEM
             dof_handler_for_neumann_space_on_neumann_domain.initialize(
               triangulation_for_neumann_domain, fe_for_neumann_space);
 
-            // Generate DoF selectors for the Dirichlet space on both the
-            // extended Dirichlet domain and the retracted Neumann domain.
+            // Generate DoF selectors for the Dirichlet space on the extended
+            // Dirichlet domain and retracted Neumann domain.
             dof_selectors_for_dirichlet_space_on_dirichlet_domain.resize(
               dof_handler_for_dirichlet_space_on_dirichlet_domain.n_dofs());
             DoFToolsExt::extract_material_domain_dofs(
@@ -1687,356 +1735,299 @@ namespace IdeoBEM
             const unsigned int n_dofs_for_neumann_space_on_neumann_domain =
               dof_handler_for_neumann_space_on_neumann_domain.n_dofs();
 
-            if (!is_use_hmat)
-              {
-                //                /**
-                //                 * If full matrices are used for verification
-                //                 purpose,
-                //                 * allocate memory for them.
-                //                 */
-                //                V1_matrix.reinit(n_dofs_for_neumann_space_on_dirichlet_domain,
-                //                                 n_dofs_for_neumann_space_on_dirichlet_domain);
-                //                K1_matrix.reinit(n_dofs_for_neumann_space_on_dirichlet_domain,
-                //                                 n_dofs_for_dirichlet_space_on_neumann_domain);
-                //
-                //                AssertDimension(V1_matrix.m(), K1_matrix.m());
-                //
-                //                K_prime1_matrix.reinit(
-                //                  n_dofs_for_dirichlet_space_on_neumann_domain,
-                //                  n_dofs_for_neumann_space_on_dirichlet_domain);
-                //                D1_matrix.reinit(n_dofs_for_dirichlet_space_on_neumann_domain,
-                //                                 n_dofs_for_dirichlet_space_on_neumann_domain);
-                //
-                //                AssertDimension(K_prime1_matrix.m(),
-                //                D1_matrix.m()); AssertDimension(V1_matrix.n(),
-                //                K_prime1_matrix.n());
-                //                AssertDimension(K1_matrix.n(), D1_matrix.n());
-                //
-                //                K2_matrix_with_mass_matrix.reinit(
-                //                  n_dofs_for_neumann_space_on_dirichlet_domain,
-                //                  n_dofs_for_dirichlet_space_on_dirichlet_domain);
-                //                V2_matrix.reinit(n_dofs_for_neumann_space_on_dirichlet_domain,
-                //                                 n_dofs_for_neumann_space_on_neumann_domain);
-                //
-                //                AssertDimension(K2_matrix_with_mass_matrix.m(),
-                //                V2_matrix.m());
-                //                AssertDimension(K2_matrix_with_mass_matrix.m(),
-                //                K1_matrix.m());
-                //
-                //                D2_matrix.reinit(
-                //                  n_dofs_for_dirichlet_space_on_neumann_domain,
-                //                  n_dofs_for_dirichlet_space_on_dirichlet_domain);
-                //                K_prime2_matrix_with_mass_matrix.reinit(
-                //                  n_dofs_for_dirichlet_space_on_neumann_domain,
-                //                  n_dofs_for_neumann_space_on_neumann_domain);
-                //
-                //                AssertDimension(D2_matrix.m(),
-                //                                K_prime2_matrix_with_mass_matrix.m());
-                //                AssertDimension(D2_matrix.m(),
-                //                K_prime1_matrix.m());
-                //                AssertDimension(K2_matrix_with_mass_matrix.n(),
-                //                D2_matrix.n()); AssertDimension(V2_matrix.n(),
-                //                                K_prime2_matrix_with_mass_matrix.n());
-              }
-            else
-              {
-                /**
-                 * Build the DoF-to-cell topology.
-                 *
-                 * \mynote{Access of this topology for the Dirichlet space
-                 * requires the map from local to full DoF indices.}
-                 */
-                build_dof_to_cell_topology(
-                  dof_to_cell_topo_for_dirichlet_space_on_dirichlet_domain,
-                  dof_handler_for_dirichlet_space_on_dirichlet_domain);
-                build_dof_to_cell_topology(
-                  dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
-                  dof_handler_for_dirichlet_space_on_neumann_domain);
+            /**
+             * Build the DoF-to-cell topology.
+             *
+             * \mynote{Access of this topology for the Dirichlet space
+             * requires the map from local to full DoF indices.}
+             */
+            build_dof_to_cell_topology(
+              dof_to_cell_topo_for_dirichlet_space_on_dirichlet_domain,
+              dof_handler_for_dirichlet_space_on_dirichlet_domain);
+            build_dof_to_cell_topology(
+              dof_to_cell_topo_for_dirichlet_space_on_neumann_domain,
+              dof_handler_for_dirichlet_space_on_neumann_domain);
 
-                build_dof_to_cell_topology(
-                  dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
-                  dof_handler_for_neumann_space_on_dirichlet_domain);
-                build_dof_to_cell_topology(
-                  dof_to_cell_topo_for_neumann_space_on_neumann_domain,
-                  dof_handler_for_neumann_space_on_neumann_domain);
+            build_dof_to_cell_topology(
+              dof_to_cell_topo_for_neumann_space_on_dirichlet_domain,
+              dof_handler_for_neumann_space_on_dirichlet_domain);
+            build_dof_to_cell_topology(
+              dof_to_cell_topo_for_neumann_space_on_neumann_domain,
+              dof_handler_for_neumann_space_on_neumann_domain);
 
-                /**
-                 * Generate lists of DoF indices.
-                 *
-                 * \mynote{N.B. For the Dirichlet space, some DoFs have been
-                 * excluded.}
-                 */
-                dof_indices_for_dirichlet_space_on_dirichlet_domain.resize(
-                  local_to_full_dirichlet_dof_indices_on_dirichlet_domain
-                    .size());
-                dof_indices_for_dirichlet_space_on_neumann_domain.resize(
-                  local_to_full_dirichlet_dof_indices_on_neumann_domain.size());
-                dof_indices_for_neumann_space_on_dirichlet_domain.resize(
-                  dof_handler_for_neumann_space_on_dirichlet_domain.n_dofs());
-                dof_indices_for_neumann_space_on_neumann_domain.resize(
-                  dof_handler_for_neumann_space_on_neumann_domain.n_dofs());
+            /**
+             * Generate lists of DoF indices.
+             *
+             * \mynote{N.B. For the Dirichlet space, some DoFs have been
+             * excluded.}
+             */
+            dof_indices_for_dirichlet_space_on_dirichlet_domain.resize(
+              n_dofs_for_dirichlet_space_on_dirichlet_domain);
+            dof_indices_for_dirichlet_space_on_neumann_domain.resize(
+              n_dofs_for_dirichlet_space_on_neumann_domain);
+            dof_indices_for_neumann_space_on_dirichlet_domain.resize(
+              n_dofs_for_neumann_space_on_dirichlet_domain);
+            dof_indices_for_neumann_space_on_neumann_domain.resize(
+              n_dofs_for_neumann_space_on_neumann_domain);
 
-                gen_linear_indices<vector_uta, types::global_dof_index>(
-                  dof_indices_for_dirichlet_space_on_dirichlet_domain);
-                gen_linear_indices<vector_uta, types::global_dof_index>(
-                  dof_indices_for_dirichlet_space_on_neumann_domain);
-                gen_linear_indices<vector_uta, types::global_dof_index>(
-                  dof_indices_for_neumann_space_on_dirichlet_domain);
-                gen_linear_indices<vector_uta, types::global_dof_index>(
-                  dof_indices_for_neumann_space_on_neumann_domain);
+            gen_linear_indices<vector_uta, types::global_dof_index>(
+              dof_indices_for_dirichlet_space_on_dirichlet_domain);
+            gen_linear_indices<vector_uta, types::global_dof_index>(
+              dof_indices_for_dirichlet_space_on_neumann_domain);
+            gen_linear_indices<vector_uta, types::global_dof_index>(
+              dof_indices_for_neumann_space_on_dirichlet_domain);
+            gen_linear_indices<vector_uta, types::global_dof_index>(
+              dof_indices_for_neumann_space_on_neumann_domain);
 
-                /**
-                 * Get the spatial coordinates of the support points.
-                 */
-                support_points_for_dirichlet_space_on_dirichlet_domain.resize(
-                  local_to_full_dirichlet_dof_indices_on_dirichlet_domain
-                    .size());
-                DoFToolsExt::map_dofs_to_support_points(
-                  kx_mapping_for_dirichlet_domain,
-                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
-                  local_to_full_dirichlet_dof_indices_on_dirichlet_domain,
-                  support_points_for_dirichlet_space_on_dirichlet_domain);
+            /**
+             * Get the spatial coordinates of the support points.
+             */
+            support_points_for_dirichlet_space_on_dirichlet_domain.resize(
+              n_dofs_for_dirichlet_space_on_dirichlet_domain);
+            DoFToolsExt::map_dofs_to_support_points(
+              kx_mapping_for_dirichlet_domain,
+              dof_handler_for_dirichlet_space_on_dirichlet_domain,
+              local_to_full_dirichlet_dof_indices_on_dirichlet_domain,
+              support_points_for_dirichlet_space_on_dirichlet_domain);
 
-                support_points_for_dirichlet_space_on_neumann_domain.resize(
-                  local_to_full_dirichlet_dof_indices_on_neumann_domain.size());
-                DoFToolsExt::map_dofs_to_support_points(
-                  kx_mapping_for_neumann_domain,
-                  dof_handler_for_dirichlet_space_on_neumann_domain,
-                  local_to_full_dirichlet_dof_indices_on_neumann_domain,
-                  support_points_for_dirichlet_space_on_neumann_domain);
+            support_points_for_dirichlet_space_on_neumann_domain.resize(
+              n_dofs_for_dirichlet_space_on_neumann_domain);
+            DoFToolsExt::map_dofs_to_support_points(
+              kx_mapping_for_neumann_domain,
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              local_to_full_dirichlet_dof_indices_on_neumann_domain,
+              support_points_for_dirichlet_space_on_neumann_domain);
 
-                support_points_for_neumann_space_on_dirichlet_domain.resize(
-                  dof_handler_for_neumann_space_on_dirichlet_domain.n_dofs());
-                DoFTools::map_dofs_to_support_points(
-                  kx_mapping_for_dirichlet_domain,
-                  dof_handler_for_neumann_space_on_dirichlet_domain,
-                  support_points_for_neumann_space_on_dirichlet_domain);
+            support_points_for_neumann_space_on_dirichlet_domain.resize(
+              n_dofs_for_neumann_space_on_dirichlet_domain);
+            DoFTools::map_dofs_to_support_points(
+              kx_mapping_for_dirichlet_domain,
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              support_points_for_neumann_space_on_dirichlet_domain);
 
-                support_points_for_neumann_space_on_neumann_domain.resize(
-                  dof_handler_for_neumann_space_on_neumann_domain.n_dofs());
-                DoFTools::map_dofs_to_support_points(
-                  kx_mapping_for_neumann_domain,
-                  dof_handler_for_neumann_space_on_neumann_domain,
-                  support_points_for_neumann_space_on_neumann_domain);
+            support_points_for_neumann_space_on_neumann_domain.resize(
+              n_dofs_for_neumann_space_on_neumann_domain);
+            DoFTools::map_dofs_to_support_points(
+              kx_mapping_for_neumann_domain,
+              dof_handler_for_neumann_space_on_neumann_domain,
+              support_points_for_neumann_space_on_neumann_domain);
 
-                /**
-                 * Calculate the average mesh cell size at each support point.
-                 */
-                dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain
-                  .assign(
-                    local_to_full_dirichlet_dof_indices_on_dirichlet_domain
-                      .size(),
-                    0);
-                DoFToolsExt::map_dofs_to_average_cell_size(
-                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
-                  local_to_full_dirichlet_dof_indices_on_dirichlet_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
+            /**
+             * Calculate the average mesh cell size at each support point.
+             */
+            dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain
+              .assign(n_dofs_for_dirichlet_space_on_dirichlet_domain, 0);
+            DoFToolsExt::map_dofs_to_average_cell_size(
+              dof_handler_for_dirichlet_space_on_dirichlet_domain,
+              local_to_full_dirichlet_dof_indices_on_dirichlet_domain,
+              dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
 
-                dof_average_cell_size_for_dirichlet_space_on_neumann_domain
-                  .assign(local_to_full_dirichlet_dof_indices_on_neumann_domain
-                            .size(),
-                          0);
-                DoFToolsExt::map_dofs_to_average_cell_size(
-                  dof_handler_for_dirichlet_space_on_neumann_domain,
-                  local_to_full_dirichlet_dof_indices_on_neumann_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
+            dof_average_cell_size_for_dirichlet_space_on_neumann_domain.assign(
+              n_dofs_for_dirichlet_space_on_neumann_domain, 0);
+            DoFToolsExt::map_dofs_to_average_cell_size(
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              local_to_full_dirichlet_dof_indices_on_neumann_domain,
+              dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
 
-                dof_average_cell_size_for_neumann_space_on_dirichlet_domain
-                  .assign(
-                    dof_handler_for_neumann_space_on_dirichlet_domain.n_dofs(),
-                    0);
-                DoFToolsExt::map_dofs_to_average_cell_size(
-                  dof_handler_for_neumann_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
+            dof_average_cell_size_for_neumann_space_on_dirichlet_domain.assign(
+              n_dofs_for_neumann_space_on_dirichlet_domain, 0);
+            DoFToolsExt::map_dofs_to_average_cell_size(
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
 
-                dof_average_cell_size_for_neumann_space_on_neumann_domain
-                  .assign(
-                    dof_handler_for_neumann_space_on_neumann_domain.n_dofs(),
-                    0);
-                DoFToolsExt::map_dofs_to_average_cell_size(
-                  dof_handler_for_neumann_space_on_neumann_domain,
-                  dof_average_cell_size_for_neumann_space_on_neumann_domain);
+            dof_average_cell_size_for_neumann_space_on_neumann_domain.assign(
+              n_dofs_for_neumann_space_on_neumann_domain, 0);
+            DoFToolsExt::map_dofs_to_average_cell_size(
+              dof_handler_for_neumann_space_on_neumann_domain,
+              dof_average_cell_size_for_neumann_space_on_neumann_domain);
 
-                /**
-                 * Initialize the cluster trees.
-                 */
-                ct_for_dirichlet_space_on_dirichlet_domain = ClusterTree<
-                  spacedim>(
-                  dof_indices_for_dirichlet_space_on_dirichlet_domain,
-                  support_points_for_dirichlet_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain,
-                  n_min_for_ct);
-                ct_for_dirichlet_space_on_neumann_domain =
-                  ClusterTree<spacedim>(
-                    dof_indices_for_dirichlet_space_on_neumann_domain,
-                    support_points_for_dirichlet_space_on_neumann_domain,
-                    dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
-                    n_min_for_ct);
-                ct_for_neumann_space_on_dirichlet_domain =
-                  ClusterTree<spacedim>(
-                    dof_indices_for_neumann_space_on_dirichlet_domain,
-                    support_points_for_neumann_space_on_dirichlet_domain,
-                    dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
-                    n_min_for_ct);
-                ct_for_neumann_space_on_neumann_domain = ClusterTree<spacedim>(
-                  dof_indices_for_neumann_space_on_neumann_domain,
-                  support_points_for_neumann_space_on_neumann_domain,
-                  dof_average_cell_size_for_neumann_space_on_neumann_domain,
-                  n_min_for_ct);
+            /**
+             * Initialize the cluster trees.
+             */
+            ct_for_dirichlet_space_on_dirichlet_domain = ClusterTree<spacedim>(
+              dof_indices_for_dirichlet_space_on_dirichlet_domain,
+              support_points_for_dirichlet_space_on_dirichlet_domain,
+              dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain,
+              n_min_for_ct);
+            ct_for_dirichlet_space_on_neumann_domain = ClusterTree<spacedim>(
+              dof_indices_for_dirichlet_space_on_neumann_domain,
+              support_points_for_dirichlet_space_on_neumann_domain,
+              dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
+              n_min_for_ct);
+            ct_for_neumann_space_on_dirichlet_domain = ClusterTree<spacedim>(
+              dof_indices_for_neumann_space_on_dirichlet_domain,
+              support_points_for_neumann_space_on_dirichlet_domain,
+              dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
+              n_min_for_ct);
+            ct_for_neumann_space_on_neumann_domain = ClusterTree<spacedim>(
+              dof_indices_for_neumann_space_on_neumann_domain,
+              support_points_for_neumann_space_on_neumann_domain,
+              dof_average_cell_size_for_neumann_space_on_neumann_domain,
+              n_min_for_ct);
 
-                /**
-                 * Partition the cluster trees.
-                 */
-                ct_for_dirichlet_space_on_dirichlet_domain.partition(
-                  support_points_for_dirichlet_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
-                ct_for_dirichlet_space_on_neumann_domain.partition(
-                  support_points_for_dirichlet_space_on_neumann_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
-                ct_for_neumann_space_on_dirichlet_domain.partition(
-                  support_points_for_neumann_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
-                ct_for_neumann_space_on_neumann_domain.partition(
-                  support_points_for_neumann_space_on_neumann_domain,
-                  dof_average_cell_size_for_neumann_space_on_neumann_domain);
+            /**
+             * Partition the cluster trees.
+             */
+            ct_for_dirichlet_space_on_dirichlet_domain.partition(
+              support_points_for_dirichlet_space_on_dirichlet_domain,
+              dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
+            ct_for_dirichlet_space_on_neumann_domain.partition(
+              support_points_for_dirichlet_space_on_neumann_domain,
+              dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
+            ct_for_neumann_space_on_dirichlet_domain.partition(
+              support_points_for_neumann_space_on_dirichlet_domain,
+              dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
+            ct_for_neumann_space_on_neumann_domain.partition(
+              support_points_for_neumann_space_on_neumann_domain,
+              dof_average_cell_size_for_neumann_space_on_neumann_domain);
 
-                /**
-                 * Get the external-to-internal and internal-to-external DoF
-                 * numberings.
-                 */
-                dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain =
-                  &(ct_for_dirichlet_space_on_dirichlet_domain
-                      .get_external_to_internal_dof_numbering());
-                dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain =
-                  &(ct_for_dirichlet_space_on_dirichlet_domain
-                      .get_internal_to_external_dof_numbering());
-                dof_e2i_numbering_for_dirichlet_space_on_neumann_domain =
-                  &(ct_for_dirichlet_space_on_neumann_domain
-                      .get_external_to_internal_dof_numbering());
-                dof_i2e_numbering_for_dirichlet_space_on_neumann_domain =
-                  &(ct_for_dirichlet_space_on_neumann_domain
-                      .get_internal_to_external_dof_numbering());
-                dof_e2i_numbering_for_neumann_space_on_dirichlet_domain =
-                  &(ct_for_neumann_space_on_dirichlet_domain
-                      .get_external_to_internal_dof_numbering());
-                dof_i2e_numbering_for_neumann_space_on_dirichlet_domain =
-                  &(ct_for_neumann_space_on_dirichlet_domain
-                      .get_internal_to_external_dof_numbering());
-                dof_e2i_numbering_for_neumann_space_on_neumann_domain =
-                  &(ct_for_neumann_space_on_neumann_domain
-                      .get_external_to_internal_dof_numbering());
-                dof_i2e_numbering_for_neumann_space_on_neumann_domain =
-                  &(ct_for_neumann_space_on_neumann_domain
-                      .get_internal_to_external_dof_numbering());
+            /**
+             * Get the external-to-internal and internal-to-external DoF
+             * numberings.
+             */
+            dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain =
+              &(ct_for_dirichlet_space_on_dirichlet_domain
+                  .get_external_to_internal_dof_numbering());
+            dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain =
+              &(ct_for_dirichlet_space_on_dirichlet_domain
+                  .get_internal_to_external_dof_numbering());
+            dof_e2i_numbering_for_dirichlet_space_on_neumann_domain =
+              &(ct_for_dirichlet_space_on_neumann_domain
+                  .get_external_to_internal_dof_numbering());
+            dof_i2e_numbering_for_dirichlet_space_on_neumann_domain =
+              &(ct_for_dirichlet_space_on_neumann_domain
+                  .get_internal_to_external_dof_numbering());
+            dof_e2i_numbering_for_neumann_space_on_dirichlet_domain =
+              &(ct_for_neumann_space_on_dirichlet_domain
+                  .get_external_to_internal_dof_numbering());
+            dof_i2e_numbering_for_neumann_space_on_dirichlet_domain =
+              &(ct_for_neumann_space_on_dirichlet_domain
+                  .get_internal_to_external_dof_numbering());
+            dof_e2i_numbering_for_neumann_space_on_neumann_domain =
+              &(ct_for_neumann_space_on_neumann_domain
+                  .get_external_to_internal_dof_numbering());
+            dof_i2e_numbering_for_neumann_space_on_neumann_domain =
+              &(ct_for_neumann_space_on_neumann_domain
+                  .get_internal_to_external_dof_numbering());
 
-                /**
-                 * Create the block cluster trees.
-                 */
-                bct_for_bilinear_form_V1 = BlockClusterTree<spacedim>(
-                  ct_for_neumann_space_on_dirichlet_domain,
-                  ct_for_neumann_space_on_dirichlet_domain,
-                  eta,
-                  n_min_for_bct);
-                bct_for_bilinear_form_K1 = BlockClusterTree<spacedim>(
-                  ct_for_neumann_space_on_dirichlet_domain,
-                  ct_for_dirichlet_space_on_neumann_domain,
-                  eta,
-                  n_min_for_bct);
-                bct_for_bilinear_form_D1 = BlockClusterTree<spacedim>(
-                  ct_for_dirichlet_space_on_neumann_domain,
-                  ct_for_dirichlet_space_on_neumann_domain,
-                  eta,
-                  n_min_for_bct);
-                bct_for_bilinear_form_K2 = BlockClusterTree<spacedim>(
-                  ct_for_neumann_space_on_dirichlet_domain,
-                  ct_for_dirichlet_space_on_dirichlet_domain,
-                  eta,
-                  n_min_for_bct);
-                bct_for_bilinear_form_V2 = BlockClusterTree<spacedim>(
-                  ct_for_neumann_space_on_dirichlet_domain,
-                  ct_for_neumann_space_on_neumann_domain,
-                  eta,
-                  n_min_for_bct);
-                bct_for_bilinear_form_D2 = BlockClusterTree<spacedim>(
-                  ct_for_dirichlet_space_on_neumann_domain,
-                  ct_for_dirichlet_space_on_dirichlet_domain,
-                  eta,
-                  n_min_for_bct);
-                bct_for_bilinear_form_K_prime2 = BlockClusterTree<spacedim>(
-                  ct_for_dirichlet_space_on_neumann_domain,
-                  ct_for_neumann_space_on_neumann_domain,
-                  eta,
-                  n_min_for_bct);
+            /**
+             * Create the block cluster trees.
+             */
+            bct_for_bilinear_form_V1 = BlockClusterTree<spacedim>(
+              ct_for_neumann_space_on_dirichlet_domain,
+              ct_for_neumann_space_on_dirichlet_domain,
+              eta,
+              n_min_for_bct);
+            bct_for_bilinear_form_K1 = BlockClusterTree<spacedim>(
+              ct_for_neumann_space_on_dirichlet_domain,
+              ct_for_dirichlet_space_on_neumann_domain,
+              eta,
+              n_min_for_bct);
+            bct_for_bilinear_form_D1 = BlockClusterTree<spacedim>(
+              ct_for_dirichlet_space_on_neumann_domain,
+              ct_for_dirichlet_space_on_neumann_domain,
+              eta,
+              n_min_for_bct);
+            bct_for_bilinear_form_K2 = BlockClusterTree<spacedim>(
+              ct_for_neumann_space_on_dirichlet_domain,
+              ct_for_dirichlet_space_on_dirichlet_domain,
+              eta,
+              n_min_for_bct);
+            bct_for_bilinear_form_V2 = BlockClusterTree<spacedim>(
+              ct_for_neumann_space_on_dirichlet_domain,
+              ct_for_neumann_space_on_neumann_domain,
+              eta,
+              n_min_for_bct);
+            bct_for_bilinear_form_D2 = BlockClusterTree<spacedim>(
+              ct_for_dirichlet_space_on_neumann_domain,
+              ct_for_dirichlet_space_on_dirichlet_domain,
+              eta,
+              n_min_for_bct);
+            bct_for_bilinear_form_K_prime2 = BlockClusterTree<spacedim>(
+              ct_for_dirichlet_space_on_neumann_domain,
+              ct_for_neumann_space_on_neumann_domain,
+              eta,
+              n_min_for_bct);
 
-                /**
-                 * Partition the block cluster trees.
-                 */
-                bct_for_bilinear_form_V1.partition(
-                  *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-                  support_points_for_neumann_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
-                bct_for_bilinear_form_K1.partition(
-                  *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-                  *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-                  support_points_for_neumann_space_on_dirichlet_domain,
-                  support_points_for_dirichlet_space_on_neumann_domain,
-                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
-                bct_for_bilinear_form_D1.partition(
-                  *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-                  support_points_for_dirichlet_space_on_neumann_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
-                bct_for_bilinear_form_K2.partition(
-                  *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-                  *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
-                  support_points_for_neumann_space_on_dirichlet_domain,
-                  support_points_for_dirichlet_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
-                bct_for_bilinear_form_V2.partition(
-                  *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-                  *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-                  support_points_for_neumann_space_on_dirichlet_domain,
-                  support_points_for_neumann_space_on_neumann_domain,
-                  dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_neumann_space_on_neumann_domain);
-                bct_for_bilinear_form_D2.partition(
-                  *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-                  *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
-                  support_points_for_dirichlet_space_on_neumann_domain,
-                  support_points_for_dirichlet_space_on_dirichlet_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
-                bct_for_bilinear_form_K_prime2.partition(
-                  *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-                  *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-                  support_points_for_dirichlet_space_on_neumann_domain,
-                  support_points_for_neumann_space_on_neumann_domain,
-                  dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
-                  dof_average_cell_size_for_neumann_space_on_neumann_domain);
+            /**
+             * Partition the block cluster trees.
+             */
+            bct_for_bilinear_form_V1.partition(
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              support_points_for_neumann_space_on_dirichlet_domain,
+              dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
+            bct_for_bilinear_form_K1.partition(
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              support_points_for_neumann_space_on_dirichlet_domain,
+              support_points_for_dirichlet_space_on_neumann_domain,
+              dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
+              dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
+            bct_for_bilinear_form_D1.partition(
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              support_points_for_dirichlet_space_on_neumann_domain,
+              dof_average_cell_size_for_dirichlet_space_on_neumann_domain);
+            bct_for_bilinear_form_K2.partition(
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
+              support_points_for_neumann_space_on_dirichlet_domain,
+              support_points_for_dirichlet_space_on_dirichlet_domain,
+              dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
+              dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
+            bct_for_bilinear_form_V2.partition(
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+              support_points_for_neumann_space_on_dirichlet_domain,
+              support_points_for_neumann_space_on_neumann_domain,
+              dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
+              dof_average_cell_size_for_neumann_space_on_neumann_domain);
+            bct_for_bilinear_form_D2.partition(
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
+              support_points_for_dirichlet_space_on_neumann_domain,
+              support_points_for_dirichlet_space_on_dirichlet_domain,
+              dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
+              dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
+            bct_for_bilinear_form_K_prime2.partition(
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+              support_points_for_dirichlet_space_on_neumann_domain,
+              support_points_for_neumann_space_on_neumann_domain,
+              dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
+              dof_average_cell_size_for_neumann_space_on_neumann_domain);
 
-                /**
-                 * Initialize \hmatrices.
-                 */
-                V1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_V1,
-                                                max_hmat_rank);
-                K1_hmat =
-                  HMatrix<spacedim>(bct_for_bilinear_form_K1, max_hmat_rank);
-                D1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_D1,
-                                                max_hmat_rank);
-                K2_hmat_with_mass_matrix =
-                  HMatrix<spacedim>(bct_for_bilinear_form_K2, max_hmat_rank);
-                V2_hmat =
-                  HMatrix<spacedim>(bct_for_bilinear_form_V2, max_hmat_rank);
-                D2_hmat =
-                  HMatrix<spacedim>(bct_for_bilinear_form_D2, max_hmat_rank);
-                K_prime2_hmat_with_mass_matrix =
-                  HMatrix<spacedim>(bct_for_bilinear_form_K_prime2,
-                                    max_hmat_rank);
-
-                // TODO Initialize the preconditioners for mixed boundary value
-                // problem.
-              }
+            /**
+             * Initialize \hmatrices.
+             */
+            V1_hmat =
+              HMatrixSymm<spacedim>(bct_for_bilinear_form_V1, max_hmat_rank);
+            K1_hmat =
+              HMatrix<spacedim>(bct_for_bilinear_form_K1,
+                                max_hmat_rank,
+                                HMatrixSupport::Property::general,
+                                HMatrixSupport::BlockType::diagonal_block);
+            D1_hmat =
+              HMatrixSymm<spacedim>(bct_for_bilinear_form_D1, max_hmat_rank);
+            K2_hmat_with_mass_matrix =
+              HMatrix<spacedim>(bct_for_bilinear_form_K2,
+                                max_hmat_rank,
+                                HMatrixSupport::Property::general,
+                                HMatrixSupport::BlockType::diagonal_block);
+            V2_hmat =
+              HMatrix<spacedim>(bct_for_bilinear_form_V2,
+                                max_hmat_rank,
+                                HMatrixSupport::Property::general,
+                                HMatrixSupport::BlockType::diagonal_block);
+            D2_hmat =
+              HMatrix<spacedim>(bct_for_bilinear_form_D2,
+                                max_hmat_rank,
+                                HMatrixSupport::Property::general,
+                                HMatrixSupport::BlockType::diagonal_block);
+            K_prime2_hmat_with_mass_matrix =
+              HMatrix<spacedim>(bct_for_bilinear_form_K_prime2,
+                                max_hmat_rank,
+                                HMatrixSupport::Property::general,
+                                HMatrixSupport::BlockType::diagonal_block);
 
             /**
              * Interpolate the Dirichlet boundary data on the extended Dirichlet
@@ -2066,8 +2057,8 @@ namespace IdeoBEM
                  i < n_dofs_for_dirichlet_space_on_dirichlet_domain;
                  i++)
               {
-                dirichlet_bc_on_selected_dofs[i] = dirichlet_bc
-                  [local_to_full_dirichlet_dof_indices_on_dirichlet_domain[i]];
+                dirichlet_bc_on_selected_dofs(i) = dirichlet_bc(
+                  local_to_full_dirichlet_dof_indices_on_dirichlet_domain[i]);
               }
 
             /**
@@ -2079,56 +2070,158 @@ namespace IdeoBEM
               *neumann_bc_functor_ptr,
               neumann_bc);
 
-            if (is_use_hmat)
-              {
-                /**
-                 * Permute the Dirichlet boundary data by following the mapping
-                 * from internal to external DoF numbering.
-                 */
-                dirichlet_bc_internal_dof_numbering.reinit(
-                  n_dofs_for_dirichlet_space_on_dirichlet_domain);
-                permute_vector(
-                  dirichlet_bc_on_selected_dofs,
-                  *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
-                  dirichlet_bc_internal_dof_numbering);
-
-                /**
-                 * Permute the Neumann boundary data by following the mapping
-                 * from internal to external DoF numbering.
-                 */
-                neumann_bc_internal_dof_numbering.reinit(
-                  n_dofs_for_neumann_space_on_neumann_domain);
-                permute_vector(
-                  neumann_bc,
-                  *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
-                  neumann_bc_internal_dof_numbering);
-              }
+            /**
+             * Permute the Dirichlet boundary data by following the mapping
+             * from internal to external DoF numbering.
+             */
+            dirichlet_bc_internal_dof_numbering.reinit(
+              n_dofs_for_dirichlet_space_on_dirichlet_domain);
+            permute_vector(
+              dirichlet_bc_on_selected_dofs,
+              *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
+              dirichlet_bc_internal_dof_numbering);
 
             /**
-             * Allocate memory for the right-hand-side vector and solution
-             * vector.
+             * Permute the Neumann boundary data by following the mapping
+             * from internal to external DoF numbering.
+             */
+            neumann_bc_internal_dof_numbering.reinit(
+              n_dofs_for_neumann_space_on_neumann_domain);
+            permute_vector(
+              neumann_bc,
+              *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
+              neumann_bc_internal_dof_numbering);
+
+            /**
+             * Allocate memory for the right-hand-side vectors and solution
+             * vectors.
              */
             system_rhs_on_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
             system_rhs_on_neumann_domain.reinit(
               n_dofs_for_dirichlet_space_on_neumann_domain);
+            system_rhs_on_combined_domain.reinit(
+              n_dofs_for_neumann_space_on_dirichlet_domain +
+              n_dofs_for_dirichlet_space_on_neumann_domain);
 
             solution_on_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
+            // N.B. This is the solution vector on all DoFs in the associated
+            // DoF handler.
             solution_on_neumann_domain.reinit(
+              dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
+            // N.B. This is the solution vector on selected DoFs in the
+            // associated DoF handler in the external DoF numbering.
+            solution_on_selected_dofs_of_neumann_domain.reinit(
               n_dofs_for_dirichlet_space_on_neumann_domain);
 
-            if (is_use_hmat)
+            solution_on_dirichlet_domain_internal_dof_numbering.reinit(
+              n_dofs_for_neumann_space_on_dirichlet_domain);
+            // N.B. This is the solution vector on the selected DoFs in the
+            // associated DoF handler in the internal DoF numbering.
+            solution_on_neumann_domain_internal_dof_numbering.reinit(
+              n_dofs_for_dirichlet_space_on_neumann_domain);
+            solution_on_combined_domain_internal_dof_numbering.reinit(
+              n_dofs_for_neumann_space_on_dirichlet_domain +
+              n_dofs_for_dirichlet_space_on_neumann_domain);
+
+            // DEBUG
+            analytical_solution_on_dirichlet_domain.reinit(
+              n_dofs_for_neumann_space_on_dirichlet_domain);
+            analytical_solution_on_neumann_domain.reinit(
+              dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
+
+            VectorTools::interpolate(
+              dof_handler_for_neumann_space_on_dirichlet_domain,
+              *neumann_bc_functor_ptr,
+              analytical_solution_on_dirichlet_domain);
+
+            VectorTools::interpolate(
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              *dirichlet_bc_functor_ptr,
+              analytical_solution_on_neumann_domain);
+
+            for (unsigned int i = 0;
+                 i < dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs();
+                 i++)
               {
-                system_rhs_on_dirichlet_domain_internal_dof_numbering.reinit(
-                  n_dofs_for_neumann_space_on_dirichlet_domain);
-                system_rhs_on_neumann_domain_internal_dof_numbering.reinit(
-                  n_dofs_for_dirichlet_space_on_neumann_domain);
-                solution_on_dirichlet_domain_internal_dof_numbering.reinit(
-                  n_dofs_for_neumann_space_on_dirichlet_domain);
-                solution_on_neumann_domain_internal_dof_numbering.reinit(
-                  n_dofs_for_dirichlet_space_on_neumann_domain);
+                if (!dof_selectors_for_dirichlet_space_on_neumann_domain[i])
+                  {
+                    analytical_solution_on_neumann_domain(i) = 0;
+                  }
               }
+
+            Vector<double>
+              analytical_solution_on_selected_dofs_of_neumann_domain(
+                n_dofs_for_dirichlet_space_on_neumann_domain);
+            for (types::global_dof_index i = 0;
+                 i < n_dofs_for_dirichlet_space_on_neumann_domain;
+                 i++)
+              {
+                analytical_solution_on_selected_dofs_of_neumann_domain(i) =
+                  analytical_solution_on_neumann_domain(
+                    local_to_full_dirichlet_dof_indices_on_neumann_domain[i]);
+              }
+
+            Vector<double>
+              analytical_solution_on_dirichlet_domain_internal_numbering(
+                n_dofs_for_neumann_space_on_dirichlet_domain);
+            Vector<double>
+              analytical_solution_on_neumann_domain_internal_numbering(
+                n_dofs_for_dirichlet_space_on_neumann_domain);
+
+            permute_vector(
+              analytical_solution_on_dirichlet_domain,
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              analytical_solution_on_dirichlet_domain_internal_numbering);
+            permute_vector(
+              analytical_solution_on_selected_dofs_of_neumann_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              analytical_solution_on_neumann_domain_internal_numbering);
+
+            print_vector_to_mat(std::cout,
+                                "analytical_solution_on_dirichlet_domain",
+                                analytical_solution_on_dirichlet_domain,
+                                false,
+                                15,
+                                25);
+
+            print_vector_to_mat(std::cout,
+                                "analytical_solution_on_neumann_domain",
+                                analytical_solution_on_neumann_domain,
+                                false,
+                                15,
+                                25);
+
+            print_vector_to_mat(
+              std::cout,
+              "analytical_solution_on_dirichlet_domain_internal_numbering",
+              analytical_solution_on_dirichlet_domain_internal_numbering,
+              false,
+              15,
+              25);
+
+            print_vector_to_mat(
+              std::cout,
+              "analytical_solution_on_neumann_domain_internal_numbering",
+              analytical_solution_on_neumann_domain_internal_numbering,
+              false,
+              15,
+              25);
+
+            print_vector_to_mat(std::cout,
+                                "neumann_bc_internal_dof_numbering",
+                                neumann_bc_internal_dof_numbering,
+                                false,
+                                15,
+                                25);
+
+            print_vector_to_mat(std::cout,
+                                "dirichlet_bc_internal_dof_numbering",
+                                dirichlet_bc_internal_dof_numbering,
+                                false,
+                                15,
+                                25);
 
             break;
           }
@@ -2680,10 +2773,9 @@ namespace IdeoBEM
             /**
              * Calculate the RHS vector.
              */
-            K2_hmat_with_mass_matrix.vmult(
-              system_rhs_on_dirichlet_domain_internal_dof_numbering,
-              dirichlet_bc_internal_dof_numbering,
-              HMatrixSupport::Property::general);
+            K2_hmat_with_mass_matrix.vmult(system_rhs_on_dirichlet_domain,
+                                           dirichlet_bc_internal_dof_numbering,
+                                           HMatrixSupport::Property::general);
 
             break;
           }
@@ -2756,7 +2848,7 @@ namespace IdeoBEM
              * Calculate the RHS vector.
              */
             K_prime2_hmat_with_mass_matrix.vmult(
-              system_rhs_on_neumann_domain_internal_dof_numbering,
+              system_rhs_on_neumann_domain,
               neumann_bc_internal_dof_numbering,
               HMatrixSupport::Property::general);
 
@@ -2843,7 +2935,7 @@ namespace IdeoBEM
                 SameTriangulations,
               true);
 
-            std::cerr << "=== Assemble K1 ===" << std::endl;
+            std::cerr << "=== Assemble -K1 ===" << std::endl;
 
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
@@ -3018,7 +3110,7 @@ namespace IdeoBEM
                   false);
               }
 
-            std::cerr << "=== V2 ===" << std::endl;
+            std::cerr << "=== -V2 ===" << std::endl;
 
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
@@ -3045,7 +3137,7 @@ namespace IdeoBEM
                 DifferentTriangulations,
               false);
 
-            std::cerr << "=== D2 ===" << std::endl;
+            std::cerr << "=== -D2 ===" << std::endl;
 
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
@@ -3071,6 +3163,10 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 DifferentTriangulations,
               false);
+
+            // Assemble the block matrix.
+            M_hmat =
+              HBlockMatrixSkewSymm<spacedim>(&V1_hmat, &K1_hmat, &D1_hmat);
 
             // DEBUG: Output hmatrices.
             std::ofstream out("V1_bct.dat");
@@ -3133,7 +3229,33 @@ namespace IdeoBEM
             D2_full.print_formatted_to_mat(out, "D2", 15, true, 25, "0");
             out.close();
 
-            // TODO Calculate the RHS vectors in mixed boundary value problem.
+            // Calculate the RHS vectors in the mixed boundary value problem.
+            K2_hmat_with_mass_matrix.vmult(system_rhs_on_dirichlet_domain,
+                                           dirichlet_bc_internal_dof_numbering,
+                                           HMatrixSupport::Property::general);
+            V2_hmat.vmult(system_rhs_on_dirichlet_domain,
+                          neumann_bc_internal_dof_numbering,
+                          HMatrixSupport::Property::general);
+
+            D2_hmat.vmult(system_rhs_on_neumann_domain,
+                          dirichlet_bc_internal_dof_numbering,
+                          HMatrixSupport::Property::general);
+            K_prime2_hmat_with_mass_matrix.vmult(
+              system_rhs_on_neumann_domain,
+              neumann_bc_internal_dof_numbering,
+              HMatrixSupport::Property::general);
+
+            // Combine the two part of RHS vectors.
+            copy_vector(system_rhs_on_combined_domain,
+                        0,
+                        system_rhs_on_dirichlet_domain,
+                        0,
+                        system_rhs_on_dirichlet_domain.size());
+            copy_vector(system_rhs_on_combined_domain,
+                        system_rhs_on_dirichlet_domain.size(),
+                        system_rhs_on_neumann_domain,
+                        0,
+                        system_rhs_on_neumann_domain.size());
 
             break;
           }
@@ -3242,9 +3364,31 @@ namespace IdeoBEM
           }
         case MixedBCProblem:
           {
-            // TODO Assemble preconditioners for the mixed boundary value
-            // problem.
-            Assert(false, ExcNotImplemented());
+            // Assemble preconditioners for the mixed boundary value problem.
+
+            // Directly make copies of existing \hmatrices and then truncate
+            // their ranks.
+            M11_in_preconditioner = V1_hmat;
+            M12_in_preconditioner = K1_hmat;
+            M22_in_preconditioner = D1_hmat;
+
+            M11_in_preconditioner.truncate_to_rank_preserve_positive_definite(
+              max_hmat_rank_for_preconditioner);
+            M12_in_preconditioner.truncate_to_rank(
+              max_hmat_rank_for_preconditioner);
+            M22_in_preconditioner.truncate_to_rank_preserve_positive_definite(
+              max_hmat_rank_for_preconditioner);
+
+            M_hmat_preconditioner =
+              HBlockMatrixSkewSymmPreconditioner<spacedim>(
+                &M11_in_preconditioner,
+                &M12_in_preconditioner,
+                &M22_in_preconditioner);
+
+            // Perform \hmat-LU factorization to the block preconditioner.
+            M_hmat_preconditioner.compute_lu_factorization(
+              max_hmat_rank_for_preconditioner);
+
             break;
           }
         default:
@@ -3262,13 +3406,13 @@ namespace IdeoBEM
   {
     if (!is_use_hmat)
       {
-        SolverControl solver_control(1000, 1e-12);
-        SolverCG<>    solver(solver_control);
-
         switch (problem_type)
           {
             case DirichletBCProblem:
               {
+                SolverControl solver_control(1000, 1e-12);
+                SolverCG<>    solver(solver_control);
+
                 solver.solve(V1_matrix,
                              solution_on_dirichlet_domain,
                              system_rhs_on_dirichlet_domain,
@@ -3278,6 +3422,9 @@ namespace IdeoBEM
               }
             case NeumannBCProblem:
               {
+                SolverControl solver_control(1000, 1e-12);
+                SolverCG<>    solver(solver_control);
+
                 solver.solve(D1_matrix,
                              solution_on_neumann_domain,
                              system_rhs_on_neumann_domain,
@@ -3287,7 +3434,7 @@ namespace IdeoBEM
               }
             case MixedBCProblem:
               {
-                // TODO Solve full matrix for mixed boundary value problem
+                Assert(false, ExcNotImplemented());
 
                 break;
               }
@@ -3299,17 +3446,17 @@ namespace IdeoBEM
       }
     else
       {
-        SolverControl            solver_control(1000, 1e-6, true, true);
-        SolverCG<Vector<double>> solver(solver_control);
-
         switch (problem_type)
           {
             case DirichletBCProblem:
               {
+                SolverControl            solver_control(1000, 1e-6, true, true);
+                SolverCG<Vector<double>> solver(solver_control);
+
                 solver.solve(
                   V1_hmat,
                   solution_on_dirichlet_domain_internal_dof_numbering,
-                  system_rhs_on_dirichlet_domain_internal_dof_numbering,
+                  system_rhs_on_dirichlet_domain,
                   V1_hmat_preconditioner);
 
                 /**
@@ -3325,11 +3472,13 @@ namespace IdeoBEM
               }
             case NeumannBCProblem:
               {
-                solver.solve(
-                  D1_hmat,
-                  solution_on_neumann_domain_internal_dof_numbering,
-                  system_rhs_on_neumann_domain_internal_dof_numbering,
-                  D1_hmat_preconditioner);
+                SolverControl            solver_control(1000, 1e-6, true, true);
+                SolverCG<Vector<double>> solver(solver_control);
+
+                solver.solve(D1_hmat,
+                             solution_on_neumann_domain_internal_dof_numbering,
+                             system_rhs_on_neumann_domain,
+                             D1_hmat_preconditioner);
 
                 /**
                  * Permute the solution vector by following the mapping
@@ -3344,7 +3493,45 @@ namespace IdeoBEM
               }
             case MixedBCProblem:
               {
-                // TODO Solve H-matrix for mixed boundary value problem
+                SolverControl solver_control(1000, 1e-16, true, true);
+                SolverBicgstab<Vector<double>> solver(solver_control);
+
+                solver.solve(M_hmat,
+                             solution_on_combined_domain_internal_dof_numbering,
+                             system_rhs_on_combined_domain,
+                             M_hmat_preconditioner);
+
+                // Split the solution vector
+                copy_vector(
+                  solution_on_dirichlet_domain_internal_dof_numbering,
+                  0,
+                  solution_on_combined_domain_internal_dof_numbering,
+                  0,
+                  solution_on_dirichlet_domain_internal_dof_numbering.size());
+                copy_vector(
+                  solution_on_neumann_domain_internal_dof_numbering,
+                  0,
+                  solution_on_combined_domain_internal_dof_numbering,
+                  solution_on_dirichlet_domain_internal_dof_numbering.size(),
+                  solution_on_neumann_domain_internal_dof_numbering.size());
+
+                // Permute the solution vector by following the mapping from
+                // external to internal DoF numbering.
+                permute_vector(
+                  solution_on_dirichlet_domain_internal_dof_numbering,
+                  *dof_e2i_numbering_for_neumann_space_on_dirichlet_domain,
+                  solution_on_dirichlet_domain);
+                permute_vector(
+                  solution_on_neumann_domain_internal_dof_numbering,
+                  *dof_e2i_numbering_for_dirichlet_space_on_neumann_domain,
+                  solution_on_selected_dofs_of_neumann_domain);
+
+                // Assemble the Dirichlet solution data to all DoFs in the DoF
+                // handler.
+                DoFToolsExt::extend_selected_dof_values_to_full_dofs(
+                  solution_on_neumann_domain,
+                  solution_on_selected_dofs_of_neumann_domain,
+                  local_to_full_dirichlet_dof_indices_on_neumann_domain);
 
                 break;
               }
@@ -3361,13 +3548,13 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::output_results()
   {
-    std::ofstream                           vtk_output;
-    DataOut<dim, DoFHandler<dim, spacedim>> data_out;
-
     switch (problem_type)
       {
         case DirichletBCProblem:
           {
+            std::ofstream                           vtk_output;
+            DataOut<dim, DoFHandler<dim, spacedim>> data_out;
+
             // DEBUG: Interpolate the analytical solution.
             VectorTools::interpolate(
               dof_handler_for_neumann_space_on_dirichlet_domain,
@@ -3393,6 +3580,9 @@ namespace IdeoBEM
               dirichlet_bc,
               "dirichlet_bc");
 
+            data_out.build_patches();
+            data_out.write_vtk(vtk_output);
+
             print_vector_to_mat(std::cout,
                                 "solution",
                                 solution_on_dirichlet_domain,
@@ -3402,6 +3592,9 @@ namespace IdeoBEM
           }
         case NeumannBCProblem:
           {
+            std::ofstream                           vtk_output;
+            DataOut<dim, DoFHandler<dim, spacedim>> data_out;
+
             // DEBUG: Interpolate the analytical solution.
             VectorTools::interpolate(
               dof_handler_for_dirichlet_space_on_neumann_domain,
@@ -3426,6 +3619,9 @@ namespace IdeoBEM
               neumann_bc,
               "neumann_bc");
 
+            data_out.build_patches();
+            data_out.write_vtk(vtk_output);
+
             print_vector_to_mat(std::cout,
                                 "solution",
                                 solution_on_neumann_domain,
@@ -3435,33 +3631,78 @@ namespace IdeoBEM
           }
         case MixedBCProblem:
           {
-            vtk_output.open("solution_for_mixed_bc.vtk", std::ofstream::out);
+            std::ofstream vtk_output;
 
-            data_out.add_data_vector(
+            vtk_output.open("neumann_data.vtk", std::ofstream::out);
+            DataOut<dim, DoFHandler<dim, spacedim>> data_out_for_neumann_data1,
+              data_out_for_neumann_data2;
+
+            data_out_for_neumann_data1.add_data_vector(
               dof_handler_for_neumann_space_on_dirichlet_domain,
               solution_on_dirichlet_domain,
-              "solution_on_dirichlet_domain");
-            data_out.add_data_vector(
-              dof_handler_for_dirichlet_space_on_dirichlet_domain,
-              dirichlet_bc,
-              "dirichlet_bc");
-            data_out.add_data_vector(
-              dof_handler_for_dirichlet_space_on_neumann_domain,
-              solution_on_neumann_domain,
-              "solution_on_neumann_domain");
-            data_out.add_data_vector(
+              "neumann_data");
+            data_out_for_neumann_data1.build_patches();
+
+            data_out_for_neumann_data2.add_data_vector(
               dof_handler_for_neumann_space_on_neumann_domain,
               neumann_bc,
-              "neumann_bc");
+              "neumann_data");
+            data_out_for_neumann_data2.build_patches();
+            data_out_for_neumann_data1.merge_patches(
+              data_out_for_neumann_data2);
+
+            data_out_for_neumann_data1.write_vtk(vtk_output);
+            vtk_output.close();
+
+            vtk_output.open("dirichlet_data.vtk", std::ofstream::out);
+            DataOut<dim, DoFHandler<dim, spacedim>>
+              data_out_for_dirichlet_data1, data_out_for_dirichlet_data2;
+
+            data_out_for_dirichlet_data1.add_data_vector(
+              dof_handler_for_dirichlet_space_on_dirichlet_domain,
+              dirichlet_bc,
+              "dirichlet_data");
+            data_out_for_dirichlet_data1.build_patches();
+
+            data_out_for_dirichlet_data2.add_data_vector(
+              dof_handler_for_dirichlet_space_on_neumann_domain,
+              solution_on_neumann_domain,
+              "dirichlet_data");
+            data_out_for_dirichlet_data2.build_patches();
+            data_out_for_dirichlet_data1.merge_patches(
+              data_out_for_dirichlet_data2);
+
+            data_out_for_dirichlet_data1.write_vtk(vtk_output);
+            vtk_output.close();
+
+            // DEBUG
+            print_vector_to_mat(
+              std::cout,
+              "solution_on_combined_domain_internal_dof_numbering",
+              solution_on_combined_domain_internal_dof_numbering,
+              false,
+              15,
+              25);
+
+            print_vector_to_mat(std::cout,
+                                "system_rhs_on_combined_domain",
+                                system_rhs_on_combined_domain,
+                                false,
+                                15,
+                                25);
 
             print_vector_to_mat(std::cout,
                                 "solution_on_dirichlet_domain",
                                 solution_on_dirichlet_domain,
-                                false);
+                                false,
+                                15,
+                                25);
             print_vector_to_mat(std::cout,
                                 "solution_on_neumann_domain",
                                 solution_on_neumann_domain,
-                                false);
+                                false,
+                                15,
+                                25);
             break;
           }
         default:
@@ -3469,9 +3710,6 @@ namespace IdeoBEM
             Assert(false, ExcInternalError());
           }
       }
-
-    data_out.build_patches();
-    data_out.write_vtk(vtk_output);
   }
 
 
@@ -3688,7 +3926,119 @@ namespace IdeoBEM
           }
         case MixedBCProblem:
           {
-            // TODO
+            if (is_interior_problem)
+              {
+                /**
+                 * Evaluate the double layer potential, which is the negated
+                 * double layer potential integral operator applied to the
+                 * Dirichlet data. \f[
+                 * -\int_{\Gamma} \widetilde{\gamma}_{1,y} G(x,y) \gamma_0^{\rm
+                 * int} u(y) \intd s_y
+                 * \f]
+                 */
+                std::cerr << "=== Evaluate DLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  double_layer_kernel,
+                  -1.0,
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  solution_on_neumann_domain,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                evaluate_potential_at_points(
+                  double_layer_kernel,
+                  -1.0,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  dirichlet_bc,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                /**
+                 * Evaluate the single layer potential, which is the single
+                 * layer potential integral operator applied to the Neumann
+                 * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
+                 * \intd s_y \f]
+                 */
+                std::cerr << "=== Evaluate SLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  single_layer_kernel,
+                  1.0,
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  solution_on_dirichlet_domain,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                evaluate_potential_at_points(
+                  single_layer_kernel,
+                  1.0,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  neumann_bc,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+              }
+            else
+              {
+                /**
+                 * Evaluate the double layer potential, which is the negated
+                 * double layer potential integral operator applied to the
+                 * Dirichlet data. \f[
+                 * -\int_{\Gamma} \widetilde{\gamma}_{1,y} G(x,y) \gamma_0^{\rm
+                 * int} u(y) \intd s_y
+                 * \f]
+                 */
+                std::cerr << "=== Evaluate DLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  double_layer_kernel,
+                  1.0,
+                  dof_handler_for_dirichlet_space_on_neumann_domain,
+                  solution_on_neumann_domain,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                evaluate_potential_at_points(
+                  double_layer_kernel,
+                  1.0,
+                  dof_handler_for_dirichlet_space_on_dirichlet_domain,
+                  dirichlet_bc,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                /**
+                 * Evaluate the single layer potential, which is the single
+                 * layer potential integral operator applied to the Neumann
+                 * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
+                 * \intd s_y \f]
+                 */
+                std::cerr << "=== Evaluate SLP potential values ==="
+                          << std::endl;
+                evaluate_potential_at_points(
+                  single_layer_kernel,
+                  -1.0,
+                  dof_handler_for_neumann_space_on_dirichlet_domain,
+                  solution_on_dirichlet_domain,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+
+                evaluate_potential_at_points(
+                  single_layer_kernel,
+                  -1.0,
+                  dof_handler_for_neumann_space_on_neumann_domain,
+                  neumann_bc,
+                  false,
+                  potential_grid_points,
+                  potential_values);
+              }
+
             break;
           }
         default:

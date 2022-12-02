@@ -13,15 +13,15 @@ ENDIF()
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
 # For running with Valgrind.
-if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-  # Disable function inlining.
-  include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
-  ADD_FLAGS(DEAL_II_CXX_FLAGS_DEBUG "-fno-inline")
+# if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+#   # Disable function inlining.
+#   include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
+#   ADD_FLAGS(DEAL_II_CXX_FLAGS_DEBUG "-fno-inline")
 
-  # Replace -O0 with -O1.
-  include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
-  REPLACE_FLAG(DEAL_II_CXX_FLAGS_DEBUG "-O0" "-O1")
-endif()
+#   # Replace -O0 with -O1.
+#   include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
+#   REPLACE_FLAG(DEAL_II_CXX_FLAGS_DEBUG "-O0" "-O1")
+# endif()
 
 # Project name
 PROJECT("ideobem")
@@ -251,3 +251,17 @@ ADD_SUBDIRECTORY(tests/laplace-bem-neumann-hmatrix)
 ADD_SUBDIRECTORY(tests/hmatrix-symm-vmult-symm)
 ADD_SUBDIRECTORY(tests/lapack-matrix-fill-rows)
 ADD_SUBDIRECTORY(tests/laplace-bem-mixed-hmatrix)
+ADD_SUBDIRECTORY(tests/verify-copy-vector)
+ADD_SUBDIRECTORY(tests/hmatrix-tvmult)
+ADD_SUBDIRECTORY(tests/hmatrix-tvmult-symm)
+ADD_SUBDIRECTORY(tests/hmatrix-hmatrix-mTmult-level-conserving-symm-result)
+ADD_SUBDIRECTORY(tests/hmatrix-hmatrix-Tmmult-level-conserving-all-coarse-ntp)
+ADD_SUBDIRECTORY(tests/hmatrix-hmatrix-Tmmult-level-conserving-all-fine-ntp)
+ADD_SUBDIRECTORY(tests/hmatrix-hmatrix-Tmmult-level-conserving-coarse-coarse-fine-ntp)
+ADD_SUBDIRECTORY(tests/hmatrix-hmatrix-Tmmult-level-conserving-coarse-fine-coarse-ntp)
+ADD_SUBDIRECTORY(tests/hmatrix-hmatrix-Tmmult-level-conserving-fine-coarse-fine-ntp)
+ADD_SUBDIRECTORY(tests/hmatrix-hmatrix-Tmmult-level-conserving-fine-fine-coarse-ntp)
+ADD_SUBDIRECTORY(tests/hmatrix-hmatrix-Tmmult-level-conserving-symm-result-ntp)
+ADD_SUBDIRECTORY(tests/lapack-matrix-tvmult)
+ADD_SUBDIRECTORY(tests/hmatrix-vmult-tril)
+ADD_SUBDIRECTORY(tests/hmatrix-tvmult-tril)

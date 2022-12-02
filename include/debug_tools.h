@@ -166,7 +166,9 @@ void
 print_vector_to_mat(std::ostream &     out,
                     const std::string &name,
                     const VectorType & values,
-                    bool               is_row_vector = false)
+                    bool               is_row_vector = false,
+                    const unsigned int precision     = 6,
+                    const unsigned int width         = 10)
 {
   out << "# name: " << name << "\n";
   out << "# type: matrix\n";
@@ -183,7 +185,8 @@ print_vector_to_mat(std::ostream &     out,
 
   for (auto iter = values.begin(); iter != values.end(); iter++)
     {
-      out << (*iter) << "\n";
+      out << std::setprecision(precision) << std::setw(width) << (*iter)
+          << "\n";
     }
 
   out << "\n\n";

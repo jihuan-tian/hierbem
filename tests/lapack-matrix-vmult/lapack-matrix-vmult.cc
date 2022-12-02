@@ -32,6 +32,8 @@ main()
   Vector<double> x({7, 3, 4, 10, 22, 15});
   Vector<double> y(6);
   Vector<double> z(6);
+  Vector<double> z1(6);
+  Vector<double> z2(6);
 
   /**
    * Perform a normal matrix-vector multiplication.
@@ -46,11 +48,27 @@ main()
   M.vmult(z, x);
 
   /**
+   * Perform a lower triangular matrix-vector multiplication, where only the
+   * lower triangular part of the matrix is used.
+   */
+  M.set_property(LAPACKSupport::Property::lower_triangular);
+  M.vmult(z1, x);
+
+  /**
+   * Perform a upper triangular matrix-vector multiplication, where only the
+   * upper triangular part of the matrix is used.
+   */
+  M.set_property(LAPACKSupport::Property::upper_triangular);
+  M.vmult(z2, x);
+
+  /**
    * Output vectors.
    */
   print_vector_to_mat(std::cout, "x", x);
   print_vector_to_mat(std::cout, "y", y);
   print_vector_to_mat(std::cout, "z", z);
+  print_vector_to_mat(std::cout, "z1", z1);
+  print_vector_to_mat(std::cout, "z2", z2);
 
   return 0;
 }

@@ -39,11 +39,12 @@ touch $test_target_name.output
 date_string=$(date -I)
 template_code=$(cat <<EOF
 /**
- * \file $test_target_name.cc
- * \brief 
- * \ingroup testers
- * \author Jihuan Tian
- * \date $date_string
+ * @file $test_target_name.cc
+ * @brief 
+ *
+ * @ingroup testers
+ * @author Jihuan Tian
+ * @date $date_string
  */
 EOF
 )

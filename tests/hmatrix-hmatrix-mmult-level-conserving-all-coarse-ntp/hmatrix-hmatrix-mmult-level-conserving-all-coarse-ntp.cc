@@ -87,6 +87,12 @@ main()
    * Create the empty result \hmatrix \p H3.
    */
   HMatrix<3, double> H3(bc_tree3.get_root(), fixed_rank_k);
+
+  /**
+   * Create the empty result \hmatrix \p H4.
+   */
+  HMatrix<3, double> H4(bc_tree3.get_root(), fixed_rank_k);
+
   /**
    * Get the full matrix representations of \p H1 and \p H2 as well as their
    * product.
@@ -109,12 +115,18 @@ main()
   H3.write_leaf_set_by_iteration(H3_out);
   H3_out.close();
 
+  H1.mmult_level_conserving(H4, 0.5, H2, fixed_rank_k, false);
+
   /**
    * Convert the result matrix into a full matrix for verification.
    */
   LAPACKFullMatrixExt<double> H3_full;
   H3.convertToFullMatrix(H3_full);
   H3_full.print_formatted_to_mat(std::cout, "H3_full", 16, false, 25, "0");
+
+  LAPACKFullMatrixExt<double> H4_full;
+  H4.convertToFullMatrix(H4_full);
+  H4_full.print_formatted_to_mat(std::cout, "H4_full", 16, false, 25, "0");
 
   return 0;
 }

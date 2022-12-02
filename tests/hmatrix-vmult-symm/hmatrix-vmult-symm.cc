@@ -82,7 +82,11 @@ main()
    */
   Vector<double> y(n);
   H.vmult(y, x, H.get_property());
-  print_vector_to_mat(std::cout, "y", y, false);
+  print_vector_to_mat(std::cout, "y1", y, false);
+
+  y = 0.;
+  H.vmult(y, 0.5, x, H.get_property());
+  print_vector_to_mat(std::cout, "y2", y, false);
 
   return 0;
 }

@@ -133,20 +133,45 @@ main(int argc, char *argv[])
       bem.read_volume_mesh(std::string("sphere-split-into-halves_hex.msh"));
     }
 
-  bem.setup_system();
-  bem.assemble_hmatrix_system();
+  const Point<3> source_loc(1, 1, 1);
+  const Point<3> center(0, 0, 0);
+  const double   radius(1);
 
-  //  const Point<3> source_loc(1, 1, 1);
-  //  const Point<3> center(0, 0, 0);
-  //  const double   radius(1);
-  //
-  //  DirichletBC dirichlet_bc(source_loc);
-  //  NeumannBC   neumann_bc(source_loc, center, radius);
-  //
-  //  bem.assign_dirichlet_bc(dirichlet_bc);
-  //  bem.assign_neumann_bc(neumann_bc);
-  //
-  //  bem.run();
+  DirichletBC dirichlet_bc(source_loc);
+  NeumannBC   neumann_bc(source_loc, center, radius);
+
+  bem.assign_dirichlet_bc(dirichlet_bc);
+  bem.assign_neumann_bc(neumann_bc);
+
+  try
+    {
+      bem.run();
+    }
+  catch (std::exception &exc)
+    {
+      std::cerr << std::endl
+                << std::endl
+                << "----------------------------------------------------"
+                << std::endl;
+      std::cerr << "Exception on processing: " << std::endl
+                << exc.what() << std::endl
+                << "Aborting!" << std::endl
+                << "----------------------------------------------------"
+                << std::endl;
+      return 1;
+    }
+  catch (...)
+    {
+      std::cerr << std::endl
+                << std::endl
+                << "----------------------------------------------------"
+                << std::endl;
+      std::cerr << "Unknown exception!" << std::endl
+                << "Aborting!" << std::endl
+                << "----------------------------------------------------"
+                << std::endl;
+      return 1;
+    }
 
   return 0;
 }

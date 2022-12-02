@@ -13,6 +13,7 @@
 #include <deal.II/base/types.h>
 
 #include <deal.II/lac/lapack_support.h>
+#include <deal.II/lac/vector.h>
 
 #include <array>
 #include <cmath>
@@ -79,6 +80,29 @@ permute_vector_by_ipiv(VectorType &                                v,
       v[i]           = v[ipiv[i] - 1];
       v[ipiv[i] - 1] = temp;
     }
+}
+
+
+/**
+ * Copy a number of data from source vector to target vector.
+ *
+ * @param dst_vec
+ * @param dst_start_index
+ * @param src_vec
+ * @param src_start_index
+ * @param number_of_data
+ */
+template <typename number>
+void
+copy_vector(Vector<number> &                         dst_vec,
+            const typename Vector<number>::size_type dst_start_index,
+            const Vector<number> &                   src_vec,
+            const typename Vector<number>::size_type src_start_index,
+            const typename Vector<number>::size_type number_of_data)
+{
+  std::memcpy(dst_vec.data() + dst_start_index,
+              src_vec.data() + src_start_index,
+              number_of_data * sizeof(number));
 }
 
 

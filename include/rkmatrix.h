@@ -65,6 +65,19 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  h_rk_Tmmult(HMatrix<spacedim1, Number1> &M1,
+              const RkMatrix<Number1> &    M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_rk_Tmmult(const Number1                alpha,
+              HMatrix<spacedim1, Number1> &M1,
+              const RkMatrix<Number1> &    M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   h_rk_mmult_for_h_h_mmult(HMatrix<spacedim1, Number1> *      M1,
                            const HMatrix<spacedim1, Number1> *M2,
                            HMatrix<spacedim1, Number1> *      M,
@@ -92,6 +105,19 @@ public:
   template <int spacedim1, typename Number1>
   friend void
   rk_h_mTmult(const Number1                alpha,
+              const RkMatrix<Number1> &    M1,
+              HMatrix<spacedim1, Number1> &M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  rk_h_Tmmult(const RkMatrix<Number1> &    M1,
+              HMatrix<spacedim1, Number1> &M2,
+              RkMatrix<Number1> &          M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  rk_h_Tmmult(const Number1                alpha,
               const RkMatrix<Number1> &    M1,
               HMatrix<spacedim1, Number1> &M2,
               RkMatrix<Number1> &          M);
@@ -131,6 +157,19 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  h_f_Tmmult(HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_Tmmult(const Number1                       alpha,
+             HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   h_f_mmult(HMatrix<spacedim1, Number1> &       M1,
             const LAPACKFullMatrixExt<Number1> &M2,
             RkMatrix<Number1> &                 M);
@@ -151,6 +190,19 @@ public:
   template <int spacedim1, typename Number1>
   friend void
   h_f_mTmult(const Number1                       alpha,
+             HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_Tmmult(HMatrix<spacedim1, Number1> &       M1,
+             const LAPACKFullMatrixExt<Number1> &M2,
+             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  h_f_Tmmult(const Number1                       alpha,
              HMatrix<spacedim1, Number1> &       M1,
              const LAPACKFullMatrixExt<Number1> &M2,
              RkMatrix<Number1> &                 M);
@@ -190,6 +242,19 @@ public:
 
   template <int spacedim1, typename Number1>
   friend void
+  f_h_Tmmult(const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_Tmmult(const Number1                       alpha,
+             const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             LAPACKFullMatrixExt<Number1> &      M);
+
+  template <int spacedim1, typename Number1>
+  friend void
   f_h_mmult(const LAPACKFullMatrixExt<Number1> &M1,
             HMatrix<spacedim1, Number1> &       M2,
             RkMatrix<Number1> &                 M);
@@ -210,6 +275,19 @@ public:
   template <int spacedim1, typename Number1>
   friend void
   f_h_mTmult(const Number1                       alpha,
+             const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_Tmmult(const LAPACKFullMatrixExt<Number1> &M1,
+             HMatrix<spacedim1, Number1> &       M2,
+             RkMatrix<Number1> &                 M);
+
+  template <int spacedim1, typename Number1>
+  friend void
+  f_h_Tmmult(const Number1                       alpha,
              const LAPACKFullMatrixExt<Number1> &M1,
              HMatrix<spacedim1, Number1> &       M2,
              RkMatrix<Number1> &                 M);

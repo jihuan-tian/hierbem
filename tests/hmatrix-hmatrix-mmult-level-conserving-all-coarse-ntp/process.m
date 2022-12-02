@@ -4,6 +4,7 @@ load hmatrix-hmatrix-mmult-level-conserving-all-coarse-ntp.output;
 M = M1 * M2;
 norm(H1_mult_H2_full - M, 'fro') / norm(M, 'fro')
 norm(H3_full - M, 'fro') / norm(M, 'fro')
+H4_full ./ H3_full
 
 figure;
 set_fig_size(gcf, 900, 300);

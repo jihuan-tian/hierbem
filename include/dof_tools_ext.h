@@ -442,6 +442,25 @@ namespace IdeoBEM
 
       AssertThrow(out, ExcIO());
     }
+
+
+    template <typename Number>
+    void
+    extend_selected_dof_values_to_full_dofs(
+      Vector<Number> &      all_dof_values,
+      const Vector<Number> &selected_dof_values,
+      const std::vector<types::global_dof_index>
+        &map_from_local_to_full_dof_indices)
+    {
+      AssertDimension(selected_dof_values.size(),
+                      map_from_local_to_full_dof_indices.size());
+
+      for (types::global_dof_index i = 0; i < selected_dof_values.size(); i++)
+        {
+          all_dof_values(map_from_local_to_full_dof_indices[i]) =
+            selected_dof_values(i);
+        }
+    }
   } // namespace DoFToolsExt
 } // namespace IdeoBEM
 #endif /* INCLUDE_DOF_TOOLS_EXT_H_ */
