@@ -17,6 +17,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstring>
 #include <forward_list>
 #include <iterator>
 #include <map>
@@ -103,6 +104,15 @@ copy_vector(Vector<number> &                         dst_vec,
   std::memcpy(dst_vec.data() + dst_start_index,
               src_vec.data() + src_start_index,
               number_of_data * sizeof(number));
+
+  //  // DEBUG: make assertion about the data equality.
+  //  for (unsigned int i = 0; i < number_of_data; i++)
+  //    {
+  //      if (dst_vec(dst_start_index + i) != src_vec(src_start_index + i))
+  //        {
+  //          throw(ExcMessage("Vector elements incompatible"));
+  //        }
+  //    }
 }
 
 

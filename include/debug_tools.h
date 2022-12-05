@@ -72,13 +72,12 @@ print_vector_values(std::ostream &     out,
 {
   typename VectorType::const_iterator iter_copy;
 
-  for (auto iter = values.cbegin(); iter != values.cend();
-       std::advance(iter, 1))
+  for (auto iter = values.begin(); iter != values.end(); std::advance(iter, 1))
     {
       iter_copy = iter;
       std::advance(iter_copy, 1);
 
-      if (iter_copy == values.cend())
+      if (iter_copy == values.end())
         if (has_newline)
           {
             out << (*iter) << std::endl;

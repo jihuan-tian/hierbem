@@ -3628,7 +3628,7 @@ namespace IdeoBEM
     for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
       {
         typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
-          kx_dof_handler.active_cell_iterators().begin();
+          kx_dof_handler.begin_active();
         std::advance(kx_cell_iter, kx_cell_index);
 
         /**
@@ -3657,7 +3657,7 @@ namespace IdeoBEM
         for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
           {
             typename DoFHandler<dim, spacedim>::active_cell_iterator
-              ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
+              ky_cell_iter = ky_dof_handler.begin_active();
             std::advance(ky_cell_iter, ky_cell_index);
 
             /**
@@ -3872,7 +3872,7 @@ namespace IdeoBEM
         bool is_update_kx_fe_values = true;
 
         typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
-          kx_dof_handler.active_cell_iterators().begin();
+          kx_dof_handler.begin_active();
         std::advance(kx_cell_iter, kx_cell_index);
 
         /**
@@ -3901,7 +3901,7 @@ namespace IdeoBEM
         for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
           {
             typename DoFHandler<dim, spacedim>::active_cell_iterator
-              ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
+              ky_cell_iter = ky_dof_handler.begin_active();
             std::advance(ky_cell_iter, ky_cell_index);
 
             /**

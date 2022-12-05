@@ -1117,6 +1117,11 @@ namespace IdeoBEM
 
             // Collected material ids for the extended Dirichlet domain and the
             // retracted Neumann domain.
+            // 1. Take the union of the boundary ids for the Dirichlet domain
+            // and the interfacial domain, save it for the newly created
+            // extended Dirichlet domain.
+            // 2. Append the material id in the interfacial domain directly to
+            // the set of Neumann domain ids.
             std::set_union(
               boundary_ids_for_dirichlet_domain.begin(),
               boundary_ids_for_dirichlet_domain.end(),
@@ -1125,8 +1130,6 @@ namespace IdeoBEM
               std::inserter(boundary_ids_for_extended_dirichlet_domain,
                             boundary_ids_for_extended_dirichlet_domain.end()));
 
-            // Append the material id in the interfacial domain directly to the
-            // set of Neumann domain ids.
             for (auto id : interfacial_domain_material_ids)
               {
                 boundary_ids_for_neumann_domain.insert(id);

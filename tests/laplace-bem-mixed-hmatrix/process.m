@@ -17,7 +17,7 @@ figure;
 plot(solution_on_combined_domain_internal_dof_numbering, 'ro', "markersize", 10);
 hold on;
 plot(solution_manual, 'b+', "markersize", 10);
-plot(solution_on_combined_domain_internal_dof_numbering(175:end), 'gx', "markersize", 20);
+legend({'C++', 'Octave'});
 
 ## Check the consistency between analytical solution on Dirichlet and Neumann
 ## domains and the numerical solution.
