@@ -1408,10 +1408,6 @@ namespace IdeoBEM
             solution_on_dirichlet_domain.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain);
 
-            // DEBUG: export analytical solution for comparison.
-            analytical_solution_on_dirichlet_domain.reinit(
-              n_dofs_for_neumann_space_on_dirichlet_domain);
-
             break;
           }
         case NeumannBCProblem:
@@ -1663,10 +1659,6 @@ namespace IdeoBEM
                 solution_on_neumann_domain_internal_dof_numbering.reinit(
                   n_dofs_for_dirichlet_space_on_neumann_domain);
               }
-
-            // DEBUG: export analytical solution for comparison.
-            analytical_solution_on_neumann_domain.reinit(
-              n_dofs_for_dirichlet_space_on_neumann_domain);
 
             break;
           }
@@ -2127,90 +2119,6 @@ namespace IdeoBEM
             solution_on_combined_domain_internal_dof_numbering.reinit(
               n_dofs_for_neumann_space_on_dirichlet_domain +
               n_dofs_for_dirichlet_space_on_neumann_domain);
-
-            // DEBUG
-            analytical_solution_on_dirichlet_domain.reinit(
-              n_dofs_for_neumann_space_on_dirichlet_domain);
-            analytical_solution_on_neumann_domain.reinit(
-              dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs());
-
-            VectorTools::interpolate(
-              dof_handler_for_neumann_space_on_dirichlet_domain,
-              *neumann_bc_functor_ptr,
-              analytical_solution_on_dirichlet_domain);
-
-            VectorTools::interpolate(
-              dof_handler_for_dirichlet_space_on_neumann_domain,
-              *dirichlet_bc_functor_ptr,
-              analytical_solution_on_neumann_domain);
-
-            for (unsigned int i = 0;
-                 i < dof_handler_for_dirichlet_space_on_neumann_domain.n_dofs();
-                 i++)
-              {
-                if (!dof_selectors_for_dirichlet_space_on_neumann_domain[i])
-                  {
-                    analytical_solution_on_neumann_domain(i) = 0;
-                  }
-              }
-
-            Vector<double>
-              analytical_solution_on_selected_dofs_of_neumann_domain(
-                n_dofs_for_dirichlet_space_on_neumann_domain);
-            for (types::global_dof_index i = 0;
-                 i < n_dofs_for_dirichlet_space_on_neumann_domain;
-                 i++)
-              {
-                analytical_solution_on_selected_dofs_of_neumann_domain(i) =
-                  analytical_solution_on_neumann_domain(
-                    local_to_full_dirichlet_dof_indices_on_neumann_domain[i]);
-              }
-
-            Vector<double>
-              analytical_solution_on_dirichlet_domain_internal_numbering(
-                n_dofs_for_neumann_space_on_dirichlet_domain);
-            Vector<double>
-              analytical_solution_on_neumann_domain_internal_numbering(
-                n_dofs_for_dirichlet_space_on_neumann_domain);
-
-            permute_vector(
-              analytical_solution_on_dirichlet_domain,
-              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-              analytical_solution_on_dirichlet_domain_internal_numbering);
-            permute_vector(
-              analytical_solution_on_selected_dofs_of_neumann_domain,
-              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-              analytical_solution_on_neumann_domain_internal_numbering);
-
-            print_vector_to_mat(std::cout,
-                                "analytical_solution_on_dirichlet_domain",
-                                analytical_solution_on_dirichlet_domain,
-                                false,
-                                15,
-                                25);
-
-            print_vector_to_mat(std::cout,
-                                "analytical_solution_on_neumann_domain",
-                                analytical_solution_on_neumann_domain,
-                                false,
-                                15,
-                                25);
-
-            print_vector_to_mat(
-              std::cout,
-              "analytical_solution_on_dirichlet_domain_internal_numbering",
-              analytical_solution_on_dirichlet_domain_internal_numbering,
-              false,
-              15,
-              25);
-
-            print_vector_to_mat(
-              std::cout,
-              "analytical_solution_on_neumann_domain_internal_numbering",
-              analytical_solution_on_neumann_domain_internal_numbering,
-              false,
-              15,
-              25);
 
             print_vector_to_mat(std::cout,
                                 "neumann_bc_internal_dof_numbering",
@@ -3558,12 +3466,6 @@ namespace IdeoBEM
             std::ofstream                           vtk_output;
             DataOut<dim, DoFHandler<dim, spacedim>> data_out;
 
-            // DEBUG: Interpolate the analytical solution.
-            VectorTools::interpolate(
-              dof_handler_for_neumann_space_on_dirichlet_domain,
-              *neumann_bc_functor_ptr,
-              analytical_solution_on_dirichlet_domain);
-
             vtk_output.open("solution_for_dirichlet_bc.vtk",
                             std::ofstream::out);
 
@@ -3571,12 +3473,6 @@ namespace IdeoBEM
               dof_handler_for_neumann_space_on_dirichlet_domain,
               solution_on_dirichlet_domain,
               "solution");
-
-            // DEBUG: export analytical solution for comparison.
-            data_out.add_data_vector(
-              dof_handler_for_neumann_space_on_dirichlet_domain,
-              analytical_solution_on_dirichlet_domain,
-              "analytical_solution");
 
             data_out.add_data_vector(
               dof_handler_for_dirichlet_space_on_dirichlet_domain,
@@ -3598,24 +3494,12 @@ namespace IdeoBEM
             std::ofstream                           vtk_output;
             DataOut<dim, DoFHandler<dim, spacedim>> data_out;
 
-            // DEBUG: Interpolate the analytical solution.
-            VectorTools::interpolate(
-              dof_handler_for_dirichlet_space_on_neumann_domain,
-              *dirichlet_bc_functor_ptr,
-              analytical_solution_on_neumann_domain);
-
             vtk_output.open("solution_for_neumann_bc.vtk", std::ofstream::out);
 
             data_out.add_data_vector(
               dof_handler_for_dirichlet_space_on_neumann_domain,
               solution_on_neumann_domain,
               "solution");
-
-            // DEBUG: export analytical solution for comparison.
-            data_out.add_data_vector(
-              dof_handler_for_dirichlet_space_on_neumann_domain,
-              analytical_solution_on_neumann_domain,
-              "analytical_solution");
 
             data_out.add_data_vector(
               dof_handler_for_neumann_space_on_neumann_domain,
@@ -4073,13 +3957,6 @@ namespace IdeoBEM
 
     solve();
     output_results();
-    output_potential_at_target_points();
-
-    // DEBUG
-    if (problem_type == ProblemType::NeumannBCProblem)
-      {
-        verify_neumann_solution_in_space();
-      }
   }
 
 
