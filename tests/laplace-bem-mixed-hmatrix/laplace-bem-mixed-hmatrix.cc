@@ -24,7 +24,18 @@ public:
   {
     (void)component;
 
-    if (p(0) < 0)
+    // For the spanner model
+    //    if (p(0) < 0)
+    //      {
+    //        return 1;
+    //      }
+    //    else
+    //      {
+    //        return 0;
+    //      }
+
+    // For the bar mode
+    if (p(2) < 3)
       {
         return 1;
       }
@@ -67,8 +78,8 @@ main(int argc, char *argv[])
     LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
     true, // is interior problem
     4,    // n_min for cluster tree
-    10,   // n_min for block cluster tree
-    0.8,  // eta for H-matrix
+    4,    // n_min for block cluster tree
+    2,    // eta for H-matrix
     5,    // max rank for H-matrix
     0.01, // aca epsilon for H-matrix
     1.0,  // eta for preconditioner
@@ -77,7 +88,7 @@ main(int argc, char *argv[])
     MultithreadInfo::n_cores());
 
   bem.set_dirichlet_boundary_ids({1, 2});
-  bem.set_neumann_boundary_ids({0});
+  bem.set_neumann_boundary_ids({3, 4, 5, 6});
 
   if (argc > 1)
     {
@@ -85,7 +96,8 @@ main(int argc, char *argv[])
     }
   else
     {
-      bem.read_volume_mesh(std::string("combination-spanner_hex.msh"));
+      // bem.read_volume_mesh(std::string("combination-spanner_hex.msh"));
+      bem.read_volume_mesh(std::string("bar-coarse_hex.msh"));
     }
 
   DirichletBC dirichlet_bc;
