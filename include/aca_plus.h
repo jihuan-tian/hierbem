@@ -507,6 +507,8 @@ namespace IdeoBEM
    * @param remaining_row_indices Remaining row indices to be checked and
    * selected from, which are stored in a @p std::forward_list.
    * @param current_ref_row_index The current reference row index
+   * @param pass_the_end_ref_row_index When this function cannot select a new
+   * reference row, return this invalid index.
    * @param row_dof_indices The list of DoF indices corresponding to the matrix
    * rows
    * @param col_dof_indices The list of DoF indices corresponding to the
@@ -527,6 +529,7 @@ namespace IdeoBEM
     const RangeNumberType                            kernel_factor,
     std::forward_list<size_type> &                   remaining_row_indices,
     const size_type                                  current_ref_row_index,
+    const size_type                                  pass_the_end_ref_row_index,
     const std::vector<types::global_dof_index> &     row_dof_indices,
     const std::vector<types::global_dof_index> &     col_dof_indices,
     const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
@@ -629,11 +632,11 @@ namespace IdeoBEM
             if (size(remaining_row_indices) == 1)
               {
                 /**
-                 * If there is only one row index left, throw an exception here
-                 * that there is no reference row can be selected.
+                 * If there is only one row index left, there is no reference
+                 * row can be selected. Then return the invalid reference row
+                 * index.
                  */
-                throw(ExcMessage(
-                  "There are no remaining row indices to select from, since the current reference row is the only one left!"));
+                return pass_the_end_ref_row_index;
               }
             else
               {
@@ -646,8 +649,7 @@ namespace IdeoBEM
           }
       }
 
-    throw(ExcMessage("There are no remaining row indices to select from!"));
-    return next_ref_row_index;
+    return pass_the_end_ref_row_index;
   }
 
 
@@ -668,6 +670,8 @@ namespace IdeoBEM
    * @param stabilization_factor
    * @param remaining_row_indices
    * @param current_ref_row_index
+   * @param pass_the_end_ref_row_index When this function cannot select a new
+   * reference row, return this invalid index.
    * @param row_dof_indices
    * @param col_dof_indices
    * @param kx_dof_to_cell_topo
@@ -696,6 +700,7 @@ namespace IdeoBEM
     const RangeNumberType                            stabilization_factor,
     std::forward_list<size_type> &                   remaining_row_indices,
     const size_type                                  current_ref_row_index,
+    const size_type                                  pass_the_end_ref_row_index,
     const std::vector<types::global_dof_index> &     row_dof_indices,
     const std::vector<types::global_dof_index> &     col_dof_indices,
     const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
@@ -800,11 +805,11 @@ namespace IdeoBEM
             if (size(remaining_row_indices) == 1)
               {
                 /**
-                 * If there is only one row index left, throw an exception here
-                 * that there is no reference row can be selected.
+                 * If there is only one row index left, there is no reference
+                 * row can be selected. Then return the invalid reference row
+                 * index.
                  */
-                throw(ExcMessage(
-                  "There are no remaining row indices to select from, since the current reference row is the only one left!"));
+                return pass_the_end_ref_row_index;
               }
             else
               {
@@ -817,8 +822,7 @@ namespace IdeoBEM
           }
       }
 
-    throw(ExcMessage("There are no remaining row indices to select from!"));
-    return next_ref_row_index;
+    return pass_the_end_ref_row_index;
   }
 
 
@@ -832,6 +836,8 @@ namespace IdeoBEM
    * extracted
    * @param remaining_row_indices
    * @param current_ref_row_index
+   * @param pass_the_end_ref_row_index When this function cannot select a new
+   * reference row, return this invalid index.
    * @param row_dof_indices
    * @param col_dof_indices
    * @return
@@ -841,7 +847,8 @@ namespace IdeoBEM
   random_select_ref_row(Vector<RangeNumberType> &                   row_vector,
                         const LAPACKFullMatrixExt<RangeNumberType> &A,
                         std::forward_list<size_type> &remaining_row_indices,
-                        const size_type               current_ref_row_index)
+                        const size_type               current_ref_row_index,
+                        const size_type pass_the_end_ref_row_index)
   {
     /**
      * The array index used to access the @p std::forward_list
@@ -889,11 +896,11 @@ namespace IdeoBEM
             if (size(remaining_row_indices) == 1)
               {
                 /**
-                 * If there is only one row index left, throw an exception here
-                 * that there is no reference row can be selected.
+                 * If there is only one row index left, there is no reference
+                 * row can be selected. Then return the invalid reference row
+                 * index.
                  */
-                throw(ExcMessage(
-                  "There are no remaining row indices to select from, since the current reference row is the only one left!"));
+                return pass_the_end_ref_row_index;
               }
             else
               {
@@ -906,8 +913,7 @@ namespace IdeoBEM
           }
       }
 
-    throw(ExcMessage("There are no remaining row indices to select from!"));
-    return next_ref_row_index;
+    return pass_the_end_ref_row_index;
   }
 
 
@@ -928,6 +934,8 @@ namespace IdeoBEM
    * @param remaining_col_indices Remaining column indices to be checked and
    * selected from, which are stored in a @p std::forward_list.
    * @param current_ref_col_index The current reference column index
+   * @param pass_the_end_ref_col_index When this function cannot select a new
+   * reference column, return this invalid index.
    * @param row_dof_indices The list of DoF indices corresponding to the matrix
    * rows
    * @param col_dof_indices The list of DoF indices corresponding to the
@@ -948,6 +956,7 @@ namespace IdeoBEM
     const RangeNumberType                            factor,
     std::forward_list<size_type> &                   remaining_col_indices,
     const size_type                                  current_ref_col_index,
+    const size_type                                  pass_the_end_ref_col_index,
     const std::vector<types::global_dof_index> &     row_dof_indices,
     const std::vector<types::global_dof_index> &     col_dof_indices,
     const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
@@ -1050,11 +1059,11 @@ namespace IdeoBEM
             if (size(remaining_col_indices) == 1)
               {
                 /**
-                 * If there is only one column index left, throw an exception
-                 * here that there is no reference column can be selected.
+                 * If there is only one column index left, there is no reference
+                 * column can be selected. Then return the invalid reference
+                 * column index.
                  */
-                throw(ExcMessage(
-                  "There are no remaining column indices to select from, since the current reference column is the only one left!"));
+                return pass_the_end_ref_col_index;
               }
             else
               {
@@ -1067,8 +1076,7 @@ namespace IdeoBEM
           }
       }
 
-    throw(ExcMessage("There are no remaining column indices to select from!"));
-    return next_ref_col_index;
+    return pass_the_end_ref_col_index;
   }
 
 
@@ -1089,6 +1097,8 @@ namespace IdeoBEM
    * @param stabilization_factor
    * @param remaining_col_indices
    * @param current_ref_col_index
+   * @param pass_the_end_ref_col_index When this function cannot select a new
+   * reference column, return this invalid index.
    * @param row_dof_indices
    * @param col_dof_indices
    * @param kx_dof_to_cell_topo
@@ -1117,6 +1127,7 @@ namespace IdeoBEM
     const RangeNumberType                            stabilization_factor,
     std::forward_list<size_type> &                   remaining_col_indices,
     const size_type                                  current_ref_col_index,
+    const size_type                                  pass_the_end_ref_col_index,
     const std::vector<types::global_dof_index> &     row_dof_indices,
     const std::vector<types::global_dof_index> &     col_dof_indices,
     const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
@@ -1221,11 +1232,11 @@ namespace IdeoBEM
             if (size(remaining_col_indices) == 1)
               {
                 /**
-                 * If there is only one column index left, throw an exception
-                 * here that there is no reference column can be selected.
+                 * If there is only one column index left, there is no reference
+                 * column can be selected. Then return the invalid reference
+                 * column index.
                  */
-                throw(ExcMessage(
-                  "There are no remaining column indices to select from, since the current reference column is the only one left!"));
+                return pass_the_end_ref_col_index;
               }
             else
               {
@@ -1238,8 +1249,7 @@ namespace IdeoBEM
           }
       }
 
-    throw(ExcMessage("There are no remaining column indices to select from!"));
-    return next_ref_col_index;
+    return pass_the_end_ref_col_index;
   }
 
 
@@ -1253,6 +1263,8 @@ namespace IdeoBEM
    * extracted
    * @param remaining_col_indices
    * @param current_ref_col_index
+   * @param pass_the_end_ref_col_index When this function cannot select a new
+   * reference column, return this invalid index.
    * @param row_dof_indices
    * @param col_dof_indices
    * @return
@@ -1262,7 +1274,8 @@ namespace IdeoBEM
   random_select_ref_column(Vector<RangeNumberType> &col_vector,
                            const LAPACKFullMatrixExt<RangeNumberType> &A,
                            std::forward_list<size_type> &remaining_col_indices,
-                           const size_type               current_ref_col_index)
+                           const size_type               current_ref_col_index,
+                           const size_type pass_the_end_ref_col_index)
   {
     /**
      * The array index used to access the @p std::forward_list
@@ -1308,11 +1321,11 @@ namespace IdeoBEM
             if (size(remaining_col_indices) == 1)
               {
                 /**
-                 * If there is only one column index left, throw an exception
-                 * here that there is no reference column can be selected.
+                 * If there is only one column index left, there is no reference
+                 * column can be selected. Then return the invalid reference
+                 * column index.
                  */
-                throw(ExcMessage(
-                  "There are no remaining column indices to select from, since the current reference column is the only one left!"));
+                return pass_the_end_ref_col_index;
               }
             else
               {
@@ -1325,8 +1338,7 @@ namespace IdeoBEM
           }
       }
 
-    throw(ExcMessage("There are no remaining column indices to select from!"));
-    return next_ref_col_index;
+    return pass_the_end_ref_col_index;
   }
 
 
@@ -1450,12 +1462,14 @@ namespace IdeoBEM
      */
     Vector<RangeNumberType> vr(n);
     Vector<RangeNumberType> uc(m);
-    size_type               r =
+
+    size_type r =
       random_select_ref_row(vr,
                             kernel,
                             factor,
                             remaining_row_indices,
-                            m + 1,
+                            m,
+                            m,
                             row_dof_indices,
                             col_dof_indices,
                             kx_dof_to_cell_topo,
@@ -1474,12 +1488,22 @@ namespace IdeoBEM
                             method_for_cell_neighboring_type,
                             scratch_data,
                             copy_data);
+
+    if (r == m)
+      {
+        // When there is no reference row can be selected, the current matrix
+        // block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+        return;
+      }
+
     size_type c =
       random_select_ref_column(uc,
                                kernel,
                                factor,
                                remaining_col_indices,
-                               n + 1,
+                               n,
+                               n,
                                row_dof_indices,
                                col_dof_indices,
                                kx_dof_to_cell_topo,
@@ -1498,6 +1522,14 @@ namespace IdeoBEM
                                method_for_cell_neighboring_type,
                                scratch_data,
                                copy_data);
+
+    if (c == n)
+      {
+        // When there is no reference column can be selected, the current matrix
+        // block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+        return;
+      }
 
     /**
      * The absolute values for the reference row and column vectors.
@@ -1806,6 +1838,7 @@ namespace IdeoBEM
                                       factor,
                                       remaining_row_indices,
                                       r,
+                                      m,
                                       row_dof_indices,
                                       col_dof_indices,
                                       kx_dof_to_cell_topo,
@@ -1825,15 +1858,34 @@ namespace IdeoBEM
                                       scratch_data,
                                       copy_data);
 
-            for (unsigned int l = 1; l <= k; l++)
+            if (r == m)
               {
-                /**
-                 * Extract the previous cross.
-                 */
-                u_mat.get_column(l - 1, ul);
-                v_mat.get_column(l - 1, vl);
+                // When there is no reference row can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                vr.add(-ul(r), vl);
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    vr.add(-ul(r), vl);
+                  }
               }
           }
         else
@@ -1865,6 +1917,7 @@ namespace IdeoBEM
                                        factor,
                                        remaining_col_indices,
                                        c,
+                                       n,
                                        row_dof_indices,
                                        col_dof_indices,
                                        kx_dof_to_cell_topo,
@@ -1884,15 +1937,34 @@ namespace IdeoBEM
                                        scratch_data,
                                        copy_data);
 
-            for (unsigned int l = 1; l <= k; l++)
+            if (c == n)
               {
-                /**
-                 * Extract the previous cross.
-                 */
-                u_mat.get_column(l - 1, ul);
-                v_mat.get_column(l - 1, vl);
+                // When there is no reference column can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                uc.add(-vl(c), ul);
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    uc.add(-vl(c), ul);
+                  }
               }
           }
         else
@@ -1933,10 +2005,17 @@ namespace IdeoBEM
           {
             if (size(remaining_row_indices) == 0)
               {
-                throw(ExcMessage(
-                  "All rows of the block matrix have been tried for selection!"));
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                break;
+                return;
               }
           }
       }
@@ -2068,14 +2147,16 @@ namespace IdeoBEM
      */
     Vector<RangeNumberType> vr(n);
     Vector<RangeNumberType> uc(m);
-    size_type               r =
+
+    size_type r =
       random_select_ref_row(vr,
                             kernel,
                             kernel_factor,
                             mass_vmult_weq,
                             stabilization_factor,
                             remaining_row_indices,
-                            m + 1,
+                            m,
+                            m,
                             row_dof_indices,
                             col_dof_indices,
                             kx_dof_to_cell_topo,
@@ -2094,6 +2175,15 @@ namespace IdeoBEM
                             method_for_cell_neighboring_type,
                             scratch_data,
                             copy_data);
+
+    if (r == m)
+      {
+        // When there is no reference row can be selected, the current matrix
+        // block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+        return;
+      }
+
     size_type c =
       random_select_ref_column(uc,
                                kernel,
@@ -2101,7 +2191,8 @@ namespace IdeoBEM
                                mass_vmult_weq,
                                stabilization_factor,
                                remaining_col_indices,
-                               n + 1,
+                               n,
+                               n,
                                row_dof_indices,
                                col_dof_indices,
                                kx_dof_to_cell_topo,
@@ -2120,6 +2211,14 @@ namespace IdeoBEM
                                method_for_cell_neighboring_type,
                                scratch_data,
                                copy_data);
+
+    if (c == n)
+      {
+        // When there is no reference column can be selected, the current matrix
+        // block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+        return;
+      }
 
     /**
      * The absolute values for the reference row and column vectors.
@@ -2438,6 +2537,7 @@ namespace IdeoBEM
                                       stabilization_factor,
                                       remaining_row_indices,
                                       r,
+                                      m,
                                       row_dof_indices,
                                       col_dof_indices,
                                       kx_dof_to_cell_topo,
@@ -2457,15 +2557,34 @@ namespace IdeoBEM
                                       scratch_data,
                                       copy_data);
 
-            for (unsigned int l = 1; l <= k; l++)
+            if (r == m)
               {
-                /**
-                 * Extract the previous cross.
-                 */
-                u_mat.get_column(l - 1, ul);
-                v_mat.get_column(l - 1, vl);
+                // When there is no reference row can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                vr.add(-ul(r), vl);
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    vr.add(-ul(r), vl);
+                  }
               }
           }
         else
@@ -2499,6 +2618,7 @@ namespace IdeoBEM
                                        stabilization_factor,
                                        remaining_col_indices,
                                        c,
+                                       n,
                                        row_dof_indices,
                                        col_dof_indices,
                                        kx_dof_to_cell_topo,
@@ -2518,15 +2638,34 @@ namespace IdeoBEM
                                        scratch_data,
                                        copy_data);
 
-            for (unsigned int l = 1; l <= k; l++)
+            if (c == n)
               {
-                /**
-                 * Extract the previous cross.
-                 */
-                u_mat.get_column(l - 1, ul);
-                v_mat.get_column(l - 1, vl);
+                // When there is no reference column can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                uc.add(-vl(c), ul);
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    uc.add(-vl(c), ul);
+                  }
               }
           }
         else
@@ -2567,10 +2706,17 @@ namespace IdeoBEM
           {
             if (size(remaining_row_indices) == 0)
               {
-                throw(ExcMessage(
-                  "All rows of the block matrix have been tried for selection!"));
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                break;
+                return;
               }
           }
       }
@@ -2633,8 +2779,26 @@ namespace IdeoBEM
      */
     Vector<RangeNumberType> vr(n);
     Vector<RangeNumberType> uc(m);
-    size_type r = random_select_ref_row(vr, A, remaining_row_indices, m + 1);
-    size_type c = random_select_ref_column(uc, A, remaining_col_indices, n + 1);
+
+    size_type r = random_select_ref_row(vr, A, remaining_row_indices, m, m);
+
+    if (r == m)
+      {
+        // When there is no reference row can be selected, the current matrix
+        // block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+        return;
+      }
+
+    size_type c = random_select_ref_column(uc, A, remaining_col_indices, n, n);
+
+    if (c == n)
+      {
+        // When there is no reference column can be selected, the current matrix
+        // block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+        return;
+      }
 
     /**
      * The absolute values for the reference row and column vectors.
@@ -2845,17 +3009,36 @@ namespace IdeoBEM
              * When the index of the selected row is the same as that of the
              * reference row, reselect a reference row.
              */
-            r = random_select_ref_row(vr, A, remaining_row_indices, r);
+            r = random_select_ref_row(vr, A, remaining_row_indices, r, m);
 
-            for (unsigned int l = 1; l <= k; l++)
+            if (r == m)
               {
-                /**
-                 * Extract the previous cross.
-                 */
-                u_mat.get_column(l - 1, ul);
-                v_mat.get_column(l - 1, vl);
+                // When there is no reference row can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                vr.add(-ul(r), vl);
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    vr.add(-ul(r), vl);
+                  }
               }
           }
         else
@@ -2881,17 +3064,36 @@ namespace IdeoBEM
              * When the index of the selected column is the same as that of the
              * reference column, reselect a reference column.
              */
-            c = random_select_ref_column(uc, A, remaining_col_indices, c);
+            c = random_select_ref_column(uc, A, remaining_col_indices, c, n);
 
-            for (unsigned int l = 1; l <= k; l++)
+            if (c == n)
               {
-                /**
-                 * Extract the previous cross.
-                 */
-                u_mat.get_column(l - 1, ul);
-                v_mat.get_column(l - 1, vl);
+                // When there is no reference column can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                uc.add(-vl(c), ul);
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    uc.add(-vl(c), ul);
+                  }
               }
           }
         else
@@ -2959,12 +3161,17 @@ namespace IdeoBEM
           {
             if (size(remaining_row_indices) == 0)
               {
-                Assert(
-                  false,
-                  ExcMessage(
-                    "All rows of the block matrix have been tried for selection!"));
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
 
-                break;
+                return;
               }
           }
       }

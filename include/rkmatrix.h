@@ -1043,7 +1043,7 @@ public:
   /**
    * Calculate the Frobenius norm of the rank-k matrix.
    *
-   * @param number_of_terms The effective number of columns in \f$A\f$ and
+   * @param number_of_columns The effective number of columns in \f$A\f$ and
    * \f$B\f$ to be included into the calculation.
    *
    * @return
@@ -2851,6 +2851,7 @@ RkMatrix<Number>::add(RkMatrix<Number> &      M,
   if (rank == 0)
     {
       M = M2;
+      M.A *= m2;
     }
   else if (M2.rank == 0)
     {
@@ -2910,6 +2911,7 @@ RkMatrix<Number>::add(const Number m1, const RkMatrix<Number> &M1)
   if (rank == 0)
     {
       (*this) = M1;
+      A *= m1;
     }
   else if (M1.rank == 0)
     {

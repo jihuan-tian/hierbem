@@ -3863,14 +3863,6 @@ namespace IdeoBEM
      */
     for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
       {
-        /**
-         * When the FEM mass matrix is to be computed and appended, this
-         * indicates whether the @p FEValues for the current cell \f$K_x\f$
-         * should be recalculated. When we come to a new \f$K_x\f$, this flag
-         * is set to true.
-         */
-        bool is_update_kx_fe_values = true;
-
         typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
           kx_dof_handler.begin_active();
         std::advance(kx_cell_iter, kx_cell_index);
@@ -4025,17 +4017,23 @@ namespace IdeoBEM
 
             /**
              * Append the FEM mass matrix contribution.
+             *
+             * \myalert{N.B. The DoF handlers for the test and ansatz spaces
+             * should be constructed on a same triangulation. Then the following
+             * comparison @p kx_cell_index == ky_cell_index is meaningful.}
              */
             if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
               {
-                if (is_update_kx_fe_values)
-                  {
-                    mass_matrix_scratch_data.fe_values_for_test_space.reinit(
-                      kx_cell_iter);
-                    is_update_kx_fe_values = false;
-                  }
+                Assert(cell_neighboring_type = CellNeighboringType::SamePanel,
+                       ExcInternalError());
+
+                // Update the finite element values for the test space.
+                mass_matrix_scratch_data.fe_values_for_test_space.reinit(
+                  kx_cell_iter);
 
                 /**
+                 * Update the finite element values for the trial space.
+                 *
                  * \mynote{N.B. The @p FEValues related to the trial
                  * space must also be updated, since the trial space may
                  * be different from the test space.}
@@ -4047,6 +4045,8 @@ namespace IdeoBEM
                   mass_matrix_scratch_data.fe_values_for_test_space
                     .get_quadrature()
                     .size();
+                // The trial space is on a same triangulation as the test space
+                // and they share a same quadrature object.
                 AssertDimension(n_q_points,
                                 mass_matrix_scratch_data
                                   .fe_values_for_trial_space.get_quadrature()
@@ -4442,14 +4442,6 @@ namespace IdeoBEM
      */
     for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
       {
-        /**
-         * When the FEM mass matrix is to be computed and appended, this
-         * indicates whether the @p FEValues for the current cell \f$K_x\f$
-         * should be recalculated. When we come to a new \f$K_x\f$, this flag
-         * is set to true.
-         */
-        bool is_update_kx_fe_values = true;
-
         typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
           kx_dof_handler.active_cell_iterators().begin();
         std::advance(kx_cell_iter, kx_cell_index);
@@ -4625,14 +4617,17 @@ namespace IdeoBEM
                     if ((kx_cell_index == ky_cell_index) &&
                         (mass_matrix_factors[counter] != 0))
                       {
-                        if (is_update_kx_fe_values)
-                          {
-                            mass_matrix_scratch_data.fe_values_for_test_space
-                              .reinit(kx_cell_iter);
-                            is_update_kx_fe_values = false;
-                          }
+                        Assert(cell_neighboring_type =
+                                 CellNeighboringType::SamePanel,
+                               ExcInternalError());
+
+                        // Update the finite element values for the test space.
+                        mass_matrix_scratch_data.fe_values_for_test_space
+                          .reinit(kx_cell_iter);
 
                         /**
+                         * Update the finite element values for the trial space.
+                         *
                          * \mynote{N.B. The @p FEValues related to the trial
                          * space must also be updated, since the trial space may
                          * be different from the test space.}
@@ -4644,6 +4639,8 @@ namespace IdeoBEM
                           mass_matrix_scratch_data.fe_values_for_test_space
                             .get_quadrature()
                             .size();
+                        // The trial space is on a same triangulation as the
+                        // test space and they share a same quadrature object.
                         AssertDimension(
                           n_q_points,
                           mass_matrix_scratch_data.fe_values_for_trial_space

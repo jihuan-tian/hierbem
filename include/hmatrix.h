@@ -8336,35 +8336,42 @@ h_rk_mmult(HMatrix<spacedim, Number> &M1,
 {
   AssertDimension(M1.n, M2.m);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
-   * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
-   * matrix-vector product \f$M_1 \cdot a_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_A(M2.A.m());
-  Vector<Number> result_vect(M1.m);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
-   * Its \p B component matrix is the same as that of \p M2.
-   */
-  M.reinit(M1.m, M2.n, M2.formal_rank);
-  M.B = M2.B;
-
-  /**
-   * Then we calculate the \p A component matrix of \p M, which is \p
-   * M1*M2.A.
-   */
-  for (size_t j = 0; j < M2.formal_rank; j++)
+  if (M2.rank > 0 && M2.formal_rank > 0)
     {
-      M2.A.get_column(j, col_vect_in_A);
-      result_vect = 0.;
-      M1.vmult(result_vect, col_vect_in_A, M1, M1.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
+       * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
+       * matrix-vector product \f$M_1 \cdot a_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_A(M2.A.m());
+      Vector<Number> result_vect(M1.m);
 
       /**
-       * Fill the result vector into the \p A component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+       * Its \p B component matrix is the same as that of \p M2.
        */
-      M.A.fill_col(j, result_vect);
+      M.reinit(M1.m, M2.n, M2.formal_rank);
+      M.B = M2.B;
+
+      /**
+       * Then we calculate the \p A component matrix of \p M, which is \p
+       * M1*M2.A.
+       */
+      for (size_t j = 0; j < M2.formal_rank; j++)
+        {
+          M2.A.get_column(j, col_vect_in_A);
+          result_vect = 0.;
+          M1.vmult(result_vect, col_vect_in_A, M1, M1.get_property());
+
+          /**
+           * Fill the result vector into the \p A component matrix of \p M.
+           */
+          M.A.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.m, M2.n, 0);
     }
 }
 
@@ -8409,39 +8416,46 @@ h_rk_mmult(const Number               alpha,
 {
   AssertDimension(M1.n, M2.m);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
-   * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
-   * matrix-vector product \f$M_1 \cdot a_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_A(M2.A.m());
-  Vector<Number> result_vect(M1.m);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
-   * Its \p B component matrix is the same as that of \p M2.
-   */
-  M.reinit(M1.m, M2.n, M2.formal_rank);
-  M.B = M2.B;
-
-  /**
-   * Then we calculate the \p A component matrix of \p M, which is \p
-   * M1*M2.A.
-   */
-  for (size_t j = 0; j < M2.formal_rank; j++)
+  if (M2.rank > 0 && M2.formal_rank > 0)
     {
-      M2.A.get_column(j, col_vect_in_A);
       /**
-       * \alert{Since the following \p vmult will compute \f$y = y + M x\f$,
-       * \p result_vect should be reset to zero beforehand.}
+       * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
+       * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
+       * matrix-vector product \f$M_1 \cdot a_{\sigma,j}\f$.
        */
-      result_vect = 0.;
-      M1.vmult(result_vect, alpha, col_vect_in_A, M1, M1.get_property());
+      Vector<Number> col_vect_in_A(M2.A.m());
+      Vector<Number> result_vect(M1.m);
 
       /**
-       * Fill the result vector into the \p A component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+       * Its \p B component matrix is the same as that of \p M2.
        */
-      M.A.fill_col(j, result_vect);
+      M.reinit(M1.m, M2.n, M2.formal_rank);
+      M.B = M2.B;
+
+      /**
+       * Then we calculate the \p A component matrix of \p M, which is \p
+       * M1*M2.A.
+       */
+      for (size_t j = 0; j < M2.formal_rank; j++)
+        {
+          M2.A.get_column(j, col_vect_in_A);
+          /**
+           * \alert{Since the following \p vmult will compute \f$y = y + M x\f$,
+           * \p result_vect should be reset to zero beforehand.}
+           */
+          result_vect = 0.;
+          M1.vmult(result_vect, alpha, col_vect_in_A, M1, M1.get_property());
+
+          /**
+           * Fill the result vector into the \p A component matrix of \p M.
+           */
+          M.A.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.m, M2.n, 0);
     }
 }
 
@@ -8484,35 +8498,42 @@ h_rk_mTmult(HMatrix<spacedim, Number> &M1,
 {
   AssertDimension(M1.n, M2.n);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
-   * B component of \p M2 and another \p Vector \f$b'_{\tau,j}\f$ storing the
-   * matrix-vector product \f$M_1 \cdot b_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_B(M2.B.m());
-  Vector<Number> result_vect(M1.m);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
-   * Its \p B component matrix is the same as that of \p M2.
-   */
-  M.reinit(M1.m, M2.m, M2.formal_rank);
-  M.B = M2.A;
-
-  /**
-   * Then we calculate the \p A component matrix of \p M, which is \p
-   * M1*M2.B.
-   */
-  for (size_t j = 0; j < M2.formal_rank; j++)
+  if (M2.rank > 0 && M2.formal_rank > 0)
     {
-      M2.B.get_column(j, col_vect_in_B);
-      result_vect = 0.;
-      M1.vmult(result_vect, col_vect_in_B, M1, M1.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+       * B component of \p M2 and another \p Vector \f$b'_{\tau,j}\f$ storing the
+       * matrix-vector product \f$M_1 \cdot b_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_B(M2.B.m());
+      Vector<Number> result_vect(M1.m);
 
       /**
-       * Fill the result vector into the \p A component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+       * Its \p B component matrix is the same as that of \p M2.
        */
-      M.A.fill_col(j, result_vect);
+      M.reinit(M1.m, M2.m, M2.formal_rank);
+      M.B = M2.A;
+
+      /**
+       * Then we calculate the \p A component matrix of \p M, which is \p
+       * M1*M2.B.
+       */
+      for (size_t j = 0; j < M2.formal_rank; j++)
+        {
+          M2.B.get_column(j, col_vect_in_B);
+          result_vect = 0.;
+          M1.vmult(result_vect, col_vect_in_B, M1, M1.get_property());
+
+          /**
+           * Fill the result vector into the \p A component matrix of \p M.
+           */
+          M.A.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.m, M2.m, 0);
     }
 }
 
@@ -8558,35 +8579,42 @@ h_rk_mTmult(const Number               alpha,
 {
   AssertDimension(M1.n, M2.n);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
-   * B component of \p M2 and another \p Vector \f$b'_{\tau,j}\f$ storing the
-   * matrix-vector product \f$M_1 \cdot b_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_B(M2.B.m());
-  Vector<Number> result_vect(M1.m);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
-   * Its \p B component matrix is the same as that of \p M2.
-   */
-  M.reinit(M1.m, M2.m, M2.formal_rank);
-  M.B = M2.A;
-
-  /**
-   * Then we calculate the \p A component matrix of \p M, which is \p
-   * M1*M2.B.
-   */
-  for (size_t j = 0; j < M2.formal_rank; j++)
+  if (M2.rank > 0 && M2.formal_rank > 0)
     {
-      M2.B.get_column(j, col_vect_in_B);
-      result_vect = 0.;
-      M1.vmult(result_vect, alpha, col_vect_in_B, M1, M1.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+       * B component of \p M2 and another \p Vector \f$b'_{\tau,j}\f$ storing the
+       * matrix-vector product \f$M_1 \cdot b_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_B(M2.B.m());
+      Vector<Number> result_vect(M1.m);
 
       /**
-       * Fill the result vector into the \p A component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+       * Its \p B component matrix is the same as that of \p M2.
        */
-      M.A.fill_col(j, result_vect);
+      M.reinit(M1.m, M2.m, M2.formal_rank);
+      M.B = M2.A;
+
+      /**
+       * Then we calculate the \p A component matrix of \p M, which is \p
+       * M1*M2.B.
+       */
+      for (size_t j = 0; j < M2.formal_rank; j++)
+        {
+          M2.B.get_column(j, col_vect_in_B);
+          result_vect = 0.;
+          M1.vmult(result_vect, alpha, col_vect_in_B, M1, M1.get_property());
+
+          /**
+           * Fill the result vector into the \p A component matrix of \p M.
+           */
+          M.A.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.m, M2.m, 0);
     }
 }
 
@@ -8629,35 +8657,42 @@ h_rk_Tmmult(HMatrix<spacedim, Number> &M1,
 {
   AssertDimension(M1.m, M2.m);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
-   * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
-   * transposed-matrix-vector product \f$M_1^T \cdot a_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_A(M2.A.m());
-  Vector<Number> result_vect(M1.n);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
-   * Its \p B component matrix is the same as that of \p M2.
-   */
-  M.reinit(M1.n, M2.n, M2.formal_rank);
-  M.B = M2.B;
-
-  /**
-   * Then we calculate the \p A component matrix of \p M, which is \p
-   * M1^T*M2.A.
-   */
-  for (size_t j = 0; j < M2.formal_rank; j++)
+  if (M2.rank > 0 && M2.formal_rank > 0)
     {
-      M2.A.get_column(j, col_vect_in_A);
-      result_vect = 0.;
-      M1.Tvmult(result_vect, col_vect_in_A, M1, M1.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
+       * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
+       * transposed-matrix-vector product \f$M_1^T \cdot a_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_A(M2.A.m());
+      Vector<Number> result_vect(M1.n);
 
       /**
-       * Fill the result vector into the \p A component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+       * Its \p B component matrix is the same as that of \p M2.
        */
-      M.A.fill_col(j, result_vect);
+      M.reinit(M1.n, M2.n, M2.formal_rank);
+      M.B = M2.B;
+
+      /**
+       * Then we calculate the \p A component matrix of \p M, which is \p
+       * M1^T*M2.A.
+       */
+      for (size_t j = 0; j < M2.formal_rank; j++)
+        {
+          M2.A.get_column(j, col_vect_in_A);
+          result_vect = 0.;
+          M1.Tvmult(result_vect, col_vect_in_A, M1, M1.get_property());
+
+          /**
+           * Fill the result vector into the \p A component matrix of \p M.
+           */
+          M.A.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.n, M2.n, 0);
     }
 }
 
@@ -8704,35 +8739,42 @@ h_rk_Tmmult(const Number               alpha,
 {
   AssertDimension(M1.m, M2.m);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
-   * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
-   * transposed-matrix-vector product \f$M_1^T \cdot a_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_A(M2.A.m());
-  Vector<Number> result_vect(M1.n);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
-   * Its \p B component matrix is the same as that of \p M2.
-   */
-  M.reinit(M1.n, M2.n, M2.formal_rank);
-  M.B = M2.B;
-
-  /**
-   * Then we calculate the \p A component matrix of \p M, which is \p
-   * M1^T*M2.A.
-   */
-  for (size_t j = 0; j < M2.formal_rank; j++)
+  if (M2.rank > 0 && M2.formal_rank > 0)
     {
-      M2.A.get_column(j, col_vect_in_A);
-      result_vect = 0.;
-      M1.Tvmult(result_vect, alpha, col_vect_in_A, M1, M1.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
+       * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
+       * transposed-matrix-vector product \f$M_1^T \cdot a_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_A(M2.A.m());
+      Vector<Number> result_vect(M1.n);
 
       /**
-       * Fill the result vector into the \p A component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M2.
+       * Its \p B component matrix is the same as that of \p M2.
        */
-      M.A.fill_col(j, result_vect);
+      M.reinit(M1.n, M2.n, M2.formal_rank);
+      M.B = M2.B;
+
+      /**
+       * Then we calculate the \p A component matrix of \p M, which is \p
+       * M1^T*M2.A.
+       */
+      for (size_t j = 0; j < M2.formal_rank; j++)
+        {
+          M2.A.get_column(j, col_vect_in_A);
+          result_vect = 0.;
+          M1.Tvmult(result_vect, alpha, col_vect_in_A, M1, M1.get_property());
+
+          /**
+           * Fill the result vector into the \p A component matrix of \p M.
+           */
+          M.A.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.n, M2.n, 0);
     }
 }
 
@@ -8741,6 +8783,7 @@ h_rk_Tmmult(const Number               alpha,
  * Calculate the product of two \hmatnodes, where the second
  * one \p M2 has \p RkMatrixType and the result will also be a rank-k matrix.
  * This function is to be called by the matrix-matrix multiplication function.
+ *
  * @param M1
  * @param M2
  * @param M
@@ -8822,35 +8865,42 @@ rk_h_mmult(const RkMatrix<Number> &   M1,
 {
   AssertDimension(M1.n, M2.m);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
-   * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
-   * matrix-vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_B(M1.B.m());
-  Vector<Number> result_vect(M2.n);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
-   * Its \p A component matrix is the same as that of \p M1_rk.
-   */
-  M.reinit(M1.m, M2.n, M1.formal_rank);
-  M.A = M1.A;
-
-  /**
-   * Then we calculate the \p B component matrix of \p M, which is \p
-   * M2^T*M1_rk.B.
-   */
-  for (size_t j = 0; j < M.formal_rank; j++)
+  if (M1.rank > 0 && M1.formal_rank > 0)
     {
-      M1.B.get_column(j, col_vect_in_B);
-      result_vect = 0.;
-      M2.Tvmult(result_vect, col_vect_in_B, M2, M2.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+       * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
+       * matrix-vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_B(M1.B.m());
+      Vector<Number> result_vect(M2.n);
 
       /**
-       * Fill the result vector into the \p B component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+       * Its \p A component matrix is the same as that of \p M1_rk.
        */
-      M.B.fill_col(j, result_vect);
+      M.reinit(M1.m, M2.n, M1.formal_rank);
+      M.A = M1.A;
+
+      /**
+       * Then we calculate the \p B component matrix of \p M, which is \p
+       * M2^T*M1_rk.B.
+       */
+      for (size_t j = 0; j < M.formal_rank; j++)
+        {
+          M1.B.get_column(j, col_vect_in_B);
+          result_vect = 0.;
+          M2.Tvmult(result_vect, col_vect_in_B, M2, M2.get_property());
+
+          /**
+           * Fill the result vector into the \p B component matrix of \p M.
+           */
+          M.B.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.m, M2.n, 0);
     }
 }
 
@@ -8895,39 +8945,46 @@ rk_h_mmult(const Number               alpha,
 {
   AssertDimension(M1.n, M2.m);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
-   * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
-   * matrix-vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_B(M1.B.m());
-  Vector<Number> result_vect(M2.n);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
-   * Its \p A component matrix is the same as that of \p M1_rk.
-   */
-  M.reinit(M1.m, M2.n, M1.formal_rank);
-  M.A = M1.A;
-
-  /**
-   * Then we calculate the \p B component matrix of \p M, which is \p
-   * M2^T*M1_rk.B.
-   */
-  for (size_t j = 0; j < M.formal_rank; j++)
+  if (M1.rank > 0 && M1.formal_rank > 0)
     {
-      M1.B.get_column(j, col_vect_in_B);
       /**
-       * \alert{Since the following \p Tvmult will compute \f$y = y + M^T x\f$,
-       * \p result_vect should be reset to zero beforehand.}
+       * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+       * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
+       * matrix-vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
        */
-      result_vect = 0.;
-      M2.Tvmult(result_vect, alpha, col_vect_in_B, M2, M2.get_property());
+      Vector<Number> col_vect_in_B(M1.B.m());
+      Vector<Number> result_vect(M2.n);
 
       /**
-       * Fill the result vector into the \p B component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+       * Its \p A component matrix is the same as that of \p M1_rk.
        */
-      M.B.fill_col(j, result_vect);
+      M.reinit(M1.m, M2.n, M1.formal_rank);
+      M.A = M1.A;
+
+      /**
+       * Then we calculate the \p B component matrix of \p M, which is \p
+       * M2^T*M1_rk.B.
+       */
+      for (size_t j = 0; j < M.formal_rank; j++)
+        {
+          M1.B.get_column(j, col_vect_in_B);
+          /**
+           * \alert{Since the following \p Tvmult will compute \f$y = y + M^T x\f$,
+           * \p result_vect should be reset to zero beforehand.}
+           */
+          result_vect = 0.;
+          M2.Tvmult(result_vect, alpha, col_vect_in_B, M2, M2.get_property());
+
+          /**
+           * Fill the result vector into the \p B component matrix of \p M.
+           */
+          M.B.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.m, M2.n, 0);
     }
 }
 
@@ -8968,35 +9025,42 @@ rk_h_mTmult(const RkMatrix<Number> &   M1,
 {
   AssertDimension(M1.n, M2.n);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
-   * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
-   * matrix-vector product \f$M_2 \cdot b_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_B(M1.B.m());
-  Vector<Number> result_vect(M2.m);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
-   * Its \p A component matrix is the same as that of \p M1_rk.
-   */
-  M.reinit(M1.m, M2.m, M1.formal_rank);
-  M.A = M1.A;
-
-  /**
-   * Then we calculate the \p B component matrix of \p M, which is \p
-   * M2*M1_rk.B.
-   */
-  for (size_t j = 0; j < M.formal_rank; j++)
+  if (M1.rank > 0 && M1.formal_rank > 0)
     {
-      M1.B.get_column(j, col_vect_in_B);
-      result_vect = 0.;
-      M2.vmult(result_vect, col_vect_in_B, M2, M2.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+       * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
+       * matrix-vector product \f$M_2 \cdot b_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_B(M1.B.m());
+      Vector<Number> result_vect(M2.m);
 
       /**
-       * Fill the result vector into the \p B component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+       * Its \p A component matrix is the same as that of \p M1_rk.
        */
-      M.B.fill_col(j, result_vect);
+      M.reinit(M1.m, M2.m, M1.formal_rank);
+      M.A = M1.A;
+
+      /**
+       * Then we calculate the \p B component matrix of \p M, which is \p
+       * M2*M1_rk.B.
+       */
+      for (size_t j = 0; j < M.formal_rank; j++)
+        {
+          M1.B.get_column(j, col_vect_in_B);
+          result_vect = 0.;
+          M2.vmult(result_vect, col_vect_in_B, M2, M2.get_property());
+
+          /**
+           * Fill the result vector into the \p B component matrix of \p M.
+           */
+          M.B.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.m, M2.m, 0);
     }
 }
 
@@ -9039,35 +9103,42 @@ rk_h_mTmult(const Number               alpha,
 {
   AssertDimension(M1.n, M2.n);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
-   * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
-   * matrix-vector product \f$M_2 \cdot b_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_B(M1.B.m());
-  Vector<Number> result_vect(M2.m);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
-   * Its \p A component matrix is the same as that of \p M1_rk.
-   */
-  M.reinit(M1.m, M2.m, M1.formal_rank);
-  M.A = M1.A;
-
-  /**
-   * Then we calculate the \p B component matrix of \p M, which is \p
-   * M2*M1_rk.B.
-   */
-  for (size_t j = 0; j < M.formal_rank; j++)
+  if (M1.rank > 0 && M1.formal_rank > 0)
     {
-      M1.B.get_column(j, col_vect_in_B);
-      result_vect = 0.;
-      M2.vmult(result_vect, alpha, col_vect_in_B, M2, M2.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
+       * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
+       * matrix-vector product \f$M_2 \cdot b_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_B(M1.B.m());
+      Vector<Number> result_vect(M2.m);
 
       /**
-       * Fill the result vector into the \p B component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+       * Its \p A component matrix is the same as that of \p M1_rk.
        */
-      M.B.fill_col(j, result_vect);
+      M.reinit(M1.m, M2.m, M1.formal_rank);
+      M.A = M1.A;
+
+      /**
+       * Then we calculate the \p B component matrix of \p M, which is \p
+       * M2*M1_rk.B.
+       */
+      for (size_t j = 0; j < M.formal_rank; j++)
+        {
+          M1.B.get_column(j, col_vect_in_B);
+          result_vect = 0.;
+          M2.vmult(result_vect, alpha, col_vect_in_B, M2, M2.get_property());
+
+          /**
+           * Fill the result vector into the \p B component matrix of \p M.
+           */
+          M.B.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.m, M2.m, 0);
     }
 }
 
@@ -9110,35 +9181,42 @@ rk_h_Tmmult(const RkMatrix<Number> &   M1,
 {
   AssertDimension(M1.m, M2.m);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
-   * A component of \p M1 and another \p Vector \f$a'_{\rho,j}\f$ storing the
-   * transposed matrix-vector product \f$M_2^T \cdot a_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_A(M1.A.m());
-  Vector<Number> result_vect(M2.n);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
-   * Its \p A component matrix is the same as the @p B component of \p M1_rk.
-   */
-  M.reinit(M1.n, M2.n, M1.formal_rank);
-  M.A = M1.B;
-
-  /**
-   * Then we calculate the \p B component matrix of \p M, which is \p
-   * M2^T*M1_rk.A.
-   */
-  for (size_t j = 0; j < M.formal_rank; j++)
+  if (M1.rank > 0 && M1.formal_rank > 0)
     {
-      M1.A.get_column(j, col_vect_in_A);
-      result_vect = 0.;
-      M2.Tvmult(result_vect, col_vect_in_A, M2, M2.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
+       * A component of \p M1 and another \p Vector \f$a'_{\rho,j}\f$ storing the
+       * transposed matrix-vector product \f$M_2^T \cdot a_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_A(M1.A.m());
+      Vector<Number> result_vect(M2.n);
 
       /**
-       * Fill the result vector into the \p B component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+       * Its \p A component matrix is the same as the @p B component of \p M1_rk.
        */
-      M.B.fill_col(j, result_vect);
+      M.reinit(M1.n, M2.n, M1.formal_rank);
+      M.A = M1.B;
+
+      /**
+       * Then we calculate the \p B component matrix of \p M, which is \p
+       * M2^T*M1_rk.A.
+       */
+      for (size_t j = 0; j < M.formal_rank; j++)
+        {
+          M1.A.get_column(j, col_vect_in_A);
+          result_vect = 0.;
+          M2.Tvmult(result_vect, col_vect_in_A, M2, M2.get_property());
+
+          /**
+           * Fill the result vector into the \p B component matrix of \p M.
+           */
+          M.B.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.n, M2.n, 0);
     }
 }
 
@@ -9185,35 +9263,42 @@ rk_h_Tmmult(const Number               alpha,
 {
   AssertDimension(M1.m, M2.m);
 
-  /**
-   * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
-   * A component of \p M1 and another \p Vector \f$a'_{\rho,j}\f$ storing the
-   * transposed matrix-vector product \f$M_2^T \cdot a_{\sigma,j}\f$.
-   */
-  Vector<Number> col_vect_in_A(M1.A.m());
-  Vector<Number> result_vect(M2.n);
-
-  /**
-   * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
-   * Its \p A component matrix is the same as the @p B component of \p M1_rk.
-   */
-  M.reinit(M1.n, M2.n, M1.formal_rank);
-  M.A = M1.B;
-
-  /**
-   * Then we calculate the \p B component matrix of \p M, which is \p
-   * M2^T*M1_rk.A.
-   */
-  for (size_t j = 0; j < M.formal_rank; j++)
+  if (M1.rank > 0 && M1.formal_rank > 0)
     {
-      M1.A.get_column(j, col_vect_in_A);
-      result_vect = 0.;
-      M2.Tvmult(result_vect, alpha, col_vect_in_A, M2, M2.get_property());
+      /**
+       * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
+       * A component of \p M1 and another \p Vector \f$a'_{\rho,j}\f$ storing the
+       * transposed matrix-vector product \f$M_2^T \cdot a_{\sigma,j}\f$.
+       */
+      Vector<Number> col_vect_in_A(M1.A.m());
+      Vector<Number> result_vect(M2.n);
 
       /**
-       * Fill the result vector into the \p B component matrix of \p M.
+       * Initialize the result rank-k matrix \p M with the formal rank of \p M1_rk.
+       * Its \p A component matrix is the same as the @p B component of \p M1_rk.
        */
-      M.B.fill_col(j, result_vect);
+      M.reinit(M1.n, M2.n, M1.formal_rank);
+      M.A = M1.B;
+
+      /**
+       * Then we calculate the \p B component matrix of \p M, which is \p
+       * M2^T*M1_rk.A.
+       */
+      for (size_t j = 0; j < M.formal_rank; j++)
+        {
+          M1.A.get_column(j, col_vect_in_A);
+          result_vect = 0.;
+          M2.Tvmult(result_vect, alpha, col_vect_in_A, M2, M2.get_property());
+
+          /**
+           * Fill the result vector into the \p B component matrix of \p M.
+           */
+          M.B.fill_col(j, result_vect);
+        }
+    }
+  else
+    {
+      M.reinit(M1.n, M2.n, 0);
     }
 }
 

@@ -24,12 +24,17 @@ public:
   {
     (void)component;
 
+    // For the bar mode
     if (p(2) < 3)
-      // Apply constant 1 volt on the plane at @p z=0.
-      return 1;
+      {
+        // Apply constant 1 volt on the plane at @p z=0.
+        return 1;
+      }
     else
-      // Apply constant 0 volt on the plane at @p z=6.
-      return 0;
+      {
+        // Apply constant 0 volt on the plane at @p z=6.
+        return 0;
+      }
   }
 };
 
@@ -45,6 +50,7 @@ public:
   {
     (void)p;
     (void)component;
+    (void)p;
 
     return 0;
   }
@@ -66,8 +72,8 @@ main(int argc, char *argv[])
     LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
     true, // is interior problem
     4,    // n_min for cluster tree
-    10,   // n_min for block cluster tree
-    0.8,  // eta for H-matrix
+    4,    // n_min for block cluster tree
+    2,    // eta for H-matrix
     5,    // max rank for H-matrix
     0.01, // aca epsilon for H-matrix
     1.0,  // eta for preconditioner
