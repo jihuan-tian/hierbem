@@ -50,7 +50,6 @@ public:
   {
     (void)p;
     (void)component;
-    (void)p;
 
     return 0;
   }
