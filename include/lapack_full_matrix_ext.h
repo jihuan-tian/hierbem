@@ -1148,6 +1148,7 @@ public:
 
   /**
    * Print a LAPACKFullMatrixExt to Octave mat format.
+   *
    * @param out
    * @param name
    * @param precision

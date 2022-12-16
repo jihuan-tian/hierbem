@@ -1090,6 +1090,28 @@ public:
   print_matrix_info_as_dot(std::ostream &out) const;
 
   /**
+   * Print the \hmatrix as a @p LAPACKFullMatrixExt to Octave mat format.
+   *
+   * @param out
+   * @param name
+   * @param precision
+   * @param scientific
+   * @param width
+   * @param zero_string
+   * @param denominator
+   * @param threshold
+   */
+  void
+  print_as_formatted_full_matrix(std::ostream &     out,
+                                 const std::string &name,
+                                 const unsigned int precision   = 8,
+                                 const bool         scientific  = true,
+                                 const unsigned int width       = 0,
+                                 const char *       zero_string = "0",
+                                 const double       denominator = 1.,
+                                 const double       threshold   = 0.) const;
+
+  /**
    * Write formatted full matrix leaf node to the output stream.
    *
    * The leaf node is written in the following format:
@@ -15883,6 +15905,31 @@ HMatrix<spacedim, Number>::print_matrix_info_as_dot(std::ostream &out) const
    */
   out << "}\n";
   out << "#@enddot" << std::endl;
+}
+
+
+template <int spacedim, typename Number>
+void
+HMatrix<spacedim, Number>::print_as_formatted_full_matrix(
+  std::ostream &     out,
+  const std::string &name,
+  const unsigned int precision,
+  const bool         scientific,
+  const unsigned int width,
+  const char *       zero_string,
+  const double       denominator,
+  const double       threshold) const
+{
+  LAPACKFullMatrixExt<Number> fullmat;
+  this->convertToFullMatrix(fullmat);
+  fullmat.print_formatted_to_mat(out,
+                                 name,
+                                 precision,
+                                 scientific,
+                                 width,
+                                 zero_string,
+                                 denominator,
+                                 threshold);
 }
 
 

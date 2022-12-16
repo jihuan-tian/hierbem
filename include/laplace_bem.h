@@ -48,6 +48,7 @@
 #include "bem_values.h"
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
+#include "config.h"
 #include "dof_tools_ext.h"
 #include "grid_out_ext.h"
 #include "hblockmatrix_skew_symm.h"
@@ -2436,86 +2437,18 @@ namespace IdeoBEM
           }
         case MixedBCProblem:
           {
-            std::cerr << "=== Assemble V1 ===" << std::endl;
-
-            fill_hmatrix_with_aca_plus_smp(
-              thread_num,
-              V1_hmat,
-              aca_config,
-              single_layer_kernel,
-              1.0,
-              dof_to_cell_topo_for_neumann_space,
-              dof_to_cell_topo_for_neumann_space,
-              SauterQuadratureRule<dim>(5, 4, 4, 3),
-              dof_handler_for_neumann_space,
-              dof_handler_for_neumann_space,
-              &local_to_full_neumann_dof_indices_on_dirichlet_domain,
-              &local_to_full_neumann_dof_indices_on_dirichlet_domain,
-              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-              kx_mapping_for_dirichlet_domain,
-              ky_mapping_for_dirichlet_domain,
-              *kx_mapping_data_for_dirichlet_domain,
-              *ky_mapping_data_for_dirichlet_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
-              true);
-
-            std::cerr << "=== Assemble -K1 ===" << std::endl;
-
-            fill_hmatrix_with_aca_plus_smp(
-              thread_num,
-              K1_hmat,
-              aca_config,
-              double_layer_kernel,
-              -1.0,
-              dof_to_cell_topo_for_neumann_space,
-              dof_to_cell_topo_for_dirichlet_space,
-              SauterQuadratureRule<dim>(5, 4, 4, 3),
-              dof_handler_for_neumann_space,
-              dof_handler_for_dirichlet_space,
-              &local_to_full_neumann_dof_indices_on_dirichlet_domain,
-              &local_to_full_dirichlet_dof_indices_on_neumann_domain,
-              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-              kx_mapping_for_dirichlet_domain,
-              ky_mapping_for_neumann_domain,
-              *kx_mapping_data_for_dirichlet_domain,
-              *ky_mapping_data_for_neumann_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
-              false);
-
-            std::cerr << "=== Assemble D1 ===" << std::endl;
-
-            fill_hmatrix_with_aca_plus_smp(
-              thread_num,
-              D1_hmat,
-              aca_config,
-              hyper_singular_kernel,
-              1.0,
-              dof_to_cell_topo_for_dirichlet_space,
-              dof_to_cell_topo_for_dirichlet_space,
-              SauterQuadratureRule<dim>(5, 4, 4, 3),
-              dof_handler_for_dirichlet_space,
-              dof_handler_for_dirichlet_space,
-              &local_to_full_dirichlet_dof_indices_on_neumann_domain,
-              &local_to_full_dirichlet_dof_indices_on_neumann_domain,
-              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
-              kx_mapping_for_neumann_domain,
-              ky_mapping_for_neumann_domain,
-              *kx_mapping_data_for_neumann_domain,
-              *ky_mapping_data_for_neumann_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
-              true);
+            /**
+             * For the mixed boundary condition, we firstly assemble the right
+             * hand side matrices and vectors. Then after releasing these
+             * matrices for saving the memory, we continue to assemble the left
+             * hand side matrices, i.e. stiff matrices.
+             */
+#if ENABLE_PRINTOUT == 1
+            // Output stream for matrices and vectors.
+            std::ofstream out_mat;
+            // Output stream for block cluster trees.
+            std::ofstream out_bct;
+#endif
 
             if (is_interior_problem)
               {
@@ -2638,7 +2571,7 @@ namespace IdeoBEM
                   false);
               }
 
-            std::cerr << "=== -V2 ===" << std::endl;
+            std::cerr << "=== Assemble -V2 ===" << std::endl;
 
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
@@ -2665,7 +2598,7 @@ namespace IdeoBEM
                 SameTriangulations,
               false);
 
-            std::cerr << "=== -D2 ===" << std::endl;
+            std::cerr << "=== Assemble -D2 ===" << std::endl;
 
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
@@ -2692,72 +2625,39 @@ namespace IdeoBEM
                 SameTriangulations,
               false);
 
-            // Assemble the block matrix.
-            M_hmat =
-              HBlockMatrixSkewSymm<spacedim>(&V1_hmat, &K1_hmat, &D1_hmat);
+#if ENABLE_PRINTOUT == 1
+            // Print RHS matrices.
+            out_mat.open("matrices.dat");
 
-            // DEBUG: Output hmatrices.
-            std::ofstream out("V1_bct.dat");
-            V1_hmat.HMatrix<spacedim, double>::write_leaf_set_by_iteration(
-              out, 1e-12);
-            out.close();
+            K2_hmat_with_mass_matrix.print_as_formatted_full_matrix(
+              out_mat, "K2", 15, true, 25);
+            K_prime2_hmat_with_mass_matrix.print_as_formatted_full_matrix(
+              out_mat, "K_prime2", 15, true, 25);
+            V2_hmat.print_as_formatted_full_matrix(out_mat, "V2", 15, true, 25);
+            D2_hmat.print_as_formatted_full_matrix(out_mat, "D2", 15, true, 25);
 
-            out.open("K1_bct.dat");
-            K1_hmat.HMatrix<spacedim, double>::write_leaf_set_by_iteration(
-              out, 1e-12);
-            out.close();
+            out_bct.open("K2_bct.dat");
+            K2_hmat_with_mass_matrix.write_leaf_set_by_iteration(out_bct,
+                                                                 1e-12);
+            out_bct.close();
 
-            out.open("D1_bct.dat");
-            D1_hmat.HMatrix<spacedim, double>::write_leaf_set_by_iteration(
-              out, 1e-12);
-            out.close();
+            out_bct.open("K_prime2_bct.dat");
+            K_prime2_hmat_with_mass_matrix.write_leaf_set_by_iteration(out_bct,
+                                                                       1e-12);
+            out_bct.close();
 
-            out.open("K2_bct.dat");
-            K2_hmat_with_mass_matrix
-              .HMatrix<spacedim, double>::write_leaf_set_by_iteration(out,
-                                                                      1e-12);
-            out.close();
+            out_bct.open("V2_bct.dat");
+            V2_hmat.write_leaf_set_by_iteration(out_bct, 1e-12);
+            out_bct.close();
 
-            out.open("K_prime2_bct.dat");
-            K_prime2_hmat_with_mass_matrix
-              .HMatrix<spacedim, double>::write_leaf_set_by_iteration(out,
-                                                                      1e-12);
-            out.close();
-
-            out.open("V2_bct.dat");
-            V2_hmat.HMatrix<spacedim, double>::write_leaf_set_by_iteration(
-              out, 1e-12);
-            out.close();
-
-            out.open("D2_bct.dat");
-            D2_hmat.HMatrix<spacedim, double>::write_leaf_set_by_iteration(
-              out, 1e-12);
-            out.close();
-
-            out.open("matrices.dat");
-            LAPACKFullMatrixExt<double> V1_full, K1_full, D1_full, K2_full,
-              K_prime2_full, V2_full, D2_full;
-            V1_hmat.HMatrix<spacedim, double>::convertToFullMatrix(V1_full);
-            K1_hmat.HMatrix<spacedim, double>::convertToFullMatrix(K1_full);
-            D1_hmat.HMatrix<spacedim, double>::convertToFullMatrix(D1_full);
-            K2_hmat_with_mass_matrix
-              .HMatrix<spacedim, double>::convertToFullMatrix(K2_full);
-            K_prime2_hmat_with_mass_matrix
-              .HMatrix<spacedim, double>::convertToFullMatrix(K_prime2_full);
-            V2_hmat.HMatrix<spacedim, double>::convertToFullMatrix(V2_full);
-            D2_hmat.HMatrix<spacedim, double>::convertToFullMatrix(D2_full);
-
-            V1_full.print_formatted_to_mat(out, "V1", 15, true, 25, "0");
-            K1_full.print_formatted_to_mat(out, "K1", 15, true, 25, "0");
-            D1_full.print_formatted_to_mat(out, "D1", 15, true, 25, "0");
-            K2_full.print_formatted_to_mat(out, "K2", 15, true, 25, "0");
-            K_prime2_full.print_formatted_to_mat(
-              out, "K_prime2", 15, true, 25, "0");
-            V2_full.print_formatted_to_mat(out, "V2", 15, true, 25, "0");
-            D2_full.print_formatted_to_mat(out, "D2", 15, true, 25, "0");
-            out.close();
+            out_bct.open("D2_bct.dat");
+            D2_hmat.write_leaf_set_by_iteration(out_bct, 1e-12);
+            out_bct.close();
+#endif
 
             // Calculate the RHS vectors in the mixed boundary value problem.
+            std::cerr << "=== Assemble RHS vectors ===" << std::endl;
+
             K2_hmat_with_mass_matrix.vmult(system_rhs_on_dirichlet_domain,
                                            dirichlet_bc_internal_dof_numbering,
                                            HMatrixSupport::Property::general);
@@ -2784,6 +2684,145 @@ namespace IdeoBEM
                         system_rhs_on_neumann_domain,
                         0,
                         system_rhs_on_neumann_domain.size());
+
+#if ENABLE_PRINTOUT == 1
+            // Print RHS vectors.
+            print_vector_to_mat(out_mat,
+                                "system_rhs_on_combined_domain",
+                                system_rhs_on_combined_domain,
+                                false,
+                                15,
+                                25);
+
+            print_vector_to_mat(out_mat,
+                                "system_rhs_on_dirichlet_domain",
+                                system_rhs_on_dirichlet_domain,
+                                false,
+                                15,
+                                25);
+
+            print_vector_to_mat(out_mat,
+                                "system_rhs_on_neumann_domain",
+                                system_rhs_on_neumann_domain,
+                                false,
+                                15,
+                                25);
+#endif
+
+            // Clear the RHS matrices.
+            std::cerr << "=== Clear RHS matrices ===" << std::endl;
+
+            K2_hmat_with_mass_matrix.release();
+            K_prime2_hmat_with_mass_matrix.release();
+            V2_hmat.release();
+            D2_hmat.release();
+
+            std::cerr << "=== Assemble V1 ===" << std::endl;
+
+            fill_hmatrix_with_aca_plus_smp(
+              thread_num,
+              V1_hmat,
+              aca_config,
+              single_layer_kernel,
+              1.0,
+              dof_to_cell_topo_for_neumann_space,
+              dof_to_cell_topo_for_neumann_space,
+              SauterQuadratureRule<dim>(5, 4, 4, 3),
+              dof_handler_for_neumann_space,
+              dof_handler_for_neumann_space,
+              &local_to_full_neumann_dof_indices_on_dirichlet_domain,
+              &local_to_full_neumann_dof_indices_on_dirichlet_domain,
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_dirichlet_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_dirichlet_domain,
+              map_from_surface_mesh_to_volume_mesh,
+              map_from_surface_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              true);
+
+            std::cerr << "=== Assemble -K1 ===" << std::endl;
+
+            fill_hmatrix_with_aca_plus_smp(
+              thread_num,
+              K1_hmat,
+              aca_config,
+              double_layer_kernel,
+              -1.0,
+              dof_to_cell_topo_for_neumann_space,
+              dof_to_cell_topo_for_dirichlet_space,
+              SauterQuadratureRule<dim>(5, 4, 4, 3),
+              dof_handler_for_neumann_space,
+              dof_handler_for_dirichlet_space,
+              &local_to_full_neumann_dof_indices_on_dirichlet_domain,
+              &local_to_full_dirichlet_dof_indices_on_neumann_domain,
+              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              kx_mapping_for_dirichlet_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_dirichlet_domain,
+              *ky_mapping_data_for_neumann_domain,
+              map_from_surface_mesh_to_volume_mesh,
+              map_from_surface_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              false);
+
+            std::cerr << "=== Assemble D1 ===" << std::endl;
+
+            fill_hmatrix_with_aca_plus_smp(
+              thread_num,
+              D1_hmat,
+              aca_config,
+              hyper_singular_kernel,
+              1.0,
+              dof_to_cell_topo_for_dirichlet_space,
+              dof_to_cell_topo_for_dirichlet_space,
+              SauterQuadratureRule<dim>(5, 4, 4, 3),
+              dof_handler_for_dirichlet_space,
+              dof_handler_for_dirichlet_space,
+              &local_to_full_dirichlet_dof_indices_on_neumann_domain,
+              &local_to_full_dirichlet_dof_indices_on_neumann_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              *dof_i2e_numbering_for_dirichlet_space_on_neumann_domain,
+              kx_mapping_for_neumann_domain,
+              ky_mapping_for_neumann_domain,
+              *kx_mapping_data_for_neumann_domain,
+              *ky_mapping_data_for_neumann_domain,
+              map_from_surface_mesh_to_volume_mesh,
+              map_from_surface_mesh_to_volume_mesh,
+              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                SameTriangulations,
+              true);
+
+            // Assemble the block matrix.
+            std::cerr << "=== Assemble system block matrix ===" << std::endl;
+            M_hmat =
+              HBlockMatrixSkewSymm<spacedim>(&V1_hmat, &K1_hmat, &D1_hmat);
+
+#if ENABLE_PRINTOUT == 1
+            // Print LHS matrices.
+            V1_hmat.print_as_formatted_full_matrix(out_mat, "V1", 15, true, 25);
+            K1_hmat.print_as_formatted_full_matrix(out_mat, "K1", 15, true, 25);
+            D1_hmat.print_as_formatted_full_matrix(out_mat, "D1", 15, true, 25);
+
+            out_bct.open("V1_bct.dat");
+            V1_hmat.write_leaf_set_by_iteration(out_bct, 1e-12);
+            out_bct.close();
+
+            out_bct.open("K1_bct.dat");
+            K1_hmat.write_leaf_set_by_iteration(out_bct, 1e-12);
+            out_bct.close();
+
+            out_bct.open("D1_bct.dat");
+            D1_hmat.write_leaf_set_by_iteration(out_bct, 1e-12);
+            out_bct.close();
+
+            out_mat.close();
+#endif
 
             break;
           }
@@ -2893,6 +2932,9 @@ namespace IdeoBEM
         case MixedBCProblem:
           {
             // Assemble preconditioners for the mixed boundary value problem.
+            std::cerr
+              << "=== Assemble preconditioner for the system block matrix ==="
+              << std::endl;
 
             // Directly make copies of existing \hmatrices and then truncate
             // their ranks.
@@ -2914,6 +2956,8 @@ namespace IdeoBEM
                 &M22_in_preconditioner);
 
             // Perform \hmat-LU factorization to the block preconditioner.
+            std::cerr << "=== LU factorization of system block matrix ==="
+                      << std::endl;
             M_hmat_preconditioner.compute_lu_factorization(
               max_hmat_rank_for_preconditioner);
 
@@ -2932,6 +2976,8 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::solve()
   {
+    std::cerr << "=== Solve problem ===" << std::endl;
+
     if (!is_use_hmat)
       {
         switch (problem_type)
@@ -3093,6 +3139,8 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::output_results()
   {
+    std::cerr << "=== Output results ===" << std::endl;
+
     switch (problem_type)
       {
         case DirichletBCProblem:
@@ -3157,7 +3205,6 @@ namespace IdeoBEM
             data_out.write_vtk(vtk_output);
             vtk_output.close();
 
-            // DEBUG
             print_vector_to_mat(
               std::cout,
               "solution_on_combined_domain_internal_dof_numbering",
@@ -3167,24 +3214,19 @@ namespace IdeoBEM
               25);
 
             print_vector_to_mat(std::cout,
-                                "system_rhs_on_combined_domain",
-                                system_rhs_on_combined_domain,
-                                false,
-                                15,
-                                25);
-
-            print_vector_to_mat(std::cout,
                                 "solution_on_dirichlet_domain",
                                 neumann_data,
                                 false,
                                 15,
                                 25);
+
             print_vector_to_mat(std::cout,
                                 "solution_on_neumann_domain",
                                 dirichlet_data,
                                 false,
                                 15,
                                 25);
+
             break;
           }
         default:
@@ -3504,13 +3546,6 @@ namespace IdeoBEM
 
     solve();
     output_results();
-    output_potential_at_target_points();
-
-    // DEBUG
-    if (problem_type == ProblemType::NeumannBCProblem)
-      {
-        verify_neumann_solution_in_space();
-      }
   }
 
 
