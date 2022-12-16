@@ -24,7 +24,7 @@ public:
   {
     (void)component;
 
-    if (p(0) < 0)
+    if (p(2) < 3)
       {
         return 1;
       }
@@ -77,7 +77,7 @@ main(int argc, char *argv[])
     MultithreadInfo::n_cores());
 
   bem.set_dirichlet_boundary_ids({1, 2});
-  bem.set_neumann_boundary_ids({0});
+  bem.set_neumann_boundary_ids({3, 4, 5, 6});
 
   if (argc > 1)
     {
