@@ -1,5 +1,5 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
-FIND_PACKAGE(deal.II 9.1.0 REQUIRED
+CMAKE_MINIMUM_REQUIRED(VERSION 3.3.0)
+FIND_PACKAGE(deal.II 9.4.0 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
   )
 IF(NOT ${deal.II_FOUND})
@@ -24,7 +24,7 @@ DEAL_II_INITIALIZE_CACHED_VARIABLES()
 # endif()
 
 # Project name
-PROJECT("ideobem")
+PROJECT("hierbem")
 # Folder for header files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 # Folder for source code

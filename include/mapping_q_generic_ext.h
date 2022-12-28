@@ -11,7 +11,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_product_polynomials.h>
 
-#include <deal.II/fe/fe_base.h>
+#include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_q_base.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/mapping_q_generic.h>
@@ -21,28 +21,6 @@
 #include <vector>
 
 using namespace dealii;
-
-namespace internal
-{
-  namespace MappingQGenericImplementation
-  {
-    /**
-     * The definition of this function is extracted from
-     * @p source/fe/mapping_q_generic.cc.
-     * @param degree
-     * @return
-     */
-    template <int dim>
-    std::vector<unsigned int>
-    get_dpo_vector(const unsigned int degree)
-    {
-      std::vector<unsigned int> dpo(dim + 1, 1U);
-      for (unsigned int i = 1; i < dpo.size(); ++i)
-        dpo[i] = dpo[i - 1] * (degree - 1);
-      return dpo;
-    }
-  } // namespace MappingQGenericImplementation
-} // namespace internal
 
 template <int dim, int spacedim = dim>
 class MappingQGenericExt : public MappingQGeneric<dim, spacedim>
@@ -110,6 +88,10 @@ public:
   std::vector<Point<spacedim>> &
   get_support_points();
 
+  std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
+  get_data(const UpdateFlags      update_flags,
+           const Quadrature<dim> &quadrature) const;
+
 private:
   /**
    * List of support points in the hierarchic ordering of the current real cell.
@@ -167,11 +149,7 @@ MappingQGenericExt<dim, spacedim>::transform_unit_to_real_cell(
   // Get the numbering for accessing the support points in the lexicographic
   // ordering which are stored in the hierarchic ordering.
   const std::vector<unsigned int> renumber(
-    FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-      ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-        this->polynomial_degree),
-      1,
-      this->polynomial_degree)));
+    FETools::lexicographic_to_hierarchic_numbering(this->polynomial_degree));
 
   Point<spacedim> mapped_point;
   for (unsigned int i = 0; i < tensor_pols.n(); ++i)
@@ -195,6 +173,16 @@ std::vector<Point<spacedim>> &
 MappingQGenericExt<dim, spacedim>::get_support_points()
 {
   return support_points;
+}
+
+
+template <int dim, int spacedim>
+std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
+MappingQGenericExt<dim, spacedim>::get_data(
+  const UpdateFlags      update_flags,
+  const Quadrature<dim> &quadrature) const
+{
+  return MappingQGeneric<dim, spacedim>::get_data(update_flags, quadrature);
 }
 
 #endif /* INCLUDE_MAPPING_Q_GENERIC_EXT_H_ */

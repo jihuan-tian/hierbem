@@ -24,13 +24,11 @@ main()
   FE_Q<2, 3> fe(4);
 
   print_vector_values(std::cout,
-                      FETools::lexicographic_to_hierarchic_numbering(fe),
+                      fe.get_poly_space_numbering_inverse(),
                       ",",
                       true);
-  print_vector_values(
-    std::cout,
-    FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<2>(
-      ::internal::MappingQGenericImplementation::get_dpo_vector<2>(4), 1, 4)),
-    ",",
-    true);
+  print_vector_values(std::cout,
+                      FETools::lexicographic_to_hierarchic_numbering<2>(4),
+                      ",",
+                      true);
 }

@@ -4,11 +4,3 @@ SET(TEST_TARGET rkmatrix-truncate-to-rank-with-error-matrices)
 SET(TEST_LIBRARIES generic_tools)
 
 DEAL_II_PICKUP_TESTS()
-
-# Post-build event
-ADD_CUSTOM_COMMAND(TARGET rkmatrix-truncate-to-rank-with-error-matrices.debug POST_BUILD
-  COMMAND mplayer ${CMAKE_SOURCE_DIR}/media/Oxygen-Im-Nudge.ogg > /dev/null 2>&1
-  VERBATIM)
-ADD_CUSTOM_COMMAND(TARGET rkmatrix-truncate-to-rank-with-error-matrices.release POST_BUILD
-  COMMAND mplayer ${CMAKE_SOURCE_DIR}/media/Oxygen-Im-Nudge.ogg > /dev/null 2>&1
-  VERBATIM)

@@ -474,11 +474,11 @@ print_mapping_between_lexicographic_and_hierarchic_numberings(
 {
   print_vector_to_mat(out,
                       fe_name + std::string("_lexi2hier"),
-                      FETools::lexicographic_to_hierarchic_numbering(fe),
+                      FETools::lexicographic_to_hierarchic_numbering<dim>(fe.degree),
                       true);
   print_vector_to_mat(out,
                       fe_name + std::string("_hier2lexi"),
-                      FETools::hierarchic_to_lexicographic_numbering(fe),
+                      FETools::hierarchic_to_lexicographic_numbering<dim>(fe.degree),
                       true);
 }
 

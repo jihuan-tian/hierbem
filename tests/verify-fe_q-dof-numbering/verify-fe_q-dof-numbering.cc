@@ -36,14 +36,24 @@ main()
   const unsigned int    fe_order = 3;
   FE_Q<dim, spacedim>   fe_q(fe_order);
   FE_DGQ<dim, spacedim> fe_dgq(fe_order);
+  FE_DGQ<dim, spacedim> fe_dgq0(0);
 
   print_polynomial_space_numbering(std::cout, fe_q, "fe_q");
   print_mapping_between_lexicographic_and_hierarchic_numberings(std::cout,
                                                                 fe_q,
                                                                 "fe_q");
 
+  // N.B. The default DoF ordering for the discontinuous finite element
+  // @p FE_DGQ has already been lexicographic. Therefore, the numbering
+  // returned from @p print_polynomial_space_numbering is just [0, 1, ...].
+  // However, @p FETools::hierarchic_to_lexicographic_numbering disregards this.
   print_polynomial_space_numbering(std::cout, fe_dgq, "fe_dgq");
-  //  print_mapping_between_lexicographic_and_hierarchic_numberings(std::cout,
-  //                                                                fe_dgq,
-  //                                                                "fe_dgq");
+  print_mapping_between_lexicographic_and_hierarchic_numberings(std::cout,
+                                                                fe_dgq,
+                                                                "fe_dgq");
+
+  print_polynomial_space_numbering(std::cout, fe_dgq0, "fe_dgq0");
+  print_mapping_between_lexicographic_and_hierarchic_numberings(std::cout,
+                                                                fe_dgq0,
+                                                                "fe_dgq0");
 }

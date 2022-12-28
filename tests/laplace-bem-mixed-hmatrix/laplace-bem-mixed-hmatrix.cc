@@ -85,7 +85,7 @@ main(int argc, char *argv[])
     }
   else
     {
-      bem.read_volume_mesh(std::string("combination-spanner_hex.msh"));
+      bem.read_volume_mesh(std::string("bar-coarse_hex.msh"));
     }
 
   DirichletBC dirichlet_bc;

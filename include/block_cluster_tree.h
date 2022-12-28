@@ -34,6 +34,13 @@ class BlockClusterTree
 {
 public:
   /**
+   * Number of children in a block cluster tree.
+   *
+   * At present, only quad-tree is allowed.
+   */
+  static const unsigned int child_num = 4;
+
+  /**
    * Print a whole block cluster tree using recursion.
    * @param out
    * @param block_cluster_tree
@@ -41,22 +48,15 @@ public:
    */
   template <int spacedim1, typename Number1>
   friend std::ostream &
-  operator<<(std::ostream &                              out,
+  operator<<(std::ostream                               &out,
              const BlockClusterTree<spacedim1, Number1> &block_cluster_tree);
-
-  /**
-   * Number of children in a block cluster tree.
-   *
-   * At present, only quad-tree is allowed.
-   */
-  static const unsigned int child_num = 4;
 
   template <int spacedim1, typename Number1>
   friend void
   split_block_cluster_node(
     TreeNode<BlockCluster<spacedim1, Number1>,
              BlockClusterTree<spacedim1, Number1>::child_num> *bc_node,
-    BlockClusterTree<spacedim1, Number1> &                     bc_tree,
+    BlockClusterTree<spacedim1, Number1>                      &bc_tree,
     const TreeNodeSplitMode                                    split_mode,
     const bool if_add_child_nodes_to_leaf_set);
 
@@ -68,7 +68,7 @@ public:
       TreeNode<BlockCluster<spacedim1, Number1>,
                BlockClusterTree<spacedim1, Number1>::child_num> *> &partition,
     TreeNode<BlockCluster<spacedim1, Number1>,
-             BlockClusterTree<spacedim1, Number1>::child_num> *     bc_node);
+             BlockClusterTree<spacedim1, Number1>::child_num>      *bc_node);
 
   /**
    * Data type of the tree node.
@@ -93,9 +93,9 @@ public:
    * Data type of the data held by a tree node.
    */
   typedef BlockCluster<spacedim, Number>        data_value_type;
-  typedef BlockCluster<spacedim, Number> *      data_pointer_type;
+  typedef BlockCluster<spacedim, Number>       *data_pointer_type;
   typedef const BlockCluster<spacedim, Number> *data_const_pointer_type;
-  typedef BlockCluster<spacedim, Number> &      data_reference_type;
+  typedef BlockCluster<spacedim, Number>       &data_reference_type;
   typedef const BlockCluster<spacedim, Number> &data_const_reference_type;
 
   template <int spacedim1, typename Number1>
@@ -121,7 +121,7 @@ public:
   template <int spacedim1, typename Number1>
   friend void
   print_block_cluster_node_info_as_dot_node(
-    std::ostream &                                                   out,
+    std::ostream                                                    &out,
     const TreeNode<BlockCluster<spacedim1, Number1>,
                    BlockClusterTree<spacedim1, Number1>::child_num> &tree_node);
 
@@ -337,7 +337,7 @@ public:
   partition(const std::vector<types::global_dof_index>
               &internal_to_external_dof_numbering,
             const std::vector<Point<spacedim>> &all_support_points,
-            const std::vector<Number> &         cell_size_at_dofs);
+            const std::vector<Number>          &cell_size_at_dofs);
 
   /**
    * Perform a recursive partition by starting from the root node. The
@@ -362,8 +362,8 @@ public:
               &internal_to_external_dof_numbering_J,
             const std::vector<Point<spacedim>> &all_support_points_in_I,
             const std::vector<Point<spacedim>> &all_support_points_in_J,
-            const std::vector<Number> &         cell_size_at_dofs_in_I,
-            const std::vector<Number> &         cell_size_at_dofs_in_J);
+            const std::vector<Number>          &cell_size_at_dofs_in_I,
+            const std::vector<Number>          &cell_size_at_dofs_in_J);
 
   /**
    * Extend the current block cluster tree to be finer than the given partition.
@@ -488,7 +488,7 @@ public:
    */
   template <typename Number1 = double>
   void
-  write_leaf_set(std::ostream &                      out,
+  write_leaf_set(std::ostream                       &out,
                  const LAPACKFullMatrixExt<Number1> &matrix,
                  const Number1 singular_value_threshold = 0.) const;
 
@@ -715,9 +715,9 @@ private:
   partition_from_block_cluster_node(
     node_pointer_type current_block_cluster_node,
     const std::vector<types::global_dof_index>
-      &                                 internal_to_external_dof_numbering,
+                                       &internal_to_external_dof_numbering,
     const std::vector<Point<spacedim>> &all_support_points,
-    std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
+    std::vector<node_pointer_type>     &leaf_set_wrt_current_node);
 
   /**
    * Perform a recursive partition by starting from a block cluster node in
@@ -744,10 +744,10 @@ private:
     const std::vector<types::global_dof_index>
       &internal_to_external_dof_numbering_I,
     const std::vector<types::global_dof_index>
-      &                                 internal_to_external_dof_numbering_J,
+                                       &internal_to_external_dof_numbering_J,
     const std::vector<Point<spacedim>> &all_support_points_in_I,
     const std::vector<Point<spacedim>> &all_support_points_in_J,
-    std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
+    std::vector<node_pointer_type>     &leaf_set_wrt_current_node);
 
   /**
    * Perform a recursive partition by starting from a block cluster node in
@@ -769,10 +769,10 @@ private:
   partition_from_block_cluster_node(
     node_pointer_type current_block_cluster_node,
     const std::vector<types::global_dof_index>
-      &                                 internal_to_external_dof_numbering,
+                                       &internal_to_external_dof_numbering,
     const std::vector<Point<spacedim>> &all_support_points,
-    const std::vector<Number> &         cell_size_at_dofs,
-    std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
+    const std::vector<Number>          &cell_size_at_dofs,
+    std::vector<node_pointer_type>     &leaf_set_wrt_current_node);
 
   /**
    * Perform a recursive partition by starting from a block cluster node in
@@ -801,12 +801,12 @@ private:
     const std::vector<types::global_dof_index>
       &internal_to_external_dof_numbering_I,
     const std::vector<types::global_dof_index>
-      &                                 internal_to_external_dof_numbering_J,
+                                       &internal_to_external_dof_numbering_J,
     const std::vector<Point<spacedim>> &all_support_points_in_I,
     const std::vector<Point<spacedim>> &all_support_points_in_J,
-    const std::vector<Number> &         cell_size_at_dofs_in_I,
-    const std::vector<Number> &         cell_size_at_dofs_in_J,
-    std::vector<node_pointer_type> &    leaf_set_wrt_current_node);
+    const std::vector<Number>          &cell_size_at_dofs_in_I,
+    const std::vector<Number>          &cell_size_at_dofs_in_J,
+    std::vector<node_pointer_type>     &leaf_set_wrt_current_node);
 
   /**
    * Find a block cluster node in the leaf set of the current block cluster
@@ -871,7 +871,7 @@ private:
 
 template <int spacedim, typename Number>
 std::ostream &
-operator<<(std::ostream &                            out,
+operator<<(std::ostream                             &out,
            const BlockClusterTree<spacedim, Number> &block_cluster_tree)
 {
   out << "* Tree depth: " << block_cluster_tree.depth << "\n";
@@ -930,7 +930,7 @@ void
 split_block_cluster_node(
   TreeNode<BlockCluster<spacedim, Number>,
            BlockClusterTree<spacedim, Number>::child_num> *bc_node,
-  BlockClusterTree<spacedim, Number> &                     bc_tree,
+  BlockClusterTree<spacedim, Number>                      &bc_tree,
   const TreeNodeSplitMode                                  split_mode,
   const bool if_add_child_nodes_to_leaf_set = true)
 {
@@ -943,12 +943,11 @@ split_block_cluster_node(
   const std::array<
     typename BlockClusterTree<spacedim, Number>::node_pointer_type,
     BlockClusterTree<spacedim, Number>::child_num>
-    empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+    empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   switch (split_mode)
     {
-      case HorizontalSplitMode:
-        {
+        case HorizontalSplitMode: {
           /**
            * <ul>
            * <li> Horizontal split mode
@@ -1023,8 +1022,7 @@ split_block_cluster_node(
            */
           break;
         }
-      case VerticalSplitMode:
-        {
+        case VerticalSplitMode: {
           /**
            * <li> Vertical split mode
            * <ol>
@@ -1099,8 +1097,7 @@ split_block_cluster_node(
 
           break;
         }
-      case CrossSplitMode:
-        {
+        case CrossSplitMode: {
           /**
            * <li> Cross split mode
            * <ol>
@@ -1189,8 +1186,7 @@ split_block_cluster_node(
            */
           break;
         }
-      default:
-        {
+        default: {
           Assert(false, ExcInternalError());
 
           break;
@@ -1225,7 +1221,7 @@ prune_to_partition_recursion(
   BlockClusterTree<spacedim, Number> &bct,
   const std::vector<TreeNode<BlockCluster<spacedim, Number>,
                              BlockClusterTree<spacedim, Number>::child_num> *>
-    &                                                      partition,
+                                                          &partition,
   TreeNode<BlockCluster<spacedim, Number>,
            BlockClusterTree<spacedim, Number>::child_num> *bc_node)
 {
@@ -1290,7 +1286,7 @@ BlockClusterTree<spacedim, Number>::BlockClusterTree(
   // Initialize the four null child pointers.
   const std::array<node_pointer_type,
                    BlockClusterTree<spacedim, Number>::child_num>
-    empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+    empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
   root_node = CreateTreeNode<data_value_type,
                              BlockClusterTree<spacedim, Number>::child_num>(
     data_value_type(TI.get_root(), TJ.get_root()),
@@ -1327,7 +1323,7 @@ BlockClusterTree<spacedim, Number>::BlockClusterTree(
   // Initialize the four null child pointers.
   const std::array<node_pointer_type,
                    BlockClusterTree<spacedim, Number>::child_num>
-    empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+    empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
 
   root_node = CreateTreeNode<data_value_type,
                              BlockClusterTree<spacedim, Number>::child_num>(
@@ -1410,7 +1406,7 @@ BlockClusterTree<spacedim, Number>::BlockClusterTree(
   // Initialize the four null child pointers.
   const std::array<node_pointer_type,
                    BlockClusterTree<spacedim, Number>::child_num>
-    empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+    empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
   root_node = CreateTreeNode<data_value_type,
                              BlockClusterTree<spacedim, Number>::child_num>(
     data_value_type(TI.get_root(), TJ.get_root()),
@@ -1469,8 +1465,8 @@ BlockClusterTree<spacedim, Number>::BlockClusterTree(
 
 template <int spacedim, typename Number>
 BlockClusterTree<spacedim, Number> &
-BlockClusterTree<spacedim, Number>::
-operator=(const BlockClusterTree<spacedim, Number> &bct)
+BlockClusterTree<spacedim, Number>::operator=(
+  const BlockClusterTree<spacedim, Number> &bct)
 {
   /**
    * If the current block cluster tree is a subtree of an existing block cluster
@@ -1502,8 +1498,8 @@ operator=(const BlockClusterTree<spacedim, Number> &bct)
 
 template <int spacedim, typename Number>
 BlockClusterTree<spacedim, Number> &
-BlockClusterTree<spacedim, Number>::
-operator=(BlockClusterTree<spacedim, Number> &&bct)
+BlockClusterTree<spacedim, Number>::operator=(
+  BlockClusterTree<spacedim, Number> &&bct)
 {
   if (is_subtree)
     {
@@ -1611,7 +1607,7 @@ template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition(
   const std::vector<types::global_dof_index>
-    &                                 internal_to_external_dof_numbering,
+                                     &internal_to_external_dof_numbering,
   const std::vector<Point<spacedim>> &all_support_points)
 {
   partition_from_block_cluster_node(root_node,
@@ -1631,7 +1627,7 @@ BlockClusterTree<spacedim, Number>::partition(
   const std::vector<types::global_dof_index>
     &internal_to_external_dof_numbering_I,
   const std::vector<types::global_dof_index>
-    &                                 internal_to_external_dof_numbering_J,
+                                     &internal_to_external_dof_numbering_J,
   const std::vector<Point<spacedim>> &all_support_points_in_I,
   const std::vector<Point<spacedim>> &all_support_points_in_J)
 {
@@ -1652,9 +1648,9 @@ template <int spacedim, typename Number>
 void
 BlockClusterTree<spacedim, Number>::partition(
   const std::vector<types::global_dof_index>
-    &                                 internal_to_external_dof_numbering,
+                                     &internal_to_external_dof_numbering,
   const std::vector<Point<spacedim>> &all_support_points,
-  const std::vector<Number> &         cell_size_at_dofs)
+  const std::vector<Number>          &cell_size_at_dofs)
 {
   partition_from_block_cluster_node(root_node,
                                     internal_to_external_dof_numbering,
@@ -1674,11 +1670,11 @@ BlockClusterTree<spacedim, Number>::partition(
   const std::vector<types::global_dof_index>
     &internal_to_external_dof_numbering_I,
   const std::vector<types::global_dof_index>
-    &                                 internal_to_external_dof_numbering_J,
+                                     &internal_to_external_dof_numbering_J,
   const std::vector<Point<spacedim>> &all_support_points_in_I,
   const std::vector<Point<spacedim>> &all_support_points_in_J,
-  const std::vector<Number> &         cell_size_at_dofs_in_I,
-  const std::vector<Number> &         cell_size_at_dofs_in_J)
+  const std::vector<Number>          &cell_size_at_dofs_in_I,
+  const std::vector<Number>          &cell_size_at_dofs_in_J)
 {
   partition_from_block_cluster_node(root_node,
                                     internal_to_external_dof_numbering_I,
@@ -2152,7 +2148,7 @@ BlockClusterTree<spacedim, Number>::
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -2277,7 +2273,7 @@ BlockClusterTree<spacedim, Number>::
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -2426,7 +2422,7 @@ BlockClusterTree<spacedim, Number>::
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -2606,7 +2602,7 @@ BlockClusterTree<spacedim, Number>::
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -2750,7 +2746,7 @@ BlockClusterTree<spacedim, Number>::
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -2832,9 +2828,9 @@ void
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
   node_pointer_type current_block_cluster_node,
   const std::vector<types::global_dof_index>
-    &                                 internal_to_external_dof_numbering,
+                                     &internal_to_external_dof_numbering,
   const std::vector<Point<spacedim>> &all_support_points,
-  std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
+  std::vector<node_pointer_type>     &leaf_set_wrt_current_node)
 {
   leaf_set_wrt_current_node.clear();
 
@@ -2892,7 +2888,7 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -2963,10 +2959,10 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
   const std::vector<types::global_dof_index>
     &internal_to_external_dof_numbering_I,
   const std::vector<types::global_dof_index>
-    &                                 internal_to_external_dof_numbering_J,
+                                     &internal_to_external_dof_numbering_J,
   const std::vector<Point<spacedim>> &all_support_points_in_I,
   const std::vector<Point<spacedim>> &all_support_points_in_J,
-  std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
+  std::vector<node_pointer_type>     &leaf_set_wrt_current_node)
 {
   leaf_set_wrt_current_node.clear();
 
@@ -3029,7 +3025,7 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -3100,10 +3096,10 @@ void
 BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
   node_pointer_type current_block_cluster_node,
   const std::vector<types::global_dof_index>
-    &                                 internal_to_external_dof_numbering,
+                                     &internal_to_external_dof_numbering,
   const std::vector<Point<spacedim>> &all_support_points,
-  const std::vector<Number> &         cell_size_at_dofs,
-  std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
+  const std::vector<Number>          &cell_size_at_dofs,
+  std::vector<node_pointer_type>     &leaf_set_wrt_current_node)
 {
   leaf_set_wrt_current_node.clear();
 
@@ -3165,7 +3161,7 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -3216,8 +3212,11 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
        * the program cannot be compiled.</dd>
        * </dl>
        */
-      AssertDimension(current_block_cluster_node->get_child_num(),
-                      (BlockClusterTree<spacedim, Number>::child_num));
+      Assert(
+        current_block_cluster_node->get_child_num() ==
+          (BlockClusterTree<spacedim, Number>::child_num),
+        ExcDimensionMismatch(current_block_cluster_node->get_child_num(),
+                             (BlockClusterTree<spacedim, Number>::child_num)));
 
       /**
        * Set the split mode of the current block cluster node as cross.
@@ -3234,12 +3233,12 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
   const std::vector<types::global_dof_index>
     &internal_to_external_dof_numbering_I,
   const std::vector<types::global_dof_index>
-    &                                 internal_to_external_dof_numbering_J,
+                                     &internal_to_external_dof_numbering_J,
   const std::vector<Point<spacedim>> &all_support_points_in_I,
   const std::vector<Point<spacedim>> &all_support_points_in_J,
-  const std::vector<Number> &         cell_size_at_dofs_in_I,
-  const std::vector<Number> &         cell_size_at_dofs_in_J,
-  std::vector<node_pointer_type> &    leaf_set_wrt_current_node)
+  const std::vector<Number>          &cell_size_at_dofs_in_I,
+  const std::vector<Number>          &cell_size_at_dofs_in_J,
+  std::vector<node_pointer_type>     &leaf_set_wrt_current_node)
 {
   leaf_set_wrt_current_node.clear();
 
@@ -3304,7 +3303,7 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
                */
               const std::array<node_pointer_type,
                                BlockClusterTree<spacedim, Number>::child_num>
-                                empty_child_pointers{nullptr, nullptr, nullptr, nullptr};
+                empty_child_pointers{{nullptr, nullptr, nullptr, nullptr}};
               node_pointer_type child_block_cluster_node =
                 CreateTreeNode<data_value_type,
                                BlockClusterTree<spacedim, Number>::child_num>(
@@ -3358,8 +3357,11 @@ BlockClusterTree<spacedim, Number>::partition_from_block_cluster_node(
        * the program cannot be compiled.</dd>
        * </dl>
        */
-      AssertDimension(current_block_cluster_node->get_child_num(),
-                      (BlockClusterTree<spacedim, Number>::child_num));
+      Assert(
+        current_block_cluster_node->get_child_num() ==
+          (BlockClusterTree<spacedim, Number>::child_num),
+        ExcDimensionMismatch(current_block_cluster_node->get_child_num(),
+                             (BlockClusterTree<spacedim, Number>::child_num)));
 
       /**
        * Set the split mode of the current block cluster node as cross.
@@ -3750,7 +3752,7 @@ template <int spacedim, typename Number>
 template <typename Number1>
 void
 BlockClusterTree<spacedim, Number>::write_leaf_set(
-  std::ostream &                      out,
+  std::ostream                       &out,
   const LAPACKFullMatrixExt<Number1> &matrix,
   const Number1                       singular_value_threshold) const
 {

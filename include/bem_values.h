@@ -12,7 +12,7 @@
 #include <deal.II/base/table_indices.h>
 
 #include <deal.II/fe/fe.h>
-#include <deal.II/fe/fe_base.h>
+#include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_tools.h>
 
 #include "bem_tools.h"
@@ -36,7 +36,7 @@ namespace IdeoBEM
   class BEMValues
   {
   public:
-    using FE_Poly_short = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+    using FE_Poly_short = FE_Poly<dim, spacedim>;
 
     /**
      * Constructor
@@ -54,8 +54,8 @@ namespace IdeoBEM
      * @param quad_rule_for_regular
      */
     BEMValues(
-      const FiniteElement<dim, spacedim> &                   kx_fe,
-      const FiniteElement<dim, spacedim> &                   ky_fe,
+      const FiniteElement<dim, spacedim>                    &kx_fe,
+      const FiniteElement<dim, spacedim>                    &ky_fe,
       typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
       typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
       const QGauss<4> &quad_rule_for_same_panel,
@@ -469,7 +469,8 @@ namespace IdeoBEM
     void
     init_mapping_shape_grad_matrix_tables();
 
-    void init_internal_matrix_in_mapping_shape_grad_matrix_table(
+    void
+    init_internal_matrix_in_mapping_shape_grad_matrix_table(
       Table<2, FullMatrix<RangeNumberType>> &table,
       const unsigned int                     n_shape_functions);
   };
@@ -477,8 +478,8 @@ namespace IdeoBEM
 
   template <int dim, int spacedim, typename RangeNumberType>
   BEMValues<dim, spacedim, RangeNumberType>::BEMValues(
-    const FiniteElement<dim, spacedim> &                   kx_fe,
-    const FiniteElement<dim, spacedim> &                   ky_fe,
+    const FiniteElement<dim, spacedim>                    &kx_fe,
+    const FiniteElement<dim, spacedim>                    &ky_fe,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const QGauss<4> &quad_rule_for_same_panel,
@@ -639,7 +640,8 @@ namespace IdeoBEM
 
 
   template <int dim, int spacedim, typename RangeNumberType>
-  void BEMValues<dim, spacedim, RangeNumberType>::
+  void
+  BEMValues<dim, spacedim, RangeNumberType>::
     init_internal_matrix_in_mapping_shape_grad_matrix_table(
       Table<2, FullMatrix<RangeNumberType>> &table,
       const unsigned int                     n_shape_functions)
@@ -819,17 +821,11 @@ namespace IdeoBEM
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
         const std::vector<unsigned int> kx_mapping_poly_space_inverse_numbering(
-          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-              kx_mapping_data.polynomial_degree),
-            1,
-            kx_mapping_data.polynomial_degree)));
+          FETools::lexicographic_to_hierarchic_numbering<dim>(
+            kx_mapping_data.polynomial_degree));
         const std::vector<unsigned int> ky_mapping_poly_space_inverse_numbering(
-          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-              ky_mapping_data.polynomial_degree),
-            1,
-            ky_mapping_data.polynomial_degree)));
+          FETools::lexicographic_to_hierarchic_numbering<dim>(
+            ky_mapping_data.polynomial_degree));
 
         kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
         ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
@@ -1028,17 +1024,11 @@ namespace IdeoBEM
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
         const std::vector<unsigned int> kx_mapping_poly_space_inverse_numbering(
-          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-              kx_mapping_data.polynomial_degree),
-            1,
-            kx_mapping_data.polynomial_degree)));
+          FETools::lexicographic_to_hierarchic_numbering<dim>(
+            kx_mapping_data.polynomial_degree));
         const std::vector<unsigned int> ky_mapping_poly_space_inverse_numbering(
-          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-              ky_mapping_data.polynomial_degree),
-            1,
-            ky_mapping_data.polynomial_degree)));
+          FETools::lexicographic_to_hierarchic_numbering<dim>(
+            ky_mapping_data.polynomial_degree));
 
         kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
         ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
@@ -1242,17 +1232,11 @@ namespace IdeoBEM
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
         const std::vector<unsigned int> kx_mapping_poly_space_inverse_numbering(
-          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-              kx_mapping_data.polynomial_degree),
-            1,
-            kx_mapping_data.polynomial_degree)));
+          FETools::lexicographic_to_hierarchic_numbering<dim>(
+            kx_mapping_data.polynomial_degree));
         const std::vector<unsigned int> ky_mapping_poly_space_inverse_numbering(
-          FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-            ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-              ky_mapping_data.polynomial_degree),
-            1,
-            ky_mapping_data.polynomial_degree)));
+          FETools::lexicographic_to_hierarchic_numbering<dim>(
+            ky_mapping_data.polynomial_degree));
 
         kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
         ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
@@ -1440,17 +1424,11 @@ namespace IdeoBEM
     // Get the numbering for accessing the support points in the
     // lexicographic ordering which are stored in the hierarchic ordering.
     const std::vector<unsigned int> kx_mapping_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-        ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-          kx_mapping_data.polynomial_degree),
-        1,
-        kx_mapping_data.polynomial_degree)));
+      FETools::lexicographic_to_hierarchic_numbering<dim>(
+        kx_mapping_data.polynomial_degree));
     const std::vector<unsigned int> ky_mapping_poly_space_inverse_numbering(
-      FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-        ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-          ky_mapping_data.polynomial_degree),
-        1,
-        ky_mapping_data.polynomial_degree)));
+      FETools::lexicographic_to_hierarchic_numbering<dim>(
+        ky_mapping_data.polynomial_degree));
 
     kx_mapping_data.compute_shape_function_values(kx_unit_quad_points);
     ky_mapping_data.compute_shape_function_values(ky_unit_quad_points);
@@ -1604,7 +1582,7 @@ namespace IdeoBEM
     CellWiseScratchDataForMassMatrix(
       const FiniteElement<dim, spacedim> &fe_for_test_space,
       const FiniteElement<dim, spacedim> &fe_for_trial_space,
-      const Quadrature<dim> &             quadrature,
+      const Quadrature<dim>              &quadrature,
       const UpdateFlags                   update_flags)
       : fe_values_for_test_space(fe_for_test_space, quadrature, update_flags)
       , fe_values_for_trial_space(fe_for_trial_space, quadrature, update_flags)
@@ -1639,7 +1617,7 @@ namespace IdeoBEM
 
     CellWiseScratchDataForPotentialEval(
       const FiniteElement<dim, spacedim> &fe_for_trial_space,
-      const Quadrature<dim> &             quadrature,
+      const Quadrature<dim>              &quadrature,
       const UpdateFlags                   update_flags)
       : fe_values_for_trial_space(fe_for_trial_space, quadrature, update_flags)
     {}
@@ -1686,7 +1664,7 @@ namespace IdeoBEM
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
   struct PairCellWiseScratchData
   {
-    using FE_Poly_short = FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+    using FE_Poly_short = FE_Poly<dim, spacedim>;
 
     /**
      * The intersection set of the vertex local indices for the two cells
@@ -1986,11 +1964,11 @@ namespace IdeoBEM
      * @param ky_fe
      * @param bem_values
      */
-    PairCellWiseScratchData(const FiniteElement<dim, spacedim> &     kx_fe,
-                            const FiniteElement<dim, spacedim> &     ky_fe,
+    PairCellWiseScratchData(const FiniteElement<dim, spacedim>      &kx_fe,
+                            const FiniteElement<dim, spacedim>      &ky_fe,
                             const MappingQGenericExt<dim, spacedim> &kx_mapping,
                             const MappingQGenericExt<dim, spacedim> &ky_mapping,
-                            const BEMValues<dim, spacedim> &         bem_values)
+                            const BEMValues<dim, spacedim>          &bem_values)
       : common_vertex_pair_local_indices(0)
       , kx_mapping_support_points_in_default_order(
           bem_values.kx_mapping_data.n_shape_functions)
@@ -2083,17 +2061,11 @@ namespace IdeoBEM
         ky_fe_poly.get_poly_space_numbering_inverse();
 
       kx_mapping_poly_space_numbering_inverse =
-        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-            kx_mapping.get_degree()),
-          1,
-          kx_mapping.get_degree()));
+        FETools::lexicographic_to_hierarchic_numbering<dim>(
+          kx_mapping.get_degree());
       ky_mapping_poly_space_numbering_inverse =
-        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-            ky_mapping.get_degree()),
-          1,
-          ky_mapping.get_degree()));
+        FETools::lexicographic_to_hierarchic_numbering<dim>(
+          ky_mapping.get_degree());
       generate_backward_mapping_support_point_permutation(
         ky_mapping, 0, ky_mapping_reversed_poly_space_numbering_inverse);
     }

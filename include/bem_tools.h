@@ -20,7 +20,7 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/fe/fe.h>
-#include <deal.II/fe/fe_base.h>
+#include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_values.h>
@@ -103,7 +103,7 @@ namespace IdeoBEM
      */
     template <typename T>
     std::vector<T>
-    permute_vector(const std::vector<T> &           input_vector,
+    permute_vector(const std::vector<T>            &input_vector,
                    const std::vector<unsigned int> &permutation_indices)
     {
       const unsigned int N = input_vector.size();
@@ -132,9 +132,9 @@ namespace IdeoBEM
      */
     template <typename T>
     void
-    permute_vector(const std::vector<T> &           input_vector,
+    permute_vector(const std::vector<T>            &input_vector,
                    const std::vector<unsigned int> &permutation_indices,
-                   std::vector<T> &                 permuted_vector)
+                   std::vector<T>                  &permuted_vector)
     {
       const unsigned int N = input_vector.size();
       Assert(N == permutation_indices.size(),
@@ -152,9 +152,9 @@ namespace IdeoBEM
     template <typename VectorType>
     void
     permute_vector(
-      const VectorType &                          input_vector,
+      const VectorType                           &input_vector,
       const std::vector<types::global_dof_index> &permutation_indices,
-      VectorType &                                permuted_vector)
+      VectorType                                 &permuted_vector)
     {
       const types::global_dof_index N = input_vector.size();
       AssertDimension(N, permutation_indices.size());
@@ -206,7 +206,7 @@ namespace IdeoBEM
     template <int dim, int spacedim = dim>
     unsigned int
     get_vertex_local_index_in_cell(
-      const Point<spacedim> &                                     v,
+      const Point<spacedim>                                      &v,
       const typename Triangulation<dim, spacedim>::cell_iterator &cell)
     {
       const unsigned int vertices_per_cell =
@@ -239,7 +239,7 @@ namespace IdeoBEM
     template <int dim, int spacedim = dim>
     unsigned int
     get_vertex_local_index_in_cell(
-      const Point<spacedim> &                                     v,
+      const Point<spacedim>                                      &v,
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
       const double                                                threshold)
     {
@@ -396,8 +396,8 @@ namespace IdeoBEM
     template <int dim, int spacedim>
     FullMatrix<double>
     shape_grad_matrix(const FiniteElement<dim, spacedim> &fe,
-                      const std::vector<unsigned int> &   dof_permutation,
-                      const Point<dim> &                  p)
+                      const std::vector<unsigned int>    &dof_permutation,
+                      const Point<dim>                   &p)
     {
       FullMatrix<double> shape_grad_matrix(fe.dofs_per_cell, dim);
 
@@ -438,7 +438,7 @@ namespace IdeoBEM
     FullMatrix<double>
     shape_grad_matrix_in_default_dof_order(
       const FiniteElement<dim, spacedim> &fe,
-      const Point<dim> &                  p)
+      const Point<dim>                   &p)
     {
       FullMatrix<double> shape_grad_matrix(fe.dofs_per_cell, dim);
 
@@ -478,10 +478,9 @@ namespace IdeoBEM
     FullMatrix<double>
     shape_grad_matrix_in_lexicographic_order(
       const FiniteElement<dim, spacedim> &fe,
-      const Point<dim> &                  p)
+      const Point<dim>                   &p)
     {
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       return shape_grad_matrix(fe,
@@ -504,8 +503,8 @@ namespace IdeoBEM
     template <int dim, int spacedim>
     Vector<double>
     shape_values(const FiniteElement<dim, spacedim> &fe,
-                 const std::vector<unsigned int> &   dof_permutation,
-                 const Point<dim> &                  p)
+                 const std::vector<unsigned int>    &dof_permutation,
+                 const Point<dim>                   &p)
     {
       Vector<double> shape_values_vector(fe.dofs_per_cell);
 
@@ -535,7 +534,7 @@ namespace IdeoBEM
     template <int dim, int spacedim>
     Vector<double>
     shape_values_in_default_dof_order(const FiniteElement<dim, spacedim> &fe,
-                                      const Point<dim> &                  p)
+                                      const Point<dim>                   &p)
     {
       Vector<double> shape_values_vector(fe.dofs_per_cell);
 
@@ -565,10 +564,9 @@ namespace IdeoBEM
     template <int dim, int spacedim>
     Vector<double>
     shape_values_in_lexicographic_order(const FiniteElement<dim, spacedim> &fe,
-                                        const Point<dim> &                  p)
+                                        const Point<dim>                   &p)
     {
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       // Use the inverse numbering of polynomial space to restore the tensor
@@ -669,7 +667,7 @@ namespace IdeoBEM
     std::vector<Point<dim>>
     get_unit_support_points_with_permutation(
       const FiniteElement<dim, spacedim> &fe,
-      const std::vector<unsigned int> &   dof_permutation)
+      const std::vector<unsigned int>    &dof_permutation)
     {
       Assert(fe.has_support_points(),
              ExcMessage("The finite element should have support points."));
@@ -712,8 +710,8 @@ namespace IdeoBEM
     void
     get_unit_support_points_with_permutation(
       const FiniteElement<dim, spacedim> &fe,
-      const std::vector<unsigned int> &   dof_permutation,
-      std::vector<Point<dim>> &           permuted_unit_support_points)
+      const std::vector<unsigned int>    &dof_permutation,
+      std::vector<Point<dim>>            &permuted_unit_support_points)
     {
       Assert(fe.has_support_points(),
              ExcMessage("The finite element should have support points."));
@@ -757,8 +755,7 @@ namespace IdeoBEM
       const unsigned int      dofs_per_cell = fe.dofs_per_cell;
       std::vector<Point<dim>> lexicographic_unit_support_points(dofs_per_cell);
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       lexicographic_unit_support_points =
@@ -784,7 +781,7 @@ namespace IdeoBEM
     void
     get_lexicographic_unit_support_points(
       const FiniteElement<dim, spacedim> &fe,
-      std::vector<Point<dim>> &           lexicographic_unit_support_points)
+      std::vector<Point<dim>>            &lexicographic_unit_support_points)
     {
       Assert(fe.has_support_points(),
              ExcMessage("The finite element should have support points."));
@@ -792,8 +789,7 @@ namespace IdeoBEM
       const unsigned int dofs_per_cell = fe.dofs_per_cell;
       AssertDimension(dofs_per_cell, lexicographic_unit_support_points.size());
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       get_unit_support_points_with_permutation(
@@ -827,8 +823,8 @@ namespace IdeoBEM
     std::vector<Point<spacedim>>
     get_support_points_in_real_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping,
+      const FiniteElement<dim, spacedim>                         &fe,
+      const MappingQGeneric<dim, spacedim>                       &mapping,
       const std::vector<unsigned int> &dof_permutation)
     {
       Assert(fe.has_support_points(),
@@ -876,10 +872,10 @@ namespace IdeoBEM
     void
     get_support_points_in_real_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping,
+      const FiniteElement<dim, spacedim>                         &fe,
+      const MappingQGeneric<dim, spacedim>                       &mapping,
       const std::vector<unsigned int> &dof_permutation,
-      std::vector<Point<spacedim>> &   support_points_in_real_cell)
+      std::vector<Point<spacedim>>    &support_points_in_real_cell)
     {
       Assert(fe.has_support_points(),
              ExcMessage("The finite element should have support points."));
@@ -927,8 +923,8 @@ namespace IdeoBEM
     std::vector<Point<spacedim>>
     get_support_points_in_default_dof_order_in_real_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping)
+      const FiniteElement<dim, spacedim>                         &fe,
+      const MappingQGeneric<dim, spacedim>                       &mapping)
     {
       Assert(fe.has_support_points(),
              ExcMessage("The finite element should have support points."));
@@ -973,8 +969,8 @@ namespace IdeoBEM
     void
     get_support_points_in_default_dof_order_in_real_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping,
+      const FiniteElement<dim, spacedim>                         &fe,
+      const MappingQGeneric<dim, spacedim>                       &mapping,
       std::vector<Point<spacedim>> &support_points_in_reall_cell)
     {
       const unsigned int dofs_per_cell = fe.dofs_per_cell;
@@ -1021,8 +1017,8 @@ namespace IdeoBEM
     std::vector<Point<spacedim>>
     get_lexicographic_support_points_in_real_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping)
+      const FiniteElement<dim, spacedim>                         &fe,
+      const MappingQGeneric<dim, spacedim>                       &mapping)
     {
       Assert(fe.has_support_points(),
              ExcMessage("The finite element should have support points."));
@@ -1030,8 +1026,7 @@ namespace IdeoBEM
       const unsigned int           dofs_per_cell = fe.dofs_per_cell;
       std::vector<Point<spacedim>> support_points_in_real_cell(dofs_per_cell);
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       support_points_in_real_cell = get_support_points_in_real_cell(
@@ -1058,8 +1053,8 @@ namespace IdeoBEM
     void
     get_lexicographic_support_points_in_real_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const MappingQGeneric<dim, spacedim> &                      mapping,
+      const FiniteElement<dim, spacedim>                         &fe,
+      const MappingQGeneric<dim, spacedim>                       &mapping,
       std::vector<Point<spacedim>> &support_points_in_real_cell)
     {
       Assert(fe.has_support_points(),
@@ -1068,8 +1063,7 @@ namespace IdeoBEM
       const unsigned int dofs_per_cell = fe.dofs_per_cell;
       AssertDimension(dofs_per_cell, support_points_in_real_cell.size());
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       get_support_points_in_real_cell(
@@ -1102,20 +1096,16 @@ namespace IdeoBEM
 
           switch (dim)
             {
-              case 1:
-                {
+                case 1: {
                   return 1;
                 }
-              case 2:
-                {
+                case 2: {
                   return fe.degree + 1;
                 }
-              case 3:
-                {
+                case 3: {
                   return (fe.degree + 1) * (fe.degree + 1);
                 }
-              default:
-                {
+                default: {
                   Assert(false, ExcNotImplemented());
 
                   return 0;
@@ -1160,15 +1150,13 @@ namespace IdeoBEM
 
       switch (dim)
         {
-          case 1:
-            {
+            case 1: {
               vertices[0] = unit_support_points[0];
               vertices[1] = unit_support_points[unit_support_points.size() - 1];
 
               break;
             }
-          case 2:
-            {
+            case 2: {
               vertices[0] = unit_support_points[0];
               vertices[1] = unit_support_points[dofs_per_face - 1];
 
@@ -1193,8 +1181,7 @@ namespace IdeoBEM
 
               break;
             }
-          default:
-            {
+            default: {
               Assert(false, ExcNotImplemented());
 
               break;
@@ -1222,7 +1209,7 @@ namespace IdeoBEM
     template <int dim, int spacedim>
     void
     get_vertices_from_lexicographic_unit_support_points(
-      const FiniteElement<dim, spacedim> &                          fe,
+      const FiniteElement<dim, spacedim>                           &fe,
       std::array<Point<dim>, GeometryInfo<dim>::vertices_per_cell> &vertices,
       const bool is_counter_clockwise_ordered = false)
     {
@@ -1236,15 +1223,13 @@ namespace IdeoBEM
 
       switch (dim)
         {
-          case 1:
-            {
+            case 1: {
               vertices[0] = unit_support_points[0];
               vertices[1] = unit_support_points[unit_support_points.size() - 1];
 
               break;
             }
-          case 2:
-            {
+            case 2: {
               vertices[0] = unit_support_points[0];
               vertices[1] = unit_support_points[dofs_per_face - 1];
 
@@ -1265,8 +1250,7 @@ namespace IdeoBEM
 
               break;
             }
-          default:
-            {
+            default: {
               Assert(false, ExcNotImplemented());
 
               break;
@@ -1295,8 +1279,8 @@ namespace IdeoBEM
     std::array<Point<spacedim>, GeometryInfo<dim>::vertices_per_cell>
     get_vertices_from_lexicographic_support_points_in_real_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const Mapping<dim, spacedim> &                              mapping,
+      const FiniteElement<dim, spacedim>                         &fe,
+      const Mapping<dim, spacedim>                               &mapping,
       const bool is_counter_clockwise_ordered = false)
     {
       Assert(fe.has_support_points(),
@@ -1345,10 +1329,10 @@ namespace IdeoBEM
     void
     get_vertices_from_lexicographic_support_points_in_real_cell(
       const typename Triangulation<dim, spacedim>::cell_iterator &cell,
-      const FiniteElement<dim, spacedim> &                        fe,
-      const Mapping<dim, spacedim> &                              mapping,
+      const FiniteElement<dim, spacedim>                         &fe,
+      const Mapping<dim, spacedim>                               &mapping,
       std::array<Point<spacedim>, GeometryInfo<dim>::vertices_per_cell>
-        &        vertices_in_real_cell,
+                &vertices_in_real_cell,
       const bool is_counter_clockwise_ordered = false)
     {
       const unsigned int vertices_per_cell =
@@ -1401,8 +1385,7 @@ namespace IdeoBEM
 
       cell->get_dof_indices(dof_indices);
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       permute_vector(dof_indices,
@@ -1438,8 +1421,7 @@ namespace IdeoBEM
       std::vector<types::global_dof_index> dof_indices(fe.dofs_per_cell);
       cell->get_dof_indices(dof_indices);
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       permute_vector(dof_indices,
@@ -1479,16 +1461,14 @@ namespace IdeoBEM
 
       switch (dim)
         {
-          case 1:
-            {
+            case 1: {
               vertex_dof_indices[0] = lexicographic_dof_indices[0];
               vertex_dof_indices[1] =
                 lexicographic_dof_indices[lexicographic_dof_indices.size() - 1];
 
               break;
             }
-          case 2:
-            {
+            case 2: {
               vertex_dof_indices[0] = lexicographic_dof_indices[0];
               vertex_dof_indices[1] =
                 lexicographic_dof_indices[dofs_per_face - 1];
@@ -1514,8 +1494,7 @@ namespace IdeoBEM
 
               break;
             }
-          default:
-            {
+            default: {
               Assert(false, ExcNotImplemented());
 
               break;
@@ -1540,7 +1519,7 @@ namespace IdeoBEM
     get_vertex_dof_indices_from_lexicographic_dof_indices(
       const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
       std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
-        &        vertex_dof_indices,
+                &vertex_dof_indices,
       const bool is_counter_clockwise_ordered = false)
     {
       const FiniteElement<dim, spacedim> &fe = cell->get_fe();
@@ -1557,16 +1536,14 @@ namespace IdeoBEM
 
       switch (dim)
         {
-          case 1:
-            {
+            case 1: {
               vertex_dof_indices[0] = lexicographic_dof_indices[0];
               vertex_dof_indices[1] =
                 lexicographic_dof_indices[lexicographic_dof_indices.size() - 1];
 
               break;
             }
-          case 2:
-            {
+            case 2: {
               vertex_dof_indices[0] = lexicographic_dof_indices[0];
               vertex_dof_indices[1] =
                 lexicographic_dof_indices[dofs_per_face - 1];
@@ -1592,8 +1569,7 @@ namespace IdeoBEM
 
               break;
             }
-          default:
-            {
+            default: {
               Assert(false, ExcNotImplemented());
 
               break;
@@ -1616,7 +1592,7 @@ namespace IdeoBEM
     std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
     get_vertex_dof_indices_in_cell(
       const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
-      const Mapping<dim, spacedim> &                           mapping,
+      const Mapping<dim, spacedim>                            &mapping,
       const double threshold = 1e-12)
     {
       const unsigned int vertices_per_cell =
@@ -1727,9 +1703,9 @@ namespace IdeoBEM
     void
     get_vertex_dof_indices_in_cell(
       const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
-      const Mapping<dim, spacedim> &                           mapping,
+      const Mapping<dim, spacedim>                            &mapping,
       std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
-        &          cell_vertex_dof_indices,
+                  &cell_vertex_dof_indices,
       const double threshold = 1e-12)
     {
       const unsigned int vertices_per_cell =
@@ -1840,7 +1816,7 @@ namespace IdeoBEM
     typename types::global_dof_index
     get_dof_index_for_vertex_in_cell(
       const typename DoFHandler<dim, spacedim>::cell_iterator &cell,
-      const Mapping<dim, spacedim> &                           mapping,
+      const Mapping<dim, spacedim>                            &mapping,
       const unsigned int local_vertex_index_in_cell,
       const double       threshold = 1e-12)
     {
@@ -1963,7 +1939,7 @@ namespace IdeoBEM
         &first_cell_vertex_indices,
       const std::array<types::global_vertex_index,
                        GeometryInfo<dim>::vertices_per_cell>
-        &                                      second_cell_vertex_indices,
+                                              &second_cell_vertex_indices,
       std::vector<types::global_vertex_index> &common_vertex_indices)
     {
       // The arrays storing vertex indices should be sorted before calling
@@ -2257,7 +2233,7 @@ namespace IdeoBEM
         &first_cell_vertex_dof_indices,
       const std::array<types::global_dof_index,
                        GeometryInfo<dim>::vertices_per_cell>
-        &                                   second_cell_vertex_dof_indices,
+                                           &second_cell_vertex_dof_indices,
       std::vector<types::global_dof_index> &vertex_dof_index_intersection)
     {
       std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
@@ -2326,11 +2302,11 @@ namespace IdeoBEM
       const typename DoFHandler<dim, spacedim>::active_cell_iterator
         &first_cell_iter,
       const typename DoFHandler<dim, spacedim>::active_cell_iterator
-        &                           second_cell_iter,
+                                   &second_cell_iter,
       const Mapping<dim, spacedim> &first_cell_mapping,
       const Mapping<dim, spacedim> &second_cell_mapping,
       std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-        &          common_vertex_dof_indices,
+                  &common_vertex_dof_indices,
       const double threshold = 1e-12)
     {
       const unsigned int vertices_per_cell =
@@ -2500,11 +2476,11 @@ namespace IdeoBEM
       const typename DoFHandler<dim, spacedim>::active_cell_iterator
         &first_cell_iter,
       const typename DoFHandler<dim, spacedim>::active_cell_iterator
-        &                           second_cell_iter,
+                                   &second_cell_iter,
       const Mapping<dim, spacedim> &first_cell_mapping,
       const Mapping<dim, spacedim> &second_cell_mapping,
       std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-        &          common_vertex_dof_indices,
+                  &common_vertex_dof_indices,
       const double threshold = 1e-12)
     {
       /**
@@ -2616,7 +2592,7 @@ namespace IdeoBEM
       const typename DoFHandler<dim, spacedim>::active_cell_iterator
         &first_cell_iter,
       const typename DoFHandler<dim, spacedim>::active_cell_iterator
-        &                           second_cell_iter,
+                                   &second_cell_iter,
       const Mapping<dim, spacedim> &first_cell_mapping,
       const Mapping<dim, spacedim> &second_cell_mapping,
       const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -2626,7 +2602,7 @@ namespace IdeoBEM
                      typename Triangulation<dim + 1, spacedim>::face_iterator>
         &map_from_second_boundary_mesh_to_volume_mesh,
       std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-        &          common_vertex_dof_indices,
+                  &common_vertex_dof_indices,
       const double threshold = 1e-12)
     {
       const FiniteElement<dim, spacedim> &first_cell_fe =
@@ -2879,8 +2855,7 @@ namespace IdeoBEM
 
       switch (method_for_cell_neighboring_type)
         {
-          case DetectCellNeighboringTypeMethod::SameTriangulations:
-            {
+            case DetectCellNeighboringTypeMethod::SameTriangulations: {
               cell_neighboring_type =
                 detect_cell_neighboring_type_for_same_triangulations<dim,
                                                                      spacedim>(
@@ -2890,8 +2865,7 @@ namespace IdeoBEM
 
               break;
             }
-          case DetectCellNeighboringTypeMethod::DifferentTriangulations:
-            {
+            case DetectCellNeighboringTypeMethod::DifferentTriangulations: {
               cell_neighboring_type =
                 detect_cell_neighboring_type_for_different_triangulations<
                   dim,
@@ -2903,8 +2877,7 @@ namespace IdeoBEM
 
               break;
             }
-          default:
-            {
+            default: {
               Assert(false,
                      ExcMessage(
                        "Invalid cell neighboring type detection method!"));
@@ -2934,7 +2907,7 @@ namespace IdeoBEM
     surface_jacobian_det(
       const FiniteElement<dim, spacedim> &fe,
       const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      const Point<dim> &                  p)
+      const Point<dim>                   &p)
     {
       /**
        * \mynote{Currently, only @p dim=2 and @p spacedim=3 are supported.}
@@ -3049,8 +3022,8 @@ namespace IdeoBEM
     surface_jacobian_det_and_normal_vector(
       const FiniteElement<dim, spacedim> &fe,
       const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      const Point<dim> &                  p,
-      Tensor<1, spacedim> &               normal_vector,
+      const Point<dim>                   &p,
+      Tensor<1, spacedim>                &normal_vector,
       const bool                          is_normal_vector_negated = false)
     {
       /**
@@ -3139,7 +3112,7 @@ namespace IdeoBEM
       const unsigned int                  quad_no,
       const Table<2, FullMatrix<double>> &shape_grad_matrix_table,
       const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      Tensor<1, spacedim> &               normal_vector,
+      Tensor<1, spacedim>                &normal_vector,
       const bool                          is_normal_vector_negated = false)
     {
       // Currently, only spacedim=3 is supported.
@@ -3210,7 +3183,7 @@ namespace IdeoBEM
     surface_covariant_transformation(
       const unsigned int                          k3_index,
       const unsigned int                          quad_no,
-      const Table<2, FullMatrix<Number>> &        shape_grad_matrix_table,
+      const Table<2, FullMatrix<Number>>         &shape_grad_matrix_table,
       const std::vector<Point<spacedim, Number>> &support_points_in_real_cell)
     {
       // Currently, only spacedim=3 is supported.
@@ -3270,7 +3243,7 @@ namespace IdeoBEM
     transform_unit_to_permuted_real_cell(
       const FiniteElement<dim, spacedim> &fe,
       const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      const Point<dim> &                  area_coords)
+      const Point<dim>                   &area_coords)
     {
       const unsigned int dofs_per_cell = fe.dofs_per_cell;
 
@@ -3322,7 +3295,7 @@ namespace IdeoBEM
     transform_unit_to_permuted_real_cell(
       const unsigned int                  k3_index,
       const unsigned int                  quad_no,
-      const Table<3, double> &            shape_value_table,
+      const Table<3, double>             &shape_value_table,
       const std::vector<Point<spacedim>> &support_points_in_real_cell)
     {
       /**
@@ -3374,8 +3347,7 @@ namespace IdeoBEM
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       std::vector<unsigned int> poly_space_inverse_numbering(
@@ -3471,8 +3443,7 @@ namespace IdeoBEM
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       std::vector<unsigned int> poly_space_inverse_numbering(
@@ -3557,11 +3528,7 @@ namespace IdeoBEM
       const int poly_degree = mapping.polynomial_degree;
 
       std::vector<unsigned int> poly_space_inverse_numbering(
-        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-            poly_degree),
-          1,
-          poly_degree)));
+        FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
       std::vector<unsigned int> support_point_permutation(
         poly_space_inverse_numbering.size());
 
@@ -3637,18 +3604,14 @@ namespace IdeoBEM
     generate_forward_mapping_support_point_permutation(
       const MappingQGenericExt<dim, spacedim> &mapping,
       unsigned int                             starting_corner,
-      std::vector<unsigned int> &              support_point_permutation)
+      std::vector<unsigned int>               &support_point_permutation)
     {
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
       const int poly_degree = mapping.get_degree();
 
       std::vector<unsigned int> poly_space_inverse_numbering(
-        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-            poly_degree),
-          1,
-          poly_degree)));
+        FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
 
       AssertDimension(support_point_permutation.size(),
                       poly_space_inverse_numbering.size());
@@ -3736,8 +3699,7 @@ namespace IdeoBEM
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       std::vector<unsigned int> poly_space_inverse_numbering(
@@ -3837,13 +3799,12 @@ namespace IdeoBEM
     generate_backward_dof_permutation(
       const FiniteElement<dim, spacedim> &fe,
       unsigned int                        starting_corner,
-      std::vector<unsigned int> &         dof_permutation)
+      std::vector<unsigned int>          &dof_permutation)
     {
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
 
-      using FE_Poly_short =
-        FE_Poly<TensorProductPolynomials<dim>, dim, spacedim>;
+      using FE_Poly_short          = FE_Poly<dim, spacedim>;
       const FE_Poly_short &fe_poly = dynamic_cast<const FE_Poly_short &>(fe);
 
       std::vector<unsigned int> poly_space_inverse_numbering(
@@ -3936,11 +3897,7 @@ namespace IdeoBEM
       const int poly_degree = mapping.polynomial_degree;
 
       std::vector<unsigned int> poly_space_inverse_numbering(
-        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-            poly_degree),
-          1,
-          poly_degree)));
+        FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
       std::vector<unsigned int> support_point_permutation(
         poly_space_inverse_numbering.size());
 
@@ -4025,18 +3982,14 @@ namespace IdeoBEM
     generate_backward_mapping_support_point_permutation(
       const MappingQGenericExt<dim, spacedim> &mapping,
       unsigned int                             starting_corner,
-      std::vector<unsigned int> &              support_point_permutation)
+      std::vector<unsigned int>               &support_point_permutation)
     {
       // Currently, only dim=2 and spacedim=3 are supported.
       Assert((dim == 2) && (spacedim == 3), ExcInternalError());
       const int poly_degree = mapping.get_degree();
 
       std::vector<unsigned int> poly_space_inverse_numbering(
-        FETools::lexicographic_to_hierarchic_numbering(FiniteElementData<dim>(
-          ::internal::MappingQGenericImplementation::get_dpo_vector<dim>(
-            poly_degree),
-          1,
-          poly_degree)));
+        FETools::lexicographic_to_hierarchic_numbering<dim>(poly_degree));
 
       AssertDimension(support_point_permutation.size(),
                       poly_space_inverse_numbering.size());

@@ -18,7 +18,7 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/fe/fe.h>
-#include <deal.II/fe/fe_base.h>
+#include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_values.h>
@@ -96,8 +96,8 @@ namespace IdeoBEM
      * @return
      */
     virtual RangeNumberType
-    value(const Point<dim> &    x,
-          const Point<dim> &    y,
+    value(const Point<dim>     &x,
+          const Point<dim>     &y,
           const Tensor<1, dim> &nx,
           const Tensor<1, dim> &ny,
           const unsigned int    component = 0) const;
@@ -121,10 +121,10 @@ namespace IdeoBEM
      * @param values The vector holding all components of the function result.
      */
     virtual void
-    vector_value(const Point<dim> &       x,
-                 const Point<dim> &       y,
-                 const Tensor<1, dim> &   nx,
-                 const Tensor<1, dim> &   ny,
+    vector_value(const Point<dim>        &x,
+                 const Point<dim>        &y,
+                 const Tensor<1, dim>    &nx,
+                 const Tensor<1, dim>    &ny,
                  Vector<RangeNumberType> &values) const;
 
 
@@ -147,11 +147,11 @@ namespace IdeoBEM
      * @param component
      */
     virtual void
-    value_list(const std::vector<Point<dim>> &    x_points,
-               const std::vector<Point<dim>> &    y_points,
+    value_list(const std::vector<Point<dim>>     &x_points,
+               const std::vector<Point<dim>>     &y_points,
                const std::vector<Tensor<1, dim>> &nx_list,
                const std::vector<Tensor<1, dim>> &ny_list,
-               std::vector<RangeNumberType> &     values,
+               std::vector<RangeNumberType>      &values,
                const unsigned int                 component = 0) const;
 
 
@@ -172,10 +172,10 @@ namespace IdeoBEM
      * @param values
      */
     virtual void
-    vector_value_list(const std::vector<Point<dim>> &       x_points,
-                      const std::vector<Point<dim>> &       y_points,
-                      const std::vector<Tensor<1, dim>> &   nx_list,
-                      const std::vector<Tensor<1, dim>> &   ny_list,
+    vector_value_list(const std::vector<Point<dim>>        &x_points,
+                      const std::vector<Point<dim>>        &y_points,
+                      const std::vector<Tensor<1, dim>>    &nx_list,
+                      const std::vector<Tensor<1, dim>>    &ny_list,
                       std::vector<Vector<RangeNumberType>> &values) const;
 
     virtual bool
@@ -245,11 +245,11 @@ namespace IdeoBEM
   template <int dim, typename RangeNumberType>
   void
   KernelFunction<dim, RangeNumberType>::value_list(
-    const std::vector<Point<dim>> &    x_points,
-    const std::vector<Point<dim>> &    y_points,
+    const std::vector<Point<dim>>     &x_points,
+    const std::vector<Point<dim>>     &y_points,
     const std::vector<Tensor<1, dim>> &nx_list,
     const std::vector<Tensor<1, dim>> &ny_list,
-    std::vector<RangeNumberType> &     values,
+    std::vector<RangeNumberType>      &values,
     const unsigned int                 component) const
   {
     Assert(values.size() == x_points.size(),
@@ -272,10 +272,10 @@ namespace IdeoBEM
   template <int dim, typename RangeNumberType>
   void
   KernelFunction<dim, RangeNumberType>::vector_value(
-    const Point<dim> &       x,
-    const Point<dim> &       y,
-    const Tensor<1, dim> &   nx,
-    const Tensor<1, dim> &   ny,
+    const Point<dim>        &x,
+    const Point<dim>        &y,
+    const Tensor<1, dim>    &nx,
+    const Tensor<1, dim>    &ny,
     Vector<RangeNumberType> &values) const
   {
     AssertDimension(values.size(), this->n_components);
@@ -290,10 +290,10 @@ namespace IdeoBEM
   template <int dim, typename RangeNumberType>
   void
   KernelFunction<dim, RangeNumberType>::vector_value_list(
-    const std::vector<Point<dim>> &       x_points,
-    const std::vector<Point<dim>> &       y_points,
-    const std::vector<Tensor<1, dim>> &   nx_list,
-    const std::vector<Tensor<1, dim>> &   ny_list,
+    const std::vector<Point<dim>>        &x_points,
+    const std::vector<Point<dim>>        &y_points,
+    const std::vector<Tensor<1, dim>>    &nx_list,
+    const std::vector<Tensor<1, dim>>    &ny_list,
     std::vector<Vector<RangeNumberType>> &values) const
   {
     Assert(values.size() == x_points.size(),
@@ -354,7 +354,7 @@ namespace IdeoBEM
      */
     KernelPulledbackToUnitCell(
       const KernelFunction<spacedim, RangeNumberType> &kernel_function,
-      const CellNeighboringType &                      cell_neighboring_type,
+      const CellNeighboringType                       &cell_neighboring_type,
       const BEMValues<dim, spacedim, RangeNumberType> *bem_values,
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType> *scratch,
       const unsigned int kx_dof_index = 0,
@@ -388,7 +388,7 @@ namespace IdeoBEM
 
     CellNeighboringType cell_neighboring_type;
 
-    const BEMValues<dim, spacedim, RangeNumberType> *              bem_values;
+    const BEMValues<dim, spacedim, RangeNumberType>               *bem_values;
     const PairCellWiseScratchData<dim, spacedim, RangeNumberType> *scratch;
 
     /**
@@ -413,7 +413,7 @@ namespace IdeoBEM
   KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::
     KernelPulledbackToUnitCell(
       const KernelFunction<spacedim, RangeNumberType> &kernel_function,
-      const CellNeighboringType &                      cell_neighboring_type,
+      const CellNeighboringType                       &cell_neighboring_type,
       const BEMValues<dim, spacedim, RangeNumberType> *bem_values,
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType> *scratch,
       const unsigned int kx_dof_index,
@@ -435,8 +435,8 @@ namespace IdeoBEM
 
   template <int dim, int spacedim, typename RangeNumberType>
   KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType> &
-  KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::
-  operator=(const KernelPulledbackToUnitCell &f)
+  KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::operator=(
+    const KernelPulledbackToUnitCell &f)
   {
     AssertDimension(n_components, f.n_components);
 
@@ -485,8 +485,8 @@ namespace IdeoBEM
      * cells, i.e. when coming to a new cell, these values need not be updated,
      * hence they are members of @p BEMValues instead of @p ScratchData.
      */
-    const Table<3, RangeNumberType> *            kx_shape_value_table = nullptr;
-    const Table<3, RangeNumberType> *            ky_shape_value_table = nullptr;
+    const Table<3, RangeNumberType>             *kx_shape_value_table = nullptr;
+    const Table<3, RangeNumberType>             *ky_shape_value_table = nullptr;
     const Table<2, FullMatrix<RangeNumberType>> *kx_shape_grad_matrix_table =
       nullptr;
     const Table<2, FullMatrix<RangeNumberType>> *ky_shape_grad_matrix_table =
@@ -768,7 +768,7 @@ namespace IdeoBEM
 
   private:
     const KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-      &                                              kernel_on_unit_cell;
+                                                    &kernel_on_unit_cell;
     CellNeighboringType                              cell_neighboring_type;
     const BEMValues<dim, spacedim, RangeNumberType> *bem_values;
   };
@@ -794,8 +794,8 @@ namespace IdeoBEM
 
   template <int dim, int spacedim, typename RangeNumberType>
   KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType> &
-  KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>::
-  operator=(const KernelPulledbackToSauterSpace &f)
+  KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>::operator=(
+    const KernelPulledbackToSauterSpace &f)
   {
     AssertDimension(n_components, f.n_components);
 
@@ -817,8 +817,7 @@ namespace IdeoBEM
 
     switch (cell_neighboring_type)
       {
-        case SamePanel:
-          {
+          case SamePanel: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
             const Point<dim * 2> &p =
@@ -835,8 +834,7 @@ namespace IdeoBEM
 
             break;
           }
-        case CommonEdge:
-          {
+          case CommonEdge: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
             const Point<dim * 2> &p =
@@ -856,8 +854,7 @@ namespace IdeoBEM
 
             break;
           }
-        case CommonVertex:
-          {
+          case CommonVertex: {
             // Current point in the Sauter's parametric space, at which the
             // pulled back kernel function is to be evaluated.
             const Point<dim * 2> &p =
@@ -874,8 +871,7 @@ namespace IdeoBEM
 
             break;
           }
-        case Regular:
-          {
+          case Regular: {
             // There is no coordinate transformation for the regular case, so
             // directly evaluate the kernel function on the product of unit
             // cells.

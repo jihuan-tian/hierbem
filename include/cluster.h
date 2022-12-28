@@ -41,8 +41,8 @@ public:
   template <int spacedim1, typename Number1>
   friend Number1
   calc_cluster_distance(
-    const Cluster<spacedim1, Number1> &           cluster1,
-    const Cluster<spacedim1, Number1> &           cluster2,
+    const Cluster<spacedim1, Number1>            &cluster1,
+    const Cluster<spacedim1, Number1>            &cluster2,
     const std::vector<Point<spacedim1, Number1>> &all_support_points);
 
   template <int spacedim1, typename Number1>
@@ -57,8 +57,8 @@ public:
   template <int spacedim1, typename Number1>
   friend Number1
   calc_cluster_distance(
-    const Cluster<spacedim1, Number1> &           cluster1,
-    const Cluster<spacedim1, Number1> &           cluster2,
+    const Cluster<spacedim1, Number1>            &cluster1,
+    const Cluster<spacedim1, Number1>            &cluster2,
     const std::vector<Point<spacedim1, Number1>> &all_support_points1,
     const std::vector<Point<spacedim1, Number1>> &all_support_points2);
 
@@ -77,10 +77,10 @@ public:
   template <int spacedim1, typename Number1>
   friend Number1
   calc_cluster_distance(
-    const Cluster<spacedim1, Number1> &           cluster1,
-    const Cluster<spacedim1, Number1> &           cluster2,
+    const Cluster<spacedim1, Number1>            &cluster1,
+    const Cluster<spacedim1, Number1>            &cluster2,
     const std::vector<Point<spacedim1, Number1>> &all_support_points,
-    const std::vector<Number1> &                  cell_size_at_dofs);
+    const std::vector<Number1>                   &cell_size_at_dofs);
 
   template <int spacedim1, typename Number1>
   friend Number1
@@ -90,17 +90,17 @@ public:
     const std::vector<types::global_dof_index>
       &internal_to_external_dof_numbering,
     const std::vector<Point<spacedim1, Number1>> &all_support_points,
-    const std::vector<Number1> &                  cell_size_at_dofs);
+    const std::vector<Number1>                   &cell_size_at_dofs);
 
   template <int spacedim1, typename Number1>
   friend Number1
   calc_cluster_distance(
-    const Cluster<spacedim1, Number1> &           cluster1,
-    const Cluster<spacedim1, Number1> &           cluster2,
+    const Cluster<spacedim1, Number1>            &cluster1,
+    const Cluster<spacedim1, Number1>            &cluster2,
     const std::vector<Point<spacedim1, Number1>> &all_support_points1,
     const std::vector<Point<spacedim1, Number1>> &all_support_points2,
-    const std::vector<Number1> &                  cell_size_at_dofs1,
-    const std::vector<Number1> &                  cell_size_at_dofs2);
+    const std::vector<Number1>                   &cell_size_at_dofs1,
+    const std::vector<Number1>                   &cell_size_at_dofs2);
 
   template <int spacedim1, typename Number1>
   friend Number1
@@ -113,8 +113,8 @@ public:
       &internal_to_external_dof_numbering2,
     const std::vector<Point<spacedim1, Number1>> &all_support_points1,
     const std::vector<Point<spacedim1, Number1>> &all_support_points2,
-    const std::vector<Number1> &                  cell_size_at_dofs1,
-    const std::vector<Number1> &                  cell_size_at_dofs2);
+    const std::vector<Number1>                   &cell_size_at_dofs1,
+    const std::vector<Number1>                   &cell_size_at_dofs2);
 
   /**
    * Check the equality of two clusters by comparing their index sets.
@@ -168,7 +168,7 @@ public:
    */
   Cluster(const std::vector<types::global_dof_index> &index_set,
           const std::vector<Point<spacedim, Number>> &all_support_points,
-          const std::vector<Number> &                 cell_size_at_dofs);
+          const std::vector<Number>                  &cell_size_at_dofs);
 
   /**
    * Constructor from an index set and a bounding box without cluster diameter
@@ -180,7 +180,7 @@ public:
    * @param bbox
    */
   Cluster(const std::vector<types::global_dof_index> &index_set,
-          const SimpleBoundingBox<spacedim, Number> & bbox,
+          const SimpleBoundingBox<spacedim, Number>  &bbox,
           const std::vector<Point<spacedim, Number>> &all_support_points);
 
   /**
@@ -193,9 +193,9 @@ public:
    * @param bbox
    */
   Cluster(const std::vector<types::global_dof_index> &index_set,
-          const SimpleBoundingBox<spacedim, Number> & bbox,
+          const SimpleBoundingBox<spacedim, Number>  &bbox,
           const std::vector<Point<spacedim, Number>> &all_support_points,
-          const std::vector<Number> &                 cell_size_at_dofs);
+          const std::vector<Number>                  &cell_size_at_dofs);
 
   /**
    * Copy constructor.
@@ -331,7 +331,7 @@ public:
    */
   Number
   distance_to_cluster(
-    const Cluster &                             cluster,
+    const Cluster                              &cluster,
     const std::vector<Point<spacedim, Number>> &all_support_points) const;
 
   /**
@@ -369,7 +369,7 @@ public:
    */
   Number
   distance_to_cluster(
-    const Cluster &                             cluster,
+    const Cluster                              &cluster,
     const std::vector<Point<spacedim, Number>> &all_support_points1,
     const std::vector<Point<spacedim, Number>> &all_support_points2) const;
 
@@ -408,9 +408,9 @@ public:
    */
   Number
   distance_to_cluster(
-    const Cluster &                             cluster,
+    const Cluster                              &cluster,
     const std::vector<Point<spacedim, Number>> &all_support_points,
-    const std::vector<Number> &                 cell_size_at_dofs) const;
+    const std::vector<Number>                  &cell_size_at_dofs) const;
 
   /**
    * Calculate the minimum distance of the current cluster to the given cluster.
@@ -433,7 +433,7 @@ public:
     const std::vector<types::global_dof_index>
       &internal_to_external_dof_numbering,
     const std::vector<Point<spacedim, Number>> &all_support_points,
-    const std::vector<Number> &                 cell_size_at_dofs) const;
+    const std::vector<Number>                  &cell_size_at_dofs) const;
 
   /**
    * Calculate the minimum distance of the current cluster to the given cluster.
@@ -451,11 +451,11 @@ public:
    */
   Number
   distance_to_cluster(
-    const Cluster &                             cluster,
+    const Cluster                              &cluster,
     const std::vector<Point<spacedim, Number>> &all_support_points1,
     const std::vector<Point<spacedim, Number>> &all_support_points2,
-    const std::vector<Number> &                 cell_size_at_dofs1,
-    const std::vector<Number> &                 cell_size_at_dofs2) const;
+    const std::vector<Number>                  &cell_size_at_dofs1,
+    const std::vector<Number>                  &cell_size_at_dofs2) const;
 
   /**
    * Calculate the minimum distance of the current cluster to the given cluster.
@@ -484,8 +484,8 @@ public:
       &internal_to_external_dof_numbering2,
     const std::vector<Point<spacedim, Number>> &all_support_points1,
     const std::vector<Point<spacedim, Number>> &all_support_points2,
-    const std::vector<Number> &                 cell_size_at_dofs1,
-    const std::vector<Number> &                 cell_size_at_dofs2) const;
+    const std::vector<Number>                  &cell_size_at_dofs1,
+    const std::vector<Number>                  &cell_size_at_dofs2) const;
 
   /**
    * Check if the index set of the current cluster is a subset of that of the
@@ -565,7 +565,7 @@ public:
    * @param index_set_intersection
    */
   void
-  intersect(const Cluster &                       cluster,
+  intersect(const Cluster                        &cluster,
             std::vector<types::global_dof_index> &index_set_intersection) const;
 
   /**
@@ -577,7 +577,7 @@ public:
    */
   void
   intersect(
-    const Cluster &                         cluster,
+    const Cluster                          &cluster,
     std::array<types::global_dof_index, 2> &index_range_intersection) const;
 
   /**
@@ -672,8 +672,8 @@ operator<<(std::ostream &out, const Cluster<spacedim, Number> &cluster)
 template <int spacedim, typename Number = double>
 Number
 calc_cluster_distance(
-  const Cluster<spacedim, Number> &           cluster1,
-  const Cluster<spacedim, Number> &           cluster2,
+  const Cluster<spacedim, Number>            &cluster1,
+  const Cluster<spacedim, Number>            &cluster2,
   const std::vector<Point<spacedim, Number>> &all_support_points)
 {
   // Calculate the total number of point pairs.
@@ -786,8 +786,8 @@ calc_cluster_distance(
 template <int spacedim, typename Number = double>
 Number
 calc_cluster_distance(
-  const Cluster<spacedim, Number> &           cluster1,
-  const Cluster<spacedim, Number> &           cluster2,
+  const Cluster<spacedim, Number>            &cluster1,
+  const Cluster<spacedim, Number>            &cluster2,
   const std::vector<Point<spacedim, Number>> &all_support_points1,
   const std::vector<Point<spacedim, Number>> &all_support_points2)
 {
@@ -904,10 +904,10 @@ calc_cluster_distance(
 template <int spacedim, typename Number = double>
 Number
 calc_cluster_distance(
-  const Cluster<spacedim, Number> &           cluster1,
-  const Cluster<spacedim, Number> &           cluster2,
+  const Cluster<spacedim, Number>            &cluster1,
+  const Cluster<spacedim, Number>            &cluster2,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number> &                 cell_size_at_dofs)
+  const std::vector<Number>                  &cell_size_at_dofs)
 {
   /**
    * Calculate the uncorrected cluster distance.
@@ -981,7 +981,7 @@ calc_cluster_distance(
   const std::vector<types::global_dof_index>
     &internal_to_external_dof_numbering,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number> &                 cell_size_at_dofs)
+  const std::vector<Number>                  &cell_size_at_dofs)
 {
   /**
    * Calculate the uncorrected cluster distance.
@@ -1061,12 +1061,12 @@ calc_cluster_distance(
 template <int spacedim, typename Number = double>
 Number
 calc_cluster_distance(
-  const Cluster<spacedim, Number> &           cluster1,
-  const Cluster<spacedim, Number> &           cluster2,
+  const Cluster<spacedim, Number>            &cluster1,
+  const Cluster<spacedim, Number>            &cluster2,
   const std::vector<Point<spacedim, Number>> &all_support_points1,
   const std::vector<Point<spacedim, Number>> &all_support_points2,
-  const std::vector<Number> &                 cell_size_at_dofs1,
-  const std::vector<Number> &                 cell_size_at_dofs2)
+  const std::vector<Number>                  &cell_size_at_dofs1,
+  const std::vector<Number>                  &cell_size_at_dofs2)
 {
   /**
    * Calculate the uncorrected cluster distance.
@@ -1146,8 +1146,8 @@ calc_cluster_distance(
     &internal_to_external_dof_numbering2,
   const std::vector<Point<spacedim, Number>> &all_support_points1,
   const std::vector<Point<spacedim, Number>> &all_support_points2,
-  const std::vector<Number> &                 cell_size_at_dofs1,
-  const std::vector<Number> &                 cell_size_at_dofs2)
+  const std::vector<Number>                  &cell_size_at_dofs1,
+  const std::vector<Number>                  &cell_size_at_dofs2)
 {
   /**
    * Calculate the uncorrected cluster distance.
@@ -1213,7 +1213,7 @@ calc_cluster_distance(
 template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster()
   : index_set(0)
-  , index_range({0, 0})
+  , index_range({{0, 0}})
   , bbox()
   , diameter(0)
 {}
@@ -1223,7 +1223,7 @@ template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster(
   const std::vector<types::global_dof_index> &index_set)
   : index_set(index_set)
-  , index_range({0, 0})
+  , index_range({{0, 0}})
   , bbox()
   , diameter(0)
 {}
@@ -1234,7 +1234,7 @@ Cluster<spacedim, Number>::Cluster(
   const std::vector<types::global_dof_index> &index_set,
   const std::vector<Point<spacedim, Number>> &all_support_points)
   : index_set(index_set)
-  , index_range({0, 0})
+  , index_range({{0, 0}})
   , bbox(index_set, all_support_points)
   , diameter(calc_diameter(all_support_points))
 {}
@@ -1243,9 +1243,9 @@ template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster(
   const std::vector<types::global_dof_index> &index_set,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number> &                 cell_size_at_dofs)
+  const std::vector<Number>                  &cell_size_at_dofs)
   : index_set(index_set)
-  , index_range({0, 0})
+  , index_range({{0, 0}})
   , bbox(index_set, all_support_points)
   , diameter(calc_diameter(all_support_points, cell_size_at_dofs))
 {}
@@ -1253,10 +1253,10 @@ Cluster<spacedim, Number>::Cluster(
 template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster(
   const std::vector<types::global_dof_index> &index_set,
-  const SimpleBoundingBox<spacedim, Number> & bbox,
+  const SimpleBoundingBox<spacedim, Number>  &bbox,
   const std::vector<Point<spacedim, Number>> &all_support_points)
   : index_set(index_set)
-  , index_range({0, 0})
+  , index_range({{0, 0}})
   , bbox(bbox)
   , diameter(calc_diameter(all_support_points))
 {}
@@ -1264,11 +1264,11 @@ Cluster<spacedim, Number>::Cluster(
 template <int spacedim, typename Number>
 Cluster<spacedim, Number>::Cluster(
   const std::vector<types::global_dof_index> &index_set,
-  const SimpleBoundingBox<spacedim, Number> & bbox,
+  const SimpleBoundingBox<spacedim, Number>  &bbox,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number> &                 cell_size_at_dofs)
+  const std::vector<Number>                  &cell_size_at_dofs)
   : index_set(index_set)
-  , index_range({0, 0})
+  , index_range({{0, 0}})
   , bbox(bbox)
   , diameter(calc_diameter(all_support_points, cell_size_at_dofs))
 {}
@@ -1468,7 +1468,7 @@ template <int spacedim, typename Number>
 Number
 Cluster<spacedim, Number>::calc_diameter(
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number> &                 cell_size_at_dofs) const
+  const std::vector<Number>                  &cell_size_at_dofs) const
 {
   Number uncorrected_diameter = calc_diameter(all_support_points);
 
@@ -1492,7 +1492,7 @@ Cluster<spacedim, Number>::calc_diameter(
   const std::vector<types::global_dof_index>
     &internal_to_external_dof_numbering,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number> &                 cell_size_at_dofs) const
+  const std::vector<Number>                  &cell_size_at_dofs) const
 {
   Number uncorrected_diameter =
     calc_diameter(internal_to_external_dof_numbering, all_support_points);
@@ -1517,7 +1517,7 @@ Cluster<spacedim, Number>::calc_diameter(
 template <int spacedim, typename Number>
 Number
 Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster &                             cluster,
+  const Cluster                              &cluster,
   const std::vector<Point<spacedim, Number>> &all_support_points) const
 {
   return calc_cluster_distance((*this), cluster, all_support_points);
@@ -1542,7 +1542,7 @@ Cluster<spacedim, Number>::distance_to_cluster(
 template <int spacedim, typename Number>
 Number
 Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster &                             cluster,
+  const Cluster                              &cluster,
   const std::vector<Point<spacedim, Number>> &all_support_points1,
   const std::vector<Point<spacedim, Number>> &all_support_points2) const
 {
@@ -1576,9 +1576,9 @@ Cluster<spacedim, Number>::distance_to_cluster(
 template <int spacedim, typename Number>
 Number
 Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster &                             cluster,
+  const Cluster                              &cluster,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number> &                 cell_size_at_dofs) const
+  const std::vector<Number>                  &cell_size_at_dofs) const
 {
   return calc_cluster_distance((*this),
                                cluster,
@@ -1594,7 +1594,7 @@ Cluster<spacedim, Number>::distance_to_cluster(
   const std::vector<types::global_dof_index>
     &internal_to_external_dof_numbering,
   const std::vector<Point<spacedim, Number>> &all_support_points,
-  const std::vector<Number> &                 cell_size_at_dofs) const
+  const std::vector<Number>                  &cell_size_at_dofs) const
 {
   return calc_cluster_distance((*this),
                                cluster,
@@ -1607,11 +1607,11 @@ Cluster<spacedim, Number>::distance_to_cluster(
 template <int spacedim, typename Number>
 Number
 Cluster<spacedim, Number>::distance_to_cluster(
-  const Cluster &                             cluster,
+  const Cluster                              &cluster,
   const std::vector<Point<spacedim, Number>> &all_support_points1,
   const std::vector<Point<spacedim, Number>> &all_support_points2,
-  const std::vector<Number> &                 cell_size_at_dofs1,
-  const std::vector<Number> &                 cell_size_at_dofs2) const
+  const std::vector<Number>                  &cell_size_at_dofs1,
+  const std::vector<Number>                  &cell_size_at_dofs2) const
 {
   return calc_cluster_distance((*this),
                                cluster,
@@ -1632,8 +1632,8 @@ Cluster<spacedim, Number>::distance_to_cluster(
     &internal_to_external_dof_numbering2,
   const std::vector<Point<spacedim, Number>> &all_support_points1,
   const std::vector<Point<spacedim, Number>> &all_support_points2,
-  const std::vector<Number> &                 cell_size_at_dofs1,
-  const std::vector<Number> &                 cell_size_at_dofs2) const
+  const std::vector<Number>                  &cell_size_at_dofs1,
+  const std::vector<Number>                  &cell_size_at_dofs2) const
 {
   return calc_cluster_distance((*this),
                                cluster,
@@ -1749,7 +1749,7 @@ Cluster<spacedim, Number>::is_proper_superset(const Cluster &cluster) const
 template <int spacedim, typename Number>
 void
 Cluster<spacedim, Number>::intersect(
-  const Cluster &                       cluster,
+  const Cluster                        &cluster,
   std::vector<types::global_dof_index> &index_set_intersection) const
 {
   Assert(index_set.size() >= 1, ExcLowerRange(index_set.size(), 1));
@@ -1769,7 +1769,7 @@ Cluster<spacedim, Number>::intersect(
 template <int spacedim, typename Number>
 void
 Cluster<spacedim, Number>::intersect(
-  const Cluster &                         cluster,
+  const Cluster                          &cluster,
   std::array<types::global_dof_index, 2> &index_range_intersection) const
 {
   ::intersect(this->index_range, cluster.index_range, index_range_intersection);

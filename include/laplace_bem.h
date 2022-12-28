@@ -18,7 +18,7 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/fe/fe.h>
-#include <deal.II/fe/fe_base.h>
+#include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_tools.h>
@@ -91,8 +91,8 @@ namespace IdeoBEM
       const DoFHandler<dim1, spacedim1> &dof_handler_for_test_space,
       const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
       const RangeNumberType              factor,
-      const Quadrature<dim1> &           quad_rule,
-      MatrixType &                       target_full_matrix);
+      const Quadrature<dim1>            &quad_rule,
+      MatrixType                        &target_full_matrix);
 
     template <int dim1,
               int spacedim1,
@@ -101,8 +101,8 @@ namespace IdeoBEM
     friend void
     assemble_bem_full_matrix(
       const KernelFunction<spacedim1, RangeNumberType> &kernel,
-      const DoFHandler<dim1, spacedim1> &  dof_handler_for_test_space,
-      const DoFHandler<dim1, spacedim1> &  dof_handler_for_trial_space,
+      const DoFHandler<dim1, spacedim1>   &dof_handler_for_test_space,
+      const DoFHandler<dim1, spacedim1>   &dof_handler_for_trial_space,
       MappingQGenericExt<dim1, spacedim1> &kx_mapping,
       MappingQGenericExt<dim1, spacedim1> &ky_mapping,
       typename MappingQGeneric<dim1, spacedim1>::InternalData &kx_mapping_data,
@@ -114,8 +114,8 @@ namespace IdeoBEM
                      typename Triangulation<dim1 + 1, spacedim1>::face_iterator>
         &map_from_trial_space_mesh_to_volume_mesh,
       const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-      const SauterQuadratureRule<dim1> &    sauter_quad_rule,
-      MatrixType &                          target_full_matrix);
+      const SauterQuadratureRule<dim1>     &sauter_quad_rule,
+      MatrixType                           &target_full_matrix);
 
 
     /**
@@ -987,12 +987,12 @@ namespace IdeoBEM
   {
     switch (problem_type)
       {
-        case DirichletBCProblem:
-          {
-            dof_handler_for_dirichlet_space.initialize(surface_triangulation,
-                                                       fe_for_dirichlet_space);
-            dof_handler_for_neumann_space.initialize(surface_triangulation,
-                                                     fe_for_neumann_space);
+          case DirichletBCProblem: {
+            dof_handler_for_dirichlet_space.reinit(surface_triangulation);
+            dof_handler_for_dirichlet_space.distribute_dofs(
+              fe_for_dirichlet_space);
+            dof_handler_for_neumann_space.reinit(surface_triangulation);
+            dof_handler_for_neumann_space.distribute_dofs(fe_for_neumann_space);
 
             const unsigned int n_dofs_for_dirichlet_space =
               dof_handler_for_dirichlet_space.n_dofs();
@@ -1194,12 +1194,12 @@ namespace IdeoBEM
 
             break;
           }
-        case NeumannBCProblem:
-          {
-            dof_handler_for_dirichlet_space.initialize(surface_triangulation,
-                                                       fe_for_dirichlet_space);
-            dof_handler_for_neumann_space.initialize(surface_triangulation,
-                                                     fe_for_neumann_space);
+          case NeumannBCProblem: {
+            dof_handler_for_dirichlet_space.reinit(surface_triangulation);
+            dof_handler_for_dirichlet_space.distribute_dofs(
+              fe_for_dirichlet_space);
+            dof_handler_for_neumann_space.reinit(surface_triangulation);
+            dof_handler_for_neumann_space.distribute_dofs(fe_for_neumann_space);
 
             const unsigned int n_dofs_for_dirichlet_space =
               dof_handler_for_dirichlet_space.n_dofs();
@@ -1433,15 +1433,15 @@ namespace IdeoBEM
 
             break;
           }
-        case MixedBCProblem:
-          {
+          case MixedBCProblem: {
             Assert(is_use_hmat, ExcInternalError());
 
             // Initialize DoF handlers.
-            dof_handler_for_dirichlet_space.initialize(surface_triangulation,
-                                                       fe_for_dirichlet_space);
-            dof_handler_for_neumann_space.initialize(surface_triangulation,
-                                                     fe_for_neumann_space);
+            dof_handler_for_dirichlet_space.reinit(surface_triangulation);
+            dof_handler_for_dirichlet_space.distribute_dofs(
+              fe_for_dirichlet_space);
+            dof_handler_for_neumann_space.reinit(surface_triangulation);
+            dof_handler_for_neumann_space.distribute_dofs(fe_for_neumann_space);
 
             // Generate DoF selectors for the Dirichlet space on the extended
             // Dirichlet domain and retracted Neumann domain.
@@ -1922,8 +1922,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInternalError());
 
             break;
@@ -1956,8 +1955,7 @@ namespace IdeoBEM
 
     switch (problem_type)
       {
-        case DirichletBCProblem:
-          {
+          case DirichletBCProblem: {
             /**
              * Assemble the FEM scaled mass matrix, which is stored into the
              * full matrix for \f$K_2\f$.
@@ -2044,8 +2042,7 @@ namespace IdeoBEM
 
             break;
           }
-        case NeumannBCProblem:
-          {
+          case NeumannBCProblem: {
             std::cerr << "=== Assemble scaled mass matrix ===" << std::endl;
 
             /**
@@ -2150,14 +2147,12 @@ namespace IdeoBEM
 
             break;
           }
-        case MixedBCProblem:
-          {
+          case MixedBCProblem: {
             Assert(false, ExcNotImplemented());
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInternalError());
 
             break;
@@ -2179,8 +2174,7 @@ namespace IdeoBEM
 
     switch (problem_type)
       {
-        case DirichletBCProblem:
-          {
+          case DirichletBCProblem: {
 #if ENABLE_PRINTOUT == 1
             // Output stream for matrices and vectors.
             std::ofstream out_mat;
@@ -2322,8 +2316,7 @@ namespace IdeoBEM
 
             break;
           }
-        case NeumannBCProblem:
-          {
+          case NeumannBCProblem: {
 #if ENABLE_PRINTOUT == 1
             // Output stream for matrices and vectors.
             std::ofstream out_mat;
@@ -2492,8 +2485,7 @@ namespace IdeoBEM
 
             break;
           }
-        case MixedBCProblem:
-          {
+          case MixedBCProblem: {
             /**
              * For the mixed boundary condition, we firstly assemble the right
              * hand side matrices and vectors. Then after releasing these
@@ -2883,8 +2875,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInternalError());
 
             break;
@@ -2901,8 +2892,7 @@ namespace IdeoBEM
 
     switch (problem_type)
       {
-        case DirichletBCProblem:
-          {
+          case DirichletBCProblem: {
             std::cerr << "=== Assemble preconditioner for V ===" << std::endl;
 
             // Directly make a copy of the existing \hmat and then truncate
@@ -2923,8 +2913,7 @@ namespace IdeoBEM
 
             break;
           }
-        case NeumannBCProblem:
-          {
+          case NeumannBCProblem: {
             std::cerr << "=== Assemble preconditioner for D===" << std::endl;
 
             // Directly make a copy of the existing \hmat and then truncate
@@ -2942,8 +2931,7 @@ namespace IdeoBEM
 
             break;
           }
-        case MixedBCProblem:
-          {
+          case MixedBCProblem: {
             // Assemble preconditioners for the mixed boundary value problem.
             std::cerr
               << "=== Assemble preconditioner for the system block matrix ==="
@@ -2976,8 +2964,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInternalError());
             break;
           }
@@ -2995,8 +2982,7 @@ namespace IdeoBEM
       {
         switch (problem_type)
           {
-            case DirichletBCProblem:
-              {
+              case DirichletBCProblem: {
                 SolverControl solver_control(1000, 1e-12);
                 SolverCG<>    solver(solver_control);
 
@@ -3007,8 +2993,7 @@ namespace IdeoBEM
 
                 break;
               }
-            case NeumannBCProblem:
-              {
+              case NeumannBCProblem: {
                 SolverControl solver_control(1000, 1e-12);
                 SolverCG<>    solver(solver_control);
 
@@ -3019,14 +3004,12 @@ namespace IdeoBEM
 
                 break;
               }
-            case MixedBCProblem:
-              {
+              case MixedBCProblem: {
                 Assert(false, ExcNotImplemented());
 
                 break;
               }
-            default:
-              {
+              default: {
                 Assert(false, ExcInternalError());
               }
           }
@@ -3035,8 +3018,7 @@ namespace IdeoBEM
       {
         switch (problem_type)
           {
-            case DirichletBCProblem:
-              {
+              case DirichletBCProblem: {
                 SolverControl solver_control(1000, 1e-12, true, true);
                 SolverCG<Vector<double>> solver(solver_control);
 
@@ -3057,8 +3039,7 @@ namespace IdeoBEM
 
                 break;
               }
-            case NeumannBCProblem:
-              {
+              case NeumannBCProblem: {
                 SolverControl solver_control(1000, 1e-12, true, true);
                 SolverCG<Vector<double>> solver(solver_control);
 
@@ -3079,8 +3060,7 @@ namespace IdeoBEM
 
                 break;
               }
-            case MixedBCProblem:
-              {
+              case MixedBCProblem: {
                 SolverControl solver_control(1000, 1e-12, true, true);
                 SolverBicgstab<Vector<double>> solver(solver_control);
 
@@ -3139,8 +3119,7 @@ namespace IdeoBEM
 
                 break;
               }
-            default:
-              {
+              default: {
                 Assert(false, ExcInternalError());
               }
           }
@@ -3156,10 +3135,9 @@ namespace IdeoBEM
 
     switch (problem_type)
       {
-        case DirichletBCProblem:
-          {
-            std::ofstream                           vtk_output;
-            DataOut<dim, DoFHandler<dim, spacedim>> data_out;
+          case DirichletBCProblem: {
+            std::ofstream          vtk_output;
+            DataOut<dim, spacedim> data_out;
 
             vtk_output.open("solution_for_dirichlet_bc.vtk",
                             std::ofstream::out);
@@ -3178,10 +3156,9 @@ namespace IdeoBEM
 
             break;
           }
-        case NeumannBCProblem:
-          {
-            std::ofstream                           vtk_output;
-            DataOut<dim, DoFHandler<dim, spacedim>> data_out;
+          case NeumannBCProblem: {
+            std::ofstream          vtk_output;
+            DataOut<dim, spacedim> data_out;
 
             vtk_output.open("solution_for_neumann_bc.vtk", std::ofstream::out);
 
@@ -3199,12 +3176,11 @@ namespace IdeoBEM
 
             break;
           }
-        case MixedBCProblem:
-          {
+          case MixedBCProblem: {
             std::ofstream vtk_output;
 
             vtk_output.open("solution_for_mixed_bc.vtk", std::ofstream::out);
-            DataOut<dim, DoFHandler<dim, spacedim>> data_out;
+            DataOut<dim, spacedim> data_out;
 
             data_out.add_data_vector(dof_handler_for_neumann_space,
                                      neumann_data,
@@ -3240,8 +3216,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInternalError());
           }
       }
@@ -3297,8 +3272,7 @@ namespace IdeoBEM
 
     switch (problem_type)
       {
-        case DirichletBCProblem:
-          {
+          case DirichletBCProblem: {
             if (is_interior_problem)
               {
                 /**
@@ -3374,8 +3348,7 @@ namespace IdeoBEM
 
             break;
           }
-        case NeumannBCProblem:
-          {
+          case NeumannBCProblem: {
             if (is_interior_problem)
               {
                 /**
@@ -3451,8 +3424,7 @@ namespace IdeoBEM
 
             break;
           }
-        case MixedBCProblem:
-          {
+          case MixedBCProblem: {
             if (is_interior_problem)
               {
                 /**
@@ -3528,8 +3500,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInternalError());
             break;
           }

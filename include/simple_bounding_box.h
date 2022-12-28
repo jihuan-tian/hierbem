@@ -26,7 +26,7 @@ class SimpleBoundingBox
 public:
   template <int spacedim1, typename Number1>
   friend std::ostream &
-  operator<<(std::ostream &                               out,
+  operator<<(std::ostream                                &out,
              const SimpleBoundingBox<spacedim1, Number1> &bbox);
 
   /**
@@ -62,7 +62,7 @@ public:
    * the DoFHandler.
    */
   template <int dim>
-  SimpleBoundingBox(const Mapping<dim, spacedim> &   mapping,
+  SimpleBoundingBox(const Mapping<dim, spacedim>    &mapping,
                     const DoFHandler<dim, spacedim> &dof_handler);
 
 
@@ -251,7 +251,7 @@ SimpleBoundingBox<spacedim, Number>::SimpleBoundingBox(
 template <int spacedim, typename Number>
 template <int dim>
 SimpleBoundingBox<spacedim, Number>::SimpleBoundingBox(
-  const Mapping<dim, spacedim> &   mapping,
+  const Mapping<dim, spacedim>    &mapping,
   const DoFHandler<dim, spacedim> &dof_handler)
 {
   // Allocate memory for the vector of support points, which are associated with
@@ -312,8 +312,7 @@ SimpleBoundingBox<spacedim, Number>::coordinate_index_with_longest_dimension()
         }
     }
 
-  Assert(coordinate_index >= 0 && coordinate_index < spacedim,
-         ExcIndexRangeType<unsigned int>(coordinate_index, 0, spacedim));
+  AssertIndexRange(coordinate_index, spacedim);
 
   return coordinate_index;
 }

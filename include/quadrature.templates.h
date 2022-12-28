@@ -1,8 +1,11 @@
-// File: quadrature.templates.h
-// Description:
-// Author: Jihuan Tian
-// Date: 2020-11-16
-// Copyright (C) 2020 Jihuan Tian <jihuan_tian@hotmail.com>
+/**
+ * @file quadrature.templates.h
+ * @brief This file is extracted from $DEAL_II_DIR/source/base/quadrature.cc
+ * for generating the Gauss quadrature in 4 dimensional space from the template.
+ *
+ * @date 2020-11-16
+ * @author Jihuan Tian
+ */
 
 #ifndef INCLUDE_QUADRATURE_TEMPLATES_H_
 #define INCLUDE_QUADRATURE_TEMPLATES_H_
@@ -10,11 +13,14 @@
 #include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/quadrature_lib.h>
-#include <deal.II/base/std_cxx14/memory.h>
+#include <deal.II/base/utilities.h>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
-#include <cstdlib>
-#include <iterator>
+#include <limits>
+#include <memory>
+#include <vector>
 
 DEAL_II_NAMESPACE_OPEN
 
@@ -29,17 +35,18 @@ Quadrature<dim>::Quadrature(const unsigned int n_q)
 template <int dim>
 void
 Quadrature<dim>::initialize(const std::vector<Point<dim>> &p,
-                            const std::vector<double> &    w)
+                            const std::vector<double>     &w)
 {
   AssertDimension(w.size(), p.size());
-  quadrature_points = p;
-  weights           = w;
+  quadrature_points      = p;
+  weights                = w;
+  is_tensor_product_flag = dim == 1;
 }
 
 
 template <int dim>
 Quadrature<dim>::Quadrature(const std::vector<Point<dim>> &points,
-                            const std::vector<double> &    weights)
+                            const std::vector<double>     &weights)
   : quadrature_points(points)
   , weights(weights)
   , is_tensor_product_flag(dim == 1)
@@ -85,9 +92,8 @@ Quadrature<dim>::Quadrature(const SubQuadrature &q1, const Quadrature<1> &q2)
   for (unsigned int i2 = 0; i2 < q2.size(); ++i2)
     for (unsigned int i1 = 0; i1 < q1.size(); ++i1)
       {
-        // compose coordinates of
-        // new quadrature point by tensor
-        // product in the last component
+        // compose coordinates of new quadrature point by tensor product in the
+        // last component
         for (unsigned int d = 0; d < dim - 1; ++d)
           quadrature_points[present_index](d) = q1.point(i1)(d);
         quadrature_points[present_index](dim - 1) = q2.point(i2)(0);
@@ -103,16 +109,15 @@ Quadrature<dim>::Quadrature(const SubQuadrature &q1, const Quadrature<1> &q2)
       double sum = 0;
       for (unsigned int i = 0; i < size(); ++i)
         sum += weights[i];
-      // we cannot guarantee the sum of weights
-      // to be exactly one, but it should be
-      // near that.
+      // we cannot guarantee the sum of weights to be exactly one, but it should
+      // be near that.
       Assert((sum > 0.999999) && (sum < 1.000001), ExcInternalError());
     }
 #endif
 
   if (is_tensor_product_flag)
     {
-      tensor_basis = std_cxx14::make_unique<std::array<Quadrature<1>, dim>>();
+      tensor_basis = std::make_unique<std::array<Quadrature<1>, dim>>();
       for (unsigned int i = 0; i < dim - 1; ++i)
         (*tensor_basis)[i] = q1.get_tensor_basis()[i];
       (*tensor_basis)[dim - 1] = q2;
@@ -162,11 +167,10 @@ Quadrature<dim>::Quadrature(const Quadrature<dim != 1 ? 1 : 0> &q)
             ++k;
           }
 
-  tensor_basis = std_cxx14::make_unique<std::array<Quadrature<1>, dim>>();
+  tensor_basis = std::make_unique<std::array<Quadrature<1>, dim>>();
   for (unsigned int i = 0; i < dim; ++i)
     (*tensor_basis)[i] = q;
 }
-
 
 
 template <int dim>
@@ -178,7 +182,7 @@ Quadrature<dim>::Quadrature(const Quadrature<dim> &q)
 {
   if (dim > 1 && is_tensor_product_flag)
     tensor_basis =
-      std_cxx14::make_unique<std::array<Quadrature<1>, dim>>(*q.tensor_basis);
+      std::make_unique<std::array<Quadrature<1>, dim>>(*q.tensor_basis);
 }
 
 
@@ -192,8 +196,8 @@ Quadrature<dim>::operator=(const Quadrature<dim> &q)
   if (dim > 1 && is_tensor_product_flag)
     {
       if (tensor_basis == nullptr)
-        tensor_basis = std_cxx14::make_unique<std::array<Quadrature<1>, dim>>(
-          *q.tensor_basis);
+        tensor_basis =
+          std::make_unique<std::array<Quadrature<1>, dim>>(*q.tensor_basis);
       else
         *tensor_basis = *q.tensor_basis;
     }
@@ -218,46 +222,19 @@ Quadrature<dim>::memory_consumption() const
 }
 
 
-// template <int dim>
-// typename std::conditional<dim == 1,
-//                          std::array<Quadrature<1>, dim>,
-//                          const std::array<Quadrature<1>, dim> &>::type
-// Quadrature<dim>::get_tensor_basis() const
-//{
-//  Assert(this->is_tensor_product_flag == true,
-//         ExcMessage("This function only makes sense if "
-//                    "this object represents a tensor product!"));
-//  Assert(tensor_basis != nullptr, ExcInternalError());
-//
-//  return *tensor_basis;
-//}
-
-
-// construct the quadrature formulae in higher dimensions by
-// tensor product of lower dimensions
+/**
+ * This is a template version of the constructor for @p QGauss.
+ *
+ * \mycomment{In @p quadrature_lib.cc, this template constructor exists.
+ * However, it is not visible to the user code. Therefore, it is copied here.}
+ *
+ * @param n
+ */
 template <int dim>
 QGauss<dim>::QGauss(const unsigned int n)
   : Quadrature<dim>(QGauss<dim - 1>(n), QGauss<1>(n))
 {}
 
-/**
- * 2022-09-26 Explicit instantiation of the function @p get_tensor_basis for
- * @p dim=1. However, this has already been instantiated in deal.ii's library
- * in @p quadrature.cc, therefore, we comment out the code here.
- */
-// template <>
-// std::array<Quadrature<1>, 1>
-// Quadrature<1>::get_tensor_basis() const
-//{
-//  Assert(this->is_tensor_product_flag == true,
-//         ExcMessage("This function only makes sense if "
-//                    "this object represents a tensor product!"));
-//
-//  return std::array<Quadrature<1>, 1>{{*this}};
-//}
-
-// template class Quadrature<4>;
-// template class QGauss<4>;
 
 DEAL_II_NAMESPACE_CLOSE
 

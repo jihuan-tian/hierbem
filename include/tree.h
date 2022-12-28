@@ -53,7 +53,7 @@ public:
    *
    * N.B. The data of type \p T will be copied into the created node.
    */
-  BinaryTreeNode(const T &       data,
+  BinaryTreeNode(const T        &data,
                  unsigned int    level,
                  BinaryTreeNode *left   = nullptr,
                  BinaryTreeNode *right  = nullptr,
@@ -241,7 +241,7 @@ BinaryTreeNode<T>::BinaryTreeNode(const BinaryTreeNode &node)
 
 
 template <typename T>
-BinaryTreeNode<T>::BinaryTreeNode(const T &       data,
+BinaryTreeNode<T>::BinaryTreeNode(const T        &data,
                                   unsigned int    level,
                                   BinaryTreeNode *left,
                                   BinaryTreeNode *right,
@@ -292,7 +292,7 @@ template <typename T>
 BinaryTreeNode<T> *
 BinaryTreeNode<T>::get_child_pointer(std::size_t index) const
 {
-  Assert((index >= 0) && (index < 2), dealii::ExcIndexRange(index, 0, 2));
+  AssertIndexRange(index, 2);
 
   switch (index)
     {
@@ -543,10 +543,10 @@ public:
    * N.B. The number of children of the parent node will automatically be
    * incremented, because the current node is associated with this parent.
    */
-  TreeNode(const T &                        data,
+  TreeNode(const T                         &data,
            unsigned int                     level,
            const std::array<TreeNode *, N> &children,
-           TreeNode *                       parent     = nullptr,
+           TreeNode                        *parent     = nullptr,
            TreeNodeSplitMode                split_mode = UnsplitMode);
 
   /**
@@ -692,7 +692,7 @@ private:
   unsigned int level;
 
   std::array<TreeNode *, N> children;
-  TreeNode *                parent;
+  TreeNode                 *parent;
 
   /**
    * Total number of nonempty children.
@@ -725,10 +725,10 @@ TreeNode<T, N>::TreeNode(const T &data)
 }
 
 template <typename T, std::size_t N>
-TreeNode<T, N>::TreeNode(const T &                        data,
+TreeNode<T, N>::TreeNode(const T                         &data,
                          unsigned int                     level,
                          const std::array<TreeNode *, N> &children,
-                         TreeNode *                       parent,
+                         TreeNode                        *parent,
                          TreeNodeSplitMode                split_mode)
   : data(data)
   , level(level)
@@ -781,7 +781,7 @@ template <typename T, std::size_t N>
 TreeNode<T, N> *
 TreeNode<T, N>::get_child_pointer(std::size_t index) const
 {
-  Assert((index >= 0) && (index < N), dealii::ExcIndexRange(index, 0, N));
+  AssertIndexRange(index, N);
 
   return children.at(index);
 }
@@ -791,7 +791,7 @@ void
 TreeNode<T, N>::set_child_pointer(std::size_t           index,
                                   const TreeNode<T, N> *pointer)
 {
-  Assert((index >= 0) && (index < N), dealii::ExcIndexRange(index, 0, N));
+  AssertIndexRange(index, N);
 
   children.at(index) = const_cast<TreeNode *>(pointer);
 }
@@ -956,7 +956,7 @@ TreeNode<T, N>::operator==(const TreeNode<T, N> &node) const
  */
 template <typename T>
 BinaryTreeNode<T> *
-CreateTreeNode(const T &          data,
+CreateTreeNode(const T           &data,
                unsigned int       level  = 0,
                BinaryTreeNode<T> *left   = nullptr,
                BinaryTreeNode<T> *right  = nullptr,
@@ -980,10 +980,10 @@ CreateTreeNode(const T &          data,
  */
 template <typename T, std::size_t N>
 TreeNode<T, N> *
-CreateTreeNode(const T &                              data,
+CreateTreeNode(const T                               &data,
                unsigned int                           level,
                const std::array<TreeNode<T, N> *, N> &children,
-               TreeNode<T, N> *                       parent     = nullptr,
+               TreeNode<T, N>                        *parent     = nullptr,
                TreeNodeSplitMode                      split_mode = UnsplitMode)
 {
   TreeNode<T, N> *p = nullptr;
@@ -1138,7 +1138,7 @@ Preorder(BinaryTreeNode<T> *p, std::function<void(BinaryTreeNode<T> *)> operate)
  */
 template <typename T>
 void
-Preorder(const BinaryTreeNode<T> *                      p,
+Preorder(const BinaryTreeNode<T>                       *p,
          std::function<void(const BinaryTreeNode<T> *)> operate)
 {
   if (p != nullptr)
@@ -1175,7 +1175,7 @@ Preorder(TreeNode<T, N> *p, std::function<void(TreeNode<T, N> *)> operate)
  */
 template <typename T, std::size_t N>
 void
-Preorder(const TreeNode<T, N> *                      p,
+Preorder(const TreeNode<T, N>                       *p,
          std::function<void(const TreeNode<T, N> *)> operate)
 {
   if (p != nullptr)
@@ -1212,7 +1212,7 @@ Inorder(BinaryTreeNode<T> *p, std::function<void(BinaryTreeNode<T> *)> operate)
  */
 template <typename T>
 void
-Inorder(const BinaryTreeNode<T> *                      p,
+Inorder(const BinaryTreeNode<T>                       *p,
         std::function<void(const BinaryTreeNode<T> *)> operate)
 {
   if (p != nullptr)
@@ -1228,7 +1228,7 @@ Inorder(const BinaryTreeNode<T> *                      p,
  */
 template <typename T>
 void
-Postorder(BinaryTreeNode<T> *                      p,
+Postorder(BinaryTreeNode<T>                       *p,
           std::function<void(BinaryTreeNode<T> *)> operate)
 {
   if (p != nullptr)
@@ -1244,7 +1244,7 @@ Postorder(BinaryTreeNode<T> *                      p,
  */
 template <typename T>
 void
-Postorder(const BinaryTreeNode<T> *                      p,
+Postorder(const BinaryTreeNode<T>                       *p,
           std::function<void(const BinaryTreeNode<T> *)> operate)
 {
   if (p != nullptr)
@@ -1281,7 +1281,7 @@ Postorder(TreeNode<T, N> *p, std::function<void(TreeNode<T, N> *)> operate)
  */
 template <typename T, std::size_t N>
 void
-Postorder(const TreeNode<T, N> *                      p,
+Postorder(const TreeNode<T, N>                       *p,
           std::function<void(const TreeNode<T, N> *)> operate)
 {
   if (p != nullptr)
@@ -1412,7 +1412,7 @@ CopyTree(const TreeNode<T, N> *p)
  */
 template <typename T>
 void
-GetTreeLeaves(const BinaryTreeNode<T> *         p,
+GetTreeLeaves(const BinaryTreeNode<T>          *p,
               std::vector<BinaryTreeNode<T> *> &leaf_set)
 {
   if (p->get_child_num() == 0)

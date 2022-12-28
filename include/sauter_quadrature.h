@@ -15,7 +15,7 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/fe/fe.h>
-#include <deal.II/fe/fe_base.h>
+#include <deal.II/fe/fe_data.h>
 
 #include <deal.II/grid/tria_accessor.h>
 
@@ -51,11 +51,11 @@ namespace IdeoBEM
   void
   build_dof_to_cell_topology(
     std::vector<std::vector<unsigned int>> &dof_to_cell_topo,
-    const DoFHandler<dim, spacedim> &       dof_handler,
+    const DoFHandler<dim, spacedim>        &dof_handler,
     const unsigned int                      fe_index = 0)
   {
     const types::global_dof_index        n_dofs = dof_handler.n_dofs();
-    const FiniteElement<dim, spacedim> & fe     = dof_handler.get_fe(fe_index);
+    const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
     const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
@@ -164,7 +164,7 @@ namespace IdeoBEM
   template <int dim, int spacedim>
   std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
   get_vertex_dof_indices_swapped(
-    const FiniteElement<dim, spacedim> &        fe,
+    const FiniteElement<dim, spacedim>         &fe,
     const std::vector<types::global_dof_index> &dof_indices)
   {
     Assert(dim == 2, ExcNotImplemented());
@@ -214,7 +214,7 @@ namespace IdeoBEM
   template <int dim, int spacedim>
   void
   get_vertex_dof_indices_swapped(
-    const FiniteElement<dim, spacedim> &        fe,
+    const FiniteElement<dim, spacedim>         &fe,
     const std::vector<types::global_dof_index> &dof_indices,
     std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
       &vertex_dof_indices)
@@ -270,7 +270,7 @@ namespace IdeoBEM
     const std::vector<std::pair<unsigned int, unsigned int>>
       &common_vertex_pair_local_indices,
     const std::array<unsigned int, vertices_per_cell>
-      &        vertex_local_indices_in_cell_with_last_two_swapped,
+              &vertex_local_indices_in_cell_with_last_two_swapped,
     const bool is_first_cell)
   {
     /**
@@ -282,7 +282,7 @@ namespace IdeoBEM
 
     switch (common_vertex_pair_local_indices.size())
       {
-        case 2: // Common edge case
+          case 2: // Common edge case
           {
             unsigned int first_vertex_local_index;
             unsigned int second_vertex_local_index;
@@ -339,7 +339,7 @@ namespace IdeoBEM
 
             break;
           }
-        case 1: // Common vertex case
+          case 1: // Common vertex case
           {
             starting_vertex_local_index =
               is_first_cell ? common_vertex_pair_local_indices[0].first :
@@ -383,8 +383,8 @@ namespace IdeoBEM
     const CellNeighboringType cell_neighboring_type,
     const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
     const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
-    const MappingQGenericExt<dim, spacedim> &                kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &                ky_mapping,
+    const MappingQGenericExt<dim, spacedim>                 &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>                 &ky_mapping,
     const bool is_scratch_data_for_kx_uncalculated = true)
   {
     // Geometry information.
@@ -406,8 +406,7 @@ namespace IdeoBEM
 
     switch (cell_neighboring_type)
       {
-        case SamePanel:
-          {
+          case SamePanel: {
             Assert(scratch.common_vertex_pair_local_indices.size() ==
                      vertices_per_cell,
                    ExcInternalError());
@@ -465,8 +464,7 @@ namespace IdeoBEM
 
             break;
           }
-        case CommonEdge:
-          {
+          case CommonEdge: {
             /**
              * This part handles the common edge case of Sauter's quadrature
              * rule.
@@ -495,7 +493,7 @@ namespace IdeoBEM
             unsigned int kx_starting_vertex_local_index =
               get_start_vertex_local_index_in_cell_from_vertex_numbers<
                 vertices_per_cell>(scratch.common_vertex_pair_local_indices,
-                                   {0, 1, 3, 2},
+                                   {{0, 1, 3, 2}},
                                    true);
             AssertIndexRange(kx_starting_vertex_local_index, vertices_per_cell);
 
@@ -503,7 +501,7 @@ namespace IdeoBEM
             unsigned int ky_starting_vertex_local_index =
               get_start_vertex_local_index_in_cell_from_vertex_numbers<
                 vertices_per_cell>(scratch.common_vertex_pair_local_indices,
-                                   {0, 2, 3, 1},
+                                   {{0, 2, 3, 1}},
                                    false);
             AssertIndexRange(ky_starting_vertex_local_index, vertices_per_cell);
 
@@ -574,8 +572,7 @@ namespace IdeoBEM
 
             break;
           }
-        case CommonVertex:
-          {
+          case CommonVertex: {
             Assert(scratch.common_vertex_pair_local_indices.size() == 1,
                    ExcInternalError());
 
@@ -583,7 +580,7 @@ namespace IdeoBEM
             unsigned int kx_starting_vertex_local_index =
               get_start_vertex_local_index_in_cell_from_vertex_numbers<
                 vertices_per_cell>(scratch.common_vertex_pair_local_indices,
-                                   {0, 1, 3, 2},
+                                   {{0, 1, 3, 2}},
                                    true);
             AssertIndexRange(kx_starting_vertex_local_index, vertices_per_cell);
 
@@ -591,7 +588,7 @@ namespace IdeoBEM
             unsigned int ky_starting_vertex_local_index =
               get_start_vertex_local_index_in_cell_from_vertex_numbers<
                 vertices_per_cell>(scratch.common_vertex_pair_local_indices,
-                                   {0, 2, 3, 1},
+                                   {{0, 2, 3, 1}},
                                    false);
             AssertIndexRange(ky_starting_vertex_local_index, vertices_per_cell);
 
@@ -662,8 +659,7 @@ namespace IdeoBEM
 
             break;
           }
-        case Regular:
-          {
+          case Regular: {
             Assert(scratch.common_vertex_pair_local_indices.size() == 0,
                    ExcInternalError());
 
@@ -713,8 +709,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInternalError());
           }
       }
@@ -744,12 +739,11 @@ namespace IdeoBEM
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
     const CellNeighboringType                        cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const QGauss<dim * 2> &                          active_quad_rule)
+    const QGauss<dim * 2>                           &active_quad_rule)
   {
     switch (cell_neighboring_type)
       {
-        case SamePanel:
-          {
+          case SamePanel: {
             Assert(scratch.common_vertex_pair_local_indices.size() ==
                      GeometryInfo<dim>::vertices_per_cell,
                    ExcInternalError());
@@ -799,8 +793,7 @@ namespace IdeoBEM
 
             break;
           }
-        case CommonEdge:
-          {
+          case CommonEdge: {
             Assert(scratch.common_vertex_pair_local_indices.size() ==
                      GeometryInfo<2>::vertices_per_face,
                    ExcInternalError());
@@ -846,8 +839,7 @@ namespace IdeoBEM
 
             break;
           }
-        case CommonVertex:
-          {
+          case CommonVertex: {
             Assert(scratch.common_vertex_pair_local_indices.size() == 1,
                    ExcInternalError());
 
@@ -894,8 +886,7 @@ namespace IdeoBEM
 
             break;
           }
-        case Regular:
-          {
+          case Regular: {
             Assert(scratch.common_vertex_pair_local_indices.size() == 0,
                    ExcInternalError());
 
@@ -935,8 +926,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcNotImplemented());
           }
       }
@@ -957,12 +947,11 @@ namespace IdeoBEM
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch,
     const CellNeighboringType                        cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const QGauss<dim * 2> &                          active_quad_rule)
+    const QGauss<dim * 2>                           &active_quad_rule)
   {
     switch (cell_neighboring_type)
       {
-        case SamePanel:
-          {
+          case SamePanel: {
             Assert(scratch.common_vertex_pair_local_indices.size() ==
                      GeometryInfo<dim>::vertices_per_cell,
                    ExcInternalError());
@@ -991,8 +980,7 @@ namespace IdeoBEM
 
             break;
           }
-        case CommonEdge:
-          {
+          case CommonEdge: {
             Assert(scratch.common_vertex_pair_local_indices.size() ==
                      GeometryInfo<2>::vertices_per_face,
                    ExcInternalError());
@@ -1021,8 +1009,7 @@ namespace IdeoBEM
 
             break;
           }
-        case CommonVertex:
-          {
+          case CommonVertex: {
             Assert(scratch.common_vertex_pair_local_indices.size() == 1,
                    ExcInternalError());
 
@@ -1050,8 +1037,7 @@ namespace IdeoBEM
 
             break;
           }
-        case Regular:
-          {
+          case Regular: {
             Assert(scratch.common_vertex_pair_local_indices.size() == 0,
                    ExcInternalError());
 
@@ -1074,8 +1060,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcNotImplemented());
           }
       }
@@ -3299,7 +3284,7 @@ namespace IdeoBEM
     RangeNumberType result = 0.;
 
     const std::vector<Point<dim * 2>> &quad_points  = quad_rule.get_points();
-    const std::vector<double> &        quad_weights = quad_rule.get_weights();
+    const std::vector<double>         &quad_weights = quad_rule.get_weights();
 
     for (unsigned int q = 0; q < quad_rule.size(); q++)
       {
@@ -3352,24 +3337,19 @@ namespace IdeoBEM
   {
     switch (cell_neighboring_type)
       {
-        case SamePanel:
-          {
+          case SamePanel: {
             return bem_values.quad_rule_for_same_panel;
           }
-        case CommonEdge:
-          {
+          case CommonEdge: {
             return bem_values.quad_rule_for_common_edge;
           }
-        case CommonVertex:
-          {
+          case CommonVertex: {
             return bem_values.quad_rule_for_common_vertex;
           }
-        case Regular:
-          {
+          case Regular: {
             return bem_values.quad_rule_for_regular;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcNotImplemented());
 
             return bem_values.quad_rule_for_same_panel;
@@ -3426,7 +3406,7 @@ namespace IdeoBEM
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
       &kx_cell_iter,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
-      &                                      ky_cell_iter,
+                                            &ky_cell_iter,
     const MappingQGenericExt<dim, spacedim> &kx_mapping,
     const MappingQGenericExt<dim, spacedim> &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -3436,8 +3416,8 @@ namespace IdeoBEM
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const BEMTools::DetectCellNeighboringTypeMethod
-                                                             method_for_cell_neighboring_type,
-    const BEMValues<dim, spacedim, RangeNumberType> &        bem_values,
+      method_for_cell_neighboring_type,
+    const BEMValues<dim, spacedim, RangeNumberType>         &bem_values,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool is_scratch_data_for_kx_uncalculated = true)
@@ -3598,17 +3578,17 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   RangeNumberType
   sauter_assemble_on_one_pair_of_dofs(
-    const KernelFunction<spacedim> &                 kernel,
+    const KernelFunction<spacedim>                  &kernel,
     const RangeNumberType                            kernel_factor,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const DoFHandler<dim, spacedim>                 &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                 &ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim>         &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>         &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -3832,18 +3812,18 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   RangeNumberType
   sauter_assemble_on_one_pair_of_dofs(
-    const KernelFunction<spacedim> &                 kernel,
+    const KernelFunction<spacedim>                  &kernel,
     const RangeNumberType                            kernel_factor,
     const RangeNumberType                            mass_matrix_factor,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const DoFHandler<dim, spacedim>                 &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                 &ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim>         &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>         &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4157,19 +4137,19 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   sauter_assemble_on_one_pair_of_dofs(
-    const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<RangeNumberType> &             kernel_factors,
-    const std::vector<bool> &                        enable_kernel_evaluations,
-    Vector<RangeNumberType> &                        results,
+    const std::vector<KernelFunction<spacedim> *>   &kernels,
+    const std::vector<RangeNumberType>              &kernel_factors,
+    const std::vector<bool>                         &enable_kernel_evaluations,
+    Vector<RangeNumberType>                         &results,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const DoFHandler<dim, spacedim>                 &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                 &ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim>         &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>         &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4402,20 +4382,20 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   sauter_assemble_on_one_pair_of_dofs(
-    const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<RangeNumberType> &             kernel_factors,
-    const std::vector<RangeNumberType> &             mass_matrix_factors,
-    const std::vector<bool> &                        enable_kernel_evaluations,
-    Vector<RangeNumberType> &                        results,
+    const std::vector<KernelFunction<spacedim> *>   &kernels,
+    const std::vector<RangeNumberType>              &kernel_factors,
+    const std::vector<RangeNumberType>              &mass_matrix_factors,
+    const std::vector<bool>                         &enable_kernel_evaluations,
+    Vector<RangeNumberType>                         &results,
     const types::global_dof_index                    i,
     const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
-    const MappingQGenericExt<dim, spacedim> &        kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &        ky_mapping,
+    const DoFHandler<dim, spacedim>                 &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                 &ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim>         &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>         &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
