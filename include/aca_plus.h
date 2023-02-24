@@ -22,12 +22,13 @@
 #include <random>
 #include <vector>
 
-#include "bem_kernels.h"
+#include "bem_kernels.hcu"
+#include "cu_bem_values.hcu"
 #include "generic_functors.h"
 #include "hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "linalg.h"
-#include "sauter_quadrature.h"
+#include "sauter_quadrature.hcu"
 #include "unary_template_arg_containers.h"
 
 namespace IdeoBEM
@@ -104,24 +105,26 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   assemble_kernel_row(
-    Vector<RangeNumberType> &                        row_vector,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const types::global_dof_index                    row_dof_index,
-    const std::vector<types::global_dof_index> &     column_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    Vector<RangeNumberType>                               &row_vector,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const types::global_dof_index                          row_dof_index,
+    const std::vector<types::global_dof_index>            &column_dof_indices,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -130,7 +133,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     AssertDimension(row_vector.size(), column_dof_indices.size());
 
@@ -160,6 +167,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_mapping,
@@ -168,7 +176,9 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           method_for_cell_neighboring_type,
           scratch_data,
-          copy_data);
+          scratch_data_gpu,
+          copy_data,
+          copy_data_gpu);
       }
   }
 
@@ -207,26 +217,28 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   assemble_kernel_row(
-    Vector<RangeNumberType> &                        row_vector,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const Vector<RangeNumberType> &                  mass_vmult_weq,
-    const RangeNumberType                            stabilization_factor,
-    const types::global_dof_index                    row_dof_index,
-    const std::vector<types::global_dof_index> &     column_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    Vector<RangeNumberType>                               &row_vector,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const Vector<RangeNumberType>                         &mass_vmult_weq,
+    const RangeNumberType                                  stabilization_factor,
+    const types::global_dof_index                          row_dof_index,
+    const std::vector<types::global_dof_index>            &column_dof_indices,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -235,7 +247,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     AssertDimension(row_vector.size(), column_dof_indices.size());
 
@@ -265,6 +281,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_mapping,
@@ -273,7 +290,9 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           method_for_cell_neighboring_type,
           scratch_data,
-          copy_data);
+          scratch_data_gpu,
+          copy_data,
+          copy_data_gpu);
 
         row_vector(j) += stabilization_factor * mass_vmult_weq(row_dof_index) *
                          mass_vmult_weq(column_dof_indices[j]);
@@ -313,24 +332,26 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   assemble_kernel_column(
-    Vector<RangeNumberType> &                        col_vector,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            factor,
-    const std::vector<types::global_dof_index> &     row_dof_indices,
-    const types::global_dof_index                    col_dof_index,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    Vector<RangeNumberType>                               &col_vector,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  factor,
+    const std::vector<types::global_dof_index>            &row_dof_indices,
+    const types::global_dof_index                          col_dof_index,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -339,7 +360,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -369,6 +394,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_mapping,
@@ -377,7 +403,9 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           method_for_cell_neighboring_type,
           scratch_data,
-          copy_data);
+          scratch_data_gpu,
+          copy_data,
+          copy_data_gpu);
       }
   }
 
@@ -415,26 +443,28 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   assemble_kernel_column(
-    Vector<RangeNumberType> &                        col_vector,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const Vector<RangeNumberType> &                  mass_vmult_weq,
-    const RangeNumberType                            stabilization_factor,
-    const std::vector<types::global_dof_index> &     row_dof_indices,
-    const types::global_dof_index                    col_dof_index,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    Vector<RangeNumberType>                               &col_vector,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const Vector<RangeNumberType>                         &mass_vmult_weq,
+    const RangeNumberType                                  stabilization_factor,
+    const std::vector<types::global_dof_index>            &row_dof_indices,
+    const types::global_dof_index                          col_dof_index,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -443,7 +473,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -473,6 +507,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_mapping,
@@ -481,7 +516,9 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           method_for_cell_neighboring_type,
           scratch_data,
-          copy_data);
+          scratch_data_gpu,
+          copy_data,
+          copy_data_gpu);
 
         col_vector(i) += stabilization_factor *
                          mass_vmult_weq(row_dof_indices[i]) *
@@ -524,27 +561,29 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   size_type
   random_select_ref_row(
-    Vector<RangeNumberType> &                        row_vector,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    std::forward_list<size_type> &                   remaining_row_indices,
+    Vector<RangeNumberType>                               &row_vector,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    std::forward_list<size_type>                    &remaining_row_indices,
     const size_type                                  current_ref_row_index,
     const size_type                                  pass_the_end_ref_row_index,
-    const std::vector<types::global_dof_index> &     row_dof_indices,
-    const std::vector<types::global_dof_index> &     col_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const std::vector<types::global_dof_index>      &row_dof_indices,
+    const std::vector<types::global_dof_index>      &col_dof_indices,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -553,7 +592,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     AssertDimension(row_vector.size(), col_dof_indices.size());
 
@@ -593,6 +636,7 @@ namespace IdeoBEM
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
                                 bem_values,
+                                bem_values_gpu,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_map_from_local_to_full_dof_indices,
@@ -605,7 +649,9 @@ namespace IdeoBEM
                                 map_from_ky_boundary_mesh_to_volume_mesh,
                                 method_for_cell_neighboring_type,
                                 scratch_data,
-                                copy_data);
+                                scratch_data_gpu,
+                                copy_data,
+                                copy_data_gpu);
 
             if (LinAlg::is_all_zero(row_vector))
               {
@@ -693,29 +739,31 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   size_type
   random_select_ref_row(
-    Vector<RangeNumberType> &                        row_vector,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const Vector<RangeNumberType> &                  mass_vmult_weq,
-    const RangeNumberType                            stabilization_factor,
-    std::forward_list<size_type> &                   remaining_row_indices,
+    Vector<RangeNumberType>                               &row_vector,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const Vector<RangeNumberType>                         &mass_vmult_weq,
+    const RangeNumberType                                  stabilization_factor,
+    std::forward_list<size_type>                    &remaining_row_indices,
     const size_type                                  current_ref_row_index,
     const size_type                                  pass_the_end_ref_row_index,
-    const std::vector<types::global_dof_index> &     row_dof_indices,
-    const std::vector<types::global_dof_index> &     col_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const std::vector<types::global_dof_index>      &row_dof_indices,
+    const std::vector<types::global_dof_index>      &col_dof_indices,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -724,7 +772,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     AssertDimension(row_vector.size(), col_dof_indices.size());
 
@@ -766,6 +818,7 @@ namespace IdeoBEM
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
                                 bem_values,
+                                bem_values_gpu,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_map_from_local_to_full_dof_indices,
@@ -778,7 +831,9 @@ namespace IdeoBEM
                                 map_from_ky_boundary_mesh_to_volume_mesh,
                                 method_for_cell_neighboring_type,
                                 scratch_data,
-                                copy_data);
+                                scratch_data_gpu,
+                                copy_data,
+                                copy_data_gpu);
 
             if (LinAlg::is_all_zero(row_vector))
               {
@@ -844,7 +899,7 @@ namespace IdeoBEM
    */
   template <typename RangeNumberType = double>
   size_type
-  random_select_ref_row(Vector<RangeNumberType> &                   row_vector,
+  random_select_ref_row(Vector<RangeNumberType>                    &row_vector,
                         const LAPACKFullMatrixExt<RangeNumberType> &A,
                         std::forward_list<size_type> &remaining_row_indices,
                         const size_type               current_ref_row_index,
@@ -951,27 +1006,29 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   size_type
   random_select_ref_column(
-    Vector<RangeNumberType> &                        col_vector,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            factor,
-    std::forward_list<size_type> &                   remaining_col_indices,
+    Vector<RangeNumberType>                               &col_vector,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  factor,
+    std::forward_list<size_type>                    &remaining_col_indices,
     const size_type                                  current_ref_col_index,
     const size_type                                  pass_the_end_ref_col_index,
-    const std::vector<types::global_dof_index> &     row_dof_indices,
-    const std::vector<types::global_dof_index> &     col_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const std::vector<types::global_dof_index>      &row_dof_indices,
+    const std::vector<types::global_dof_index>      &col_dof_indices,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -980,7 +1037,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -1020,6 +1081,7 @@ namespace IdeoBEM
                                    kx_dof_to_cell_topo,
                                    ky_dof_to_cell_topo,
                                    bem_values,
+                                   bem_values_gpu,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_map_from_local_to_full_dof_indices,
@@ -1032,7 +1094,9 @@ namespace IdeoBEM
                                    map_from_ky_boundary_mesh_to_volume_mesh,
                                    method_for_cell_neighboring_type,
                                    scratch_data,
-                                   copy_data);
+                                   scratch_data_gpu,
+                                   copy_data,
+                                   copy_data_gpu);
 
             if (LinAlg::is_all_zero(col_vector))
               {
@@ -1120,29 +1184,31 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   size_type
   random_select_ref_column(
-    Vector<RangeNumberType> &                        col_vector,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const Vector<RangeNumberType> &                  mass_vmult_weq,
-    const RangeNumberType                            stabilization_factor,
-    std::forward_list<size_type> &                   remaining_col_indices,
+    Vector<RangeNumberType>                               &col_vector,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const Vector<RangeNumberType>                         &mass_vmult_weq,
+    const RangeNumberType                                  stabilization_factor,
+    std::forward_list<size_type>                    &remaining_col_indices,
     const size_type                                  current_ref_col_index,
     const size_type                                  pass_the_end_ref_col_index,
-    const std::vector<types::global_dof_index> &     row_dof_indices,
-    const std::vector<types::global_dof_index> &     col_dof_indices,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+    const std::vector<types::global_dof_index>      &row_dof_indices,
+    const std::vector<types::global_dof_index>      &col_dof_indices,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -1151,7 +1217,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -1193,6 +1263,7 @@ namespace IdeoBEM
                                    kx_dof_to_cell_topo,
                                    ky_dof_to_cell_topo,
                                    bem_values,
+                                   bem_values_gpu,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_map_from_local_to_full_dof_indices,
@@ -1205,7 +1276,9 @@ namespace IdeoBEM
                                    map_from_ky_boundary_mesh_to_volume_mesh,
                                    method_for_cell_neighboring_type,
                                    scratch_data,
-                                   copy_data);
+                                   scratch_data_gpu,
+                                   copy_data,
+                                   copy_data_gpu);
 
             if (LinAlg::is_all_zero(col_vector))
               {
@@ -1376,25 +1449,27 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   aca_plus(
-    RkMatrix<RangeNumberType> &                      rkmat,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            factor,
-    const std::array<types::global_dof_index, 2> &   row_dof_index_range,
-    const std::array<types::global_dof_index, 2> &   col_dof_index_range,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    RkMatrix<RangeNumberType>                             &rkmat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  factor,
+    const std::array<types::global_dof_index, 2>          &row_dof_index_range,
+    const std::array<types::global_dof_index, 2>          &col_dof_index_range,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -1403,7 +1478,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     /**
      * Get the size of each dimension of the matrix block to be built.
@@ -1475,6 +1554,7 @@ namespace IdeoBEM
                             kx_dof_to_cell_topo,
                             ky_dof_to_cell_topo,
                             bem_values,
+                            bem_values_gpu,
                             kx_dof_handler,
                             ky_dof_handler,
                             kx_map_from_local_to_full_dof_indices,
@@ -1487,7 +1567,9 @@ namespace IdeoBEM
                             map_from_ky_boundary_mesh_to_volume_mesh,
                             method_for_cell_neighboring_type,
                             scratch_data,
-                            copy_data);
+                            scratch_data_gpu,
+                            copy_data,
+                            copy_data_gpu);
 
     if (r == m)
       {
@@ -1509,6 +1591,7 @@ namespace IdeoBEM
                                kx_dof_to_cell_topo,
                                ky_dof_to_cell_topo,
                                bem_values,
+                               bem_values_gpu,
                                kx_dof_handler,
                                ky_dof_handler,
                                kx_map_from_local_to_full_dof_indices,
@@ -1521,7 +1604,9 @@ namespace IdeoBEM
                                map_from_ky_boundary_mesh_to_volume_mesh,
                                method_for_cell_neighboring_type,
                                scratch_data,
-                               copy_data);
+                               scratch_data_gpu,
+                               copy_data,
+                               copy_data_gpu);
 
     if (c == n)
       {
@@ -1624,6 +1709,7 @@ namespace IdeoBEM
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
                                 bem_values,
+                                bem_values_gpu,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_map_from_local_to_full_dof_indices,
@@ -1636,7 +1722,9 @@ namespace IdeoBEM
                                 map_from_ky_boundary_mesh_to_volume_mesh,
                                 method_for_cell_neighboring_type,
                                 scratch_data,
-                                copy_data);
+                                scratch_data_gpu,
+                                copy_data,
+                                copy_data_gpu);
 
             /**
              * \mynote{Here the counter \f$l\f$ iterates over all the previous
@@ -1686,6 +1774,7 @@ namespace IdeoBEM
                                    kx_dof_to_cell_topo,
                                    ky_dof_to_cell_topo,
                                    bem_values,
+                                   bem_values_gpu,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_map_from_local_to_full_dof_indices,
@@ -1698,7 +1787,9 @@ namespace IdeoBEM
                                    map_from_ky_boundary_mesh_to_volume_mesh,
                                    method_for_cell_neighboring_type,
                                    scratch_data,
-                                   copy_data);
+                                   scratch_data_gpu,
+                                   copy_data,
+                                   copy_data_gpu);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -1729,6 +1820,7 @@ namespace IdeoBEM
                                    kx_dof_to_cell_topo,
                                    ky_dof_to_cell_topo,
                                    bem_values,
+                                   bem_values_gpu,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_map_from_local_to_full_dof_indices,
@@ -1741,7 +1833,9 @@ namespace IdeoBEM
                                    map_from_ky_boundary_mesh_to_volume_mesh,
                                    method_for_cell_neighboring_type,
                                    scratch_data,
-                                   copy_data);
+                                   scratch_data_gpu,
+                                   copy_data,
+                                   copy_data_gpu);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -1777,6 +1871,7 @@ namespace IdeoBEM
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
                                 bem_values,
+                                bem_values_gpu,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_map_from_local_to_full_dof_indices,
@@ -1789,7 +1884,9 @@ namespace IdeoBEM
                                 map_from_ky_boundary_mesh_to_volume_mesh,
                                 method_for_cell_neighboring_type,
                                 scratch_data,
-                                copy_data);
+                                scratch_data_gpu,
+                                copy_data,
+                                copy_data_gpu);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -1844,6 +1941,7 @@ namespace IdeoBEM
                                       kx_dof_to_cell_topo,
                                       ky_dof_to_cell_topo,
                                       bem_values,
+                                      bem_values_gpu,
                                       kx_dof_handler,
                                       ky_dof_handler,
                                       kx_map_from_local_to_full_dof_indices,
@@ -1856,7 +1954,9 @@ namespace IdeoBEM
                                       map_from_ky_boundary_mesh_to_volume_mesh,
                                       method_for_cell_neighboring_type,
                                       scratch_data,
-                                      copy_data);
+                                      scratch_data_gpu,
+                                      copy_data,
+                                      copy_data_gpu);
 
             if (r == m)
               {
@@ -1923,6 +2023,7 @@ namespace IdeoBEM
                                        kx_dof_to_cell_topo,
                                        ky_dof_to_cell_topo,
                                        bem_values,
+                                       bem_values_gpu,
                                        kx_dof_handler,
                                        ky_dof_handler,
                                        kx_map_from_local_to_full_dof_indices,
@@ -1935,7 +2036,9 @@ namespace IdeoBEM
                                        map_from_ky_boundary_mesh_to_volume_mesh,
                                        method_for_cell_neighboring_type,
                                        scratch_data,
-                                       copy_data);
+                                       scratch_data_gpu,
+                                       copy_data,
+                                       copy_data_gpu);
 
             if (c == n)
               {
@@ -2059,27 +2162,29 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   aca_plus(
-    RkMatrix<RangeNumberType> &                      rkmat,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const Vector<RangeNumberType> &                  mass_vmult_weq,
-    const RangeNumberType                            stabilization_factor,
-    const std::array<types::global_dof_index, 2> &   row_dof_index_range,
-    const std::array<types::global_dof_index, 2> &   col_dof_index_range,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    RkMatrix<RangeNumberType>                             &rkmat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const Vector<RangeNumberType>                         &mass_vmult_weq,
+    const RangeNumberType                                  stabilization_factor,
+    const std::array<types::global_dof_index, 2>          &row_dof_index_range,
+    const std::array<types::global_dof_index, 2>          &col_dof_index_range,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -2088,7 +2193,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
     /**
      * Get the size of each dimension of the matrix block to be built.
@@ -2162,6 +2271,7 @@ namespace IdeoBEM
                             kx_dof_to_cell_topo,
                             ky_dof_to_cell_topo,
                             bem_values,
+                            bem_values_gpu,
                             kx_dof_handler,
                             ky_dof_handler,
                             kx_map_from_local_to_full_dof_indices,
@@ -2174,7 +2284,9 @@ namespace IdeoBEM
                             map_from_ky_boundary_mesh_to_volume_mesh,
                             method_for_cell_neighboring_type,
                             scratch_data,
-                            copy_data);
+                            scratch_data_gpu,
+                            copy_data,
+                            copy_data_gpu);
 
     if (r == m)
       {
@@ -2198,6 +2310,7 @@ namespace IdeoBEM
                                kx_dof_to_cell_topo,
                                ky_dof_to_cell_topo,
                                bem_values,
+                               bem_values_gpu,
                                kx_dof_handler,
                                ky_dof_handler,
                                kx_map_from_local_to_full_dof_indices,
@@ -2210,7 +2323,9 @@ namespace IdeoBEM
                                map_from_ky_boundary_mesh_to_volume_mesh,
                                method_for_cell_neighboring_type,
                                scratch_data,
-                               copy_data);
+                               scratch_data_gpu,
+                               copy_data,
+                               copy_data_gpu);
 
     if (c == n)
       {
@@ -2315,6 +2430,7 @@ namespace IdeoBEM
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
                                 bem_values,
+                                bem_values_gpu,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_map_from_local_to_full_dof_indices,
@@ -2327,7 +2443,9 @@ namespace IdeoBEM
                                 map_from_ky_boundary_mesh_to_volume_mesh,
                                 method_for_cell_neighboring_type,
                                 scratch_data,
-                                copy_data);
+                                scratch_data_gpu,
+                                copy_data,
+                                copy_data_gpu);
 
             /**
              * \mynote{Here the counter \f$l\f$ iterates over all the previous
@@ -2379,6 +2497,7 @@ namespace IdeoBEM
                                    kx_dof_to_cell_topo,
                                    ky_dof_to_cell_topo,
                                    bem_values,
+                                   bem_values_gpu,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_map_from_local_to_full_dof_indices,
@@ -2391,7 +2510,9 @@ namespace IdeoBEM
                                    map_from_ky_boundary_mesh_to_volume_mesh,
                                    method_for_cell_neighboring_type,
                                    scratch_data,
-                                   copy_data);
+                                   scratch_data_gpu,
+                                   copy_data,
+                                   copy_data_gpu);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -2424,6 +2545,7 @@ namespace IdeoBEM
                                    kx_dof_to_cell_topo,
                                    ky_dof_to_cell_topo,
                                    bem_values,
+                                   bem_values_gpu,
                                    kx_dof_handler,
                                    ky_dof_handler,
                                    kx_map_from_local_to_full_dof_indices,
@@ -2436,7 +2558,9 @@ namespace IdeoBEM
                                    map_from_ky_boundary_mesh_to_volume_mesh,
                                    method_for_cell_neighboring_type,
                                    scratch_data,
-                                   copy_data);
+                                   scratch_data_gpu,
+                                   copy_data,
+                                   copy_data_gpu);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -2474,6 +2598,7 @@ namespace IdeoBEM
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
                                 bem_values,
+                                bem_values_gpu,
                                 kx_dof_handler,
                                 ky_dof_handler,
                                 kx_map_from_local_to_full_dof_indices,
@@ -2486,7 +2611,9 @@ namespace IdeoBEM
                                 map_from_ky_boundary_mesh_to_volume_mesh,
                                 method_for_cell_neighboring_type,
                                 scratch_data,
-                                copy_data);
+                                scratch_data_gpu,
+                                copy_data,
+                                copy_data_gpu);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -2543,6 +2670,7 @@ namespace IdeoBEM
                                       kx_dof_to_cell_topo,
                                       ky_dof_to_cell_topo,
                                       bem_values,
+                                      bem_values_gpu,
                                       kx_dof_handler,
                                       ky_dof_handler,
                                       kx_map_from_local_to_full_dof_indices,
@@ -2555,7 +2683,9 @@ namespace IdeoBEM
                                       map_from_ky_boundary_mesh_to_volume_mesh,
                                       method_for_cell_neighboring_type,
                                       scratch_data,
-                                      copy_data);
+                                      scratch_data_gpu,
+                                      copy_data,
+                                      copy_data_gpu);
 
             if (r == m)
               {
@@ -2624,6 +2754,7 @@ namespace IdeoBEM
                                        kx_dof_to_cell_topo,
                                        ky_dof_to_cell_topo,
                                        bem_values,
+                                       bem_values_gpu,
                                        kx_dof_handler,
                                        ky_dof_handler,
                                        kx_map_from_local_to_full_dof_indices,
@@ -2636,7 +2767,9 @@ namespace IdeoBEM
                                        map_from_ky_boundary_mesh_to_volume_mesh,
                                        method_for_cell_neighboring_type,
                                        scratch_data,
-                                       copy_data);
+                                       scratch_data_gpu,
+                                       copy_data,
+                                       copy_data_gpu);
 
             if (c == n)
               {
@@ -2738,8 +2871,8 @@ namespace IdeoBEM
    */
   template <typename RangeNumberType = double>
   void
-  aca_plus(RkMatrix<RangeNumberType> &                 rkmat,
-           const ACAConfig &                           aca_config,
+  aca_plus(RkMatrix<RangeNumberType>                  &rkmat,
+           const ACAConfig                            &aca_config,
            const LAPACKFullMatrixExt<RangeNumberType> &A)
   {
     AssertDimension(rkmat.get_m(), A.m());
@@ -3222,23 +3355,25 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> *             leaf_mat,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    HMatrix<spacedim, RangeNumberType>                    *leaf_mat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -3247,7 +3382,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
     const std::array<types::global_dof_index, 2> *row_indices =
@@ -3260,8 +3399,7 @@ namespace IdeoBEM
 
     switch (leaf_mat->get_type())
       {
-        case FullMatrixType:
-          {
+          case FullMatrixType: {
             LAPACKFullMatrixExt<RangeNumberType> *fullmat =
               leaf_mat->get_fullmatrix();
 
@@ -3274,8 +3412,7 @@ namespace IdeoBEM
                  */
                 switch (leaf_mat->get_block_type())
                   {
-                    case HMatrixSupport::diagonal_block:
-                      {
+                      case HMatrixSupport::diagonal_block: {
                         /**
                          * A diagonal \hmatrix block as well as its associated
                          * full matrix should be symmetric.
@@ -3321,6 +3458,7 @@ namespace IdeoBEM
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
+                                    bem_values_gpu,
                                     kx_dof_handler,
                                     ky_dof_handler,
                                     kx_mapping,
@@ -3329,14 +3467,15 @@ namespace IdeoBEM
                                     map_from_ky_boundary_mesh_to_volume_mesh,
                                     method_for_cell_neighboring_type,
                                     scratch_data,
-                                    copy_data);
+                                    scratch_data_gpu,
+                                    copy_data,
+                                    copy_data_gpu);
                               }
                           }
 
                         break;
                       }
-                    case HMatrixSupport::upper_triangular_block:
-                      {
+                      case HMatrixSupport::upper_triangular_block: {
                         /**
                          * Do not build \hmatrix block belonging to the upper
                          * triangular part.
@@ -3344,8 +3483,7 @@ namespace IdeoBEM
 
                         break;
                       }
-                    case HMatrixSupport::lower_triangular_block:
-                      {
+                      case HMatrixSupport::lower_triangular_block: {
                         /**
                          * When the current \hmatrix block belongs to the lower
                          * triangular part, evaluate all of its elements as
@@ -3380,6 +3518,7 @@ namespace IdeoBEM
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
+                                    bem_values_gpu,
                                     kx_dof_handler,
                                     ky_dof_handler,
                                     kx_mapping,
@@ -3388,14 +3527,15 @@ namespace IdeoBEM
                                     map_from_ky_boundary_mesh_to_volume_mesh,
                                     method_for_cell_neighboring_type,
                                     scratch_data,
-                                    copy_data);
+                                    scratch_data_gpu,
+                                    copy_data,
+                                    copy_data_gpu);
                               }
                           }
 
                         break;
                       }
-                    case HMatrixSupport::undefined_block:
-                      {
+                      case HMatrixSupport::undefined_block: {
                         Assert(false,
                                ExcInvalidHMatrixBlockType(
                                  leaf_mat->get_block_type()));
@@ -3433,6 +3573,7 @@ namespace IdeoBEM
                           kx_dof_to_cell_topo,
                           ky_dof_to_cell_topo,
                           bem_values,
+                          bem_values_gpu,
                           kx_dof_handler,
                           ky_dof_handler,
                           kx_mapping,
@@ -3441,15 +3582,16 @@ namespace IdeoBEM
                           map_from_ky_boundary_mesh_to_volume_mesh,
                           method_for_cell_neighboring_type,
                           scratch_data,
-                          copy_data);
+                          scratch_data_gpu,
+                          copy_data,
+                          copy_data_gpu);
                       }
                   }
               }
 
             break;
           }
-        case RkMatrixType:
-          {
+          case RkMatrixType: {
             /**
              * When the \hmatrix block type is rank-k matrix, when the top
              * level \hmatrix is symmetric and the flag
@@ -3464,8 +3606,7 @@ namespace IdeoBEM
               {
                 switch (leaf_mat->get_block_type())
                   {
-                    case HMatrixSupport::lower_triangular_block:
-                      {
+                      case HMatrixSupport::lower_triangular_block: {
                         /**
                          * Build the \hmatrix block when it belongs to the lower
                          * triangular part using ACA+.
@@ -3479,6 +3620,7 @@ namespace IdeoBEM
                                  kx_dof_to_cell_topo,
                                  ky_dof_to_cell_topo,
                                  bem_values,
+                                 bem_values_gpu,
                                  kx_dof_handler,
                                  ky_dof_handler,
                                  kx_map_from_local_to_full_dof_indices,
@@ -3491,12 +3633,13 @@ namespace IdeoBEM
                                  map_from_ky_boundary_mesh_to_volume_mesh,
                                  method_for_cell_neighboring_type,
                                  scratch_data,
-                                 copy_data);
+                                 scratch_data_gpu,
+                                 copy_data,
+                                 copy_data_gpu);
 
                         break;
                       }
-                    case HMatrixSupport::upper_triangular_block:
-                      {
+                      case HMatrixSupport::upper_triangular_block: {
                         /**
                          * Do not build \hmatrix block belonging to the upper
                          * triangular part.
@@ -3508,8 +3651,7 @@ namespace IdeoBEM
                       /**
                        * An rank-k matrix cannot belong to the diagonal part.
                        */
-                    case HMatrixSupport::undefined_block:
-                      {
+                      case HMatrixSupport::undefined_block: {
                         Assert(false,
                                ExcInvalidHMatrixBlockType(
                                  leaf_mat->get_block_type()));
@@ -3529,6 +3671,7 @@ namespace IdeoBEM
                          kx_dof_to_cell_topo,
                          ky_dof_to_cell_topo,
                          bem_values,
+                         bem_values_gpu,
                          kx_dof_handler,
                          ky_dof_handler,
                          kx_map_from_local_to_full_dof_indices,
@@ -3541,13 +3684,14 @@ namespace IdeoBEM
                          map_from_ky_boundary_mesh_to_volume_mesh,
                          method_for_cell_neighboring_type,
                          scratch_data,
-                         copy_data);
+                         scratch_data_gpu,
+                         copy_data,
+                         copy_data_gpu);
               }
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
           }
       }
@@ -3600,25 +3744,27 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> *             leaf_mat,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const Vector<RangeNumberType> &                  mass_vmult_weq,
-    const RangeNumberType                            stabilization_factor,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    HMatrix<spacedim, RangeNumberType>                    *leaf_mat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const Vector<RangeNumberType>                         &mass_vmult_weq,
+    const RangeNumberType                                  stabilization_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -3627,7 +3773,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
     const std::array<types::global_dof_index, 2> *row_indices =
@@ -3640,8 +3790,7 @@ namespace IdeoBEM
 
     switch (leaf_mat->get_type())
       {
-        case FullMatrixType:
-          {
+          case FullMatrixType: {
             LAPACKFullMatrixExt<RangeNumberType> *fullmat =
               leaf_mat->get_fullmatrix();
 
@@ -3654,8 +3803,7 @@ namespace IdeoBEM
                  */
                 switch (leaf_mat->get_block_type())
                   {
-                    case HMatrixSupport::diagonal_block:
-                      {
+                      case HMatrixSupport::diagonal_block: {
                         /**
                          * A diagonal \hmatrix block as well as its associated
                          * full matrix should be symmetric.
@@ -3701,6 +3849,7 @@ namespace IdeoBEM
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
+                                    bem_values_gpu,
                                     kx_dof_handler,
                                     ky_dof_handler,
                                     kx_mapping,
@@ -3709,7 +3858,9 @@ namespace IdeoBEM
                                     map_from_ky_boundary_mesh_to_volume_mesh,
                                     method_for_cell_neighboring_type,
                                     scratch_data,
-                                    copy_data);
+                                    scratch_data_gpu,
+                                    copy_data,
+                                    copy_data_gpu);
 
                                 // N.B. The internal and local DoF indices are
                                 // used directly to access the result vector of
@@ -3723,8 +3874,7 @@ namespace IdeoBEM
 
                         break;
                       }
-                    case HMatrixSupport::upper_triangular_block:
-                      {
+                      case HMatrixSupport::upper_triangular_block: {
                         /**
                          * Do not build \hmatrix block belonging to the upper
                          * triangular part.
@@ -3732,8 +3882,7 @@ namespace IdeoBEM
 
                         break;
                       }
-                    case HMatrixSupport::lower_triangular_block:
-                      {
+                      case HMatrixSupport::lower_triangular_block: {
                         /**
                          * When the current \hmatrix block belongs to the lower
                          * triangular part, evaluate all of its elements as
@@ -3768,6 +3917,7 @@ namespace IdeoBEM
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
+                                    bem_values_gpu,
                                     kx_dof_handler,
                                     ky_dof_handler,
                                     kx_mapping,
@@ -3776,7 +3926,9 @@ namespace IdeoBEM
                                     map_from_ky_boundary_mesh_to_volume_mesh,
                                     method_for_cell_neighboring_type,
                                     scratch_data,
-                                    copy_data);
+                                    scratch_data_gpu,
+                                    copy_data,
+                                    copy_data_gpu);
 
                                 // N.B. The internal and local DoF indices are
                                 // used directly to access the result vector of
@@ -3790,8 +3942,7 @@ namespace IdeoBEM
 
                         break;
                       }
-                    case HMatrixSupport::undefined_block:
-                      {
+                      case HMatrixSupport::undefined_block: {
                         Assert(false,
                                ExcInvalidHMatrixBlockType(
                                  leaf_mat->get_block_type()));
@@ -3829,6 +3980,7 @@ namespace IdeoBEM
                           kx_dof_to_cell_topo,
                           ky_dof_to_cell_topo,
                           bem_values,
+                          bem_values_gpu,
                           kx_dof_handler,
                           ky_dof_handler,
                           kx_mapping,
@@ -3837,7 +3989,9 @@ namespace IdeoBEM
                           map_from_ky_boundary_mesh_to_volume_mesh,
                           method_for_cell_neighboring_type,
                           scratch_data,
-                          copy_data);
+                          scratch_data_gpu,
+                          copy_data,
+                          copy_data_gpu);
 
                         // N.B. The internal and local DoF indices are
                         // used directly to access the result vector of
@@ -3852,8 +4006,7 @@ namespace IdeoBEM
 
             break;
           }
-        case RkMatrixType:
-          {
+          case RkMatrixType: {
             /**
              * When the \hmatrix block type is rank-k matrix, when the top
              * level \hmatrix is symmetric and the flag
@@ -3868,8 +4021,7 @@ namespace IdeoBEM
               {
                 switch (leaf_mat->get_block_type())
                   {
-                    case HMatrixSupport::lower_triangular_block:
-                      {
+                      case HMatrixSupport::lower_triangular_block: {
                         /**
                          * Build the \hmatrix block when it belongs to the lower
                          * triangular part using ACA+.
@@ -3885,6 +4037,7 @@ namespace IdeoBEM
                                  kx_dof_to_cell_topo,
                                  ky_dof_to_cell_topo,
                                  bem_values,
+                                 bem_values_gpu,
                                  kx_dof_handler,
                                  ky_dof_handler,
                                  kx_map_from_local_to_full_dof_indices,
@@ -3897,12 +4050,13 @@ namespace IdeoBEM
                                  map_from_ky_boundary_mesh_to_volume_mesh,
                                  method_for_cell_neighboring_type,
                                  scratch_data,
-                                 copy_data);
+                                 scratch_data_gpu,
+                                 copy_data,
+                                 copy_data_gpu);
 
                         break;
                       }
-                    case HMatrixSupport::upper_triangular_block:
-                      {
+                      case HMatrixSupport::upper_triangular_block: {
                         /**
                          * Do not build \hmatrix block belonging to the upper
                          * triangular part.
@@ -3914,8 +4068,7 @@ namespace IdeoBEM
                       /**
                        * An rank-k matrix cannot belong to the diagonal part.
                        */
-                    case HMatrixSupport::undefined_block:
-                      {
+                      case HMatrixSupport::undefined_block: {
                         Assert(false,
                                ExcInvalidHMatrixBlockType(
                                  leaf_mat->get_block_type()));
@@ -3937,6 +4090,7 @@ namespace IdeoBEM
                          kx_dof_to_cell_topo,
                          ky_dof_to_cell_topo,
                          bem_values,
+                         bem_values_gpu,
                          kx_dof_handler,
                          ky_dof_handler,
                          kx_map_from_local_to_full_dof_indices,
@@ -3949,13 +4103,14 @@ namespace IdeoBEM
                          map_from_ky_boundary_mesh_to_volume_mesh,
                          method_for_cell_neighboring_type,
                          scratch_data,
-                         copy_data);
+                         scratch_data_gpu,
+                         copy_data,
+                         copy_data_gpu);
               }
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
           }
       }
@@ -4002,24 +4157,26 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> *             leaf_mat,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const RangeNumberType                            mass_matrix_factor,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    HMatrix<spacedim, RangeNumberType>                    *leaf_mat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const RangeNumberType                                  mass_matrix_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4029,7 +4186,11 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
     const std::array<types::global_dof_index, 2> *row_indices =
@@ -4042,8 +4203,7 @@ namespace IdeoBEM
 
     switch (leaf_mat->get_type())
       {
-        case FullMatrixType:
-          {
+          case FullMatrixType: {
             LAPACKFullMatrixExt<RangeNumberType> *fullmat =
               leaf_mat->get_fullmatrix();
 
@@ -4056,8 +4216,7 @@ namespace IdeoBEM
                  */
                 switch (leaf_mat->get_block_type())
                   {
-                    case HMatrixSupport::diagonal_block:
-                      {
+                      case HMatrixSupport::diagonal_block: {
                         /**
                          * A diagonal \hmatrix block as well as its associated
                          * full matrix should be symmetric.
@@ -4104,6 +4263,7 @@ namespace IdeoBEM
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
+                                    bem_values_gpu,
                                     kx_dof_handler,
                                     ky_dof_handler,
                                     kx_mapping,
@@ -4113,14 +4273,15 @@ namespace IdeoBEM
                                     method_for_cell_neighboring_type,
                                     mass_matrix_scratch_data,
                                     scratch_data,
-                                    copy_data);
+                                    scratch_data_gpu,
+                                    copy_data,
+                                    copy_data_gpu);
                               }
                           }
 
                         break;
                       }
-                    case HMatrixSupport::upper_triangular_block:
-                      {
+                      case HMatrixSupport::upper_triangular_block: {
                         /**
                          * Do not build \hmatrix block belonging to the upper
                          * triangular part.
@@ -4128,8 +4289,7 @@ namespace IdeoBEM
 
                         break;
                       }
-                    case HMatrixSupport::lower_triangular_block:
-                      {
+                      case HMatrixSupport::lower_triangular_block: {
                         /**
                          * When the current \hmatrix block belongs to the lower
                          * triangular part, evaluate all of its elements as
@@ -4165,6 +4325,7 @@ namespace IdeoBEM
                                     kx_dof_to_cell_topo,
                                     ky_dof_to_cell_topo,
                                     bem_values,
+                                    bem_values_gpu,
                                     kx_dof_handler,
                                     ky_dof_handler,
                                     kx_mapping,
@@ -4174,14 +4335,15 @@ namespace IdeoBEM
                                     method_for_cell_neighboring_type,
                                     mass_matrix_scratch_data,
                                     scratch_data,
-                                    copy_data);
+                                    scratch_data_gpu,
+                                    copy_data,
+                                    copy_data_gpu);
                               }
                           }
 
                         break;
                       }
-                    case HMatrixSupport::undefined_block:
-                      {
+                      case HMatrixSupport::undefined_block: {
                         Assert(false,
                                ExcInvalidHMatrixBlockType(
                                  leaf_mat->get_block_type()));
@@ -4217,6 +4379,7 @@ namespace IdeoBEM
                           kx_dof_to_cell_topo,
                           ky_dof_to_cell_topo,
                           bem_values,
+                          bem_values_gpu,
                           kx_dof_handler,
                           ky_dof_handler,
                           kx_mapping,
@@ -4226,23 +4389,23 @@ namespace IdeoBEM
                           method_for_cell_neighboring_type,
                           mass_matrix_scratch_data,
                           scratch_data,
-                          copy_data);
+                          scratch_data_gpu,
+                          copy_data,
+                          copy_data_gpu);
                       }
                   }
               }
 
             break;
           }
-        case RkMatrixType:
-          {
+          case RkMatrixType: {
             RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
 
             if (enable_build_symmetric_hmat && kernel.is_symmetric())
               {
                 switch (leaf_mat->get_block_type())
                   {
-                    case HMatrixSupport::lower_triangular_block:
-                      {
+                      case HMatrixSupport::lower_triangular_block: {
                         /**
                          * Build the \hmatrix block when it belongs to the lower
                          * triangular part using ACA+.
@@ -4256,6 +4419,7 @@ namespace IdeoBEM
                                  kx_dof_to_cell_topo,
                                  ky_dof_to_cell_topo,
                                  bem_values,
+                                 bem_values_gpu,
                                  kx_dof_handler,
                                  ky_dof_handler,
                                  kx_map_from_local_to_full_dof_indices,
@@ -4268,12 +4432,13 @@ namespace IdeoBEM
                                  map_from_ky_boundary_mesh_to_volume_mesh,
                                  method_for_cell_neighboring_type,
                                  scratch_data,
-                                 copy_data);
+                                 scratch_data_gpu,
+                                 copy_data,
+                                 copy_data_gpu);
 
                         break;
                       }
-                    case HMatrixSupport::upper_triangular_block:
-                      {
+                      case HMatrixSupport::upper_triangular_block: {
                         /**
                          * Do not build \hmatrix block belonging to the upper
                          * triangular part.
@@ -4285,8 +4450,7 @@ namespace IdeoBEM
                       /**
                        * An rank-k matrix cannot belong to the diagonal part.
                        */
-                    case HMatrixSupport::undefined_block:
-                      {
+                      case HMatrixSupport::undefined_block: {
                         Assert(false,
                                ExcInvalidHMatrixBlockType(
                                  leaf_mat->get_block_type()));
@@ -4306,6 +4470,7 @@ namespace IdeoBEM
                          kx_dof_to_cell_topo,
                          ky_dof_to_cell_topo,
                          bem_values,
+                         bem_values_gpu,
                          kx_dof_handler,
                          ky_dof_handler,
                          kx_map_from_local_to_full_dof_indices,
@@ -4318,13 +4483,14 @@ namespace IdeoBEM
                          map_from_ky_boundary_mesh_to_volume_mesh,
                          method_for_cell_neighboring_type,
                          scratch_data,
-                         copy_data);
+                         scratch_data_gpu,
+                         copy_data,
+                         copy_data_gpu);
               }
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
           }
       }
@@ -4372,23 +4538,26 @@ namespace IdeoBEM
   void
   fill_hmatrix_leaf_node_with_aca_plus(
     const std::vector<HMatrix<spacedim, RangeNumberType> *>
-      &                                              leaf_mat_for_kernels,
-    const ACAConfig &                                aca_config,
-    const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<RangeNumberType> &             kernel_factors,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+                    &leaf_mat_for_kernels,
+    const ACAConfig &aca_config,
+    const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
+                                                    &kernels,
+    const std::vector<RangeNumberType>              &kernel_factors,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4397,7 +4566,11 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(leaf_mat_for_kernels.size(), kernels.size());
@@ -4420,8 +4593,7 @@ namespace IdeoBEM
 
     switch (leaf_mat_for_kernels[0]->get_type())
       {
-        case FullMatrixType:
-          {
+          case FullMatrixType: {
             Vector<RangeNumberType> fullmat_coeffs(kernel_num);
 
             /**
@@ -4465,8 +4637,7 @@ namespace IdeoBEM
                              */
                             switch (leaf_mat_for_kernels[k]->get_block_type())
                               {
-                                case HMatrixSupport::diagonal_block:
-                                  {
+                                  case HMatrixSupport::diagonal_block: {
                                     /**
                                      * A diagonal \hmatrix block as well as its
                                      * associated full matrix should be
@@ -4507,8 +4678,7 @@ namespace IdeoBEM
 
                                     break;
                                   }
-                                case HMatrixSupport::upper_triangular_block:
-                                  {
+                                  case HMatrixSupport::upper_triangular_block: {
                                     /**
                                      * Do not build \hmatrix block belonging to
                                      * the upper triangular part.
@@ -4517,8 +4687,7 @@ namespace IdeoBEM
 
                                     break;
                                   }
-                                case HMatrixSupport::lower_triangular_block:
-                                  {
+                                  case HMatrixSupport::lower_triangular_block: {
                                     /**
                                      * When the current \hmatrix block belongs
                                      * to the lower triangular part, evaluate
@@ -4528,8 +4697,7 @@ namespace IdeoBEM
 
                                     break;
                                   }
-                                case HMatrixSupport::undefined_block:
-                                  {
+                                  case HMatrixSupport::undefined_block: {
                                     Assert(false,
                                            ExcInvalidHMatrixBlockType(
                                              leaf_mat_for_kernels[k]
@@ -4561,6 +4729,7 @@ namespace IdeoBEM
                       kx_dof_to_cell_topo,
                       ky_dof_to_cell_topo,
                       bem_values,
+                      bem_values_gpu,
                       kx_dof_handler,
                       ky_dof_handler,
                       kx_mapping,
@@ -4569,7 +4738,9 @@ namespace IdeoBEM
                       map_from_ky_boundary_mesh_to_volume_mesh,
                       method_for_cell_neighboring_type,
                       scratch_data,
-                      copy_data);
+                      scratch_data_gpu,
+                      copy_data,
+                      copy_data_gpu);
 
                     /**
                      * Assign the vector of returned values to each full matrix
@@ -4589,8 +4760,7 @@ namespace IdeoBEM
 
             break;
           }
-        case RkMatrixType:
-          {
+          case RkMatrixType: {
             /**
              * Determine if each kernel is to be evaluated at the current pair
              * of DoFs.
@@ -4601,8 +4771,7 @@ namespace IdeoBEM
                   {
                     switch (leaf_mat_for_kernels[k]->get_block_type())
                       {
-                        case HMatrixSupport::lower_triangular_block:
-                          {
+                          case HMatrixSupport::lower_triangular_block: {
                             /**
                              * Build the \hmatrix block when it belongs to the
                              * lower triangular part using ACA+.
@@ -4611,8 +4780,7 @@ namespace IdeoBEM
 
                             break;
                           }
-                        case HMatrixSupport::upper_triangular_block:
-                          {
+                          case HMatrixSupport::upper_triangular_block: {
                             /**
                              * Do not build \hmatrix block belonging to the
                              * upper triangular part.
@@ -4626,8 +4794,7 @@ namespace IdeoBEM
                            * An rank-k matrix cannot belong to the diagonal
                            * part.
                            */
-                        case HMatrixSupport::undefined_block:
-                          {
+                          case HMatrixSupport::undefined_block: {
                             Assert(
                               false,
                               ExcInvalidHMatrixBlockType(
@@ -4649,7 +4816,8 @@ namespace IdeoBEM
              * the rank-k format using ACA+.
              */
             unsigned int counter = 0;
-            for (const KernelFunction<spacedim> *kernel : kernels)
+            for (const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *kernel :
+                 kernels)
               {
                 if (enable_kernel_evaluations[counter])
                   {
@@ -4665,6 +4833,7 @@ namespace IdeoBEM
                              kx_dof_to_cell_topo,
                              ky_dof_to_cell_topo,
                              bem_values,
+                             bem_values_gpu,
                              kx_dof_handler,
                              ky_dof_handler,
                              kx_map_from_local_to_full_dof_indices,
@@ -4677,7 +4846,9 @@ namespace IdeoBEM
                              map_from_ky_boundary_mesh_to_volume_mesh,
                              method_for_cell_neighboring_type,
                              scratch_data,
-                             copy_data);
+                             scratch_data_gpu,
+                             copy_data,
+                             copy_data_gpu);
                   }
 
                 counter++;
@@ -4685,8 +4856,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false,
                    ExcInvalidHMatrixType(leaf_mat_for_kernels[0]->get_type()));
           }
@@ -4737,24 +4907,27 @@ namespace IdeoBEM
   void
   fill_hmatrix_leaf_node_with_aca_plus(
     const std::vector<HMatrix<spacedim, RangeNumberType> *>
-      &                                              leaf_mat_for_kernels,
-    const ACAConfig &                                aca_config,
-    const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<RangeNumberType> &             kernel_factors,
-    const std::vector<RangeNumberType> &             mass_matrix_factors,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+                    &leaf_mat_for_kernels,
+    const ACAConfig &aca_config,
+    const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
+                                                    &kernels,
+    const std::vector<RangeNumberType>              &kernel_factors,
+    const std::vector<RangeNumberType>              &mass_matrix_factors,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -4764,7 +4937,11 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
     AssertDimension(leaf_mat_for_kernels.size(), kernels.size());
@@ -4787,8 +4964,7 @@ namespace IdeoBEM
 
     switch (leaf_mat_for_kernels[0]->get_type())
       {
-        case FullMatrixType:
-          {
+          case FullMatrixType: {
             Vector<RangeNumberType> fullmat_coeffs(kernel_num);
 
             /**
@@ -4832,8 +5008,7 @@ namespace IdeoBEM
                              */
                             switch (leaf_mat_for_kernels[k]->get_block_type())
                               {
-                                case HMatrixSupport::diagonal_block:
-                                  {
+                                  case HMatrixSupport::diagonal_block: {
                                     /**
                                      * A diagonal \hmatrix block as well as its
                                      * associated full matrix should be
@@ -4874,8 +5049,7 @@ namespace IdeoBEM
 
                                     break;
                                   }
-                                case HMatrixSupport::upper_triangular_block:
-                                  {
+                                  case HMatrixSupport::upper_triangular_block: {
                                     /**
                                      * Do not build \hmatrix block belonging to
                                      * the upper triangular part.
@@ -4884,8 +5058,7 @@ namespace IdeoBEM
 
                                     break;
                                   }
-                                case HMatrixSupport::lower_triangular_block:
-                                  {
+                                  case HMatrixSupport::lower_triangular_block: {
                                     /**
                                      * When the current \hmatrix block belongs
                                      * to the lower triangular part, evaluate
@@ -4895,8 +5068,7 @@ namespace IdeoBEM
 
                                     break;
                                   }
-                                case HMatrixSupport::undefined_block:
-                                  {
+                                  case HMatrixSupport::undefined_block: {
                                     Assert(false,
                                            ExcInvalidHMatrixBlockType(
                                              leaf_mat_for_kernels[k]
@@ -4929,6 +5101,7 @@ namespace IdeoBEM
                       kx_dof_to_cell_topo,
                       ky_dof_to_cell_topo,
                       bem_values,
+                      bem_values_gpu,
                       kx_dof_handler,
                       ky_dof_handler,
                       kx_mapping,
@@ -4938,7 +5111,9 @@ namespace IdeoBEM
                       method_for_cell_neighboring_type,
                       mass_matrix_scratch_data,
                       scratch_data,
-                      copy_data);
+                      scratch_data_gpu,
+                      copy_data,
+                      copy_data_gpu);
 
                     /**
                      * Assign the vector of returned values to each full matrix
@@ -4958,8 +5133,7 @@ namespace IdeoBEM
 
             break;
           }
-        case RkMatrixType:
-          {
+          case RkMatrixType: {
             /**
              * Determine if each kernel is to be evaluated at the current pair
              * of DoFs.
@@ -4970,8 +5144,7 @@ namespace IdeoBEM
                   {
                     switch (leaf_mat_for_kernels[k]->get_block_type())
                       {
-                        case HMatrixSupport::lower_triangular_block:
-                          {
+                          case HMatrixSupport::lower_triangular_block: {
                             /**
                              * Build the \hmatrix block when it belongs to the
                              * lower triangular part using ACA+.
@@ -4980,8 +5153,7 @@ namespace IdeoBEM
 
                             break;
                           }
-                        case HMatrixSupport::upper_triangular_block:
-                          {
+                          case HMatrixSupport::upper_triangular_block: {
                             /**
                              * Do not build \hmatrix block belonging to the
                              * upper triangular part.
@@ -4995,8 +5167,7 @@ namespace IdeoBEM
                            * An rank-k matrix cannot belong to the diagonal
                            * part.
                            */
-                        case HMatrixSupport::undefined_block:
-                          {
+                          case HMatrixSupport::undefined_block: {
                             Assert(
                               false,
                               ExcInvalidHMatrixBlockType(
@@ -5018,7 +5189,8 @@ namespace IdeoBEM
              * the rank-k format using ACA+.
              */
             unsigned int counter = 0;
-            for (const KernelFunction<spacedim> *kernel : kernels)
+            for (const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *kernel :
+                 kernels)
               {
                 if (enable_kernel_evaluations[counter])
                   {
@@ -5034,6 +5206,7 @@ namespace IdeoBEM
                              kx_dof_to_cell_topo,
                              ky_dof_to_cell_topo,
                              bem_values,
+                             bem_values_gpu,
                              kx_dof_handler,
                              ky_dof_handler,
                              kx_map_from_local_to_full_dof_indices,
@@ -5046,7 +5219,9 @@ namespace IdeoBEM
                              map_from_ky_boundary_mesh_to_volume_mesh,
                              method_for_cell_neighboring_type,
                              scratch_data,
-                             copy_data);
+                             scratch_data_gpu,
+                             copy_data,
+                             copy_data_gpu);
                   }
 
                 counter++;
@@ -5054,8 +5229,7 @@ namespace IdeoBEM
 
             break;
           }
-        default:
-          {
+          default: {
             Assert(false,
                    ExcInvalidHMatrixType(leaf_mat_for_kernels[0]->get_type()));
           }
@@ -5090,23 +5264,25 @@ namespace IdeoBEM
   fill_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<
       typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-      &                                              range,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+                                                          &range,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5130,6 +5306,17 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
+    /**
+     * Create pair cell wise scratch data and task data on GPU device.
+     */
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                       scratch_data_gpu;
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
+
+    scratch_data_gpu.allocate(scratch_data);
+    copy_data_gpu.allocate(copy_data);
+
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -5143,6 +5330,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_map_from_local_to_full_dof_indices,
@@ -5155,9 +5343,17 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           method_for_cell_neighboring_type,
           scratch_data,
+          scratch_data_gpu,
           copy_data,
+          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release pair cell wise scratch and copy data.
+     */
+    scratch_data_gpu.release();
+    copy_data_gpu.release();
   }
 
 
@@ -5193,25 +5389,27 @@ namespace IdeoBEM
   fill_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<
       typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-      &                                              range,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const Vector<RangeNumberType> &                  mass_vmult_weq,
-    const RangeNumberType                            stabilization_factor,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+                                                          &range,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const Vector<RangeNumberType>                         &mass_vmult_weq,
+    const RangeNumberType                                  stabilization_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5235,6 +5433,17 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
+    /**
+     * Create pair cell wise scratch data and task data on GPU device.
+     */
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                       scratch_data_gpu;
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
+
+    scratch_data_gpu.allocate(scratch_data);
+    copy_data_gpu.allocate(copy_data);
+
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -5250,6 +5459,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_map_from_local_to_full_dof_indices,
@@ -5262,9 +5472,17 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           method_for_cell_neighboring_type,
           scratch_data,
+          scratch_data_gpu,
           copy_data,
+          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release pair cell wise scratch and copy data.
+     */
+    scratch_data_gpu.release();
+    copy_data_gpu.release();
   }
 
 
@@ -5299,15 +5517,17 @@ namespace IdeoBEM
   fill_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<
       typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-      &                                              range,
-    const ACAConfig &                                aca_config,
-    const KernelFunction<spacedim> &                 kernel,
-    const RangeNumberType                            kernel_factor,
-    const RangeNumberType                            mass_matrix_factor,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const QGauss<dim> &              mass_matrix_quadrature_formula,
+                                                          &range,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const RangeNumberType                                  mass_matrix_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
@@ -5316,8 +5536,8 @@ namespace IdeoBEM
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5350,6 +5570,17 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
+    /**
+     * Create pair cell wise scratch data and task data on GPU device.
+     */
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                       scratch_data_gpu;
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
+
+    scratch_data_gpu.allocate(scratch_data);
+    copy_data_gpu.allocate(copy_data);
+
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -5364,6 +5595,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_map_from_local_to_full_dof_indices,
@@ -5377,9 +5609,17 @@ namespace IdeoBEM
           method_for_cell_neighboring_type,
           mass_matrix_scratch_data,
           scratch_data,
+          scratch_data_gpu,
           copy_data,
+          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release pair cell wise scratch and copy data.
+     */
+    scratch_data_gpu.release();
+    copy_data_gpu.release();
   }
 
 
@@ -5418,23 +5658,26 @@ namespace IdeoBEM
   fill_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<size_t> &range,
     const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
-      &                                              collection_of_leaf_sets,
-    const ACAConfig &                                aca_config,
-    const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<RangeNumberType> &             kernel_factors,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+                    &collection_of_leaf_sets,
+    const ACAConfig &aca_config,
+    const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
+                                                    &kernels,
+    const std::vector<RangeNumberType>              &kernel_factors,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const DoFHandler<dim, spacedim> &                kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                ky_dof_handler,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5461,6 +5704,17 @@ namespace IdeoBEM
       bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+    /**
+     * Create pair cell wise scratch data and task data on GPU device.
+     */
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                       scratch_data_gpu;
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
+
+    scratch_data_gpu.allocate(scratch_data);
+    copy_data_gpu.allocate(copy_data);
 
     /**
      * Generate a list of \hmatrix pointers at a given index in the subrange,
@@ -5490,6 +5744,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_map_from_local_to_full_dof_indices,
@@ -5502,9 +5757,17 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           method_for_cell_neighboring_type,
           scratch_data,
+          scratch_data_gpu,
           copy_data,
+          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release pair cell wise scratch and copy data.
+     */
+    scratch_data_gpu.release();
+    copy_data_gpu.release();
   }
 
 
@@ -5541,15 +5804,18 @@ namespace IdeoBEM
   fill_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<size_t> &range,
     const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
-      &                                              collection_of_leaf_sets,
-    const ACAConfig &                                aca_config,
-    const std::vector<KernelFunction<spacedim> *> &  kernels,
-    const std::vector<RangeNumberType> &             kernel_factors,
-    const std::vector<RangeNumberType> &             mass_matrix_factors,
-    const std::vector<std::vector<unsigned int>> &   kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &   ky_dof_to_cell_topo,
+                    &collection_of_leaf_sets,
+    const ACAConfig &aca_config,
+    const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
+                                                    &kernels,
+    const std::vector<RangeNumberType>              &kernel_factors,
+    const std::vector<RangeNumberType>              &mass_matrix_factors,
+    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
@@ -5558,8 +5824,8 @@ namespace IdeoBEM
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &   kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &   ky_mapping,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5597,6 +5863,17 @@ namespace IdeoBEM
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     /**
+     * Create pair cell wise scratch data and task data on GPU device.
+     */
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                       scratch_data_gpu;
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
+
+    scratch_data_gpu.allocate(scratch_data);
+    copy_data_gpu.allocate(copy_data);
+
+    /**
      * Generate a list of \hmatrix pointers at a given index in the subrange,
      * each of which corresponds to a kernel function in the vector @p kernels.
      */
@@ -5625,6 +5902,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_map_from_local_to_full_dof_indices,
@@ -5637,9 +5915,17 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           mass_matrix_scratch_data,
           scratch_data,
+          scratch_data_gpu,
           copy_data,
+          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release pair cell wise scratch and copy data.
+     */
+    scratch_data_gpu.release();
+    copy_data_gpu.release();
   }
 
 
@@ -5675,23 +5961,23 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> &          hmat,
-    const ACAConfig &                             aca_config,
-    const KernelFunction<spacedim> &              kernel,
-    const RangeNumberType                         kernel_factor,
-    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &             sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &             kx_dof_handler,
-    const DoFHandler<dim, spacedim> &             ky_dof_handler,
+    HMatrix<spacedim, RangeNumberType>                    &hmat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
+    const DoFHandler<dim, spacedim>                       &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                       &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -5733,14 +6019,36 @@ namespace IdeoBEM
     bem_values.fill_shape_function_value_tables();
 
     /**
+     * Copy the precalculated BEM values to the GPU device.
+     */
+    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      bem_values_gpu;
+    bem_values_gpu.allocate_and_assign_from_host(bem_values);
+
+    /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
      * are local to the current working thread. This is mandatory because
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
-      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), bem_values);
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+    /**
+     * Create pair cell wise scratch data and task data on GPU device.
+     */
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                       scratch_data_gpu;
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
+
+    scratch_data_gpu.allocate(scratch_data);
+    copy_data_gpu.allocate(copy_data);
 
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
@@ -5752,6 +6060,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_map_from_local_to_full_dof_indices,
@@ -5764,34 +6073,47 @@ namespace IdeoBEM
           map_from_ky_boundary_mesh_to_volume_mesh,
           method_for_cell_neighboring_type,
           scratch_data,
+          scratch_data_gpu,
           copy_data,
+          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release BEM values on the GPU device.
+     */
+    bem_values_gpu.release();
+
+    /**
+     * Release pair cell wise scratch and copy data on the GPU device.
+     */
+    scratch_data_gpu.release();
+    copy_data_gpu.release();
   }
 
 
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus(
-    HMatrix<spacedim, RangeNumberType> &          hmat,
-    const ACAConfig &                             aca_config,
-    const KernelFunction<spacedim> &              kernel,
-    const RangeNumberType                         kernel_factor,
-    const RangeNumberType                         mass_matrix_factor,
-    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &             sauter_quad_rule,
-    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    HMatrix<spacedim, RangeNumberType>                    &hmat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const RangeNumberType                                  mass_matrix_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
+    const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -5831,6 +6153,13 @@ namespace IdeoBEM
       sauter_quad_rule.quad_rule_for_regular);
 
     bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Copy the precalculated BEM values to the GPU device.
+     */
+    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      bem_values_gpu;
+    bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
     /**
      * Define @p CellWiseScratchDataForMassMatrix which is local to current
@@ -5856,6 +6185,17 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
+    /**
+     * Create pair cell wise scratch data and task data on GPU device.
+     */
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                       scratch_data_gpu;
+    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
+
+    scratch_data_gpu.allocate(scratch_data);
+    copy_data_gpu.allocate(copy_data);
+
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
         fill_hmatrix_leaf_node_with_aca_plus(
@@ -5867,6 +6207,7 @@ namespace IdeoBEM
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
           bem_values,
+          bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
           kx_map_from_local_to_full_dof_indices,
@@ -5880,9 +6221,22 @@ namespace IdeoBEM
           method_for_cell_neighboring_type,
           mass_matrix_scratch_data,
           scratch_data,
+          scratch_data_gpu,
           copy_data,
+          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release BEM values on the GPU device.
+     */
+    bem_values_gpu.release();
+
+    /**
+     * Release pair cell wise scratch and copy data.
+     */
+    scratch_data_gpu.release();
+    copy_data_gpu.release();
   }
 
 
@@ -5919,24 +6273,24 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
-    const unsigned int                            thread_num,
-    HMatrix<spacedim, RangeNumberType> &          hmat,
-    const ACAConfig &                             aca_config,
-    const KernelFunction<spacedim> &              kernel,
-    const RangeNumberType                         kernel_factor,
-    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &             sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &             kx_dof_handler,
-    const DoFHandler<dim, spacedim> &             ky_dof_handler,
+    const unsigned int                                     thread_num,
+    HMatrix<spacedim, RangeNumberType>                    &hmat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
+    const DoFHandler<dim, spacedim>                       &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                       &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -5976,6 +6330,13 @@ namespace IdeoBEM
       sauter_quad_rule.quad_rule_for_regular);
 
     bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Copy the precalculated BEM values to the GPU device.
+     */
+    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      bem_values_gpu;
+    bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
       hmat.get_leaf_set();
@@ -6021,11 +6382,13 @@ namespace IdeoBEM
                   const tbb::blocked_range<typename std::vector<
                     HMatrix<spacedim, RangeNumberType> *>::iterator> &,
                   const ACAConfig &,
-                  const KernelFunction<spacedim> &,
+                  const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &,
                   const RangeNumberType,
                   const std::vector<std::vector<unsigned int>> &,
                   const std::vector<std::vector<unsigned int>> &,
                   const BEMValues<dim, spacedim, RangeNumberType> &,
+                  const IdeoBEM::CUDAWrappers::
+                    CUDABEMValues<dim, spacedim, RangeNumberType> &,
                   const DoFHandler<dim, spacedim> &,
                   const DoFHandler<dim, spacedim> &,
                   const std::vector<types::global_dof_index> *,
@@ -6049,6 +6412,7 @@ namespace IdeoBEM
                 std::cref(kx_dof_to_cell_topo),
                 std::cref(ky_dof_to_cell_topo),
                 std::cref(bem_values),
+                std::cref(bem_values_gpu),
                 std::cref(kx_dof_handler),
                 std::cref(ky_dof_handler),
                 kx_map_from_local_to_full_dof_indices,
@@ -6062,6 +6426,11 @@ namespace IdeoBEM
                 method_for_cell_neighboring_type,
                 enable_build_symmetric_hmat),
       grain_size);
+
+    /**
+     * Release BEM values on the GPU device.
+     */
+    bem_values_gpu.release();
   }
 
 
@@ -6106,26 +6475,26 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
-    const unsigned int                            thread_num,
-    HMatrix<spacedim, RangeNumberType> &          hmat,
-    const ACAConfig &                             aca_config,
-    const KernelFunction<spacedim> &              kernel,
-    const RangeNumberType                         kernel_factor,
-    const Vector<RangeNumberType> &               mass_vmult_weq,
-    const RangeNumberType                         stabilization_factor,
-    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &             sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &             kx_dof_handler,
-    const DoFHandler<dim, spacedim> &             ky_dof_handler,
+    const unsigned int                                     thread_num,
+    HMatrix<spacedim, RangeNumberType>                    &hmat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const Vector<RangeNumberType>                         &mass_vmult_weq,
+    const RangeNumberType                                  stabilization_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
+    const DoFHandler<dim, spacedim>                       &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                       &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -6165,6 +6534,13 @@ namespace IdeoBEM
       sauter_quad_rule.quad_rule_for_regular);
 
     bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Copy the precalculated BEM values to the GPU device.
+     */
+    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      bem_values_gpu;
+    bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
       hmat.get_leaf_set();
@@ -6210,13 +6586,15 @@ namespace IdeoBEM
                   const tbb::blocked_range<typename std::vector<
                     HMatrix<spacedim, RangeNumberType> *>::iterator> &,
                   const ACAConfig &,
-                  const KernelFunction<spacedim> &,
+                  const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &,
                   const RangeNumberType,
                   const Vector<RangeNumberType> &,
                   const RangeNumberType,
                   const std::vector<std::vector<unsigned int>> &,
                   const std::vector<std::vector<unsigned int>> &,
                   const BEMValues<dim, spacedim, RangeNumberType> &,
+                  const IdeoBEM::CUDAWrappers::
+                    CUDABEMValues<dim, spacedim, RangeNumberType> &,
                   const DoFHandler<dim, spacedim> &,
                   const DoFHandler<dim, spacedim> &,
                   const std::vector<types::global_dof_index> *,
@@ -6242,6 +6620,7 @@ namespace IdeoBEM
                 std::cref(kx_dof_to_cell_topo),
                 std::cref(ky_dof_to_cell_topo),
                 std::cref(bem_values),
+                std::cref(bem_values_gpu),
                 std::cref(kx_dof_handler),
                 std::cref(ky_dof_handler),
                 kx_map_from_local_to_full_dof_indices,
@@ -6255,6 +6634,11 @@ namespace IdeoBEM
                 method_for_cell_neighboring_type,
                 enable_build_symmetric_hmat),
       grain_size);
+
+    /**
+     * Release BEM values on the GPU device.
+     */
+    bem_values_gpu.release();
   }
 
 
@@ -6293,26 +6677,26 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType = double>
   void
   fill_hmatrix_with_aca_plus_smp(
-    const unsigned int                            thread_num,
-    HMatrix<spacedim, RangeNumberType> &          hmat,
-    const ACAConfig &                             aca_config,
-    const KernelFunction<spacedim> &              kernel,
-    const RangeNumberType                         kernel_factor,
-    const RangeNumberType                         mass_matrix_factor,
-    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &             sauter_quad_rule,
-    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    const unsigned int                                     thread_num,
+    HMatrix<spacedim, RangeNumberType>                    &hmat,
+    const ACAConfig                                       &aca_config,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
+    const RangeNumberType                                  kernel_factor,
+    const RangeNumberType                                  mass_matrix_factor,
+    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
+    const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -6352,6 +6736,13 @@ namespace IdeoBEM
       sauter_quad_rule.quad_rule_for_regular);
 
     bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Copy the precalculated BEM values to the GPU device.
+     */
+    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      bem_values_gpu;
+    bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
       hmat.get_leaf_set();
@@ -6397,12 +6788,14 @@ namespace IdeoBEM
                   const tbb::blocked_range<typename std::vector<
                     HMatrix<spacedim, RangeNumberType> *>::iterator> &,
                   const ACAConfig &,
-                  const KernelFunction<spacedim> &,
+                  const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &,
                   const RangeNumberType,
                   const RangeNumberType,
                   const std::vector<std::vector<unsigned int>> &,
                   const std::vector<std::vector<unsigned int>> &,
                   const BEMValues<dim, spacedim, RangeNumberType> &,
+                  const IdeoBEM::CUDAWrappers::
+                    CUDABEMValues<dim, spacedim, RangeNumberType> &,
                   const QGauss<dim> &,
                   const DoFHandler<dim, spacedim> &,
                   const DoFHandler<dim, spacedim> &,
@@ -6428,6 +6821,7 @@ namespace IdeoBEM
                 std::cref(kx_dof_to_cell_topo),
                 std::cref(ky_dof_to_cell_topo),
                 std::cref(bem_values),
+                std::cref(bem_values_gpu),
                 std::cref(mass_matrix_quadrature_formula),
                 std::cref(kx_dof_handler),
                 std::cref(ky_dof_handler),
@@ -6442,6 +6836,11 @@ namespace IdeoBEM
                 method_for_cell_neighboring_type,
                 enable_build_symmetric_hmat),
       grain_size);
+
+    /**
+     * Release BEM values on the GPU device.
+     */
+    bem_values_gpu.release();
   }
 
 
@@ -6489,22 +6888,23 @@ namespace IdeoBEM
   fill_hmatrix_with_aca_plus_smp(
     const unsigned int                                 thread_num,
     std::vector<HMatrix<spacedim, RangeNumberType> *> &hmats,
-    const ACAConfig &                                  aca_config,
-    const std::vector<KernelFunction<spacedim> *> &    kernels,
-    const std::vector<RangeNumberType> &               kernel_factors,
-    const std::vector<std::vector<unsigned int>> &     kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &     ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &                  sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &                  kx_dof_handler,
-    const DoFHandler<dim, spacedim> &                  ky_dof_handler,
+    const ACAConfig                                   &aca_config,
+    const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
+                                                 &kernels,
+    const std::vector<RangeNumberType>           &kernel_factors,
+    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>              &sauter_quad_rule,
+    const DoFHandler<dim, spacedim>              &kx_dof_handler,
+    const DoFHandler<dim, spacedim>              &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -6548,6 +6948,13 @@ namespace IdeoBEM
       sauter_quad_rule.quad_rule_for_regular);
 
     bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Copy the precalculated BEM values to the GPU device.
+     */
+    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      bem_values_gpu;
+    bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
     /**
      * Extract the collection of leaf sets from the vector of \hmatrices.
@@ -6608,11 +7015,14 @@ namespace IdeoBEM
           const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
             &,
           const ACAConfig &,
-          const std::vector<KernelFunction<spacedim> *> &,
+          const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
+            &,
           const std::vector<RangeNumberType> &,
           const std::vector<std::vector<unsigned int>> &,
           const std::vector<std::vector<unsigned int>> &,
           const BEMValues<dim, spacedim, RangeNumberType> &,
+          const IdeoBEM::CUDAWrappers::
+            CUDABEMValues<dim, spacedim, RangeNumberType> &,
           const DoFHandler<dim, spacedim> &,
           const DoFHandler<dim, spacedim> &,
           const std::vector<types::global_dof_index> *,
@@ -6637,6 +7047,7 @@ namespace IdeoBEM
         std::cref(kx_dof_to_cell_topo),
         std::cref(ky_dof_to_cell_topo),
         std::cref(bem_values),
+        std::cref(bem_values_gpu),
         std::cref(kx_dof_handler),
         std::cref(ky_dof_handler),
         kx_map_from_local_to_full_dof_indices,
@@ -6650,6 +7061,11 @@ namespace IdeoBEM
         method_for_cell_neighboring_type,
         enable_build_symmetric_hmat),
       tbb::auto_partitioner());
+
+    /**
+     * Release BEM values on the GPU device.
+     */
+    bem_values_gpu.release();
   }
 
 
@@ -6702,24 +7118,25 @@ namespace IdeoBEM
   fill_hmatrix_with_aca_plus_smp(
     const unsigned int                                 thread_num,
     std::vector<HMatrix<spacedim, RangeNumberType> *> &hmats,
-    const ACAConfig &                                  aca_config,
-    const std::vector<KernelFunction<spacedim> *> &    kernels,
-    const std::vector<RangeNumberType> &               kernel_factors,
-    const std::vector<RangeNumberType> &               mass_matrix_factors,
-    const std::vector<std::vector<unsigned int>> &     kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>> &     ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &                  sauter_quad_rule,
-    const QGauss<dim> &              mass_matrix_quadrature_formula,
+    const ACAConfig                                   &aca_config,
+    const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
+                                                 &kernels,
+    const std::vector<RangeNumberType>           &kernel_factors,
+    const std::vector<RangeNumberType>           &mass_matrix_factors,
+    const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>              &sauter_quad_rule,
+    const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &           kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &           ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim> &              kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &              ky_mapping,
+    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -6763,6 +7180,13 @@ namespace IdeoBEM
       sauter_quad_rule.quad_rule_for_regular);
 
     bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Copy the precalculated BEM values to the GPU device.
+     */
+    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      bem_values_gpu;
+    bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
     /**
      * Extract the collection of leaf sets from the vector of \hmatrices.
@@ -6823,12 +7247,15 @@ namespace IdeoBEM
           const std::vector<std::vector<HMatrix<spacedim, RangeNumberType> *> *>
             &,
           const ACAConfig &,
-          const std::vector<KernelFunction<spacedim> *> &,
+          const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
+            &,
           const std::vector<RangeNumberType> &,
           const std::vector<RangeNumberType> &,
           const std::vector<std::vector<unsigned int>> &,
           const std::vector<std::vector<unsigned int>> &,
           const BEMValues<dim, spacedim, RangeNumberType> &,
+          const IdeoBEM::CUDAWrappers::
+            CUDABEMValues<dim, spacedim, RangeNumberType> &,
           const QGauss<dim> &,
           const DoFHandler<dim, spacedim> &,
           const DoFHandler<dim, spacedim> &,
@@ -6855,6 +7282,7 @@ namespace IdeoBEM
         std::cref(kx_dof_to_cell_topo),
         std::cref(ky_dof_to_cell_topo),
         std::cref(bem_values),
+        std::cref(bem_values_gpu),
         std::cref(mass_matrix_quadrature_formula),
         std::cref(kx_dof_handler),
         std::cref(ky_dof_handler),
@@ -6869,6 +7297,11 @@ namespace IdeoBEM
         method_for_cell_neighboring_type,
         enable_build_symmetric_hmat),
       tbb::auto_partitioner());
+
+    /**
+     * Release BEM values on the GPU device.
+     */
+    bem_values_gpu.release();
   }
 } // namespace IdeoBEM
 

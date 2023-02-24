@@ -20,10 +20,9 @@
 #include <utility>
 #include <vector>
 
-#include "bem_kernels.h"
-#include "bem_tools.h"
+#include "bem_kernels.hcu"
 #include "bem_values.h"
-#include "sauter_quadrature.h"
+#include "sauter_quadrature.hcu"
 
 namespace IdeoBEM
 {
@@ -38,7 +37,7 @@ namespace IdeoBEM
       typename DoFHandler<dim, spacedim>::active_cell_iterator,
       typename DoFHandler<dim, spacedim>::active_cell_iterator>>::const_iterator
       &iterator_for_cell_iterator_pairs,
-    CellWiseScratchDataForMassMatrix<dim, spacedim> &              scratch_data,
+    CellWiseScratchDataForMassMatrix<dim, spacedim>               &scratch_data,
     CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> &copy_data)
   {
     /**
@@ -277,7 +276,7 @@ namespace IdeoBEM
   void
   copy_cell_local_to_global_for_fem_matrix_vmult(
     const CellWiseCopyDataForMassMatrixVmult<dim, spacedim, RangeNumberType>
-      &         copy_data,
+               &copy_data,
     VectorType &target_vector)
   {
     AssertDimension(copy_data.local_dof_indices_for_test_space.size(),
@@ -387,8 +386,8 @@ namespace IdeoBEM
     const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
     const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
     const RangeNumberType            factor,
-    const Quadrature<dim> &          quad_rule,
-    MatrixType &                     target_full_matrix)
+    const Quadrature<dim>           &quad_rule,
+    MatrixType                      &target_full_matrix)
   {
     // Because the test and ansatz function spaces related to the mass matrix
     // are on a same spatial domain, here we make an assertion about the
@@ -454,9 +453,9 @@ namespace IdeoBEM
   assemble_fem_mass_matrix_vmult(
     const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
     const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
-    const VectorType &               v,
-    const Quadrature<dim> &          quad_rule,
-    VectorType &                     target_vector)
+    const VectorType                &v,
+    const Quadrature<dim>           &quad_rule,
+    VectorType                      &target_vector)
   {
     // Because the test and ansatz function spaces related to the mass matrix
     // are on a same spatial domain, here we make an assertion about the
@@ -553,10 +552,11 @@ namespace IdeoBEM
             typename MatrixType>
   void
   assemble_bem_full_matrix(
-    const KernelFunction<spacedim, RangeNumberType> &kernel,
-    const RangeNumberType                            factor,
-    const DoFHandler<dim, spacedim> &                dof_handler_for_test_space,
-    const DoFHandler<dim, spacedim> &  dof_handler_for_trial_space,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim, RangeNumberType>
+                                      &kernel,
+    const RangeNumberType              factor,
+    const DoFHandler<dim, spacedim>   &dof_handler_for_test_space,
+    const DoFHandler<dim, spacedim>   &dof_handler_for_trial_space,
     MappingQGenericExt<dim, spacedim> &kx_mapping,
     MappingQGenericExt<dim, spacedim> &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
@@ -568,8 +568,8 @@ namespace IdeoBEM
                    typename Triangulation<dim + 1, spacedim>::face_iterator>
       &map_from_trial_space_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const SauterQuadratureRule<dim> &     sauter_quad_rule,
-    MatrixType &                          target_full_matrix)
+    const SauterQuadratureRule<dim>      &sauter_quad_rule,
+    MatrixType                           &target_full_matrix)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -701,7 +701,7 @@ namespace IdeoBEM
      */
     CellWiseScratchDataForRHSLinearForm(
       const FiniteElement<dim, spacedim> &fe_for_test_space,
-      const Quadrature<dim> &             quadrature,
+      const Quadrature<dim>              &quadrature,
       const UpdateFlags                   update_flags)
       : fe_values_for_test_space(fe_for_test_space, quadrature, update_flags)
     {}
@@ -783,7 +783,7 @@ namespace IdeoBEM
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
   void
   local_assemble_rhs_linear_form_vector(
-    const Function<spacedim, RangeNumberType> &                     f,
+    const Function<spacedim, RangeNumberType>                      &f,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
     CellWiseScratchDataForRHSLinearForm<dim, spacedim> &scratch_data,
     CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType> &copy_data)
@@ -869,7 +869,7 @@ namespace IdeoBEM
   void
   copy_cell_local_to_global_rhs_linear_form_vector(
     const CellWiseCopyDataForRHSLinearForm<dim, spacedim, RangeNumberType>
-      &         copy_data,
+               &copy_data,
     VectorType &rhs_vector)
   {
     AssertDimension(copy_data.local_dof_indices_for_test_space.size(),
@@ -897,9 +897,9 @@ namespace IdeoBEM
   void
   assemble_rhs_linear_form_vector(
     const Function<spacedim, RangeNumberType> &f,
-    const DoFHandler<dim, spacedim> &          dof_handler_for_test_space,
-    const Quadrature<dim> &                    quad_rule,
-    VectorType &                               rhs_vector)
+    const DoFHandler<dim, spacedim>           &dof_handler_for_test_space,
+    const Quadrature<dim>                     &quad_rule,
+    VectorType                                &rhs_vector)
   {
     WorkStream::run(
       dof_handler_for_test_space.begin_active(),
@@ -941,8 +941,8 @@ namespace IdeoBEM
   assemble_rhs_linear_form_vector(
     const RangeNumberType            f,
     const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
-    const Quadrature<dim> &          quad_rule,
-    VectorType &                     rhs_vector)
+    const Quadrature<dim>           &quad_rule,
+    VectorType                      &rhs_vector)
   {
     WorkStream::run(
       dof_handler_for_test_space.begin_active(),
@@ -986,9 +986,10 @@ namespace IdeoBEM
   template <int dim, int spacedim, typename RangeNumberType>
   void
   evaluate_potential_on_one_cell(
-    const KernelFunction<spacedim, RangeNumberType> &kernel,
-    const Point<spacedim, RangeNumberType> &         target_point,
-    const RangeNumberType                            factor,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim, RangeNumberType>
+                                           &kernel,
+    const Point<spacedim, RangeNumberType> &target_point,
+    const RangeNumberType                   factor,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
     const bool is_normal_vector_negated,
     CellWiseScratchDataForPotentialEval<dim, spacedim, RangeNumberType>
@@ -1060,7 +1061,7 @@ namespace IdeoBEM
   void
   copy_cell_local_to_global_for_potential_eval(
     const CellWisePerTaskDataForPotentialEval<dim, spacedim, RangeNumberType>
-      &         copy_data,
+               &copy_data,
     VectorType &result_vector)
   {
     AssertDimension(copy_data.local_dof_indices_for_trial_space.size(),
@@ -1100,13 +1101,14 @@ namespace IdeoBEM
             typename VectorType>
   void
   evaluate_potential_at_points(
-    const KernelFunction<spacedim, RangeNumberType> &kernel,
-    const RangeNumberType                            factor,
+    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim, RangeNumberType>
+                                    &kernel,
+    const RangeNumberType            factor,
     const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
-    const VectorType &               dof_values_in_trial_space,
+    const VectorType                &dof_values_in_trial_space,
     const bool                       is_normal_vector_negated,
     const std::vector<Point<spacedim, RangeNumberType>> &target_point_list,
-    VectorType &                                         potential_values)
+    VectorType                                          &potential_values)
   {
     AssertDimension(target_point_list.size(), potential_values.size());
 

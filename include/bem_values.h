@@ -15,7 +15,9 @@
 #include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_tools.h>
 
-#include "bem_tools.h"
+#include "bem_tools.hcu"
+#include "cpu_table.h"
+#include "lapack_full_matrix_ext.h"
 #include "sauter_quadrature_tools.h"
 
 namespace IdeoBEM
@@ -58,10 +60,10 @@ namespace IdeoBEM
       const FiniteElement<dim, spacedim>                    &ky_fe,
       typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
       typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-      const QGauss<4> &quad_rule_for_same_panel,
-      const QGauss<4> &quad_rule_for_common_edge,
-      const QGauss<4> &quad_rule_for_common_vertex,
-      const QGauss<4> &quad_rule_for_regular);
+      const QGauss<dim * 2> &quad_rule_for_same_panel,
+      const QGauss<dim * 2> &quad_rule_for_common_edge,
+      const QGauss<dim * 2> &quad_rule_for_common_vertex,
+      const QGauss<dim * 2> &quad_rule_for_regular);
 
 
     /**
@@ -281,7 +283,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of finite element shape function's gradient values for
@@ -291,7 +293,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of finite element shape function's gradient values for
@@ -301,7 +303,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of finite element shape function's gradient values for
@@ -311,7 +313,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of finite element shape function's gradient values for
@@ -321,7 +323,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of finite element shape function's gradient values for
@@ -331,7 +333,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of finite element shape function's gradient values for
@@ -341,7 +343,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_shape_grad_matrix_table_for_regular;
     /**
      * Data table of finite element shape function's gradient values for
@@ -351,7 +353,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_shape_grad_matrix_table_for_regular;
 
     /**
@@ -362,7 +364,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of mapping shape function's gradient values for
@@ -372,7 +374,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of mapping shape function's gradient values for
@@ -382,7 +384,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of mapping shape function's gradient values for
@@ -392,7 +394,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of mapping shape function's gradient values for
@@ -402,7 +404,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of mapping shape function's gradient values for
@@ -412,7 +414,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of mapping shape function's gradient values for
@@ -422,7 +424,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_regular;
     /**
      * Data table of mapping shape function's gradient values for
@@ -432,12 +434,12 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_regular;
 
     /**
-     * Fill the data tables for both finite element and mapping shape function
-     * values and their derivatives.
+     * Fill the data tables for the values and derivatives of finite element
+     * shape functions and mapping object shape functions.
      */
     void
     fill_shape_function_value_tables();
@@ -463,16 +465,23 @@ namespace IdeoBEM
     init_shape_grad_matrix_tables();
 
     /**
-     * Initialize the data tables for the gradient values of mapping shape
-     * functions.
+     * Initialize the data tables for the gradient values of shape functions in
+     * the mapping object.
      */
     void
     init_mapping_shape_grad_matrix_tables();
 
+    /**
+     * Initialize matrices storing the gradient values of shape functions in the
+     * mapping object.
+     *
+     * @param table
+     * @param n_shape_functions
+     */
     void
     init_internal_matrix_in_mapping_shape_grad_matrix_table(
-      Table<2, FullMatrix<RangeNumberType>> &table,
-      const unsigned int                     n_shape_functions);
+      Table<2, LAPACKFullMatrixExt<RangeNumberType>> &table,
+      const unsigned int                              n_shape_functions);
   };
 
 
@@ -482,10 +491,10 @@ namespace IdeoBEM
     const FiniteElement<dim, spacedim>                    &ky_fe,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const QGauss<4> &quad_rule_for_same_panel,
-    const QGauss<4> &quad_rule_for_common_edge,
-    const QGauss<4> &quad_rule_for_common_vertex,
-    const QGauss<4> &quad_rule_for_regular)
+    const QGauss<dim * 2> &quad_rule_for_same_panel,
+    const QGauss<dim * 2> &quad_rule_for_common_edge,
+    const QGauss<dim * 2> &quad_rule_for_common_vertex,
+    const QGauss<dim * 2> &quad_rule_for_regular)
     : kx_fe(kx_fe)
     , ky_fe(ky_fe)
     , kx_mapping_data(kx_mapping_data)
@@ -643,8 +652,8 @@ namespace IdeoBEM
   void
   BEMValues<dim, spacedim, RangeNumberType>::
     init_internal_matrix_in_mapping_shape_grad_matrix_table(
-      Table<2, FullMatrix<RangeNumberType>> &table,
-      const unsigned int                     n_shape_functions)
+      Table<2, LAPACKFullMatrixExt<RangeNumberType>> &table,
+      const unsigned int                              n_shape_functions)
   {
     for (unsigned int i = 0; i < table.size(0); i++)
       for (unsigned int j = 0; j < table.size(1); j++)
@@ -814,9 +823,17 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Even though the internally generated polynomials are in the
-         * tensor product order, the shape function values and derivatives are
-         * still in the hierarchic order.}
+         *
+         * \alert{Even though the internally generated polynomials in the
+         * mapping object are in the tensor product order, the shape function
+         * values and derivatives are still in the hierarchic order. This can be
+         * verified by checking the source code of
+         * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
+         * (see
+         * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)
+         *
+         * However, this behavior is different from the documentation for the
+         * function @p MappingQ< dim, spacedim >::InternalData::shape().}
          */
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
@@ -1017,9 +1034,17 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Even though the internally generated polynomials are in the
-         * tensor product order, the shape function values and derivatives are
-         * still in the hierarchic order.}
+         *
+         * \alert{Even though the internally generated polynomials in the
+         * mapping object are in the tensor product order, the shape function
+         * values and derivatives are still in the hierarchic order. This can be
+         * verified by checking the source code of
+         * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
+         * (see
+         * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)
+         *
+         * However, this behavior is different from the documentation for the
+         * function @p MappingQ< dim, spacedim >::InternalData::shape().}
          */
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
@@ -1225,9 +1250,17 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Even though the internally generated polynomials are in the
-         * tensor product order, the shape function values and derivatives are
-         * still in the hierarchic order.}
+         *
+         * \alert{Even though the internally generated polynomials in the
+         * mapping object are in the tensor product order, the shape function
+         * values and derivatives are still in the hierarchic order. This can be
+         * verified by checking the source code of
+         * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
+         * (see
+         * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)
+         *
+         * However, this behavior is different from the documentation for the
+         * function @p MappingQ< dim, spacedim >::InternalData::shape().}
          */
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
@@ -1417,9 +1450,17 @@ namespace IdeoBEM
 
     /**
      * Compute mapping shape function values and their derivatives in batch.
-     * \mynote{Even though the internally generated polynomials are in the
-     * tensor product order, the shape function values and derivatives are
-     * still in the hierarchic order.}
+     *
+     * \alert{Even though the internally generated polynomials in the
+     * mapping object are in the tensor product order, the shape function
+     * values and derivatives are still in the hierarchic order. This can be
+     * verified by checking the source code of
+     * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
+     * (see
+     * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)
+     *
+     * However, this behavior is different from the documentation for the
+     * function @p MappingQ< dim, spacedim >::InternalData::shape().}
      */
     // Get the numbering for accessing the support points in the
     // lexicographic ordering which are stored in the hierarchic ordering.
@@ -1475,7 +1516,7 @@ namespace IdeoBEM
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
   struct CellWiseCopyDataForMassMatrix
   {
-    FullMatrix<RangeNumberType> local_matrix;
+    LAPACKFullMatrixExt<RangeNumberType> local_matrix;
     // N.B. Memory should be preallocated for this vector before calling
     // <code>get_dof_indices</code>.
     std::vector<types::global_dof_index> local_dof_indices_for_test_space;
@@ -1516,8 +1557,8 @@ namespace IdeoBEM
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
   struct CellWiseCopyDataForMassMatrixVmult
   {
-    FullMatrix<RangeNumberType> local_matrix;
-    Vector<RangeNumberType>     local_u, local_v;
+    LAPACKFullMatrixExt<RangeNumberType> local_matrix;
+    Vector<RangeNumberType>              local_u, local_v;
 
     // N.B. Memory should be preallocated for this vector before calling
     // <code>get_dof_indices</code>.
@@ -1662,8 +1703,9 @@ namespace IdeoBEM
    * is used for SMP parallel computation of BEM matrices.
    */
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
-  struct PairCellWiseScratchData
+  class PairCellWiseScratchData
   {
+  public:
     using FE_Poly_short = FE_Poly<dim, spacedim>;
 
     /**
@@ -1834,22 +1876,22 @@ namespace IdeoBEM
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the same panel case.
      */
-    Table<2, FullMatrix<RangeNumberType>> kx_covariants_same_panel;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_same_panel;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the common edge case.
      */
-    Table<2, FullMatrix<RangeNumberType>> kx_covariants_common_edge;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_common_edge;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
      */
-    Table<2, FullMatrix<RangeNumberType>> kx_covariants_common_vertex;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_common_vertex;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the regular case.
      */
-    Table<2, FullMatrix<RangeNumberType>> kx_covariants_regular;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_regular;
 
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
@@ -1919,22 +1961,22 @@ namespace IdeoBEM
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the same panel case.
      */
-    Table<2, FullMatrix<RangeNumberType>> ky_covariants_same_panel;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_same_panel;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the common edge case.
      */
-    Table<2, FullMatrix<RangeNumberType>> ky_covariants_common_edge;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_common_edge;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
      */
-    Table<2, FullMatrix<RangeNumberType>> ky_covariants_common_vertex;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_common_vertex;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the regular case.
      */
-    Table<2, FullMatrix<RangeNumberType>> ky_covariants_regular;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_regular;
 
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
@@ -2145,15 +2187,16 @@ namespace IdeoBEM
 
 
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
-  struct PairCellWisePerTaskData
+  class PairCellWisePerTaskData
   {
+  public:
     /**
      * Local matrix for the pair of cells to be assembled into the global full
      * matrix representation of the boundary integral operator.
      *
      * \comment{Therefore, this data field is only defined for verification.}
      */
-    FullMatrix<RangeNumberType> local_pair_cell_matrix;
+    LAPACKFullMatrixExt<RangeNumberType> local_pair_cell_matrix;
 
     /**
      * Permuted list of DoF indices in the cell \f$K_x\f$, each element of

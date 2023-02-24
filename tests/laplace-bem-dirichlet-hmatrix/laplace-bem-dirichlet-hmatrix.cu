@@ -127,7 +127,7 @@ main(int argc, char *argv[])
     }
   else
     {
-      bem.read_volume_mesh(std::string("sphere-from-gmsh-refine-2_hex.msh"));
+      bem.read_volume_mesh(std::string("sphere-from-gmsh_hex.msh"));
     }
 
   const Point<3> source_loc(1, 1, 1);

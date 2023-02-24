@@ -13,6 +13,8 @@
 
 #include <limits>
 
+#include "lapack_full_matrix_ext.h"
+
 namespace LinAlg
 {
   using namespace dealii;
@@ -23,6 +25,44 @@ namespace LinAlg
   template <typename number>
   number
   determinant4x4(const FullMatrix<number> &matrix)
+  {
+    Assert(matrix.m() == 4, ExcDimensionMismatch(matrix.m(), 4));
+    Assert(matrix.n() == 4, ExcDimensionMismatch(matrix.n(), 4));
+
+    return matrix(0, 0) *
+             (matrix(1, 1) *
+                (matrix(2, 2) * matrix(3, 3) - matrix(2, 3) * matrix(3, 2)) -
+              matrix(1, 2) *
+                (matrix(2, 1) * matrix(3, 3) - matrix(2, 3) * matrix(3, 1)) +
+              matrix(1, 3) *
+                (matrix(2, 1) * matrix(3, 2) - matrix(2, 2) * matrix(3, 1))) -
+           matrix(0, 1) *
+             (matrix(1, 0) *
+                (matrix(2, 2) * matrix(3, 3) - matrix(2, 3) * matrix(3, 2)) -
+              matrix(1, 2) *
+                (matrix(2, 0) * matrix(3, 3) - matrix(2, 3) * matrix(3, 0)) +
+              matrix(1, 3) *
+                (matrix(2, 0) * matrix(3, 2) - matrix(2, 2) * matrix(3, 0))) +
+           matrix(0, 2) *
+             (matrix(1, 0) *
+                (matrix(2, 1) * matrix(3, 3) - matrix(2, 3) * matrix(3, 1)) -
+              matrix(1, 1) *
+                (matrix(2, 0) * matrix(3, 3) - matrix(2, 3) * matrix(3, 0)) +
+              matrix(1, 3) *
+                (matrix(2, 0) * matrix(3, 1) - matrix(2, 1) * matrix(3, 0))) -
+           matrix(0, 3) *
+             (matrix(1, 0) *
+                (matrix(2, 1) * matrix(3, 2) - matrix(2, 2) * matrix(3, 1)) -
+              matrix(1, 1) *
+                (matrix(2, 0) * matrix(3, 2) - matrix(2, 2) * matrix(3, 0)) +
+              matrix(1, 2) *
+                (matrix(2, 0) * matrix(3, 1) - matrix(2, 1) * matrix(3, 0)));
+  }
+
+
+  template <typename number>
+  number
+  determinant4x4(const LAPACKFullMatrixExt<number> &matrix)
   {
     Assert(matrix.m() == 4, ExcDimensionMismatch(matrix.m(), 4));
     Assert(matrix.n() == 4, ExcDimensionMismatch(matrix.n(), 4));

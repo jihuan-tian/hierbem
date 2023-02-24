@@ -17,7 +17,7 @@
 #include <fstream>
 #include <vector>
 
-#include "sauter_quadrature.h"
+#include "../../include/sauter_quadrature.hcu"
 
 using namespace dealii;
 

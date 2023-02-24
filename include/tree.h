@@ -354,7 +354,7 @@ void
 BinaryTreeNode<T>::set_child_pointer(std::size_t           index,
                                      const BinaryTreeNode *node_pointer)
 {
-  Assert((index >= 0) && (index < 2), dealii::ExcIndexRange(index, 0, 2));
+  AssertIndexRange(index, 2);
 
   switch (index)
     {

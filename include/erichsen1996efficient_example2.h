@@ -62,7 +62,7 @@
 
 #include "aca_plus.h"
 #include "bem_general.h"
-#include "bem_kernels.h"
+#include "bem_kernels.hcu"
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 #include "debug_tools.h"

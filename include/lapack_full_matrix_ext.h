@@ -8,6 +8,7 @@
 #ifndef INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 #define INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 
+#include <fstream>
 #include <limits>
 #include <regex>
 #include <sstream>
@@ -128,7 +129,7 @@ public:
   static void
   Reshape(const size_type              rows,
           const size_type              cols,
-          const std::vector<Number> &  values,
+          const std::vector<Number>   &values,
           LAPACKFullMatrixExt<Number> &matrix);
 
   /**
@@ -145,11 +146,11 @@ public:
    */
   static size_type
   reduced_svd_on_AxBT(
-    LAPACKFullMatrixExt<Number> &                                   A,
-    LAPACKFullMatrixExt<Number> &                                   B,
-    LAPACKFullMatrixExt<Number> &                                   U,
+    LAPACKFullMatrixExt<Number>                                    &A,
+    LAPACKFullMatrixExt<Number>                                    &B,
+    LAPACKFullMatrixExt<Number>                                    &U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-    LAPACKFullMatrixExt<Number> &                                   VT,
+    LAPACKFullMatrixExt<Number>                                    &VT,
     Number singular_value_threshold = 0.);
 
   /**
@@ -171,11 +172,11 @@ public:
    */
   static size_type
   reduced_svd_on_AxBT(
-    LAPACKFullMatrixExt<Number> &                                   A,
-    LAPACKFullMatrixExt<Number> &                                   B,
-    LAPACKFullMatrixExt<Number> &                                   U,
+    LAPACKFullMatrixExt<Number>                                    &A,
+    LAPACKFullMatrixExt<Number>                                    &B,
+    LAPACKFullMatrixExt<Number>                                    &U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-    LAPACKFullMatrixExt<Number> &                                   VT,
+    LAPACKFullMatrixExt<Number>                                    &VT,
     size_type truncation_rank,
     Number    singular_value_threshold = 0.);
 
@@ -202,13 +203,13 @@ public:
    */
   static size_type
   reduced_svd_on_AxBT(
-    LAPACKFullMatrixExt<Number> &                                   A,
-    LAPACKFullMatrixExt<Number> &                                   B,
-    LAPACKFullMatrixExt<Number> &                                   U,
+    LAPACKFullMatrixExt<Number>                                    &A,
+    LAPACKFullMatrixExt<Number>                                    &B,
+    LAPACKFullMatrixExt<Number>                                    &U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-    LAPACKFullMatrixExt<Number> &                                   VT,
-    LAPACKFullMatrixExt<Number> &                                   C,
-    LAPACKFullMatrixExt<Number> &                                   D,
+    LAPACKFullMatrixExt<Number>                                    &VT,
+    LAPACKFullMatrixExt<Number>                                    &C,
+    LAPACKFullMatrixExt<Number>                                    &D,
     size_type truncation_rank,
     Number    singular_value_threshold = 0.);
 
@@ -254,7 +255,7 @@ public:
   LAPACKFullMatrixExt(
     const std::array<types::global_dof_index, 2> &row_index_range,
     const std::array<types::global_dof_index, 2> &column_index_range,
-    const LAPACKFullMatrixExt<Number> &           M);
+    const LAPACKFullMatrixExt<Number>            &M);
 
   /**
    * Construct a full matrix by restriction to the block cluster \f$\tau
@@ -269,7 +270,7 @@ public:
   LAPACKFullMatrixExt(
     const std::array<types::global_dof_index, 2> &row_index_range,
     const std::array<types::global_dof_index, 2> &column_index_range,
-    const LAPACKFullMatrixExt<Number> &           M,
+    const LAPACKFullMatrixExt<Number>            &M,
     const std::array<types::global_dof_index, 2> &M_row_index_range,
     const std::array<types::global_dof_index, 2> &M_column_index_range);
 
@@ -434,9 +435,9 @@ public:
    * @param VT with a dimension \f$n \times n\f$
    */
   void
-  svd(LAPACKFullMatrixExt<Number> &                                   U,
+  svd(LAPACKFullMatrixExt<Number>                                    &U,
       std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-      LAPACKFullMatrixExt<Number> &                                   VT);
+      LAPACKFullMatrixExt<Number>                                    &VT);
 
   /**
    * Perform the standard singular value decomposition (SVD) with rank
@@ -452,9 +453,9 @@ public:
    * @param VT with a dimension \f$n \times n\f$.
    */
   void
-  svd(LAPACKFullMatrixExt<Number> &                                   U,
+  svd(LAPACKFullMatrixExt<Number>                                    &U,
       std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-      LAPACKFullMatrixExt<Number> &                                   VT,
+      LAPACKFullMatrixExt<Number>                                    &VT,
       const size_type truncation_rank);
 
   /**
@@ -478,9 +479,9 @@ public:
    */
   size_type
   reduced_svd(
-    LAPACKFullMatrixExt<Number> &                                   U,
+    LAPACKFullMatrixExt<Number>                                    &U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-    LAPACKFullMatrixExt<Number> &                                   VT,
+    LAPACKFullMatrixExt<Number>                                    &VT,
     size_type truncation_rank,
     Number    singular_value_threshold = 0.);
 
@@ -509,11 +510,11 @@ public:
    */
   size_type
   reduced_svd(
-    LAPACKFullMatrixExt<Number> &                                   U,
+    LAPACKFullMatrixExt<Number>                                    &U,
     std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-    LAPACKFullMatrixExt<Number> &                                   VT,
-    LAPACKFullMatrixExt<Number> &                                   C,
-    LAPACKFullMatrixExt<Number> &                                   D,
+    LAPACKFullMatrixExt<Number>                                    &VT,
+    LAPACKFullMatrixExt<Number>                                    &C,
+    LAPACKFullMatrixExt<Number>                                    &D,
     size_type truncation_rank,
     Number    singular_value_threshold = 0.);
 
@@ -607,7 +608,7 @@ public:
    */
   void
   scale_rows(
-    LAPACKFullMatrixExt<Number> &                                         A,
+    LAPACKFullMatrixExt<Number>                                          &A,
     const std::vector<typename numbers::NumberTraits<Number>::real_type> &V)
     const;
 
@@ -634,7 +635,7 @@ public:
    */
   void
   scale_columns(
-    LAPACKFullMatrixExt<Number> &                                         A,
+    LAPACKFullMatrixExt<Number>                                          &A,
     const std::vector<typename numbers::NumberTraits<Number>::real_type> &V)
     const;
 
@@ -719,7 +720,7 @@ public:
    */
   void
   fill_rows(const std::array<types::global_dof_index, 2> &row_index_range,
-            const LAPACKFullMatrixExt<Number> &           M,
+            const LAPACKFullMatrixExt<Number>            &M,
             const std::array<types::global_dof_index, 2> &M_row_index_range,
             const Number                                  factor    = 1.,
             const bool                                    is_adding = false);
@@ -740,7 +741,7 @@ public:
    * @param B
    */
   void
-  hstack(LAPACKFullMatrixExt<Number> &      C,
+  hstack(LAPACKFullMatrixExt<Number>       &C,
          const LAPACKFullMatrixExt<Number> &B) const;
 
   /**
@@ -749,7 +750,7 @@ public:
    * @param B
    */
   void
-  vstack(LAPACKFullMatrixExt<Number> &      C,
+  vstack(LAPACKFullMatrixExt<Number>       &C,
          const LAPACKFullMatrixExt<Number> &B) const;
 
   /**
@@ -877,7 +878,7 @@ public:
    * current matrix.
    */
   void
-  add(LAPACKFullMatrixExt<Number> &      C,
+  add(LAPACKFullMatrixExt<Number>       &C,
       const LAPACKFullMatrixExt<Number> &B,
       const bool is_result_matrix_symm_apriori = false) const;
 
@@ -886,7 +887,7 @@ public:
    * multiplied with \f$B\f$, where \f$A\f$ is the current matrix.
    */
   void
-  add(LAPACKFullMatrixExt<Number> &      C,
+  add(LAPACKFullMatrixExt<Number>       &C,
       const Number                       b,
       const LAPACKFullMatrixExt<Number> &B,
       const bool is_result_matrix_symm_apriori = false) const;
@@ -926,7 +927,7 @@ public:
    * @param adding
    */
   void
-  vmult(Vector<Number> &      w,
+  vmult(Vector<Number>       &w,
         const Vector<Number> &v,
         const bool            adding = false) const;
 
@@ -945,7 +946,7 @@ public:
    * @param adding
    */
   void
-  Tvmult(Vector<Number> &      w,
+  Tvmult(Vector<Number>       &w,
          const Vector<Number> &v,
          const bool            adding = false) const;
 
@@ -957,7 +958,7 @@ public:
    * @param adding
    */
   void
-  mmult(LAPACKFullMatrixExt<Number> &      C,
+  mmult(LAPACKFullMatrixExt<Number>       &C,
         const LAPACKFullMatrixExt<Number> &B,
         const bool                         adding = false) const;
 
@@ -971,7 +972,7 @@ public:
    * @param adding
    */
   void
-  mmult(LAPACKFullMatrixExt<Number> &      C,
+  mmult(LAPACKFullMatrixExt<Number>       &C,
         const Number                       alpha,
         const LAPACKFullMatrixExt<Number> &B,
         const bool                         adding = false) const;
@@ -985,7 +986,7 @@ public:
    * @param adding
    */
   void
-  mTmult(LAPACKFullMatrixExt<Number> &      C,
+  mTmult(LAPACKFullMatrixExt<Number>       &C,
          const LAPACKFullMatrixExt<Number> &B,
          const bool                         adding = false) const;
 
@@ -1000,24 +1001,49 @@ public:
    * @param adding
    */
   void
-  mTmult(LAPACKFullMatrixExt<Number> &      C,
+  mTmult(LAPACKFullMatrixExt<Number>       &C,
          const Number                       alpha,
          const LAPACKFullMatrixExt<Number> &B,
          const bool                         adding = false) const;
 
   void
-  Tmmult(LAPACKFullMatrixExt<Number> &      C,
+  Tmmult(LAPACKFullMatrixExt<Number>       &C,
          const LAPACKFullMatrixExt<Number> &B,
          const bool                         adding = false) const;
 
   void
-  Tmmult(LAPACKFullMatrixExt<Number> &      C,
+  Tmmult(LAPACKFullMatrixExt<Number>       &C,
          const Number                       alpha,
          const LAPACKFullMatrixExt<Number> &B,
          const bool                         adding = false) const;
 
   /**
+   * Calculate the determinant of a \f$2\times 2\f$ matrix.
+   *
+   * @return
+   */
+  Number
+  determinant2x2() const;
+
+  /**
+   * Calculate the determinant of a \f$3\times 3\f$ matrix.
+   *
+   * @return
+   */
+  Number
+  determinant3x3() const;
+
+  /**
+   * Assign the inverse of the given matrix to @p *this.
+   *
+   * @param M
+   */
+  void
+  invert(const LAPACKFullMatrixExt<Number> &M);
+
+  /**
    * Calculate the inverse of the matrix using Gauss elimination.
+   *
    * @param M_inv
    */
   void
@@ -1114,7 +1140,7 @@ public:
    * @param transposed
    */
   void
-  solve_by_forward_substitution(Vector<Number> &      x,
+  solve_by_forward_substitution(Vector<Number>       &x,
                                 const Vector<Number> &b,
                                 const bool            transposed = false,
                                 const bool is_unit_diagonal      = true) const;
@@ -1141,7 +1167,7 @@ public:
    * @param transposed
    */
   void
-  solve_by_backward_substitution(Vector<Number> &      x,
+  solve_by_backward_substitution(Vector<Number>       &x,
                                  const Vector<Number> &b,
                                  const bool            transposed = false,
                                  const bool is_unit_diagonal = false) const;
@@ -1159,12 +1185,12 @@ public:
    * @param threshold
    */
   void
-  print_formatted_to_mat(std::ostream &     out,
+  print_formatted_to_mat(std::ostream      &out,
                          const std::string &name,
                          const unsigned int precision   = 8,
                          const bool         scientific  = true,
                          const unsigned int width       = 0,
-                         const char *       zero_string = "0",
+                         const char        *zero_string = "0",
                          const double       denominator = 1.,
                          const double       threshold   = 0.) const;
 
@@ -1309,7 +1335,7 @@ template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
                                      const size_type              cols,
-                                     const std::vector<Number> &  values,
+                                     const std::vector<Number>   &values,
                                      LAPACKFullMatrixExt<Number> &matrix)
 {
   AssertDimension(rows * cols, values.size());
@@ -1329,11 +1355,11 @@ LAPACKFullMatrixExt<Number>::Reshape(const size_type              rows,
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
-  LAPACKFullMatrixExt<Number> &                                   A,
-  LAPACKFullMatrixExt<Number> &                                   B,
-  LAPACKFullMatrixExt<Number> &                                   U,
+  LAPACKFullMatrixExt<Number>                                    &A,
+  LAPACKFullMatrixExt<Number>                                    &B,
+  LAPACKFullMatrixExt<Number>                                    &U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number> &                                   VT,
+  LAPACKFullMatrixExt<Number>                                    &VT,
   Number singular_value_threshold)
 {
   /**
@@ -1563,11 +1589,11 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
-  LAPACKFullMatrixExt<Number> &                                   A,
-  LAPACKFullMatrixExt<Number> &                                   B,
-  LAPACKFullMatrixExt<Number> &                                   U,
+  LAPACKFullMatrixExt<Number>                                    &A,
+  LAPACKFullMatrixExt<Number>                                    &B,
+  LAPACKFullMatrixExt<Number>                                    &U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number> &                                   VT,
+  LAPACKFullMatrixExt<Number>                                    &VT,
   size_type truncation_rank,
   Number    singular_value_threshold)
 {
@@ -1805,13 +1831,13 @@ LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd_on_AxBT(
-  LAPACKFullMatrixExt<Number> &                                   A,
-  LAPACKFullMatrixExt<Number> &                                   B,
-  LAPACKFullMatrixExt<Number> &                                   U,
+  LAPACKFullMatrixExt<Number>                                    &A,
+  LAPACKFullMatrixExt<Number>                                    &B,
+  LAPACKFullMatrixExt<Number>                                    &U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number> &                                   VT,
-  LAPACKFullMatrixExt<Number> &                                   C,
-  LAPACKFullMatrixExt<Number> &                                   D,
+  LAPACKFullMatrixExt<Number>                                    &VT,
+  LAPACKFullMatrixExt<Number>                                    &C,
+  LAPACKFullMatrixExt<Number>                                    &D,
   size_type truncation_rank,
   Number    singular_value_threshold)
 {
@@ -2197,7 +2223,7 @@ template <typename Number>
 LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
   const std::array<types::global_dof_index, 2> &row_index_range,
   const std::array<types::global_dof_index, 2> &column_index_range,
-  const LAPACKFullMatrixExt<Number> &           M)
+  const LAPACKFullMatrixExt<Number>            &M)
   : LAPACKFullMatrix<Number>(row_index_range[1] - row_index_range[0],
                              column_index_range[1] - column_index_range[0])
   , state(LAPACKSupport::matrix)
@@ -2234,7 +2260,7 @@ template <typename Number>
 LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(
   const std::array<types::global_dof_index, 2> &row_index_range,
   const std::array<types::global_dof_index, 2> &column_index_range,
-  const LAPACKFullMatrixExt<Number> &           M,
+  const LAPACKFullMatrixExt<Number>            &M,
   const std::array<types::global_dof_index, 2> &M_row_index_range,
   const std::array<types::global_dof_index, 2> &M_column_index_range)
   : LAPACKFullMatrix<Number>(row_index_range[1] - row_index_range[0],
@@ -2335,8 +2361,8 @@ LAPACKFullMatrixExt<Number>::LAPACKFullMatrixExt(const LAPACKFullMatrixExt &M11,
 
 template <typename Number>
 LAPACKFullMatrixExt<Number> &
-LAPACKFullMatrixExt<Number>::
-operator=(const LAPACKFullMatrixExt<Number> &matrix)
+LAPACKFullMatrixExt<Number>::operator=(
+  const LAPACKFullMatrixExt<Number> &matrix)
 {
   LAPACKFullMatrix<Number>::operator=(matrix);
   state                             = matrix.state;
@@ -2398,8 +2424,7 @@ LAPACKFullMatrixExt<Number>::set_column_zeros(const size_type col_index)
   size_type mm = this->m();
   size_type nn = this->n();
 
-  Assert(col_index >= 0 && col_index < nn,
-         ExcRightOpenIntervalRange(col_index, 0, nn));
+  AssertIndexRange(col_index, nn);
 
   for (size_type i = 0; i < mm; i++)
     {
@@ -2415,8 +2440,7 @@ LAPACKFullMatrixExt<Number>::set_row_zeros(const size_type row_index)
   const size_type mm = this->m();
   const size_type nn = this->n();
 
-  Assert(row_index >= 0 && row_index < mm,
-         ExcRightOpenIntervalRange(row_index, 0, mm));
+  AssertIndexRange(row_index, mm);
 
   for (size_type j = 0; j < nn; j++)
     {
@@ -2730,9 +2754,9 @@ LAPACKFullMatrixExt<Number>::keep_first_n_columns(const size_type n,
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::svd(
-  LAPACKFullMatrixExt<Number> &                                   U,
+  LAPACKFullMatrixExt<Number>                                    &U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number> &                                   VT)
+  LAPACKFullMatrixExt<Number>                                    &VT)
 {
   Assert(state == LAPACKSupport::matrix ||
            state == LAPACKSupport::State::cholesky,
@@ -2823,9 +2847,9 @@ LAPACKFullMatrixExt<Number>::svd(
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::svd(
-  LAPACKFullMatrixExt<Number> &                                   U,
+  LAPACKFullMatrixExt<Number>                                    &U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number> &                                   VT,
+  LAPACKFullMatrixExt<Number>                                    &VT,
   const size_type truncation_rank)
 {
   const size_type mm      = this->m();
@@ -2877,9 +2901,9 @@ LAPACKFullMatrixExt<Number>::svd(
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd(
-  LAPACKFullMatrixExt<Number> &                                   U,
+  LAPACKFullMatrixExt<Number>                                    &U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number> &                                   VT,
+  LAPACKFullMatrixExt<Number>                                    &VT,
   size_type truncation_rank,
   Number    singular_value_threshold)
 {
@@ -3038,11 +3062,11 @@ LAPACKFullMatrixExt<Number>::reduced_svd(
 template <typename Number>
 typename LAPACKFullMatrixExt<Number>::size_type
 LAPACKFullMatrixExt<Number>::reduced_svd(
-  LAPACKFullMatrixExt<Number> &                                   U,
+  LAPACKFullMatrixExt<Number>                                    &U,
   std::vector<typename numbers::NumberTraits<Number>::real_type> &Sigma_r,
-  LAPACKFullMatrixExt<Number> &                                   VT,
-  LAPACKFullMatrixExt<Number> &                                   C,
-  LAPACKFullMatrixExt<Number> &                                   D,
+  LAPACKFullMatrixExt<Number>                                    &VT,
+  LAPACKFullMatrixExt<Number>                                    &C,
+  LAPACKFullMatrixExt<Number>                                    &D,
   size_type truncation_rank,
   Number    singular_value_threshold)
 {
@@ -3551,7 +3575,7 @@ LAPACKFullMatrixExt<Number>::scale_rows(
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::scale_rows(
-  LAPACKFullMatrixExt<Number> &                                         A,
+  LAPACKFullMatrixExt<Number>                                          &A,
   const std::vector<typename numbers::NumberTraits<Number>::real_type> &V) const
 {
   AssertDimension(this->m(), V.size());
@@ -3597,7 +3621,7 @@ LAPACKFullMatrixExt<Number>::scale_columns(
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::scale_columns(
-  LAPACKFullMatrixExt<Number> &                                         A,
+  LAPACKFullMatrixExt<Number>                                          &A,
   const std::vector<typename numbers::NumberTraits<Number>::real_type> &V) const
 {
   AssertDimension(this->n(), V.size());
@@ -3822,7 +3846,7 @@ template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::fill_rows(
   const std::array<types::global_dof_index, 2> &row_index_range,
-  const LAPACKFullMatrixExt<Number> &           M,
+  const LAPACKFullMatrixExt<Number>            &M,
   const std::array<types::global_dof_index, 2> &M_row_index_range,
   const Number                                  factor,
   const bool                                    is_adding)
@@ -3864,7 +3888,7 @@ LAPACKFullMatrixExt<Number>::fill_col(const size_type       col_index,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::hstack(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::hstack(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B) const
 {
   AssertDimension(this->m(), B.m());
@@ -3881,7 +3905,7 @@ LAPACKFullMatrixExt<Number>::hstack(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::vstack(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::vstack(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B) const
 {
   AssertDimension(this->n(), B.n());
@@ -4049,7 +4073,7 @@ LAPACKFullMatrixExt<Number>::rank_k_decompose(const unsigned int           k,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
                                  const LAPACKFullMatrixExt<Number> &B,
                                  const bool is_result_matrix_symm_apriori) const
 {
@@ -4095,7 +4119,7 @@ LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::add(LAPACKFullMatrixExt<Number>       &C,
                                  const Number                       b,
                                  const LAPACKFullMatrixExt<Number> &B,
                                  const bool is_result_matrix_symm_apriori) const
@@ -4227,14 +4251,13 @@ LAPACKFullMatrixExt<Number>::add(const Number                       b,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
+LAPACKFullMatrixExt<Number>::vmult(Vector<Number>       &w,
                                    const Vector<Number> &v,
                                    const bool            adding) const
 {
   switch (get_property())
     {
-      case LAPACKSupport::symmetric:
-        {
+        case LAPACKSupport::symmetric: {
           LAPACKHelpers::symv_helper(LAPACKSupport::L,
                                      1.0,
                                      this->m(),
@@ -4245,8 +4268,7 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
 
           break;
         }
-      case LAPACKSupport::general:
-        {
+        case LAPACKSupport::general: {
           /**
            * Call the normal matrix-vector multiplication member function of the
            * parent class.
@@ -4255,8 +4277,7 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
 
           break;
         }
-      case LAPACKSupport::Property::lower_triangular:
-        {
+        case LAPACKSupport::Property::lower_triangular: {
           w = v;
           LAPACKHelpers::trmv_helper(LAPACKSupport::L,
                                      LAPACKSupport::N,
@@ -4267,8 +4288,7 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
 
           break;
         }
-      case LAPACKSupport::Property::upper_triangular:
-        {
+        case LAPACKSupport::Property::upper_triangular: {
           w = v;
           LAPACKHelpers::trmv_helper(LAPACKSupport::U,
                                      LAPACKSupport::N,
@@ -4279,8 +4299,7 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
 
           break;
         }
-      default:
-        {
+        default: {
           Assert(false, ExcNotImplemented());
 
           break;
@@ -4291,26 +4310,23 @@ LAPACKFullMatrixExt<Number>::vmult(Vector<Number> &      w,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number> &      w,
+LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number>       &w,
                                     const Vector<Number> &v,
                                     const bool            adding) const
 {
   switch (get_property())
     {
-      case LAPACKSupport::symmetric:
-        {
+        case LAPACKSupport::symmetric: {
           this->vmult(w, v, adding);
 
           break;
         }
-      case LAPACKSupport::general:
-        {
+        case LAPACKSupport::general: {
           this->LAPACKFullMatrix<Number>::Tvmult(w, v, adding);
 
           break;
         }
-      case LAPACKSupport::Property::lower_triangular:
-        {
+        case LAPACKSupport::Property::lower_triangular: {
           w = v;
           LAPACKHelpers::trmv_helper(LAPACKSupport::L,
                                      LAPACKSupport::T,
@@ -4321,8 +4337,7 @@ LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number> &      w,
 
           break;
         }
-      case LAPACKSupport::Property::upper_triangular:
-        {
+        case LAPACKSupport::Property::upper_triangular: {
           w = v;
           LAPACKHelpers::trmv_helper(LAPACKSupport::U,
                                      LAPACKSupport::T,
@@ -4333,8 +4348,7 @@ LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number> &      w,
 
           break;
         }
-      default:
-        {
+        default: {
           Assert(false, ExcNotImplemented());
 
           break;
@@ -4345,7 +4359,7 @@ LAPACKFullMatrixExt<Number>::Tvmult(Vector<Number> &      w,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number>       &C,
                                    const LAPACKFullMatrixExt<Number> &B,
                                    const bool adding) const
 {
@@ -4367,7 +4381,7 @@ LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number>       &C,
                                    const Number                       alpha,
                                    const LAPACKFullMatrixExt<Number> &B,
                                    const bool adding) const
@@ -4398,7 +4412,7 @@ LAPACKFullMatrixExt<Number>::mmult(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     const bool adding) const
 {
@@ -4420,7 +4434,7 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number>       &C,
                                     const Number                       alpha,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     const bool adding) const
@@ -4451,7 +4465,7 @@ LAPACKFullMatrixExt<Number>::mTmult(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     const bool adding) const
 {
@@ -4473,7 +4487,7 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number> &      C,
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number> &      C,
+LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number>       &C,
                                     const Number                       alpha,
                                     const LAPACKFullMatrixExt<Number> &B,
                                     const bool adding) const
@@ -4499,6 +4513,45 @@ LAPACKFullMatrixExt<Number>::Tmmult(LAPACKFullMatrixExt<Number> &      C,
   LAPACKFullMatrix<Number>::Tmmult(C,
                                    (LAPACKFullMatrix<Number>)B_scaled,
                                    adding);
+}
+
+
+template <typename Number>
+Number
+LAPACKFullMatrixExt<Number>::determinant2x2() const
+{
+  AssertDimension(this->m(), this->n());
+  AssertDimension(this->m(), 2);
+
+  return (*this)(0, 0) * (*this)(1, 1) - (*this)(0, 1) * (*this)(1, 0);
+}
+
+
+template <typename Number>
+Number
+LAPACKFullMatrixExt<Number>::determinant3x3() const
+{
+  AssertDimension(this->m(), this->n());
+  AssertDimension(this->m(), 3);
+
+  return (*this)(0, 0) * (*this)(1, 1) * (*this)(2, 2) +
+         (*this)(0, 1) * (*this)(1, 2) * (*this)(2, 0) +
+         (*this)(0, 2) * (*this)(1, 0) * (*this)(2, 1) -
+         (*this)(0, 2) * (*this)(1, 1) * (*this)(2, 0) -
+         (*this)(0, 1) * (*this)(1, 0) * (*this)(2, 2) -
+         (*this)(0, 0) * (*this)(1, 2) * (*this)(2, 1);
+}
+
+
+template <typename Number>
+void
+LAPACKFullMatrixExt<Number>::invert(const LAPACKFullMatrixExt<Number> &M)
+{
+  AssertDimension(M.m(), M.n());
+
+  (*this) = M;
+  this->LAPACKFullMatrix<Number>::invert();
+  this->state = LAPACKSupport::State::inverse_matrix;
 }
 
 
@@ -4675,7 +4728,7 @@ LAPACKFullMatrixExt<Number>::solve(Vector<Number> &v,
   Assert(this->m() == this->n(), LACExceptions::ExcNotQuadratic());
   AssertDimension(this->m(), v.size());
 
-  const char *          trans  = transposed ? &T : &N;
+  const char           *trans  = transposed ? &T : &N;
   const types::blas_int nn     = this->n();
   const Number *const   values = this->values.data();
   const types::blas_int n_rhs  = 1;
@@ -4759,7 +4812,7 @@ LAPACKFullMatrixExt<Number>::solve_by_forward_substitution(
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::solve_by_forward_substitution(
-  Vector<Number> &      x,
+  Vector<Number>       &x,
   const Vector<Number> &b,
   const bool            transposed,
   const bool            is_unit_diagonal) const
@@ -4803,7 +4856,7 @@ LAPACKFullMatrixExt<Number>::solve_by_backward_substitution(
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::solve_by_backward_substitution(
-  Vector<Number> &      x,
+  Vector<Number>       &x,
   const Vector<Number> &b,
   const bool            transposed,
   const bool            is_unit_diagonal) const
@@ -4816,12 +4869,12 @@ LAPACKFullMatrixExt<Number>::solve_by_backward_substitution(
 template <typename Number>
 void
 LAPACKFullMatrixExt<Number>::print_formatted_to_mat(
-  std::ostream &     out,
+  std::ostream      &out,
   const std::string &name,
   const unsigned int precision,
   const bool         scientific,
   const unsigned int width,
-  const char *       zero_string,
+  const char        *zero_string,
   const double       denominator,
   const double       threshold) const
 {
@@ -4839,7 +4892,7 @@ LAPACKFullMatrixExt<Number>::print_formatted_to_mat(
 
 template <typename Number>
 void
-LAPACKFullMatrixExt<Number>::read_from_mat(std::ifstream &    in,
+LAPACKFullMatrixExt<Number>::read_from_mat(std::ifstream     &in,
                                            const std::string &name)
 {
   std::string line_buf;

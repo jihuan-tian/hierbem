@@ -1,0 +1,825 @@
+/**
+ * @file cu_table.h
+ * @brief Introduction of cu_table.h
+ *
+ * @date 2023-01-04
+ * @author Jihuan Tian
+ */
+#ifndef INCLUDE_CU_TABLE_HCU_
+#define INCLUDE_CU_TABLE_HCU_
+
+#include <deal.II/base/table.h>
+#include <deal.II/base/table_indices.h>
+
+#include <assert.h>
+#include <cuda_runtime.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+// DEBUG
+#include <iostream>
+
+#include "cu_table_indices.hcu"
+
+namespace IdeoBEM
+{
+  using namespace dealii;
+
+  namespace CUDAWrappers
+  {
+    /**
+     * Table class with the memory for its internal data allocated on the GPU
+     * device.
+     *
+     * @tparam N Table dimension
+     * @tparam T Value type
+     */
+    template <int N, typename T = double>
+    class CUDATable
+    {
+    public:
+      // Declare class types.
+      using value_type    = T;
+      using size_type     = std::size_t;
+      using pointer       = T *;
+      using const_pointer = const T *;
+
+      /**
+       * Allocate global memory on the device according to the specified table
+       * sizes in @p TableIndices.
+       *
+       * @param table_size_arg
+       */
+      __host__ void
+      allocate(const TableIndices<N> &table_size_arg);
+
+      /**
+       * Allocate global memory on the device according to the specified table
+       * sizes in @p CUDATableIndices.
+       *
+       * @param table_size_arg
+       */
+      __host__ void
+      allocate(const CUDATableIndices<N> &table_size_arg);
+
+      /**
+       * Assign values held within a deal.ii @p Table on the host to the device.
+       *
+       * \alert{The memory of the @p CUDATable should preallocated to the same
+       * table size before calling this function. The data are directly copied
+       * from @p table_cpu to the current object and there is no size checking.}
+       *
+       * @param table_cpu
+       */
+      __host__ void
+      assign_from_host(const Table<N, T> &table_cpu);
+
+      /**
+       * Assign values held within a vector on the host to the device.
+       *
+       * @param data
+       */
+      __host__ void
+      assign_from_host(const std::vector<T> &data);
+
+      /**
+       * Assign values held within an array on the host to the device.
+       *
+       * @param data
+       * @param size
+       */
+      __host__ void
+      assign_from_host(const T *data, const size_type size);
+
+      /**
+       * Assign values held within an array on the host to the device with
+       * an offset.
+       *
+       * @param data
+       * @param size
+       */
+      __host__ void
+      assign_from_host(const T        *data,
+                       const size_type offset_in_device_table,
+                       const size_type size);
+
+      /**
+       * Copy the table data on the device to the table on the host.
+       *
+       * @param table_cpu
+       */
+      __host__ void
+      copy_to_host(Table<N, T> &table_cpu) const;
+
+      /**
+       * Release the allocated global memory on the device.
+       */
+      __host__ void
+      release();
+
+      /**
+       * Get the total number of elements in the table.
+       * @return
+       */
+      __host__ __device__ size_type
+      n_elements() const;
+
+      /**
+       * Assignment operator: copy the values from another @p CUDATable object.
+       *
+       * \alert{This function can only run on the host, since objects of this
+       * class are actually managed from the host and inside this function, the
+       * function @p cudaMemcpy is called, which can only run on the host.}
+       *
+       * @param src
+       * @return
+       */
+      __host__ CUDATable<N, T>          &
+      operator=(const CUDATable<N, T> &src);
+
+      /**
+       * Get the const reference to the i'th element in the table using linear
+       * index.
+       *
+       * \alert{This function can only be called on the device, since the table
+       * data are stored on the device and accessing only one element at a time
+       * is inefficient.}
+       *
+       * @param i
+       * @return
+       */
+      __device__ const T &
+      operator[](const size_type i) const;
+
+      /**
+       * Get the reference to the i'th element in the table using linear index.
+       *
+       * \alert{This function can only be called on the device, since the table
+       * data are stored on the device and accessing only one element at a time
+       * is inefficient.}
+       *
+       * @param i
+       * @return
+       */
+      __device__ T &
+      operator[](const size_type i);
+
+      /**
+       * Get the const reference to the element specified by the table indices.
+       * C style indexing is adopted.
+       *
+       * \alert{This function can only be called on the device, since the table
+       * data are stored on the device and accessing only one element at a time
+       * is inefficient.}
+       *
+       * @param indices
+       * @return
+       */
+      __device__ const T &
+      operator()(const CUDATableIndices<N> &indices) const;
+
+      /**
+       * Get the reference to the element specified by the table indices. C
+       * style indexing is adopted.
+       *
+       * \alert{This function can only be called on the device, since the table
+       * data are stored on the device and accessing only one element at a time
+       * is inefficient.}
+       *
+       * @param indices
+       * @return
+       */
+      __device__ T &
+      operator()(const CUDATableIndices<N> &indices);
+
+      /**
+       * Get the const reference to the i'th element in the table.
+       *
+       * \mynote{The table should have only one dimension.}
+       *
+       * @param i
+       * @return
+       */
+      __device__ const T &
+      operator()(const size_type i) const;
+
+      /**
+       * Get the reference to the i'th element in the table.
+       *
+       * \mynote{The table should have only one dimension.}
+       *
+       * @param i
+       * @return
+       */
+      __device__ T &
+      operator()(const size_type i);
+
+      /**
+       * Get the const reference to the element (i,j) in the table.
+       *
+       * \mynote{The table should have two dimensions.}
+       *
+       * @param i
+       * @param j
+       * @return
+       */
+      __device__ const T &
+      operator()(const size_type i, const size_type j) const;
+
+      /**
+       * Get the reference to the element (i,j) in the table.
+       *
+       * \mynote{The table should have two dimensions.}
+       *
+       * @param i
+       * @param j
+       * @return
+       */
+      __device__ T &
+      operator()(const size_type i, const size_type j);
+
+      /**
+       * Get the const reference to the element (i,j,k) in the table.
+       *
+       * \mynote{The table should have three dimensions.}
+       *
+       * @param i
+       * @param j
+       * @param k
+       * @return
+       */
+      __device__ const T &
+      operator()(const size_type i, const size_type j, const size_type k) const;
+
+      /**
+       * Get the reference to the element (i,j,k) in the table.
+       *
+       * \mynote{The table should have three dimensions.}
+       *
+       * @param i
+       * @param j
+       * @param k
+       * @return
+       */
+      __device__ T &
+      operator()(const size_type i, const size_type j, const size_type k);
+
+      /**
+       * Get the const reference to the element (i,j,k,l) in the table.
+       *
+       * \mynote{The table should have four dimensions.}
+       *
+       * @param i
+       * @param j
+       * @param k
+       * @param l
+       * @return
+       */
+      __device__ const T &
+      operator()(const size_type i,
+                 const size_type j,
+                 const size_type k,
+                 const size_type l) const;
+
+      /**
+       * Get the reference to the element (i,j,k,l) in the table.
+       *
+       * \mynote{The table should have four dimensions.}
+       *
+       * @param i
+       * @param j
+       * @param k
+       * @param l
+       * @return
+       */
+      __device__ T &
+      operator()(const size_type i,
+                 const size_type j,
+                 const size_type k,
+                 const size_type l);
+
+      /**
+       * Get table sizes.
+       *
+       * @return
+       */
+      __host__ __device__ const CUDATableIndices<N>                           &
+      size() const;
+
+      /**
+       * Get the table size in the i'th dimension.
+       *
+       * @param i
+       * @return
+       */
+      __host__ __device__ size_type
+      size(const size_type i) const;
+
+      /**
+       * Get the pointer to the internal data.
+       *
+       * @return
+       */
+      __host__ __device__ pointer
+      data();
+
+      /**
+       * Get the const pointer to the internal data.
+       *
+       * @return
+       */
+      __host__ __device__ const_pointer
+      data() const;
+
+    private:
+      /**
+       * Pointer to the table of values.
+       */
+      T *values = nullptr;
+      /**
+       * Total number of entries in the table.
+       */
+      size_type element_num = 0;
+      /**
+       * Table size in each dimension.
+       */
+      CUDATableIndices<N> table_size{};
+    };
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::allocate(const TableIndices<N> &table_size_arg)
+    {
+      table_size  = table_size_arg;
+      element_num = 1;
+      for (size_type i = 0; i < N; i++)
+        {
+          element_num *= table_size[i];
+        }
+
+      // If the table contains old data, free the memory first before
+      // allocation.
+      if (values != nullptr)
+        {
+          cudaError_t error_code = cudaFree(values);
+          AssertCuda(error_code);
+        }
+
+      cudaError_t error_code =
+        cudaMalloc((void **)&values, element_num * sizeof(T));
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::allocate(const CUDATableIndices<N> &table_size_arg)
+    {
+      table_size  = table_size_arg;
+      element_num = 1;
+      for (size_type i = 0; i < N; i++)
+        {
+          element_num *= table_size[i];
+        }
+
+      // If the table contains old data, free the memory first before
+      // allocation.
+      if (values != nullptr)
+        {
+          cudaError_t error_code = cudaFree(values);
+          AssertCuda(error_code);
+        }
+
+      cudaError_t error_code =
+        cudaMalloc((void **)&values, element_num * sizeof(T));
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::assign_from_host(const Table<N, T> &table_cpu)
+    {
+      Assert(table_size == table_cpu.size(),
+             ExcMessage("Table size mismatch!"));
+      Assert(values != nullptr,
+             ExcMessage("Memory for this table has not be allocated!"));
+
+      // &(table_cpu(TableIndices<N>())): get the first element in the table,
+      // then take its address.
+      cudaError_t error_code = cudaMemcpy(values,
+                                          &(table_cpu(TableIndices<N>())),
+                                          element_num * sizeof(T),
+                                          cudaMemcpyHostToDevice);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::assign_from_host(const std::vector<T> &data)
+    {
+      AssertDimension(element_num, data.size());
+      Assert(values != nullptr,
+             ExcMessage("Memory for this table has not be allocated!"));
+
+      cudaError_t error_code = cudaMemcpy(values,
+                                          data.data(),
+                                          data.size() * sizeof(T),
+                                          cudaMemcpyHostToDevice);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::assign_from_host(const T *data, const size_type size)
+    {
+      Assert(data != nullptr, ExcMessage("Pointer to source data is empty!"));
+      AssertDimension(element_num, size);
+      Assert(values != nullptr,
+             ExcMessage("Memory for this table has not be allocated!"));
+
+      cudaError_t error_code =
+        cudaMemcpy(values, data, size * sizeof(T), cudaMemcpyHostToDevice);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::assign_from_host(const T        *data,
+                                      const size_type offset_in_device_table,
+                                      const size_type size)
+    {
+      Assert(data != nullptr, ExcMessage("Pointer to source data is empty!"));
+      Assert(values != nullptr,
+             ExcMessage("Memory for this table has not be allocated!"));
+      AssertIndexRange(offset_in_device_table + size - 1, element_num);
+
+      cudaError_t error_code = cudaMemcpy(values + offset_in_device_table,
+                                          data,
+                                          size * sizeof(T),
+                                          cudaMemcpyHostToDevice);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::copy_to_host(Table<N, T> &table_cpu) const
+    {
+      Assert(this->table_size == table_cpu.size(),
+             ExcMessage("Table size mismatch!"));
+
+      cudaError_t error_code = cudaMemcpy(&(table_cpu(TableIndices<N>())),
+                                          values,
+                                          element_num * sizeof(T),
+                                          cudaMemcpyDeviceToHost);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::release()
+    {
+      // Reset the table sizes and number of elements to 0.
+      for (size_type i = 0; i < N; i++)
+        {
+          table_size[i] = 0;
+        }
+
+      element_num = 0;
+
+      if (values != nullptr)
+        {
+          cudaFree(values);
+
+          // Reset the pointer.
+          values = nullptr;
+        }
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline typename CUDATable<N, T>::size_type
+             CUDATable<N, T>::n_elements() const
+    {
+      return element_num;
+    }
+
+
+    template <int N, typename T>
+    __host__ CUDATable<N, T> &
+    CUDATable<N, T>::operator=(const CUDATable<N, T> &src)
+    {
+      if (table_size != src.table_size)
+        {
+          // Otherwise, release the memory of the current table, reallocate
+          // memory, then copy the data.
+          release();
+
+          element_num = src.element_num;
+          table_size  = src.table_size;
+
+          cudaError_t error_code =
+            cudaMalloc((void **)&values, element_num * sizeof(T));
+          AssertCuda(error_code);
+        }
+
+      cudaError_t error_code = cudaMemcpy(values,
+                                          src.values,
+                                          element_num * sizeof(T),
+                                          cudaMemcpyDeviceToDevice);
+      AssertCuda(error_code);
+
+      return *this;
+    }
+
+
+    template <int N, typename T>
+    __device__ inline const T &
+    CUDATable<N, T>::operator[](const size_type i) const
+    {
+      return values[i];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline T &
+    CUDATable<N, T>::operator[](const size_type i)
+    {
+      return values[i];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline const T &
+    CUDATable<N, T>::operator()(const CUDATableIndices<N> &indices) const
+    {
+      return values[ndarray_indices_to_linear_index(indices, table_size)];
+    }
+
+
+    template <int N, typename T>
+    __device__ T &
+    CUDATable<N, T>::operator()(const CUDATableIndices<N> &indices)
+    {
+      return values[ndarray_indices_to_linear_index(indices, table_size)];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline const T &
+    CUDATable<N, T>::operator()(const size_type i) const
+    {
+      assert(N == 1);
+
+      return values[i];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline T &
+    CUDATable<N, T>::operator()(const size_type i)
+    {
+      assert(N == 1);
+
+      return values[i];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline const T &
+    CUDATable<N, T>::operator()(const size_type i, const size_type j) const
+    {
+      assert(N == 2);
+
+      return values[i * table_size[1] + j];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline T &
+    CUDATable<N, T>::operator()(const size_type i, const size_type j)
+    {
+      assert(N == 2);
+
+      return values[i * table_size[1] + j];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline const T &
+    CUDATable<N, T>::operator()(const size_type i,
+                                const size_type j,
+                                const size_type k) const
+    {
+      assert(N == 3);
+
+      return values[(i * table_size[1] + j) * table_size[2] + k];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline T &
+    CUDATable<N, T>::operator()(const size_type i,
+                                const size_type j,
+                                const size_type k)
+    {
+      assert(N == 3);
+
+      return values[(i * table_size[1] + j) * table_size[2] + k];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline const T &
+    CUDATable<N, T>::operator()(const size_type i,
+                                const size_type j,
+                                const size_type k,
+                                const size_type l) const
+    {
+      assert(N == 4);
+
+      return values[((i * table_size[1] + j) * table_size[2] + k) *
+                      table_size[3] +
+                    l];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline T &
+    CUDATable<N, T>::operator()(const size_type i,
+                                const size_type j,
+                                const size_type k,
+                                const size_type l)
+    {
+      assert(N == 4);
+
+      return values[((i * table_size[1] + j) * table_size[2] + k) *
+                      table_size[3] +
+                    l];
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline const CUDATableIndices<N>          &
+    CUDATable<N, T>::size() const
+    {
+      return table_size;
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline CUDATable<N, T>::size_type
+             CUDATable<N, T>::size(const size_type i) const
+    {
+      return table_size[i];
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline typename CUDATable<N, T>::pointer
+             CUDATable<N, T>::data()
+    {
+      return values;
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline typename CUDATable<N, T>::const_pointer
+             CUDATable<N, T>::data() const
+    {
+      return values;
+    }
+
+
+    /**
+     * Print the values in a 1-dimensional @p CUDATable.
+     *
+     * @tparam T
+     * @param table
+     */
+    template <typename T>
+    __global__ void
+    print_cuda_object(const CUDATable<1, T> table)
+    {
+      const unsigned int idx        = (blockIdx.x * blockDim.x) + threadIdx.x;
+      const unsigned int idy        = (blockIdx.y * blockDim.y) + threadIdx.y;
+      const unsigned int thread_idx = (gridDim.x * blockDim.x) * idy + idx;
+
+      // Perform the print out only in the first thread.
+      if (thread_idx == 0)
+        {
+          for (size_t i = 0; i < table.size(0); i++)
+            {
+              printf("[%lu]=%f\n", i, table(i));
+            }
+        }
+    }
+
+
+    /**
+     * Print the values in a 2-dimensional @p CUDATable.
+     *
+     * @tparam T
+     * @param table
+     */
+    template <typename T>
+    __global__ void
+    print_cuda_object(const CUDATable<2, T> table)
+    {
+      const unsigned int idx        = (blockIdx.x * blockDim.x) + threadIdx.x;
+      const unsigned int idy        = (blockIdx.y * blockDim.y) + threadIdx.y;
+      const unsigned int thread_idx = (gridDim.x * blockDim.x) * idy + idx;
+
+      // Perform the print out only in the first thread.
+      if (thread_idx == 0)
+        {
+          for (size_t i = 0; i < table.size(0); i++)
+            {
+              for (size_t j = 0; j < table.size(1); j++)
+                {
+                  printf("[%lu, %lu]=%f\n", i, j, table(i, j));
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Print the values in a 3-dimensional @p CUDATable.
+     *
+     * @tparam T
+     * @param table
+     */
+    template <typename T>
+    __global__ void
+    print_cuda_object(const CUDATable<3, T> table)
+    {
+      const unsigned int idx        = (blockIdx.x * blockDim.x) + threadIdx.x;
+      const unsigned int idy        = (blockIdx.y * blockDim.y) + threadIdx.y;
+      const unsigned int thread_idx = (gridDim.x * blockDim.x) * idy + idx;
+
+      // Perform the print out only in the first thread.
+      if (thread_idx == 0)
+        {
+          for (size_t i = 0; i < table.size(0); i++)
+            {
+              for (size_t j = 0; j < table.size(1); j++)
+                {
+                  for (size_t k = 0; k < table.size(2); k++)
+                    {
+                      printf("[%lu, %lu, %lu]=%f\n", i, j, k, table(i, j, k));
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Print the values in a 4-dimensional @p CUDATable.
+     *
+     * @tparam T
+     * @param table
+     */
+    template <typename T>
+    __global__ void
+    print_cuda_object(const CUDATable<4, T> table)
+    {
+      const unsigned int idx        = (blockIdx.x * blockDim.x) + threadIdx.x;
+      const unsigned int idy        = (blockIdx.y * blockDim.y) + threadIdx.y;
+      const unsigned int thread_idx = (gridDim.x * blockDim.x) * idy + idx;
+
+      // Perform the print out only in the first thread.
+      if (thread_idx == 0)
+        {
+          for (size_t i = 0; i < table.size(0); i++)
+            {
+              for (size_t j = 0; j < table.size(1); j++)
+                {
+                  for (size_t k = 0; k < table.size(2); k++)
+                    {
+                      for (size_t l = 0; l < table.size(3); l++)
+                        {
+                          printf("[%lu, %lu, %lu, %lu]=%f\n",
+                                 i,
+                                 j,
+                                 k,
+                                 l,
+                                 table(i, j, k, l));
+                        }
+                    }
+                }
+            }
+        }
+    }
+  } // namespace CUDAWrappers
+} // namespace IdeoBEM
+
+#endif /* INCLUDE_CU_TABLE_HCU_ */

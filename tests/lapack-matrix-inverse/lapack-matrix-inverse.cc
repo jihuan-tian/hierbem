@@ -26,6 +26,14 @@ main()
   M.print_formatted_to_mat(std::cout, "M", 8, false, 16, "0");
 
   /**
+   * Calculate the inverse form an input matrix.
+   */
+  LAPACKFullMatrixExt<double> M_inv_from_input;
+  M_inv_from_input.invert(M);
+  M_inv_from_input.print_formatted_to_mat(
+    std::cout, "M_inv_from_input", 12, false, 20, "0");
+
+  /**
    * Make a copy of the matrix for manual calculation of its inverse.
    */
   LAPACKFullMatrixExt<double> M_prime(M);
@@ -33,7 +41,7 @@ main()
   /**
    * Calculate the matrix inverse using deal.ii \p invert function.
    */
-  M.invert();
+  M.LAPACKFullMatrix<double>::invert();
   M.print_formatted_to_mat(std::cout, "M_inv", 12, false, 20, "0");
 
   /**

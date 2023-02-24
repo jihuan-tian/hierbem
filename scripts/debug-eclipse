@@ -1,0 +1,14 @@
+org.eclipse.cdt.core/debug=true
+org.eclipse.cdt.core/debug/pdomtimings=true
+org.eclipse.cdt.core/debug/indexer=true
+org.eclipse.cdt.core/debug/parser=true
+org.eclipse.cdt.core/debug/deltaprocessor=true
+org.eclipse.cdt.core/debug/scanner=true
+org.eclipse.cdt.core/debug/model=true
+org.eclipse.cdt.core/debug/index/locks=true
+org.eclipse.cdt.core/debug/indexer/activity=true
+org.eclipse.cdt.core/debug/indexer/statistics=true
+org.eclipse.cdt.core/debug/indexer/problems=true
+org.eclipse.cdt.core/debug/indexer/problems/inclusion=true
+org.eclipse.cdt.core/debug/indexer/problems/scanner=true
+org.eclipse.cdt.core/debug/indexer/problems/syntax=true

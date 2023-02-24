@@ -1,0 +1,411 @@
+/**
+ * @file laplace_kernels.h
+ * @brief Introduction of laplace_kernels.h
+ *
+ * @date 2022-03-04
+ * @author Jihuan Tian
+ */
+#ifndef INCLUDE_LAPLACE_KERNELS_HCU_
+#define INCLUDE_LAPLACE_KERNELS_HCU_
+
+#include "bem_kernels.hcu"
+#include "utilities.hcu"
+
+namespace IdeoBEM
+{
+  using namespace dealii;
+
+  namespace CUDAWrappers
+  {
+    namespace LaplaceKernel
+    {
+      /**
+       * Laplace single layer kernel function
+       */
+      template <int dim, typename RangeNumberType = double>
+      class SingleLayerKernel : public KernelFunction<dim, RangeNumberType>
+      {
+      public:
+        __host__ __device__
+        SingleLayerKernel()
+          : KernelFunction<dim, RangeNumberType>(SingleLayer)
+        {}
+
+        /**
+         * Evaluate the kernel function.
+         *
+         * \mynote{With the appended keyword @p override, this function must be
+         * explicitly defined with the same function signature as the
+         * corresponding virtual function in the parent class.}
+         *
+         * @param x
+         * @param y
+         * @param nx
+         * @param ny
+         * @param component
+         * @return
+         */
+        __host__ __device__ virtual RangeNumberType
+        value(const Point<dim>     &x,
+              const Point<dim>     &y,
+              const Tensor<1, dim> &nx,
+              const Tensor<1, dim> &ny,
+              const unsigned int    component = 0) const override;
+
+        /**
+         * Return whether the kernel function is symmetric.
+         *
+         * @return
+         */
+        __host__ __device__ virtual bool
+        is_symmetric() const override;
+      };
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ RangeNumberType
+      SingleLayerKernel<dim, RangeNumberType>::value(
+        const Point<dim>     &x,
+        const Point<dim>     &y,
+        const Tensor<1, dim> &nx,
+        const Tensor<1, dim> &ny,
+        const unsigned int    component) const
+      {
+        (void)nx;
+        (void)ny;
+        (void)component;
+
+        switch (dim)
+          {
+            case 2:
+#ifdef __CUDA_ARCH__
+              return (-0.5 / numbers::PI * log(1.0 / (x - y).norm()));
+#else
+              return (-0.5 / numbers::PI * std::log(1.0 / (x - y).norm()));
+#endif
+
+            case 3:
+              return (0.25 / numbers::PI / (x - y).norm());
+
+            default:
+              Assert(false, ExcInternalError());
+              return 0.;
+          }
+      }
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ bool
+      SingleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+      {
+        return true;
+      }
+
+
+      /**
+       * Double layer kernel.
+       */
+      template <int dim, typename RangeNumberType = double>
+      class DoubleLayerKernel : public KernelFunction<dim, RangeNumberType>
+      {
+      public:
+        __host__ __device__
+        DoubleLayerKernel()
+          : KernelFunction<dim, RangeNumberType>(DoubleLayer)
+        {}
+
+        __host__ __device__ virtual RangeNumberType
+        value(const Point<dim>     &x,
+              const Point<dim>     &y,
+              const Tensor<1, dim> &nx,
+              const Tensor<1, dim> &ny,
+              const unsigned int    component = 0) const override;
+
+        /**
+         * Return whether the kernel function is symmetric.
+         *
+         * @return
+         */
+        __host__ __device__ virtual bool
+        is_symmetric() const override;
+      };
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ RangeNumberType
+      DoubleLayerKernel<dim, RangeNumberType>::value(
+        const Point<dim>     &x,
+        const Point<dim>     &y,
+        const Tensor<1, dim> &nx,
+        const Tensor<1, dim> &ny,
+        const unsigned int    component) const
+      {
+        (void)nx;
+        (void)component;
+
+        switch (dim)
+          {
+            case 2:
+              return scalar_product((y - x), ny) / 2.0 / numbers::PI /
+                     (y - x).norm_square();
+
+            case 3:
+              return scalar_product((x - y), ny) / 4.0 / numbers::PI /
+                     IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                       (x - y).norm());
+
+            default:
+              Assert(false, ExcInternalError());
+              return 0.;
+          }
+      }
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ bool
+      DoubleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+      {
+        return false;
+      }
+
+
+      // Class for the adjoint double layer kernel.
+      template <int dim, typename RangeNumberType = double>
+      class AdjointDoubleLayerKernel
+        : public KernelFunction<dim, RangeNumberType>
+      {
+      public:
+        __host__ __device__
+        AdjointDoubleLayerKernel()
+          : KernelFunction<dim, RangeNumberType>(AdjointDoubleLayer)
+        {}
+
+        __host__ __device__ virtual RangeNumberType
+        value(const Point<dim>     &x,
+              const Point<dim>     &y,
+              const Tensor<1, dim> &nx,
+              const Tensor<1, dim> &ny,
+              const unsigned int    component = 0) const override;
+
+        /**
+         * Return whether the kernel function is symmetric.
+         *
+         * @return
+         */
+        __host__ __device__ virtual bool
+        is_symmetric() const override;
+      };
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ RangeNumberType
+      AdjointDoubleLayerKernel<dim, RangeNumberType>::value(
+        const Point<dim>     &x,
+        const Point<dim>     &y,
+        const Tensor<1, dim> &nx,
+        const Tensor<1, dim> &ny,
+        const unsigned int    component) const
+      {
+        (void)ny;
+        (void)component;
+
+        switch (dim)
+          {
+            case 2:
+              return scalar_product((x - y), nx) / 2.0 / numbers::PI /
+                     (x - y).norm_square();
+
+            case 3:
+              return scalar_product((y - x), nx) / 4.0 / numbers::PI /
+                     IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                       (x - y).norm());
+
+            default:
+              Assert(false, ExcInternalError());
+              return 0.;
+          }
+      }
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ bool
+      AdjointDoubleLayerKernel<dim, RangeNumberType>::is_symmetric() const
+      {
+        return false;
+      }
+
+
+      /**
+       * Kernel function for the hyper singular boundary integral operator.
+       */
+      template <int dim, typename RangeNumberType = double>
+      class HyperSingularKernel : public KernelFunction<dim, RangeNumberType>
+      {
+      public:
+        __host__ __device__
+        HyperSingularKernel()
+          : KernelFunction<dim, RangeNumberType>(HyperSingular)
+        {}
+
+        __host__ __device__ virtual RangeNumberType
+        value(const Point<dim>     &x,
+              const Point<dim>     &y,
+              const Tensor<1, dim> &nx,
+              const Tensor<1, dim> &ny,
+              const unsigned int    component = 0) const override;
+
+        /**
+         * Return whether the kernel function is symmetric.
+         *
+         * @return
+         */
+        __host__ __device__ virtual bool
+        is_symmetric() const override;
+      };
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ RangeNumberType
+      HyperSingularKernel<dim, RangeNumberType>::value(
+        const Point<dim>     &x,
+        const Point<dim>     &y,
+        const Tensor<1, dim> &nx,
+        const Tensor<1, dim> &ny,
+        const unsigned int    component) const
+      {
+        (void)component;
+
+        double r2 = (x - y).norm_square();
+
+        switch (dim)
+          {
+              case 2: {
+                double r4 = r2 * r2;
+
+                return 0.5 / numbers::PI *
+                       (-scalar_product(nx, ny) / r2 +
+                        2.0 * scalar_product(nx, (x - y)) *
+                          scalar_product(ny, (x - y)) / r4);
+              }
+
+              case 3: {
+                double r3 = (x - y).norm() * r2;
+                double r5 = r2 * r3;
+
+                return 0.25 / numbers::PI *
+                       (-scalar_product(nx, ny) / r3 +
+                        3.0 * scalar_product(nx, (x - y)) *
+                          scalar_product(ny, (x - y)) / r5);
+              }
+
+              default: {
+                Assert(false, ExcInternalError());
+                return 0.;
+              }
+          }
+      }
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ bool
+      HyperSingularKernel<dim, RangeNumberType>::is_symmetric() const
+      {
+        return true;
+      }
+
+
+      /**
+       * Kernel function for the regularized hyper singular boundary integral
+       * operator.
+       */
+      template <int dim, typename RangeNumberType = double>
+      class HyperSingularKernelRegular
+        : public KernelFunction<dim, RangeNumberType>
+      {
+      public:
+        __host__ __device__
+        HyperSingularKernelRegular()
+          : KernelFunction<dim, RangeNumberType>(HyperSingularRegular)
+        {}
+
+        /**
+         * Calculate the value of fundamental solution of the Laplace operator.
+         * This version runs on the CPU host.
+         *
+         * \mynote{Because regularization will be applied to the bilinear form
+         * of the hyper-singular kernel, the value calculated here is actually
+         * not the hyper-singular function itself, but the fundamental solution
+         * of the Laplace operator. The final computing the regularized bilinear
+         * form will be carried out in the pullback in the unit cell, which is
+         * handled in the
+         * function @p KernelPulledbackToUnitCell::value.}
+         *
+         * @param x
+         * @param y
+         * @param nx
+         * @param ny
+         * @param component
+         * @return
+         */
+        __host__ __device__ virtual RangeNumberType
+        value(const Point<dim>     &x,
+              const Point<dim>     &y,
+              const Tensor<1, dim> &nx,
+              const Tensor<1, dim> &ny,
+              const unsigned int    component = 0) const override;
+
+        /**
+         * Return whether the kernel function is symmetric.
+         *
+         * @return
+         */
+        __host__ __device__ virtual bool
+        is_symmetric() const override;
+      };
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ RangeNumberType
+      HyperSingularKernelRegular<dim, RangeNumberType>::value(
+        const Point<dim>     &x,
+        const Point<dim>     &y,
+        const Tensor<1, dim> &nx,
+        const Tensor<1, dim> &ny,
+        const unsigned int    component) const
+      {
+        (void)nx;
+        (void)ny;
+        (void)component;
+
+        switch (dim)
+          {
+              case 2: {
+#ifdef __CUDA_ARCH__
+                return (-0.5 / numbers::PI * log((x - y).norm()));
+#else
+                return (-0.5 / numbers::PI * std::log((x - y).norm()));
+#endif
+              }
+
+              case 3: {
+                return (0.25 / numbers::PI / (x - y).norm());
+              }
+
+              default: {
+                Assert(false, ExcInternalError());
+                return 0.;
+              }
+          }
+      }
+
+
+      template <int dim, typename RangeNumberType>
+      __host__ __device__ bool
+      HyperSingularKernelRegular<dim, RangeNumberType>::is_symmetric() const
+      {
+        return true;
+      }
+    } // namespace LaplaceKernel
+  }   // namespace CUDAWrappers
+} // namespace IdeoBEM
+
+#endif /* INCLUDE_LAPLACE_KERNELS_HCU_ */

@@ -12,7 +12,7 @@ SET(TARGET "hierbem")
 # in the "CMake in user projects" page accessible from the "User info"
 # page of the documentation.
 SET(TARGET_SRC
-  ${TARGET}.cc
+  ${TARGET}.cu
   )
 
 # This macro will further call the following macros:
@@ -29,7 +29,7 @@ LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)
 # ##################################
 # Library target: generic_tools
 # ##################################
-ADD_LIBRARY(generic_tools aca_plus.cc generic_functors.cc sauter_quadrature.cc regex_tools.cc hmatrix_support.cc)
+ADD_LIBRARY(generic_tools aca_plus.cu generic_functors.cc sauter_quadrature.cu regex_tools.cc hmatrix_support.cc)
 # Because my library generic_tools has included deal.ii header files,
 # dependent include paths and library paths need to be imported by
 # calling this macro DEAL_II_SETUP_TARGET.
@@ -41,6 +41,6 @@ TARGET_LINK_LIBRARIES(${TARGET} boost_program_options generic_tools)
 # ###############################################
 # Executable target: generate_block_cluster_tree
 # ###############################################
-ADD_EXECUTABLE(generate_block_cluster_tree generate_block_cluster_tree.cc)
-DEAL_II_SETUP_TARGET(generate_block_cluster_tree)
-TARGET_LINK_LIBRARIES(generate_block_cluster_tree boost_program_options generic_tools)
+# ADD_EXECUTABLE(generate_block_cluster_tree generate_block_cluster_tree.cc)
+# DEAL_II_SETUP_TARGET(generate_block_cluster_tree)
+# TARGET_LINK_LIBRARIES(generate_block_cluster_tree boost_program_options generic_tools)

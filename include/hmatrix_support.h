@@ -28,7 +28,7 @@ namespace HMatrixSupport
    * the matrix. The elements of this enumeration are therefore used to track
    * what is currently being stored by this object.
    *
-   * \comment{This above documentation is extracted from deal.ii.}
+   * \comment{The above documentation is extracted from deal.ii.}
    */
   enum State
   {
@@ -59,21 +59,21 @@ namespace HMatrixSupport
   {
     switch (s)
       {
-        case matrix:
+        case State::matrix:
           return "matrix";
-        case inverse_matrix:
+        case State::inverse_matrix:
           return "inverse matrix";
-        case lu:
+        case State::lu:
           return "lu decomposition";
-        case cholesky:
+        case State::cholesky:
           return "cholesky decomposition";
-        case eigenvalues:
+        case State::eigenvalues:
           return "eigenvalues";
-        case svd:
+        case State::svd:
           return "svd";
-        case inverse_svd:
+        case State::inverse_svd:
           return "inverse_svd";
-        case unusable:
+        case State::unusable:
           return "unusable";
         default:
           return "unknown";
@@ -128,13 +128,13 @@ namespace HMatrixSupport
   {
     switch (s)
       {
-        case general:
+        case Property::general:
           return "general";
-        case symmetric:
+        case Property::symmetric:
           return "symmetric";
-        case upper_triangular:
+        case Property::upper_triangular:
           return "upper triangular";
-        case lower_triangular:
+        case Property::lower_triangular:
           return "lower triangular";
       }
 
@@ -157,9 +157,9 @@ namespace HMatrixSupport
    * 1. the top level \hmatnode is a diagonal block;
    * 2. if the current \hmatnode is a diagonal block and has submatrices, the
    * first and last submatrices are still diagonal blocks, while the second
-   * submatrix is a upper triangular block and the third submatrix is a lower
+   * submatrix is an upper triangular block and the third submatrix is a lower
    * triangular block;
-   * 3. if the current \hmatnode is a upper (lower) triangular block and has
+   * 3. if the current \hmatnode is an upper (lower) triangular block and has
    * submatrices, all of them are upper (lower) triangular blocks.}
    */
   enum BlockType
@@ -183,13 +183,13 @@ namespace HMatrixSupport
   {
     switch (b)
       {
-        case undefined_block:
+        case BlockType::undefined_block:
           return "undefined block";
-        case diagonal_block:
+        case BlockType::diagonal_block:
           return "diagonal block";
-        case upper_triangular_block:
+        case BlockType::upper_triangular_block:
           return "upper triangular block";
-        case lower_triangular_block:
+        case BlockType::lower_triangular_block:
           return "lower triangular block";
       }
 

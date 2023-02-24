@@ -298,7 +298,7 @@ unsigned int
 SimpleBoundingBox<spacedim, Number>::coordinate_index_with_longest_dimension()
   const
 {
-  unsigned int coordinate_index  = -1;
+  unsigned int coordinate_index  = spacedim;
   Number       longest_dimension = 0.0;
   for (unsigned int d = 0; d < spacedim; d++)
     {

@@ -1,0 +1,6 @@
+Table size (6), indices (5), C style linear index=5
+Table size (6), indices (5), Fortran style linear index=5
+Table size (5, 5), indices (2, 3), C style linear index=13
+Table size (5, 5), indices (2, 3), Fortran style linear index=17
+Table size (5, 5, 5), indices (4, 3, 3), C style linear index=118
+Table size (5, 5, 5), indices (4, 3, 3), Fortran style linear index=94
