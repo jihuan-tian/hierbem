@@ -1088,9 +1088,10 @@ namespace IdeoBEM
       CUDATable<2, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
 
       /**
-       * Sauter quadrature value.
+       * Sauter quadrature values calculated from the accumulation of each
+       * thread blocks.
        */
-      RangeNumberType *quad_value;
+      RangeNumberType *quad_values_in_thread_blocks;
     };
 
 
@@ -1256,7 +1257,8 @@ namespace IdeoBEM
       ky_quad_points_regular.allocate(
         scratch_cpu.ky_quad_points_regular.size());
 
-      error_code = cudaMalloc((void **)&quad_value, sizeof(RangeNumberType));
+      error_code = cudaMalloc((void **)&quad_values_in_thread_blocks,
+                              sizeof(RangeNumberType) * 100);
       AssertCuda(error_code);
     }
 
@@ -1374,7 +1376,7 @@ namespace IdeoBEM
       ky_quad_points_common_vertex.release();
       ky_quad_points_regular.release();
 
-      error_code = cudaFree(quad_value);
+      error_code = cudaFree(quad_values_in_thread_blocks);
       AssertCuda(error_code);
     }
 

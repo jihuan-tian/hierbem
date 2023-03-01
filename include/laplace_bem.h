@@ -96,12 +96,13 @@ namespace IdeoBEM
 
     template <int dim1,
               int spacedim1,
+              template <int, typename>
+              typename KernelFunctionType,
               typename RangeNumberType,
               typename MatrixType>
     friend void
     assemble_bem_full_matrix(
-      const IdeoBEM::CUDAWrappers::KernelFunction<spacedim1, RangeNumberType>
-                                          &kernel,
+      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
       const DoFHandler<dim1, spacedim1>   &dof_handler_for_test_space,
       const DoFHandler<dim1, spacedim1>   &dof_handler_for_trial_space,
       MappingQGenericExt<dim1, spacedim1> &kx_mapping,

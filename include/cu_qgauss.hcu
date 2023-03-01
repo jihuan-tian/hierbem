@@ -92,7 +92,8 @@ namespace IdeoBEM
        * Table of quadrature points. The first dimension is the quadrature point
        * index. The second dimension is coordinate index. Since @p CUDATable
        * adopts C style indexing, this memory configuration is consistent with
-       * the quadrature point data held within @p QGauss.
+       * the quadrature point data held within @p QGauss, which is a vector of
+       * @p Point objects.
        */
       CUDATable<2, double> points;
       double              *weights = nullptr;
@@ -157,7 +158,7 @@ namespace IdeoBEM
 
 
     template <int dim>
-    __host__ __device__ unsigned int
+    __host__ __device__ inline unsigned int
     CUDAQGauss<dim>::size() const
     {
       return quad_num;
@@ -165,7 +166,7 @@ namespace IdeoBEM
 
 
     template <int dim>
-    __host__ __device__ const CUDATable<2, double>                           &
+    __host__ __device__ inline const CUDATable<2, double>          &
     CUDAQGauss<dim>::get_points() const
     {
       return points;
@@ -173,7 +174,7 @@ namespace IdeoBEM
 
 
     template <int dim>
-    __host__ __device__ const double *
+    __host__ __device__ inline const double *
     CUDAQGauss<dim>::get_weights() const
     {
       return weights;

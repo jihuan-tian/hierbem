@@ -548,13 +548,14 @@ namespace IdeoBEM
    */
   template <int dim,
             int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
             typename RangeNumberType,
             typename MatrixType>
   void
   assemble_bem_full_matrix(
-    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim, RangeNumberType>
-                                      &kernel,
-    const RangeNumberType              factor,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                factor,
     const DoFHandler<dim, spacedim>   &dof_handler_for_test_space,
     const DoFHandler<dim, spacedim>   &dof_handler_for_trial_space,
     MappingQGenericExt<dim, spacedim> &kx_mapping,
@@ -653,6 +654,7 @@ namespace IdeoBEM
           std::bind(
             &sauter_assemble_on_one_pair_of_cells<dim,
                                                   spacedim,
+                                                  KernelFunctionType,
                                                   RangeNumberType>,
             std::cref(kernel),
             factor,
@@ -983,13 +985,16 @@ namespace IdeoBEM
    * @param scratch
    * @param data
    */
-  template <int dim, int spacedim, typename RangeNumberType>
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType>
   void
   evaluate_potential_on_one_cell(
-    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim, RangeNumberType>
-                                           &kernel,
-    const Point<spacedim, RangeNumberType> &target_point,
-    const RangeNumberType                   factor,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const Point<spacedim, RangeNumberType>              &target_point,
+    const RangeNumberType                                factor,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell_iter,
     const bool is_normal_vector_negated,
     CellWiseScratchDataForPotentialEval<dim, spacedim, RangeNumberType>
@@ -1097,13 +1102,14 @@ namespace IdeoBEM
    */
   template <int dim,
             int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
             typename RangeNumberType,
             typename VectorType>
   void
   evaluate_potential_at_points(
-    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim, RangeNumberType>
-                                    &kernel,
-    const RangeNumberType            factor,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                factor,
     const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
     const VectorType                &dof_values_in_trial_space,
     const bool                       is_normal_vector_negated,

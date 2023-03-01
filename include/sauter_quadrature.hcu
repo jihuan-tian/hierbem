@@ -182,9 +182,10 @@ namespace IdeoBEM
      * of DoFs per face.
      */
     const unsigned int dofs_per_face =
-      fe.dofs_per_face > 0 ? fe.dofs_per_face :
-                             static_cast<unsigned int>(
-                               Utilities::fixed_power<dim - 1>(fe.degree + 1));
+      fe.dofs_per_face > 0 ?
+        fe.dofs_per_face :
+        static_cast<unsigned int>(
+          dealii::Utilities::fixed_power<dim - 1>(fe.degree + 1));
 
     vertex_dof_indices[0] = dof_indices[0];
     vertex_dof_indices[1] = dof_indices[dofs_per_face - 1];
@@ -231,9 +232,10 @@ namespace IdeoBEM
      * of DoFs per face.
      */
     const unsigned int dofs_per_face =
-      fe.dofs_per_face > 0 ? fe.dofs_per_face :
-                             static_cast<unsigned int>(
-                               Utilities::fixed_power<dim - 1>(fe.degree + 1));
+      fe.dofs_per_face > 0 ?
+        fe.dofs_per_face :
+        static_cast<unsigned int>(
+          dealii::Utilities::fixed_power<dim - 1>(fe.degree + 1));
 
     vertex_dof_indices[0] = dof_indices[0];
     vertex_dof_indices[1] = dof_indices[dofs_per_face - 1];
@@ -1222,7 +1224,231 @@ namespace IdeoBEM
 
 
     /**
-     * TODO Implement CUDA parallel applying quadrature using sum reduction.
+     * Sum using warp reduce.
+     *
+     * @param data
+     * @param tid
+     */
+    template <typename RangeNumberType = double>
+    __device__ void
+    warpReduce(volatile RangeNumberType *data, const unsigned int tid)
+    {
+      assert(warpSize == 32);
+
+      data[tid] += data[tid + 32];
+      data[tid] += data[tid + 16];
+      data[tid] += data[tid + 8];
+      data[tid] += data[tid + 4];
+      data[tid] += data[tid + 2];
+      data[tid] += data[tid + 1];
+    }
+
+
+    /**
+     * ONGOING Apply Sauter quadrature directly to the kernel function for the
+     * same panel case.
+     */
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    ApplyQuadratureUsingBEMValuesSamePanel(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel_function,
+      const RangeNumberType                               factor,
+      const unsigned int                                  kx_dof_index,
+      const unsigned int                                  ky_dof_index,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
+      const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                   scratch_data,
+      unsigned int component = 0)
+    {
+      /**
+       * @internal Result array in the shared memory which stores the quadrature
+       * results for each thread in a same thread block. Its dimension should be
+       * @p blockDim.x.
+       */
+      extern __shared__ RangeNumberType quad_values_in_thread_block[];
+
+      const unsigned int quad_no = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+      if (quad_no < bem_values.quad_rule_for_same_panel.size())
+        {
+          const CUDATable<2, double> &quad_points =
+            bem_values.quad_rule_for_same_panel.get_points();
+
+          /**
+           * @internal Evaluate the kernel function at the current quadrature
+           * point, which is an accumulation of all @p k3 terms.
+           */
+          RangeNumberType kernel_value = 0.;
+          for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
+            {
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  /**
+                   * @internal Extract the gradient values of the current shape
+                   * function at the current quadrature point in the unit cell
+                   * for \f$K_x\f$ as well as \f$K_y\f$.
+                   */
+                  RangeNumberType             kx_shape_grad_in_unit_cell[dim];
+                  RangeNumberType             ky_shape_grad_in_unit_cell[dim];
+                  CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                    kx_shape_grad_in_unit_cell, dim);
+                  CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                    ky_shape_grad_in_unit_cell, dim);
+
+                  for (unsigned int i = 0; i < dim; i++)
+                    {
+                      kx_shape_grad_in_unit_cell[i] =
+                        bem_values.kx_shape_grad_matrix_table_for_same_panel(
+                          k3_index, quad_no, i, kx_dof_index);
+                      ky_shape_grad_in_unit_cell[i] =
+                        bem_values.kx_shape_grad_matrix_table_for_same_panel(
+                          k3_index, quad_no, i, ky_dof_index);
+                    }
+
+                  /**
+                   * Apply covariant transformation to the gradient tensors in
+                   * the unit cell.
+                   */
+                  RangeNumberType kx_shape_grad_in_real_cell[spacedim];
+                  RangeNumberType ky_shape_grad_in_real_cell[spacedim];
+                  CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                    kx_shape_grad_in_real_cell, spacedim);
+                  CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                    ky_shape_grad_in_real_cell, spacedim);
+
+                  CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+                    const_cast<RangeNumberType *>(
+                      &(scratch_data.kx_covariants_same_panel(
+                        k3_index, quad_no, 0, 0))),
+                    spacedim,
+                    dim);
+                  CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+                    const_cast<RangeNumberType *>(
+                      &(scratch_data.ky_covariants_same_panel(
+                        k3_index, quad_no, 0, 0))),
+                    spacedim,
+                    dim);
+
+                  kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
+                                            kx_shape_grad_in_unit_cell_vector);
+                  ky_covariant_matrix.vmult(ky_shape_grad_in_real_cell_vector,
+                                            ky_shape_grad_in_unit_cell_vector);
+
+                  /**
+                   * Calculate the surface gradient tensor of the shape
+                   * functions, which is the cross product of normal vector and
+                   * the volume gradient vector.
+                   *
+                   * \mynote{The cross product operation requires the input
+                   * vectors be transformed to tensors.}
+                   */
+                  Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                    cross_product_3d(
+                      scratch_data.kx_normals_same_panel(k3_index, quad_no),
+                      kx_shape_grad_in_real_cell_vector);
+                  Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                    cross_product_3d(
+                      scratch_data.ky_normals_same_panel(k3_index, quad_no),
+                      ky_shape_grad_in_real_cell_vector);
+
+                  kernel_value +=
+                    kernel_function.value(
+                      scratch_data.kx_quad_points_same_panel(k3_index, quad_no),
+                      scratch_data.ky_quad_points_same_panel(k3_index, quad_no),
+                      scratch_data.kx_normals_same_panel(k3_index, quad_no),
+                      scratch_data.ky_normals_same_panel(k3_index, quad_no),
+                      component) *
+                    scratch_data.kx_jacobians_same_panel(k3_index, quad_no) *
+                    scratch_data.ky_jacobians_same_panel(k3_index, quad_no) *
+                    scalar_product(kx_shape_surface_curl,
+                                   ky_shape_surface_curl);
+                }
+              else
+                {
+                  /**
+                   * @internal Evaluate the kernel function at the specified
+                   * pair of points in the real cells with their normal vectors,
+                   * the result of which is then multiplied by the Jacobians and
+                   * shape function values.
+                   */
+                  kernel_value +=
+                    kernel_function.value(
+                      scratch_data.kx_quad_points_same_panel(k3_index, quad_no),
+                      scratch_data.ky_quad_points_same_panel(k3_index, quad_no),
+                      scratch_data.kx_normals_same_panel(k3_index, quad_no),
+                      scratch_data.ky_normals_same_panel(k3_index, quad_no),
+                      component) *
+                    scratch_data.kx_jacobians_same_panel(k3_index, quad_no) *
+                    scratch_data.ky_jacobians_same_panel(k3_index, quad_no) *
+                    bem_values.kx_shape_value_table_for_same_panel(kx_dof_index,
+                                                                   k3_index,
+                                                                   quad_no) *
+                    bem_values.ky_shape_value_table_for_same_panel(ky_dof_index,
+                                                                   k3_index,
+                                                                   quad_no);
+                }
+            }
+
+          /**
+           * @internal Multiply the kernel function value with the Jacobian from
+           * the Sauter parametric space to the unit cell, then with the
+           * quadrature weights, then with the additional factor. The result is
+           * stored into the shared memory.
+           */
+          quad_values_in_thread_block[threadIdx.x] =
+            kernel_value * quad_points(quad_no, 0) *
+            (1 - quad_points(quad_no, 0)) *
+            (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1)) *
+            bem_values.quad_rule_for_same_panel.get_weights()[quad_no] * factor;
+        }
+      else
+        {
+          quad_values_in_thread_block[threadIdx.x] = 0.;
+        }
+
+      /**
+       * @internal Synchronize all the threads in the current thread block for
+       * finishing their function evaluation at the specified quadrature point.
+       */
+      __syncthreads();
+
+      /**
+       * @internal Sum up the values saved in the shared memory.
+       */
+      //! Accumulate the data in a thread block. N.B. Here s is the stride for
+      //! sum and 2*s is the stride for classification of the array into
+      //! segments.
+      for (unsigned int s = blockDim.x / 2; s > warpSize; s >>= 1)
+        {
+          if (threadIdx.x < s)
+            {
+              quad_values_in_thread_block[threadIdx.x] +=
+                quad_values_in_thread_block[threadIdx.x + s];
+            }
+
+          __syncthreads();
+        }
+
+      if (threadIdx.x < warpSize)
+        {
+          warpReduce(quad_values_in_thread_block, threadIdx.x);
+        }
+
+      //! Write out the result for the current block.
+      if (threadIdx.x == 0)
+        {
+          scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
+            quad_values_in_thread_block[0];
+        }
+    }
+
+
+    /**
+     * Implement CUDA parallel applying quadrature using sum reduction.
      *
      * @tparam dim
      * @tparam spacedim
@@ -1234,13 +1460,20 @@ namespace IdeoBEM
      * @param scratch_data
      * @param component
      */
-    template <int dim, int spacedim, typename RangeNumberType = double>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
     __global__ void
     ApplyQuadratureUsingBEMValues(
       const CellNeighboringType cell_neighboring_type,
-      const KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType> f,
-      const RangeNumberType                               factor,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
+      const KernelPulledbackToSauterSpace<dim,
+                                          spacedim,
+                                          KernelFunctionType,
+                                          RangeNumberType> f,
+      const RangeNumberType                                factor,
+      const CUDABEMValues<dim, spacedim, RangeNumberType>  bem_values,
       const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                    scratch_data,
       unsigned int component = 0)
@@ -1663,14 +1896,21 @@ namespace IdeoBEM
    * @param component
    * @return
    */
-  template <int dim, int spacedim, typename RangeNumberType = double>
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
   __host__ RangeNumberType
   ApplyQuadratureUsingBEMValues(
     const Quadrature<dim * 2> &quad_rule,
-    const IdeoBEM::CUDAWrappers::
-      KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType> &f,
-    const RangeNumberType                                            factor,
-    const BEMValues<dim, spacedim, RangeNumberType>                 &bem_values,
+    const IdeoBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
+      dim,
+      spacedim,
+      KernelFunctionType,
+      RangeNumberType>                                            &f,
+    const RangeNumberType                                          factor,
+    const BEMValues<dim, spacedim, RangeNumberType>               &bem_values,
     const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     unsigned int component = 0)
   {
@@ -1759,11 +1999,15 @@ namespace IdeoBEM
    * @param data
    * @param is_scratch_data_for_kx_uncalculated
    */
-  template <int dim, int spacedim, typename RangeNumberType = double>
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
   void
   sauter_assemble_on_one_pair_of_cells(
-    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
-    const RangeNumberType                                  kernel_factor,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
       &kx_cell_iter,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
@@ -1876,15 +2120,21 @@ namespace IdeoBEM
         for (unsigned int j = 0; j < ky_n_dofs; j++)
           {
             // Pullback the kernel function to unit cell.
-            IdeoBEM::CUDAWrappers::
-              KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
+            IdeoBEM::CUDAWrappers::KernelPulledbackToUnitCell<
+              dim,
+              spacedim,
+              KernelFunctionType,
+              RangeNumberType>
+              kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
 
             // Pullback the kernel function to Sauter parameter space.
-            IdeoBEM::CUDAWrappers::
-              KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
-                kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                          cell_neighboring_type);
+            IdeoBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
+              dim,
+              spacedim,
+              KernelFunctionType,
+              RangeNumberType>
+              kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                        cell_neighboring_type);
 
             // Apply Sauter numerical quadrature.
             copy_data.local_pair_cell_matrix(i, j) =
@@ -1934,16 +2184,20 @@ namespace IdeoBEM
    * @param copy_data
    * @return
    */
-  template <int dim, int spacedim, typename RangeNumberType = double>
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
   RangeNumberType
   sauter_assemble_on_one_pair_of_dofs(
-    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
-    const RangeNumberType                                  kernel_factor,
-    const types::global_dof_index                          i,
-    const types::global_dof_index                          j,
-    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const types::global_dof_index                        i,
+    const types::global_dof_index                        j,
+    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                             &bem_values_gpu,
     const DoFHandler<dim, spacedim>         &kx_dof_handler,
@@ -2105,42 +2359,48 @@ namespace IdeoBEM
             unsigned int j_index =
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-
-            /**
-             * Pullback the kernel function to unit cell.
-             */
-            IdeoBEM::CUDAWrappers::
-              KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                kernel_pullback_on_unit(kernel,
-                                        cell_neighboring_type,
-                                        i_index,
-                                        j_index);
-
-            /**
-             * Pullback the kernel function to Sauter parameter space.
-             */
-            IdeoBEM::CUDAWrappers::
-              KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
-                kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                          cell_neighboring_type);
-
             // Apply 4d Sauter numerical quadrature on the GPU device.
-            RangeNumberType temp_result = 0;
-            //            IdeoBEM::CUDAWrappers::
-            //              ApplyQuadratureUsingBEMValues<<<blocks_rect.x,
-            //              threads_rect.x>>>(
-            //                cell_neighboring_type,
-            //                kernel_pullback_on_sauter,
-            //                kernel_factor,
-            //                bem_values_gpu,
-            //                scratch_data_gpu);
-            //            // Copy the current result to the temporary variable.
-            //            cudaMemcpy(&temp_result,
-            //                       scratch_data_gpu.quad_value,
-            //                       sizeof(RangeNumberType),
-            //                       cudaMemcpyDeviceToHost);
+            switch (cell_neighboring_type)
+              {
+                  case BEMTools::CellNeighboringType::SamePanel: {
+                    IdeoBEM::CUDAWrappers::
+                      ApplyQuadratureUsingBEMValuesSamePanel<<<
+                        blocks_rect.x,
+                        threads_rect.x>>>(kernel,
+                                          kernel_factor,
+                                          i_index,
+                                          j_index,
+                                          bem_values_gpu,
+                                          scratch_data_gpu);
 
-            double_integral += temp_result;
+                    break;
+                  }
+                  case BEMTools::CellNeighboringType::CommonEdge: {
+                    break;
+                  }
+                  case BEMTools::CellNeighboringType::CommonVertex: {
+                    break;
+                  }
+                  case BEMTools::CellNeighboringType::Regular: {
+                    break;
+                  }
+                  default: {
+                    Assert(false, ExcInternalError());
+                    break;
+                  }
+              }
+
+            RangeNumberType quad_values_in_thread_blocks[100];
+            // Copy the current result to the temporary variable.
+            cudaMemcpy(quad_values_in_thread_blocks,
+                       scratch_data_gpu.quad_values_in_thread_blocks,
+                       sizeof(RangeNumberType) * blocks_rect.x,
+                       cudaMemcpyDeviceToHost);
+
+            for (unsigned int i = 0; i < blocks_rect.x; i++)
+              {
+                double_integral += quad_values_in_thread_blocks[i];
+              }
           }
       }
 
@@ -2192,17 +2452,21 @@ namespace IdeoBEM
    * @param copy_data
    * @return
    */
-  template <int dim, int spacedim, typename RangeNumberType = double>
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
   RangeNumberType
   sauter_assemble_on_one_pair_of_dofs(
-    const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> &kernel,
-    const RangeNumberType                                  kernel_factor,
-    const RangeNumberType                                  mass_matrix_factor,
-    const types::global_dof_index                          i,
-    const types::global_dof_index                          j,
-    const std::vector<std::vector<unsigned int>>          &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>          &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>       &bem_values,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const RangeNumberType                                mass_matrix_factor,
+    const types::global_dof_index                        i,
+    const types::global_dof_index                        j,
+    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
+    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                             &bem_values_gpu,
     const DoFHandler<dim, spacedim>         &kx_dof_handler,
@@ -2363,42 +2627,48 @@ namespace IdeoBEM
             unsigned int j_index =
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-
-            /**
-             * Pullback the kernel function to unit cell.
-             */
-            IdeoBEM::CUDAWrappers::
-              KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                kernel_pullback_on_unit(kernel,
-                                        cell_neighboring_type,
-                                        i_index,
-                                        j_index);
-
-            /**
-             * Pullback the kernel function to Sauter parameter space.
-             */
-            IdeoBEM::CUDAWrappers::
-              KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>
-                kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                          cell_neighboring_type);
-
             // Apply 4d Sauter numerical quadrature on the GPU device.
-            RangeNumberType temp_result = 0;
-            //            IdeoBEM::CUDAWrappers::
-            //              ApplyQuadratureUsingBEMValues<<<blocks_rect.x,
-            //              threads_rect.x>>>(
-            //                cell_neighboring_type,
-            //                kernel_pullback_on_sauter,
-            //                kernel_factor,
-            //                bem_values_gpu,
-            //                scratch_data_gpu);
-            //            // Copy the current result to the temporary variable.
-            //            cudaMemcpy(&temp_result,
-            //                       scratch_data_gpu.quad_value,
-            //                       sizeof(RangeNumberType),
-            //                       cudaMemcpyDeviceToHost);
+            switch (cell_neighboring_type)
+              {
+                  case BEMTools::CellNeighboringType::SamePanel: {
+                    IdeoBEM::CUDAWrappers::
+                      ApplyQuadratureUsingBEMValuesSamePanel<<<
+                        blocks_rect.x,
+                        threads_rect.x>>>(kernel,
+                                          kernel_factor,
+                                          i_index,
+                                          j_index,
+                                          bem_values_gpu,
+                                          scratch_data_gpu);
 
-            double_integral += temp_result;
+                    break;
+                  }
+                  case BEMTools::CellNeighboringType::CommonEdge: {
+                    break;
+                  }
+                  case BEMTools::CellNeighboringType::CommonVertex: {
+                    break;
+                  }
+                  case BEMTools::CellNeighboringType::Regular: {
+                    break;
+                  }
+                  default: {
+                    Assert(false, ExcInternalError());
+                    break;
+                  }
+              }
+
+            RangeNumberType quad_values_in_thread_blocks[100];
+            // Copy the current result to the temporary variable.
+            cudaMemcpy(quad_values_in_thread_blocks,
+                       scratch_data_gpu.quad_values_in_thread_blocks,
+                       sizeof(RangeNumberType) * blocks_rect.x,
+                       cudaMemcpyDeviceToHost);
+
+            for (unsigned int t = 0; t < blocks_rect.x; t++)
+              {
+                double_integral += quad_values_in_thread_blocks[t];
+              }
 
             /**
              * Append the FEM mass matrix contribution.
@@ -2504,660 +2774,6 @@ namespace IdeoBEM
       }
 
     return double_integral;
-  }
-
-
-  /**
-   * Perform Galerkin-BEM double integral with respect to a list of kernels on
-   * a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature. N.B. These
-   * bilinear forms should have the same trial and ansatz spaces.
-   *
-   * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
-   * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
-   * sharing the DoF support point \f$j\f$. Then Galerkin-BEM double integral
-   * will be over each cell pair which is comprised of an arbitrary cell in
-   * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
-   *
-   * @param kernels A vector of kernel function pointers
-   * @param factors
-   * @param enable_kernel_evaluations A list of flags indicating if each kernel
-   * is to be evaluated.
-   * @param results The vector of values returned for the integral with respect
-   * to the vector of kernel functions
-   * @param i
-   * @param j
-   * @param kx_dof_to_cell_topo
-   * @param ky_dof_to_cell_topo
-   * @param bem_values
-   * @param kx_dof_handler
-   * @param ky_dof_handler
-   * @param kx_mapping
-   * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
-   * @param scratch_data
-   * @param copy_data
-   */
-  template <int dim, int spacedim, typename RangeNumberType = double>
-  void
-  sauter_assemble_on_one_pair_of_dofs(
-    const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
-                                                    &kernels,
-    const std::vector<RangeNumberType>              &kernel_factors,
-    const std::vector<bool>                         &enable_kernel_evaluations,
-    Vector<RangeNumberType>                         &results,
-    const types::global_dof_index                    i,
-    const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
-                                            &bem_values_gpu,
-    const DoFHandler<dim, spacedim>         &kx_dof_handler,
-    const DoFHandler<dim, spacedim>         &ky_dof_handler,
-    const MappingQGenericExt<dim, spacedim> &kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &ky_mapping,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
-      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                            &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
-  {
-    AssertDimension(kernels.size(), kernel_factors.size());
-    AssertDimension(kernels.size(), enable_kernel_evaluations.size());
-
-    /**
-     * Reinitialize the result vector to zero.
-     */
-    results.reinit(kernels.size());
-
-    /**
-     * Iterate over each cell in the support of the basis function for the
-     * i-th DoF.
-     */
-    for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
-      {
-        typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
-          kx_dof_handler.active_cell_iterators().begin();
-        std::advance(kx_cell_iter, kx_cell_index);
-
-        /**
-         * Calculate the real support points in the cell \f$K_x\f$ via the
-         * mapping object. Since such data will be held and updated in-situ in
-         * the mapping object, which has been passed into this working function
-         * by const reference, a copy of it should be made.
-         */
-        MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
-        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
-        /**
-         * Copy the newly calculated support points into @p ScratchData.
-         */
-        scratch_data.kx_mapping_support_points_in_default_order =
-          kx_mapping_copy.get_support_points();
-        /**
-         * Update the DoF indices.
-         */
-        kx_cell_iter->get_dof_indices(
-          scratch_data.kx_local_dof_indices_in_default_dof_order);
-
-        /**
-         * Iterate over each cell in the support of the basis function for the
-         * j-th DoF.
-         */
-        for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
-          {
-            typename DoFHandler<dim, spacedim>::active_cell_iterator
-              ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
-            std::advance(ky_cell_iter, ky_cell_index);
-
-            /**
-             * Detect the cell neighboring type based on cell vertex indices.
-             */
-            CellNeighboringType cell_neighboring_type =
-              detect_cell_neighboring_type<dim, spacedim>(
-                method_for_cell_neighboring_type,
-                kx_cell_iter,
-                ky_cell_iter,
-                map_from_kx_boundary_mesh_to_volume_mesh,
-                map_from_ky_boundary_mesh_to_volume_mesh,
-                scratch_data.common_vertex_pair_local_indices);
-
-            /**
-             * Calculate the real support points in the cell \f$K_y\f$ via the
-             * mapping object. Since such data will be held and updated in-situ
-             * in the mapping object, which has been passed into this working
-             * function by const reference, a copy of it should be made.
-             */
-            MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
-            ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
-            /**
-             * Copy the newly calculated support points into @p ScratchData.
-             */
-            scratch_data.ky_mapping_support_points_in_default_order =
-              ky_mapping_copy.get_support_points();
-
-            /**
-             * \mynote{Inside this function, whether DoF indices in \f$K_x\f$
-             * will be extracted depends on the flag
-             * @p is_scratch_data_for_kx_uncalculated. The DoF indices in
-             * \f$K_y\f$ will always be extracted.}
-             */
-            permute_dofs_and_mapping_support_points_for_sauter_quad(
-              scratch_data,
-              copy_data,
-              cell_neighboring_type,
-              kx_cell_iter,
-              ky_cell_iter,
-              kx_mapping_copy,
-              ky_mapping_copy,
-              false);
-
-            // Copy data from CPU to GPU.
-            scratch_data_gpu.assign_from_host(scratch_data);
-            copy_data_gpu.assign_from_host(copy_data);
-
-            // Determine thread block dimensions.
-            dim3 blocks_rect;
-            dim3 threads_rect;
-            IdeoBEM::CUDAWrappers::configure_thread_blocks(
-              cell_neighboring_type, bem_values, blocks_rect, threads_rect);
-
-            IdeoBEM::CUDAWrappers::
-              calc_jacobian_normals_for_sauter_quad<<<blocks_rect,
-                                                      threads_rect>>>(
-                cell_neighboring_type, bem_values_gpu, scratch_data_gpu);
-            cudaDeviceSynchronize();
-
-            /**
-             * When there is at least one bilinear form for the hyper singular
-             * operator is to be evaluated, the covariant transformation is
-             * computed.
-             */
-            for (auto kernel : kernels)
-              {
-                if (kernel->kernel_type == HyperSingularRegular)
-                  {
-                    IdeoBEM::CUDAWrappers::
-                      calc_covariant_transformations<<<blocks_rect,
-                                                       threads_rect>>>(
-                        cell_neighboring_type,
-                        bem_values_gpu,
-                        scratch_data_gpu);
-                    cudaDeviceSynchronize();
-
-                    break;
-                  }
-              }
-
-            /**
-             * Find the index of the i-th DoF in the permuted DoF indices of
-             * \f$K_x\f$.
-             */
-            typename std::vector<types::global_dof_index>::const_iterator
-              i_iter =
-                std::find(copy_data.kx_local_dof_indices_permuted.begin(),
-                          copy_data.kx_local_dof_indices_permuted.end(),
-                          i);
-            Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
-                   ExcInternalError());
-            unsigned int i_index =
-              i_iter - copy_data.kx_local_dof_indices_permuted.begin();
-
-            /**
-             * Find the index of the j-th DoF in the permuted DoF indices of
-             * \f$K_y\f$.
-             */
-            typename std::vector<types::global_dof_index>::const_iterator
-              j_iter =
-                std::find(copy_data.ky_local_dof_indices_permuted.begin(),
-                          copy_data.ky_local_dof_indices_permuted.end(),
-                          j);
-            Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
-                   ExcInternalError());
-            unsigned int j_index =
-              j_iter - copy_data.ky_local_dof_indices_permuted.begin();
-
-            /**
-             * Iterate over each kernel.
-             */
-            unsigned int counter = 0;
-            for (const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *kernel :
-                 kernels)
-              {
-                if (enable_kernel_evaluations[counter])
-                  {
-                    /**
-                     * Pullback the kernel function to unit cell.
-                     */
-                    IdeoBEM::CUDAWrappers::
-                      KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                        kernel_pullback_on_unit(*kernel,
-                                                cell_neighboring_type,
-                                                i_index,
-                                                j_index);
-
-                    /**
-                     * Pullback the kernel function to Sauter parameter space.
-                     */
-                    IdeoBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
-                      dim,
-                      spacedim,
-                      RangeNumberType>
-                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                                cell_neighboring_type);
-
-                    // Apply 4d Sauter numerical quadrature on the GPU device.
-                    RangeNumberType temp_result = 0;
-                    //                    IdeoBEM::CUDAWrappers::
-                    //                      ApplyQuadratureUsingBEMValues<<<blocks_rect.x,
-                    //                                                      threads_rect.x>>>(
-                    //                        cell_neighboring_type,
-                    //                        kernel_pullback_on_sauter,
-                    //                        kernel_factors[counter],
-                    //                        bem_values_gpu,
-                    //                        scratch_data_gpu);
-                    //                    // Copy the current result to the
-                    //                    temporary variable.
-                    //                    cudaMemcpy(&temp_result,
-                    //                               scratch_data_gpu.quad_value,
-                    //                               sizeof(RangeNumberType),
-                    //                               cudaMemcpyDeviceToHost);
-
-                    results(counter) += temp_result;
-                  }
-
-                counter++;
-              }
-          }
-      }
-  }
-
-
-  /**
-   * Perform Galerkin-BEM double integral with respect to a list of kernels on
-   * a pair of DoFs \f$(i, j)\f$ using the Sauter quadrature. In the meantime,
-   * if these two DoFs are shared by some common cells, the FEM mass matrix
-   * multiplied by a factor will be added into the result.
-   *
-   * Assume \f$\mathcal{K}_i\f$ is the collection of cells sharing the DoF
-   * support point \f$i\f$ and \f$\mathcal{K}_j\f$ is the collection of cells
-   * sharing the DoF support point \f$j\f$. Then Galerkin-BEM double integral
-   * will be over each cell pair which is comprised of an arbitrary cell in
-   * \f$\mathcal{K}_i\f$ and an arbitrary cell in \f$\mathcal{K}_j\f$.
-   *
-   * @param results
-   * @param scratch
-   * @param data
-   * @param mass_matrix_factors
-   * @param kernels A vector of kernel function pointers
-   * @param enable_kernel_evaluations A list of flags indicating if each kernel
-   * is to be evaluated.
-   * @param i
-   * @param j
-   * @param dof_to_cell_topo
-   * @param bem_values
-   * @param kx_dof_handler
-   * @param ky_dof_handler
-   * @param kx_mapping
-   * @param ky_mapping
-   */
-  template <int dim, int spacedim, typename RangeNumberType = double>
-  void
-  sauter_assemble_on_one_pair_of_dofs(
-    const std::vector<IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *>
-                                                    &kernels,
-    const std::vector<RangeNumberType>              &kernel_factors,
-    const std::vector<RangeNumberType>              &mass_matrix_factors,
-    const std::vector<bool>                         &enable_kernel_evaluations,
-    Vector<RangeNumberType>                         &results,
-    const types::global_dof_index                    i,
-    const types::global_dof_index                    j,
-    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
-                                            &bem_values_gpu,
-    const DoFHandler<dim, spacedim>         &kx_dof_handler,
-    const DoFHandler<dim, spacedim>         &ky_dof_handler,
-    const MappingQGenericExt<dim, spacedim> &kx_mapping,
-    const MappingQGenericExt<dim, spacedim> &ky_mapping,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
-      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                            &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
-  {
-    AssertDimension(kernels.size(), kernel_factors.size());
-    AssertDimension(kernels.size(), mass_matrix_factors.size());
-    AssertDimension(kernels.size(), enable_kernel_evaluations.size());
-
-    /**
-     * Reinitialize the result vector to zero.
-     */
-    results.reinit(kernels.size());
-
-    /**
-     * Iterate over each cell in the support of the basis function for the
-     * i-th DoF.
-     */
-    for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
-      {
-        typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
-          kx_dof_handler.active_cell_iterators().begin();
-        std::advance(kx_cell_iter, kx_cell_index);
-
-        /**
-         * Calculate the real support points in the cell \f$K_x\f$ via the
-         * mapping object. Since such data will be held and updated in-situ in
-         * the mapping object, which has been passed into this working function
-         * by const reference, a copy of it should be made.
-         */
-        MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
-        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
-        /**
-         * Copy the newly calculated support points into @p ScratchData.
-         */
-        scratch_data.kx_mapping_support_points_in_default_order =
-          kx_mapping_copy.get_support_points();
-        /**
-         * Update the DoF indices.
-         */
-        kx_cell_iter->get_dof_indices(
-          scratch_data.kx_local_dof_indices_in_default_dof_order);
-
-        /**
-         * Iterate over each cell in the support of the basis function for the
-         * j-th DoF.
-         */
-        for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
-          {
-            typename DoFHandler<dim, spacedim>::active_cell_iterator
-              ky_cell_iter = ky_dof_handler.active_cell_iterators().begin();
-            std::advance(ky_cell_iter, ky_cell_index);
-
-            /**
-             * Detect the cell neighboring type based on cell vertex indices.
-             */
-            CellNeighboringType cell_neighboring_type =
-              detect_cell_neighboring_type<dim, spacedim>(
-                method_for_cell_neighboring_type,
-                kx_cell_iter,
-                ky_cell_iter,
-                map_from_kx_boundary_mesh_to_volume_mesh,
-                map_from_ky_boundary_mesh_to_volume_mesh,
-                scratch_data.common_vertex_pair_local_indices);
-
-            /**
-             * Calculate the real support points in the cell \f$K_y\f$ via the
-             * mapping object. Since such data will be held and updated in-situ
-             * in the mapping object, which has been passed into this working
-             * function by const reference, a copy of it should be made.
-             */
-            MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
-            ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
-            /**
-             * Copy the newly calculated support points into @p ScratchData.
-             */
-            scratch_data.ky_mapping_support_points_in_default_order =
-              ky_mapping_copy.get_support_points();
-
-            /**
-             * \mynote{Inside this function, whether DoF indices in \f$K_x\f$
-             * will be extracted depends on the flag
-             * @p is_scratch_data_for_kx_uncalculated. The DoF indices in
-             * \f$K_y\f$ will always be extracted.}
-             */
-            permute_dofs_and_mapping_support_points_for_sauter_quad(
-              scratch_data,
-              copy_data,
-              cell_neighboring_type,
-              kx_cell_iter,
-              ky_cell_iter,
-              kx_mapping_copy,
-              ky_mapping_copy,
-              false);
-
-            // Copy data from CPU to GPU.
-            scratch_data_gpu.assign_from_host(scratch_data);
-            copy_data_gpu.assign_from_host(copy_data);
-
-            // Determine thread block dimensions.
-            dim3 blocks_rect;
-            dim3 threads_rect;
-            IdeoBEM::CUDAWrappers::configure_thread_blocks(
-              cell_neighboring_type, bem_values, blocks_rect, threads_rect);
-
-            IdeoBEM::CUDAWrappers::
-              calc_jacobian_normals_for_sauter_quad<<<blocks_rect,
-                                                      threads_rect>>>(
-                cell_neighboring_type, bem_values_gpu, scratch_data_gpu);
-            cudaDeviceSynchronize();
-
-            /**
-             * When there is at least one bilinear form for the hyper singular
-             * operator is to be evaluated, the covariant transformation is
-             * computed.
-             */
-            for (auto kernel : kernels)
-              {
-                if (kernel->kernel_type == HyperSingularRegular)
-                  {
-                    IdeoBEM::CUDAWrappers::
-                      calc_covariant_transformations<<<blocks_rect,
-                                                       threads_rect>>>(
-                        cell_neighboring_type,
-                        bem_values_gpu,
-                        scratch_data_gpu);
-                    cudaDeviceSynchronize();
-
-                    break;
-                  }
-              }
-
-            /**
-             * Find the index of the i-th DoF in the permuted DoF indices of
-             * \f$K_x\f$.
-             */
-            typename std::vector<types::global_dof_index>::const_iterator
-              i_iter =
-                std::find(copy_data.kx_local_dof_indices_permuted.begin(),
-                          copy_data.kx_local_dof_indices_permuted.end(),
-                          i);
-            Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
-                   ExcInternalError());
-            unsigned int i_index =
-              i_iter - copy_data.kx_local_dof_indices_permuted.begin();
-
-            /**
-             * Find the index of the j-th DoF in the permuted DoF indices of
-             * \f$K_y\f$.
-             */
-            typename std::vector<types::global_dof_index>::const_iterator
-              j_iter =
-                std::find(copy_data.ky_local_dof_indices_permuted.begin(),
-                          copy_data.ky_local_dof_indices_permuted.end(),
-                          j);
-            Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
-                   ExcInternalError());
-            unsigned int j_index =
-              j_iter - copy_data.ky_local_dof_indices_permuted.begin();
-
-            /**
-             * Iterate over each kernel.
-             */
-            unsigned int counter = 0;
-            for (const IdeoBEM::CUDAWrappers::KernelFunction<spacedim> *kernel :
-                 kernels)
-              {
-                if (enable_kernel_evaluations[counter])
-                  {
-                    /**
-                     * Pullback the kernel function to unit cell.
-                     */
-                    IdeoBEM::CUDAWrappers::
-                      KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                        kernel_pullback_on_unit(*kernel,
-                                                cell_neighboring_type,
-                                                i_index,
-                                                j_index);
-
-                    /**
-                     * Pullback the kernel function to Sauter parameter space.
-                     */
-                    IdeoBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
-                      dim,
-                      spacedim,
-                      RangeNumberType>
-                      kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                                cell_neighboring_type);
-
-                    // Apply 4d Sauter numerical quadrature on the GPU device.
-                    RangeNumberType temp_result = 0;
-                    //                    IdeoBEM::CUDAWrappers::
-                    //                      ApplyQuadratureUsingBEMValues<<<blocks_rect.x,
-                    //                                                      threads_rect.x>>>(
-                    //                        cell_neighboring_type,
-                    //                        kernel_pullback_on_sauter,
-                    //                        kernel_factors[counter],
-                    //                        bem_values_gpu,
-                    //                        scratch_data_gpu);
-                    //                    // Copy the current result to the
-                    //                    temporary variable.
-                    //                    cudaMemcpy(&temp_result,
-                    //                               scratch_data_gpu.quad_value,
-                    //                               sizeof(RangeNumberType),
-                    //                               cudaMemcpyDeviceToHost);
-
-                    results(counter) += temp_result;
-
-                    /**
-                     * Append the FEM mass matrix contribution.
-                     */
-                    if ((kx_cell_index == ky_cell_index) &&
-                        (mass_matrix_factors[counter] != 0))
-                      {
-                        Assert(cell_neighboring_type ==
-                                 CellNeighboringType::SamePanel,
-                               ExcInternalError());
-
-                        // Update the finite element values for the test space.
-                        mass_matrix_scratch_data.fe_values_for_test_space
-                          .reinit(kx_cell_iter);
-
-                        /**
-                         * Update the finite element values for the trial space.
-                         *
-                         * \mynote{N.B. The @p FEValues related to the trial
-                         * space must also be updated, since the trial space may
-                         * be different from the test space.}
-                         */
-                        mass_matrix_scratch_data.fe_values_for_trial_space
-                          .reinit(ky_cell_iter);
-
-                        const unsigned int n_q_points =
-                          mass_matrix_scratch_data.fe_values_for_test_space
-                            .get_quadrature()
-                            .size();
-                        // The trial space is on a same triangulation as the
-                        // test space and they share a same quadrature object.
-                        AssertDimension(
-                          n_q_points,
-                          mass_matrix_scratch_data.fe_values_for_trial_space
-                            .get_quadrature()
-                            .size());
-
-                        /**
-                         * Get the index of the global DoF index \f$i\f$ in
-                         * the current cell \f$K_x\f$.
-                         *
-                         * \mynote{N.B. The local DoF index in \f$K_x\f$ is
-                         * searched from the list from DoF indices held in the
-                         * @p ScratchData for BEM. This is valid because the
-                         * test and trial spaces associated with the mass matrix
-                         * and the BEM bilinear form are the same.
-                         *
-                         * Since there is no support point permutation during
-                         * FEM mass matrix assembly, the DoF indices here are in
-                         * the default order.}
-                         */
-                        auto i_local_dof_iter = std::find(
-                          scratch_data.kx_local_dof_indices_in_default_dof_order
-                            .begin(),
-                          scratch_data.kx_local_dof_indices_in_default_dof_order
-                            .end(),
-                          i);
-                        Assert(
-                          i_local_dof_iter !=
-                            scratch_data
-                              .kx_local_dof_indices_in_default_dof_order.end(),
-                          ExcMessage(
-                            std::string("Cannot find the global DoF index ") +
-                            std::to_string(i) +
-                            std::string(" in the list of cell DoF indices!")));
-                        const unsigned int i_local_dof_index =
-                          i_local_dof_iter -
-                          scratch_data.kx_local_dof_indices_in_default_dof_order
-                            .begin();
-
-                        /**
-                         * Get the index of the global DoF index \f$j\f$ in
-                         * the current cell \f$K_y\f$.
-                         */
-                        auto j_local_dof_iter = std::find(
-                          scratch_data.ky_local_dof_indices_in_default_dof_order
-                            .begin(),
-                          scratch_data.ky_local_dof_indices_in_default_dof_order
-                            .end(),
-                          j);
-                        Assert(
-                          j_local_dof_iter !=
-                            scratch_data
-                              .ky_local_dof_indices_in_default_dof_order.end(),
-                          ExcMessage(
-                            std::string("Cannot find the global DoF index ") +
-                            std::to_string(j) +
-                            std::string(" in the list of cell DoF indices!")));
-                        const unsigned int j_local_dof_index =
-                          j_local_dof_iter -
-                          scratch_data.ky_local_dof_indices_in_default_dof_order
-                            .begin();
-
-                        for (unsigned int q = 0; q < n_q_points; q++)
-                          {
-                            results(counter) +=
-                              mass_matrix_factors[counter] *
-                              mass_matrix_scratch_data.fe_values_for_test_space
-                                .shape_value(i_local_dof_index, q) *
-                              mass_matrix_scratch_data.fe_values_for_trial_space
-                                .shape_value(j_local_dof_index, q) *
-                              mass_matrix_scratch_data.fe_values_for_test_space
-                                .JxW(q);
-                          }
-                      }
-                  }
-
-                counter++;
-              }
-          }
-      }
   }
 } // namespace IdeoBEM
 

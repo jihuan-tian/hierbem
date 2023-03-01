@@ -101,6 +101,14 @@ main(int argc, char *argv[])
 {
   deallog.depth_console(2);
 
+  /**
+   * @internal Initialize the CUDA device parameters.
+   */
+  const size_t stack_size = 1024 * 7;
+  cudaError_t  error_code = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
+  AssertCuda(error_code);
+  deallog << "CUDA stack size has been set to " << stack_size << std::endl;
+
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
@@ -119,7 +127,7 @@ main(int argc, char *argv[])
     1.0,  // eta for preconditioner
     2,    // max rank for preconditioner
     0.1,  // aca epsilon for preconditioner
-    MultithreadInfo::n_cores());
+    1);   // MultithreadInfo::n_cores());
 
   if (argc > 1)
     {

@@ -8,6 +8,8 @@
 #ifndef INCLUDE_LAPLACE_KERNELS_HCU_
 #define INCLUDE_LAPLACE_KERNELS_HCU_
 
+#include <assert.h>
+
 #include "bem_kernels.hcu"
 #include "utilities.hcu"
 
@@ -23,20 +25,21 @@ namespace IdeoBEM
        * Laplace single layer kernel function
        */
       template <int dim, typename RangeNumberType = double>
-      class SingleLayerKernel : public KernelFunction<dim, RangeNumberType>
+      class SingleLayerKernel
       {
       public:
+        static constexpr unsigned int dimension = dim;
+        const KernelType              kernel_type;
+        const unsigned int            n_components;
+
         __host__ __device__
         SingleLayerKernel()
-          : KernelFunction<dim, RangeNumberType>(SingleLayer)
+          : kernel_type(SingleLayer)
+          , n_components(1)
         {}
 
         /**
          * Evaluate the kernel function.
-         *
-         * \mynote{With the appended keyword @p override, this function must be
-         * explicitly defined with the same function signature as the
-         * corresponding virtual function in the parent class.}
          *
          * @param x
          * @param y
@@ -45,20 +48,20 @@ namespace IdeoBEM
          * @param component
          * @return
          */
-        __host__ __device__ virtual RangeNumberType
+        __host__ __device__ RangeNumberType
         value(const Point<dim>     &x,
               const Point<dim>     &y,
               const Tensor<1, dim> &nx,
               const Tensor<1, dim> &ny,
-              const unsigned int    component = 0) const override;
+              const unsigned int    component = 0) const;
 
         /**
          * Return whether the kernel function is symmetric.
          *
          * @return
          */
-        __host__ __device__ virtual bool
-        is_symmetric() const override;
+        __host__ __device__ bool
+        is_symmetric() const;
       };
 
 
@@ -88,7 +91,7 @@ namespace IdeoBEM
               return (0.25 / numbers::PI / (x - y).norm());
 
             default:
-              Assert(false, ExcInternalError());
+              assert(false);
               return 0.;
           }
       }
@@ -106,28 +109,33 @@ namespace IdeoBEM
        * Double layer kernel.
        */
       template <int dim, typename RangeNumberType = double>
-      class DoubleLayerKernel : public KernelFunction<dim, RangeNumberType>
+      class DoubleLayerKernel
       {
       public:
+        static constexpr unsigned int dimension = dim;
+        const KernelType              kernel_type;
+        const unsigned int            n_components;
+
         __host__ __device__
         DoubleLayerKernel()
-          : KernelFunction<dim, RangeNumberType>(DoubleLayer)
+          : kernel_type(DoubleLayer)
+          , n_components(1)
         {}
 
-        __host__ __device__ virtual RangeNumberType
+        __host__ __device__ RangeNumberType
         value(const Point<dim>     &x,
               const Point<dim>     &y,
               const Tensor<1, dim> &nx,
               const Tensor<1, dim> &ny,
-              const unsigned int    component = 0) const override;
+              const unsigned int    component = 0) const;
 
         /**
          * Return whether the kernel function is symmetric.
          *
          * @return
          */
-        __host__ __device__ virtual bool
-        is_symmetric() const override;
+        __host__ __device__ bool
+        is_symmetric() const;
       };
 
 
@@ -155,7 +163,7 @@ namespace IdeoBEM
                        (x - y).norm());
 
             default:
-              Assert(false, ExcInternalError());
+              assert(false);
               return 0.;
           }
       }
@@ -172,28 +180,32 @@ namespace IdeoBEM
       // Class for the adjoint double layer kernel.
       template <int dim, typename RangeNumberType = double>
       class AdjointDoubleLayerKernel
-        : public KernelFunction<dim, RangeNumberType>
       {
       public:
+        static constexpr unsigned int dimension = dim;
+        const KernelType              kernel_type;
+        const unsigned int            n_components;
+
         __host__ __device__
         AdjointDoubleLayerKernel()
-          : KernelFunction<dim, RangeNumberType>(AdjointDoubleLayer)
+          : kernel_type(AdjointDoubleLayer)
+          , n_components(1)
         {}
 
-        __host__ __device__ virtual RangeNumberType
+        __host__ __device__ RangeNumberType
         value(const Point<dim>     &x,
               const Point<dim>     &y,
               const Tensor<1, dim> &nx,
               const Tensor<1, dim> &ny,
-              const unsigned int    component = 0) const override;
+              const unsigned int    component = 0) const;
 
         /**
          * Return whether the kernel function is symmetric.
          *
          * @return
          */
-        __host__ __device__ virtual bool
-        is_symmetric() const override;
+        __host__ __device__ bool
+        is_symmetric() const;
       };
 
 
@@ -221,7 +233,7 @@ namespace IdeoBEM
                        (x - y).norm());
 
             default:
-              Assert(false, ExcInternalError());
+              assert(false);
               return 0.;
           }
       }
@@ -239,28 +251,33 @@ namespace IdeoBEM
        * Kernel function for the hyper singular boundary integral operator.
        */
       template <int dim, typename RangeNumberType = double>
-      class HyperSingularKernel : public KernelFunction<dim, RangeNumberType>
+      class HyperSingularKernel
       {
       public:
+        static constexpr unsigned int dimension = dim;
+        const KernelType              kernel_type;
+        const unsigned int            n_components;
+
         __host__ __device__
         HyperSingularKernel()
-          : KernelFunction<dim, RangeNumberType>(HyperSingular)
+          : kernel_type(HyperSingular)
+          , n_components(1)
         {}
 
-        __host__ __device__ virtual RangeNumberType
+        __host__ __device__ RangeNumberType
         value(const Point<dim>     &x,
               const Point<dim>     &y,
               const Tensor<1, dim> &nx,
               const Tensor<1, dim> &ny,
-              const unsigned int    component = 0) const override;
+              const unsigned int    component = 0) const;
 
         /**
          * Return whether the kernel function is symmetric.
          *
          * @return
          */
-        __host__ __device__ virtual bool
-        is_symmetric() const override;
+        __host__ __device__ bool
+        is_symmetric() const;
       };
 
 
@@ -299,7 +316,7 @@ namespace IdeoBEM
               }
 
               default: {
-                Assert(false, ExcInternalError());
+                assert(false);
                 return 0.;
               }
           }
@@ -319,12 +336,16 @@ namespace IdeoBEM
        */
       template <int dim, typename RangeNumberType = double>
       class HyperSingularKernelRegular
-        : public KernelFunction<dim, RangeNumberType>
       {
       public:
+        static constexpr unsigned int dimension = dim;
+        const KernelType              kernel_type;
+        const unsigned int            n_components;
+
         __host__ __device__
         HyperSingularKernelRegular()
-          : KernelFunction<dim, RangeNumberType>(HyperSingularRegular)
+          : kernel_type(HyperSingularRegular)
+          , n_components(1)
         {}
 
         /**
@@ -346,20 +367,20 @@ namespace IdeoBEM
          * @param component
          * @return
          */
-        __host__ __device__ virtual RangeNumberType
+        __host__ __device__ RangeNumberType
         value(const Point<dim>     &x,
               const Point<dim>     &y,
               const Tensor<1, dim> &nx,
               const Tensor<1, dim> &ny,
-              const unsigned int    component = 0) const override;
+              const unsigned int    component = 0) const;
 
         /**
          * Return whether the kernel function is symmetric.
          *
          * @return
          */
-        __host__ __device__ virtual bool
-        is_symmetric() const override;
+        __host__ __device__ bool
+        is_symmetric() const;
       };
 
 
@@ -391,7 +412,7 @@ namespace IdeoBEM
               }
 
               default: {
-                Assert(false, ExcInternalError());
+                assert(false);
                 return 0.;
               }
           }

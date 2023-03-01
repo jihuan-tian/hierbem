@@ -26,6 +26,8 @@
 
 #include <deal.II/grid/tria.h>
 
+#include <assert.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -41,6 +43,7 @@
 #include "cu_vector.hcu"
 #include "generic_functors.h"
 #include "lapack_full_matrix_ext.h"
+#include "utilities.hcu"
 
 namespace IdeoBEM
 {
@@ -60,131 +63,18 @@ namespace IdeoBEM
   namespace CUDAWrappers
   {
     /**
-     * Base class for a BEM Laplace kernel function.
-     *
-     * \mynote{The template argument @p dim is the spatial dimension instead of the manifold dimension.}
-     */
-    template <int dim, typename RangeNumberType = double>
-    class KernelFunction
-    {
-    public:
-      static constexpr unsigned int dimension = dim;
-      const KernelType              kernel_type;
-      const unsigned int            n_components;
-
-      __host__ __device__
-      KernelFunction(const KernelType   kernel_type  = KernelType::NoneType,
-                     const unsigned int n_components = 1);
-      __host__ __device__ virtual ~KernelFunction() = 0;
-
-      /**
-       * Assignment operator
-       *
-       * @param f
-       * @return
-       */
-      __host__ __device__ KernelFunction &
-      operator=(const KernelFunction &f);
-
-      /**
-       * Evaluate the kernel function at the specified point pair \f$(x, y)\f$
-       * associated with their normal vectors \f$(n_x, n_y)\f$. In case the
-       * kernel function is vector-valued, this function only returns the
-       * required @p component in the result vector.
-       *
-       * \mynote{This member function can only run on the GPU device.}
-       *
-       * @param x
-       * @param y
-       * @param nx
-       * @param ny
-       * @param component Component index in the result vector, if the kernel
-       * function is vector-valued. If the kernel function is scalar-valued,
-       * there is no such issue and @p component is 0 by default.
-       * @return
-       */
-      __host__ __device__ virtual RangeNumberType
-      value(const Point<dim>     &x,
-            const Point<dim>     &y,
-            const Tensor<1, dim> &nx,
-            const Tensor<1, dim> &ny,
-            const unsigned int    component = 0) const;
-
-      /**
-       * Whether the bilinear form and the discretized matrix related with the
-       * kernel function are symmetric.
-       *
-       * @return
-       */
-      __host__ __device__ virtual bool
-      is_symmetric() const = 0;
-    };
-
-
-    template <int dim, typename RangeNumberType>
-    __host__ __device__
-    KernelFunction<dim, RangeNumberType>::KernelFunction(
-      const KernelType   kernel_type,
-      const unsigned int n_components)
-      : kernel_type(kernel_type)
-      , n_components(n_components)
-    {
-      //      Assert(kernel_type != NoneType, ExcInternalError());
-      //      Assert(n_components > 0, ExcZero());
-    }
-
-
-    /**
-     * Default destructor provided by the compiler.
-     */
-    template <int dim, typename RangeNumberType>
-    __host__
-      __device__ inline KernelFunction<dim,
-                                       RangeNumberType>::~KernelFunction() =
-        default;
-
-
-    template <int dim, typename RangeNumberType>
-    __host__ __device__ KernelFunction<dim, RangeNumberType> &
-    KernelFunction<dim, RangeNumberType>::operator=(const KernelFunction &f)
-    {
-      /**
-       * As a pure base class, it does nothing here but only assert the number
-       * of components. The following sentence suppresses compiler warnings
-       * about the unused input argument f.
-       */
-      (void)f;
-      // AssertDimension(n_components, f.n_components);
-
-      return *this;
-    }
-
-
-    template <int dim, typename RangeNumberType>
-    __host__ __device__ RangeNumberType
-    KernelFunction<dim, RangeNumberType>::value(const Point<dim> &,
-                                                const Point<dim> &,
-                                                const Tensor<1, dim> &,
-                                                const Tensor<1, dim> &,
-                                                const unsigned int) const
-    {
-      /**
-       * This function should never be called, since as a member function of the
-       * abstract class, it has no literal definition of the function. Hence, we
-       * throw an error here.
-       */
-      // Assert(false, ExcPureFunctionCalled());
-
-      return 0;
-    }
-
-
-    /**
      * Kernel function pulled back to the unit cell.
      *
-     * \mynote{The unit cell has the manifold dimension @p dim.}
+     * \mynote{1. The unit cell has the manifold dimension @p dim.
+     * 2. Here we use the "template template" technique to define the template
+     * parameter @p KernelFunctionType. Its first template parameter is the
+     * space dimension and the second parameter is the value type.}
      */
-    template <int dim, int spacedim, typename RangeNumberType = double>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
     class KernelPulledbackToUnitCell
     {
     public:
@@ -202,10 +92,10 @@ namespace IdeoBEM
        */
       __host__ __device__
       KernelPulledbackToUnitCell(
-        const KernelFunction<spacedim, RangeNumberType> &kernel_function,
-        const CellNeighboringType                       &cell_neighboring_type,
-        const unsigned int                               kx_dof_index = 0,
-        const unsigned int                               ky_dof_index = 0);
+        const KernelFunctionType<spacedim, RangeNumberType> &kernel_function,
+        const CellNeighboringType &cell_neighboring_type,
+        const unsigned int         kx_dof_index = 0,
+        const unsigned int         ky_dof_index = 0);
 
       /**
        * Destructor.
@@ -214,7 +104,7 @@ namespace IdeoBEM
        * members and their memory is not managed by this class, the destructor
        * provided by the compiler is adopted.}
        */
-      __host__ __device__ virtual ~KernelPulledbackToUnitCell();
+      __host__ __device__ ~KernelPulledbackToUnitCell();
 
       /**
        * Assignment operator
@@ -276,7 +166,7 @@ namespace IdeoBEM
             const unsigned int component = 0) const;
 
     private:
-      const KernelFunction<spacedim, RangeNumberType> &kernel_function;
+      const KernelFunctionType<spacedim, RangeNumberType> &kernel_function;
 
       CellNeighboringType cell_neighboring_type;
 
@@ -293,14 +183,21 @@ namespace IdeoBEM
     };
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
     __host__ __device__
-    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::
+    KernelPulledbackToUnitCell<dim,
+                               spacedim,
+                               KernelFunctionType,
+                               RangeNumberType>::
       KernelPulledbackToUnitCell(
-        const KernelFunction<spacedim, RangeNumberType> &kernel_function,
-        const CellNeighboringType                       &cell_neighboring_type,
-        const unsigned int                               kx_dof_index,
-        const unsigned int                               ky_dof_index)
+        const KernelFunctionType<spacedim, RangeNumberType> &kernel_function,
+        const CellNeighboringType &cell_neighboring_type,
+        const unsigned int         kx_dof_index,
+        const unsigned int         ky_dof_index)
       : n_components(kernel_function.n_components)
       , kernel_function(kernel_function)
       , cell_neighboring_type(cell_neighboring_type)
@@ -309,19 +206,34 @@ namespace IdeoBEM
     {}
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
-    __host__
-      __device__ KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::
-        ~KernelPulledbackToUnitCell() = default;
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
+    __host__ __device__ KernelPulledbackToUnitCell<
+      dim,
+      spacedim,
+      KernelFunctionType,
+      RangeNumberType>::~KernelPulledbackToUnitCell() = default;
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
-    __host__
-      __device__ KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType> &
-      KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::operator=(
-        const KernelPulledbackToUnitCell &f)
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
+    __host__ __device__ KernelPulledbackToUnitCell<dim,
+                                                   spacedim,
+                                                   KernelFunctionType,
+                                                   RangeNumberType>                     &
+    KernelPulledbackToUnitCell<
+                          dim,
+                          spacedim,
+                          KernelFunctionType,
+                          RangeNumberType>::operator=(const KernelPulledbackToUnitCell &f)
     {
-      // AssertDimension(n_components, f.n_components);
+      assert(n_components == f.n_components);
 
       kernel_function       = f.kernel_function;
       cell_neighboring_type = f.cell_neighboring_type;
@@ -332,33 +244,54 @@ namespace IdeoBEM
     }
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
     __host__ __device__ void
-    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::
-      set_kx_dof_index(const unsigned int kx_dof_index)
+    KernelPulledbackToUnitCell<
+      dim,
+      spacedim,
+      KernelFunctionType,
+      RangeNumberType>::set_kx_dof_index(const unsigned int kx_dof_index)
     {
       this->kx_dof_index = kx_dof_index;
     }
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
     __host__ __device__ void
-    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::
-      set_ky_dof_index(const unsigned int ky_dof_index)
+    KernelPulledbackToUnitCell<
+      dim,
+      spacedim,
+      KernelFunctionType,
+      RangeNumberType>::set_ky_dof_index(const unsigned int ky_dof_index)
     {
       this->ky_dof_index = ky_dof_index;
     }
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
     __host__ RangeNumberType
-    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::value(
-      const unsigned int                               k3_index,
-      const unsigned int                               quad_no,
-      const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                        &scratch_data,
-      const unsigned int component) const
+    KernelPulledbackToUnitCell<dim,
+                               spacedim,
+                               KernelFunctionType,
+                               RangeNumberType>::
+      value(const unsigned int                               k3_index,
+            const unsigned int                               quad_no,
+            const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+            const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                              &scratch_data,
+            const unsigned int component) const
     {
       Assert(dim == 2 && spacedim == 3, ExcNotImplemented());
 
@@ -402,137 +335,147 @@ namespace IdeoBEM
        */
       switch (cell_neighboring_type)
         {
-          case SamePanel:
-            kx_shape_value_table =
-              &(bem_values.kx_shape_value_table_for_same_panel);
-            ky_shape_value_table =
-              &(bem_values.ky_shape_value_table_for_same_panel);
+            case SamePanel: {
+              kx_shape_value_table =
+                &(bem_values.kx_shape_value_table_for_same_panel);
+              ky_shape_value_table =
+                &(bem_values.ky_shape_value_table_for_same_panel);
 
-            /**
-             * When the kernel type is regularized hyper singular, extract
-             * covariant transformation matrices from @p ScratchData and
-             * gradient of shape functions from @p BEMValues.
-             */
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table =
-                  &(bem_values.kx_shape_grad_matrix_table_for_same_panel);
-                ky_shape_grad_matrix_table =
-                  &(bem_values.ky_shape_grad_matrix_table_for_same_panel);
-                kx_covariants_table = &(scratch_data.kx_covariants_same_panel);
-                ky_covariants_table = &(scratch_data.ky_covariants_same_panel);
-              }
+              /**
+               * When the kernel type is regularized hyper singular, extract
+               * covariant transformation matrices from @p ScratchData and
+               * gradient of shape functions from @p BEMValues.
+               */
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table =
+                    &(bem_values.kx_shape_grad_matrix_table_for_same_panel);
+                  ky_shape_grad_matrix_table =
+                    &(bem_values.ky_shape_grad_matrix_table_for_same_panel);
+                  kx_covariants_table =
+                    &(scratch_data.kx_covariants_same_panel);
+                  ky_covariants_table =
+                    &(scratch_data.ky_covariants_same_panel);
+                }
 
-            x  = scratch_data.kx_quad_points_same_panel(k3_index, quad_no);
-            y  = scratch_data.ky_quad_points_same_panel(k3_index, quad_no);
-            Jx = scratch_data.kx_jacobians_same_panel(k3_index, quad_no);
-            Jy = scratch_data.ky_jacobians_same_panel(k3_index, quad_no);
-            nx = scratch_data.kx_normals_same_panel(k3_index, quad_no);
-            ny = scratch_data.ky_normals_same_panel(k3_index, quad_no);
+              x  = scratch_data.kx_quad_points_same_panel(k3_index, quad_no);
+              y  = scratch_data.ky_quad_points_same_panel(k3_index, quad_no);
+              Jx = scratch_data.kx_jacobians_same_panel(k3_index, quad_no);
+              Jy = scratch_data.ky_jacobians_same_panel(k3_index, quad_no);
+              nx = scratch_data.kx_normals_same_panel(k3_index, quad_no);
+              ny = scratch_data.ky_normals_same_panel(k3_index, quad_no);
 
-            break;
-          case CommonEdge:
-            kx_shape_value_table =
-              &(bem_values.kx_shape_value_table_for_common_edge);
-            ky_shape_value_table =
-              &(bem_values.ky_shape_value_table_for_common_edge);
+              break;
+            }
+            case CommonEdge: {
+              kx_shape_value_table =
+                &(bem_values.kx_shape_value_table_for_common_edge);
+              ky_shape_value_table =
+                &(bem_values.ky_shape_value_table_for_common_edge);
 
-            /**
-             * When the kernel type is regularized hyper singular, extract
-             * covariant transformation matrices from @p ScratchData and
-             * gradient of shape functions from @p BEMValues.
-             */
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table =
-                  &(bem_values.kx_shape_grad_matrix_table_for_common_edge);
-                ky_shape_grad_matrix_table =
-                  &(bem_values.ky_shape_grad_matrix_table_for_common_edge);
-                kx_covariants_table = &(scratch_data.kx_covariants_common_edge);
-                ky_covariants_table = &(scratch_data.ky_covariants_common_edge);
-              }
+              /**
+               * When the kernel type is regularized hyper singular, extract
+               * covariant transformation matrices from @p ScratchData and
+               * gradient of shape functions from @p BEMValues.
+               */
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table =
+                    &(bem_values.kx_shape_grad_matrix_table_for_common_edge);
+                  ky_shape_grad_matrix_table =
+                    &(bem_values.ky_shape_grad_matrix_table_for_common_edge);
+                  kx_covariants_table =
+                    &(scratch_data.kx_covariants_common_edge);
+                  ky_covariants_table =
+                    &(scratch_data.ky_covariants_common_edge);
+                }
 
-            x  = scratch_data.kx_quad_points_common_edge(k3_index, quad_no);
-            y  = scratch_data.ky_quad_points_common_edge(k3_index, quad_no);
-            Jx = scratch_data.kx_jacobians_common_edge(k3_index, quad_no);
-            Jy = scratch_data.ky_jacobians_common_edge(k3_index, quad_no);
-            nx = scratch_data.kx_normals_common_edge(k3_index, quad_no);
-            ny = scratch_data.ky_normals_common_edge(k3_index, quad_no);
+              x  = scratch_data.kx_quad_points_common_edge(k3_index, quad_no);
+              y  = scratch_data.ky_quad_points_common_edge(k3_index, quad_no);
+              Jx = scratch_data.kx_jacobians_common_edge(k3_index, quad_no);
+              Jy = scratch_data.ky_jacobians_common_edge(k3_index, quad_no);
+              nx = scratch_data.kx_normals_common_edge(k3_index, quad_no);
+              ny = scratch_data.ky_normals_common_edge(k3_index, quad_no);
 
-            break;
-          case CommonVertex:
-            kx_shape_value_table =
-              &(bem_values.kx_shape_value_table_for_common_vertex);
-            ky_shape_value_table =
-              &(bem_values.ky_shape_value_table_for_common_vertex);
+              break;
+            }
+            case CommonVertex: {
+              kx_shape_value_table =
+                &(bem_values.kx_shape_value_table_for_common_vertex);
+              ky_shape_value_table =
+                &(bem_values.ky_shape_value_table_for_common_vertex);
 
-            /**
-             * When the kernel type is regularized hyper singular, extract
-             * covariant transformation matrices from @p ScratchData and
-             * gradient of shape functions from @p BEMValues.
-             */
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table =
-                  &(bem_values.kx_shape_grad_matrix_table_for_common_vertex);
-                ky_shape_grad_matrix_table =
-                  &(bem_values.ky_shape_grad_matrix_table_for_common_vertex);
-                kx_covariants_table =
-                  &(scratch_data.kx_covariants_common_vertex);
-                ky_covariants_table =
-                  &(scratch_data.ky_covariants_common_vertex);
-              }
+              /**
+               * When the kernel type is regularized hyper singular, extract
+               * covariant transformation matrices from @p ScratchData and
+               * gradient of shape functions from @p BEMValues.
+               */
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table =
+                    &(bem_values.kx_shape_grad_matrix_table_for_common_vertex);
+                  ky_shape_grad_matrix_table =
+                    &(bem_values.ky_shape_grad_matrix_table_for_common_vertex);
+                  kx_covariants_table =
+                    &(scratch_data.kx_covariants_common_vertex);
+                  ky_covariants_table =
+                    &(scratch_data.ky_covariants_common_vertex);
+                }
 
-            x  = scratch_data.kx_quad_points_common_vertex(k3_index, quad_no);
-            y  = scratch_data.ky_quad_points_common_vertex(k3_index, quad_no);
-            Jx = scratch_data.kx_jacobians_common_vertex(k3_index, quad_no);
-            Jy = scratch_data.ky_jacobians_common_vertex(k3_index, quad_no);
-            nx = scratch_data.kx_normals_common_vertex(k3_index, quad_no);
-            ny = scratch_data.ky_normals_common_vertex(k3_index, quad_no);
+              x  = scratch_data.kx_quad_points_common_vertex(k3_index, quad_no);
+              y  = scratch_data.ky_quad_points_common_vertex(k3_index, quad_no);
+              Jx = scratch_data.kx_jacobians_common_vertex(k3_index, quad_no);
+              Jy = scratch_data.ky_jacobians_common_vertex(k3_index, quad_no);
+              nx = scratch_data.kx_normals_common_vertex(k3_index, quad_no);
+              ny = scratch_data.ky_normals_common_vertex(k3_index, quad_no);
 
-            break;
-          case Regular:
-            kx_shape_value_table =
-              &(bem_values.kx_shape_value_table_for_regular);
-            ky_shape_value_table =
-              &(bem_values.ky_shape_value_table_for_regular);
+              break;
+            }
+            case Regular: {
+              kx_shape_value_table =
+                &(bem_values.kx_shape_value_table_for_regular);
+              ky_shape_value_table =
+                &(bem_values.ky_shape_value_table_for_regular);
 
-            /**
-             * When the kernel type is regularized hyper singular, extract
-             * covariant transformation matrices from @p ScratchData and
-             * gradient of shape functions from @p BEMValues.
-             */
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table =
-                  &(bem_values.kx_shape_grad_matrix_table_for_regular);
-                ky_shape_grad_matrix_table =
-                  &(bem_values.ky_shape_grad_matrix_table_for_regular);
-                kx_covariants_table = &(scratch_data.kx_covariants_regular);
-                ky_covariants_table = &(scratch_data.ky_covariants_regular);
-              }
+              /**
+               * When the kernel type is regularized hyper singular, extract
+               * covariant transformation matrices from @p ScratchData and
+               * gradient of shape functions from @p BEMValues.
+               */
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table =
+                    &(bem_values.kx_shape_grad_matrix_table_for_regular);
+                  ky_shape_grad_matrix_table =
+                    &(bem_values.ky_shape_grad_matrix_table_for_regular);
+                  kx_covariants_table = &(scratch_data.kx_covariants_regular);
+                  ky_covariants_table = &(scratch_data.ky_covariants_regular);
+                }
 
-            x  = scratch_data.kx_quad_points_regular(k3_index, quad_no);
-            y  = scratch_data.ky_quad_points_regular(k3_index, quad_no);
-            Jx = scratch_data.kx_jacobians_regular(k3_index, quad_no);
-            Jy = scratch_data.ky_jacobians_regular(k3_index, quad_no);
-            nx = scratch_data.kx_normals_regular(k3_index, quad_no);
-            ny = scratch_data.ky_normals_regular(k3_index, quad_no);
+              x  = scratch_data.kx_quad_points_regular(k3_index, quad_no);
+              y  = scratch_data.ky_quad_points_regular(k3_index, quad_no);
+              Jx = scratch_data.kx_jacobians_regular(k3_index, quad_no);
+              Jy = scratch_data.ky_jacobians_regular(k3_index, quad_no);
+              nx = scratch_data.kx_normals_regular(k3_index, quad_no);
+              ny = scratch_data.ky_normals_regular(k3_index, quad_no);
 
-            break;
-          default:
-            kx_shape_value_table = nullptr;
-            ky_shape_value_table = nullptr;
+              break;
+            }
+            default: {
+              kx_shape_value_table = nullptr;
+              ky_shape_value_table = nullptr;
 
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table = nullptr;
-                ky_shape_grad_matrix_table = nullptr;
-                kx_covariants_table        = nullptr;
-                ky_covariants_table        = nullptr;
-              }
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table = nullptr;
+                  ky_shape_grad_matrix_table = nullptr;
+                  kx_covariants_table        = nullptr;
+                  ky_covariants_table        = nullptr;
+                }
 
-            Assert(false, ExcInternalError());
+              Assert(false, ExcInternalError());
+              break;
+            }
         }
 
       /**
@@ -615,15 +558,22 @@ namespace IdeoBEM
     }
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
     __device__ RangeNumberType
-    KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>::value(
-      const unsigned int                                   k3_index,
-      const unsigned int                                   quad_no,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                        &scratch_data,
-      const unsigned int component) const
+    KernelPulledbackToUnitCell<dim,
+                               spacedim,
+                               KernelFunctionType,
+                               RangeNumberType>::
+      value(const unsigned int                                   k3_index,
+            const unsigned int                                   quad_no,
+            const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+            const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                              &scratch_data,
+            const unsigned int component) const
     {
       /**
        * N.B. The shape function value and their gradient value data tables are
@@ -661,135 +611,145 @@ namespace IdeoBEM
        */
       switch (cell_neighboring_type)
         {
-          case SamePanel:
-            kx_shape_value_table =
-              &(bem_values.kx_shape_value_table_for_same_panel);
-            ky_shape_value_table =
-              &(bem_values.ky_shape_value_table_for_same_panel);
+            case SamePanel: {
+              kx_shape_value_table =
+                &(bem_values.kx_shape_value_table_for_same_panel);
+              ky_shape_value_table =
+                &(bem_values.ky_shape_value_table_for_same_panel);
 
-            /**
-             * When the kernel type is regularized hyper singular, extract
-             * covariant transformation matrices from @p ScratchData and
-             * gradient of shape functions from @p BEMValues.
-             */
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table =
-                  &(bem_values.kx_shape_grad_matrix_table_for_same_panel);
-                ky_shape_grad_matrix_table =
-                  &(bem_values.ky_shape_grad_matrix_table_for_same_panel);
-                kx_covariants_table = &(scratch_data.kx_covariants_same_panel);
-                ky_covariants_table = &(scratch_data.ky_covariants_same_panel);
-              }
+              /**
+               * When the kernel type is regularized hyper singular, extract
+               * covariant transformation matrices from @p ScratchData and
+               * gradient of shape functions from @p BEMValues.
+               */
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table =
+                    &(bem_values.kx_shape_grad_matrix_table_for_same_panel);
+                  ky_shape_grad_matrix_table =
+                    &(bem_values.ky_shape_grad_matrix_table_for_same_panel);
+                  kx_covariants_table =
+                    &(scratch_data.kx_covariants_same_panel);
+                  ky_covariants_table =
+                    &(scratch_data.ky_covariants_same_panel);
+                }
 
-            x  = scratch_data.kx_quad_points_same_panel(k3_index, quad_no);
-            y  = scratch_data.ky_quad_points_same_panel(k3_index, quad_no);
-            Jx = scratch_data.kx_jacobians_same_panel(k3_index, quad_no);
-            Jy = scratch_data.ky_jacobians_same_panel(k3_index, quad_no);
-            nx = scratch_data.kx_normals_same_panel(k3_index, quad_no);
-            ny = scratch_data.ky_normals_same_panel(k3_index, quad_no);
+              x  = scratch_data.kx_quad_points_same_panel(k3_index, quad_no);
+              y  = scratch_data.ky_quad_points_same_panel(k3_index, quad_no);
+              Jx = scratch_data.kx_jacobians_same_panel(k3_index, quad_no);
+              Jy = scratch_data.ky_jacobians_same_panel(k3_index, quad_no);
+              nx = scratch_data.kx_normals_same_panel(k3_index, quad_no);
+              ny = scratch_data.ky_normals_same_panel(k3_index, quad_no);
 
-            break;
-          case CommonEdge:
-            kx_shape_value_table =
-              &(bem_values.kx_shape_value_table_for_common_edge);
-            ky_shape_value_table =
-              &(bem_values.ky_shape_value_table_for_common_edge);
+              break;
+            }
+            case CommonEdge: {
+              kx_shape_value_table =
+                &(bem_values.kx_shape_value_table_for_common_edge);
+              ky_shape_value_table =
+                &(bem_values.ky_shape_value_table_for_common_edge);
 
-            /**
-             * When the kernel type is regularized hyper singular, extract
-             * covariant transformation matrices from @p ScratchData and
-             * gradient of shape functions from @p BEMValues.
-             */
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table =
-                  &(bem_values.kx_shape_grad_matrix_table_for_common_edge);
-                ky_shape_grad_matrix_table =
-                  &(bem_values.ky_shape_grad_matrix_table_for_common_edge);
-                kx_covariants_table = &(scratch_data.kx_covariants_common_edge);
-                ky_covariants_table = &(scratch_data.ky_covariants_common_edge);
-              }
+              /**
+               * When the kernel type is regularized hyper singular, extract
+               * covariant transformation matrices from @p ScratchData and
+               * gradient of shape functions from @p BEMValues.
+               */
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table =
+                    &(bem_values.kx_shape_grad_matrix_table_for_common_edge);
+                  ky_shape_grad_matrix_table =
+                    &(bem_values.ky_shape_grad_matrix_table_for_common_edge);
+                  kx_covariants_table =
+                    &(scratch_data.kx_covariants_common_edge);
+                  ky_covariants_table =
+                    &(scratch_data.ky_covariants_common_edge);
+                }
 
-            x  = scratch_data.kx_quad_points_common_edge(k3_index, quad_no);
-            y  = scratch_data.ky_quad_points_common_edge(k3_index, quad_no);
-            Jx = scratch_data.kx_jacobians_common_edge(k3_index, quad_no);
-            Jy = scratch_data.ky_jacobians_common_edge(k3_index, quad_no);
-            nx = scratch_data.kx_normals_common_edge(k3_index, quad_no);
-            ny = scratch_data.ky_normals_common_edge(k3_index, quad_no);
+              x  = scratch_data.kx_quad_points_common_edge(k3_index, quad_no);
+              y  = scratch_data.ky_quad_points_common_edge(k3_index, quad_no);
+              Jx = scratch_data.kx_jacobians_common_edge(k3_index, quad_no);
+              Jy = scratch_data.ky_jacobians_common_edge(k3_index, quad_no);
+              nx = scratch_data.kx_normals_common_edge(k3_index, quad_no);
+              ny = scratch_data.ky_normals_common_edge(k3_index, quad_no);
 
-            break;
-          case CommonVertex:
-            kx_shape_value_table =
-              &(bem_values.kx_shape_value_table_for_common_vertex);
-            ky_shape_value_table =
-              &(bem_values.ky_shape_value_table_for_common_vertex);
+              break;
+            }
+            case CommonVertex: {
+              kx_shape_value_table =
+                &(bem_values.kx_shape_value_table_for_common_vertex);
+              ky_shape_value_table =
+                &(bem_values.ky_shape_value_table_for_common_vertex);
 
-            /**
-             * When the kernel type is regularized hyper singular, extract
-             * covariant transformation matrices from @p ScratchData and
-             * gradient of shape functions from @p BEMValues.
-             */
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table =
-                  &(bem_values.kx_shape_grad_matrix_table_for_common_vertex);
-                ky_shape_grad_matrix_table =
-                  &(bem_values.ky_shape_grad_matrix_table_for_common_vertex);
-                kx_covariants_table =
-                  &(scratch_data.kx_covariants_common_vertex);
-                ky_covariants_table =
-                  &(scratch_data.ky_covariants_common_vertex);
-              }
+              /**
+               * When the kernel type is regularized hyper singular, extract
+               * covariant transformation matrices from @p ScratchData and
+               * gradient of shape functions from @p BEMValues.
+               */
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table =
+                    &(bem_values.kx_shape_grad_matrix_table_for_common_vertex);
+                  ky_shape_grad_matrix_table =
+                    &(bem_values.ky_shape_grad_matrix_table_for_common_vertex);
+                  kx_covariants_table =
+                    &(scratch_data.kx_covariants_common_vertex);
+                  ky_covariants_table =
+                    &(scratch_data.ky_covariants_common_vertex);
+                }
 
-            x  = scratch_data.kx_quad_points_common_vertex(k3_index, quad_no);
-            y  = scratch_data.ky_quad_points_common_vertex(k3_index, quad_no);
-            Jx = scratch_data.kx_jacobians_common_vertex(k3_index, quad_no);
-            Jy = scratch_data.ky_jacobians_common_vertex(k3_index, quad_no);
-            nx = scratch_data.kx_normals_common_vertex(k3_index, quad_no);
-            ny = scratch_data.ky_normals_common_vertex(k3_index, quad_no);
+              x  = scratch_data.kx_quad_points_common_vertex(k3_index, quad_no);
+              y  = scratch_data.ky_quad_points_common_vertex(k3_index, quad_no);
+              Jx = scratch_data.kx_jacobians_common_vertex(k3_index, quad_no);
+              Jy = scratch_data.ky_jacobians_common_vertex(k3_index, quad_no);
+              nx = scratch_data.kx_normals_common_vertex(k3_index, quad_no);
+              ny = scratch_data.ky_normals_common_vertex(k3_index, quad_no);
 
-            break;
-          case Regular:
-            kx_shape_value_table =
-              &(bem_values.kx_shape_value_table_for_regular);
-            ky_shape_value_table =
-              &(bem_values.ky_shape_value_table_for_regular);
+              break;
+            }
+            case Regular: {
+              kx_shape_value_table =
+                &(bem_values.kx_shape_value_table_for_regular);
+              ky_shape_value_table =
+                &(bem_values.ky_shape_value_table_for_regular);
 
-            /**
-             * When the kernel type is regularized hyper singular, extract
-             * covariant transformation matrices from @p ScratchData and
-             * gradient of shape functions from @p BEMValues.
-             */
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table =
-                  &(bem_values.kx_shape_grad_matrix_table_for_regular);
-                ky_shape_grad_matrix_table =
-                  &(bem_values.ky_shape_grad_matrix_table_for_regular);
-                kx_covariants_table = &(scratch_data.kx_covariants_regular);
-                ky_covariants_table = &(scratch_data.ky_covariants_regular);
-              }
+              /**
+               * When the kernel type is regularized hyper singular, extract
+               * covariant transformation matrices from @p ScratchData and
+               * gradient of shape functions from @p BEMValues.
+               */
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table =
+                    &(bem_values.kx_shape_grad_matrix_table_for_regular);
+                  ky_shape_grad_matrix_table =
+                    &(bem_values.ky_shape_grad_matrix_table_for_regular);
+                  kx_covariants_table = &(scratch_data.kx_covariants_regular);
+                  ky_covariants_table = &(scratch_data.ky_covariants_regular);
+                }
 
-            x  = scratch_data.kx_quad_points_regular(k3_index, quad_no);
-            y  = scratch_data.ky_quad_points_regular(k3_index, quad_no);
-            Jx = scratch_data.kx_jacobians_regular(k3_index, quad_no);
-            Jy = scratch_data.ky_jacobians_regular(k3_index, quad_no);
-            nx = scratch_data.kx_normals_regular(k3_index, quad_no);
-            ny = scratch_data.ky_normals_regular(k3_index, quad_no);
+              x  = scratch_data.kx_quad_points_regular(k3_index, quad_no);
+              y  = scratch_data.ky_quad_points_regular(k3_index, quad_no);
+              Jx = scratch_data.kx_jacobians_regular(k3_index, quad_no);
+              Jy = scratch_data.ky_jacobians_regular(k3_index, quad_no);
+              nx = scratch_data.kx_normals_regular(k3_index, quad_no);
+              ny = scratch_data.ky_normals_regular(k3_index, quad_no);
 
-            break;
-          default:
-            kx_shape_value_table = nullptr;
-            ky_shape_value_table = nullptr;
+              break;
+            }
+            default: {
+              kx_shape_value_table = nullptr;
+              ky_shape_value_table = nullptr;
 
-            if (kernel_function.kernel_type == HyperSingularRegular)
-              {
-                kx_shape_grad_matrix_table = nullptr;
-                ky_shape_grad_matrix_table = nullptr;
-                kx_covariants_table        = nullptr;
-                ky_covariants_table        = nullptr;
-              }
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  kx_shape_grad_matrix_table = nullptr;
+                  ky_shape_grad_matrix_table = nullptr;
+                  kx_covariants_table        = nullptr;
+                  ky_covariants_table        = nullptr;
+                }
+              break;
+            }
         }
 
       /**
@@ -886,7 +846,11 @@ namespace IdeoBEM
      * Class for pullback the kernel function on the product of two unit cells
      * to Sauter's parametric space.
      */
-    template <int dim, int spacedim, typename RangeNumberType = double>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
     class KernelPulledbackToSauterSpace
     {
     public:
@@ -901,8 +865,10 @@ namespace IdeoBEM
        */
       __host__ __device__
       KernelPulledbackToSauterSpace(
-        const KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                                 &kernel,
+        const KernelPulledbackToUnitCell<dim,
+                                         spacedim,
+                                         KernelFunctionType,
+                                         RangeNumberType> &kernel,
         const CellNeighboringType cell_neighboring_type);
 
       /**
@@ -958,18 +924,29 @@ namespace IdeoBEM
             const unsigned int component = 0) const;
 
     private:
-      const KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                         &kernel_on_unit_cell;
-      CellNeighboringType cell_neighboring_type;
+      const KernelPulledbackToUnitCell<dim,
+                                       spacedim,
+                                       KernelFunctionType,
+                                       RangeNumberType> &kernel_on_unit_cell;
+      CellNeighboringType                                cell_neighboring_type;
     };
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
     __host__ __device__
-    KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>::
+    KernelPulledbackToSauterSpace<dim,
+                                  spacedim,
+                                  KernelFunctionType,
+                                  RangeNumberType>::
       KernelPulledbackToSauterSpace(
-        const KernelPulledbackToUnitCell<dim, spacedim, RangeNumberType>
-                                 &kernel,
+        const KernelPulledbackToUnitCell<dim,
+                                         spacedim,
+                                         KernelFunctionType,
+                                         RangeNumberType> &kernel,
         const CellNeighboringType cell_neighboring_type)
       : n_components(kernel.n_components)
       , kernel_on_unit_cell(kernel)
@@ -977,19 +954,34 @@ namespace IdeoBEM
     {}
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
-    __host__
-      __device__ KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>::
-        ~KernelPulledbackToSauterSpace() = default;
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
+    __host__ __device__ KernelPulledbackToSauterSpace<
+      dim,
+      spacedim,
+      KernelFunctionType,
+      RangeNumberType>::~KernelPulledbackToSauterSpace() = default;
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
-    __host__
-      __device__ KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType> &
-      KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>::operator=(
-        const KernelPulledbackToSauterSpace &f)
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
+    __host__ __device__ KernelPulledbackToSauterSpace<dim,
+                                                      spacedim,
+                                                      KernelFunctionType,
+                                                      RangeNumberType>                     &
+    KernelPulledbackToSauterSpace<
+                          dim,
+                          spacedim,
+                          KernelFunctionType,
+                          RangeNumberType>::operator=(const KernelPulledbackToSauterSpace &f)
     {
-      // AssertDimension(n_components, f.n_components);
+      assert(n_components == f.n_components);
 
       kernel_on_unit_cell   = f.kernel_on_unit_cell;
       cell_neighboring_type = f.cell_neighboring_type;
@@ -998,14 +990,21 @@ namespace IdeoBEM
     }
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
     __host__ RangeNumberType
-    KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>::value(
-      const unsigned int                               quad_no,
-      const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                        &scratch_data,
-      const unsigned int component) const
+    KernelPulledbackToSauterSpace<dim,
+                                  spacedim,
+                                  KernelFunctionType,
+                                  RangeNumberType>::
+      value(const unsigned int                               quad_no,
+            const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+            const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                              &scratch_data,
+            const unsigned int component) const
     {
       RangeNumberType kernel_value = 0.;
 
@@ -1059,7 +1058,7 @@ namespace IdeoBEM
               // pulled back kernel function is to be evaluated.
               const Point<dim * 2> &p =
                 bem_values.quad_rule_for_common_vertex.point(quad_no);
-              double jacobian_det = Utilities::fixed_power<3>(p(0));
+              double jacobian_det = dealii::Utilities::fixed_power<3>(p(0));
 
               for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
                 {
@@ -1088,24 +1087,33 @@ namespace IdeoBEM
     }
 
 
-    template <int dim, int spacedim, typename RangeNumberType>
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType>
     __device__ RangeNumberType
-    KernelPulledbackToSauterSpace<dim, spacedim, RangeNumberType>::value(
-      const unsigned int                                   quad_no,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                        &scratch_data,
-      const unsigned int component) const
+    KernelPulledbackToSauterSpace<dim,
+                                  spacedim,
+                                  KernelFunctionType,
+                                  RangeNumberType>::
+      value(const unsigned int                                   quad_no,
+            const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+            const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                              &scratch_data,
+            const unsigned int component) const
     {
       RangeNumberType kernel_value = 0.;
 
       switch (cell_neighboring_type)
         {
             case SamePanel: {
-              // Here we get the reference to the table of quadrature points
-              // first. Then get the current quadrature point in the Sauter's
-              // parametric space, at which the pulled back kernel function is
-              // to be evaluated.
+              /**
+               * @internal Here we get the reference to the table of quadrature
+               * points first. Then get the current quadrature point in the
+               * Sauter's parametric space, at which the pulled back kernel
+               * function is to be evaluated.
+               */
               const CUDATable<2, double> &quad_points =
                 bem_values.quad_rule_for_same_panel.get_points();
               double jacobian_det =
@@ -1123,10 +1131,12 @@ namespace IdeoBEM
               break;
             }
             case CommonEdge: {
-              // Here we get the reference to the table of quadrature points
-              // first. Then get the current quadrature point in the Sauter's
-              // parametric space, at which the pulled back kernel function is
-              // to be evaluated.
+              /**
+               * @internal Here we get the reference to the table of quadrature
+               * points first. Then get the current quadrature point in the
+               * Sauter's parametric space, at which the pulled back kernel
+               * function is to be evaluated.
+               */
               const CUDATable<2, double> &quad_points =
                 bem_values.quad_rule_for_common_edge.get_points();
               double jacobian_det1 = quad_points(quad_no, 0) *
@@ -1155,13 +1165,17 @@ namespace IdeoBEM
               break;
             }
             case CommonVertex: {
-              // Here we get the reference to the table of quadrature points
-              // first. Then get the current quadrature point in the Sauter's
-              // parametric space, at which the pulled back kernel function is
-              // to be evaluated.
+              /**
+               * @internal Here we get the reference to the table of quadrature
+               * points first. Then get the current quadrature point in the
+               * Sauter's parametric space, at which the pulled back kernel
+               * function is to be evaluated.
+               */
               const CUDATable<2, double> &quad_points =
                 bem_values.quad_rule_for_common_vertex.get_points();
-              double jacobian_det = pow(quad_points(quad_no, 0), 3);
+              double jacobian_det =
+                IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                  quad_points(quad_no, 0));
 
               for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
                 {
@@ -1174,9 +1188,11 @@ namespace IdeoBEM
               break;
             }
             case Regular: {
-              // There is no coordinate transformation for the regular case, so
-              // directly evaluate the kernel function on the product of unit
-              // cells.
+              /**
+               * @internal There is no coordinate transformation for the regular
+               * case, so directly evaluate the kernel function on the product
+               * of unit cells.
+               */
               kernel_value = kernel_on_unit_cell.value(
                 0, quad_no, bem_values, scratch_data, component);
 
