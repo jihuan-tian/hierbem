@@ -56,12 +56,34 @@ namespace IdeoBEM
 
       /**
        * Allocate global memory on the device according to the specified table
+       * sizes in @p TableIndices (asynchronous allocation).
+       *
+       * @param table_size_arg
+       * @param stream
+       */
+      __host__ void
+      allocate(const TableIndices<N> &table_size_arg,
+               const cudaStream_t     stream);
+
+      /**
+       * Allocate global memory on the device according to the specified table
        * sizes in @p CUDATableIndices.
        *
        * @param table_size_arg
        */
       __host__ void
       allocate(const CUDATableIndices<N> &table_size_arg);
+
+      /**
+       * Allocate global memory on the device according to the specified table
+       * sizes in @p CUDATableIndices (asynchronous allocation).
+       *
+       * @param table_size_arg
+       * @param stream
+       */
+      __host__ void
+      allocate(const CUDATableIndices<N> &table_size_arg,
+               const cudaStream_t         stream);
 
       /**
        * Assign values held within a deal.ii @p Table on the host to the device.
@@ -76,12 +98,36 @@ namespace IdeoBEM
       assign_from_host(const Table<N, T> &table_cpu);
 
       /**
+       * Assign values held within a deal.ii @p Table on the host to the device
+       * (asynchronous copy).
+       *
+       * \alert{The memory of the @p CUDATable should preallocated to the same
+       * table size before calling this function. The data are directly copied
+       * from @p table_cpu to the current object and there is no size checking.}
+       *
+       * @param table_cpu
+       * @param stream
+       */
+      __host__ void
+      assign_from_host(const Table<N, T> &table_cpu, const cudaStream_t stream);
+
+      /**
        * Assign values held within a vector on the host to the device.
        *
        * @param data
        */
       __host__ void
       assign_from_host(const std::vector<T> &data);
+
+      /**
+       * Assign values held within a vector on the host to the device
+       * (asynchronous copy).
+       *
+       * @param data
+       * @param stream
+       */
+      __host__ void
+      assign_from_host(const std::vector<T> &data, const cudaStream_t stream);
 
       /**
        * Assign values held within an array on the host to the device.
@@ -91,6 +137,19 @@ namespace IdeoBEM
        */
       __host__ void
       assign_from_host(const T *data, const size_type size);
+
+      /**
+       * Assign values held within an array on the host to the device
+       * (asynchronous copy).
+       *
+       * @param data
+       * @param size
+       * @param stream
+       */
+      __host__ void
+      assign_from_host(const T           *data,
+                       const size_type    size,
+                       const cudaStream_t stream);
 
       /**
        * Assign values held within an array on the host to the device with
@@ -105,6 +164,21 @@ namespace IdeoBEM
                        const size_type size);
 
       /**
+       * Assign values held within an array on the host to the device with
+       * an offset (asynchronous copy).
+       *
+       * @param data
+       * @param offset_in_device_table
+       * @param size
+       * @param stream
+       */
+      __host__ void
+      assign_from_host(const T           *data,
+                       const size_type    offset_in_device_table,
+                       const size_type    size,
+                       const cudaStream_t stream);
+
+      /**
        * Copy the table data on the device to the table on the host.
        *
        * @param table_cpu
@@ -113,10 +187,29 @@ namespace IdeoBEM
       copy_to_host(Table<N, T> &table_cpu) const;
 
       /**
+       * Copy the table data on the device to the table on the host
+       * (asynchronous copy).
+       *
+       * @param table_cpu
+       * @param stream
+       */
+      __host__ void
+      copy_to_host(Table<N, T> &table_cpu, const cudaStream_t stream) const;
+
+      /**
        * Release the allocated global memory on the device.
        */
       __host__ void
       release();
+
+      /**
+       * Release the allocated global memory on the device (asynchronous
+       * release).
+       *
+       * @param stream
+       */
+      __host__ void
+      release(const cudaStream_t stream);
 
       /**
        * Get the total number of elements in the table.
@@ -137,6 +230,20 @@ namespace IdeoBEM
        */
       __host__ CUDATable<N, T>          &
       operator=(const CUDATable<N, T> &src);
+
+      /**
+       * Assignment operator: copy the values from another @p CUDATable object (asynchronous).
+       *
+       * \alert{This function can only run on the host, since objects of this
+       * class are actually managed from the host and inside this function, the
+       * function @p cudaMemcpy is called, which can only run on the host.}
+       *
+       * @param src
+       * @param stream
+       * @return
+       */
+      __host__ void
+      assign(const CUDATable<N, T> &src, const cudaStream_t stream);
 
       /**
        * Get the const reference to the i'th element in the table using linear
@@ -375,6 +482,32 @@ namespace IdeoBEM
 
     template <int N, typename T>
     __host__ void
+    CUDATable<N, T>::allocate(const TableIndices<N> &table_size_arg,
+                              const cudaStream_t     stream)
+    {
+      table_size  = table_size_arg;
+      element_num = 1;
+      for (size_type i = 0; i < N; i++)
+        {
+          element_num *= table_size[i];
+        }
+
+      // If the table contains old data, free the memory first before
+      // allocation.
+      if (values != nullptr)
+        {
+          cudaError_t error_code = cudaFree(values);
+          AssertCuda(error_code);
+        }
+
+      cudaError_t error_code =
+        cudaMallocAsync((void **)&values, element_num * sizeof(T), stream);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
     CUDATable<N, T>::allocate(const CUDATableIndices<N> &table_size_arg)
     {
       table_size  = table_size_arg;
@@ -400,6 +533,32 @@ namespace IdeoBEM
 
     template <int N, typename T>
     __host__ void
+    CUDATable<N, T>::allocate(const CUDATableIndices<N> &table_size_arg,
+                              const cudaStream_t         stream)
+    {
+      table_size  = table_size_arg;
+      element_num = 1;
+      for (size_type i = 0; i < N; i++)
+        {
+          element_num *= table_size[i];
+        }
+
+      // If the table contains old data, free the memory first before
+      // allocation.
+      if (values != nullptr)
+        {
+          cudaError_t error_code = cudaFree(values);
+          AssertCuda(error_code);
+        }
+
+      cudaError_t error_code =
+        cudaMallocAsync((void **)&values, element_num * sizeof(T), stream);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
     CUDATable<N, T>::assign_from_host(const Table<N, T> &table_cpu)
     {
       Assert(table_size == table_cpu.size(),
@@ -413,6 +572,27 @@ namespace IdeoBEM
                                           &(table_cpu(TableIndices<N>())),
                                           element_num * sizeof(T),
                                           cudaMemcpyHostToDevice);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::assign_from_host(const Table<N, T> &table_cpu,
+                                      const cudaStream_t stream)
+    {
+      Assert(table_size == table_cpu.size(),
+             ExcMessage("Table size mismatch!"));
+      Assert(values != nullptr,
+             ExcMessage("Memory for this table has not be allocated!"));
+
+      // &(table_cpu(TableIndices<N>())): get the first element in the table,
+      // then take its address.
+      cudaError_t error_code = cudaMemcpyAsync(values,
+                                               &(table_cpu(TableIndices<N>())),
+                                               element_num * sizeof(T),
+                                               cudaMemcpyHostToDevice,
+                                               stream);
       AssertCuda(error_code);
     }
 
@@ -435,6 +615,24 @@ namespace IdeoBEM
 
     template <int N, typename T>
     __host__ void
+    CUDATable<N, T>::assign_from_host(const std::vector<T> &data,
+                                      const cudaStream_t    stream)
+    {
+      AssertDimension(element_num, data.size());
+      Assert(values != nullptr,
+             ExcMessage("Memory for this table has not be allocated!"));
+
+      cudaError_t error_code = cudaMemcpyAsync(values,
+                                               data.data(),
+                                               data.size() * sizeof(T),
+                                               cudaMemcpyHostToDevice,
+                                               stream);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
     CUDATable<N, T>::assign_from_host(const T *data, const size_type size)
     {
       Assert(data != nullptr, ExcMessage("Pointer to source data is empty!"));
@@ -444,6 +642,23 @@ namespace IdeoBEM
 
       cudaError_t error_code =
         cudaMemcpy(values, data, size * sizeof(T), cudaMemcpyHostToDevice);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::assign_from_host(const T           *data,
+                                      const size_type    size,
+                                      const cudaStream_t stream)
+    {
+      Assert(data != nullptr, ExcMessage("Pointer to source data is empty!"));
+      AssertDimension(element_num, size);
+      Assert(values != nullptr,
+             ExcMessage("Memory for this table has not be allocated!"));
+
+      cudaError_t error_code = cudaMemcpyAsync(
+        values, data, size * sizeof(T), cudaMemcpyHostToDevice, stream);
       AssertCuda(error_code);
     }
 
@@ -469,6 +684,27 @@ namespace IdeoBEM
 
     template <int N, typename T>
     __host__ void
+    CUDATable<N, T>::assign_from_host(const T           *data,
+                                      const size_type    offset_in_device_table,
+                                      const size_type    size,
+                                      const cudaStream_t stream)
+    {
+      Assert(data != nullptr, ExcMessage("Pointer to source data is empty!"));
+      Assert(values != nullptr,
+             ExcMessage("Memory for this table has not be allocated!"));
+      AssertIndexRange(offset_in_device_table + size - 1, element_num);
+
+      cudaError_t error_code = cudaMemcpyAsync(values + offset_in_device_table,
+                                               data,
+                                               size * sizeof(T),
+                                               cudaMemcpyHostToDevice,
+                                               stream);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
     CUDATable<N, T>::copy_to_host(Table<N, T> &table_cpu) const
     {
       Assert(this->table_size == table_cpu.size(),
@@ -478,6 +714,23 @@ namespace IdeoBEM
                                           values,
                                           element_num * sizeof(T),
                                           cudaMemcpyDeviceToHost);
+      AssertCuda(error_code);
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::copy_to_host(Table<N, T>       &table_cpu,
+                                  const cudaStream_t stream) const
+    {
+      Assert(this->table_size == table_cpu.size(),
+             ExcMessage("Table size mismatch!"));
+
+      cudaError_t error_code = cudaMemcpyAsync(&(table_cpu(TableIndices<N>())),
+                                               values,
+                                               element_num * sizeof(T),
+                                               cudaMemcpyDeviceToHost,
+                                               stream);
       AssertCuda(error_code);
     }
 
@@ -496,7 +749,31 @@ namespace IdeoBEM
 
       if (values != nullptr)
         {
-          cudaFree(values);
+          cudaError_t error_code = cudaFree(values);
+          AssertCuda(error_code);
+
+          // Reset the pointer.
+          values = nullptr;
+        }
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::release(const cudaStream_t stream)
+    {
+      // Reset the table sizes and number of elements to 0.
+      for (size_type i = 0; i < N; i++)
+        {
+          table_size[i] = 0;
+        }
+
+      element_num = 0;
+
+      if (values != nullptr)
+        {
+          cudaError_t error_code = cudaFreeAsync(values, stream);
+          AssertCuda(error_code);
 
           // Reset the pointer.
           values = nullptr;
@@ -537,6 +814,34 @@ namespace IdeoBEM
       AssertCuda(error_code);
 
       return *this;
+    }
+
+
+    template <int N, typename T>
+    __host__ void
+    CUDATable<N, T>::assign(const CUDATable<N, T> &src,
+                            const cudaStream_t     stream)
+    {
+      if (table_size != src.table_size)
+        {
+          // Otherwise, release the memory of the current table, reallocate
+          // memory, then copy the data.
+          release(stream);
+
+          element_num = src.element_num;
+          table_size  = src.table_size;
+
+          cudaError_t error_code =
+            cudaMallocAsync((void **)&values, element_num * sizeof(T), stream);
+          AssertCuda(error_code);
+        }
+
+      cudaError_t error_code = cudaMemcpyAsync(values,
+                                               src.values,
+                                               element_num * sizeof(T),
+                                               cudaMemcpyDeviceToDevice,
+                                               stream);
+      AssertCuda(error_code);
     }
 
 

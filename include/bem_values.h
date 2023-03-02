@@ -1709,6 +1709,11 @@ namespace IdeoBEM
     using FE_Poly_short = FE_Poly<dim, spacedim>;
 
     /**
+     * CUDA stream associated with this CPU work stream.
+     */
+    cudaStream_t cuda_stream_handle;
+
+    /**
      * The intersection set of the vertex local indices for the two cells
      * \f$K_x\f$ and \f$K_y\f$.
      */
@@ -2011,7 +2016,8 @@ namespace IdeoBEM
                             const MappingQGenericExt<dim, spacedim> &kx_mapping,
                             const MappingQGenericExt<dim, spacedim> &ky_mapping,
                             const BEMValues<dim, spacedim>          &bem_values)
-      : common_vertex_pair_local_indices(0)
+      : cuda_stream_handle(0)
+      , common_vertex_pair_local_indices(0)
       , kx_mapping_support_points_in_default_order(
           bem_values.kx_mapping_data.n_shape_functions)
       , ky_mapping_support_points_in_default_order(
@@ -2087,6 +2093,10 @@ namespace IdeoBEM
           bem_values.quad_rule_for_common_vertex.size())
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
     {
+      cudaError_t error_code;
+      error_code = cudaStreamCreate(&cuda_stream_handle);
+      AssertCuda(error_code);
+
       common_vertex_pair_local_indices.reserve(
         GeometryInfo<dim>::vertices_per_cell);
 
@@ -2120,7 +2130,8 @@ namespace IdeoBEM
      */
     PairCellWiseScratchData(
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch)
-      : common_vertex_pair_local_indices(
+      : cuda_stream_handle(scratch.cuda_stream_handle)
+      , common_vertex_pair_local_indices(
           scratch.common_vertex_pair_local_indices)
       , kx_mapping_support_points_in_default_order(
           scratch.kx_mapping_support_points_in_default_order)
@@ -2183,6 +2194,13 @@ namespace IdeoBEM
       , ky_quad_points_common_vertex(scratch.ky_quad_points_common_vertex)
       , ky_quad_points_regular(scratch.ky_quad_points_regular)
     {}
+
+    void
+    release()
+    {
+      cudaError_t error_code = cudaStreamDestroy(cuda_stream_handle);
+      AssertCuda(error_code);
+    }
   };
 
 

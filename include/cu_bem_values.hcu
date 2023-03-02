@@ -836,7 +836,7 @@ namespace IdeoBEM
        * Release the allocated global memory on the device.
        */
       __host__ void
-      release();
+      release(const cudaStream_t stream);
 
       /**
        * Permuted list of mapping support points in the real cell \f$K_x\f$.
@@ -1104,46 +1104,59 @@ namespace IdeoBEM
       cudaError_t error_code;
 
       kx_mapping_support_points_permuted.allocate(
-        TableIndices<1>(scratch_cpu.kx_mapping_support_points_permuted.size()));
+        TableIndices<1>(scratch_cpu.kx_mapping_support_points_permuted.size()),
+        scratch_cpu.cuda_stream_handle);
 
-      error_code =
-        cudaMalloc((void **)&kx_mapping_support_points_permuted_two_components,
-                   scratch_cpu.kx_mapping_support_points_permuted.size() * 2 *
-                     sizeof(RangeNumberType));
+      error_code = cudaMallocAsync(
+        (void **)&kx_mapping_support_points_permuted_two_components,
+        scratch_cpu.kx_mapping_support_points_permuted.size() * 2 *
+          sizeof(RangeNumberType),
+        scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
-      error_code =
-        cudaMalloc((void **)&kx_mapping_support_points_permuted_all_components,
-                   scratch_cpu.kx_mapping_support_points_permuted.size() *
-                     spacedim * sizeof(RangeNumberType));
+      error_code = cudaMallocAsync(
+        (void **)&kx_mapping_support_points_permuted_all_components,
+        scratch_cpu.kx_mapping_support_points_permuted.size() * spacedim *
+          sizeof(RangeNumberType),
+        scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
-      error_code = cudaMalloc((void **)&kx_mapping_jacobian_matrix,
-                              spacedim * dim * sizeof(RangeNumberType));
+      error_code = cudaMallocAsync((void **)&kx_mapping_jacobian_matrix,
+                                   spacedim * dim * sizeof(RangeNumberType),
+                                   scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
-      error_code = cudaMalloc((void **)&kx_mapping_metric_tensor,
-                              dim * dim * sizeof(RangeNumberType));
+      error_code = cudaMallocAsync((void **)&kx_mapping_metric_tensor,
+                                   dim * dim * sizeof(RangeNumberType),
+                                   scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
-      error_code = cudaMalloc((void **)&kx_mapping_metric_tensor_inv,
-                              dim * dim * sizeof(RangeNumberType));
+      error_code = cudaMallocAsync((void **)&kx_mapping_metric_tensor_inv,
+                                   dim * dim * sizeof(RangeNumberType),
+                                   scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
       kx_jacobians_same_panel.allocate(
-        scratch_cpu.kx_jacobians_same_panel.size());
+        scratch_cpu.kx_jacobians_same_panel.size(),
+        scratch_cpu.cuda_stream_handle);
       kx_jacobians_common_edge.allocate(
-        scratch_cpu.kx_jacobians_common_edge.size());
+        scratch_cpu.kx_jacobians_common_edge.size(),
+        scratch_cpu.cuda_stream_handle);
       kx_jacobians_common_vertex.allocate(
-        scratch_cpu.kx_jacobians_common_vertex.size());
-      kx_jacobians_regular.allocate(scratch_cpu.kx_jacobians_regular.size());
+        scratch_cpu.kx_jacobians_common_vertex.size(),
+        scratch_cpu.cuda_stream_handle);
+      kx_jacobians_regular.allocate(scratch_cpu.kx_jacobians_regular.size(),
+                                    scratch_cpu.cuda_stream_handle);
 
-      kx_normals_same_panel.allocate(scratch_cpu.kx_normals_same_panel.size());
-      kx_normals_common_edge.allocate(
-        scratch_cpu.kx_normals_common_edge.size());
+      kx_normals_same_panel.allocate(scratch_cpu.kx_normals_same_panel.size(),
+                                     scratch_cpu.cuda_stream_handle);
+      kx_normals_common_edge.allocate(scratch_cpu.kx_normals_common_edge.size(),
+                                      scratch_cpu.cuda_stream_handle);
       kx_normals_common_vertex.allocate(
-        scratch_cpu.kx_normals_common_vertex.size());
-      kx_normals_regular.allocate(scratch_cpu.kx_normals_regular.size());
+        scratch_cpu.kx_normals_common_vertex.size(),
+        scratch_cpu.cuda_stream_handle);
+      kx_normals_regular.allocate(scratch_cpu.kx_normals_regular.size(),
+                                  scratch_cpu.cuda_stream_handle);
 
       // N.B. The covariant transformation matrix belongs to \f$\mathbb{R}^{{\rm
       // spacedim}\times{\rm dim}}\f$. Since a data table adopts the C style
@@ -1154,73 +1167,93 @@ namespace IdeoBEM
         TableIndices<4>(scratch_cpu.kx_covariants_same_panel.n_rows(),
                         scratch_cpu.kx_covariants_same_panel.n_cols(),
                         dim,
-                        spacedim));
+                        spacedim),
+        scratch_cpu.cuda_stream_handle);
       kx_covariants_common_edge.allocate(
         TableIndices<4>(scratch_cpu.kx_covariants_common_edge.n_rows(),
                         scratch_cpu.kx_covariants_common_edge.n_cols(),
                         dim,
-                        spacedim));
+                        spacedim),
+        scratch_cpu.cuda_stream_handle);
       kx_covariants_common_vertex.allocate(
         TableIndices<4>(scratch_cpu.kx_covariants_common_vertex.n_rows(),
                         scratch_cpu.kx_covariants_common_vertex.n_cols(),
                         dim,
-                        spacedim));
+                        spacedim),
+        scratch_cpu.cuda_stream_handle);
       kx_covariants_regular.allocate(
         TableIndices<4>(scratch_cpu.kx_covariants_regular.n_rows(),
                         scratch_cpu.kx_covariants_regular.n_cols(),
                         dim,
-                        spacedim));
+                        spacedim),
+        scratch_cpu.cuda_stream_handle);
 
       kx_quad_points_same_panel.allocate(
-        scratch_cpu.kx_quad_points_same_panel.size());
+        scratch_cpu.kx_quad_points_same_panel.size(),
+        scratch_cpu.cuda_stream_handle);
       kx_quad_points_common_edge.allocate(
-        scratch_cpu.kx_quad_points_common_edge.size());
+        scratch_cpu.kx_quad_points_common_edge.size(),
+        scratch_cpu.cuda_stream_handle);
       kx_quad_points_common_vertex.allocate(
-        scratch_cpu.kx_quad_points_common_vertex.size());
-      kx_quad_points_regular.allocate(
-        scratch_cpu.kx_quad_points_regular.size());
+        scratch_cpu.kx_quad_points_common_vertex.size(),
+        scratch_cpu.cuda_stream_handle);
+      kx_quad_points_regular.allocate(scratch_cpu.kx_quad_points_regular.size(),
+                                      scratch_cpu.cuda_stream_handle);
 
       ky_mapping_support_points_permuted.allocate(
-        TableIndices<1>(scratch_cpu.ky_mapping_support_points_permuted.size()));
+        TableIndices<1>(scratch_cpu.ky_mapping_support_points_permuted.size()),
+        scratch_cpu.cuda_stream_handle);
 
-      error_code =
-        cudaMalloc((void **)&ky_mapping_support_points_permuted_two_components,
-                   scratch_cpu.ky_mapping_support_points_permuted.size() * 2 *
-                     sizeof(RangeNumberType));
+      error_code = cudaMallocAsync(
+        (void **)&ky_mapping_support_points_permuted_two_components,
+        scratch_cpu.ky_mapping_support_points_permuted.size() * 2 *
+          sizeof(RangeNumberType),
+        scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
-      error_code =
-        cudaMalloc((void **)&ky_mapping_support_points_permuted_all_components,
-                   scratch_cpu.ky_mapping_support_points_permuted.size() *
-                     spacedim * sizeof(RangeNumberType));
+      error_code = cudaMallocAsync(
+        (void **)&ky_mapping_support_points_permuted_all_components,
+        scratch_cpu.ky_mapping_support_points_permuted.size() * spacedim *
+          sizeof(RangeNumberType),
+        scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
-      error_code = cudaMalloc((void **)&ky_mapping_jacobian_matrix,
-                              spacedim * dim * sizeof(RangeNumberType));
+      error_code = cudaMallocAsync((void **)&ky_mapping_jacobian_matrix,
+                                   spacedim * dim * sizeof(RangeNumberType),
+                                   scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
-      error_code = cudaMalloc((void **)&ky_mapping_metric_tensor,
-                              dim * dim * sizeof(RangeNumberType));
+      error_code = cudaMallocAsync((void **)&ky_mapping_metric_tensor,
+                                   dim * dim * sizeof(RangeNumberType),
+                                   scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
-      error_code = cudaMalloc((void **)&ky_mapping_metric_tensor_inv,
-                              dim * dim * sizeof(RangeNumberType));
+      error_code = cudaMallocAsync((void **)&ky_mapping_metric_tensor_inv,
+                                   dim * dim * sizeof(RangeNumberType),
+                                   scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
 
       ky_jacobians_same_panel.allocate(
-        scratch_cpu.ky_jacobians_same_panel.size());
+        scratch_cpu.ky_jacobians_same_panel.size(),
+        scratch_cpu.cuda_stream_handle);
       ky_jacobians_common_edge.allocate(
-        scratch_cpu.ky_jacobians_common_edge.size());
+        scratch_cpu.ky_jacobians_common_edge.size(),
+        scratch_cpu.cuda_stream_handle);
       ky_jacobians_common_vertex.allocate(
-        scratch_cpu.ky_jacobians_common_vertex.size());
-      ky_jacobians_regular.allocate(scratch_cpu.ky_jacobians_regular.size());
+        scratch_cpu.ky_jacobians_common_vertex.size(),
+        scratch_cpu.cuda_stream_handle);
+      ky_jacobians_regular.allocate(scratch_cpu.ky_jacobians_regular.size(),
+                                    scratch_cpu.cuda_stream_handle);
 
-      ky_normals_same_panel.allocate(scratch_cpu.ky_normals_same_panel.size());
-      ky_normals_common_edge.allocate(
-        scratch_cpu.ky_normals_common_edge.size());
+      ky_normals_same_panel.allocate(scratch_cpu.ky_normals_same_panel.size(),
+                                     scratch_cpu.cuda_stream_handle);
+      ky_normals_common_edge.allocate(scratch_cpu.ky_normals_common_edge.size(),
+                                      scratch_cpu.cuda_stream_handle);
       ky_normals_common_vertex.allocate(
-        scratch_cpu.ky_normals_common_vertex.size());
-      ky_normals_regular.allocate(scratch_cpu.ky_normals_regular.size());
+        scratch_cpu.ky_normals_common_vertex.size(),
+        scratch_cpu.cuda_stream_handle);
+      ky_normals_regular.allocate(scratch_cpu.ky_normals_regular.size(),
+                                  scratch_cpu.cuda_stream_handle);
 
       // N.B. The covariant transformation matrix belongs to \f$\mathbb{R}^{{\rm
       // spacedim}\times{\rm dim}}\f$. Since a data table adopts the C style
@@ -1231,34 +1264,45 @@ namespace IdeoBEM
         TableIndices<4>(scratch_cpu.ky_covariants_same_panel.n_rows(),
                         scratch_cpu.ky_covariants_same_panel.n_cols(),
                         dim,
-                        spacedim));
+                        spacedim),
+        scratch_cpu.cuda_stream_handle);
       ky_covariants_common_edge.allocate(
         TableIndices<4>(scratch_cpu.ky_covariants_common_edge.n_rows(),
                         scratch_cpu.ky_covariants_common_edge.n_cols(),
                         dim,
-                        spacedim));
+                        spacedim),
+        scratch_cpu.cuda_stream_handle);
       ky_covariants_common_vertex.allocate(
         TableIndices<4>(scratch_cpu.ky_covariants_common_vertex.n_rows(),
                         scratch_cpu.ky_covariants_common_vertex.n_cols(),
                         dim,
-                        spacedim));
+                        spacedim),
+        scratch_cpu.cuda_stream_handle);
       ky_covariants_regular.allocate(
         TableIndices<4>(scratch_cpu.ky_covariants_regular.n_rows(),
                         scratch_cpu.ky_covariants_regular.n_cols(),
                         dim,
-                        spacedim));
+                        spacedim),
+        scratch_cpu.cuda_stream_handle);
 
       ky_quad_points_same_panel.allocate(
-        scratch_cpu.ky_quad_points_same_panel.size());
+        scratch_cpu.ky_quad_points_same_panel.size(),
+        scratch_cpu.cuda_stream_handle);
       ky_quad_points_common_edge.allocate(
-        scratch_cpu.ky_quad_points_common_edge.size());
+        scratch_cpu.ky_quad_points_common_edge.size(),
+        scratch_cpu.cuda_stream_handle);
       ky_quad_points_common_vertex.allocate(
-        scratch_cpu.ky_quad_points_common_vertex.size());
-      ky_quad_points_regular.allocate(
-        scratch_cpu.ky_quad_points_regular.size());
+        scratch_cpu.ky_quad_points_common_vertex.size(),
+        scratch_cpu.cuda_stream_handle);
+      ky_quad_points_regular.allocate(scratch_cpu.ky_quad_points_regular.size(),
+                                      scratch_cpu.cuda_stream_handle);
 
-      error_code = cudaMalloc((void **)&quad_values_in_thread_blocks,
-                              sizeof(RangeNumberType) * 100);
+      error_code = cudaMallocAsync((void **)&quad_values_in_thread_blocks,
+                                   sizeof(RangeNumberType) * 100,
+                                   scratch_cpu.cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code = cudaStreamSynchronize(scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
     }
 
@@ -1271,112 +1315,128 @@ namespace IdeoBEM
           &scratch_cpu)
     {
       kx_mapping_support_points_permuted.assign_from_host(
-        scratch_cpu.kx_mapping_support_points_permuted);
+        scratch_cpu.kx_mapping_support_points_permuted,
+        scratch_cpu.cuda_stream_handle);
 
       kx_quad_points_same_panel.assign_from_host(
-        scratch_cpu.kx_quad_points_same_panel);
+        scratch_cpu.kx_quad_points_same_panel, scratch_cpu.cuda_stream_handle);
       kx_quad_points_common_edge.assign_from_host(
-        scratch_cpu.kx_quad_points_common_edge);
+        scratch_cpu.kx_quad_points_common_edge, scratch_cpu.cuda_stream_handle);
       kx_quad_points_common_vertex.assign_from_host(
-        scratch_cpu.kx_quad_points_common_vertex);
+        scratch_cpu.kx_quad_points_common_vertex,
+        scratch_cpu.cuda_stream_handle);
       kx_quad_points_regular.assign_from_host(
-        scratch_cpu.kx_quad_points_regular);
+        scratch_cpu.kx_quad_points_regular, scratch_cpu.cuda_stream_handle);
 
       ky_mapping_support_points_permuted.assign_from_host(
-        scratch_cpu.ky_mapping_support_points_permuted);
+        scratch_cpu.ky_mapping_support_points_permuted,
+        scratch_cpu.cuda_stream_handle);
 
       ky_quad_points_same_panel.assign_from_host(
-        scratch_cpu.ky_quad_points_same_panel);
+        scratch_cpu.ky_quad_points_same_panel, scratch_cpu.cuda_stream_handle);
       ky_quad_points_common_edge.assign_from_host(
-        scratch_cpu.ky_quad_points_common_edge);
+        scratch_cpu.ky_quad_points_common_edge, scratch_cpu.cuda_stream_handle);
       ky_quad_points_common_vertex.assign_from_host(
-        scratch_cpu.ky_quad_points_common_vertex);
+        scratch_cpu.ky_quad_points_common_vertex,
+        scratch_cpu.cuda_stream_handle);
       ky_quad_points_regular.assign_from_host(
-        scratch_cpu.ky_quad_points_regular);
+        scratch_cpu.ky_quad_points_regular, scratch_cpu.cuda_stream_handle);
     }
 
 
     template <int dim, int spacedim, typename RangeNumberType>
     __host__ void
-    CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>::release()
+    CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>::release(
+      const cudaStream_t stream)
     {
       cudaError_t error_code;
 
-      kx_mapping_support_points_permuted.release();
+      kx_mapping_support_points_permuted.release(stream);
 
-      error_code = cudaFree(kx_mapping_support_points_permuted_two_components);
+      error_code =
+        cudaFreeAsync(kx_mapping_support_points_permuted_two_components,
+                      stream);
       AssertCuda(error_code);
 
-      error_code = cudaFree(kx_mapping_support_points_permuted_all_components);
+      error_code =
+        cudaFreeAsync(kx_mapping_support_points_permuted_all_components,
+                      stream);
       AssertCuda(error_code);
 
-      error_code = cudaFree(kx_mapping_jacobian_matrix);
+      error_code = cudaFreeAsync(kx_mapping_jacobian_matrix, stream);
       AssertCuda(error_code);
 
-      error_code = cudaFree(kx_mapping_metric_tensor);
+      error_code = cudaFreeAsync(kx_mapping_metric_tensor, stream);
       AssertCuda(error_code);
 
-      error_code = cudaFree(kx_mapping_metric_tensor_inv);
+      error_code = cudaFreeAsync(kx_mapping_metric_tensor_inv, stream);
       AssertCuda(error_code);
 
-      kx_jacobians_same_panel.release();
-      kx_jacobians_common_edge.release();
-      kx_jacobians_common_vertex.release();
-      kx_jacobians_regular.release();
+      kx_jacobians_same_panel.release(stream);
+      kx_jacobians_common_edge.release(stream);
+      kx_jacobians_common_vertex.release(stream);
+      kx_jacobians_regular.release(stream);
 
-      kx_normals_same_panel.release();
-      kx_normals_common_edge.release();
-      kx_normals_common_vertex.release();
-      kx_normals_regular.release();
+      kx_normals_same_panel.release(stream);
+      kx_normals_common_edge.release(stream);
+      kx_normals_common_vertex.release(stream);
+      kx_normals_regular.release(stream);
 
-      kx_covariants_same_panel.release();
-      kx_covariants_common_edge.release();
-      kx_covariants_common_vertex.release();
-      kx_covariants_regular.release();
+      kx_covariants_same_panel.release(stream);
+      kx_covariants_common_edge.release(stream);
+      kx_covariants_common_vertex.release(stream);
+      kx_covariants_regular.release(stream);
 
-      kx_quad_points_same_panel.release();
-      kx_quad_points_common_edge.release();
-      kx_quad_points_common_vertex.release();
-      kx_quad_points_regular.release();
+      kx_quad_points_same_panel.release(stream);
+      kx_quad_points_common_edge.release(stream);
+      kx_quad_points_common_vertex.release(stream);
+      kx_quad_points_regular.release(stream);
 
-      ky_mapping_support_points_permuted.release();
+      ky_mapping_support_points_permuted.release(stream);
 
-      error_code = cudaFree(ky_mapping_support_points_permuted_two_components);
+      error_code =
+        cudaFreeAsync(ky_mapping_support_points_permuted_two_components,
+                      stream);
       AssertCuda(error_code);
 
-      error_code = cudaFree(ky_mapping_support_points_permuted_all_components);
+      error_code =
+        cudaFreeAsync(ky_mapping_support_points_permuted_all_components,
+                      stream);
       AssertCuda(error_code);
 
-      error_code = cudaFree(ky_mapping_jacobian_matrix);
+      error_code = cudaFreeAsync(ky_mapping_jacobian_matrix, stream);
       AssertCuda(error_code);
 
-      error_code = cudaFree(ky_mapping_metric_tensor);
+      error_code = cudaFreeAsync(ky_mapping_metric_tensor, stream);
       AssertCuda(error_code);
 
-      error_code = cudaFree(ky_mapping_metric_tensor_inv);
+      error_code = cudaFreeAsync(ky_mapping_metric_tensor_inv, stream);
       AssertCuda(error_code);
 
-      ky_jacobians_same_panel.release();
-      ky_jacobians_common_edge.release();
-      ky_jacobians_common_vertex.release();
-      ky_jacobians_regular.release();
+      ky_jacobians_same_panel.release(stream);
+      ky_jacobians_common_edge.release(stream);
+      ky_jacobians_common_vertex.release(stream);
+      ky_jacobians_regular.release(stream);
 
-      ky_normals_same_panel.release();
-      ky_normals_common_edge.release();
-      ky_normals_common_vertex.release();
-      ky_normals_regular.release();
+      ky_normals_same_panel.release(stream);
+      ky_normals_common_edge.release(stream);
+      ky_normals_common_vertex.release(stream);
+      ky_normals_regular.release(stream);
 
-      ky_covariants_same_panel.release();
-      ky_covariants_common_edge.release();
-      ky_covariants_common_vertex.release();
-      ky_covariants_regular.release();
+      ky_covariants_same_panel.release(stream);
+      ky_covariants_common_edge.release(stream);
+      ky_covariants_common_vertex.release(stream);
+      ky_covariants_regular.release(stream);
 
-      ky_quad_points_same_panel.release();
-      ky_quad_points_common_edge.release();
-      ky_quad_points_common_vertex.release();
-      ky_quad_points_regular.release();
+      ky_quad_points_same_panel.release(stream);
+      ky_quad_points_common_edge.release(stream);
+      ky_quad_points_common_vertex.release(stream);
+      ky_quad_points_regular.release(stream);
 
-      error_code = cudaFree(quad_values_in_thread_blocks);
+      error_code = cudaFreeAsync(quad_values_in_thread_blocks, stream);
+      AssertCuda(error_code);
+
+      error_code = cudaStreamSynchronize(stream);
       AssertCuda(error_code);
     }
 
@@ -1398,12 +1458,21 @@ namespace IdeoBEM
       template <int dim, int spacedim, typename RangeNumberType>
       void
       allocate(const PairCellWisePerTaskData<dim, spacedim, RangeNumberType>
-                 &per_task_data)
+                                 &per_task_data,
+               const cudaStream_t stream)
       {
-        kx_local_dof_indices_permuted.allocate(CUDATableIndices<1>(
-          per_task_data.kx_local_dof_indices_permuted.size()));
-        ky_local_dof_indices_permuted.allocate(CUDATableIndices<1>(
-          per_task_data.ky_local_dof_indices_permuted.size()));
+        kx_local_dof_indices_permuted.allocate(
+          CUDATableIndices<1>(
+            per_task_data.kx_local_dof_indices_permuted.size()),
+          stream);
+        ky_local_dof_indices_permuted.allocate(
+          CUDATableIndices<1>(
+            per_task_data.ky_local_dof_indices_permuted.size()),
+          stream);
+
+        cudaError_t error_code;
+        error_code = cudaStreamSynchronize(stream);
+        AssertCuda(error_code);
       }
 
       /**
@@ -1419,22 +1488,31 @@ namespace IdeoBEM
       void
       assign_from_host(
         const PairCellWisePerTaskData<dim, spacedim, RangeNumberType>
-          &per_task_data)
+                          &per_task_data,
+        const cudaStream_t stream)
       {
         kx_local_dof_indices_permuted.assign_from_host(
-          per_task_data.kx_local_dof_indices_permuted);
+          per_task_data.kx_local_dof_indices_permuted, stream);
         ky_local_dof_indices_permuted.assign_from_host(
-          per_task_data.ky_local_dof_indices_permuted);
+          per_task_data.ky_local_dof_indices_permuted, stream);
+
+        cudaError_t error_code;
+        error_code = cudaStreamSynchronize(stream);
+        AssertCuda(error_code);
       }
 
       /**
        * Release the memory on the device.
        */
       void
-      release()
+      release(const cudaStream_t stream)
       {
-        kx_local_dof_indices_permuted.release();
-        ky_local_dof_indices_permuted.release();
+        kx_local_dof_indices_permuted.release(stream);
+        ky_local_dof_indices_permuted.release(stream);
+
+        cudaError_t error_code;
+        error_code = cudaStreamSynchronize(stream);
+        AssertCuda(error_code);
       }
 
       CUDATable<1, types::global_dof_index> kx_local_dof_indices_permuted;

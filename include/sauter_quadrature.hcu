@@ -1245,8 +1245,8 @@ namespace IdeoBEM
 
 
     /**
-     * ONGOING Apply Sauter quadrature directly to the kernel function for the
-     * same panel case.
+     * Apply Sauter quadrature directly to the kernel function for the same
+     * panel case.
      */
     template <int dim,
               int spacedim,
@@ -1372,8 +1372,8 @@ namespace IdeoBEM
                   /**
                    * @internal Evaluate the kernel function at the specified
                    * pair of points in the real cells with their normal vectors,
-                   * the result of which is then multiplied by the Jacobians and
-                   * shape function values.
+                   * the result of which is then multiplied by the Jacobians
+                   * from unit cell to real cell and shape function values.
                    */
                   kernel_value +=
                     kernel_function.value(
@@ -1395,15 +1395,227 @@ namespace IdeoBEM
 
           /**
            * @internal Multiply the kernel function value with the Jacobian from
-           * the Sauter parametric space to the unit cell, then with the
-           * quadrature weights, then with the additional factor. The result is
-           * stored into the shared memory.
+           * the Sauter 4D parametric space to the unit cell, then with the
+           * quadrature weights. The result is stored into the shared memory.
            */
           quad_values_in_thread_block[threadIdx.x] =
             kernel_value * quad_points(quad_no, 0) *
             (1 - quad_points(quad_no, 0)) *
             (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1)) *
-            bem_values.quad_rule_for_same_panel.get_weights()[quad_no] * factor;
+            bem_values.quad_rule_for_same_panel.get_weights()[quad_no];
+        }
+      else
+        {
+          quad_values_in_thread_block[threadIdx.x] = 0.;
+        }
+
+      /**
+       * @internal Synchronize all the threads in the current thread block for
+       * finishing their function evaluation at the specified quadrature point.
+       */
+      __syncthreads();
+
+      /**
+       * @internal Sum up the values saved in the shared memory.
+       */
+      //! Accumulate the data in a thread block. N.B. Here s is the stride for
+      //! sum and 2*s is the stride for classification of the array into
+      //! segments.
+      for (unsigned int s = blockDim.x / 2; s > warpSize; s >>= 1)
+        {
+          if (threadIdx.x < s)
+            {
+              quad_values_in_thread_block[threadIdx.x] +=
+                quad_values_in_thread_block[threadIdx.x + s];
+            }
+
+          __syncthreads();
+        }
+
+      if (threadIdx.x < warpSize)
+        {
+          warpReduce(quad_values_in_thread_block, threadIdx.x);
+        }
+
+      //! Write out the result (scaled by the factor) for the current block.
+      if (threadIdx.x == 0)
+        {
+          scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
+            quad_values_in_thread_block[0] * factor;
+        }
+    }
+
+
+    /**
+     * Apply Sauter quadrature directly to the kernel function for the common
+     * edge case.
+     *
+     * \myalert{During the computation, the normal vector of \f$K_y\f$} should
+     * be negated.
+     */
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    ApplyQuadratureUsingBEMValuesCommonEdge(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel_function,
+      const RangeNumberType                               factor,
+      const unsigned int                                  kx_dof_index,
+      const unsigned int                                  ky_dof_index,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
+      const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                   scratch_data,
+      unsigned int component = 0)
+    {
+      /**
+       * @internal Result array in the shared memory which stores the quadrature
+       * results for each thread in a same thread block. Its dimension should be
+       * @p blockDim.x.
+       */
+      extern __shared__ RangeNumberType quad_values_in_thread_block[];
+
+      const unsigned int quad_no = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+      if (quad_no < bem_values.quad_rule_for_common_edge.size())
+        {
+          const CUDATable<2, double> &quad_points =
+            bem_values.quad_rule_for_common_edge.get_points();
+          RangeNumberType jacobian_det1 = quad_points(quad_no, 0) *
+                                          quad_points(quad_no, 0) *
+                                          (1 - quad_points(quad_no, 0));
+          RangeNumberType jacobian_det2 =
+            quad_points(quad_no, 0) * quad_points(quad_no, 0) *
+            (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
+
+          /**
+           * @internal Evaluate the kernel function at the current quadrature
+           * point, which is an accumulation of all @p k3 terms.
+           */
+          RangeNumberType kernel_value = 0.;
+          for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
+            {
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  /**
+                   * @internal Extract the gradient values of the current shape
+                   * function at the current quadrature point in the unit cell
+                   * for \f$K_x\f$ as well as \f$K_y\f$.
+                   */
+                  RangeNumberType             kx_shape_grad_in_unit_cell[dim];
+                  RangeNumberType             ky_shape_grad_in_unit_cell[dim];
+                  CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                    kx_shape_grad_in_unit_cell, dim);
+                  CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                    ky_shape_grad_in_unit_cell, dim);
+
+                  for (unsigned int i = 0; i < dim; i++)
+                    {
+                      kx_shape_grad_in_unit_cell[i] =
+                        bem_values.kx_shape_grad_matrix_table_for_common_edge(
+                          k3_index, quad_no, i, kx_dof_index);
+                      ky_shape_grad_in_unit_cell[i] =
+                        bem_values.kx_shape_grad_matrix_table_for_common_edge(
+                          k3_index, quad_no, i, ky_dof_index);
+                    }
+
+                  /**
+                   * Apply covariant transformation to the gradient tensors in
+                   * the unit cell.
+                   */
+                  RangeNumberType kx_shape_grad_in_real_cell[spacedim];
+                  RangeNumberType ky_shape_grad_in_real_cell[spacedim];
+                  CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                    kx_shape_grad_in_real_cell, spacedim);
+                  CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                    ky_shape_grad_in_real_cell, spacedim);
+
+                  CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+                    const_cast<RangeNumberType *>(
+                      &(scratch_data.kx_covariants_common_edge(
+                        k3_index, quad_no, 0, 0))),
+                    spacedim,
+                    dim);
+                  CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+                    const_cast<RangeNumberType *>(
+                      &(scratch_data.ky_covariants_common_edge(
+                        k3_index, quad_no, 0, 0))),
+                    spacedim,
+                    dim);
+
+                  kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
+                                            kx_shape_grad_in_unit_cell_vector);
+                  ky_covariant_matrix.vmult(ky_shape_grad_in_real_cell_vector,
+                                            ky_shape_grad_in_unit_cell_vector);
+
+                  /**
+                   * Calculate the surface gradient tensor of the shape
+                   * functions, which is the cross product of normal vector and
+                   * the volume gradient vector.
+                   *
+                   * \mynote{The cross product operation requires the input
+                   * vectors be transformed to tensors.}
+                   */
+                  Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                    cross_product_3d(
+                      scratch_data.kx_normals_common_edge(k3_index, quad_no),
+                      kx_shape_grad_in_real_cell_vector);
+                  Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                    cross_product_3d(
+                      -scratch_data.ky_normals_common_edge(k3_index, quad_no),
+                      ky_shape_grad_in_real_cell_vector);
+
+                  kernel_value +=
+                    kernel_function.value(
+                      scratch_data.kx_quad_points_common_edge(k3_index,
+                                                              quad_no),
+                      scratch_data.ky_quad_points_common_edge(k3_index,
+                                                              quad_no),
+                      scratch_data.kx_normals_common_edge(k3_index, quad_no),
+                      -scratch_data.ky_normals_common_edge(k3_index, quad_no),
+                      component) *
+                    scratch_data.kx_jacobians_common_edge(k3_index, quad_no) *
+                    scratch_data.ky_jacobians_common_edge(k3_index, quad_no) *
+                    scalar_product(kx_shape_surface_curl,
+                                   ky_shape_surface_curl) *
+                    (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
+                }
+              else
+                {
+                  /**
+                   * @internal Evaluate the kernel function at the specified
+                   * pair of points in the real cells with their normal vectors,
+                   * the result of which is then multiplied by the Jacobians
+                   * from unit cell to real cell, Jacobian from Sauter 4D space
+                   * to unit cell, and shape function values.
+                   */
+                  kernel_value +=
+                    kernel_function.value(
+                      scratch_data.kx_quad_points_common_edge(k3_index,
+                                                              quad_no),
+                      scratch_data.ky_quad_points_common_edge(k3_index,
+                                                              quad_no),
+                      scratch_data.kx_normals_common_edge(k3_index, quad_no),
+                      -scratch_data.ky_normals_common_edge(k3_index, quad_no),
+                      component) *
+                    scratch_data.kx_jacobians_common_edge(k3_index, quad_no) *
+                    scratch_data.ky_jacobians_common_edge(k3_index, quad_no) *
+                    bem_values.kx_shape_value_table_for_common_edge(
+                      kx_dof_index, k3_index, quad_no) *
+                    bem_values.ky_shape_value_table_for_common_edge(
+                      ky_dof_index, k3_index, quad_no) *
+                    (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
+                }
+            }
+
+          /**
+           * @internal Multiply the kernel function value with the quadrature
+           * weights. The result is stored into the shared memory.
+           */
+          quad_values_in_thread_block[threadIdx.x] =
+            kernel_value *
+            bem_values.quad_rule_for_common_edge.get_weights()[quad_no];
         }
       else
         {
@@ -1442,7 +1654,389 @@ namespace IdeoBEM
       if (threadIdx.x == 0)
         {
           scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
-            quad_values_in_thread_block[0];
+            quad_values_in_thread_block[0] * factor;
+        }
+    }
+
+
+    /**
+     * Apply Sauter quadrature directly to the kernel function for the common
+     * vertex case.
+     */
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    ApplyQuadratureUsingBEMValuesCommonVertex(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel_function,
+      const RangeNumberType                               factor,
+      const unsigned int                                  kx_dof_index,
+      const unsigned int                                  ky_dof_index,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
+      const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                   scratch_data,
+      unsigned int component = 0)
+    {
+      /**
+       * @internal Result array in the shared memory which stores the quadrature
+       * results for each thread in a same thread block. Its dimension should be
+       * @p blockDim.x.
+       */
+      extern __shared__ RangeNumberType quad_values_in_thread_block[];
+
+      const unsigned int quad_no = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+      if (quad_no < bem_values.quad_rule_for_common_vertex.size())
+        {
+          const CUDATable<2, double> &quad_points =
+            bem_values.quad_rule_for_common_vertex.get_points();
+
+          /**
+           * @internal Evaluate the kernel function at the current quadrature
+           * point, which is an accumulation of all @p k3 terms.
+           */
+          RangeNumberType kernel_value = 0.;
+          for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
+            {
+              if (kernel_function.kernel_type == HyperSingularRegular)
+                {
+                  /**
+                   * @internal Extract the gradient values of the current shape
+                   * function at the current quadrature point in the unit cell
+                   * for \f$K_x\f$ as well as \f$K_y\f$.
+                   */
+                  RangeNumberType             kx_shape_grad_in_unit_cell[dim];
+                  RangeNumberType             ky_shape_grad_in_unit_cell[dim];
+                  CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                    kx_shape_grad_in_unit_cell, dim);
+                  CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                    ky_shape_grad_in_unit_cell, dim);
+
+                  for (unsigned int i = 0; i < dim; i++)
+                    {
+                      kx_shape_grad_in_unit_cell[i] =
+                        bem_values.kx_shape_grad_matrix_table_for_common_vertex(
+                          k3_index, quad_no, i, kx_dof_index);
+                      ky_shape_grad_in_unit_cell[i] =
+                        bem_values.kx_shape_grad_matrix_table_for_common_vertex(
+                          k3_index, quad_no, i, ky_dof_index);
+                    }
+
+                  /**
+                   * Apply covariant transformation to the gradient tensors in
+                   * the unit cell.
+                   */
+                  RangeNumberType kx_shape_grad_in_real_cell[spacedim];
+                  RangeNumberType ky_shape_grad_in_real_cell[spacedim];
+                  CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                    kx_shape_grad_in_real_cell, spacedim);
+                  CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                    ky_shape_grad_in_real_cell, spacedim);
+
+                  CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+                    const_cast<RangeNumberType *>(
+                      &(scratch_data.kx_covariants_common_vertex(
+                        k3_index, quad_no, 0, 0))),
+                    spacedim,
+                    dim);
+                  CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+                    const_cast<RangeNumberType *>(
+                      &(scratch_data.ky_covariants_common_vertex(
+                        k3_index, quad_no, 0, 0))),
+                    spacedim,
+                    dim);
+
+                  kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
+                                            kx_shape_grad_in_unit_cell_vector);
+                  ky_covariant_matrix.vmult(ky_shape_grad_in_real_cell_vector,
+                                            ky_shape_grad_in_unit_cell_vector);
+
+                  /**
+                   * Calculate the surface gradient tensor of the shape
+                   * functions, which is the cross product of normal vector and
+                   * the volume gradient vector.
+                   *
+                   * \mynote{The cross product operation requires the input
+                   * vectors be transformed to tensors.}
+                   */
+                  Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                    cross_product_3d(
+                      scratch_data.kx_normals_common_vertex(k3_index, quad_no),
+                      kx_shape_grad_in_real_cell_vector);
+                  Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                    cross_product_3d(
+                      scratch_data.ky_normals_common_vertex(k3_index, quad_no),
+                      ky_shape_grad_in_real_cell_vector);
+
+                  kernel_value +=
+                    kernel_function.value(
+                      scratch_data.kx_quad_points_common_vertex(k3_index,
+                                                                quad_no),
+                      scratch_data.ky_quad_points_common_vertex(k3_index,
+                                                                quad_no),
+                      scratch_data.kx_normals_common_vertex(k3_index, quad_no),
+                      scratch_data.ky_normals_common_vertex(k3_index, quad_no),
+                      component) *
+                    scratch_data.kx_jacobians_common_vertex(k3_index, quad_no) *
+                    scratch_data.ky_jacobians_common_vertex(k3_index, quad_no) *
+                    scalar_product(kx_shape_surface_curl,
+                                   ky_shape_surface_curl);
+                }
+              else
+                {
+                  /**
+                   * @internal Evaluate the kernel function at the specified
+                   * pair of points in the real cells with their normal vectors,
+                   * the result of which is then multiplied by the Jacobians
+                   * from unit cell to real cell and shape function values.
+                   */
+                  kernel_value +=
+                    kernel_function.value(
+                      scratch_data.kx_quad_points_common_vertex(k3_index,
+                                                                quad_no),
+                      scratch_data.ky_quad_points_common_vertex(k3_index,
+                                                                quad_no),
+                      scratch_data.kx_normals_common_vertex(k3_index, quad_no),
+                      scratch_data.ky_normals_common_vertex(k3_index, quad_no),
+                      component) *
+                    scratch_data.kx_jacobians_common_vertex(k3_index, quad_no) *
+                    scratch_data.ky_jacobians_common_vertex(k3_index, quad_no) *
+                    bem_values.kx_shape_value_table_for_common_vertex(
+                      kx_dof_index, k3_index, quad_no) *
+                    bem_values.ky_shape_value_table_for_common_vertex(
+                      ky_dof_index, k3_index, quad_no);
+                }
+            }
+
+          /**
+           * @internal Multiply the kernel function value with the Jacobian from
+           * the Sauter 4D parametric space to the unit cell, then with the
+           * quadrature weights. The result is stored into the shared memory.
+           */
+          quad_values_in_thread_block[threadIdx.x] =
+            kernel_value *
+            IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+              quad_points(quad_no, 0)) *
+            bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
+        }
+      else
+        {
+          quad_values_in_thread_block[threadIdx.x] = 0.;
+        }
+
+      /**
+       * @internal Synchronize all the threads in the current thread block for
+       * finishing their function evaluation at the specified quadrature point.
+       */
+      __syncthreads();
+
+      /**
+       * @internal Sum up the values saved in the shared memory.
+       */
+      //! Accumulate the data in a thread block. N.B. Here s is the stride for
+      //! sum and 2*s is the stride for classification of the array into
+      //! segments.
+      for (unsigned int s = blockDim.x / 2; s > warpSize; s >>= 1)
+        {
+          if (threadIdx.x < s)
+            {
+              quad_values_in_thread_block[threadIdx.x] +=
+                quad_values_in_thread_block[threadIdx.x + s];
+            }
+
+          __syncthreads();
+        }
+
+      if (threadIdx.x < warpSize)
+        {
+          warpReduce(quad_values_in_thread_block, threadIdx.x);
+        }
+
+      //! Write out the result (scaled by the factor) for the current block.
+      if (threadIdx.x == 0)
+        {
+          scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
+            quad_values_in_thread_block[0] * factor;
+        }
+    }
+
+
+    /**
+     * Apply Sauter quadrature directly to the kernel function for the regular
+     * case.
+     */
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    ApplyQuadratureUsingBEMValuesRegular(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel_function,
+      const RangeNumberType                               factor,
+      const unsigned int                                  kx_dof_index,
+      const unsigned int                                  ky_dof_index,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
+      const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                   scratch_data,
+      unsigned int component = 0)
+    {
+      /**
+       * @internal Result array in the shared memory which stores the quadrature
+       * results for each thread in a same thread block. Its dimension should be
+       * @p blockDim.x.
+       */
+      extern __shared__ RangeNumberType quad_values_in_thread_block[];
+
+      const unsigned int quad_no = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+      if (quad_no < bem_values.quad_rule_for_regular.size())
+        {
+          if (kernel_function.kernel_type == HyperSingularRegular)
+            {
+              /**
+               * @internal Extract the gradient values of the current shape
+               * function at the current quadrature point in the unit cell
+               * for \f$K_x\f$ as well as \f$K_y\f$.
+               */
+              RangeNumberType             kx_shape_grad_in_unit_cell[dim];
+              RangeNumberType             ky_shape_grad_in_unit_cell[dim];
+              CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                kx_shape_grad_in_unit_cell, dim);
+              CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                ky_shape_grad_in_unit_cell, dim);
+
+              for (unsigned int i = 0; i < dim; i++)
+                {
+                  kx_shape_grad_in_unit_cell[i] =
+                    bem_values.kx_shape_grad_matrix_table_for_regular(
+                      0, quad_no, i, kx_dof_index);
+                  ky_shape_grad_in_unit_cell[i] =
+                    bem_values.kx_shape_grad_matrix_table_for_regular(
+                      0, quad_no, i, ky_dof_index);
+                }
+
+              /**
+               * Apply covariant transformation to the gradient tensors in
+               * the unit cell.
+               */
+              RangeNumberType             kx_shape_grad_in_real_cell[spacedim];
+              RangeNumberType             ky_shape_grad_in_real_cell[spacedim];
+              CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                kx_shape_grad_in_real_cell, spacedim);
+              CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                ky_shape_grad_in_real_cell, spacedim);
+
+              CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+                const_cast<RangeNumberType *>(
+                  &(scratch_data.kx_covariants_regular(0, quad_no, 0, 0))),
+                spacedim,
+                dim);
+              CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+                const_cast<RangeNumberType *>(
+                  &(scratch_data.ky_covariants_regular(0, quad_no, 0, 0))),
+                spacedim,
+                dim);
+
+              kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
+                                        kx_shape_grad_in_unit_cell_vector);
+              ky_covariant_matrix.vmult(ky_shape_grad_in_real_cell_vector,
+                                        ky_shape_grad_in_unit_cell_vector);
+
+              /**
+               * Calculate the surface gradient tensor of the shape
+               * functions, which is the cross product of normal vector and
+               * the volume gradient vector.
+               *
+               * \mynote{The cross product operation requires the input
+               * vectors be transformed to tensors.}
+               */
+              Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                cross_product_3d(scratch_data.kx_normals_regular(0, quad_no),
+                                 kx_shape_grad_in_real_cell_vector);
+              Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                cross_product_3d(scratch_data.ky_normals_regular(0, quad_no),
+                                 ky_shape_grad_in_real_cell_vector);
+
+              quad_values_in_thread_block[threadIdx.x] =
+                kernel_function.value(
+                  scratch_data.kx_quad_points_regular(0, quad_no),
+                  scratch_data.ky_quad_points_regular(0, quad_no),
+                  scratch_data.kx_normals_regular(0, quad_no),
+                  scratch_data.ky_normals_regular(0, quad_no),
+                  component) *
+                scratch_data.kx_jacobians_regular(0, quad_no) *
+                scratch_data.ky_jacobians_regular(0, quad_no) *
+                scalar_product(kx_shape_surface_curl, ky_shape_surface_curl) *
+                bem_values.quad_rule_for_regular.get_weights()[quad_no];
+            }
+          else
+            {
+              /**
+               * @internal Evaluate the kernel function at the specified
+               * pair of points in the real cells with their normal vectors,
+               * the result of which is then multiplied by the Jacobians
+               * from unit cell to real cell, shape function values and
+               * quadrature weights.
+               */
+              quad_values_in_thread_block[threadIdx.x] =
+                kernel_function.value(
+                  scratch_data.kx_quad_points_regular(0, quad_no),
+                  scratch_data.ky_quad_points_regular(0, quad_no),
+                  scratch_data.kx_normals_regular(0, quad_no),
+                  scratch_data.ky_normals_regular(0, quad_no),
+                  component) *
+                scratch_data.kx_jacobians_regular(0, quad_no) *
+                scratch_data.ky_jacobians_regular(0, quad_no) *
+                bem_values.kx_shape_value_table_for_regular(kx_dof_index,
+                                                            0,
+                                                            quad_no) *
+                bem_values.ky_shape_value_table_for_regular(ky_dof_index,
+                                                            0,
+                                                            quad_no) *
+                bem_values.quad_rule_for_regular.get_weights()[quad_no];
+            }
+        }
+      else
+        {
+          quad_values_in_thread_block[threadIdx.x] = 0.;
+        }
+
+      /**
+       * @internal Synchronize all the threads in the current thread block for
+       * finishing their function evaluation at the specified quadrature point.
+       */
+      __syncthreads();
+
+      /**
+       * @internal Sum up the values saved in the shared memory.
+       */
+      //! Accumulate the data in a thread block. N.B. Here s is the stride for
+      //! sum and 2*s is the stride for classification of the array into
+      //! segments.
+      for (unsigned int s = blockDim.x / 2; s > warpSize; s >>= 1)
+        {
+          if (threadIdx.x < s)
+            {
+              quad_values_in_thread_block[threadIdx.x] +=
+                quad_values_in_thread_block[threadIdx.x + s];
+            }
+
+          __syncthreads();
+        }
+
+      if (threadIdx.x < warpSize)
+        {
+          warpReduce(quad_values_in_thread_block, threadIdx.x);
+        }
+
+      //! Write out the result (scaled by the factor) for the current block.
+      if (threadIdx.x == 0)
+        {
+          scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
+            quad_values_in_thread_block[0] * factor;
         }
     }
 
@@ -2305,7 +2899,8 @@ namespace IdeoBEM
 
             // Copy data from CPU to GPU.
             scratch_data_gpu.assign_from_host(scratch_data);
-            copy_data_gpu.assign_from_host(copy_data);
+            copy_data_gpu.assign_from_host(copy_data,
+                                           scratch_data.cuda_stream_handle);
 
             // Determine thread block dimensions.
             dim3 blocks_rect;
@@ -2313,11 +2908,16 @@ namespace IdeoBEM
             IdeoBEM::CUDAWrappers::configure_thread_blocks(
               cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
-            IdeoBEM::CUDAWrappers::
-              calc_jacobian_normals_for_sauter_quad<<<blocks_rect,
-                                                      threads_rect>>>(
-                cell_neighboring_type, bem_values_gpu, scratch_data_gpu);
-            cudaDeviceSynchronize();
+            IdeoBEM::CUDAWrappers::calc_jacobian_normals_for_sauter_quad<<<
+              blocks_rect,
+              threads_rect,
+              0,
+              scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
+                                                 bem_values_gpu,
+                                                 scratch_data_gpu);
+            cudaError_t error_code =
+              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
 
             /**
              * When the bilinear form for the hyper singular operator is
@@ -2325,10 +2925,16 @@ namespace IdeoBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
-                IdeoBEM::CUDAWrappers::
-                  calc_covariant_transformations<<<blocks_rect, threads_rect>>>(
-                    cell_neighboring_type, bem_values_gpu, scratch_data_gpu);
-                cudaDeviceSynchronize();
+                IdeoBEM::CUDAWrappers::calc_covariant_transformations<<<
+                  blocks_rect,
+                  threads_rect,
+                  0,
+                  scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
+                                                     bem_values_gpu,
+                                                     scratch_data_gpu);
+                error_code =
+                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+                AssertCuda(error_code);
               }
 
             /**
@@ -2366,22 +2972,60 @@ namespace IdeoBEM
                     IdeoBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesSamePanel<<<
                         blocks_rect.x,
-                        threads_rect.x>>>(kernel,
-                                          kernel_factor,
-                                          i_index,
-                                          j_index,
-                                          bem_values_gpu,
-                                          scratch_data_gpu);
+                        threads_rect.x,
+                        blocks_rect.x * sizeof(RangeNumberType),
+                        scratch_data.cuda_stream_handle>>>(kernel,
+                                                           kernel_factor,
+                                                           i_index,
+                                                           j_index,
+                                                           bem_values_gpu,
+                                                           scratch_data_gpu);
 
                     break;
                   }
                   case BEMTools::CellNeighboringType::CommonEdge: {
+                    IdeoBEM::CUDAWrappers::
+                      ApplyQuadratureUsingBEMValuesCommonEdge<<<
+                        blocks_rect.x,
+                        threads_rect.x,
+                        blocks_rect.x * sizeof(RangeNumberType),
+                        scratch_data.cuda_stream_handle>>>(kernel,
+                                                           kernel_factor,
+                                                           i_index,
+                                                           j_index,
+                                                           bem_values_gpu,
+                                                           scratch_data_gpu);
+
                     break;
                   }
                   case BEMTools::CellNeighboringType::CommonVertex: {
+                    IdeoBEM::CUDAWrappers::
+                      ApplyQuadratureUsingBEMValuesCommonVertex<<<
+                        blocks_rect.x,
+                        threads_rect.x,
+                        blocks_rect.x * sizeof(RangeNumberType),
+                        scratch_data.cuda_stream_handle>>>(kernel,
+                                                           kernel_factor,
+                                                           i_index,
+                                                           j_index,
+                                                           bem_values_gpu,
+                                                           scratch_data_gpu);
+
                     break;
                   }
                   case BEMTools::CellNeighboringType::Regular: {
+                    IdeoBEM::CUDAWrappers::
+                      ApplyQuadratureUsingBEMValuesRegular<<<
+                        blocks_rect.x,
+                        threads_rect.x,
+                        blocks_rect.x * sizeof(RangeNumberType),
+                        scratch_data.cuda_stream_handle>>>(kernel,
+                                                           kernel_factor,
+                                                           i_index,
+                                                           j_index,
+                                                           bem_values_gpu,
+                                                           scratch_data_gpu);
+
                     break;
                   }
                   default: {
@@ -2390,16 +3034,27 @@ namespace IdeoBEM
                   }
               }
 
-            RangeNumberType quad_values_in_thread_blocks[100];
-            // Copy the current result to the temporary variable.
-            cudaMemcpy(quad_values_in_thread_blocks,
-                       scratch_data_gpu.quad_values_in_thread_blocks,
-                       sizeof(RangeNumberType) * blocks_rect.x,
-                       cudaMemcpyDeviceToHost);
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
 
-            for (unsigned int i = 0; i < blocks_rect.x; i++)
+            /**
+             * @internal Extract quadrature results accumulated from all thread
+             * blocks.
+             */
+            RangeNumberType quad_values_in_thread_blocks[100];
+            error_code =
+              cudaMemcpyAsync(quad_values_in_thread_blocks,
+                              scratch_data_gpu.quad_values_in_thread_blocks,
+                              sizeof(RangeNumberType) * blocks_rect.x,
+                              cudaMemcpyDeviceToHost,
+                              scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+
+            for (unsigned int t = 0; t < blocks_rect.x; t++)
               {
-                double_integral += quad_values_in_thread_blocks[i];
+                double_integral += quad_values_in_thread_blocks[t];
               }
           }
       }
@@ -2573,7 +3228,8 @@ namespace IdeoBEM
 
             // Copy data from CPU to GPU.
             scratch_data_gpu.assign_from_host(scratch_data);
-            copy_data_gpu.assign_from_host(copy_data);
+            copy_data_gpu.assign_from_host(copy_data,
+                                           scratch_data.cuda_stream_handle);
 
             // Determine thread block dimensions.
             dim3 blocks_rect;
@@ -2581,11 +3237,16 @@ namespace IdeoBEM
             IdeoBEM::CUDAWrappers::configure_thread_blocks(
               cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
-            IdeoBEM::CUDAWrappers::
-              calc_jacobian_normals_for_sauter_quad<<<blocks_rect,
-                                                      threads_rect>>>(
-                cell_neighboring_type, bem_values_gpu, scratch_data_gpu);
-            cudaDeviceSynchronize();
+            IdeoBEM::CUDAWrappers::calc_jacobian_normals_for_sauter_quad<<<
+              blocks_rect,
+              threads_rect,
+              0,
+              scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
+                                                 bem_values_gpu,
+                                                 scratch_data_gpu);
+            cudaError_t error_code =
+              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
 
             /**
              * When the bilinear form for the hyper singular operator is
@@ -2593,10 +3254,16 @@ namespace IdeoBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
-                IdeoBEM::CUDAWrappers::
-                  calc_covariant_transformations<<<blocks_rect, threads_rect>>>(
-                    cell_neighboring_type, bem_values_gpu, scratch_data_gpu);
-                cudaDeviceSynchronize();
+                IdeoBEM::CUDAWrappers::calc_covariant_transformations<<<
+                  blocks_rect,
+                  threads_rect,
+                  0,
+                  scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
+                                                     bem_values_gpu,
+                                                     scratch_data_gpu);
+                error_code =
+                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+                AssertCuda(error_code);
               }
 
             /**
@@ -2634,22 +3301,60 @@ namespace IdeoBEM
                     IdeoBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesSamePanel<<<
                         blocks_rect.x,
-                        threads_rect.x>>>(kernel,
-                                          kernel_factor,
-                                          i_index,
-                                          j_index,
-                                          bem_values_gpu,
-                                          scratch_data_gpu);
+                        threads_rect.x,
+                        blocks_rect.x * sizeof(RangeNumberType),
+                        scratch_data.cuda_stream_handle>>>(kernel,
+                                                           kernel_factor,
+                                                           i_index,
+                                                           j_index,
+                                                           bem_values_gpu,
+                                                           scratch_data_gpu);
 
                     break;
                   }
                   case BEMTools::CellNeighboringType::CommonEdge: {
+                    IdeoBEM::CUDAWrappers::
+                      ApplyQuadratureUsingBEMValuesCommonEdge<<<
+                        blocks_rect.x,
+                        threads_rect.x,
+                        blocks_rect.x * sizeof(RangeNumberType),
+                        scratch_data.cuda_stream_handle>>>(kernel,
+                                                           kernel_factor,
+                                                           i_index,
+                                                           j_index,
+                                                           bem_values_gpu,
+                                                           scratch_data_gpu);
+
                     break;
                   }
                   case BEMTools::CellNeighboringType::CommonVertex: {
+                    IdeoBEM::CUDAWrappers::
+                      ApplyQuadratureUsingBEMValuesCommonVertex<<<
+                        blocks_rect.x,
+                        threads_rect.x,
+                        blocks_rect.x * sizeof(RangeNumberType),
+                        scratch_data.cuda_stream_handle>>>(kernel,
+                                                           kernel_factor,
+                                                           i_index,
+                                                           j_index,
+                                                           bem_values_gpu,
+                                                           scratch_data_gpu);
+
                     break;
                   }
                   case BEMTools::CellNeighboringType::Regular: {
+                    IdeoBEM::CUDAWrappers::
+                      ApplyQuadratureUsingBEMValuesRegular<<<
+                        blocks_rect.x,
+                        threads_rect.x,
+                        blocks_rect.x * sizeof(RangeNumberType),
+                        scratch_data.cuda_stream_handle>>>(kernel,
+                                                           kernel_factor,
+                                                           i_index,
+                                                           j_index,
+                                                           bem_values_gpu,
+                                                           scratch_data_gpu);
+
                     break;
                   }
                   default: {
@@ -2658,12 +3363,23 @@ namespace IdeoBEM
                   }
               }
 
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+
+            /**
+             * @internal Extract quadrature results accumulated from all thread
+             * blocks.
+             */
             RangeNumberType quad_values_in_thread_blocks[100];
-            // Copy the current result to the temporary variable.
-            cudaMemcpy(quad_values_in_thread_blocks,
-                       scratch_data_gpu.quad_values_in_thread_blocks,
-                       sizeof(RangeNumberType) * blocks_rect.x,
-                       cudaMemcpyDeviceToHost);
+            error_code =
+              cudaMemcpyAsync(quad_values_in_thread_blocks,
+                              scratch_data_gpu.quad_values_in_thread_blocks,
+                              sizeof(RangeNumberType) * blocks_rect.x,
+                              cudaMemcpyDeviceToHost,
+                              scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
 
             for (unsigned int t = 0; t < blocks_rect.x; t++)
               {

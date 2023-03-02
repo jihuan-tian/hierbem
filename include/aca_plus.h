@@ -14,10 +14,13 @@
 
 #include <deal.II/lac/vector.h>
 
+#include <tbb/tbb_thread.h>
+
 #include <algorithm>
 #include <cmath>
 #include <forward_list>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <random>
 #include <vector>
@@ -4608,6 +4611,9 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
+    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " starts..."
+              << std::endl;
+
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
      * are local to the current working thread. This is mandatory because
@@ -4631,7 +4637,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
 
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data);
+    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
@@ -4668,8 +4674,12 @@ namespace IdeoBEM
     /**
      * Release pair cell wise scratch and copy data.
      */
-    scratch_data_gpu.release();
-    copy_data_gpu.release();
+    scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+    copy_data_gpu.release(scratch_data.cuda_stream_handle);
+    scratch_data.release();
+
+    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
+              << std::endl;
   }
 
 
@@ -4739,6 +4749,9 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
+    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " starts..."
+              << std::endl;
+
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
      * are local to the current working thread. This is mandatory because
@@ -4762,7 +4775,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
 
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data);
+    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
@@ -4801,8 +4814,12 @@ namespace IdeoBEM
     /**
      * Release pair cell wise scratch and copy data.
      */
-    scratch_data_gpu.release();
-    copy_data_gpu.release();
+    scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+    copy_data_gpu.release(scratch_data.cuda_stream_handle);
+    scratch_data.release();
+
+    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
+              << std::endl;
   }
 
 
@@ -4871,6 +4888,9 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
+    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " starts..."
+              << std::endl;
+
     /**
      * Define @p CellWiseScratchData which is local to the current working thread.
      */
@@ -4903,7 +4923,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
 
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data);
+    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
@@ -4942,8 +4962,12 @@ namespace IdeoBEM
     /**
      * Release pair cell wise scratch and copy data.
      */
-    scratch_data_gpu.release();
-    copy_data_gpu.release();
+    scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+    copy_data_gpu.release(scratch_data.cuda_stream_handle);
+    scratch_data.release();
+
+    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
+              << std::endl;
   }
 
 
@@ -5070,7 +5094,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
 
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data);
+    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
@@ -5109,8 +5133,9 @@ namespace IdeoBEM
     /**
      * Release pair cell wise scratch and copy data on the GPU device.
      */
-    scratch_data_gpu.release();
-    copy_data_gpu.release();
+    scratch_data.release();
+    scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+    copy_data_gpu.release(scratch_data.cuda_stream_handle);
   }
 
 
@@ -5220,7 +5245,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
 
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data);
+    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
@@ -5261,8 +5286,9 @@ namespace IdeoBEM
     /**
      * Release pair cell wise scratch and copy data.
      */
-    scratch_data_gpu.release();
-    copy_data_gpu.release();
+    scratch_data.release();
+    scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+    copy_data_gpu.release(scratch_data.cuda_stream_handle);
   }
 
 
