@@ -104,7 +104,7 @@ main(int argc, char *argv[])
   /**
    * @internal Initialize the CUDA device parameters.
    */
-  const size_t stack_size = 1024 * 7;
+  const size_t stack_size = 1024 * 10;
   cudaError_t  error_code = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
   AssertCuda(error_code);
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;

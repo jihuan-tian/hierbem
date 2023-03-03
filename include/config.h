@@ -8,6 +8,6 @@
 #ifndef INCLUDE_CONFIG_H_
 #define INCLUDE_CONFIG_H_
 
-#define ENABLE_PRINTOUT 0
+#define ENABLE_PRINTOUT 1
 
 #endif /* INCLUDE_CONFIG_H_ */

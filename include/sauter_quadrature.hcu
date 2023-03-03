@@ -2902,6 +2902,10 @@ namespace IdeoBEM
             copy_data_gpu.assign_from_host(copy_data,
                                            scratch_data.cuda_stream_handle);
 
+            cudaError_t error_code =
+              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+
             // Determine thread block dimensions.
             dim3 blocks_rect;
             dim3 threads_rect;
@@ -2915,8 +2919,7 @@ namespace IdeoBEM
               scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
                                                  bem_values_gpu,
                                                  scratch_data_gpu);
-            cudaError_t error_code =
-              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
 
             /**
@@ -2973,7 +2976,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesSamePanel<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        blocks_rect.x * sizeof(RangeNumberType),
+                        threads_rect.x * sizeof(RangeNumberType),
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -2988,7 +2991,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesCommonEdge<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        blocks_rect.x * sizeof(RangeNumberType),
+                        threads_rect.x * sizeof(RangeNumberType),
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3003,7 +3006,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesCommonVertex<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        blocks_rect.x * sizeof(RangeNumberType),
+                        threads_rect.x * sizeof(RangeNumberType),
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3018,7 +3021,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesRegular<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        blocks_rect.x * sizeof(RangeNumberType),
+                        threads_rect.x * sizeof(RangeNumberType),
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3041,9 +3044,8 @@ namespace IdeoBEM
              * @internal Extract quadrature results accumulated from all thread
              * blocks.
              */
-            RangeNumberType quad_values_in_thread_blocks[100];
             error_code =
-              cudaMemcpyAsync(quad_values_in_thread_blocks,
+              cudaMemcpyAsync(scratch_data.quad_values_in_thread_blocks,
                               scratch_data_gpu.quad_values_in_thread_blocks,
                               sizeof(RangeNumberType) * blocks_rect.x,
                               cudaMemcpyDeviceToHost,
@@ -3054,7 +3056,7 @@ namespace IdeoBEM
 
             for (unsigned int t = 0; t < blocks_rect.x; t++)
               {
-                double_integral += quad_values_in_thread_blocks[t];
+                double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
           }
       }
@@ -3231,6 +3233,10 @@ namespace IdeoBEM
             copy_data_gpu.assign_from_host(copy_data,
                                            scratch_data.cuda_stream_handle);
 
+            cudaError_t error_code =
+              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+
             // Determine thread block dimensions.
             dim3 blocks_rect;
             dim3 threads_rect;
@@ -3244,8 +3250,7 @@ namespace IdeoBEM
               scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
                                                  bem_values_gpu,
                                                  scratch_data_gpu);
-            cudaError_t error_code =
-              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
 
             /**
@@ -3302,7 +3307,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesSamePanel<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        blocks_rect.x * sizeof(RangeNumberType),
+                        threads_rect.x * sizeof(RangeNumberType),
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3317,7 +3322,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesCommonEdge<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        blocks_rect.x * sizeof(RangeNumberType),
+                        threads_rect.x * sizeof(RangeNumberType),
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3332,7 +3337,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesCommonVertex<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        blocks_rect.x * sizeof(RangeNumberType),
+                        threads_rect.x * sizeof(RangeNumberType),
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3347,7 +3352,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesRegular<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        blocks_rect.x * sizeof(RangeNumberType),
+                        threads_rect.x * sizeof(RangeNumberType),
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3370,9 +3375,8 @@ namespace IdeoBEM
              * @internal Extract quadrature results accumulated from all thread
              * blocks.
              */
-            RangeNumberType quad_values_in_thread_blocks[100];
             error_code =
-              cudaMemcpyAsync(quad_values_in_thread_blocks,
+              cudaMemcpyAsync(scratch_data.quad_values_in_thread_blocks,
                               scratch_data_gpu.quad_values_in_thread_blocks,
                               sizeof(RangeNumberType) * blocks_rect.x,
                               cudaMemcpyDeviceToHost,
@@ -3383,7 +3387,7 @@ namespace IdeoBEM
 
             for (unsigned int t = 0; t < blocks_rect.x; t++)
               {
-                double_integral += quad_values_in_thread_blocks[t];
+                double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
 
             /**

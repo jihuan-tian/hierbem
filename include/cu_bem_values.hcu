@@ -1301,9 +1301,6 @@ namespace IdeoBEM
                                    sizeof(RangeNumberType) * 100,
                                    scratch_cpu.cuda_stream_handle);
       AssertCuda(error_code);
-
-      error_code = cudaStreamSynchronize(scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
     }
 
 
@@ -1435,9 +1432,6 @@ namespace IdeoBEM
 
       error_code = cudaFreeAsync(quad_values_in_thread_blocks, stream);
       AssertCuda(error_code);
-
-      error_code = cudaStreamSynchronize(stream);
-      AssertCuda(error_code);
     }
 
 
@@ -1469,10 +1463,6 @@ namespace IdeoBEM
           CUDATableIndices<1>(
             per_task_data.ky_local_dof_indices_permuted.size()),
           stream);
-
-        cudaError_t error_code;
-        error_code = cudaStreamSynchronize(stream);
-        AssertCuda(error_code);
       }
 
       /**
@@ -1495,10 +1485,6 @@ namespace IdeoBEM
           per_task_data.kx_local_dof_indices_permuted, stream);
         ky_local_dof_indices_permuted.assign_from_host(
           per_task_data.ky_local_dof_indices_permuted, stream);
-
-        cudaError_t error_code;
-        error_code = cudaStreamSynchronize(stream);
-        AssertCuda(error_code);
       }
 
       /**
@@ -1509,10 +1495,6 @@ namespace IdeoBEM
       {
         kx_local_dof_indices_permuted.release(stream);
         ky_local_dof_indices_permuted.release(stream);
-
-        cudaError_t error_code;
-        error_code = cudaStreamSynchronize(stream);
-        AssertCuda(error_code);
       }
 
       CUDATable<1, types::global_dof_index> kx_local_dof_indices_permuted;

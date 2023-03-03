@@ -4639,6 +4639,10 @@ namespace IdeoBEM
     scratch_data_gpu.allocate(scratch_data);
     copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
+    cudaError_t error_code =
+      cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+    AssertCuda(error_code);
+
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -4676,7 +4680,12 @@ namespace IdeoBEM
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
     copy_data_gpu.release(scratch_data.cuda_stream_handle);
+
+    error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+    AssertCuda(error_code);
+
     scratch_data.release();
+    copy_data.release();
 
     std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
               << std::endl;
@@ -4777,6 +4786,10 @@ namespace IdeoBEM
     scratch_data_gpu.allocate(scratch_data);
     copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
+    cudaError_t error_code =
+      cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+    AssertCuda(error_code);
+
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -4816,7 +4829,12 @@ namespace IdeoBEM
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
     copy_data_gpu.release(scratch_data.cuda_stream_handle);
+
+    error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+    AssertCuda(error_code);
+
     scratch_data.release();
+    copy_data.release();
 
     std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
               << std::endl;
@@ -4925,6 +4943,10 @@ namespace IdeoBEM
     scratch_data_gpu.allocate(scratch_data);
     copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
+    cudaError_t error_code =
+      cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+    AssertCuda(error_code);
+
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -4964,7 +4986,12 @@ namespace IdeoBEM
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
     copy_data_gpu.release(scratch_data.cuda_stream_handle);
+
+    error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+    AssertCuda(error_code);
+
     scratch_data.release();
+    copy_data.release();
 
     std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
               << std::endl;
