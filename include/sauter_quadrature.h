@@ -4004,7 +4004,7 @@ namespace IdeoBEM
              */
             if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
               {
-                Assert(cell_neighboring_type = CellNeighboringType::SamePanel,
+                Assert(cell_neighboring_type == CellNeighboringType::SamePanel,
                        ExcInternalError());
 
                 // Update the finite element values for the test space.
@@ -4597,7 +4597,7 @@ namespace IdeoBEM
                     if ((kx_cell_index == ky_cell_index) &&
                         (mass_matrix_factors[counter] != 0))
                       {
-                        Assert(cell_neighboring_type =
+                        Assert(cell_neighboring_type ==
                                  CellNeighboringType::SamePanel,
                                ExcInternalError());
 
