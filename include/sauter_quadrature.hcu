@@ -8,7 +8,7 @@
 #ifndef INCLUDE_SAUTER_QUADRATURE_HCU_
 #define INCLUDE_SAUTER_QUADRATURE_HCU_
 
-
+#include <deal.II/base/logstream.h>
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/dofs/dof_accessor.h>
@@ -22,16 +22,20 @@
 #include <deal.II/lac/full_matrix.h>
 
 #include <cuda_runtime.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <vector>
 
 #include "bem_kernels.hcu"
 #include "bem_values.h"
+#include "config.h"
 #include "cu_bem_values.hcu"
 #include "cu_qgauss.hcu"
-#include "debug_tools.h"
+#include "debug_tools.hcu"
 #include "mapping_q_generic_ext.h"
 #include "sauter_quadrature_tools.h"
 
@@ -719,6 +723,50 @@ namespace IdeoBEM
             Assert(false, ExcInternalError());
           }
       }
+
+    /**
+     * @internal Extract two components from the permuted mapping support
+     * points.
+     */
+    for (unsigned int i = 0;
+         i < scratch.kx_mapping_support_points_permuted.size();
+         i++)
+      {
+        scratch.kx_mapping_support_points_permuted_xy_components[i](0) =
+          scratch.kx_mapping_support_points_permuted[i](0);
+        scratch.kx_mapping_support_points_permuted_xy_components[i](1) =
+          scratch.kx_mapping_support_points_permuted[i](1);
+
+        scratch.kx_mapping_support_points_permuted_yz_components[i](0) =
+          scratch.kx_mapping_support_points_permuted[i](1);
+        scratch.kx_mapping_support_points_permuted_yz_components[i](1) =
+          scratch.kx_mapping_support_points_permuted[i](2);
+
+        scratch.kx_mapping_support_points_permuted_zx_components[i](0) =
+          scratch.kx_mapping_support_points_permuted[i](2);
+        scratch.kx_mapping_support_points_permuted_zx_components[i](1) =
+          scratch.kx_mapping_support_points_permuted[i](0);
+      }
+
+    for (unsigned int i = 0;
+         i < scratch.ky_mapping_support_points_permuted.size();
+         i++)
+      {
+        scratch.ky_mapping_support_points_permuted_xy_components[i](0) =
+          scratch.ky_mapping_support_points_permuted[i](0);
+        scratch.ky_mapping_support_points_permuted_xy_components[i](1) =
+          scratch.ky_mapping_support_points_permuted[i](1);
+
+        scratch.ky_mapping_support_points_permuted_yz_components[i](0) =
+          scratch.ky_mapping_support_points_permuted[i](1);
+        scratch.ky_mapping_support_points_permuted_yz_components[i](1) =
+          scratch.ky_mapping_support_points_permuted[i](2);
+
+        scratch.ky_mapping_support_points_permuted_zx_components[i](0) =
+          scratch.ky_mapping_support_points_permuted[i](2);
+        scratch.ky_mapping_support_points_permuted_zx_components[i](1) =
+          scratch.ky_mapping_support_points_permuted[i](0);
+      }
   }
 
 
@@ -799,8 +847,9 @@ namespace IdeoBEM
 
 
     /**
-     * Precalculate surface Jacobians and normal vectors to be used in the
-     * Sauter quadrature. This function runs on the GPU device.
+     * Precalculate surface Jacobians, normal vectors and quadrature points in
+     * the real cell to be used in the Sauter quadrature (for same panel cell
+     * neighboring type). This function runs on the GPU device.
      *
      * 2D thread grid is adopted. The X direction is associated with quadrature
      * point index, while the Y direction is associated with k3 index.
@@ -817,15 +866,13 @@ namespace IdeoBEM
      * @tparam dim
      * @tparam spacedim
      * @tparam RangeNumberType
-     * @param cell_neighboring_type
      * @param bem_values
      * @param scratch_data
      */
     template <int dim, int spacedim, typename RangeNumberType = double>
     __global__ void
-    calc_jacobian_normals_for_sauter_quad(
-      const CellNeighboringType                           cell_neighboring_type,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
+    calc_jacobian_normals_for_sauter_quad_same_panel(
+      const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
     {
       // Number of threads in a row in the thread grid.
@@ -840,197 +887,305 @@ namespace IdeoBEM
       // processes only one quadrature point.
       const unsigned int stride = thread_num_per_row * gridDim.y;
 
-      switch (cell_neighboring_type)
+      for (unsigned int q = current_quad_point_index;
+           q < bem_values.quad_rule_for_same_panel.size();
+           q += stride)
         {
-            case SamePanel: {
-              for (unsigned int q = current_quad_point_index;
-                   q < bem_values.quad_rule_for_same_panel.size();
-                   q += stride)
-                {
-                  scratch_data.kx_jacobians_same_panel(threadIdx.y, q) =
-                    BEMTools::CUDAWrappers::
-                      surface_jacobian_det_and_normal_vector(
-                        threadIdx.y,
-                        q,
-                        bem_values
-                          .kx_mapping_shape_grad_matrix_table_for_same_panel,
-                        scratch_data.kx_mapping_support_points_permuted,
-                        scratch_data
-                          .kx_mapping_support_points_permuted_two_components,
-                        scratch_data.kx_normals_same_panel(threadIdx.y, q));
+          scratch_data.kx_jacobians_same_panel(threadIdx.y, q) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              threadIdx.y,
+              q,
+              bem_values.kx_mapping_shape_grad_matrix_table_for_same_panel,
+              scratch_data.kx_mapping_support_points_permuted,
+              scratch_data.kx_mapping_support_points_permuted_xy_components,
+              scratch_data.kx_mapping_support_points_permuted_yz_components,
+              scratch_data.kx_mapping_support_points_permuted_zx_components,
+              scratch_data.kx_normals_same_panel(threadIdx.y, q));
 
-                  scratch_data.ky_jacobians_same_panel(threadIdx.y, q) =
-                    BEMTools::CUDAWrappers::
-                      surface_jacobian_det_and_normal_vector(
-                        threadIdx.y,
-                        q,
-                        bem_values
-                          .ky_mapping_shape_grad_matrix_table_for_same_panel,
-                        scratch_data.ky_mapping_support_points_permuted,
-                        scratch_data
-                          .ky_mapping_support_points_permuted_two_components,
-                        scratch_data.ky_normals_same_panel(threadIdx.y, q));
+          scratch_data.ky_jacobians_same_panel(threadIdx.y, q) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              threadIdx.y,
+              q,
+              bem_values.ky_mapping_shape_grad_matrix_table_for_same_panel,
+              scratch_data.ky_mapping_support_points_permuted,
+              scratch_data.ky_mapping_support_points_permuted_xy_components,
+              scratch_data.ky_mapping_support_points_permuted_yz_components,
+              scratch_data.ky_mapping_support_points_permuted_zx_components,
+              scratch_data.ky_normals_same_panel(threadIdx.y, q));
 
-                  BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-                    threadIdx.y,
-                    q,
-                    bem_values.kx_mapping_shape_value_table_for_same_panel,
-                    scratch_data.kx_mapping_support_points_permuted,
-                    scratch_data.kx_quad_points_same_panel(threadIdx.y, q));
+          BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
+            threadIdx.y,
+            q,
+            bem_values.kx_mapping_shape_value_table_for_same_panel,
+            scratch_data.kx_mapping_support_points_permuted,
+            scratch_data.kx_quad_points_same_panel(threadIdx.y, q));
 
-                  BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-                    threadIdx.y,
-                    q,
-                    bem_values.ky_mapping_shape_value_table_for_same_panel,
-                    scratch_data.ky_mapping_support_points_permuted,
-                    scratch_data.ky_quad_points_same_panel(threadIdx.y, q));
-                }
+          BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
+            threadIdx.y,
+            q,
+            bem_values.ky_mapping_shape_value_table_for_same_panel,
+            scratch_data.ky_mapping_support_points_permuted,
+            scratch_data.ky_quad_points_same_panel(threadIdx.y, q));
+        }
+    }
 
-              break;
-            }
-            case CommonEdge: {
-              for (unsigned int q = current_quad_point_index;
-                   q < bem_values.quad_rule_for_common_edge.size();
-                   q += stride)
-                {
-                  scratch_data.kx_jacobians_common_edge(threadIdx.y, q) =
-                    BEMTools::CUDAWrappers::
-                      surface_jacobian_det_and_normal_vector(
-                        threadIdx.y,
-                        q,
-                        bem_values
-                          .kx_mapping_shape_grad_matrix_table_for_common_edge,
-                        scratch_data.kx_mapping_support_points_permuted,
-                        scratch_data
-                          .kx_mapping_support_points_permuted_two_components,
-                        scratch_data.kx_normals_common_edge(threadIdx.y, q));
 
-                  scratch_data.ky_jacobians_common_edge(threadIdx.y, q) =
-                    BEMTools::CUDAWrappers::
-                      surface_jacobian_det_and_normal_vector(
-                        threadIdx.y,
-                        q,
-                        bem_values
-                          .ky_mapping_shape_grad_matrix_table_for_common_edge,
-                        scratch_data.ky_mapping_support_points_permuted,
-                        scratch_data
-                          .ky_mapping_support_points_permuted_two_components,
-                        scratch_data.ky_normals_common_edge(threadIdx.y, q));
+    /**
+     * Precalculate surface Jacobians, normal vectors and qudrature points in
+     * the real cell to be used in the Sauter quadrature (for common edge cell
+     * neighboring type). This function runs on the GPU device.
+     *
+     * 2D thread grid is adopted. The X direction is associated with quadrature
+     * point index, while the Y direction is associated with k3 index.
+     *
+     * \mynote{Since this is a @p __global__ function, the parameters should be
+     * passed by value.}
+     *
+     * \alert{Computation of the Jacobian matrix as well as related quantities
+     * such as normal vector, covariant transformation matrix, metric tensor,
+     * etc., is related to the mapping object and has nothing to do with the
+     * finite element. A mapping object is used to describe geometry, while a
+     * finite element object is used to describe the ansatz or test functions.}
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param bem_values
+     * @param scratch_data
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    __global__ void
+    calc_jacobian_normals_for_sauter_quad_common_edge(
+      const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
+    {
+      // Number of threads in a row in the thread grid.
+      const unsigned int thread_num_per_row = gridDim.x * blockDim.x;
+      // Thread index in the X direction, which is mapped to the quadrature
+      // point index.
+      const unsigned int current_quad_point_index =
+        thread_num_per_row * blockIdx.y +
+        (blockIdx.x * blockDim.x + threadIdx.x);
+      // Quadrature point index stride for the current thread to process the
+      // next point. If enough thread blocks are allocated, each thread
+      // processes only one quadrature point.
+      const unsigned int stride = thread_num_per_row * gridDim.y;
 
-                  BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-                    threadIdx.y,
-                    q,
-                    bem_values.kx_mapping_shape_value_table_for_common_edge,
-                    scratch_data.kx_mapping_support_points_permuted,
-                    scratch_data.kx_quad_points_common_edge(threadIdx.y, q));
+      for (unsigned int q = current_quad_point_index;
+           q < bem_values.quad_rule_for_common_edge.size();
+           q += stride)
+        {
+          scratch_data.kx_jacobians_common_edge(threadIdx.y, q) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              threadIdx.y,
+              q,
+              bem_values.kx_mapping_shape_grad_matrix_table_for_common_edge,
+              scratch_data.kx_mapping_support_points_permuted,
+              scratch_data.kx_mapping_support_points_permuted_xy_components,
+              scratch_data.kx_mapping_support_points_permuted_yz_components,
+              scratch_data.kx_mapping_support_points_permuted_zx_components,
+              scratch_data.kx_normals_common_edge(threadIdx.y, q));
 
-                  BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-                    threadIdx.y,
-                    q,
-                    bem_values.ky_mapping_shape_value_table_for_common_edge,
-                    scratch_data.ky_mapping_support_points_permuted,
-                    scratch_data.ky_quad_points_common_edge(threadIdx.y, q));
-                }
+          scratch_data.ky_jacobians_common_edge(threadIdx.y, q) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              threadIdx.y,
+              q,
+              bem_values.ky_mapping_shape_grad_matrix_table_for_common_edge,
+              scratch_data.ky_mapping_support_points_permuted,
+              scratch_data.ky_mapping_support_points_permuted_xy_components,
+              scratch_data.ky_mapping_support_points_permuted_yz_components,
+              scratch_data.ky_mapping_support_points_permuted_zx_components,
+              scratch_data.ky_normals_common_edge(threadIdx.y, q));
 
-              break;
-            }
-            case CommonVertex: {
-              for (unsigned int q = current_quad_point_index;
-                   q < bem_values.quad_rule_for_common_vertex.size();
-                   q += stride)
-                {
-                  scratch_data.kx_jacobians_common_vertex(threadIdx.y, q) =
-                    BEMTools::CUDAWrappers::
-                      surface_jacobian_det_and_normal_vector(
-                        threadIdx.y,
-                        q,
-                        bem_values
-                          .kx_mapping_shape_grad_matrix_table_for_common_vertex,
-                        scratch_data.kx_mapping_support_points_permuted,
-                        scratch_data
-                          .kx_mapping_support_points_permuted_two_components,
-                        scratch_data.kx_normals_common_vertex(threadIdx.y, q));
+          BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
+            threadIdx.y,
+            q,
+            bem_values.kx_mapping_shape_value_table_for_common_edge,
+            scratch_data.kx_mapping_support_points_permuted,
+            scratch_data.kx_quad_points_common_edge(threadIdx.y, q));
 
-                  scratch_data.ky_jacobians_common_vertex(threadIdx.y, q) =
-                    BEMTools::CUDAWrappers::
-                      surface_jacobian_det_and_normal_vector(
-                        threadIdx.y,
-                        q,
-                        bem_values
-                          .ky_mapping_shape_grad_matrix_table_for_common_vertex,
-                        scratch_data.ky_mapping_support_points_permuted,
-                        scratch_data
-                          .ky_mapping_support_points_permuted_two_components,
-                        scratch_data.ky_normals_common_vertex(threadIdx.y, q));
+          BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
+            threadIdx.y,
+            q,
+            bem_values.ky_mapping_shape_value_table_for_common_edge,
+            scratch_data.ky_mapping_support_points_permuted,
+            scratch_data.ky_quad_points_common_edge(threadIdx.y, q));
+        }
+    }
 
-                  BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-                    threadIdx.y,
-                    q,
-                    bem_values.kx_mapping_shape_value_table_for_common_vertex,
-                    scratch_data.kx_mapping_support_points_permuted,
-                    scratch_data.kx_quad_points_common_vertex(threadIdx.y, q));
 
-                  BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-                    threadIdx.y,
-                    q,
-                    bem_values.ky_mapping_shape_value_table_for_common_vertex,
-                    scratch_data.ky_mapping_support_points_permuted,
-                    scratch_data.ky_quad_points_common_vertex(threadIdx.y, q));
-                }
+    /**
+     * Precalculate surface Jacobians, normal vectors and quadrature points in
+     * the real cell to be used in the Sauter quadrature (for common vertex cell
+     * neighboring type). This function runs on the GPU device.
+     *
+     * 2D thread grid is adopted. The X direction is associated with quadrature
+     * point index, while the Y direction is associated with k3 index.
+     *
+     * \mynote{Since this is a @p __global__ function, the parameters should be
+     * passed by value.}
+     *
+     * \alert{Computation of the Jacobian matrix as well as related quantities
+     * such as normal vector, covariant transformation matrix, metric tensor,
+     * etc., is related to the mapping object and has nothing to do with the
+     * finite element. A mapping object is used to describe geometry, while a
+     * finite element object is used to describe the ansatz or test functions.}
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param bem_values
+     * @param scratch_data
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    __global__ void
+    calc_jacobian_normals_for_sauter_quad_common_vertex(
+      const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
+    {
+      // Number of threads in a row in the thread grid.
+      const unsigned int thread_num_per_row = gridDim.x * blockDim.x;
+      // Thread index in the X direction, which is mapped to the quadrature
+      // point index.
+      const unsigned int current_quad_point_index =
+        thread_num_per_row * blockIdx.y +
+        (blockIdx.x * blockDim.x + threadIdx.x);
+      // Quadrature point index stride for the current thread to process the
+      // next point. If enough thread blocks are allocated, each thread
+      // processes only one quadrature point.
+      const unsigned int stride = thread_num_per_row * gridDim.y;
 
-              break;
-            }
-            case Regular: {
-              for (unsigned int q = current_quad_point_index;
-                   q < bem_values.quad_rule_for_regular.size();
-                   q += stride)
-                {
-                  scratch_data.kx_jacobians_regular(threadIdx.y, q) = BEMTools::
-                    CUDAWrappers::surface_jacobian_det_and_normal_vector(
-                      threadIdx.y,
-                      q,
-                      bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
-                      scratch_data.kx_mapping_support_points_permuted,
-                      scratch_data
-                        .kx_mapping_support_points_permuted_two_components,
-                      scratch_data.kx_normals_regular(threadIdx.y, q));
+      for (unsigned int q = current_quad_point_index;
+           q < bem_values.quad_rule_for_common_vertex.size();
+           q += stride)
+        {
+          scratch_data.kx_jacobians_common_vertex(threadIdx.y, q) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              threadIdx.y,
+              q,
+              bem_values.kx_mapping_shape_grad_matrix_table_for_common_vertex,
+              scratch_data.kx_mapping_support_points_permuted,
+              scratch_data.kx_mapping_support_points_permuted_xy_components,
+              scratch_data.kx_mapping_support_points_permuted_yz_components,
+              scratch_data.kx_mapping_support_points_permuted_zx_components,
+              scratch_data.kx_normals_common_vertex(threadIdx.y, q));
 
-                  scratch_data.ky_jacobians_regular(threadIdx.y, q) = BEMTools::
-                    CUDAWrappers::surface_jacobian_det_and_normal_vector(
-                      threadIdx.y,
-                      q,
-                      bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
-                      scratch_data.ky_mapping_support_points_permuted,
-                      scratch_data
-                        .ky_mapping_support_points_permuted_two_components,
-                      scratch_data.ky_normals_regular(threadIdx.y, q));
+          scratch_data.ky_jacobians_common_vertex(threadIdx.y, q) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              threadIdx.y,
+              q,
+              bem_values.ky_mapping_shape_grad_matrix_table_for_common_vertex,
+              scratch_data.ky_mapping_support_points_permuted,
+              scratch_data.ky_mapping_support_points_permuted_xy_components,
+              scratch_data.ky_mapping_support_points_permuted_yz_components,
+              scratch_data.ky_mapping_support_points_permuted_zx_components,
+              scratch_data.ky_normals_common_vertex(threadIdx.y, q));
 
-                  BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-                    threadIdx.y,
-                    q,
-                    bem_values.kx_mapping_shape_value_table_for_regular,
-                    scratch_data.kx_mapping_support_points_permuted,
-                    scratch_data.kx_quad_points_regular(threadIdx.y, q));
+          BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
+            threadIdx.y,
+            q,
+            bem_values.kx_mapping_shape_value_table_for_common_vertex,
+            scratch_data.kx_mapping_support_points_permuted,
+            scratch_data.kx_quad_points_common_vertex(threadIdx.y, q));
 
-                  BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-                    threadIdx.y,
-                    q,
-                    bem_values.ky_mapping_shape_value_table_for_regular,
-                    scratch_data.ky_mapping_support_points_permuted,
-                    scratch_data.ky_quad_points_regular(threadIdx.y, q));
-                }
+          BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
+            threadIdx.y,
+            q,
+            bem_values.ky_mapping_shape_value_table_for_common_vertex,
+            scratch_data.ky_mapping_support_points_permuted,
+            scratch_data.ky_quad_points_common_vertex(threadIdx.y, q));
+        }
+    }
 
-              break;
-            }
+
+    /**
+     * Precalculate surface Jacobians, normal vectors and quadrature points in
+     * the real cell to be used in the Sauter quadrature (for regular cell
+     * neighboring type). This function runs on the GPU device.
+     *
+     * 2D thread grid is adopted. The X direction is associated with quadrature
+     * point index, while the Y direction is associated with k3 index.
+     *
+     * \mynote{Since this is a @p __global__ function, the parameters should be
+     * passed by value.}
+     *
+     * \alert{Computation of the Jacobian matrix as well as related quantities
+     * such as normal vector, covariant transformation matrix, metric tensor,
+     * etc., is related to the mapping object and has nothing to do with the
+     * finite element. A mapping object is used to describe geometry, while a
+     * finite element object is used to describe the ansatz or test functions.}
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param bem_values
+     * @param scratch_data
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    __global__ void
+    calc_jacobian_normals_for_sauter_quad_regular(
+      const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
+    {
+      // Number of threads in a row in the thread grid.
+      const unsigned int thread_num_per_row = gridDim.x * blockDim.x;
+      // Thread index in the X direction, which is mapped to the quadrature
+      // point index.
+      const unsigned int current_quad_point_index =
+        thread_num_per_row * blockIdx.y +
+        (blockIdx.x * blockDim.x + threadIdx.x);
+      // Quadrature point index stride for the current thread to process the
+      // next point. If enough thread blocks are allocated, each thread
+      // processes only one quadrature point.
+      const unsigned int stride = thread_num_per_row * gridDim.y;
+
+      for (unsigned int q = current_quad_point_index;
+           q < bem_values.quad_rule_for_regular.size();
+           q += stride)
+        {
+          scratch_data.kx_jacobians_regular(threadIdx.y, q) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              threadIdx.y,
+              q,
+              bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
+              scratch_data.kx_mapping_support_points_permuted,
+              scratch_data.kx_mapping_support_points_permuted_xy_components,
+              scratch_data.kx_mapping_support_points_permuted_yz_components,
+              scratch_data.kx_mapping_support_points_permuted_zx_components,
+              scratch_data.kx_normals_regular(threadIdx.y, q));
+
+          scratch_data.ky_jacobians_regular(threadIdx.y, q) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              threadIdx.y,
+              q,
+              bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
+              scratch_data.ky_mapping_support_points_permuted,
+              scratch_data.ky_mapping_support_points_permuted_xy_components,
+              scratch_data.ky_mapping_support_points_permuted_yz_components,
+              scratch_data.ky_mapping_support_points_permuted_zx_components,
+              scratch_data.ky_normals_regular(threadIdx.y, q));
+
+          BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
+            threadIdx.y,
+            q,
+            bem_values.kx_mapping_shape_value_table_for_regular,
+            scratch_data.kx_mapping_support_points_permuted,
+            scratch_data.kx_quad_points_regular(threadIdx.y, q));
+
+          BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
+            threadIdx.y,
+            q,
+            bem_values.ky_mapping_shape_value_table_for_regular,
+            scratch_data.ky_mapping_support_points_permuted,
+            scratch_data.ky_quad_points_regular(threadIdx.y, q));
         }
     }
 
 
     template <int dim, int spacedim, typename RangeNumberType = double>
     __global__ void
-    calc_covariant_transformations(
-      const CellNeighboringType                           cell_neighboring_type,
-      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values,
+    calc_covariant_transformations_same_panel(
+      const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
     {
       // Number of threads in a row in the thread grid.
@@ -1045,180 +1200,172 @@ namespace IdeoBEM
       // processes only one quadrature point.
       const unsigned int stride = thread_num_per_row * gridDim.y;
 
-      switch (cell_neighboring_type)
+      for (unsigned int q = current_quad_point_index;
+           q < bem_values.quad_rule_for_same_panel.size();
+           q += stride)
         {
-            case SamePanel: {
-              for (unsigned int q = current_quad_point_index;
-                   q < bem_values.quad_rule_for_same_panel.size();
-                   q += stride)
-                {
-                  CUDAFullMatrix<RangeNumberType> kx_covariant(
-                    &(scratch_data.kx_covariants_same_panel(
-                      threadIdx.y, q, 0, 0)),
-                    spacedim,
-                    dim);
-                  BEMTools::CUDAWrappers::surface_covariant_transformation(
-                    threadIdx.y,
-                    q,
-                    bem_values
-                      .kx_mapping_shape_grad_matrix_table_for_same_panel,
-                    scratch_data.kx_mapping_support_points_permuted,
-                    scratch_data
-                      .kx_mapping_support_points_permuted_all_components,
-                    scratch_data.kx_mapping_jacobian_matrix,
-                    scratch_data.kx_mapping_metric_tensor,
-                    scratch_data.kx_mapping_metric_tensor_inv,
-                    kx_covariant);
+          CUDAFullMatrix<RangeNumberType> kx_covariant(
+            &(scratch_data.kx_covariants_same_panel(threadIdx.y, q, 0, 0)),
+            spacedim,
+            dim);
+          BEMTools::CUDAWrappers::surface_covariant_transformation(
+            threadIdx.y,
+            q,
+            bem_values.kx_mapping_shape_grad_matrix_table_for_same_panel,
+            scratch_data.kx_mapping_support_points_permuted,
+            kx_covariant);
 
-                  CUDAFullMatrix<RangeNumberType> ky_covariant(
-                    &(scratch_data.ky_covariants_same_panel(
-                      threadIdx.y, q, 0, 0)),
-                    spacedim,
-                    dim);
-                  BEMTools::CUDAWrappers::surface_covariant_transformation(
-                    threadIdx.y,
-                    q,
-                    bem_values
-                      .ky_mapping_shape_grad_matrix_table_for_same_panel,
-                    scratch_data.ky_mapping_support_points_permuted,
-                    scratch_data
-                      .ky_mapping_support_points_permuted_all_components,
-                    scratch_data.ky_mapping_jacobian_matrix,
-                    scratch_data.ky_mapping_metric_tensor,
-                    scratch_data.ky_mapping_metric_tensor_inv,
-                    ky_covariant);
-                }
+          CUDAFullMatrix<RangeNumberType> ky_covariant(
+            &(scratch_data.ky_covariants_same_panel(threadIdx.y, q, 0, 0)),
+            spacedim,
+            dim);
+          BEMTools::CUDAWrappers::surface_covariant_transformation(
+            threadIdx.y,
+            q,
+            bem_values.ky_mapping_shape_grad_matrix_table_for_same_panel,
+            scratch_data.ky_mapping_support_points_permuted,
+            ky_covariant);
+        }
+    }
 
-              break;
-            }
-            case CommonEdge: {
-              for (unsigned int q = current_quad_point_index;
-                   q < bem_values.quad_rule_for_common_edge.size();
-                   q += stride)
-                {
-                  CUDAFullMatrix<RangeNumberType> kx_covariant(
-                    &(scratch_data.kx_covariants_common_edge(
-                      threadIdx.y, q, 0, 0)),
-                    spacedim,
-                    dim);
-                  BEMTools::CUDAWrappers::surface_covariant_transformation(
-                    threadIdx.y,
-                    q,
-                    bem_values
-                      .kx_mapping_shape_grad_matrix_table_for_common_edge,
-                    scratch_data.kx_mapping_support_points_permuted,
-                    scratch_data
-                      .kx_mapping_support_points_permuted_all_components,
-                    scratch_data.kx_mapping_jacobian_matrix,
-                    scratch_data.kx_mapping_metric_tensor,
-                    scratch_data.kx_mapping_metric_tensor_inv,
-                    kx_covariant);
 
-                  CUDAFullMatrix<RangeNumberType> ky_covariant(
-                    &(scratch_data.ky_covariants_common_edge(
-                      threadIdx.y, q, 0, 0)),
-                    spacedim,
-                    dim);
-                  BEMTools::CUDAWrappers::surface_covariant_transformation(
-                    threadIdx.y,
-                    q,
-                    bem_values
-                      .ky_mapping_shape_grad_matrix_table_for_common_edge,
-                    scratch_data.ky_mapping_support_points_permuted,
-                    scratch_data
-                      .ky_mapping_support_points_permuted_all_components,
-                    scratch_data.ky_mapping_jacobian_matrix,
-                    scratch_data.ky_mapping_metric_tensor,
-                    scratch_data.ky_mapping_metric_tensor_inv,
-                    ky_covariant);
-                }
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    __global__ void
+    calc_covariant_transformations_common_edge(
+      const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
+    {
+      // Number of threads in a row in the thread grid.
+      const unsigned int thread_num_per_row = gridDim.x * blockDim.x;
+      // Thread index in the X direction, which is mapped to the quadrature
+      // point index.
+      const unsigned int current_quad_point_index =
+        thread_num_per_row * blockIdx.y +
+        (blockIdx.x * blockDim.x + threadIdx.x);
+      // Quadrature point index stride for the current thread to process the
+      // next point. If enough thread blocks are allocated, each thread
+      // processes only one quadrature point.
+      const unsigned int stride = thread_num_per_row * gridDim.y;
 
-              break;
-            }
-            case CommonVertex: {
-              for (unsigned int q = current_quad_point_index;
-                   q < bem_values.quad_rule_for_common_vertex.size();
-                   q += stride)
-                {
-                  CUDAFullMatrix<RangeNumberType> kx_covariant(
-                    &(scratch_data.kx_covariants_common_vertex(
-                      threadIdx.y, q, 0, 0)),
-                    spacedim,
-                    dim);
-                  BEMTools::CUDAWrappers::surface_covariant_transformation(
-                    threadIdx.y,
-                    q,
-                    bem_values
-                      .kx_mapping_shape_grad_matrix_table_for_common_vertex,
-                    scratch_data.kx_mapping_support_points_permuted,
-                    scratch_data
-                      .kx_mapping_support_points_permuted_all_components,
-                    scratch_data.kx_mapping_jacobian_matrix,
-                    scratch_data.kx_mapping_metric_tensor,
-                    scratch_data.kx_mapping_metric_tensor_inv,
-                    kx_covariant);
+      for (unsigned int q = current_quad_point_index;
+           q < bem_values.quad_rule_for_common_edge.size();
+           q += stride)
+        {
+          CUDAFullMatrix<RangeNumberType> kx_covariant(
+            &(scratch_data.kx_covariants_common_edge(threadIdx.y, q, 0, 0)),
+            spacedim,
+            dim);
+          BEMTools::CUDAWrappers::surface_covariant_transformation(
+            threadIdx.y,
+            q,
+            bem_values.kx_mapping_shape_grad_matrix_table_for_common_edge,
+            scratch_data.kx_mapping_support_points_permuted,
+            kx_covariant);
 
-                  CUDAFullMatrix<RangeNumberType> ky_covariant(
-                    &(scratch_data.ky_covariants_common_vertex(
-                      threadIdx.y, q, 0, 0)),
-                    spacedim,
-                    dim);
-                  BEMTools::CUDAWrappers::surface_covariant_transformation(
-                    threadIdx.y,
-                    q,
-                    bem_values
-                      .ky_mapping_shape_grad_matrix_table_for_common_vertex,
-                    scratch_data.ky_mapping_support_points_permuted,
-                    scratch_data
-                      .ky_mapping_support_points_permuted_all_components,
-                    scratch_data.ky_mapping_jacobian_matrix,
-                    scratch_data.ky_mapping_metric_tensor,
-                    scratch_data.ky_mapping_metric_tensor_inv,
-                    ky_covariant);
-                }
+          CUDAFullMatrix<RangeNumberType> ky_covariant(
+            &(scratch_data.ky_covariants_common_edge(threadIdx.y, q, 0, 0)),
+            spacedim,
+            dim);
+          BEMTools::CUDAWrappers::surface_covariant_transformation(
+            threadIdx.y,
+            q,
+            bem_values.ky_mapping_shape_grad_matrix_table_for_common_edge,
+            scratch_data.ky_mapping_support_points_permuted,
+            ky_covariant);
+        }
+    }
 
-              break;
-            }
-            case Regular: {
-              for (unsigned int q = current_quad_point_index;
-                   q < bem_values.quad_rule_for_regular.size();
-                   q += stride)
-                {
-                  CUDAFullMatrix<RangeNumberType> kx_covariant(
-                    &(scratch_data.kx_covariants_regular(threadIdx.y, q, 0, 0)),
-                    spacedim,
-                    dim);
-                  BEMTools::CUDAWrappers::surface_covariant_transformation(
-                    threadIdx.y,
-                    q,
-                    bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
-                    scratch_data.kx_mapping_support_points_permuted,
-                    scratch_data
-                      .kx_mapping_support_points_permuted_all_components,
-                    scratch_data.kx_mapping_jacobian_matrix,
-                    scratch_data.kx_mapping_metric_tensor,
-                    scratch_data.kx_mapping_metric_tensor_inv,
-                    kx_covariant);
 
-                  CUDAFullMatrix<RangeNumberType> ky_covariant(
-                    &(scratch_data.ky_covariants_regular(threadIdx.y, q, 0, 0)),
-                    spacedim,
-                    dim);
-                  BEMTools::CUDAWrappers::surface_covariant_transformation(
-                    threadIdx.y,
-                    q,
-                    bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
-                    scratch_data.ky_mapping_support_points_permuted,
-                    scratch_data
-                      .ky_mapping_support_points_permuted_all_components,
-                    scratch_data.ky_mapping_jacobian_matrix,
-                    scratch_data.ky_mapping_metric_tensor,
-                    scratch_data.ky_mapping_metric_tensor_inv,
-                    ky_covariant);
-                }
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    __global__ void
+    calc_covariant_transformations_common_vertex(
+      const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
+    {
+      // Number of threads in a row in the thread grid.
+      const unsigned int thread_num_per_row = gridDim.x * blockDim.x;
+      // Thread index in the X direction, which is mapped to the quadrature
+      // point index.
+      const unsigned int current_quad_point_index =
+        thread_num_per_row * blockIdx.y +
+        (blockIdx.x * blockDim.x + threadIdx.x);
+      // Quadrature point index stride for the current thread to process the
+      // next point. If enough thread blocks are allocated, each thread
+      // processes only one quadrature point.
+      const unsigned int stride = thread_num_per_row * gridDim.y;
 
-              break;
-            }
+      for (unsigned int q = current_quad_point_index;
+           q < bem_values.quad_rule_for_common_vertex.size();
+           q += stride)
+        {
+          CUDAFullMatrix<RangeNumberType> kx_covariant(
+            &(scratch_data.kx_covariants_common_vertex(threadIdx.y, q, 0, 0)),
+            spacedim,
+            dim);
+          BEMTools::CUDAWrappers::surface_covariant_transformation(
+            threadIdx.y,
+            q,
+            bem_values.kx_mapping_shape_grad_matrix_table_for_common_vertex,
+            scratch_data.kx_mapping_support_points_permuted,
+            kx_covariant);
+
+          CUDAFullMatrix<RangeNumberType> ky_covariant(
+            &(scratch_data.ky_covariants_common_vertex(threadIdx.y, q, 0, 0)),
+            spacedim,
+            dim);
+          BEMTools::CUDAWrappers::surface_covariant_transformation(
+            threadIdx.y,
+            q,
+            bem_values.ky_mapping_shape_grad_matrix_table_for_common_vertex,
+            scratch_data.ky_mapping_support_points_permuted,
+            ky_covariant);
+        }
+    }
+
+
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    __global__ void
+    calc_covariant_transformations_regular(
+      const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
+    {
+      // Number of threads in a row in the thread grid.
+      const unsigned int thread_num_per_row = gridDim.x * blockDim.x;
+      // Thread index in the X direction, which is mapped to the quadrature
+      // point index.
+      const unsigned int current_quad_point_index =
+        thread_num_per_row * blockIdx.y +
+        (blockIdx.x * blockDim.x + threadIdx.x);
+      // Quadrature point index stride for the current thread to process the
+      // next point. If enough thread blocks are allocated, each thread
+      // processes only one quadrature point.
+      const unsigned int stride = thread_num_per_row * gridDim.y;
+
+      for (unsigned int q = current_quad_point_index;
+           q < bem_values.quad_rule_for_regular.size();
+           q += stride)
+        {
+          CUDAFullMatrix<RangeNumberType> kx_covariant(
+            &(scratch_data.kx_covariants_regular(threadIdx.y, q, 0, 0)),
+            spacedim,
+            dim);
+          BEMTools::CUDAWrappers::surface_covariant_transformation(
+            threadIdx.y,
+            q,
+            bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
+            scratch_data.kx_mapping_support_points_permuted,
+            kx_covariant);
+
+          CUDAFullMatrix<RangeNumberType> ky_covariant(
+            &(scratch_data.ky_covariants_regular(threadIdx.y, q, 0, 0)),
+            spacedim,
+            dim);
+          BEMTools::CUDAWrappers::surface_covariant_transformation(
+            threadIdx.y,
+            q,
+            bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
+            scratch_data.ky_mapping_support_points_permuted,
+            ky_covariant);
         }
     }
 
@@ -1269,7 +1416,7 @@ namespace IdeoBEM
        * results for each thread in a same thread block. Its dimension should be
        * @p blockDim.x.
        */
-      extern __shared__ RangeNumberType quad_values_in_thread_block[];
+      __shared__ RangeNumberType quad_values_in_thread_block[20];
 
       const unsigned int quad_no = (blockIdx.x * blockDim.x) + threadIdx.x;
 
@@ -1442,6 +1589,7 @@ namespace IdeoBEM
         {
           scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
             quad_values_in_thread_block[0] * factor;
+          printf("%f\n", scratch_data.quad_values_in_thread_blocks[blockIdx.x]);
         }
     }
 
@@ -1474,7 +1622,7 @@ namespace IdeoBEM
        * results for each thread in a same thread block. Its dimension should be
        * @p blockDim.x.
        */
-      extern __shared__ RangeNumberType quad_values_in_thread_block[];
+      __shared__ RangeNumberType quad_values_in_thread_block[20];
 
       const unsigned int quad_no = (blockIdx.x * blockDim.x) + threadIdx.x;
 
@@ -1684,7 +1832,7 @@ namespace IdeoBEM
        * results for each thread in a same thread block. Its dimension should be
        * @p blockDim.x.
        */
-      extern __shared__ RangeNumberType quad_values_in_thread_block[];
+      __shared__ RangeNumberType quad_values_in_thread_block[20];
 
       const unsigned int quad_no = (blockIdx.x * blockDim.x) + threadIdx.x;
 
@@ -1888,7 +2036,7 @@ namespace IdeoBEM
        * results for each thread in a same thread block. Its dimension should be
        * @p blockDim.x.
        */
-      extern __shared__ RangeNumberType quad_values_in_thread_block[];
+      __shared__ RangeNumberType quad_values_in_thread_block[20];
 
       const unsigned int quad_no = (blockIdx.x * blockDim.x) + threadIdx.x;
 
@@ -2037,92 +2185,6 @@ namespace IdeoBEM
         {
           scratch_data.quad_values_in_thread_blocks[blockIdx.x] =
             quad_values_in_thread_block[0] * factor;
-        }
-    }
-
-
-    /**
-     * Implement CUDA parallel applying quadrature using sum reduction.
-     *
-     * @tparam dim
-     * @tparam spacedim
-     * @tparam RangeNumberType
-     * @param cell_neighboring_type
-     * @param f
-     * @param factor
-     * @param bem_values
-     * @param scratch_data
-     * @param component
-     */
-    template <int dim,
-              int spacedim,
-              template <int, typename>
-              typename KernelFunctionType,
-              typename RangeNumberType = double>
-    __global__ void
-    ApplyQuadratureUsingBEMValues(
-      const CellNeighboringType cell_neighboring_type,
-      const KernelPulledbackToSauterSpace<dim,
-                                          spacedim,
-                                          KernelFunctionType,
-                                          RangeNumberType> f,
-      const RangeNumberType                                factor,
-      const CUDABEMValues<dim, spacedim, RangeNumberType>  bem_values,
-      const CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                   scratch_data,
-      unsigned int component = 0)
-    {
-      const unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
-      const unsigned int idy = (blockIdx.y * blockDim.y) + threadIdx.y;
-      // Number of threads in a row in the thread grid.
-      const unsigned int thread_num_per_row = gridDim.x * blockDim.x;
-      const unsigned int thread_idx         = thread_num_per_row * idy + idx;
-
-      const RangeNumberType *quad_weights;
-      unsigned int           quad_num;
-
-      switch (cell_neighboring_type)
-        {
-            case SamePanel: {
-              quad_weights = bem_values.quad_rule_for_same_panel.get_weights();
-              quad_num     = bem_values.quad_rule_for_same_panel.size();
-
-              break;
-            }
-            case CommonEdge: {
-              quad_weights = bem_values.quad_rule_for_common_edge.get_weights();
-              quad_num     = bem_values.quad_rule_for_common_edge.size();
-
-              break;
-            }
-            case CommonVertex: {
-              quad_weights =
-                bem_values.quad_rule_for_common_vertex.get_weights();
-              quad_num = bem_values.quad_rule_for_common_vertex.size();
-
-              break;
-            }
-            case Regular: {
-              quad_weights = bem_values.quad_rule_for_regular.get_weights();
-              quad_num     = bem_values.quad_rule_for_regular.size();
-
-              break;
-            }
-            default: {
-              quad_weights = nullptr;
-              quad_num     = 0;
-
-              break;
-            }
-        }
-
-      RangeNumberType result = 0.;
-      for (unsigned int q = thread_idx; q < quad_num; q += thread_num_per_row)
-        {
-          // Evaluate the integrand with precalculated shape values and shape
-          // gradient matrices.
-          result += f.value(q, bem_values, scratch_data, component) *
-                    quad_weights[q] * factor;
         }
     }
   } // namespace CUDAWrappers
@@ -2812,6 +2874,8 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
+    LogStream::Prefix prefix_string("Sauter");
+
     RangeNumberType double_integral = 0.0;
 
     /**
@@ -2897,7 +2961,9 @@ namespace IdeoBEM
               ky_mapping_copy,
               false);
 
-            // Copy data from CPU to GPU.
+            /**
+             * @internal Copy the scratch data and copy data from CPU to GPU.
+             */
             scratch_data_gpu.assign_from_host(scratch_data);
             copy_data_gpu.assign_from_host(copy_data,
                                            scratch_data.cuda_stream_handle);
@@ -2906,19 +2972,67 @@ namespace IdeoBEM
               cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
 
-            // Determine thread block dimensions.
+            /**
+             * @internal Determine thread block dimensions.
+             */
             dim3 blocks_rect;
             dim3 threads_rect;
             IdeoBEM::CUDAWrappers::configure_thread_blocks(
               cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
-            IdeoBEM::CUDAWrappers::calc_jacobian_normals_for_sauter_quad<<<
-              blocks_rect,
-              threads_rect,
-              0,
-              scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
-                                                 bem_values_gpu,
-                                                 scratch_data_gpu);
+            switch (cell_neighboring_type)
+              {
+                  case CellNeighboringType::SamePanel: {
+                    IdeoBEM::CUDAWrappers::
+                      calc_jacobian_normals_for_sauter_quad_same_panel<<<
+                        blocks_rect,
+                        threads_rect,
+                        0,
+                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                           scratch_data_gpu);
+
+                    break;
+                  }
+                  case CellNeighboringType::CommonEdge: {
+                    IdeoBEM::CUDAWrappers::
+                      calc_jacobian_normals_for_sauter_quad_common_edge<<<
+                        blocks_rect,
+                        threads_rect,
+                        0,
+                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                           scratch_data_gpu);
+
+                    break;
+                  }
+                  case CellNeighboringType::CommonVertex: {
+                    IdeoBEM::CUDAWrappers::
+                      calc_jacobian_normals_for_sauter_quad_common_vertex<<<
+                        blocks_rect,
+                        threads_rect,
+                        0,
+                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                           scratch_data_gpu);
+
+                    break;
+                  }
+                  case CellNeighboringType::Regular: {
+                    IdeoBEM::CUDAWrappers::
+                      calc_jacobian_normals_for_sauter_quad_regular<<<
+                        blocks_rect,
+                        threads_rect,
+                        0,
+                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                           scratch_data_gpu);
+
+                    break;
+                  }
+                  default: {
+                    Assert(false, ExcInternalError());
+
+                    break;
+                  }
+              }
+
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
 
@@ -2928,17 +3042,104 @@ namespace IdeoBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
-                IdeoBEM::CUDAWrappers::calc_covariant_transformations<<<
-                  blocks_rect,
-                  threads_rect,
-                  0,
-                  scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
-                                                     bem_values_gpu,
-                                                     scratch_data_gpu);
+                switch (cell_neighboring_type)
+                  {
+                      case CellNeighboringType::SamePanel: {
+                        IdeoBEM::CUDAWrappers::
+                          calc_covariant_transformations_same_panel<<<
+                            blocks_rect,
+                            threads_rect,
+                            0,
+                            scratch_data.cuda_stream_handle>>>(
+                            bem_values_gpu, scratch_data_gpu);
+
+                        break;
+                      }
+                      case CellNeighboringType::CommonEdge: {
+                        IdeoBEM::CUDAWrappers::
+                          calc_covariant_transformations_common_edge<<<
+                            blocks_rect,
+                            threads_rect,
+                            0,
+                            scratch_data.cuda_stream_handle>>>(
+                            bem_values_gpu, scratch_data_gpu);
+
+                        break;
+                      }
+                      case CellNeighboringType::CommonVertex: {
+                        IdeoBEM::CUDAWrappers::
+                          calc_covariant_transformations_common_vertex<<<
+                            blocks_rect,
+                            threads_rect,
+                            0,
+                            scratch_data.cuda_stream_handle>>>(
+                            bem_values_gpu, scratch_data_gpu);
+
+                        break;
+                      }
+                      case CellNeighboringType::Regular: {
+                        IdeoBEM::CUDAWrappers::
+                          calc_covariant_transformations_regular<<<
+                            blocks_rect,
+                            threads_rect,
+                            0,
+                            scratch_data.cuda_stream_handle>>>(
+                            bem_values_gpu, scratch_data_gpu);
+
+                        break;
+                      }
+                      default: {
+                        Assert(false, ExcInternalError());
+
+                        break;
+                      }
+                  }
+
                 error_code =
                   cudaStreamSynchronize(scratch_data.cuda_stream_handle);
                 AssertCuda(error_code);
               }
+
+#if ENABLE_DEBUG == 1
+            /**
+             * @internal For debug purpose, here we calculate the scratch data
+             * on the CPU, then compare the results with those on the GPU.
+             */
+            const QGauss<dim * 2> active_quad_rule =
+              select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
+                                                      bem_values);
+            calc_jacobian_normals_for_sauter_quad(cell_neighboring_type,
+                                                  bem_values,
+                                                  scratch_data,
+                                                  active_quad_rule);
+
+            /**
+             * @internal When the bilinear form for the hyper singular operator
+             * is evaluated, the covariant transformation is required.
+             */
+            if (kernel.kernel_type == HyperSingularRegular)
+              {
+                calc_covariant_transformations(cell_neighboring_type,
+                                               bem_values,
+                                               scratch_data,
+                                               active_quad_rule);
+              }
+
+            deallog << "(" << i << "," << j << "," << kx_cell_index << ","
+                    << ky_cell_index << ","
+                    << cell_neighboring_type_name(cell_neighboring_type) << ")"
+                    << std::endl;
+            Assert(is_equal(scratch_data,
+                            scratch_data_gpu,
+                            1e-10,
+                            scratch_data.cuda_stream_handle,
+                            kernel.kernel_type == HyperSingularRegular),
+                   ExcInternalError());
+            Assert(is_equal(copy_data,
+                            copy_data_gpu,
+                            scratch_data.cuda_stream_handle),
+                   ExcInternalError());
+#endif
 
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
@@ -2976,7 +3177,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesSamePanel<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
+                        0,
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -2991,7 +3192,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesCommonEdge<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
+                        0,
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3006,7 +3207,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesCommonVertex<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
+                        0,
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3021,7 +3222,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesRegular<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
+                        0,
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3145,6 +3346,8 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
+    LogStream::Prefix prefix_string("Sauter");
+
     RangeNumberType double_integral = 0.0;
 
     /**
@@ -3243,13 +3446,59 @@ namespace IdeoBEM
             IdeoBEM::CUDAWrappers::configure_thread_blocks(
               cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
-            IdeoBEM::CUDAWrappers::calc_jacobian_normals_for_sauter_quad<<<
-              blocks_rect,
-              threads_rect,
-              0,
-              scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
-                                                 bem_values_gpu,
-                                                 scratch_data_gpu);
+            switch (cell_neighboring_type)
+              {
+                  case CellNeighboringType::SamePanel: {
+                    IdeoBEM::CUDAWrappers::
+                      calc_jacobian_normals_for_sauter_quad_same_panel<<<
+                        blocks_rect,
+                        threads_rect,
+                        0,
+                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                           scratch_data_gpu);
+
+                    break;
+                  }
+                  case CellNeighboringType::CommonEdge: {
+                    IdeoBEM::CUDAWrappers::
+                      calc_jacobian_normals_for_sauter_quad_common_edge<<<
+                        blocks_rect,
+                        threads_rect,
+                        0,
+                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                           scratch_data_gpu);
+
+                    break;
+                  }
+                  case CellNeighboringType::CommonVertex: {
+                    IdeoBEM::CUDAWrappers::
+                      calc_jacobian_normals_for_sauter_quad_common_vertex<<<
+                        blocks_rect,
+                        threads_rect,
+                        0,
+                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                           scratch_data_gpu);
+
+                    break;
+                  }
+                  case CellNeighboringType::Regular: {
+                    IdeoBEM::CUDAWrappers::
+                      calc_jacobian_normals_for_sauter_quad_regular<<<
+                        blocks_rect,
+                        threads_rect,
+                        0,
+                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                           scratch_data_gpu);
+
+                    break;
+                  }
+                  default: {
+                    Assert(false, ExcInternalError());
+
+                    break;
+                  }
+              }
+
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
 
@@ -3259,17 +3508,104 @@ namespace IdeoBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
-                IdeoBEM::CUDAWrappers::calc_covariant_transformations<<<
-                  blocks_rect,
-                  threads_rect,
-                  0,
-                  scratch_data.cuda_stream_handle>>>(cell_neighboring_type,
-                                                     bem_values_gpu,
-                                                     scratch_data_gpu);
+                switch (cell_neighboring_type)
+                  {
+                      case CellNeighboringType::SamePanel: {
+                        IdeoBEM::CUDAWrappers::
+                          calc_covariant_transformations_same_panel<<<
+                            blocks_rect,
+                            threads_rect,
+                            0,
+                            scratch_data.cuda_stream_handle>>>(
+                            bem_values_gpu, scratch_data_gpu);
+
+                        break;
+                      }
+                      case CellNeighboringType::CommonEdge: {
+                        IdeoBEM::CUDAWrappers::
+                          calc_covariant_transformations_common_edge<<<
+                            blocks_rect,
+                            threads_rect,
+                            0,
+                            scratch_data.cuda_stream_handle>>>(
+                            bem_values_gpu, scratch_data_gpu);
+
+                        break;
+                      }
+                      case CellNeighboringType::CommonVertex: {
+                        IdeoBEM::CUDAWrappers::
+                          calc_covariant_transformations_common_vertex<<<
+                            blocks_rect,
+                            threads_rect,
+                            0,
+                            scratch_data.cuda_stream_handle>>>(
+                            bem_values_gpu, scratch_data_gpu);
+
+                        break;
+                      }
+                      case CellNeighboringType::Regular: {
+                        IdeoBEM::CUDAWrappers::
+                          calc_covariant_transformations_regular<<<
+                            blocks_rect,
+                            threads_rect,
+                            0,
+                            scratch_data.cuda_stream_handle>>>(
+                            bem_values_gpu, scratch_data_gpu);
+
+                        break;
+                      }
+                      default: {
+                        Assert(false, ExcInternalError());
+
+                        break;
+                      }
+                  }
+
                 error_code =
                   cudaStreamSynchronize(scratch_data.cuda_stream_handle);
                 AssertCuda(error_code);
               }
+
+#if ENABLE_DEBUG == 1
+            /**
+             * @internal For debug purpose, here we calculate the scratch data
+             * on the CPU, then compare the results with those on the GPU.
+             */
+            const QGauss<dim * 2> active_quad_rule =
+              select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
+                                                      bem_values);
+            calc_jacobian_normals_for_sauter_quad(cell_neighboring_type,
+                                                  bem_values,
+                                                  scratch_data,
+                                                  active_quad_rule);
+
+            /**
+             * @internal When the bilinear form for the hyper singular operator
+             * is evaluated, the covariant transformation is required.
+             */
+            if (kernel.kernel_type == HyperSingularRegular)
+              {
+                calc_covariant_transformations(cell_neighboring_type,
+                                               bem_values,
+                                               scratch_data,
+                                               active_quad_rule);
+              }
+
+            deallog << "(" << i << "," << j << "," << kx_cell_index << ","
+                    << ky_cell_index << ","
+                    << cell_neighboring_type_name(cell_neighboring_type) << ")"
+                    << std::endl;
+            Assert(is_equal(scratch_data,
+                            scratch_data_gpu,
+                            1e-10,
+                            scratch_data.cuda_stream_handle,
+                            kernel.kernel_type == HyperSingularRegular),
+                   ExcInternalError());
+            Assert(is_equal(copy_data,
+                            copy_data_gpu,
+                            scratch_data.cuda_stream_handle),
+                   ExcInternalError());
+#endif
 
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
@@ -3307,7 +3643,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesSamePanel<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
+                        0,
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3322,7 +3658,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesCommonEdge<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
+                        0,
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3337,7 +3673,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesCommonVertex<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
+                        0,
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,
@@ -3352,7 +3688,7 @@ namespace IdeoBEM
                       ApplyQuadratureUsingBEMValuesRegular<<<
                         blocks_rect.x,
                         threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
+                        0,
                         scratch_data.cuda_stream_handle>>>(kernel,
                                                            kernel_factor,
                                                            i_index,

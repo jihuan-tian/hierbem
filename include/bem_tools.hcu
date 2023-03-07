@@ -44,10 +44,10 @@
 #include "lapack_full_matrix_ext.h"
 #include "mapping_q_generic_ext.h"
 
-using namespace dealii;
-
 namespace IdeoBEM
 {
+  using namespace dealii;
+
   namespace BEMTools
   {
     /**
@@ -3361,8 +3361,13 @@ namespace IdeoBEM
           &shape_grad_matrix_table,
         const IdeoBEM::CUDAWrappers::CUDATable<1,
                                                Point<spacedim, RangeNumberType>>
-                                             &support_points_in_real_cell,
-        RangeNumberType                      *support_points_two_components,
+          &support_points_in_real_cell,
+        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+          &support_points_in_real_cell_xy_components,
+        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+          &support_points_in_real_cell_yz_components,
+        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+          &support_points_in_real_cell_zx_components,
         Tensor<1, spacedim, RangeNumberType> &normal_vector,
         const bool                            is_normal_vector_negated = false)
       {
@@ -3400,27 +3405,43 @@ namespace IdeoBEM
         IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           jacobian_matrix_2x2(jacobian_matrix_2x2_data, 2, 2);
 
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
-          two_component_coords(support_points_two_components,
-                               2,
-                               support_points_in_real_cell.size(0));
-
         RangeNumberType surface_jacobian_det = 0.0;
         RangeNumberType surface_jacobian_det_components[spacedim];
 
-        for (unsigned int i = 0; i < spacedim; i++)
-          {
-            collect_two_components_from_point3(support_points_in_real_cell,
-                                               i,
-                                               (i + 1) % spacedim,
-                                               two_component_coords);
-            two_component_coords.mmult(jacobian_matrix_2x2,
-                                       shape_grad_matrix_at_quad_point);
-            surface_jacobian_det_components[i] =
-              jacobian_matrix_2x2.determinant2x2();
-            surface_jacobian_det += surface_jacobian_det_components[i] *
-                                    surface_jacobian_det_components[i];
-          }
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          two_component_coords(
+            (RangeNumberType *)(support_points_in_real_cell_xy_components
+                                  .data()),
+            2,
+            support_points_in_real_cell.size(0));
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[0] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[0] *
+                                surface_jacobian_det_components[0];
+
+        two_component_coords.reinit(
+          (RangeNumberType *)(support_points_in_real_cell_yz_components.data()),
+          2,
+          support_points_in_real_cell.size(0));
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[1] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[1] *
+                                surface_jacobian_det_components[1];
+
+        two_component_coords.reinit(
+          (RangeNumberType *)(support_points_in_real_cell_zx_components.data()),
+          2,
+          support_points_in_real_cell.size(0));
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[2] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[2] *
+                                surface_jacobian_det_components[2];
 
         surface_jacobian_det = sqrt(surface_jacobian_det);
 
@@ -3483,11 +3504,7 @@ namespace IdeoBEM
           &shape_grad_matrix_table,
         const IdeoBEM::CUDAWrappers::CUDATable<1,
                                                Point<spacedim, RangeNumberType>>
-                        &support_points_in_real_cell,
-        RangeNumberType *support_points_all_components,
-        RangeNumberType *jacobian_matrix_data,
-        RangeNumberType *metric_tensor_data,
-        RangeNumberType *metric_tensor_inv_data,
+          &support_points_in_real_cell,
         IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &covariant)
       {
         /**
@@ -3519,24 +3536,25 @@ namespace IdeoBEM
         assert(shape_grad_matrix_at_quad_point.n() == 2);
 
         IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
-          all_component_coords(support_points_all_components,
-                               spacedim,
-                               support_points_in_real_cell.size(0));
-        collect_components_from_points(support_points_in_real_cell,
-                                       all_component_coords);
+          all_component_coords(
+            (RangeNumberType *)(support_points_in_real_cell.data()),
+            spacedim,
+            support_points_in_real_cell.size(0));
 
-        const unsigned int dim = shape_grad_matrix_at_quad_point.n();
+        RangeNumberType jacobian_matrix_data[6];
         IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
-          jacobian_matrix_data, spacedim, dim);
+          jacobian_matrix_data, spacedim, 2);
         all_component_coords.mmult(jacobian_matrix,
                                    shape_grad_matrix_at_quad_point);
 
         // Metric tensor
+        RangeNumberType metric_tensor_data[4];
         IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(
-          metric_tensor_data, dim, dim);
+          metric_tensor_data, 2, 2);
         // Inverse of the metric tensor
+        RangeNumberType metric_tensor_inv_data[4];
         IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(
-          metric_tensor_inv_data, dim, dim);
+          metric_tensor_inv_data, 2, 2);
 
         // Compute \f$G=J^T J\f$.
         jacobian_matrix.Tmmult(G, jacobian_matrix);

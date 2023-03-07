@@ -12,13 +12,16 @@
 #include <list>
 #include <vector>
 
-template <typename T>
-using vector_uta = std::vector<T, std::allocator<T>>;
+namespace IdeoBEM
+{
+  template <typename T>
+  using vector_uta = std::vector<T, std::allocator<T>>;
 
-template <typename T>
-using list_uta = std::list<T, std::allocator<T>>;
+  template <typename T>
+  using list_uta = std::list<T, std::allocator<T>>;
 
-template <typename T>
-using forward_list_uta = std::forward_list<T, std::allocator<T>>;
+  template <typename T>
+  using forward_list_uta = std::forward_list<T, std::allocator<T>>;
+} // namespace IdeoBEM
 
 #endif /* INCLUDE_UNARY_TEMPLATE_ARG_CONTAINERS_H_ */

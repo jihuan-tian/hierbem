@@ -849,63 +849,19 @@ namespace IdeoBEM
       CUDATable<1, Point<spacedim, RangeNumberType>>
         ky_mapping_support_points_permuted;
 
-      /**
-       * Buffer for storing two coordinate components that are extracted from
-       * the permuted mapping support points in \f$K_x\f$.
-       *
-       * It is a matrix with the first dimension as the coordinate components
-       * and the second dimension as the mapping support point index.
-       */
-      RangeNumberType *kx_mapping_support_points_permuted_two_components;
-      /**
-       * Buffer for storing two coordinate components that are extracted from
-       * the permuted mapping support points in \f$K_y\f$.
-       */
-      RangeNumberType *ky_mapping_support_points_permuted_two_components;
+      CUDATable<1, Point<2, RangeNumberType>>
+        kx_mapping_support_points_permuted_xy_components;
+      CUDATable<1, Point<2, RangeNumberType>>
+        kx_mapping_support_points_permuted_yz_components;
+      CUDATable<1, Point<2, RangeNumberType>>
+        kx_mapping_support_points_permuted_zx_components;
 
-      /**
-       * Buffer for storing all coordinate components that are extracted from
-       * the permuted mapping support points in \f$K_x\f$.
-       */
-      RangeNumberType *kx_mapping_support_points_permuted_all_components;
-      /**
-       * Buffer for storing all coordinate components that are extracted from
-       * the permuted mapping support points in \f$K_y\f$.
-       */
-      RangeNumberType *ky_mapping_support_points_permuted_all_components;
-
-      /**
-       * Buffer for storing the Jacobian matrix of the mapping object on
-       * \f$K_x\f$. Its dimension is <tt>spacedim * dim</tt>.
-       */
-      RangeNumberType *kx_mapping_jacobian_matrix;
-      /**
-       * Buffer for storing the Jacobian matrix of the mapping object on
-       * \f$K_y\f$. Its dimension is <tt>spacedim * dim</tt>.
-       */
-      RangeNumberType *ky_mapping_jacobian_matrix;
-
-      /**
-       * Buffer for storing the metric tensor of the mapping object on
-       * \f$K_x\f$. Its dimension is @p dim * dim.
-       */
-      RangeNumberType *kx_mapping_metric_tensor;
-      /**
-       * Buffer for storing the metric tensor of the mapping object on
-       * \f$K_y\f$. Its dimension is @p dim * dim.
-       */
-      RangeNumberType *ky_mapping_metric_tensor;
-
-      /**
-       * Buffer for storing the inverse of the metric tensor of the mapping
-       * object on \f$K_x\f$. Its dimension is @p dim * dim.
-       */
-      RangeNumberType *kx_mapping_metric_tensor_inv;
-      /**
-       * Buffer for storing the inverse of the metric tensor of the mapping
-       * object on \f$K_y\f$. Its dimension is @p dim * dim.
-       */
-      RangeNumberType *ky_mapping_metric_tensor_inv;
+      CUDATable<1, Point<2, RangeNumberType>>
+        ky_mapping_support_points_permuted_xy_components;
+      CUDATable<1, Point<2, RangeNumberType>>
+        ky_mapping_support_points_permuted_yz_components;
+      CUDATable<1, Point<2, RangeNumberType>>
+        ky_mapping_support_points_permuted_zx_components;
 
       /**
        * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
@@ -1107,34 +1063,20 @@ namespace IdeoBEM
         TableIndices<1>(scratch_cpu.kx_mapping_support_points_permuted.size()),
         scratch_cpu.cuda_stream_handle);
 
-      error_code = cudaMallocAsync(
-        (void **)&kx_mapping_support_points_permuted_two_components,
-        scratch_cpu.kx_mapping_support_points_permuted.size() * 2 *
-          sizeof(RangeNumberType),
+      kx_mapping_support_points_permuted_xy_components.allocate(
+        TableIndices<1>(
+          scratch_cpu.kx_mapping_support_points_permuted_xy_components.size()),
         scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
 
-      error_code = cudaMallocAsync(
-        (void **)&kx_mapping_support_points_permuted_all_components,
-        scratch_cpu.kx_mapping_support_points_permuted.size() * spacedim *
-          sizeof(RangeNumberType),
+      kx_mapping_support_points_permuted_yz_components.allocate(
+        TableIndices<1>(
+          scratch_cpu.kx_mapping_support_points_permuted_yz_components.size()),
         scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
 
-      error_code = cudaMallocAsync((void **)&kx_mapping_jacobian_matrix,
-                                   spacedim * dim * sizeof(RangeNumberType),
-                                   scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      error_code = cudaMallocAsync((void **)&kx_mapping_metric_tensor,
-                                   dim * dim * sizeof(RangeNumberType),
-                                   scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      error_code = cudaMallocAsync((void **)&kx_mapping_metric_tensor_inv,
-                                   dim * dim * sizeof(RangeNumberType),
-                                   scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
+      kx_mapping_support_points_permuted_zx_components.allocate(
+        TableIndices<1>(
+          scratch_cpu.kx_mapping_support_points_permuted_zx_components.size()),
+        scratch_cpu.cuda_stream_handle);
 
       kx_jacobians_same_panel.allocate(
         scratch_cpu.kx_jacobians_same_panel.size(),
@@ -1204,34 +1146,20 @@ namespace IdeoBEM
         TableIndices<1>(scratch_cpu.ky_mapping_support_points_permuted.size()),
         scratch_cpu.cuda_stream_handle);
 
-      error_code = cudaMallocAsync(
-        (void **)&ky_mapping_support_points_permuted_two_components,
-        scratch_cpu.ky_mapping_support_points_permuted.size() * 2 *
-          sizeof(RangeNumberType),
+      ky_mapping_support_points_permuted_xy_components.allocate(
+        TableIndices<1>(
+          scratch_cpu.ky_mapping_support_points_permuted_xy_components.size()),
         scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
 
-      error_code = cudaMallocAsync(
-        (void **)&ky_mapping_support_points_permuted_all_components,
-        scratch_cpu.ky_mapping_support_points_permuted.size() * spacedim *
-          sizeof(RangeNumberType),
+      ky_mapping_support_points_permuted_yz_components.allocate(
+        TableIndices<1>(
+          scratch_cpu.ky_mapping_support_points_permuted_yz_components.size()),
         scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
 
-      error_code = cudaMallocAsync((void **)&ky_mapping_jacobian_matrix,
-                                   spacedim * dim * sizeof(RangeNumberType),
-                                   scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      error_code = cudaMallocAsync((void **)&ky_mapping_metric_tensor,
-                                   dim * dim * sizeof(RangeNumberType),
-                                   scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      error_code = cudaMallocAsync((void **)&ky_mapping_metric_tensor_inv,
-                                   dim * dim * sizeof(RangeNumberType),
-                                   scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
+      ky_mapping_support_points_permuted_zx_components.allocate(
+        TableIndices<1>(
+          scratch_cpu.ky_mapping_support_points_permuted_zx_components.size()),
+        scratch_cpu.cuda_stream_handle);
 
       ky_jacobians_same_panel.allocate(
         scratch_cpu.ky_jacobians_same_panel.size(),
@@ -1315,29 +1243,29 @@ namespace IdeoBEM
         scratch_cpu.kx_mapping_support_points_permuted,
         scratch_cpu.cuda_stream_handle);
 
-      kx_quad_points_same_panel.assign_from_host(
-        scratch_cpu.kx_quad_points_same_panel, scratch_cpu.cuda_stream_handle);
-      kx_quad_points_common_edge.assign_from_host(
-        scratch_cpu.kx_quad_points_common_edge, scratch_cpu.cuda_stream_handle);
-      kx_quad_points_common_vertex.assign_from_host(
-        scratch_cpu.kx_quad_points_common_vertex,
-        scratch_cpu.cuda_stream_handle);
-      kx_quad_points_regular.assign_from_host(
-        scratch_cpu.kx_quad_points_regular, scratch_cpu.cuda_stream_handle);
-
       ky_mapping_support_points_permuted.assign_from_host(
         scratch_cpu.ky_mapping_support_points_permuted,
         scratch_cpu.cuda_stream_handle);
 
-      ky_quad_points_same_panel.assign_from_host(
-        scratch_cpu.ky_quad_points_same_panel, scratch_cpu.cuda_stream_handle);
-      ky_quad_points_common_edge.assign_from_host(
-        scratch_cpu.ky_quad_points_common_edge, scratch_cpu.cuda_stream_handle);
-      ky_quad_points_common_vertex.assign_from_host(
-        scratch_cpu.ky_quad_points_common_vertex,
+      kx_mapping_support_points_permuted_xy_components.assign_from_host(
+        scratch_cpu.kx_mapping_support_points_permuted_xy_components,
         scratch_cpu.cuda_stream_handle);
-      ky_quad_points_regular.assign_from_host(
-        scratch_cpu.ky_quad_points_regular, scratch_cpu.cuda_stream_handle);
+      kx_mapping_support_points_permuted_yz_components.assign_from_host(
+        scratch_cpu.kx_mapping_support_points_permuted_yz_components,
+        scratch_cpu.cuda_stream_handle);
+      kx_mapping_support_points_permuted_zx_components.assign_from_host(
+        scratch_cpu.kx_mapping_support_points_permuted_zx_components,
+        scratch_cpu.cuda_stream_handle);
+
+      ky_mapping_support_points_permuted_xy_components.assign_from_host(
+        scratch_cpu.ky_mapping_support_points_permuted_xy_components,
+        scratch_cpu.cuda_stream_handle);
+      ky_mapping_support_points_permuted_yz_components.assign_from_host(
+        scratch_cpu.ky_mapping_support_points_permuted_yz_components,
+        scratch_cpu.cuda_stream_handle);
+      ky_mapping_support_points_permuted_zx_components.assign_from_host(
+        scratch_cpu.ky_mapping_support_points_permuted_zx_components,
+        scratch_cpu.cuda_stream_handle);
     }
 
 
@@ -1350,24 +1278,9 @@ namespace IdeoBEM
 
       kx_mapping_support_points_permuted.release(stream);
 
-      error_code =
-        cudaFreeAsync(kx_mapping_support_points_permuted_two_components,
-                      stream);
-      AssertCuda(error_code);
-
-      error_code =
-        cudaFreeAsync(kx_mapping_support_points_permuted_all_components,
-                      stream);
-      AssertCuda(error_code);
-
-      error_code = cudaFreeAsync(kx_mapping_jacobian_matrix, stream);
-      AssertCuda(error_code);
-
-      error_code = cudaFreeAsync(kx_mapping_metric_tensor, stream);
-      AssertCuda(error_code);
-
-      error_code = cudaFreeAsync(kx_mapping_metric_tensor_inv, stream);
-      AssertCuda(error_code);
+      kx_mapping_support_points_permuted_xy_components.release(stream);
+      kx_mapping_support_points_permuted_yz_components.release(stream);
+      kx_mapping_support_points_permuted_zx_components.release(stream);
 
       kx_jacobians_same_panel.release(stream);
       kx_jacobians_common_edge.release(stream);
@@ -1391,24 +1304,9 @@ namespace IdeoBEM
 
       ky_mapping_support_points_permuted.release(stream);
 
-      error_code =
-        cudaFreeAsync(ky_mapping_support_points_permuted_two_components,
-                      stream);
-      AssertCuda(error_code);
-
-      error_code =
-        cudaFreeAsync(ky_mapping_support_points_permuted_all_components,
-                      stream);
-      AssertCuda(error_code);
-
-      error_code = cudaFreeAsync(ky_mapping_jacobian_matrix, stream);
-      AssertCuda(error_code);
-
-      error_code = cudaFreeAsync(ky_mapping_metric_tensor, stream);
-      AssertCuda(error_code);
-
-      error_code = cudaFreeAsync(ky_mapping_metric_tensor_inv, stream);
-      AssertCuda(error_code);
+      ky_mapping_support_points_permuted_xy_components.release(stream);
+      ky_mapping_support_points_permuted_yz_components.release(stream);
+      ky_mapping_support_points_permuted_zx_components.release(stream);
 
       ky_jacobians_same_panel.release(stream);
       ky_jacobians_common_edge.release(stream);

@@ -21,6 +21,7 @@
 
 #include "bem_values.h"
 #include "cu_bem_values.hcu"
+#include "debug_tools.hcu"
 #include "mapping_q_generic_ext.h"
 #include "sauter_quadrature.hcu"
 #include "sauter_quadrature_tools.h"
@@ -87,13 +88,26 @@ main()
   IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
 
   scratch_data_gpu.allocate(scratch_data);
+  copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
+
+  cudaError_t error_code =
+    cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+  AssertCuda(error_code);
+
   scratch_data_gpu.assign_from_host(scratch_data);
+  copy_data_gpu.assign_from_host(copy_data, scratch_data.cuda_stream_handle);
 
-  copy_data_gpu.allocate(copy_data);
-  copy_data_gpu.assign_from_host(copy_data);
+  error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+  AssertCuda(error_code);
 
-  scratch_data_gpu.release();
-  copy_data_gpu.release();
+  scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+  copy_data_gpu.release(scratch_data.cuda_stream_handle);
+
+  error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+  AssertCuda(error_code);
+
+  scratch_data.release();
+  copy_data.release();
 
   return 0;
 }

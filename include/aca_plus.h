@@ -27,6 +27,7 @@
 
 #include "bem_kernels.hcu"
 #include "cu_bem_values.hcu"
+#include "debug_tools.hcu"
 #include "generic_functors.h"
 #include "hmatrix.h"
 #include "lapack_full_matrix_ext.h"
@@ -5421,6 +5422,10 @@ namespace IdeoBEM
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
+#if ENABLE_DEBUG == 1
+    Assert(is_equal(bem_values, bem_values_gpu), ExcInternalError());
+#endif
+
     std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
       hmat.get_leaf_set();
     /**
@@ -5629,6 +5634,10 @@ namespace IdeoBEM
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
+#if ENABLE_DEBUG == 1
+    Assert(is_equal(bem_values, bem_values_gpu), ExcInternalError());
+#endif
+
     std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
       hmat.get_leaf_set();
     /**
@@ -5834,6 +5843,10 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
+
+#if ENABLE_DEBUG == 1
+    Assert(is_equal(bem_values, bem_values_gpu), ExcInternalError());
+#endif
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
       hmat.get_leaf_set();

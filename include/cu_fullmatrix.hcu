@@ -45,6 +45,12 @@ namespace IdeoBEM
       CUDAFullMatrix(pointer p, const size_type _rows, const size_type _cols);
 
       /**
+       * Reinitialize the current matrix wrapper with new pointer and dimension.
+       */
+      __host__ __device__ void
+      reinit(pointer p, const size_type _rows, const size_type _cols);
+
+      /**
        * Deep copy constructor is disabled. Since this class has no
        * memory allocation, which is merely a wrapper, and because all memory
        * allocation on GPU has been performed in the host code by calling
@@ -333,6 +339,18 @@ namespace IdeoBEM
       , rows(_rows)
       , cols(_cols)
     {}
+
+
+    template <typename T>
+    __host__ __device__ void
+    CUDAFullMatrix<T>::reinit(pointer         p,
+                              const size_type _rows,
+                              const size_type _cols)
+    {
+      values = p;
+      rows   = _rows;
+      cols   = _cols;
+    }
 
 
     template <typename T>

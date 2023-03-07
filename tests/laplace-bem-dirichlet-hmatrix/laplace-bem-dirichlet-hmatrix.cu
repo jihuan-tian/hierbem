@@ -6,6 +6,10 @@
  * \date 2022-09-23
  */
 
+#include <deal.II/base/logstream.h>
+
+#include <cuda_runtime.h>
+
 #include <iostream>
 
 #include "laplace_bem.h"
@@ -99,13 +103,22 @@ private:
 int
 main(int argc, char *argv[])
 {
-  deallog.depth_console(2);
+  /**
+   * @internal Pop out the default "DEAL" prefix string.
+   */
+  deallog.pop();
+  deallog.depth_console(5);
 
   /**
    * @internal Initialize the CUDA device parameters.
    */
+  cudaError_t error_code = cudaSetDevice(0);
+  error_code =
+    cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceScheduleBlockingSync);
+  AssertCuda(error_code);
+
   const size_t stack_size = 1024 * 10;
-  cudaError_t  error_code = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
+  error_code              = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
   AssertCuda(error_code);
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;
 

@@ -9,5 +9,6 @@
 #define INCLUDE_CONFIG_H_
 
 #define ENABLE_PRINTOUT 1
+#define ENABLE_DEBUG 1
 
 #endif /* INCLUDE_CONFIG_H_ */

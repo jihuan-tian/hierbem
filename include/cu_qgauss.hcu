@@ -89,11 +89,13 @@ namespace IdeoBEM
     private:
       unsigned int quad_num = 0;
       /**
-       * Table of quadrature points. The first dimension is the quadrature point
-       * index. The second dimension is coordinate index. Since @p CUDATable
-       * adopts C style indexing, this memory configuration is consistent with
-       * the quadrature point data held within @p QGauss, which is a vector of
-       * @p Point objects.
+       * Table of quadrature points.
+       * - The first dimension is the quadrature point index.
+       * - The second dimension is coordinate index.
+       *
+       * Since @p CUDATable adopts C style indexing, this memory configuration
+       * is consistent with the quadrature point data held within @p QGauss,
+       * which is a vector of @p Point objects.
        */
       CUDATable<2, double> points;
       double              *weights = nullptr;
