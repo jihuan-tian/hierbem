@@ -112,13 +112,13 @@ main(int argc, char *argv[])
   /**
    * @internal Initialize the CUDA device parameters.
    */
-  cudaError_t error_code = cudaSetDevice(0);
-  error_code =
-    cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceScheduleBlockingSync);
-  AssertCuda(error_code);
+  //  cudaError_t error_code = cudaSetDevice(0);
+  //  error_code =
+  //    cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceScheduleBlockingSync);
+  //  AssertCuda(error_code);
 
   const size_t stack_size = 1024 * 10;
-  error_code              = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
+  cudaError_t  error_code = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
   AssertCuda(error_code);
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;
 
@@ -140,7 +140,7 @@ main(int argc, char *argv[])
     1.0,  // eta for preconditioner
     2,    // max rank for preconditioner
     0.1,  // aca epsilon for preconditioner
-    1);   // MultithreadInfo::n_cores());
+    MultithreadInfo::n_cores());
 
   if (argc > 1)
     {
