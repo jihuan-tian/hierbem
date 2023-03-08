@@ -2900,8 +2900,6 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
-    LogStream::Prefix prefix_string("Sauter");
-
     /**
      * @internal This result variable accumulates all contributions from pairs
      * of cells related to the global DoF indices @p (i,j).
@@ -3130,54 +3128,6 @@ namespace IdeoBEM
                 AssertCuda(error_code);
               }
 
-#if ENABLE_DEBUG == 1
-            /**
-             * @internal For debug purpose, here we calculate the scratch data
-             * on the CPU, then compare the results with those on the GPU.
-             */
-            const QGauss<dim * 2> active_quad_rule =
-              select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
-                                                      bem_values);
-            calc_jacobian_normals_for_sauter_quad(cell_neighboring_type,
-                                                  bem_values,
-                                                  scratch_data,
-                                                  active_quad_rule);
-
-            /**
-             * @internal When the bilinear form for the hyper singular operator
-             * is evaluated, the covariant transformation is required.
-             */
-            if (kernel.kernel_type == HyperSingularRegular)
-              {
-                calc_covariant_transformations(cell_neighboring_type,
-                                               bem_values,
-                                               scratch_data,
-                                               active_quad_rule);
-              }
-//
-//            deallog << scratch_data.cuda_stream_handle << ": (" <<
-//            i << "," <<
-//            j
-//                    << "," << kx_cell_index << "," <<
-//                    ky_cell_index << ","
-//                    <<
-//                    cell_neighboring_type_name(cell_neighboring_type)
-//                    <<
-//                    ")"
-//                    << std::endl;
-//            Assert(is_equal(scratch_data,
-//                            scratch_data_gpu,
-//                            1e-10,
-//                            scratch_data.cuda_stream_handle,
-//                            kernel.kernel_type ==
-//                            HyperSingularRegular),
-//                   ExcInternalError());
-//            Assert(is_equal(copy_data,
-//                            copy_data_gpu,
-//                            scratch_data.cuda_stream_handle),
-//                   ExcInternalError());
-#endif
-
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
              * \f$K_x\f$.
@@ -3296,49 +3246,6 @@ namespace IdeoBEM
               {
                 double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
-
-#if ENABLE_DEBUG == 1
-            RangeNumberType quad_values_sum = 0.;
-            for (unsigned int t = 0; t < blocks_rect.x; t++)
-              {
-                quad_values_sum += scratch_data.quad_values_in_thread_blocks[t];
-              }
-
-            RangeNumberType quad_values_sum_cpu = 0.;
-            // Pullback the kernel function to unit cell.
-            IdeoBEM::CUDAWrappers::KernelPulledbackToUnitCell<
-              dim,
-              spacedim,
-              KernelFunctionType,
-              RangeNumberType>
-              kernel_pullback_on_unit(kernel,
-                                      cell_neighboring_type,
-                                      i_index,
-                                      j_index);
-
-            // Pullback the kernel function to Sauter parameter space.
-            IdeoBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
-              dim,
-              spacedim,
-              KernelFunctionType,
-              RangeNumberType>
-              kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                        cell_neighboring_type);
-
-            // Apply Sauter numerical quadrature.
-            quad_values_sum_cpu =
-              ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                            kernel_pullback_on_sauter,
-                                            kernel_factor,
-                                            bem_values,
-                                            scratch_data);
-
-            //            deallog << "(" << quad_values_sum << "," <<
-            //            quad_values_sum_cpu
-            //                    << ")" << std::endl;
-            Assert(std::fabs(quad_values_sum - quad_values_sum_cpu) < 1e-10,
-                   ExcInternalError());
-#endif
           }
       }
 
@@ -3426,8 +3333,6 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
   {
-    LogStream::Prefix prefix_string("Sauter");
-
     /**
      * @internal This result variable accumulates all contributions from pairs
      * of cells related to the global DoF indices @p (i,j).
@@ -3650,54 +3555,6 @@ namespace IdeoBEM
                 AssertCuda(error_code);
               }
 
-#if ENABLE_DEBUG == 1
-            /**
-             * @internal For debug purpose, here we calculate the scratch data
-             * on the CPU, then compare the results with those on the GPU.
-             */
-            const QGauss<dim * 2> active_quad_rule =
-              select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
-                                                      bem_values);
-            calc_jacobian_normals_for_sauter_quad(cell_neighboring_type,
-                                                  bem_values,
-                                                  scratch_data,
-                                                  active_quad_rule);
-
-            /**
-             * @internal When the bilinear form for the hyper singular operator
-             * is evaluated, the covariant transformation is required.
-             */
-            if (kernel.kernel_type == HyperSingularRegular)
-              {
-                calc_covariant_transformations(cell_neighboring_type,
-                                               bem_values,
-                                               scratch_data,
-                                               active_quad_rule);
-              }
-
-//            deallog << scratch_data.cuda_stream_handle << ": (" <<
-//            i << "," <<
-//            j
-//                    << "," << kx_cell_index << "," <<
-//                    ky_cell_index << ","
-//                    <<
-//                    cell_neighboring_type_name(cell_neighboring_type)
-//                    <<
-//                    ")"
-//                    << std::endl;
-//            Assert(is_equal(scratch_data,
-//                            scratch_data_gpu,
-//                            1e-10,
-//                            scratch_data.cuda_stream_handle,
-//                            kernel.kernel_type ==
-//                            HyperSingularRegular),
-//                   ExcInternalError());
-//            Assert(is_equal(copy_data,
-//                            copy_data_gpu,
-//                            scratch_data.cuda_stream_handle),
-//                   ExcInternalError());
-#endif
-
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
              * \f$K_x\f$.
@@ -3816,49 +3673,6 @@ namespace IdeoBEM
               {
                 double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
-
-#if ENABLE_DEBUG == 1
-            RangeNumberType quad_values_sum = 0.;
-            for (unsigned int t = 0; t < blocks_rect.x; t++)
-              {
-                quad_values_sum += scratch_data.quad_values_in_thread_blocks[t];
-              }
-
-            RangeNumberType quad_values_sum_cpu = 0.;
-            // Pullback the kernel function to unit cell.
-            IdeoBEM::CUDAWrappers::KernelPulledbackToUnitCell<
-              dim,
-              spacedim,
-              KernelFunctionType,
-              RangeNumberType>
-              kernel_pullback_on_unit(kernel,
-                                      cell_neighboring_type,
-                                      i_index,
-                                      j_index);
-
-            // Pullback the kernel function to Sauter parameter space.
-            IdeoBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
-              dim,
-              spacedim,
-              KernelFunctionType,
-              RangeNumberType>
-              kernel_pullback_on_sauter(kernel_pullback_on_unit,
-                                        cell_neighboring_type);
-
-            // Apply Sauter numerical quadrature.
-            quad_values_sum_cpu =
-              ApplyQuadratureUsingBEMValues(active_quad_rule,
-                                            kernel_pullback_on_sauter,
-                                            kernel_factor,
-                                            bem_values,
-                                            scratch_data);
-
-            //            deallog << "(" << quad_values_sum << "," <<
-            //            quad_values_sum_cpu
-            //                    << ")" << std::endl;
-            Assert(std::fabs(quad_values_sum - quad_values_sum_cpu) < 1e-10,
-                   ExcInternalError());
-#endif
 
             /**
              * Append the FEM mass matrix contribution.
