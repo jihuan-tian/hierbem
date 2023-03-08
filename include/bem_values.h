@@ -8,6 +8,7 @@
 #ifndef INCLUDE_BEM_VALUES_H_
 #define INCLUDE_BEM_VALUES_H_
 
+#include <deal.II/base/point.h>
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
 
@@ -15,7 +16,9 @@
 #include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_tools.h>
 
-#include "bem_tools.h"
+#include "bem_tools.hcu"
+#include "cpu_table.h"
+#include "lapack_full_matrix_ext.h"
 #include "sauter_quadrature_tools.h"
 
 namespace IdeoBEM
@@ -58,10 +61,10 @@ namespace IdeoBEM
       const FiniteElement<dim, spacedim>                    &ky_fe,
       typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
       typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-      const QGauss<4> &quad_rule_for_same_panel,
-      const QGauss<4> &quad_rule_for_common_edge,
-      const QGauss<4> &quad_rule_for_common_vertex,
-      const QGauss<4> &quad_rule_for_regular);
+      const QGauss<dim * 2> &quad_rule_for_same_panel,
+      const QGauss<dim * 2> &quad_rule_for_common_edge,
+      const QGauss<dim * 2> &quad_rule_for_common_vertex,
+      const QGauss<dim * 2> &quad_rule_for_regular);
 
 
     /**
@@ -281,7 +284,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of finite element shape function's gradient values for
@@ -291,7 +294,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of finite element shape function's gradient values for
@@ -301,7 +304,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of finite element shape function's gradient values for
@@ -311,7 +314,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of finite element shape function's gradient values for
@@ -321,7 +324,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of finite element shape function's gradient values for
@@ -331,7 +334,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of finite element shape function's gradient values for
@@ -341,7 +344,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_shape_grad_matrix_table_for_regular;
     /**
      * Data table of finite element shape function's gradient values for
@@ -351,7 +354,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$dofs_per_cell*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_shape_grad_matrix_table_for_regular;
 
     /**
@@ -362,7 +365,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of mapping shape function's gradient values for
@@ -372,7 +375,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_same_panel;
     /**
      * Data table of mapping shape function's gradient values for
@@ -382,7 +385,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of mapping shape function's gradient values for
@@ -392,7 +395,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_common_edge;
     /**
      * Data table of mapping shape function's gradient values for
@@ -402,7 +405,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of mapping shape function's gradient values for
@@ -412,7 +415,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_common_vertex;
     /**
      * Data table of mapping shape function's gradient values for
@@ -422,7 +425,7 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       kx_mapping_shape_grad_matrix_table_for_regular;
     /**
      * Data table of mapping shape function's gradient values for
@@ -432,12 +435,12 @@ namespace IdeoBEM
      * N.B. Each data item in the table is itself a matrix with the dimension
      * \f$MappingQGeneric::InternalData.n_shape_functions*dim\f$.
      */
-    Table<2, FullMatrix<RangeNumberType>>
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>>
       ky_mapping_shape_grad_matrix_table_for_regular;
 
     /**
-     * Fill the data tables for both finite element and mapping shape function
-     * values and their derivatives.
+     * Fill the data tables for the values and derivatives of finite element
+     * shape functions and mapping object shape functions.
      */
     void
     fill_shape_function_value_tables();
@@ -463,16 +466,23 @@ namespace IdeoBEM
     init_shape_grad_matrix_tables();
 
     /**
-     * Initialize the data tables for the gradient values of mapping shape
-     * functions.
+     * Initialize the data tables for the gradient values of shape functions in
+     * the mapping object.
      */
     void
     init_mapping_shape_grad_matrix_tables();
 
+    /**
+     * Initialize matrices storing the gradient values of shape functions in the
+     * mapping object.
+     *
+     * @param table
+     * @param n_shape_functions
+     */
     void
     init_internal_matrix_in_mapping_shape_grad_matrix_table(
-      Table<2, FullMatrix<RangeNumberType>> &table,
-      const unsigned int                     n_shape_functions);
+      Table<2, LAPACKFullMatrixExt<RangeNumberType>> &table,
+      const unsigned int                              n_shape_functions);
   };
 
 
@@ -482,10 +492,10 @@ namespace IdeoBEM
     const FiniteElement<dim, spacedim>                    &ky_fe,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const QGauss<4> &quad_rule_for_same_panel,
-    const QGauss<4> &quad_rule_for_common_edge,
-    const QGauss<4> &quad_rule_for_common_vertex,
-    const QGauss<4> &quad_rule_for_regular)
+    const QGauss<dim * 2> &quad_rule_for_same_panel,
+    const QGauss<dim * 2> &quad_rule_for_common_edge,
+    const QGauss<dim * 2> &quad_rule_for_common_vertex,
+    const QGauss<dim * 2> &quad_rule_for_regular)
     : kx_fe(kx_fe)
     , ky_fe(ky_fe)
     , kx_mapping_data(kx_mapping_data)
@@ -643,8 +653,8 @@ namespace IdeoBEM
   void
   BEMValues<dim, spacedim, RangeNumberType>::
     init_internal_matrix_in_mapping_shape_grad_matrix_table(
-      Table<2, FullMatrix<RangeNumberType>> &table,
-      const unsigned int                     n_shape_functions)
+      Table<2, LAPACKFullMatrixExt<RangeNumberType>> &table,
+      const unsigned int                              n_shape_functions)
   {
     for (unsigned int i = 0; i < table.size(0); i++)
       for (unsigned int j = 0; j < table.size(1); j++)
@@ -814,9 +824,17 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Even though the internally generated polynomials are in the
-         * tensor product order, the shape function values and derivatives are
-         * still in the hierarchic order.}
+         *
+         * \alert{Even though the internally generated polynomials in the
+         * mapping object are in the tensor product order, the shape function
+         * values and derivatives are still in the hierarchic order. This can be
+         * verified by checking the source code of
+         * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
+         * (see
+         * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)
+         *
+         * However, this behavior is different from the documentation for the
+         * function @p MappingQ< dim, spacedim >::InternalData::shape().}
          */
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
@@ -1017,9 +1035,17 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Even though the internally generated polynomials are in the
-         * tensor product order, the shape function values and derivatives are
-         * still in the hierarchic order.}
+         *
+         * \alert{Even though the internally generated polynomials in the
+         * mapping object are in the tensor product order, the shape function
+         * values and derivatives are still in the hierarchic order. This can be
+         * verified by checking the source code of
+         * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
+         * (see
+         * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)
+         *
+         * However, this behavior is different from the documentation for the
+         * function @p MappingQ< dim, spacedim >::InternalData::shape().}
          */
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
@@ -1225,9 +1251,17 @@ namespace IdeoBEM
 
         /**
          * Compute mapping shape function values and their derivatives in batch.
-         * \mynote{Even though the internally generated polynomials are in the
-         * tensor product order, the shape function values and derivatives are
-         * still in the hierarchic order.}
+         *
+         * \alert{Even though the internally generated polynomials in the
+         * mapping object are in the tensor product order, the shape function
+         * values and derivatives are still in the hierarchic order. This can be
+         * verified by checking the source code of
+         * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
+         * (see
+         * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)
+         *
+         * However, this behavior is different from the documentation for the
+         * function @p MappingQ< dim, spacedim >::InternalData::shape().}
          */
         // Get the numbering for accessing the support points in the
         // lexicographic ordering which are stored in the hierarchic ordering.
@@ -1417,9 +1451,17 @@ namespace IdeoBEM
 
     /**
      * Compute mapping shape function values and their derivatives in batch.
-     * \mynote{Even though the internally generated polynomials are in the
-     * tensor product order, the shape function values and derivatives are
-     * still in the hierarchic order.}
+     *
+     * \alert{Even though the internally generated polynomials in the
+     * mapping object are in the tensor product order, the shape function
+     * values and derivatives are still in the hierarchic order. This can be
+     * verified by checking the source code of
+     * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
+     * (see
+     * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)
+     *
+     * However, this behavior is different from the documentation for the
+     * function @p MappingQ< dim, spacedim >::InternalData::shape().}
      */
     // Get the numbering for accessing the support points in the
     // lexicographic ordering which are stored in the hierarchic ordering.
@@ -1475,7 +1517,7 @@ namespace IdeoBEM
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
   struct CellWiseCopyDataForMassMatrix
   {
-    FullMatrix<RangeNumberType> local_matrix;
+    LAPACKFullMatrixExt<RangeNumberType> local_matrix;
     // N.B. Memory should be preallocated for this vector before calling
     // <code>get_dof_indices</code>.
     std::vector<types::global_dof_index> local_dof_indices_for_test_space;
@@ -1516,8 +1558,8 @@ namespace IdeoBEM
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
   struct CellWiseCopyDataForMassMatrixVmult
   {
-    FullMatrix<RangeNumberType> local_matrix;
-    Vector<RangeNumberType>     local_u, local_v;
+    LAPACKFullMatrixExt<RangeNumberType> local_matrix;
+    Vector<RangeNumberType>              local_u, local_v;
 
     // N.B. Memory should be preallocated for this vector before calling
     // <code>get_dof_indices</code>.
@@ -1662,9 +1704,15 @@ namespace IdeoBEM
    * is used for SMP parallel computation of BEM matrices.
    */
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
-  struct PairCellWiseScratchData
+  class PairCellWiseScratchData
   {
+  public:
     using FE_Poly_short = FE_Poly<dim, spacedim>;
+
+    /**
+     * CUDA stream associated with this CPU work stream.
+     */
+    cudaStream_t cuda_stream_handle;
 
     /**
      * The intersection set of the vertex local indices for the two cells
@@ -1696,6 +1744,20 @@ namespace IdeoBEM
      */
     std::vector<Point<spacedim, RangeNumberType>>
       ky_mapping_support_points_permuted;
+
+    std::vector<Point<2, RangeNumberType>>
+      kx_mapping_support_points_permuted_xy_components;
+    std::vector<Point<2, RangeNumberType>>
+      kx_mapping_support_points_permuted_yz_components;
+    std::vector<Point<2, RangeNumberType>>
+      kx_mapping_support_points_permuted_zx_components;
+
+    std::vector<Point<2, RangeNumberType>>
+      ky_mapping_support_points_permuted_xy_components;
+    std::vector<Point<2, RangeNumberType>>
+      ky_mapping_support_points_permuted_yz_components;
+    std::vector<Point<2, RangeNumberType>>
+      ky_mapping_support_points_permuted_zx_components;
 
     /**
      * The list of DoF indices in \f$K_x\f$ which are ordered in the
@@ -1834,22 +1896,22 @@ namespace IdeoBEM
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the same panel case.
      */
-    Table<2, FullMatrix<RangeNumberType>> kx_covariants_same_panel;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_same_panel;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the common edge case.
      */
-    Table<2, FullMatrix<RangeNumberType>> kx_covariants_common_edge;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_common_edge;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
      */
-    Table<2, FullMatrix<RangeNumberType>> kx_covariants_common_vertex;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_common_vertex;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the regular case.
      */
-    Table<2, FullMatrix<RangeNumberType>> kx_covariants_regular;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> kx_covariants_regular;
 
     /**
      * Coordinates in the real cell \f$K_x\f$ for each \f$k_3\f$ term and each
@@ -1919,22 +1981,22 @@ namespace IdeoBEM
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the same panel case.
      */
-    Table<2, FullMatrix<RangeNumberType>> ky_covariants_same_panel;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_same_panel;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the common edge case.
      */
-    Table<2, FullMatrix<RangeNumberType>> ky_covariants_common_edge;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_common_edge;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the common vertex case.
      */
-    Table<2, FullMatrix<RangeNumberType>> ky_covariants_common_vertex;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_common_vertex;
     /**
      * Covariant transformation matrix for each \f$k_3\f$ term and each
      * quadrature point in the real cell \f$K_x\f$ for the regular case.
      */
-    Table<2, FullMatrix<RangeNumberType>> ky_covariants_regular;
+    Table<2, LAPACKFullMatrixExt<RangeNumberType>> ky_covariants_regular;
 
     /**
      * Coordinates in the real cell \f$K_y\f$ for each \f$k_3\f$ term and each
@@ -1956,6 +2018,10 @@ namespace IdeoBEM
      * quadrature point for the regular case.
      */
     Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
+    /**
+     * Buffer holding quadrature results accumulated from all thread blocks.
+     */
+    RangeNumberType *quad_values_in_thread_blocks;
 
     /**
      * Constructor
@@ -1969,7 +2035,8 @@ namespace IdeoBEM
                             const MappingQGenericExt<dim, spacedim> &kx_mapping,
                             const MappingQGenericExt<dim, spacedim> &ky_mapping,
                             const BEMValues<dim, spacedim>          &bem_values)
-      : common_vertex_pair_local_indices(0)
+      : cuda_stream_handle(0)
+      , common_vertex_pair_local_indices(0)
       , kx_mapping_support_points_in_default_order(
           bem_values.kx_mapping_data.n_shape_functions)
       , ky_mapping_support_points_in_default_order(
@@ -1977,6 +2044,18 @@ namespace IdeoBEM
       , kx_mapping_support_points_permuted(
           bem_values.kx_mapping_data.n_shape_functions)
       , ky_mapping_support_points_permuted(
+          bem_values.ky_mapping_data.n_shape_functions)
+      , kx_mapping_support_points_permuted_xy_components(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , kx_mapping_support_points_permuted_yz_components(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , kx_mapping_support_points_permuted_zx_components(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_points_permuted_xy_components(
+          bem_values.ky_mapping_data.n_shape_functions)
+      , ky_mapping_support_points_permuted_yz_components(
+          bem_values.ky_mapping_data.n_shape_functions)
+      , ky_mapping_support_points_permuted_zx_components(
           bem_values.ky_mapping_data.n_shape_functions)
       , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
@@ -2044,7 +2123,12 @@ namespace IdeoBEM
           4,
           bem_values.quad_rule_for_common_vertex.size())
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
+      , quad_values_in_thread_blocks(nullptr)
     {
+      cudaError_t error_code;
+      error_code = cudaStreamCreate(&cuda_stream_handle);
+      AssertCuda(error_code);
+
       common_vertex_pair_local_indices.reserve(
         GeometryInfo<dim>::vertices_per_cell);
 
@@ -2068,6 +2152,119 @@ namespace IdeoBEM
           ky_mapping.get_degree());
       generate_backward_mapping_support_point_permutation(
         ky_mapping, 0, ky_mapping_reversed_poly_space_numbering_inverse);
+
+      /**
+       * @internal Register host memory for asynchronous transfer to the device.
+       */
+      error_code =
+        cudaHostRegister((void *)kx_mapping_support_points_permuted.data(),
+                         kx_mapping_support_points_permuted.size() *
+                           sizeof(Point<spacedim, RangeNumberType>),
+                         0);
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostRegister((void *)ky_mapping_support_points_permuted.data(),
+                         ky_mapping_support_points_permuted.size() *
+                           sizeof(Point<spacedim, RangeNumberType>),
+                         0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister(
+        (void *)kx_mapping_support_points_permuted_xy_components.data(),
+        kx_mapping_support_points_permuted_xy_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister(
+        (void *)kx_mapping_support_points_permuted_yz_components.data(),
+        kx_mapping_support_points_permuted_yz_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister(
+        (void *)kx_mapping_support_points_permuted_zx_components.data(),
+        kx_mapping_support_points_permuted_zx_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister(
+        (void *)ky_mapping_support_points_permuted_xy_components.data(),
+        ky_mapping_support_points_permuted_xy_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister(
+        (void *)ky_mapping_support_points_permuted_yz_components.data(),
+        ky_mapping_support_points_permuted_yz_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister(
+        (void *)ky_mapping_support_points_permuted_zx_components.data(),
+        ky_mapping_support_points_permuted_zx_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister((void *)&(kx_quad_points_same_panel(0, 0)),
+                                    kx_quad_points_same_panel.n_elements() *
+                                      sizeof(Point<spacedim, RangeNumberType>),
+                                    0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister((void *)&(kx_quad_points_common_edge(0, 0)),
+                                    kx_quad_points_common_edge.n_elements() *
+                                      sizeof(Point<spacedim, RangeNumberType>),
+                                    0);
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostRegister((void *)&(kx_quad_points_common_vertex(0, 0)),
+                         kx_quad_points_common_vertex.n_elements() *
+                           sizeof(Point<spacedim, RangeNumberType>),
+                         0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister((void *)&(kx_quad_points_regular(0, 0)),
+                                    kx_quad_points_regular.n_elements() *
+                                      sizeof(Point<spacedim, RangeNumberType>),
+                                    0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister((void *)&(ky_quad_points_same_panel(0, 0)),
+                                    ky_quad_points_same_panel.n_elements() *
+                                      sizeof(Point<spacedim, RangeNumberType>),
+                                    0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister((void *)&(ky_quad_points_common_edge(0, 0)),
+                                    ky_quad_points_common_edge.n_elements() *
+                                      sizeof(Point<spacedim, RangeNumberType>),
+                                    0);
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostRegister((void *)&(ky_quad_points_common_vertex(0, 0)),
+                         ky_quad_points_common_vertex.n_elements() *
+                           sizeof(Point<spacedim, RangeNumberType>),
+                         0);
+      AssertCuda(error_code);
+
+      error_code = cudaHostRegister((void *)&(ky_quad_points_regular(0, 0)),
+                                    ky_quad_points_regular.n_elements() *
+                                      sizeof(Point<spacedim, RangeNumberType>),
+                                    0);
+      AssertCuda(error_code);
+
+      error_code = cudaMallocHost((void **)&quad_values_in_thread_blocks,
+                                  100 * sizeof(RangeNumberType));
+      AssertCuda(error_code);
     }
 
 
@@ -2078,7 +2275,8 @@ namespace IdeoBEM
      */
     PairCellWiseScratchData(
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch)
-      : common_vertex_pair_local_indices(
+      : cuda_stream_handle(scratch.cuda_stream_handle)
+      , common_vertex_pair_local_indices(
           scratch.common_vertex_pair_local_indices)
       , kx_mapping_support_points_in_default_order(
           scratch.kx_mapping_support_points_in_default_order)
@@ -2088,6 +2286,18 @@ namespace IdeoBEM
           scratch.kx_mapping_support_points_permuted)
       , ky_mapping_support_points_permuted(
           scratch.ky_mapping_support_points_permuted)
+      , kx_mapping_support_points_permuted_xy_components(
+          scratch.kx_mapping_support_points_permuted_xy_components)
+      , kx_mapping_support_points_permuted_yz_components(
+          scratch.kx_mapping_support_points_permuted_yz_components)
+      , kx_mapping_support_points_permuted_zx_components(
+          scratch.kx_mapping_support_points_permuted_zx_components)
+      , ky_mapping_support_points_permuted_xy_components(
+          scratch.ky_mapping_support_points_permuted_xy_components)
+      , ky_mapping_support_points_permuted_yz_components(
+          scratch.ky_mapping_support_points_permuted_yz_components)
+      , ky_mapping_support_points_permuted_zx_components(
+          scratch.ky_mapping_support_points_permuted_zx_components)
       , kx_local_dof_indices_in_default_dof_order(
           scratch.kx_local_dof_indices_in_default_dof_order)
       , ky_local_dof_indices_in_default_dof_order(
@@ -2140,20 +2350,94 @@ namespace IdeoBEM
       , ky_quad_points_common_edge(scratch.ky_quad_points_common_edge)
       , ky_quad_points_common_vertex(scratch.ky_quad_points_common_vertex)
       , ky_quad_points_regular(scratch.ky_quad_points_regular)
+      , quad_values_in_thread_blocks(scratch.quad_values_in_thread_blocks)
     {}
+
+    void
+    release()
+    {
+      cudaError_t error_code = cudaStreamDestroy(cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)kx_mapping_support_points_permuted.data());
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)ky_mapping_support_points_permuted.data());
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister(
+        (void *)kx_mapping_support_points_permuted_xy_components.data());
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister(
+        (void *)kx_mapping_support_points_permuted_yz_components.data());
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister(
+        (void *)kx_mapping_support_points_permuted_zx_components.data());
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister(
+        (void *)ky_mapping_support_points_permuted_xy_components.data());
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister(
+        (void *)ky_mapping_support_points_permuted_yz_components.data());
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister(
+        (void *)ky_mapping_support_points_permuted_zx_components.data());
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)&(kx_quad_points_same_panel(0, 0)));
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)&(kx_quad_points_common_edge(0, 0)));
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)&(kx_quad_points_common_vertex(0, 0)));
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister((void *)&(kx_quad_points_regular(0, 0)));
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)&(ky_quad_points_same_panel(0, 0)));
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)&(ky_quad_points_common_edge(0, 0)));
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)&(ky_quad_points_common_vertex(0, 0)));
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister((void *)&(ky_quad_points_regular(0, 0)));
+      AssertCuda(error_code);
+
+      error_code = cudaFreeHost(quad_values_in_thread_blocks);
+      AssertCuda(error_code);
+    }
   };
 
 
   template <int dim, int spacedim = dim, typename RangeNumberType = double>
-  struct PairCellWisePerTaskData
+  class PairCellWisePerTaskData
   {
+  public:
     /**
      * Local matrix for the pair of cells to be assembled into the global full
      * matrix representation of the boundary integral operator.
      *
      * \comment{Therefore, this data field is only defined for verification.}
      */
-    FullMatrix<RangeNumberType> local_pair_cell_matrix;
+    LAPACKFullMatrixExt<RangeNumberType> local_pair_cell_matrix;
 
     /**
      * Permuted list of DoF indices in the cell \f$K_x\f$, each element of
@@ -2179,7 +2463,21 @@ namespace IdeoBEM
       : local_pair_cell_matrix(kx_fe.dofs_per_cell, ky_fe.dofs_per_cell)
       , kx_local_dof_indices_permuted(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_permuted(ky_fe.dofs_per_cell)
-    {}
+    {
+      cudaError_t error_code =
+        cudaHostRegister((void *)kx_local_dof_indices_permuted.data(),
+                         kx_local_dof_indices_permuted.size() *
+                           sizeof(types::global_dof_index),
+                         0);
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostRegister((void *)ky_local_dof_indices_permuted.data(),
+                         ky_local_dof_indices_permuted.size() *
+                           sizeof(types::global_dof_index),
+                         0);
+      AssertCuda(error_code);
+    }
 
 
     /**
@@ -2193,6 +2491,18 @@ namespace IdeoBEM
       , kx_local_dof_indices_permuted(task_data.kx_local_dof_indices_permuted)
       , ky_local_dof_indices_permuted(task_data.ky_local_dof_indices_permuted)
     {}
+
+    void
+    release()
+    {
+      cudaError_t error_code =
+        cudaHostUnregister((void *)kx_local_dof_indices_permuted.data());
+      AssertCuda(error_code);
+
+      error_code =
+        cudaHostUnregister((void *)ky_local_dof_indices_permuted.data());
+      AssertCuda(error_code);
+    }
   };
 } // namespace IdeoBEM
 

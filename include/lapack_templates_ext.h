@@ -19,6 +19,8 @@
 #  include <cfenv>
 #endif
 
+using namespace dealii;
+
 extern "C"
 {
   /**
@@ -37,27 +39,27 @@ extern "C"
    * @param incx
    */
   void
-  ssymv_(const char *                   uplo,
+  ssymv_(const char                    *uplo,
          const dealii::types::blas_int *n,
-         const float *                  alpha,
-         const float *                  a,
+         const float                   *alpha,
+         const float                   *a,
          const dealii::types::blas_int *lda,
-         const float *                  x,
+         const float                   *x,
          const dealii::types::blas_int *incx,
-         const float *                  beta,
-         float *                        y,
+         const float                   *beta,
+         float                         *y,
          const dealii::types::blas_int *incy);
 
   void
-  dsymv_(const char *                   uplo,
+  dsymv_(const char                    *uplo,
          const dealii::types::blas_int *n,
-         const double *                 alpha,
-         const double *                 a,
+         const double                  *alpha,
+         const double                  *a,
          const dealii::types::blas_int *lda,
-         const double *                 x,
+         const double                  *x,
          const dealii::types::blas_int *incx,
-         const double *                 beta,
-         double *                       y,
+         const double                  *beta,
+         double                        *y,
          const dealii::types::blas_int *incy);
 
   /**
@@ -75,57 +77,57 @@ extern "C"
    * @param incx
    */
   void
-  strsv_(const char *                   uplo,
-         const char *                   trans,
-         const char *                   diag,
+  strsv_(const char                    *uplo,
+         const char                    *trans,
+         const char                    *diag,
          const dealii::types::blas_int *n,
-         const float *                  a,
+         const float                   *a,
          const dealii::types::blas_int *lda,
-         float *                        x,
+         float                         *x,
          const dealii::types::blas_int *incx);
 
   void
-  dtrsv_(const char *                   uplo,
-         const char *                   trans,
-         const char *                   diag,
+  dtrsv_(const char                    *uplo,
+         const char                    *trans,
+         const char                    *diag,
          const dealii::types::blas_int *n,
-         const double *                 a,
+         const double                  *a,
          const dealii::types::blas_int *lda,
-         double *                       x,
+         double                        *x,
          const dealii::types::blas_int *incx);
 
   void
-  ctrsv_(const char *                   uplo,
-         const char *                   trans,
-         const char *                   diag,
+  ctrsv_(const char                    *uplo,
+         const char                    *trans,
+         const char                    *diag,
          const dealii::types::blas_int *n,
-         const std::complex<float> *    a,
+         const std::complex<float>     *a,
          const dealii::types::blas_int *lda,
-         std::complex<float> *          x,
+         std::complex<float>           *x,
          const dealii::types::blas_int *incx);
 
   void
-  ztrsv_(const char *                   uplo,
-         const char *                   trans,
-         const char *                   diag,
+  ztrsv_(const char                    *uplo,
+         const char                    *trans,
+         const char                    *diag,
          const dealii::types::blas_int *n,
-         const std::complex<double> *   a,
+         const std::complex<double>    *a,
          const dealii::types::blas_int *lda,
-         std::complex<double> *         x,
+         std::complex<double>          *x,
          const dealii::types::blas_int *incx);
 }
 
 
 inline void
-symv(const char *                   uplo,
+symv(const char                    *uplo,
      const dealii::types::blas_int *n,
-     const float *                  alpha,
-     const float *                  a,
+     const float                   *alpha,
+     const float                   *a,
      const dealii::types::blas_int *lda,
-     const float *                  x,
+     const float                   *x,
      const dealii::types::blas_int *incx,
-     const float *                  beta,
-     float *                        y,
+     const float                   *beta,
+     float                         *y,
      const dealii::types::blas_int *incy)
 {
 #ifdef DEAL_II_WITH_LAPACK
@@ -147,15 +149,15 @@ symv(const char *                   uplo,
 
 
 inline void
-symv(const char *                   uplo,
+symv(const char                    *uplo,
      const dealii::types::blas_int *n,
-     const double *                 alpha,
-     const double *                 a,
+     const double                  *alpha,
+     const double                  *a,
      const dealii::types::blas_int *lda,
-     const double *                 x,
+     const double                  *x,
      const dealii::types::blas_int *incx,
-     const double *                 beta,
-     double *                       y,
+     const double                  *beta,
+     double                        *y,
      const dealii::types::blas_int *incy)
 {
 #ifdef DEAL_II_WITH_LAPACK
@@ -178,13 +180,13 @@ symv(const char *                   uplo,
 
 template <typename number1, typename number2>
 inline void
-trsv(const char *                   uplo,
-     const char *                   trans,
-     const char *                   diag,
+trsv(const char                    *uplo,
+     const char                    *trans,
+     const char                    *diag,
      const dealii::types::blas_int *n,
-     const number1 *                a,
+     const number1                 *a,
      const dealii::types::blas_int *lda,
-     number2 *                      x,
+     number2                       *x,
      const dealii::types::blas_int *incx)
 {
   Assert(false, ExcNotImplemented());
@@ -192,13 +194,13 @@ trsv(const char *                   uplo,
 
 
 inline void
-trsv(const char *                   uplo,
-     const char *                   trans,
-     const char *                   diag,
+trsv(const char                    *uplo,
+     const char                    *trans,
+     const char                    *diag,
      const dealii::types::blas_int *n,
-     const float *                  a,
+     const float                   *a,
      const dealii::types::blas_int *lda,
-     float *                        x,
+     float                         *x,
      const dealii::types::blas_int *incx)
 {
 #ifdef DEAL_II_WITH_LAPACK
@@ -218,13 +220,13 @@ trsv(const char *                   uplo,
 
 
 inline void
-trsv(const char *                   uplo,
-     const char *                   trans,
-     const char *                   diag,
+trsv(const char                    *uplo,
+     const char                    *trans,
+     const char                    *diag,
      const dealii::types::blas_int *n,
-     const double *                 a,
+     const double                  *a,
      const dealii::types::blas_int *lda,
-     double *                       x,
+     double                        *x,
      const dealii::types::blas_int *incx)
 {
 #ifdef DEAL_II_WITH_LAPACK
@@ -244,13 +246,13 @@ trsv(const char *                   uplo,
 
 
 inline void
-trsv(const char *                   uplo,
-     const char *                   trans,
-     const char *                   diag,
+trsv(const char                    *uplo,
+     const char                    *trans,
+     const char                    *diag,
      const dealii::types::blas_int *n,
-     const std::complex<float> *    a,
+     const std::complex<float>     *a,
      const dealii::types::blas_int *lda,
-     std::complex<float> *          x,
+     std::complex<float>           *x,
      const dealii::types::blas_int *incx)
 {
 #ifdef DEAL_II_WITH_LAPACK
@@ -270,13 +272,13 @@ trsv(const char *                   uplo,
 
 
 inline void
-trsv(const char *                   uplo,
-     const char *                   trans,
-     const char *                   diag,
+trsv(const char                    *uplo,
+     const char                    *trans,
+     const char                    *diag,
      const dealii::types::blas_int *n,
-     const std::complex<double> *   a,
+     const std::complex<double>    *a,
      const dealii::types::blas_int *lda,
-     std::complex<double> *         x,
+     std::complex<double>          *x,
      const dealii::types::blas_int *incx)
 {
 #ifdef DEAL_II_WITH_LAPACK

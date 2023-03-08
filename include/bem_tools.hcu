@@ -6,8 +6,8 @@
  * @date 2022-03-03
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_BEM_TOOLS_H_
-#define INCLUDE_BEM_TOOLS_H_
+#ifndef INCLUDE_BEM_TOOLS_HCU_
+#define INCLUDE_BEM_TOOLS_HCU_
 
 #include <deal.II/base/derivative_form.h>
 #include <deal.II/base/point.h>
@@ -29,6 +29,8 @@
 
 #include <deal.II/lac/full_matrix.templates.h>
 
+#include <assert.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -36,13 +38,16 @@
 #include <utility>
 #include <vector>
 
+#include "cu_fullmatrix.hcu"
+#include "cu_table.hcu"
 #include "generic_functors.h"
+#include "lapack_full_matrix_ext.h"
 #include "mapping_q_generic_ext.h"
-
-using namespace dealii;
 
 namespace IdeoBEM
 {
+  using namespace dealii;
+
   namespace BEMTools
   {
     /**
@@ -394,12 +399,12 @@ namespace IdeoBEM
      * dimension is @p dofs_per_cell*dim.
      */
     template <int dim, int spacedim>
-    FullMatrix<double>
+    LAPACKFullMatrixExt<double>
     shape_grad_matrix(const FiniteElement<dim, spacedim> &fe,
                       const std::vector<unsigned int>    &dof_permutation,
                       const Point<dim>                   &p)
     {
-      FullMatrix<double> shape_grad_matrix(fe.dofs_per_cell, dim);
+      LAPACKFullMatrixExt<double> shape_grad_matrix(fe.dofs_per_cell, dim);
 
       for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
         {
@@ -435,12 +440,12 @@ namespace IdeoBEM
      * dimension is @p dofs_per_cell*dim.
      */
     template <int dim, int spacedim>
-    FullMatrix<double>
+    LAPACKFullMatrixExt<double>
     shape_grad_matrix_in_default_dof_order(
       const FiniteElement<dim, spacedim> &fe,
       const Point<dim>                   &p)
     {
-      FullMatrix<double> shape_grad_matrix(fe.dofs_per_cell, dim);
+      LAPACKFullMatrixExt<double> shape_grad_matrix(fe.dofs_per_cell, dim);
 
       for (unsigned int i = 0; i < fe.dofs_per_cell; i++)
         {
@@ -475,7 +480,7 @@ namespace IdeoBEM
      * dimension is @p dofs_per_cell*dim.
      */
     template <int dim, int spacedim>
-    FullMatrix<double>
+    LAPACKFullMatrixExt<double>
     shape_grad_matrix_in_lexicographic_order(
       const FiniteElement<dim, spacedim> &fe,
       const Point<dim>                   &p)
@@ -590,16 +595,16 @@ namespace IdeoBEM
      * has a dimension @p 2*points.size().
      */
     template <int spacedim>
-    FullMatrix<double>
+    LAPACKFullMatrixExt<double>
     collect_two_components_from_point3(
       const std::vector<Point<spacedim>> &points,
       const unsigned int                  first_component,
       const unsigned int                  second_component)
     {
-      Assert(first_component < 3, ExcInternalError());
-      Assert(second_component < 3, ExcInternalError());
+      Assert(first_component < spacedim, ExcInternalError());
+      Assert(second_component < spacedim, ExcInternalError());
 
-      FullMatrix<double> two_component_coords(2, points.size());
+      LAPACKFullMatrixExt<double> two_component_coords(2, points.size());
 
       for (unsigned int i = 0; i < points.size(); i++)
         {
@@ -635,10 +640,10 @@ namespace IdeoBEM
      * @return
      */
     template <int spacedim>
-    FullMatrix<double>
+    LAPACKFullMatrixExt<double>
     collect_components_from_points(const std::vector<Point<spacedim>> &points)
     {
-      FullMatrix<double> point_coords(spacedim, points.size());
+      LAPACKFullMatrixExt<double> point_coords(spacedim, points.size());
 
       for (unsigned int i = 0; i < points.size(); i++)
         {
@@ -2921,7 +2926,7 @@ namespace IdeoBEM
        * Calculate the shape function's gradient matrix, the rows of which are
        * in the lexicographic order.
        */
-      FullMatrix<double> shape_grad_matrix_at_p(
+      LAPACKFullMatrixExt<double> shape_grad_matrix_at_p(
         shape_grad_matrix_in_lexicographic_order(fe, p));
 
       /**
@@ -2929,18 +2934,18 @@ namespace IdeoBEM
        * metric
        * tensor, namely,\f$J_{01}\f$, \f$J_{12}\f$ and \f$J_{20}\f$.
        */
-      double             jacobian_det_squared = 0.0;
-      FullMatrix<double> jacobian_matrix_2x2(dim, dim);
+      double                      jacobian_det_squared = 0.0;
+      LAPACKFullMatrixExt<double> jacobian_matrix_2x2(dim, dim);
       for (unsigned int i = 0; i < spacedim; i++)
         {
-          FullMatrix<double> support_point_components =
+          LAPACKFullMatrixExt<double> support_point_components =
             collect_two_components_from_point3(support_points_in_real_cell,
                                                i,
                                                (i + 1) % spacedim);
           support_point_components.mmult(jacobian_matrix_2x2,
                                          shape_grad_matrix_at_p);
           jacobian_det_squared +=
-            Utilities::fixed_power<2>(jacobian_matrix_2x2.determinant());
+            Utilities::fixed_power<2>(jacobian_matrix_2x2.determinant2x2());
         }
 
       return std::sqrt(jacobian_det_squared);
@@ -2962,10 +2967,10 @@ namespace IdeoBEM
     template <int spacedim>
     double
     surface_jacobian_det(
-      const unsigned int                  k3_index,
-      const unsigned int                  quad_no,
-      const Table<2, FullMatrix<double>> &shape_grad_matrix_table,
-      const std::vector<Point<spacedim>> &support_points_in_real_cell)
+      const unsigned int                           k3_index,
+      const unsigned int                           quad_no,
+      const Table<2, LAPACKFullMatrixExt<double>> &shape_grad_matrix_table,
+      const std::vector<Point<spacedim>>          &support_points_in_real_cell)
     {
       // Currently, only spacedim=3 is supported.
       Assert(spacedim == 3, ExcInternalError());
@@ -2974,21 +2979,21 @@ namespace IdeoBEM
        * Extract the shape function's gradient matrix under the specified
        * \f$k_3\f$ index and quadrature point.
        */
-      const FullMatrix<double> &shape_grad_matrix_at_quad_point =
+      const LAPACKFullMatrixExt<double> &shape_grad_matrix_at_quad_point =
         shape_grad_matrix_table(k3_index, quad_no);
 
-      double             jacobian_det_squared = 0.0;
-      FullMatrix<double> jacobian_matrix_2x2(2, 2);
+      double                      jacobian_det_squared = 0.0;
+      LAPACKFullMatrixExt<double> jacobian_matrix_2x2(2, 2);
       for (unsigned int i = 0; i < spacedim; i++)
         {
-          FullMatrix<double> support_point_components =
+          LAPACKFullMatrixExt<double> support_point_components =
             collect_two_components_from_point3(support_points_in_real_cell,
                                                i,
                                                (i + 1) % spacedim);
           support_point_components.mmult(jacobian_matrix_2x2,
                                          shape_grad_matrix_at_quad_point);
           jacobian_det_squared +=
-            Utilities::fixed_power<2>(jacobian_matrix_2x2.determinant());
+            Utilities::fixed_power<2>(jacobian_matrix_2x2.determinant2x2());
         }
 
       return std::sqrt(jacobian_det_squared);
@@ -3038,7 +3043,7 @@ namespace IdeoBEM
        * Calculate the shape function's gradient matrix, the rows of which are
        * in the lexicographic order.
        */
-      FullMatrix<double> shape_grad_matrix_at_p(
+      LAPACKFullMatrixExt<double> shape_grad_matrix_at_p(
         shape_grad_matrix_in_lexicographic_order(fe, p));
 
       /**
@@ -3047,19 +3052,19 @@ namespace IdeoBEM
        * tensor, namely,\f$J_{01}\f$, \f$J_{12}\f$ and \f$J_{20}\f$. These
        * components are stored in the array @p surface_jacobian_det_components.
        */
-      double             surface_jacobian_det = 0.0;
-      FullMatrix<double> jacobian_matrix_2x2(dim, dim);
-      double             surface_jacobian_det_components[spacedim];
+      double                      surface_jacobian_det = 0.0;
+      LAPACKFullMatrixExt<double> jacobian_matrix_2x2(dim, dim);
+      double                      surface_jacobian_det_components[spacedim];
       for (unsigned int i = 0; i < spacedim; i++)
         {
-          FullMatrix<double> support_point_components =
+          LAPACKFullMatrixExt<double> support_point_components =
             collect_two_components_from_point3(support_points_in_real_cell,
                                                i,
                                                (i + 1) % spacedim);
           support_point_components.mmult(jacobian_matrix_2x2,
                                          shape_grad_matrix_at_p);
           surface_jacobian_det_components[i] =
-            jacobian_matrix_2x2.determinant();
+            jacobian_matrix_2x2.determinant2x2();
           surface_jacobian_det +=
             Utilities::fixed_power<2>(surface_jacobian_det_components[i]);
         }
@@ -3094,6 +3099,11 @@ namespace IdeoBEM
      * Calculate the surface Jacobian determinant and the normal vector at the
      * quadrature point specified by its index.
      *
+     * \mynote{N.B. The reversed lexicographic order appears for \f$K_y\f$
+     * when the cell neighboring type is common edge. Then the calculated
+     * normal vector \f$n_y\f$ has the opposite direction of the real one,
+     * which should be negated in the subsequent calculation.}
+     *
      * @param k3_index \f$k_3\f$ term index
      * @param quad_no Quadrature point index
      * @param shape_grad_matrix_table The data table storing the gradient values
@@ -3108,36 +3118,38 @@ namespace IdeoBEM
     template <int spacedim>
     double
     surface_jacobian_det_and_normal_vector(
-      const unsigned int                  k3_index,
-      const unsigned int                  quad_no,
-      const Table<2, FullMatrix<double>> &shape_grad_matrix_table,
-      const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      Tensor<1, spacedim>                &normal_vector,
-      const bool                          is_normal_vector_negated = false)
+      const unsigned int                           k3_index,
+      const unsigned int                           quad_no,
+      const Table<2, LAPACKFullMatrixExt<double>> &shape_grad_matrix_table,
+      const std::vector<Point<spacedim>>          &support_points_in_real_cell,
+      Tensor<1, spacedim>                         &normal_vector,
+      const bool is_normal_vector_negated = false)
     {
-      // Currently, only spacedim=3 is supported.
+      // Currently, only @p spacedim=3 is supported.
       Assert(spacedim == 3, ExcInternalError());
 
       /**
        * Extract the shape function's gradient matrix under the specified
-       * \f$k_3\f$ index and quadrature point.
+       * \f$k_3\f$ index and quadrature point. Its first dimension is the shape
+       * function index and its second dimension is coordinate component index
+       * in the unit cell.
        */
-      const FullMatrix<double> &shape_grad_matrix_at_quad_point =
+      const LAPACKFullMatrixExt<double> &shape_grad_matrix_at_quad_point =
         shape_grad_matrix_table(k3_index, quad_no);
 
-      double             surface_jacobian_det = 0.0;
-      FullMatrix<double> jacobian_matrix_2x2(2, 2);
-      double             surface_jacobian_det_components[spacedim];
+      double                      surface_jacobian_det = 0.0;
+      LAPACKFullMatrixExt<double> jacobian_matrix_2x2(2, 2);
+      double                      surface_jacobian_det_components[spacedim];
       for (unsigned int i = 0; i < spacedim; i++)
         {
-          FullMatrix<double> support_point_components =
+          LAPACKFullMatrixExt<double> support_point_components =
             collect_two_components_from_point3(support_points_in_real_cell,
                                                i,
                                                (i + 1) % spacedim);
           support_point_components.mmult(jacobian_matrix_2x2,
                                          shape_grad_matrix_at_quad_point);
           surface_jacobian_det_components[i] =
-            jacobian_matrix_2x2.determinant();
+            jacobian_matrix_2x2.determinant2x2();
           surface_jacobian_det +=
             Utilities::fixed_power<2>(surface_jacobian_det_components[i]);
         }
@@ -3172,6 +3184,14 @@ namespace IdeoBEM
      * Calculate the covariant transformation matrix for mapping the gradient in
      * local coordinate chart to global coordinates.
      *
+     * The formula for calculating the covariant transformation matrix:
+     * \f[
+     * J G^{-1} = J (J^T J)^{-1}.
+     * \f]
+     * N.B. \f$J\f$ is the Jacobian matrix in \f$\mathbb{R}^{{\rm
+     * spacedim}\times{\rm dim}}\f$. Therefore, the covariant transformation
+     * matrix has the same sizes as \f$J\f$.
+     *
      * @param k3_index
      * @param quad_no
      * @param shape_grad_matrix_table
@@ -3179,14 +3199,14 @@ namespace IdeoBEM
      * @return
      */
     template <int spacedim, typename Number>
-    FullMatrix<Number>
+    LAPACKFullMatrixExt<Number>
     surface_covariant_transformation(
-      const unsigned int                          k3_index,
-      const unsigned int                          quad_no,
-      const Table<2, FullMatrix<Number>>         &shape_grad_matrix_table,
-      const std::vector<Point<spacedim, Number>> &support_points_in_real_cell)
+      const unsigned int                           k3_index,
+      const unsigned int                           quad_no,
+      const Table<2, LAPACKFullMatrixExt<Number>> &shape_grad_matrix_table,
+      const std::vector<Point<spacedim, Number>>  &support_points_in_real_cell)
     {
-      // Currently, only spacedim=3 is supported.
+      // Currently, only @p spacedim=3 is supported.
       Assert(spacedim == 3, ExcInternalError());
 
       /**
@@ -3194,37 +3214,404 @@ namespace IdeoBEM
        * \f$k_3\f$ index and quadrature point, which will then be used for
        * calculating the Jacobian matrix.
        */
-      const FullMatrix<Number> &shape_grad_matrix_at_quad_point =
+      const LAPACKFullMatrixExt<Number> &shape_grad_matrix_at_quad_point =
         shape_grad_matrix_table(k3_index, quad_no);
 
-      FullMatrix<Number> support_point_components =
+      LAPACKFullMatrixExt<Number> support_point_components =
         collect_components_from_points(support_points_in_real_cell);
 
-      const unsigned int dim = shape_grad_matrix_at_quad_point.n();
-      FullMatrix<Number> jacobian_matrix(spacedim, dim);
+      const unsigned int          dim = shape_grad_matrix_at_quad_point.n();
+      LAPACKFullMatrixExt<Number> jacobian_matrix(spacedim, dim);
       support_point_components.mmult(jacobian_matrix,
                                      shape_grad_matrix_at_quad_point);
 
       /**
        * Metric tensor
        */
-      FullMatrix<Number> G(dim, dim);
+      LAPACKFullMatrixExt<Number> G(dim, dim);
       /**
        * Inverse of the metric tensor
        */
-      FullMatrix<Number> G_inv(dim, dim);
+      LAPACKFullMatrixExt<Number> G_inv(dim, dim);
       /**
        * \f$G=J^T J\f$
        */
       jacobian_matrix.Tmmult(G, jacobian_matrix);
       G_inv.invert(G);
 
-      FullMatrix<Number> covariant(spacedim, dim);
+      LAPACKFullMatrixExt<Number> covariant(spacedim, dim);
       jacobian_matrix.mmult(covariant, G_inv);
 
       return covariant;
     }
 
+    namespace CUDAWrappers
+    {
+      /**
+       * Collect two coordinate components from the list of points in 3D space.
+       * This version runs on the GPU device.
+       *
+       * \mynote{This function is useful in constructing the surface metric
+       * tensor or surface normal vector.}
+       *
+       * @tparam spacedim
+       * @tparam RangeNumberType
+       * @param points
+       * @param first_component Must be in the range @p [0, 3).
+       * @param second_component Must be in the range @p [0, 3).
+       * @param two_component_coords A matrix storing the two coordinate
+       * components for all points. Its dimension is @p 2*points.size().
+       */
+      template <int spacedim, typename RangeNumberType = double>
+      __device__ void
+      collect_two_components_from_point3(
+        const IdeoBEM::CUDAWrappers::CUDATable<1,
+                                               Point<spacedim, RangeNumberType>>
+                          &points,
+        const unsigned int first_component,
+        const unsigned int second_component,
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          &two_component_coords)
+      {
+        assert(first_component < spacedim);
+        assert(second_component < spacedim);
+        assert(two_component_coords.m() == 2);
+        assert(points.size(0) == two_component_coords.n());
+
+        for (unsigned int i = 0; i < points.size(0); i++)
+          {
+            two_component_coords(0, i) = points(i)(first_component);
+            two_component_coords(1, i) = points(i)(second_component);
+          }
+      }
+
+
+      /**
+       * Collect coordinate components from the list of points in
+       * \f$\mathbb{R}^d\f$. This version runs on the GPU device.
+       *
+       * The obtained coordinate matrix has this format:
+       * \f[
+       * \begin{pmatrix}
+       * x_1(1) & \cdots & x_1(k) \\
+       * \vdots & \vdots & \vdots \\
+       * x_d(1) & \cdots & x_d(k)
+       * \end{pmatrix}
+       * \f]
+       * where \f$k\f$ is the number of points and \f$x(i)\f$ is the i-th point
+       * in the list.
+       *
+       * \mynote{This function will be used for calculating the Jacobian matrix.
+       * Let \f$DN\f$ be the matrix of first order derivatives of shape
+       * functions and \f$P\f$ be the resulted coordinate matrix. Then
+       * \[
+       * J = P \cdot DN
+       * \]}
+       *
+       * @tparam spacedim
+       * @tparam RangeNumberType
+       * @param points
+       * @param point_coords
+       */
+      template <int spacedim, typename RangeNumberType = double>
+      __device__ void
+      collect_components_from_points(
+        const IdeoBEM::CUDAWrappers::CUDATable<1,
+                                               Point<spacedim, RangeNumberType>>
+                                                               &points,
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &point_coords)
+      {
+        for (unsigned int i = 0; i < points.size(0); i++)
+          {
+            for (unsigned int j = 0; j < spacedim; j++)
+              {
+                point_coords(j, i) = points(i)(j);
+              }
+          }
+      }
+
+
+      /**
+       * Calculate the surface Jacobian determinant and the normal vector at the
+       * quadrature point specified by its index. This version runs on the
+       * GPU device.
+       *
+       * \mynote{N.B. The reversed lexicographic order appears for \f$K_y\f$
+       * when the cell neighboring type is common edge. Then the calculated
+       * normal vector \f$n_y\f$ has the opposite direction of the real one,
+       * which should be negated in the subsequent calculation.}
+       *
+       * @tparam dim
+       * @tparam spacedim
+       * @tparam RangeNumberType
+       * @param k3_index
+       * @param quad_no
+       * @param shape_grad_matrix_table
+       * @param support_points_permuted
+       * @param normal_vector
+       * @param is_normal_vector_negated
+       * @return
+       */
+      template <int spacedim, typename RangeNumberType = double>
+      __device__ RangeNumberType
+      surface_jacobian_det_and_normal_vector(
+        const unsigned int k3_index,
+        const unsigned int quad_no,
+        const IdeoBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+          &shape_grad_matrix_table,
+        const IdeoBEM::CUDAWrappers::CUDATable<1,
+                                               Point<spacedim, RangeNumberType>>
+          &support_points_in_real_cell,
+        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+          &support_points_in_real_cell_xy_components,
+        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+          &support_points_in_real_cell_yz_components,
+        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+          &support_points_in_real_cell_zx_components,
+        Tensor<1, spacedim, RangeNumberType> &normal_vector,
+        const bool                            is_normal_vector_negated = false)
+      {
+        /**
+         * @internal Currently, only @p spacedim=3 is supported.
+         */
+        assert(spacedim == 3);
+
+        /**
+         * Extract the shape function's gradient matrix under the specified
+         * \f$k_3\f$ index and quadrature point. @p CUDAFullMatrix is just a
+         * wrapper of the existing linear memory allocated for the matrix. Its
+         * first dimension is the shape function index and its second dimension
+         * is coordinate component index in the unit cell.
+         */
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          shape_grad_matrix_at_quad_point(
+            const_cast<RangeNumberType *>(
+              &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
+            shape_grad_matrix_table.size(3),
+            shape_grad_matrix_table.size(2));
+
+        /**
+         * @internal The number of support points should be equal to the number
+         * of shape functions.
+         */
+        assert(support_points_in_real_cell.size(0) ==
+               shape_grad_matrix_at_quad_point.m());
+        /**
+         * @internal The number of columns of the gradient matrix should be 2.
+         */
+        assert(shape_grad_matrix_at_quad_point.n() == 2);
+
+        RangeNumberType jacobian_matrix_2x2_data[4];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          jacobian_matrix_2x2(jacobian_matrix_2x2_data, 2, 2);
+
+        RangeNumberType surface_jacobian_det = 0.0;
+        RangeNumberType surface_jacobian_det_components[spacedim];
+
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          two_component_coords(
+            (RangeNumberType *)(support_points_in_real_cell_xy_components
+                                  .data()),
+            2,
+            support_points_in_real_cell.size(0));
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[0] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[0] *
+                                surface_jacobian_det_components[0];
+
+        two_component_coords.reinit(
+          (RangeNumberType *)(support_points_in_real_cell_yz_components.data()),
+          2,
+          support_points_in_real_cell.size(0));
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[1] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[1] *
+                                surface_jacobian_det_components[1];
+
+        two_component_coords.reinit(
+          (RangeNumberType *)(support_points_in_real_cell_zx_components.data()),
+          2,
+          support_points_in_real_cell.size(0));
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[2] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[2] *
+                                surface_jacobian_det_components[2];
+
+        surface_jacobian_det = sqrt(surface_jacobian_det);
+
+        /**
+         * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
+         * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal
+         * vector.
+         */
+        for (unsigned int i = 0; i < spacedim; i++)
+          {
+            if (is_normal_vector_negated)
+              {
+                normal_vector[i] =
+                  -surface_jacobian_det_components[(i + 1) % spacedim] /
+                  surface_jacobian_det;
+              }
+            else
+              {
+                normal_vector[i] =
+                  surface_jacobian_det_components[(i + 1) % spacedim] /
+                  surface_jacobian_det;
+              }
+          }
+
+        return surface_jacobian_det;
+      }
+
+
+      /**
+       * Calculate the covariant transformation matrix for mapping the gradient
+       * in local coordinate chart to global coordinates. This version runs on
+       * the GPU device.
+       *
+       * The formula for calculating the covariant transformation matrix:
+       * \f[
+       * J G^{-1} = J (J^T J)^{-1}.
+       * \f]
+       * N.B. \f$J\f$ is the Jacobian matrix in \f$\mathbb{R}^{{\rm
+       * spacedim}\times{\rm dim}}\f$. Therefore, the covariant transformation
+       * matrix has the same sizes as \f$J\f$.
+       *
+       * @tparam spacedim
+       * @tparam RangeNumberType
+       * @param k3_index
+       * @param quad_no
+       * @param shape_grad_matrix_table
+       * @param support_points_in_real_cell
+       * @param support_points_all_components
+       * @param jacobian_matrix_data
+       * @param metric_tensor_data
+       * @param metric_tensor_inv_data
+       * @param covariant
+       */
+      template <int spacedim, typename RangeNumberType = double>
+      __device__ void
+      surface_covariant_transformation(
+        const unsigned int k3_index,
+        const unsigned int quad_no,
+        const IdeoBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+          &shape_grad_matrix_table,
+        const IdeoBEM::CUDAWrappers::CUDATable<1,
+                                               Point<spacedim, RangeNumberType>>
+          &support_points_in_real_cell,
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &covariant)
+      {
+        /**
+         * @internal Currently, only @p spacedim=3 is supported.
+         */
+        assert(spacedim == 3);
+
+        /**
+         * @internal Extract the shape function's gradient matrix under the
+         * specified \f$k_3\f$ index and quadrature point, which will then be
+         * used for calculating the Jacobian matrix.
+         */
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          shape_grad_matrix_at_quad_point(
+            const_cast<RangeNumberType *>(
+              &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
+            shape_grad_matrix_table.size(3),
+            shape_grad_matrix_table.size(2));
+
+        /**
+         * @internal The number of support points should be equal to the number
+         * of shape functions.
+         */
+        assert(support_points_in_real_cell.size(0) ==
+               shape_grad_matrix_at_quad_point.m());
+        /**
+         * @internal The number of columns of the gradient matrix should be 2.
+         */
+        assert(shape_grad_matrix_at_quad_point.n() == 2);
+
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          all_component_coords(
+            (RangeNumberType *)(support_points_in_real_cell.data()),
+            spacedim,
+            support_points_in_real_cell.size(0));
+
+        RangeNumberType jacobian_matrix_data[6];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
+          jacobian_matrix_data, spacedim, 2);
+        all_component_coords.mmult(jacobian_matrix,
+                                   shape_grad_matrix_at_quad_point);
+
+        // Metric tensor
+        RangeNumberType metric_tensor_data[4];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(
+          metric_tensor_data, 2, 2);
+        // Inverse of the metric tensor
+        RangeNumberType metric_tensor_inv_data[4];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(
+          metric_tensor_inv_data, 2, 2);
+
+        // Compute \f$G=J^T J\f$.
+        jacobian_matrix.Tmmult(G, jacobian_matrix);
+
+        G_inv.invert2x2(G);
+
+        jacobian_matrix.mmult(covariant, G_inv);
+      }
+
+
+      /**
+       * Coordinate transformation of the specified quadrature point in the unit
+       * cell to the real cell based on a list of support points in the real
+       * cell. This version runs on the GPU device.
+       *
+       * @tparam spacedim
+       * @tparam RangeNumberType
+       * @param k3_index
+       * @param quad_no
+       * @param shape_value_table
+       * @param support_points_in_real_cell
+       * @param real_coords
+       */
+      template <int spacedim, typename RangeNumberType = double>
+      __device__ void
+      transform_unit_to_permuted_real_cell(
+        const unsigned int k3_index,
+        const unsigned int quad_no,
+        const IdeoBEM::CUDAWrappers::CUDATable<3, RangeNumberType>
+          &shape_value_table,
+        const IdeoBEM::CUDAWrappers::CUDATable<1,
+                                               Point<spacedim, RangeNumberType>>
+                                         &support_points_in_real_cell,
+        Point<spacedim, RangeNumberType> &real_coords)
+      {
+        const unsigned int shape_num = shape_value_table.size(0);
+
+        // Reset all coordinate components to zero.
+        // N.B. The operator for assignment from a scalar value in the parenet
+        // class is called.
+        for (unsigned int i = 0; i < spacedim; i++)
+          {
+            real_coords(i) = 0.;
+          }
+
+        /**
+         * Linear combination of support point coordinates and evaluation of
+         * shape functions at the specified area coordinates.
+         */
+        for (unsigned int i = 0; i < shape_num; i++)
+          {
+            real_coords =
+              real_coords + shape_value_table(i, k3_index, quad_no) *
+                              support_points_in_real_cell(i);
+          }
+      }
+    } // namespace CUDAWrappers
 
     /**
      * Coordinate transformation from the unit cell to the real cell based on a
@@ -4070,4 +4457,4 @@ namespace IdeoBEM
 } // namespace IdeoBEM
 
 
-#endif /* INCLUDE_BEM_TOOLS_H_ */
+#endif /* INCLUDE_BEM_TOOLS_HCU_ */

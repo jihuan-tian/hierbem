@@ -44,7 +44,7 @@
 
 #include "aca_plus.h"
 #include "bem_general.h"
-#include "bem_tools.h"
+#include "bem_tools.hcu"
 #include "bem_values.h"
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
@@ -56,7 +56,7 @@
 #include "hmatrix.h"
 #include "hmatrix_symm.h"
 #include "hmatrix_symm_preconditioner.h"
-#include "laplace_kernels.h"
+#include "laplace_kernels.hcu"
 #include "mapping_q_generic_ext.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
@@ -96,11 +96,13 @@ namespace IdeoBEM
 
     template <int dim1,
               int spacedim1,
+              template <int, typename>
+              typename KernelFunctionType,
               typename RangeNumberType,
               typename MatrixType>
     friend void
     assemble_bem_full_matrix(
-      const KernelFunction<spacedim1, RangeNumberType> &kernel,
+      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
       const DoFHandler<dim1, spacedim1>   &dof_handler_for_test_space,
       const DoFHandler<dim1, spacedim1>   &dof_handler_for_trial_space,
       MappingQGenericExt<dim1, spacedim1> &kx_mapping,
@@ -463,19 +465,23 @@ namespace IdeoBEM
     /**
      * Kernel function for the single layer potential.
      */
-    LaplaceKernel::SingleLayerKernel<3> single_layer_kernel;
+    IdeoBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<3>
+      single_layer_kernel;
     /**
      * Kernel function for the double layer potential.
      */
-    LaplaceKernel::DoubleLayerKernel<3> double_layer_kernel;
+    IdeoBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<3>
+      double_layer_kernel;
     /**
      * Kernel function for the adjoint double layer potential.
      */
-    LaplaceKernel::AdjointDoubleLayerKernel<3> adjoint_double_layer_kernel;
+    IdeoBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<3>
+      adjoint_double_layer_kernel;
     /**
      * Kernel function for the hyper-singular potential.
      */
-    LaplaceKernel::HyperSingularKernelRegular<3> hyper_singular_kernel;
+    IdeoBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernelRegular<3>
+      hyper_singular_kernel;
 
     /**
      * Full matrices for verification purpose.
