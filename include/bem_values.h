@@ -10,10 +10,17 @@
 
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/fe/fe.h>
 #include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_tools.h>
+
+#include <tbb/tbb_thread.h>
+
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include "bem_tools.h"
 #include "sauter_quadrature_tools.h"
@@ -1667,6 +1674,23 @@ namespace IdeoBEM
     using FE_Poly_short = FE_Poly<dim, spacedim>;
 
     /**
+     * ID for the working thread associated with this scratch data.
+     */
+    int thread_id;
+
+    /**
+     * Timer object associated with the scratch data, which is bound to a
+     * working thread.
+     */
+    Timer timer;
+
+    /**
+     * Output stream for the working thread associated with this scratch data,
+     * which will record log messages, such as timing.
+     */
+    std::ofstream log_stream;
+    
+    /**
      * The intersection set of the vertex local indices for the two cells
      * \f$K_x\f$ and \f$K_y\f$.
      */
@@ -1958,10 +1982,13 @@ namespace IdeoBEM
     Table<2, Point<spacedim, RangeNumberType>> ky_quad_points_regular;
 
     /**
-     * Constructor
+     * Constructor to be used for assembling full BEM matrix, which does not
+     * involve @p thread_id.
      *
      * @param kx_fe
      * @param ky_fe
+     * @param kx_mapping
+     * @param ky_mapping
      * @param bem_values
      */
     PairCellWiseScratchData(const FiniteElement<dim, spacedim>      &kx_fe,
@@ -1969,7 +1996,8 @@ namespace IdeoBEM
                             const MappingQGenericExt<dim, spacedim> &kx_mapping,
                             const MappingQGenericExt<dim, spacedim> &ky_mapping,
                             const BEMValues<dim, spacedim>          &bem_values)
-      : common_vertex_pair_local_indices(0)
+      : thread_id(-1)
+      , common_vertex_pair_local_indices(0)
       , kx_mapping_support_points_in_default_order(
           bem_values.kx_mapping_data.n_shape_functions)
       , ky_mapping_support_points_in_default_order(
@@ -2045,6 +2073,145 @@ namespace IdeoBEM
           bem_values.quad_rule_for_common_vertex.size())
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
     {
+      /**
+       * @internal Stop the timer at the moment, which will be started
+       * afterwards when needed.
+       */
+      timer.stop();
+      
+      common_vertex_pair_local_indices.reserve(
+        GeometryInfo<dim>::vertices_per_cell);
+
+      // Polynomial space inverse numbering for recovering the lexicographic
+      // order.
+      const FE_Poly_short &kx_fe_poly =
+        dynamic_cast<const FE_Poly_short &>(kx_fe);
+      const FE_Poly_short &ky_fe_poly =
+        dynamic_cast<const FE_Poly_short &>(ky_fe);
+
+      kx_fe_poly_space_numbering_inverse =
+        kx_fe_poly.get_poly_space_numbering_inverse();
+      ky_fe_poly_space_numbering_inverse =
+        ky_fe_poly.get_poly_space_numbering_inverse();
+
+      kx_mapping_poly_space_numbering_inverse =
+        FETools::lexicographic_to_hierarchic_numbering<dim>(
+          kx_mapping.get_degree());
+      ky_mapping_poly_space_numbering_inverse =
+        FETools::lexicographic_to_hierarchic_numbering<dim>(
+          ky_mapping.get_degree());
+      generate_backward_mapping_support_point_permutation(
+        ky_mapping, 0, ky_mapping_reversed_poly_space_numbering_inverse);
+    }
+
+
+    /**
+     * Constructor for assembling hierarchical BEM matrix, which involves
+     * @p thread_id.
+     *
+     * @param thread_id
+     * @param kx_fe
+     * @param ky_fe
+     * @param kx_mapping
+     * @param ky_mapping
+     * @param bem_values
+     */
+    PairCellWiseScratchData(int                                      thread_id,
+                            const FiniteElement<dim, spacedim>      &kx_fe,
+                            const FiniteElement<dim, spacedim>      &ky_fe,
+                            const MappingQGenericExt<dim, spacedim> &kx_mapping,
+                            const MappingQGenericExt<dim, spacedim> &ky_mapping,
+                            const BEMValues<dim, spacedim>          &bem_values)
+      : thread_id(thread_id)
+      , common_vertex_pair_local_indices(0)
+      , kx_mapping_support_points_in_default_order(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_points_in_default_order(
+          bem_values.ky_mapping_data.n_shape_functions)
+      , kx_mapping_support_points_permuted(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_points_permuted(
+          bem_values.ky_mapping_data.n_shape_functions)
+      , kx_local_dof_indices_in_default_dof_order(kx_fe.dofs_per_cell)
+      , ky_local_dof_indices_in_default_dof_order(ky_fe.dofs_per_cell)
+      , kx_fe_poly_space_numbering_inverse(kx_fe.dofs_per_cell)
+      , ky_fe_poly_space_numbering_inverse(ky_fe.dofs_per_cell)
+      , kx_mapping_poly_space_numbering_inverse(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , ky_mapping_poly_space_numbering_inverse(
+          bem_values.ky_mapping_data.n_shape_functions)
+      , ky_mapping_reversed_poly_space_numbering_inverse(
+          bem_values.ky_mapping_data.n_shape_functions)
+      , kx_local_dof_permutation(kx_fe.dofs_per_cell)
+      , ky_local_dof_permutation(ky_fe.dofs_per_cell)
+      , kx_mapping_support_point_permutation(
+          bem_values.kx_mapping_data.n_shape_functions)
+      , ky_mapping_support_point_permutation(
+          bem_values.ky_mapping_data.n_shape_functions)
+      , kx_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , kx_jacobians_common_edge(6, bem_values.quad_rule_for_common_edge.size())
+      , kx_jacobians_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , kx_jacobians_regular(1, bem_values.quad_rule_for_regular.size())
+      , kx_normals_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , kx_normals_common_edge(6, bem_values.quad_rule_for_common_edge.size())
+      , kx_normals_common_vertex(4,
+                                 bem_values.quad_rule_for_common_vertex.size())
+      , kx_normals_regular(1, bem_values.quad_rule_for_regular.size())
+      , kx_covariants_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , kx_covariants_common_edge(6,
+                                  bem_values.quad_rule_for_common_edge.size())
+      , kx_covariants_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , kx_covariants_regular(1, bem_values.quad_rule_for_regular.size())
+      , kx_quad_points_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , kx_quad_points_common_edge(6,
+                                   bem_values.quad_rule_for_common_edge.size())
+      , kx_quad_points_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , kx_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
+      , ky_jacobians_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , ky_jacobians_common_edge(6, bem_values.quad_rule_for_common_edge.size())
+      , ky_jacobians_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , ky_jacobians_regular(1, bem_values.quad_rule_for_regular.size())
+      , ky_normals_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , ky_normals_common_edge(6, bem_values.quad_rule_for_common_edge.size())
+      , ky_normals_common_vertex(4,
+                                 bem_values.quad_rule_for_common_vertex.size())
+      , ky_normals_regular(1, bem_values.quad_rule_for_regular.size())
+      , ky_covariants_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , ky_covariants_common_edge(6,
+                                  bem_values.quad_rule_for_common_edge.size())
+      , ky_covariants_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , ky_covariants_regular(1, bem_values.quad_rule_for_regular.size())
+      , ky_quad_points_same_panel(8, bem_values.quad_rule_for_same_panel.size())
+      , ky_quad_points_common_edge(6,
+                                   bem_values.quad_rule_for_common_edge.size())
+      , ky_quad_points_common_vertex(
+          4,
+          bem_values.quad_rule_for_common_vertex.size())
+      , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
+    {
+      /**
+       * @internal Stop the timer at the moment, which will be started
+       * afterwards when needed.
+       */
+      timer.stop();
+
+      /**
+       * @internal Open the log stream in append mode, in case there is an
+       * existing log file with the same name.
+       */
+      log_stream.open(std::string("thread-") + std::to_string(thread_id),
+                      std::ios_base::app);
+      
       common_vertex_pair_local_indices.reserve(
         GeometryInfo<dim>::vertices_per_cell);
 
@@ -2078,7 +2245,8 @@ namespace IdeoBEM
      */
     PairCellWiseScratchData(
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch)
-      : common_vertex_pair_local_indices(
+      : thread_id(scratch.thread_id)
+      , common_vertex_pair_local_indices(
           scratch.common_vertex_pair_local_indices)
       , kx_mapping_support_points_in_default_order(
           scratch.kx_mapping_support_points_in_default_order)
@@ -2141,6 +2309,12 @@ namespace IdeoBEM
       , ky_quad_points_common_vertex(scratch.ky_quad_points_common_vertex)
       , ky_quad_points_regular(scratch.ky_quad_points_regular)
     {}
+
+    void
+    release()
+    {
+      log_stream.close();
+    }
   };
 
 

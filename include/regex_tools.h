@@ -8,22 +8,23 @@
 #ifndef INCLUDE_REGEX_TOOLS_H_
 #define INCLUDE_REGEX_TOOLS_H_
 
-
 #include <regex>
 
-namespace RegexTools
+namespace IdeoBEM
 {
-  using namespace std;
+  namespace RegexTools
+  {
+    using namespace std;
 
-  extern const regex reg_for_file_base_and_ext1;
-  extern const regex reg_for_file_base_and_ext2;
+    extern const regex reg_for_file_base_and_ext1;
+    extern const regex reg_for_file_base_and_ext2;
 
-  string
-  file_basename(const string &filename);
+    string
+    file_basename(const string &filename);
 
-  string
-  file_ext(const string &filename);
-} // namespace RegexTools
-
+    string
+    file_ext(const string &filename);
+  } // namespace RegexTools
+} // namespace IdeoBEM
 
 #endif /* INCLUDE_REGEX_TOOLS_H_ */

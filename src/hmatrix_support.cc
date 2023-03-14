@@ -8,59 +8,57 @@
 
 #include "hmatrix_support.h"
 
-namespace HMatrixSupport
+namespace IdeoBEM
 {
-  void
-  infer_submatrix_block_types_from_parent_hmat(
-    const BlockType                           parent_hmat_block_type,
-    std::array<HMatrixSupport::BlockType, 4> &submatrix_block_types)
+  namespace HMatrixSupport
   {
-    switch (parent_hmat_block_type)
-      {
-        case HMatrixSupport::diagonal_block:
-          {
-            submatrix_block_types[0] = HMatrixSupport::diagonal_block;
-            submatrix_block_types[1] = HMatrixSupport::upper_triangular_block;
-            submatrix_block_types[2] = HMatrixSupport::lower_triangular_block;
-            submatrix_block_types[3] = HMatrixSupport::diagonal_block;
+    void
+    infer_submatrix_block_types_from_parent_hmat(
+      const BlockType                           parent_hmat_block_type,
+      std::array<HMatrixSupport::BlockType, 4> &submatrix_block_types)
+    {
+      switch (parent_hmat_block_type)
+        {
+            case HMatrixSupport::diagonal_block: {
+              submatrix_block_types[0] = HMatrixSupport::diagonal_block;
+              submatrix_block_types[1] = HMatrixSupport::upper_triangular_block;
+              submatrix_block_types[2] = HMatrixSupport::lower_triangular_block;
+              submatrix_block_types[3] = HMatrixSupport::diagonal_block;
 
-            break;
-          }
-        case HMatrixSupport::lower_triangular_block:
-          {
-            submatrix_block_types[0] = HMatrixSupport::lower_triangular_block;
-            submatrix_block_types[1] = HMatrixSupport::lower_triangular_block;
-            submatrix_block_types[2] = HMatrixSupport::lower_triangular_block;
-            submatrix_block_types[3] = HMatrixSupport::lower_triangular_block;
+              break;
+            }
+            case HMatrixSupport::lower_triangular_block: {
+              submatrix_block_types[0] = HMatrixSupport::lower_triangular_block;
+              submatrix_block_types[1] = HMatrixSupport::lower_triangular_block;
+              submatrix_block_types[2] = HMatrixSupport::lower_triangular_block;
+              submatrix_block_types[3] = HMatrixSupport::lower_triangular_block;
 
-            break;
-          }
-        case HMatrixSupport::upper_triangular_block:
-          {
-            submatrix_block_types[0] = HMatrixSupport::upper_triangular_block;
-            submatrix_block_types[1] = HMatrixSupport::upper_triangular_block;
-            submatrix_block_types[2] = HMatrixSupport::upper_triangular_block;
-            submatrix_block_types[3] = HMatrixSupport::upper_triangular_block;
+              break;
+            }
+            case HMatrixSupport::upper_triangular_block: {
+              submatrix_block_types[0] = HMatrixSupport::upper_triangular_block;
+              submatrix_block_types[1] = HMatrixSupport::upper_triangular_block;
+              submatrix_block_types[2] = HMatrixSupport::upper_triangular_block;
+              submatrix_block_types[3] = HMatrixSupport::upper_triangular_block;
 
-            break;
-          }
-        case HMatrixSupport::undefined_block:
-          {
-            submatrix_block_types[0] = HMatrixSupport::undefined_block;
-            submatrix_block_types[1] = HMatrixSupport::undefined_block;
-            submatrix_block_types[2] = HMatrixSupport::undefined_block;
-            submatrix_block_types[3] = HMatrixSupport::undefined_block;
+              break;
+            }
+            case HMatrixSupport::undefined_block: {
+              submatrix_block_types[0] = HMatrixSupport::undefined_block;
+              submatrix_block_types[1] = HMatrixSupport::undefined_block;
+              submatrix_block_types[2] = HMatrixSupport::undefined_block;
+              submatrix_block_types[3] = HMatrixSupport::undefined_block;
 
-            break;
-          }
-        default:
-          {
-            Assert(false,
-                   ExcMessage(std::string("Invalid H-matrix types: ") +
-                              std::to_string(parent_hmat_block_type)));
+              break;
+            }
+            default: {
+              Assert(false,
+                     ExcMessage(std::string("Invalid H-matrix types: ") +
+                                std::to_string(parent_hmat_block_type)));
 
-            break;
-          }
-      }
-  }
-} // namespace HMatrixSupport
+              break;
+            }
+        }
+    }
+  } // namespace HMatrixSupport
+} // namespace IdeoBEM

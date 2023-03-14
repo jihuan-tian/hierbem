@@ -8,7 +8,7 @@
 #ifndef INCLUDE_SAUTER_QUADRATURE_H_
 #define INCLUDE_SAUTER_QUADRATURE_H_
 
-
+#include <deal.II/base/logstream.h>
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/dofs/dof_accessor.h>
@@ -22,11 +22,13 @@
 #include <deal.II/lac/full_matrix.h>
 
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <vector>
 
 #include "bem_kernels.h"
 #include "bem_values.h"
+#include "config.h"
 #include "debug_tools.h"
 #include "mapping_q_generic_ext.h"
 #include "sauter_quadrature_tools.h"
@@ -3688,10 +3690,19 @@ namespace IdeoBEM
               ky_mapping_copy,
               false);
 
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             calc_jacobian_normals_for_sauter_quad(scratch_data,
                                                   cell_neighboring_type,
                                                   bem_values,
                                                   active_quad_rule);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "calculate Jacobians and normal vectors");
+#endif
 
             /**
              * When the bilinear form for the hyper singular operator is
@@ -3699,10 +3710,19 @@ namespace IdeoBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
+#if ENABLE_TIMER == 1
+                scratch_data.timer.start();
+#endif
                 calc_covariant_transformations(scratch_data,
                                                cell_neighboring_type,
                                                bem_values,
                                                active_quad_rule);
+#if ENABLE_TIMER == 1
+                scratch_data.timer.stop();
+                print_wall_time(scratch_data.log_stream,
+                                scratch_data.timer,
+                                "calculate covariant matrices");
+#endif
               }
 
             /**
@@ -3734,6 +3754,9 @@ namespace IdeoBEM
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
 
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             /**
              * Pullback the kernel function to unit cell.
              */
@@ -3758,6 +3781,12 @@ namespace IdeoBEM
               ApplyQuadratureUsingBEMValues(active_quad_rule,
                                             kernel_pullback_on_sauter,
                                             kernel_factor);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "apply Sauter quadrature");
+#endif
           }
       }
 
@@ -3924,10 +3953,19 @@ namespace IdeoBEM
               ky_mapping_copy,
               false);
 
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             calc_jacobian_normals_for_sauter_quad(scratch_data,
                                                   cell_neighboring_type,
                                                   bem_values,
                                                   active_quad_rule);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "calculate Jacobians and normal vectors");
+#endif
 
             /**
              * When the bilinear form for the hyper singular operator is
@@ -3935,10 +3973,19 @@ namespace IdeoBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
+#if ENABLE_TIMER == 1
+                scratch_data.timer.start();
+#endif
                 calc_covariant_transformations(scratch_data,
                                                cell_neighboring_type,
                                                bem_values,
                                                active_quad_rule);
+#if ENABLE_TIMER == 1
+                scratch_data.timer.stop();
+                print_wall_time(scratch_data.log_stream,
+                                scratch_data.timer,
+                                "calculate covariant matrices");
+#endif
               }
 
             /**
@@ -3969,7 +4016,9 @@ namespace IdeoBEM
             unsigned int j_index =
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             /**
              * Pullback the kernel function to unit cell.
              */
@@ -3994,6 +4043,12 @@ namespace IdeoBEM
               ApplyQuadratureUsingBEMValues(active_quad_rule,
                                             kernel_pullback_on_sauter,
                                             kernel_factor);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "apply Sauter quadrature");
+#endif
 
             /**
              * Append the FEM mass matrix contribution.

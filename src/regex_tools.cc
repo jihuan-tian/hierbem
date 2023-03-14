@@ -10,46 +10,49 @@
 
 #include <exception>
 
-namespace RegexTools
+namespace IdeoBEM
 {
-  using namespace std;
-
-  const regex reg_for_file_base_and_ext1("^((../|./)*)(.+)$");
-  const regex reg_for_file_base_and_ext2("^(.+)\\.(.+)$");
-
-  string
-  file_basename(const string &filename)
+  namespace RegexTools
   {
-    smatch m1, m2;
+    using namespace std;
 
-    regex_match(filename, m1, reg_for_file_base_and_ext1);
-    string filename_without_dots(m1[3].str());
+    const regex reg_for_file_base_and_ext1("^((../|./)*)(.+)$");
+    const regex reg_for_file_base_and_ext2("^(.+)\\.(.+)$");
 
-    if (regex_match(filename_without_dots, m2, reg_for_file_base_and_ext2))
-      {
-        return m1[1].str() + m2[1].str();
-      }
-    else
-      {
-        return m1[1].str() + m1[3].str();
-      }
-  }
+    string
+    file_basename(const string &filename)
+    {
+      smatch m1, m2;
 
-  string
-  file_ext(const string &filename)
-  {
-    smatch m1, m2;
+      regex_match(filename, m1, reg_for_file_base_and_ext1);
+      string filename_without_dots(m1[3].str());
 
-    regex_match(filename, m1, reg_for_file_base_and_ext1);
-    string filename_without_dots(m1[3].str());
+      if (regex_match(filename_without_dots, m2, reg_for_file_base_and_ext2))
+        {
+          return m1[1].str() + m2[1].str();
+        }
+      else
+        {
+          return m1[1].str() + m1[3].str();
+        }
+    }
 
-    if (regex_match(filename_without_dots, m2, reg_for_file_base_and_ext2))
-      {
-        return m2[2].str();
-      }
-    else
-      {
-        return string("");
-      }
-  }
-} // namespace RegexTools
+    string
+    file_ext(const string &filename)
+    {
+      smatch m1, m2;
+
+      regex_match(filename, m1, reg_for_file_base_and_ext1);
+      string filename_without_dots(m1[3].str());
+
+      if (regex_match(filename_without_dots, m2, reg_for_file_base_and_ext2))
+        {
+          return m2[2].str();
+        }
+      else
+        {
+          return string("");
+        }
+    }
+  } // namespace RegexTools
+} // namespace IdeoBEM

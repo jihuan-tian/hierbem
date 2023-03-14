@@ -14,6 +14,8 @@
 
 #include <deal.II/lac/vector.h>
 
+#include <tbb/tbb_thread.h>
+
 #include <algorithm>
 #include <cmath>
 #include <forward_list>
@@ -5116,12 +5118,17 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
+    const int current_thread_id = tbb::task_arena::current_thread_index();
+    std::cerr << "WorkStream " << current_thread_id << " starts..."
+              << std::endl;
+    
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
      * are local to the current working thread. This is mandatory because
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      current_thread_id,
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
       kx_mapping,
@@ -5158,6 +5165,13 @@ namespace IdeoBEM
           copy_data,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release pair cell wise scratch data.
+     */
+    scratch_data.release();
+
+    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
   }
 
 
@@ -5221,12 +5235,17 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
+    const int current_thread_id = tbb::task_arena::current_thread_index();
+    std::cerr << "WorkStream " << current_thread_id << " starts..."
+              << std::endl;
+    
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
      * are local to the current working thread. This is mandatory because
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      current_thread_id,
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
       kx_mapping,
@@ -5265,6 +5284,13 @@ namespace IdeoBEM
           copy_data,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release pair cell wise scratch data.
+     */
+    scratch_data.release();
+
+    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
   }
 
 
@@ -5327,6 +5353,10 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
+    const int current_thread_id = tbb::task_arena::current_thread_index();
+    std::cerr << "WorkStream " << current_thread_id << " starts..."
+              << std::endl;
+    
     /**
      * Define @p CellWiseScratchData which is local to the current working thread.
      */
@@ -5342,6 +5372,7 @@ namespace IdeoBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      current_thread_id,
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
       kx_mapping,
@@ -5380,6 +5411,13 @@ namespace IdeoBEM
           copy_data,
           enable_build_symmetric_hmat);
       }
+
+    /**
+     * Release pair cell wise scratch data.
+     */
+    scratch_data.release();
+
+    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
   }
 
 
