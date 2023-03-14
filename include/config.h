@@ -10,5 +10,6 @@
 
 #define ENABLE_PRINTOUT 1
 #define ENABLE_DEBUG 1
+#define ENABLE_TIMER 1
 
 #endif /* INCLUDE_CONFIG_H_ */

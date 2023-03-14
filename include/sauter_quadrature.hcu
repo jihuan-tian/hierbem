@@ -2992,6 +2992,9 @@ namespace IdeoBEM
             /**
              * @internal Copy the scratch data and copy data from CPU to GPU.
              */
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             scratch_data_gpu.assign_from_host(scratch_data);
             copy_data_gpu.assign_from_host(copy_data,
                                            scratch_data.cuda_stream_handle);
@@ -2999,6 +3002,12 @@ namespace IdeoBEM
             cudaError_t error_code =
               cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "copy scratch data from host to device");
+#endif
 
             /**
              * @internal Determine thread block dimensions.
@@ -3008,6 +3017,9 @@ namespace IdeoBEM
             IdeoBEM::CUDAWrappers::configure_thread_blocks(
               cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             switch (cell_neighboring_type)
               {
                   case CellNeighboringType::SamePanel: {
@@ -3063,6 +3075,12 @@ namespace IdeoBEM
 
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "calculate Jacobians and normal vectors");
+#endif
 
             /**
              * When the bilinear form for the hyper singular operator is
@@ -3070,6 +3088,9 @@ namespace IdeoBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
+#if ENABLE_TIMER == 1
+                scratch_data.timer.start();
+#endif
                 switch (cell_neighboring_type)
                   {
                       case CellNeighboringType::SamePanel: {
@@ -3126,6 +3147,12 @@ namespace IdeoBEM
                 error_code =
                   cudaStreamSynchronize(scratch_data.cuda_stream_handle);
                 AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+                scratch_data.timer.stop();
+                print_wall_time(scratch_data.log_stream,
+                                scratch_data.timer,
+                                "calculate covariant matrices");
+#endif
               }
 
             /**
@@ -3157,6 +3184,9 @@ namespace IdeoBEM
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
             // Apply 4d Sauter numerical quadrature on the GPU device.
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             switch (cell_neighboring_type)
               {
                   case BEMTools::CellNeighboringType::SamePanel: {
@@ -3246,6 +3276,12 @@ namespace IdeoBEM
               {
                 double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "apply Sauter quadrature");
+#endif
           }
       }
 
@@ -3420,7 +3456,12 @@ namespace IdeoBEM
               ky_mapping_copy,
               false);
 
-            // Copy data from CPU to GPU.
+            /**
+             * @internal Copy the scratch data and copy data from CPU to GPU.
+             */
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             scratch_data_gpu.assign_from_host(scratch_data);
             copy_data_gpu.assign_from_host(copy_data,
                                            scratch_data.cuda_stream_handle);
@@ -3428,6 +3469,12 @@ namespace IdeoBEM
             cudaError_t error_code =
               cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "copy scratch data from host to device");
+#endif
 
             // Determine thread block dimensions.
             dim3 blocks_rect;
@@ -3435,6 +3482,9 @@ namespace IdeoBEM
             IdeoBEM::CUDAWrappers::configure_thread_blocks(
               cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             switch (cell_neighboring_type)
               {
                   case CellNeighboringType::SamePanel: {
@@ -3490,6 +3540,12 @@ namespace IdeoBEM
 
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "calculate Jacobians and normal vectors");
+#endif
 
             /**
              * When the bilinear form for the hyper singular operator is
@@ -3497,6 +3553,9 @@ namespace IdeoBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
+#if ENABLE_TIMER == 1
+                scratch_data.timer.start();
+#endif
                 switch (cell_neighboring_type)
                   {
                       case CellNeighboringType::SamePanel: {
@@ -3553,6 +3612,12 @@ namespace IdeoBEM
                 error_code =
                   cudaStreamSynchronize(scratch_data.cuda_stream_handle);
                 AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+                scratch_data.timer.stop();
+                print_wall_time(scratch_data.log_stream,
+                                scratch_data.timer,
+                                "calculate covariant matrices");
+#endif
               }
 
             /**
@@ -3584,6 +3649,9 @@ namespace IdeoBEM
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
             // Apply 4d Sauter numerical quadrature on the GPU device.
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
             switch (cell_neighboring_type)
               {
                   case BEMTools::CellNeighboringType::SamePanel: {
@@ -3673,6 +3741,12 @@ namespace IdeoBEM
               {
                 double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "apply Sauter quadrature");
+#endif
 
             /**
              * Append the FEM mass matrix contribution.

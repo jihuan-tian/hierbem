@@ -3437,10 +3437,10 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
-    const std::array<types::global_dof_index, 2> *row_indices =
-      leaf_mat->get_row_indices();
-    const std::array<types::global_dof_index, 2> *col_indices =
-      leaf_mat->get_col_indices();
+    const std::array<types::global_dof_index, 2> *row_index_range =
+      leaf_mat->get_row_index_range();
+    const std::array<types::global_dof_index, 2> *col_index_range =
+      leaf_mat->get_col_index_range();
 
     types::global_dof_index i_global_dof_index;
     types::global_dof_index j_global_dof_index;
@@ -3482,20 +3482,22 @@ namespace IdeoBEM
                             i_global_dof_index =
                               (kx_map_from_local_to_full_dof_indices ==
                                nullptr) ?
-                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     i] :
                                 kx_map_from_local_to_full_dof_indices->at(
-                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                                  kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                       i]);
 
                             for (size_t j = 0; j <= i; j++)
                               {
                                 j_global_dof_index =
                                   (ky_map_from_local_to_full_dof_indices ==
                                    nullptr) ?
-                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                          j] :
                                     ky_map_from_local_to_full_dof_indices->at(
-                                      ky_dof_i2e_numbering[(*col_indices)[0] +
-                                                           j]);
+                                      ky_dof_i2e_numbering
+                                        [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
@@ -3542,20 +3544,22 @@ namespace IdeoBEM
                             i_global_dof_index =
                               (kx_map_from_local_to_full_dof_indices ==
                                nullptr) ?
-                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     i] :
                                 kx_map_from_local_to_full_dof_indices->at(
-                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                                  kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                       i]);
 
                             for (size_t j = 0; j < fullmat->n(); j++)
                               {
                                 j_global_dof_index =
                                   (ky_map_from_local_to_full_dof_indices ==
                                    nullptr) ?
-                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                          j] :
                                     ky_map_from_local_to_full_dof_indices->at(
-                                      ky_dof_i2e_numbering[(*col_indices)[0] +
-                                                           j]);
+                                      ky_dof_i2e_numbering
+                                        [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
@@ -3601,17 +3605,17 @@ namespace IdeoBEM
                   {
                     i_global_dof_index =
                       (kx_map_from_local_to_full_dof_indices == nullptr) ?
-                        kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                        kx_dof_i2e_numbering[(*row_index_range)[0] + i] :
                         kx_map_from_local_to_full_dof_indices->at(
-                          kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                          kx_dof_i2e_numbering[(*row_index_range)[0] + i]);
 
                     for (size_t j = 0; j < fullmat->n(); j++)
                       {
                         j_global_dof_index =
                           (ky_map_from_local_to_full_dof_indices == nullptr) ?
-                            ky_dof_i2e_numbering[(*col_indices)[0] + j] :
+                            ky_dof_i2e_numbering[(*col_index_range)[0] + j] :
                             ky_map_from_local_to_full_dof_indices->at(
-                              ky_dof_i2e_numbering[(*col_indices)[0] + j]);
+                              ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
                         (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
                           kernel,
@@ -3663,8 +3667,8 @@ namespace IdeoBEM
                                  aca_config,
                                  kernel,
                                  kernel_factor,
-                                 *row_indices,
-                                 *col_indices,
+                                 *row_index_range,
+                                 *col_index_range,
                                  kx_dof_to_cell_topo,
                                  ky_dof_to_cell_topo,
                                  bem_values,
@@ -3714,8 +3718,8 @@ namespace IdeoBEM
                          aca_config,
                          kernel,
                          kernel_factor,
-                         (*row_indices),
-                         (*col_indices),
+                         (*row_index_range),
+                         (*col_index_range),
                          kx_dof_to_cell_topo,
                          ky_dof_to_cell_topo,
                          bem_values,
@@ -3832,10 +3836,10 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
-    const std::array<types::global_dof_index, 2> *row_indices =
-      leaf_mat->get_row_indices();
-    const std::array<types::global_dof_index, 2> *col_indices =
-      leaf_mat->get_col_indices();
+    const std::array<types::global_dof_index, 2> *row_index_range =
+      leaf_mat->get_row_index_range();
+    const std::array<types::global_dof_index, 2> *col_index_range =
+      leaf_mat->get_col_index_range();
 
     types::global_dof_index i_global_dof_index;
     types::global_dof_index j_global_dof_index;
@@ -3877,20 +3881,22 @@ namespace IdeoBEM
                             i_global_dof_index =
                               (kx_map_from_local_to_full_dof_indices ==
                                nullptr) ?
-                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     i] :
                                 kx_map_from_local_to_full_dof_indices->at(
-                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                                  kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                       i]);
 
                             for (size_t j = 0; j <= i; j++)
                               {
                                 j_global_dof_index =
                                   (ky_map_from_local_to_full_dof_indices ==
                                    nullptr) ?
-                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                          j] :
                                     ky_map_from_local_to_full_dof_indices->at(
-                                      ky_dof_i2e_numbering[(*col_indices)[0] +
-                                                           j]);
+                                      ky_dof_i2e_numbering
+                                        [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
@@ -3919,8 +3925,8 @@ namespace IdeoBEM
                                 // \f$M w_{\rm eq}\f$.
                                 (*fullmat)(i, j) +=
                                   stabilization_factor *
-                                  mass_vmult_weq((*row_indices)[0] + i) *
-                                  mass_vmult_weq((*col_indices)[0] + j);
+                                  mass_vmult_weq((*row_index_range)[0] + i) *
+                                  mass_vmult_weq((*col_index_range)[0] + j);
                               }
                           }
 
@@ -3945,20 +3951,22 @@ namespace IdeoBEM
                             i_global_dof_index =
                               (kx_map_from_local_to_full_dof_indices ==
                                nullptr) ?
-                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     i] :
                                 kx_map_from_local_to_full_dof_indices->at(
-                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                                  kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                       i]);
 
                             for (size_t j = 0; j < fullmat->n(); j++)
                               {
                                 j_global_dof_index =
                                   (ky_map_from_local_to_full_dof_indices ==
                                    nullptr) ?
-                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                          j] :
                                     ky_map_from_local_to_full_dof_indices->at(
-                                      ky_dof_i2e_numbering[(*col_indices)[0] +
-                                                           j]);
+                                      ky_dof_i2e_numbering
+                                        [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
@@ -3987,8 +3995,8 @@ namespace IdeoBEM
                                 // \f$M w_{\rm eq}\f$.
                                 (*fullmat)(i, j) +=
                                   stabilization_factor *
-                                  mass_vmult_weq((*row_indices)[0] + i) *
-                                  mass_vmult_weq((*col_indices)[0] + j);
+                                  mass_vmult_weq((*row_index_range)[0] + i) *
+                                  mass_vmult_weq((*col_index_range)[0] + j);
                               }
                           }
 
@@ -4012,17 +4020,17 @@ namespace IdeoBEM
                   {
                     i_global_dof_index =
                       (kx_map_from_local_to_full_dof_indices == nullptr) ?
-                        kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                        kx_dof_i2e_numbering[(*row_index_range)[0] + i] :
                         kx_map_from_local_to_full_dof_indices->at(
-                          kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                          kx_dof_i2e_numbering[(*row_index_range)[0] + i]);
 
                     for (size_t j = 0; j < fullmat->n(); j++)
                       {
                         j_global_dof_index =
                           (ky_map_from_local_to_full_dof_indices == nullptr) ?
-                            ky_dof_i2e_numbering[(*col_indices)[0] + j] :
+                            ky_dof_i2e_numbering[(*col_index_range)[0] + j] :
                             ky_map_from_local_to_full_dof_indices->at(
-                              ky_dof_i2e_numbering[(*col_indices)[0] + j]);
+                              ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
                         (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
                           kernel,
@@ -4050,8 +4058,8 @@ namespace IdeoBEM
                         // \f$M w_{\rm eq}\f$.
                         (*fullmat)(i, j) +=
                           stabilization_factor *
-                          mass_vmult_weq((*row_indices)[0] + i) *
-                          mass_vmult_weq((*col_indices)[0] + j);
+                          mass_vmult_weq((*row_index_range)[0] + i) *
+                          mass_vmult_weq((*col_index_range)[0] + j);
                       }
                   }
               }
@@ -4084,8 +4092,8 @@ namespace IdeoBEM
                                  kernel_factor,
                                  mass_vmult_weq,
                                  stabilization_factor,
-                                 *row_indices,
-                                 *col_indices,
+                                 *row_index_range,
+                                 *col_index_range,
                                  kx_dof_to_cell_topo,
                                  ky_dof_to_cell_topo,
                                  bem_values,
@@ -4137,8 +4145,8 @@ namespace IdeoBEM
                          kernel_factor,
                          mass_vmult_weq,
                          stabilization_factor,
-                         (*row_indices),
-                         (*col_indices),
+                         (*row_index_range),
+                         (*col_index_range),
                          kx_dof_to_cell_topo,
                          ky_dof_to_cell_topo,
                          bem_values,
@@ -4249,10 +4257,10 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
-    const std::array<types::global_dof_index, 2> *row_indices =
-      leaf_mat->get_row_indices();
-    const std::array<types::global_dof_index, 2> *col_indices =
-      leaf_mat->get_col_indices();
+    const std::array<types::global_dof_index, 2> *row_index_range =
+      leaf_mat->get_row_index_range();
+    const std::array<types::global_dof_index, 2> *col_index_range =
+      leaf_mat->get_col_index_range();
 
     types::global_dof_index i_global_dof_index;
     types::global_dof_index j_global_dof_index;
@@ -4294,20 +4302,22 @@ namespace IdeoBEM
                             i_global_dof_index =
                               (kx_map_from_local_to_full_dof_indices ==
                                nullptr) ?
-                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     i] :
                                 kx_map_from_local_to_full_dof_indices->at(
-                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                                  kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                       i]);
 
                             for (size_t j = 0; j <= i; j++)
                               {
                                 j_global_dof_index =
                                   (ky_map_from_local_to_full_dof_indices ==
                                    nullptr) ?
-                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                          j] :
                                     ky_map_from_local_to_full_dof_indices->at(
-                                      ky_dof_i2e_numbering[(*col_indices)[0] +
-                                                           j]);
+                                      ky_dof_i2e_numbering
+                                        [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
@@ -4356,20 +4366,22 @@ namespace IdeoBEM
                             i_global_dof_index =
                               (kx_map_from_local_to_full_dof_indices ==
                                nullptr) ?
-                                kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     i] :
                                 kx_map_from_local_to_full_dof_indices->at(
-                                  kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                                  kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                       i]);
 
                             for (size_t j = 0; j < fullmat->n(); j++)
                               {
                                 j_global_dof_index =
                                   (ky_map_from_local_to_full_dof_indices ==
                                    nullptr) ?
-                                    ky_dof_i2e_numbering[(*col_indices)[0] +
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
                                                          j] :
                                     ky_map_from_local_to_full_dof_indices->at(
-                                      ky_dof_i2e_numbering[(*col_indices)[0] +
-                                                           j]);
+                                      ky_dof_i2e_numbering
+                                        [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
                                   sauter_assemble_on_one_pair_of_dofs(
@@ -4414,17 +4426,17 @@ namespace IdeoBEM
                   {
                     i_global_dof_index =
                       (kx_map_from_local_to_full_dof_indices == nullptr) ?
-                        kx_dof_i2e_numbering[(*row_indices)[0] + i] :
+                        kx_dof_i2e_numbering[(*row_index_range)[0] + i] :
                         kx_map_from_local_to_full_dof_indices->at(
-                          kx_dof_i2e_numbering[(*row_indices)[0] + i]);
+                          kx_dof_i2e_numbering[(*row_index_range)[0] + i]);
 
                     for (size_t j = 0; j < fullmat->n(); j++)
                       {
                         j_global_dof_index =
                           (ky_map_from_local_to_full_dof_indices == nullptr) ?
-                            ky_dof_i2e_numbering[(*col_indices)[0] + j] :
+                            ky_dof_i2e_numbering[(*col_index_range)[0] + j] :
                             ky_map_from_local_to_full_dof_indices->at(
-                              ky_dof_i2e_numbering[(*col_indices)[0] + j]);
+                              ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
                         (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
                           kernel,
@@ -4470,8 +4482,8 @@ namespace IdeoBEM
                                  aca_config,
                                  kernel,
                                  kernel_factor,
-                                 *row_indices,
-                                 *col_indices,
+                                 *row_index_range,
+                                 *col_index_range,
                                  kx_dof_to_cell_topo,
                                  ky_dof_to_cell_topo,
                                  bem_values,
@@ -4521,8 +4533,8 @@ namespace IdeoBEM
                          aca_config,
                          kernel,
                          kernel_factor,
-                         *row_indices,
-                         *col_indices,
+                         *row_index_range,
+                         *col_index_range,
                          kx_dof_to_cell_topo,
                          ky_dof_to_cell_topo,
                          bem_values,
@@ -4612,7 +4624,8 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
-    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " starts..."
+    const int current_thread_id = tbb::task_arena::current_thread_index();
+    std::cerr << "WorkStream " << current_thread_id << " starts..."
               << std::endl;
 
     /**
@@ -4621,6 +4634,7 @@ namespace IdeoBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      current_thread_id,
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
       kx_mapping,
@@ -4688,8 +4702,7 @@ namespace IdeoBEM
     scratch_data.release();
     copy_data.release();
 
-    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
-              << std::endl;
+    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
   }
 
 
@@ -4759,7 +4772,8 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
-    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " starts..."
+    const int current_thread_id = tbb::task_arena::current_thread_index();
+    std::cerr << "WorkStream " << current_thread_id << " starts..."
               << std::endl;
 
     /**
@@ -4768,6 +4782,7 @@ namespace IdeoBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      current_thread_id,
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
       kx_mapping,
@@ -4837,8 +4852,7 @@ namespace IdeoBEM
     scratch_data.release();
     copy_data.release();
 
-    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
-              << std::endl;
+    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
   }
 
 
@@ -4907,7 +4921,8 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
-    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " starts..."
+    const int current_thread_id = tbb::task_arena::current_thread_index();
+    std::cerr << "WorkStream " << current_thread_id << " starts..."
               << std::endl;
 
     /**
@@ -4925,6 +4940,7 @@ namespace IdeoBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      current_thread_id,
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
       kx_mapping,
@@ -4994,8 +5010,7 @@ namespace IdeoBEM
     scratch_data.release();
     copy_data.release();
 
-    std::cerr << "WorkStream " << tbb::this_tbb_thread::get_id() << " exits..."
-              << std::endl;
+    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
   }
 
 

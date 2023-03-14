@@ -12,6 +12,7 @@
 
 #include <iostream>
 
+#include "debug_tools.hcu"
 #include "laplace_bem.h"
 
 using namespace dealii;
@@ -108,6 +109,12 @@ main(int argc, char *argv[])
    */
   deallog.pop();
   deallog.depth_console(5);
+  LogStream::Prefix prefix_string("HierBEM");
+
+  /**
+   * @internal Create and start the timer.
+   */
+  Timer timer;
 
   /**
    * @internal Initialize the CUDA device parameters.
@@ -142,6 +149,10 @@ main(int argc, char *argv[])
     0.1,  // aca epsilon for preconditioner
     MultithreadInfo::n_cores());
 
+  timer.stop();
+  print_wall_time(deallog, timer, "program preparation");
+
+  timer.start();
   if (argc > 1)
     {
       bem.read_volume_mesh(std::string(argv[1]));
@@ -150,7 +161,10 @@ main(int argc, char *argv[])
     {
       bem.read_volume_mesh(std::string("sphere-from-gmsh_hex.msh"));
     }
+  timer.stop();
+  print_wall_time(deallog, timer, "read mesh");
 
+  timer.start();
   const Point<3> source_loc(1, 1, 1);
   const Point<3> center(0, 0, 0);
   const double   radius(1);
@@ -160,8 +174,16 @@ main(int argc, char *argv[])
 
   bem.assign_dirichlet_bc(dirichlet_bc);
   bem.assign_neumann_bc(neumann_bc);
+  timer.stop();
+  print_wall_time(deallog, timer, "assign boundary conditions");
 
+  timer.start();
   bem.run();
+  timer.stop();
+  print_wall_time(deallog, timer, "run the solver");
+
+  deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
+          << std::endl;
 
   return 0;
 }

@@ -11,6 +11,7 @@
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/table.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
@@ -40,6 +41,65 @@ namespace IdeoBEM
 {
   using namespace dealii;
 
+  /**
+   * Print the elapsed wall time and the total wall time to log stream.
+   *
+   * @param log
+   * @param timer
+   * @param activity_name
+   */
+  void
+  print_wall_time(LogStream         &log,
+                  const Timer       &timer,
+                  const std::string &activity_name);
+
+
+  /**
+   * Print the elapsed wall time and the total wall time to output stream.
+   *
+   * @param out
+   * @param timer
+   * @param activity_name
+   */
+  void
+  print_wall_time(std::ostream      &out,
+                  const Timer       &timer,
+                  const std::string &activity_name);
+
+
+  /**
+   * Print the elapsed CPU time and the total CPU time to log stream.
+   *
+   * @param log
+   * @param timer
+   * @param activity_name
+   */
+  void
+  print_cpu_time(LogStream         &log,
+                 const Timer       &timer,
+                 const std::string &activity_name);
+
+
+  /**
+   * Print the elapsed CPU time and the total CPU time to output stream.
+   *
+   * @param out
+   * @param timer
+   * @param activity_name
+   */
+  void
+  print_cpu_time(std::ostream      &out,
+                 const Timer       &timer,
+                 const std::string &activity_name);
+
+
+  /**
+   * Print mesh information.
+   *
+   * @tparam dim
+   * @tparam spacedim
+   * @param triangulation
+   */
   template <int dim, int spacedim>
   void
   print_mesh_info(const Triangulation<dim, spacedim> &triangulation)

@@ -1396,8 +1396,8 @@ namespace IdeoBEM
      * Calculate matrix-vector multiplication as \f$y = y +
      * M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
      *
-     * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
-     * \p col_indices should be swapped. Also refer to HMatrix::vmult.
+     * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
+     * \p col_index_range should be swapped. Also refer to HMatrix::vmult.
      *
      * \mynote{The input vectors \p x and \p y are with respect to root cluster
      * nodes and should be directly accessed via **global** DoF indices.}
@@ -1415,8 +1415,8 @@ namespace IdeoBEM
      * Calculate matrix-vector multiplication as \f$y = y +
      * \alpha \cdot M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
      *
-     * Because the matrix \f$M\f$ is transposed, the roles for \p row_indices and
-     * \p col_indices should be swapped. Also refer to HMatrix::vmult.
+     * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
+     * \p col_index_range should be swapped. Also refer to HMatrix::vmult.
      *
      * \mynote{The input vectors \p x and \p y are with respect to root cluster
      * nodes and should be directly accessed via **global** DoF indices.}
@@ -2702,36 +2702,36 @@ namespace IdeoBEM
     get_leaf_set() const;
 
     /**
-     * Get the pointer to the list of global row indices.
+     * Get the pointer to the global row index range.
      *
      * @return
      */
     std::array<types::global_dof_index, 2> *
-    get_row_indices();
+    get_row_index_range();
 
     /**
-     * Get the pointer to the list of global row indices (const version).
+     * Get the pointer to the global row index range (const version).
      *
      * @return
      */
     const std::array<types::global_dof_index, 2> *
-    get_row_indices() const;
+    get_row_index_range() const;
 
     /**
-     * Get the pointer to the list of global column indices.
+     * Get the pointer to the global column index range.
      *
      * @return
      */
     std::array<types::global_dof_index, 2> *
-    get_col_indices();
+    get_col_index_range();
 
     /**
-     * Get the pointer to the list of global column indices (const version).
+     * Get the pointer to the global column index range (const version).
      *
      * @return
      */
     const std::array<types::global_dof_index, 2> *
-    get_col_indices() const;
+    get_col_index_range() const;
 
     /**
      * Find a block cluster in the leaf set of the current
@@ -3054,13 +3054,13 @@ namespace IdeoBEM
      * Pointer to the range of row indices (in internal DoF numbering), which
      * has been stored in the cluster \f$\tau\f$. It is a subset of \f$I\f$.
      */
-    std::array<types::global_dof_index, 2> *row_indices;
+    std::array<types::global_dof_index, 2> *row_index_range;
 
     /**
      * Pointer to the range of column indices (in internal DoF numbering), which
      * has been stored in the cluster \f$\sigma\f$. It is a subset of \f$J\f$.
      */
-    std::array<types::global_dof_index, 2> *col_indices;
+    std::array<types::global_dof_index, 2> *col_index_range;
 
     /**
      * Total number of rows in the matrix.
@@ -3125,12 +3125,12 @@ namespace IdeoBEM
      * Link row and column indices stored in the clusters \f$\tau\f$ and
      * \f$\sigma\f$ respectively.
      */
-    hmat.row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
+    hmat.row_index_range = const_cast<std::array<types::global_dof_index, 2> *>(
       &(hmat.bc_node->get_data_reference()
           .get_tau_node()
           ->get_data_reference()
           .get_index_range()));
-    hmat.col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
+    hmat.col_index_range = const_cast<std::array<types::global_dof_index, 2> *>(
       &(hmat.bc_node->get_data_reference()
           .get_sigma_node()
           ->get_data_reference()
@@ -3139,8 +3139,8 @@ namespace IdeoBEM
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat.m = (*hmat.row_indices)[1] - (*hmat.row_indices)[0];
-    hmat.n = (*hmat.col_indices)[1] - (*hmat.col_indices)[0];
+    hmat.m = (*hmat.row_index_range)[1] - (*hmat.row_index_range)[0];
+    hmat.n = (*hmat.col_index_range)[1] - (*hmat.col_index_range)[0];
 
     hmat.Sigma_P.clear();
     hmat.Sigma_R.clear();
@@ -3176,12 +3176,12 @@ namespace IdeoBEM
      * Link row and column indices stored in the clusters \f$\tau\f$ and
      * \f$\sigma\f$ respectively.
      */
-    hmat.row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
+    hmat.row_index_range = const_cast<std::array<types::global_dof_index, 2> *>(
       &(hmat.bc_node->get_data_reference()
           .get_tau_node()
           ->get_data_reference()
           .get_index_range()));
-    hmat.col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
+    hmat.col_index_range = const_cast<std::array<types::global_dof_index, 2> *>(
       &(hmat.bc_node->get_data_reference()
           .get_sigma_node()
           ->get_data_reference()
@@ -3190,8 +3190,8 @@ namespace IdeoBEM
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat.m = (*hmat.row_indices)[1] - (*hmat.row_indices)[0];
-    hmat.n = (*hmat.col_indices)[1] - (*hmat.col_indices)[0];
+    hmat.m = (*hmat.row_index_range)[1] - (*hmat.row_index_range)[0];
+    hmat.n = (*hmat.col_index_range)[1] - (*hmat.col_index_range)[0];
 
     for (std::pair<HMatrix<spacedim, Number> *, HMatrix<spacedim, Number> *>
            &hmat_pair : Sigma_P)
@@ -3232,12 +3232,12 @@ namespace IdeoBEM
      * Link row and column indices stored in the clusters \f$\tau\f$ and
      * \f$\sigma\f$ respectively.
      */
-    hmat.row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
+    hmat.row_index_range = const_cast<std::array<types::global_dof_index, 2> *>(
       &(hmat.bc_node->get_data_reference()
           .get_tau_node()
           ->get_data_reference()
           .get_index_range()));
-    hmat.col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
+    hmat.col_index_range = const_cast<std::array<types::global_dof_index, 2> *>(
       &(hmat.bc_node->get_data_reference()
           .get_sigma_node()
           ->get_data_reference()
@@ -3246,8 +3246,8 @@ namespace IdeoBEM
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat.m = (*hmat.row_indices)[1] - (*hmat.row_indices)[0];
-    hmat.n = (*hmat.col_indices)[1] - (*hmat.col_indices)[0];
+    hmat.m = (*hmat.row_index_range)[1] - (*hmat.row_index_range)[0];
+    hmat.n = (*hmat.col_index_range)[1] - (*hmat.col_index_range)[0];
 
     hmat.Sigma_P.push_back(hmat_pair);
     hmat.Sigma_R.clear();
@@ -3282,22 +3282,24 @@ namespace IdeoBEM
      * Link row and column indices stored in the clusters \f$\tau\f$ and
      * \f$\sigma\f$ respectively.
      */
-    hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_tau_node()
-          ->get_data_reference()
-          .get_index_range()));
-    hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_sigma_node()
-          ->get_data_reference()
-          .get_index_range()));
+    hmat->row_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_tau_node()
+            ->get_data_reference()
+            .get_index_range()));
+    hmat->col_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_sigma_node()
+            ->get_data_reference()
+            .get_index_range()));
 
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
-    hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
+    hmat->m = (*hmat->row_index_range)[1] - (*hmat->row_index_range)[0];
+    hmat->n = (*hmat->col_index_range)[1] - (*hmat->col_index_range)[0];
 
     const unsigned int bc_node_child_num = bc_node->get_child_num();
     if (bc_node_child_num > 0)
@@ -3603,22 +3605,24 @@ namespace IdeoBEM
      * Link row and column indices stored in the clusters \f$\tau\f$ and
      * \f$\sigma\f$ respectively.
      */
-    hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_tau_node()
-          ->get_data_reference()
-          .get_index_range()));
-    hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_sigma_node()
-          ->get_data_reference()
-          .get_index_range()));
+    hmat->row_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_tau_node()
+            ->get_data_reference()
+            .get_index_range()));
+    hmat->col_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_sigma_node()
+            ->get_data_reference()
+            .get_index_range()));
 
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
-    hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
+    hmat->m = (*hmat->row_index_range)[1] - (*hmat->row_index_range)[0];
+    hmat->n = (*hmat->col_index_range)[1] - (*hmat->col_index_range)[0];
 
     const unsigned int bc_node_child_num = bc_node->get_child_num();
     if (bc_node_child_num > 0)
@@ -4222,22 +4226,24 @@ namespace IdeoBEM
     /**
      * Link row and column indices.
      */
-    hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_tau_node()
-          ->get_data_reference()
-          .get_index_range()));
-    hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_sigma_node()
-          ->get_data_reference()
-          .get_index_range()));
+    hmat->row_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_tau_node()
+            ->get_data_reference()
+            .get_index_range()));
+    hmat->col_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_sigma_node()
+            ->get_data_reference()
+            .get_index_range()));
 
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
-    hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
+    hmat->m = (*hmat->row_index_range)[1] - (*hmat->row_index_range)[0];
+    hmat->n = (*hmat->col_index_range)[1] - (*hmat->col_index_range)[0];
 
     const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -4471,18 +4477,19 @@ namespace IdeoBEM
                         for (unsigned int j = 0; j < hmat->n; j++)
                           {
                             (*hmat->fullmatrix)(i, j) =
-                              M((*hmat->row_indices)[0] + i,
-                                (*hmat->col_indices)[0] + j);
+                              M((*hmat->row_index_range)[0] + i,
+                                (*hmat->col_index_range)[0] + j);
                           }
                       }
                   }
                 else
                   {
-                    hmat->type     = RkMatrixType;
-                    hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
-                                                          *(hmat->col_indices),
-                                                          fixed_rank_k,
-                                                          M);
+                    hmat->type = RkMatrixType;
+                    hmat->rkmatrix =
+                      new RkMatrix<Number>(*(hmat->row_index_range),
+                                           *(hmat->col_index_range),
+                                           fixed_rank_k,
+                                           M);
                   }
 
                 break;
@@ -4538,8 +4545,8 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] + i,
-                                    (*hmat->col_indices)[0] + j);
+                                  M((*hmat->row_index_range)[0] + i,
+                                    (*hmat->col_index_range)[0] + j);
                               }
                           }
 
@@ -4567,8 +4574,8 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] + i,
-                                        (*hmat->col_indices)[0] + j);
+                                      M((*hmat->row_index_range)[0] + i,
+                                        (*hmat->col_index_range)[0] + j);
                                   }
                               }
                           }
@@ -4576,8 +4583,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    fixed_rank_k,
                                                    M);
                           }
@@ -4669,8 +4676,8 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] + i,
-                                    (*hmat->col_indices)[0] + j);
+                                  M((*hmat->row_index_range)[0] + i,
+                                    (*hmat->col_index_range)[0] + j);
                               }
                           }
 
@@ -4698,8 +4705,8 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] + i,
-                                        (*hmat->col_indices)[0] + j);
+                                      M((*hmat->row_index_range)[0] + i,
+                                        (*hmat->col_index_range)[0] + j);
                                   }
                               }
                           }
@@ -4707,8 +4714,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    fixed_rank_k,
                                                    M);
                           }
@@ -4799,8 +4806,8 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] + i,
-                                    (*hmat->col_indices)[0] + j);
+                                  M((*hmat->row_index_range)[0] + i,
+                                    (*hmat->col_index_range)[0] + j);
                               }
                           }
 
@@ -4828,8 +4835,8 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] + i,
-                                        (*hmat->col_indices)[0] + j);
+                                      M((*hmat->row_index_range)[0] + i,
+                                        (*hmat->col_index_range)[0] + j);
                                   }
                               }
                           }
@@ -4837,8 +4844,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    fixed_rank_k,
                                                    M);
                           }
@@ -4936,22 +4943,24 @@ namespace IdeoBEM
     /**
      * Link row and column indices.
      */
-    hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_tau_node()
-          ->get_data_reference()
-          .get_index_range()));
-    hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_sigma_node()
-          ->get_data_reference()
-          .get_index_range()));
+    hmat->row_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_tau_node()
+            ->get_data_reference()
+            .get_index_range()));
+    hmat->col_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_sigma_node()
+            ->get_data_reference()
+            .get_index_range()));
 
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
-    hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
+    hmat->m = (*hmat->row_index_range)[1] - (*hmat->row_index_range)[0];
+    hmat->n = (*hmat->col_index_range)[1] - (*hmat->col_index_range)[0];
 
     const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -5188,17 +5197,18 @@ namespace IdeoBEM
                         for (unsigned int j = 0; j < hmat->n; j++)
                           {
                             (*hmat->fullmatrix)(i, j) =
-                              M((*hmat->row_indices)[0] + i,
-                                (*hmat->col_indices)[0] + j);
+                              M((*hmat->row_index_range)[0] + i,
+                                (*hmat->col_index_range)[0] + j);
                           }
                       }
                   }
                 else
                   {
-                    hmat->type     = RkMatrixType;
-                    hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
-                                                          *(hmat->col_indices),
-                                                          M);
+                    hmat->type = RkMatrixType;
+                    hmat->rkmatrix =
+                      new RkMatrix<Number>(*(hmat->row_index_range),
+                                           *(hmat->col_index_range),
+                                           M);
                   }
 
                 break;
@@ -5254,8 +5264,8 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] + i,
-                                    (*hmat->col_indices)[0] + j);
+                                  M((*hmat->row_index_range)[0] + i,
+                                    (*hmat->col_index_range)[0] + j);
                               }
                           }
 
@@ -5283,8 +5293,8 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] + i,
-                                        (*hmat->col_indices)[0] + j);
+                                      M((*hmat->row_index_range)[0] + i,
+                                        (*hmat->col_index_range)[0] + j);
                                   }
                               }
                           }
@@ -5292,8 +5302,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    M);
                           }
 
@@ -5381,8 +5391,8 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] + i,
-                                    (*hmat->col_indices)[0] + j);
+                                  M((*hmat->row_index_range)[0] + i,
+                                    (*hmat->col_index_range)[0] + j);
                               }
                           }
 
@@ -5410,8 +5420,8 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] + i,
-                                        (*hmat->col_indices)[0] + j);
+                                      M((*hmat->row_index_range)[0] + i,
+                                        (*hmat->col_index_range)[0] + j);
                                   }
                               }
                           }
@@ -5419,8 +5429,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    M);
                           }
 
@@ -5507,8 +5517,8 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] + i,
-                                    (*hmat->col_indices)[0] + j);
+                                  M((*hmat->row_index_range)[0] + i,
+                                    (*hmat->col_index_range)[0] + j);
                               }
                           }
 
@@ -5536,8 +5546,8 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] + i,
-                                        (*hmat->col_indices)[0] + j);
+                                      M((*hmat->row_index_range)[0] + i,
+                                        (*hmat->col_index_range)[0] + j);
                                   }
                               }
                           }
@@ -5545,8 +5555,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    M);
                           }
 
@@ -5635,8 +5645,8 @@ namespace IdeoBEM
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
-    hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
+    hmat->m = (*hmat->row_index_range)[1] - (*hmat->row_index_range)[0];
+    hmat->n = (*hmat->col_index_range)[1] - (*hmat->col_index_range)[0];
 
     const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -5872,22 +5882,23 @@ namespace IdeoBEM
                         for (unsigned int j = 0; j < hmat->n; j++)
                           {
                             (*hmat->fullmatrix)(i, j) =
-                              M((*hmat->row_indices)[0] - M_row_index_range[0] +
-                                  i,
-                                (*hmat->col_indices)[0] - M_col_index_range[0] +
-                                  j);
+                              M((*hmat->row_index_range)[0] -
+                                  M_row_index_range[0] + i,
+                                (*hmat->col_index_range)[0] -
+                                  M_col_index_range[0] + j);
                           }
                       }
                   }
                 else
                   {
-                    hmat->type     = RkMatrixType;
-                    hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
-                                                          *(hmat->col_indices),
-                                                          fixed_rank_k,
-                                                          M,
-                                                          M_row_index_range,
-                                                          M_col_index_range);
+                    hmat->type = RkMatrixType;
+                    hmat->rkmatrix =
+                      new RkMatrix<Number>(*(hmat->row_index_range),
+                                           *(hmat->col_index_range),
+                                           fixed_rank_k,
+                                           M,
+                                           M_row_index_range,
+                                           M_col_index_range);
                   }
 
                 break;
@@ -5943,9 +5954,9 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] -
+                                  M((*hmat->row_index_range)[0] -
                                       M_row_index_range[0] + i,
-                                    (*hmat->col_indices)[0] -
+                                    (*hmat->col_index_range)[0] -
                                       M_col_index_range[0] + j);
                               }
                           }
@@ -5974,9 +5985,9 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] -
+                                      M((*hmat->row_index_range)[0] -
                                           M_row_index_range[0] + i,
-                                        (*hmat->col_indices)[0] -
+                                        (*hmat->col_index_range)[0] -
                                           M_col_index_range[0] + j);
                                   }
                               }
@@ -5985,8 +5996,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    fixed_rank_k,
                                                    M,
                                                    M_row_index_range,
@@ -6077,9 +6088,9 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] -
+                                  M((*hmat->row_index_range)[0] -
                                       M_row_index_range[0] + i,
-                                    (*hmat->col_indices)[0] -
+                                    (*hmat->col_index_range)[0] -
                                       M_col_index_range[0] + j);
                               }
                           }
@@ -6108,9 +6119,9 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] -
+                                      M((*hmat->row_index_range)[0] -
                                           M_row_index_range[0] + i,
-                                        (*hmat->col_indices)[0] -
+                                        (*hmat->col_index_range)[0] -
                                           M_col_index_range[0] + j);
                                   }
                               }
@@ -6119,8 +6130,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    fixed_rank_k,
                                                    M,
                                                    M_row_index_range,
@@ -6210,9 +6221,9 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] -
+                                  M((*hmat->row_index_range)[0] -
                                       M_row_index_range[0] + i,
-                                    (*hmat->col_indices)[0] -
+                                    (*hmat->col_index_range)[0] -
                                       M_col_index_range[0] + j);
                               }
                           }
@@ -6241,9 +6252,9 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] -
+                                      M((*hmat->row_index_range)[0] -
                                           M_row_index_range[0] + i,
-                                        (*hmat->col_indices)[0] -
+                                        (*hmat->col_index_range)[0] -
                                           M_col_index_range[0] + j);
                                   }
                               }
@@ -6252,8 +6263,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    fixed_rank_k,
                                                    M,
                                                    M_row_index_range,
@@ -6338,22 +6349,24 @@ namespace IdeoBEM
     /**
      * Link row and column indices.
      */
-    hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_tau_node()
-          ->get_data_reference()
-          .get_index_range()));
-    hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_sigma_node()
-          ->get_data_reference()
-          .get_index_range()));
+    hmat->row_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_tau_node()
+            ->get_data_reference()
+            .get_index_range()));
+    hmat->col_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_sigma_node()
+            ->get_data_reference()
+            .get_index_range()));
 
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
-    hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
+    hmat->m = (*hmat->row_index_range)[1] - (*hmat->row_index_range)[0];
+    hmat->n = (*hmat->col_index_range)[1] - (*hmat->col_index_range)[0];
 
     const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -6588,21 +6601,22 @@ namespace IdeoBEM
                         for (unsigned int j = 0; j < hmat->n; j++)
                           {
                             (*hmat->fullmatrix)(i, j) =
-                              M((*hmat->row_indices)[0] - M_row_index_range[0] +
-                                  i,
-                                (*hmat->col_indices)[0] - M_col_index_range[0] +
-                                  j);
+                              M((*hmat->row_index_range)[0] -
+                                  M_row_index_range[0] + i,
+                                (*hmat->col_index_range)[0] -
+                                  M_col_index_range[0] + j);
                           }
                       }
                   }
                 else
                   {
-                    hmat->type     = RkMatrixType;
-                    hmat->rkmatrix = new RkMatrix<Number>(*(hmat->row_indices),
-                                                          *(hmat->col_indices),
-                                                          M,
-                                                          M_row_index_range,
-                                                          M_col_index_range);
+                    hmat->type = RkMatrixType;
+                    hmat->rkmatrix =
+                      new RkMatrix<Number>(*(hmat->row_index_range),
+                                           *(hmat->col_index_range),
+                                           M,
+                                           M_row_index_range,
+                                           M_col_index_range);
                   }
 
                 break;
@@ -6658,9 +6672,9 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] -
+                                  M((*hmat->row_index_range)[0] -
                                       M_row_index_range[0] + i,
-                                    (*hmat->col_indices)[0] -
+                                    (*hmat->col_index_range)[0] -
                                       M_col_index_range[0] + j);
                               }
                           }
@@ -6689,9 +6703,9 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] -
+                                      M((*hmat->row_index_range)[0] -
                                           M_row_index_range[0] + i,
-                                        (*hmat->col_indices)[0] -
+                                        (*hmat->col_index_range)[0] -
                                           M_col_index_range[0] + j);
                                   }
                               }
@@ -6700,8 +6714,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    M,
                                                    M_row_index_range,
                                                    M_col_index_range);
@@ -6791,9 +6805,9 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] -
+                                  M((*hmat->row_index_range)[0] -
                                       M_row_index_range[0] + i,
-                                    (*hmat->col_indices)[0] -
+                                    (*hmat->col_index_range)[0] -
                                       M_col_index_range[0] + j);
                               }
                           }
@@ -6822,9 +6836,9 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] -
+                                      M((*hmat->row_index_range)[0] -
                                           M_row_index_range[0] + i,
-                                        (*hmat->col_indices)[0] -
+                                        (*hmat->col_index_range)[0] -
                                           M_col_index_range[0] + j);
                                   }
                               }
@@ -6833,8 +6847,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    M,
                                                    M_row_index_range,
                                                    M_col_index_range);
@@ -6923,9 +6937,9 @@ namespace IdeoBEM
                             for (unsigned int j = 0; j < hmat->n; j++)
                               {
                                 (*hmat->fullmatrix)(i, j) =
-                                  M((*hmat->row_indices)[0] -
+                                  M((*hmat->row_index_range)[0] -
                                       M_row_index_range[0] + i,
-                                    (*hmat->col_indices)[0] -
+                                    (*hmat->col_index_range)[0] -
                                       M_col_index_range[0] + j);
                               }
                           }
@@ -6954,9 +6968,9 @@ namespace IdeoBEM
                                 for (unsigned int j = 0; j < hmat->n; j++)
                                   {
                                     (*hmat->fullmatrix)(i, j) =
-                                      M((*hmat->row_indices)[0] -
+                                      M((*hmat->row_index_range)[0] -
                                           M_row_index_range[0] + i,
-                                        (*hmat->col_indices)[0] -
+                                        (*hmat->col_index_range)[0] -
                                           M_col_index_range[0] + j);
                                   }
                               }
@@ -6965,8 +6979,8 @@ namespace IdeoBEM
                           {
                             hmat->type = RkMatrixType;
                             hmat->rkmatrix =
-                              new RkMatrix<Number>(*(hmat->row_indices),
-                                                   *(hmat->col_indices),
+                              new RkMatrix<Number>(*(hmat->row_index_range),
+                                                   *(hmat->col_index_range),
                                                    M,
                                                    M_row_index_range,
                                                    M_col_index_range);
@@ -7045,22 +7059,24 @@ namespace IdeoBEM
      * Link row and column indices stored in the clusters \f$\tau\f$ and
      * \f$\sigma\f$ respectively..
      */
-    hmat->row_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_tau_node()
-          ->get_data_reference()
-          .get_index_range()));
-    hmat->col_indices = const_cast<std::array<types::global_dof_index, 2> *>(
-      &(hmat->bc_node->get_data_reference()
-          .get_sigma_node()
-          ->get_data_reference()
-          .get_index_range()));
+    hmat->row_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_tau_node()
+            ->get_data_reference()
+            .get_index_range()));
+    hmat->col_index_range =
+      const_cast<std::array<types::global_dof_index, 2> *>(
+        &(hmat->bc_node->get_data_reference()
+            .get_sigma_node()
+            ->get_data_reference()
+            .get_index_range()));
 
     /**
      * Update the matrix dimension of \p hmat.
      */
-    hmat->m = (*hmat->row_indices)[1] - (*hmat->row_indices)[0];
-    hmat->n = (*hmat->col_indices)[1] - (*hmat->col_indices)[0];
+    hmat->m = (*hmat->row_index_range)[1] - (*hmat->row_index_range)[0];
+    hmat->n = (*hmat->col_index_range)[1] - (*hmat->col_index_range)[0];
 
     const unsigned int bc_node_child_num = bc_node->get_child_num();
 
@@ -7532,13 +7548,13 @@ namespace IdeoBEM
              * Link row and column indices of the child \hmatrix
              * node to those index sets stored in clusters.
              */
-            child_hmat->row_indices =
+            child_hmat->row_index_range =
               const_cast<std::array<types::global_dof_index, 2> *>(
                 &(child_hmat->bc_node->get_data_reference()
                     .get_tau_node()
                     ->get_data_reference()
                     .get_index_range()));
-            child_hmat->col_indices =
+            child_hmat->col_index_range =
               const_cast<std::array<types::global_dof_index, 2> *>(
                 &(child_hmat->bc_node->get_data_reference()
                     .get_sigma_node()
@@ -7549,10 +7565,10 @@ namespace IdeoBEM
              * Update the matrix dimension of the child \hmatrix
              * node.
              */
-            child_hmat->m =
-              (*child_hmat->row_indices)[1] - (*child_hmat->row_indices)[0];
-            child_hmat->n =
-              (*child_hmat->col_indices)[1] - (*child_hmat->col_indices)[0];
+            child_hmat->m = (*child_hmat->row_index_range)[1] -
+                            (*child_hmat->row_index_range)[0];
+            child_hmat->n = (*child_hmat->col_index_range)[1] -
+                            (*child_hmat->col_index_range)[0];
 
             /**
              * Set the pointer to the parent \hmatnode of the current child
@@ -7612,11 +7628,11 @@ namespace IdeoBEM
                          */
                         current_hmat->fullmatrix =
                           new LAPACKFullMatrixExt<Number>(
-                            *(current_hmat->row_indices),
-                            *(current_hmat->col_indices),
+                            *(current_hmat->row_index_range),
+                            *(current_hmat->col_index_range),
                             *(starting_hmat->fullmatrix),
-                            *starting_hmat->row_indices,
-                            *starting_hmat->col_indices);
+                            *starting_hmat->row_index_range,
+                            *starting_hmat->col_index_range);
 
                         break;
                       }
@@ -7627,11 +7643,11 @@ namespace IdeoBEM
                         current_hmat->fullmatrix =
                           new LAPACKFullMatrixExt<Number>();
                         starting_hmat->rkmatrix->restrictToFullMatrix(
-                          *starting_hmat->row_indices,
-                          *starting_hmat->col_indices,
+                          *starting_hmat->row_index_range,
+                          *starting_hmat->col_index_range,
                           *(current_hmat->fullmatrix),
-                          *(current_hmat->row_indices),
-                          *(current_hmat->col_indices));
+                          *(current_hmat->row_index_range),
+                          *(current_hmat->col_index_range));
 
                         break;
                       }
@@ -7704,11 +7720,11 @@ namespace IdeoBEM
                          * Restrict full matrix to rank-k matrix.
                          */
                         current_hmat->rkmatrix =
-                          new RkMatrix<Number>(*(current_hmat->row_indices),
-                                               *(current_hmat->col_indices),
+                          new RkMatrix<Number>(*(current_hmat->row_index_range),
+                                               *(current_hmat->col_index_range),
                                                *(starting_hmat->fullmatrix),
-                                               *starting_hmat->row_indices,
-                                               *starting_hmat->col_indices);
+                                               *starting_hmat->row_index_range,
+                                               *starting_hmat->col_index_range);
 
                         break;
                       }
@@ -7717,11 +7733,11 @@ namespace IdeoBEM
                          * Restrict rank-k matrix to rank-k matrix.
                          */
                         current_hmat->rkmatrix =
-                          new RkMatrix<Number>(*(current_hmat->row_indices),
-                                               *(current_hmat->col_indices),
+                          new RkMatrix<Number>(*(current_hmat->row_index_range),
+                                               *(current_hmat->col_index_range),
                                                *(starting_hmat->rkmatrix),
-                                               *starting_hmat->row_indices,
-                                               *starting_hmat->col_indices);
+                                               *starting_hmat->row_index_range,
+                                               *starting_hmat->col_index_range);
 
                         break;
                       }
@@ -8682,7 +8698,7 @@ namespace IdeoBEM
   {
     Assert(M2->type == RkMatrixType, ExcInvalidHMatrixType(M2->type));
     Assert(M2->rkmatrix, ExcInternalError());
-    //  Assert(*(M1->col_indices) == *(M2->row_indices),
+    //  Assert(*(M1->col_index_range) == *(M2->row_index_range),
     //         ExcMessage("Incompatible index sets during matrix
     //         multiplication"));
     AssertDimension(M1->n, M2->m);
@@ -9203,7 +9219,7 @@ namespace IdeoBEM
   {
     Assert(M1->type == RkMatrixType, ExcInvalidHMatrixType(M1->type));
     Assert(M1->rkmatrix, ExcInternalError());
-    //  Assert(*(M1->col_indices) == *(M2->row_indices),
+    //  Assert(*(M1->col_index_range) == *(M2->row_index_range),
     //         ExcMessage("Incompatible index sets during matrix
     //         multiplication"));
     AssertDimension(M1->n, M2->m);
@@ -9686,7 +9702,7 @@ namespace IdeoBEM
   {
     Assert(M2->type == FullMatrixType, ExcInvalidHMatrixType(M2->type));
     Assert(M2->fullmatrix, ExcInternalError());
-    //  Assert(*(M1->col_indices) == *(M2->row_indices),
+    //  Assert(*(M1->col_index_range) == *(M2->row_index_range),
     //         ExcMessage("Incompatible index sets during matrix
     //         multiplication"));
     AssertDimension(M1->n, M2->m);
@@ -10134,7 +10150,7 @@ namespace IdeoBEM
   {
     Assert(M1->type == FullMatrixType, ExcInvalidHMatrixType(M1->type));
     Assert(M1->fullmatrix, ExcInternalError());
-    //  Assert(*(M1->col_indices) == *(M2->row_indices),
+    //  Assert(*(M1->col_index_range) == *(M2->row_index_range),
     //         ExcMessage("Incompatible index sets during matrix
     //         multiplication"));
     AssertDimension(M1->n, M2->m);
@@ -10705,8 +10721,10 @@ namespace IdeoBEM
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
             M.fullmatrix->fill(*(Z.fullmatrix),
-                               (*Z.row_indices)[0] - (*M.row_indices)[0],
-                               (*Z.col_indices)[0] - (*M.col_indices)[0],
+                               (*Z.row_index_range)[0] -
+                                 (*M.row_index_range)[0],
+                               (*Z.col_index_range)[0] -
+                                 (*M.col_index_range)[0],
                                0,
                                0,
                                1.0,
@@ -10729,11 +10747,11 @@ namespace IdeoBEM
              M.block_type != HMatrixSupport::upper_triangular_block &&
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
-            M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
-                                               *M.col_indices,
+            M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                               *M.col_index_range,
                                                *(Z.rkmatrix),
-                                               *(Z.row_indices),
-                                               *(Z.col_indices),
+                                               *(Z.row_index_range),
+                                               *(Z.col_index_range),
                                                fixed_rank);
           }
       }
@@ -11117,8 +11135,10 @@ namespace IdeoBEM
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
             M.fullmatrix->fill(*(Z.fullmatrix),
-                               (*Z.row_indices)[0] - (*M.row_indices)[0],
-                               (*Z.col_indices)[0] - (*M.col_indices)[0],
+                               (*Z.row_index_range)[0] -
+                                 (*M.row_index_range)[0],
+                               (*Z.col_index_range)[0] -
+                                 (*M.col_index_range)[0],
                                0,
                                0,
                                1.0,
@@ -11141,11 +11161,11 @@ namespace IdeoBEM
              M.block_type != HMatrixSupport::upper_triangular_block &&
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
-            M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
-                                               *M.col_indices,
+            M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                               *M.col_index_range,
                                                *(Z.rkmatrix),
-                                               *(Z.row_indices),
-                                               *(Z.col_indices),
+                                               *(Z.row_index_range),
+                                               *(Z.col_index_range),
                                                fixed_rank);
           }
       }
@@ -11520,8 +11540,10 @@ namespace IdeoBEM
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
             M.fullmatrix->fill(*(Z.fullmatrix),
-                               (*Z.row_indices)[0] - (*M.row_indices)[0],
-                               (*Z.col_indices)[0] - (*M.col_indices)[0],
+                               (*Z.row_index_range)[0] -
+                                 (*M.row_index_range)[0],
+                               (*Z.col_index_range)[0] -
+                                 (*M.col_index_range)[0],
                                0,
                                0,
                                1.0,
@@ -11544,11 +11566,11 @@ namespace IdeoBEM
              M.block_type != HMatrixSupport::upper_triangular_block &&
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
-            M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
-                                               *M.col_indices,
+            M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                               *M.col_index_range,
                                                *(Z.rkmatrix),
-                                               *(Z.row_indices),
-                                               *(Z.col_indices),
+                                               *(Z.row_index_range),
+                                               *(Z.col_index_range),
                                                fixed_rank);
           }
       }
@@ -11934,8 +11956,10 @@ namespace IdeoBEM
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
             M.fullmatrix->fill(*(Z.fullmatrix),
-                               (*Z.row_indices)[0] - (*M.row_indices)[0],
-                               (*Z.col_indices)[0] - (*M.col_indices)[0],
+                               (*Z.row_index_range)[0] -
+                                 (*M.row_index_range)[0],
+                               (*Z.col_index_range)[0] -
+                                 (*M.col_index_range)[0],
                                0,
                                0,
                                1.0,
@@ -11958,11 +11982,11 @@ namespace IdeoBEM
              M.block_type != HMatrixSupport::upper_triangular_block &&
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
-            M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
-                                               *M.col_indices,
+            M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                               *M.col_index_range,
                                                *(Z.rkmatrix),
-                                               *(Z.row_indices),
-                                               *(Z.col_indices),
+                                               *(Z.row_index_range),
+                                               *(Z.col_index_range),
                                                fixed_rank);
           }
       }
@@ -12322,8 +12346,10 @@ namespace IdeoBEM
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
             M.fullmatrix->fill(*(Z.fullmatrix),
-                               (*Z.row_indices)[0] - (*M.row_indices)[0],
-                               (*Z.col_indices)[0] - (*M.col_indices)[0],
+                               (*Z.row_index_range)[0] -
+                                 (*M.row_index_range)[0],
+                               (*Z.col_index_range)[0] -
+                                 (*M.col_index_range)[0],
                                0,
                                0,
                                1.0,
@@ -12346,11 +12372,11 @@ namespace IdeoBEM
              M.block_type != HMatrixSupport::upper_triangular_block &&
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
-            M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
-                                               *M.col_indices,
+            M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                               *M.col_index_range,
                                                *(Z.rkmatrix),
-                                               *(Z.row_indices),
-                                               *(Z.col_indices),
+                                               *(Z.row_index_range),
+                                               *(Z.col_index_range),
                                                fixed_rank);
           }
       }
@@ -12720,8 +12746,10 @@ namespace IdeoBEM
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
             M.fullmatrix->fill(*(Z.fullmatrix),
-                               (*Z.row_indices)[0] - (*M.row_indices)[0],
-                               (*Z.col_indices)[0] - (*M.col_indices)[0],
+                               (*Z.row_index_range)[0] -
+                                 (*M.row_index_range)[0],
+                               (*Z.col_index_range)[0] -
+                                 (*M.col_index_range)[0],
                                0,
                                0,
                                1.0,
@@ -12744,11 +12772,11 @@ namespace IdeoBEM
              M.block_type != HMatrixSupport::upper_triangular_block &&
              Z.block_type != HMatrixSupport::upper_triangular_block))
           {
-            M.rkmatrix->assemble_from_rkmatrix(*M.row_indices,
-                                               *M.col_indices,
+            M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                               *M.col_index_range,
                                                *(Z.rkmatrix),
-                                               *(Z.row_indices),
-                                               *(Z.col_indices),
+                                               *(Z.row_index_range),
+                                               *(Z.col_index_range),
                                                fixed_rank);
           }
       }
@@ -13830,11 +13858,11 @@ namespace IdeoBEM
         hmat_dst.fullmatrix = nullptr;
       }
 
-    hmat_dst.bc_node     = hmat_src.bc_node;
-    hmat_dst.row_indices = hmat_src.row_indices;
-    hmat_dst.col_indices = hmat_src.col_indices;
-    hmat_dst.m           = hmat_src.m;
-    hmat_dst.n           = hmat_src.n;
+    hmat_dst.bc_node         = hmat_src.bc_node;
+    hmat_dst.row_index_range = hmat_src.row_index_range;
+    hmat_dst.col_index_range = hmat_src.col_index_range;
+    hmat_dst.m               = hmat_src.m;
+    hmat_dst.n               = hmat_src.n;
   }
 
 
@@ -13863,8 +13891,8 @@ namespace IdeoBEM
     hmat_dst.rkmatrix        = hmat_src.rkmatrix;
     hmat_dst.fullmatrix      = hmat_src.fullmatrix;
     hmat_dst.bc_node         = hmat_src.bc_node;
-    hmat_dst.row_indices     = hmat_src.row_indices;
-    hmat_dst.col_indices     = hmat_src.col_indices;
+    hmat_dst.row_index_range = hmat_src.row_index_range;
+    hmat_dst.col_index_range = hmat_src.col_index_range;
     hmat_dst.m               = hmat_src.m;
     hmat_dst.n               = hmat_src.n;
     hmat_dst.Sigma_P         = hmat_src.Sigma_P;
@@ -13916,9 +13944,9 @@ namespace IdeoBEM
                              const HMatrix<spacedim, Number> &M)
   {
     out << name + std::string("([") << std::flush;
-    print_vector_values(out, *(M.row_indices), ",", false);
+    print_vector_values(out, *(M.row_index_range), ",", false);
     out << "],[" << std::flush;
-    print_vector_values(out, *(M.col_indices), ",", false);
+    print_vector_values(out, *(M.col_index_range), ",", false);
     out << "])";
   }
 
@@ -13975,8 +14003,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind()
@@ -14003,8 +14031,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind()
@@ -14035,8 +14063,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind()
@@ -14066,8 +14094,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind()
@@ -14102,8 +14130,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind()
@@ -14140,8 +14168,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind()
@@ -14172,8 +14200,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind()
@@ -14204,8 +14232,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind(std::move(H.Tind))
@@ -14235,8 +14263,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind(std::move(H.Tind))
@@ -14262,8 +14290,8 @@ namespace IdeoBEM
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
-    , row_indices(nullptr)
-    , col_indices(nullptr)
+    , row_index_range(nullptr)
+    , col_index_range(nullptr)
     , m(0)
     , n(0)
     , Tind()
@@ -14289,8 +14317,8 @@ namespace IdeoBEM
     , rkmatrix(H.rkmatrix)
     , fullmatrix(H.fullmatrix)
     , bc_node(H.bc_node)
-    , row_indices(H.row_indices)
-    , col_indices(H.col_indices)
+    , row_index_range(H.row_index_range)
+    , col_index_range(H.col_index_range)
     , m(H.m)
     , n(H.n)
     , Tind(std::move(H.Tind))
@@ -14408,8 +14436,8 @@ namespace IdeoBEM
                     {
                       for (size_type j = 0; j < n; j++)
                         {
-                          M((*row_indices)[0] + i, (*col_indices)[0] + j) =
-                            (*fullmatrix)(i, j);
+                          M((*row_index_range)[0] + i,
+                            (*col_index_range)[0] + j) = (*fullmatrix)(i, j);
                         }
                     }
 
@@ -14431,7 +14459,8 @@ namespace IdeoBEM
                         {
                           for (size_type j = 0; j <= i; j++)
                             {
-                              M((*row_indices)[0] + i, (*col_indices)[0] + j) =
+                              M((*row_index_range)[0] + i,
+                                (*col_index_range)[0] + j) =
                                 (*fullmatrix)(i, j);
                             }
                         }
@@ -14443,7 +14472,8 @@ namespace IdeoBEM
                         {
                           for (size_type j = 0; j < n; j++)
                             {
-                              M((*row_indices)[0] + i, (*col_indices)[0] + j) =
+                              M((*row_index_range)[0] + i,
+                                (*col_index_range)[0] + j) =
                                 (*fullmatrix)(i, j);
                             }
                         }
@@ -14466,7 +14496,8 @@ namespace IdeoBEM
                         {
                           for (size_type j = i; j < n; j++)
                             {
-                              M((*row_indices)[0] + i, (*col_indices)[0] + j) =
+                              M((*row_index_range)[0] + i,
+                                (*col_index_range)[0] + j) =
                                 (*fullmatrix)(i, j);
                             }
                         }
@@ -14478,7 +14509,8 @@ namespace IdeoBEM
                         {
                           for (size_type j = 0; j < n; j++)
                             {
-                              M((*row_indices)[0] + i, (*col_indices)[0] + j) =
+                              M((*row_index_range)[0] + i,
+                                (*col_index_range)[0] + j) =
                                 (*fullmatrix)(i, j);
                             }
                         }
@@ -14510,8 +14542,8 @@ namespace IdeoBEM
                         {
                           for (size_type j = 0; j < n; j++)
                             {
-                              M((*row_indices)[0] + i, (*col_indices)[0] + j) =
-                                matrix_block(i, j);
+                              M((*row_index_range)[0] + i,
+                                (*col_index_range)[0] + j) = matrix_block(i, j);
                             }
                         }
                     }
@@ -14549,8 +14581,9 @@ namespace IdeoBEM
                             {
                               for (size_type j = 0; j < n; j++)
                                 {
-                                  M((*row_indices)[0] + i,
-                                    (*col_indices)[0] + j) = matrix_block(i, j);
+                                  M((*row_index_range)[0] + i,
+                                    (*col_index_range)[0] + j) =
+                                    matrix_block(i, j);
                                 }
                             }
                         }
@@ -14588,8 +14621,9 @@ namespace IdeoBEM
                             {
                               for (size_type j = 0; j < n; j++)
                                 {
-                                  M((*row_indices)[0] + i,
-                                    (*col_indices)[0] + j) = matrix_block(i, j);
+                                  M((*row_index_range)[0] + i,
+                                    (*col_index_range)[0] + j) =
+                                    matrix_block(i, j);
                                 }
                             }
                         }
@@ -14757,11 +14791,11 @@ namespace IdeoBEM
                     LAPACKFullMatrixExt<Number> fullmatrix_restricted;
 
                     rkmatrix_in_starting_hmat->restrictToFullMatrix(
-                      *starting_hmat.row_indices,
-                      *starting_hmat.col_indices,
+                      *starting_hmat.row_index_range,
+                      *starting_hmat.col_index_range,
                       fullmatrix_restricted,
-                      *row_indices,
-                      *col_indices);
+                      *row_index_range,
+                      *col_index_range);
 
                     fullmatrix->add(fullmatrix_restricted);
                   }
@@ -14776,11 +14810,11 @@ namespace IdeoBEM
                     Assert(fullmatrix_in_starting_hmat, ExcInternalError());
 
                     LAPACKFullMatrixExt<Number> fullmatrix_restricted(
-                      *row_indices,
-                      *col_indices,
+                      *row_index_range,
+                      *col_index_range,
                       *fullmatrix_in_starting_hmat,
-                      *starting_hmat.row_indices,
-                      *starting_hmat.col_indices);
+                      *starting_hmat.row_index_range,
+                      *starting_hmat.col_index_range);
 
                     fullmatrix->add(fullmatrix_restricted);
                   }
@@ -14798,11 +14832,11 @@ namespace IdeoBEM
                     Assert(rkmatrix_in_starting_hmat, ExcInternalError());
 
                     RkMatrix<Number> rkmatrix_restricted(
-                      *row_indices,
-                      *col_indices,
+                      *row_index_range,
+                      *col_index_range,
                       *rkmatrix_in_starting_hmat,
-                      *starting_hmat.row_indices,
-                      *starting_hmat.col_indices);
+                      *starting_hmat.row_index_range,
+                      *starting_hmat.col_index_range);
 
                     if (fixed_rank == 0)
                       {
@@ -14824,11 +14858,11 @@ namespace IdeoBEM
                     Assert(fullmatrix_in_starting_hmat, ExcInternalError());
 
                     RkMatrix<Number> rkmatrix_restricted(
-                      *row_indices,
-                      *col_indices,
+                      *row_index_range,
+                      *col_index_range,
                       *fullmatrix_in_starting_hmat,
-                      *starting_hmat.row_indices,
-                      *starting_hmat.col_indices);
+                      *starting_hmat.row_index_range,
+                      *starting_hmat.col_index_range);
 
                     if (fixed_rank == 0)
                       {
@@ -14891,8 +14925,8 @@ namespace IdeoBEM
     bc_node         = nullptr;
     parent          = nullptr;
     submatrix_index = submatrix_index_invalid;
-    row_indices     = nullptr;
-    col_indices     = nullptr;
+    row_index_range = nullptr;
+    col_index_range = nullptr;
     m               = 0;
     n               = 0;
 
@@ -14958,13 +14992,13 @@ namespace IdeoBEM
     parent          = nullptr;
     submatrix_index = submatrix_index_invalid;
     leaf_set.clear();
-    rkmatrix    = nullptr;
-    fullmatrix  = nullptr;
-    bc_node     = nullptr;
-    row_indices = nullptr;
-    col_indices = nullptr;
-    m           = 0;
-    n           = 0;
+    rkmatrix        = nullptr;
+    fullmatrix      = nullptr;
+    bc_node         = nullptr;
+    row_index_range = nullptr;
+    col_index_range = nullptr;
+    m               = 0;
+    n               = 0;
     Sigma_P.clear();
     Sigma_R.clear();
     Sigma_F.clear();
@@ -15796,9 +15830,9 @@ namespace IdeoBEM
      */
     out << "\"" << std::hex << this << "\""
         << "[label=<<b>" << std::hex << this << "</b><br/>" << std::dec
-        << "tau: [" << (*row_indices)[0] << "," << (*row_indices)[1]
+        << "tau: [" << (*row_index_range)[0] << "," << (*row_index_range)[1]
         << ")<br/>";
-    out << "sigma: [" << (*col_indices)[0] << "," << (*col_indices)[1]
+    out << "sigma: [" << (*col_index_range)[0] << "," << (*col_index_range)[1]
         << ")<br/>";
     out << "Level: " << bc_node->get_level() << "<br/>";
     out << "Parent: " << std::hex << parent << "<br/>";
@@ -16744,7 +16778,7 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < n; j++)
                       {
-                        local_x(j) = x((*col_indices)[0] + j);
+                        local_x(j) = x((*col_index_range)[0] + j);
                       }
 
                     fullmatrix->vmult(local_y, local_x);
@@ -16754,7 +16788,7 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < m; i++)
                       {
-                        y((*row_indices)[0] + i) += local_y(i);
+                        y((*row_index_range)[0] + i) += local_y(i);
                       }
 
                     break;
@@ -16798,7 +16832,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -16808,7 +16842,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += local_y(i);
+                                y((*row_index_range)[0] + i) += local_y(i);
                               }
 
                             break;
@@ -16837,7 +16871,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -16847,7 +16881,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += local_y(i);
+                                y((*row_index_range)[0] + i) += local_y(i);
                               }
 
                             Vector<Number> local_y_for_Tvmult(n);
@@ -16860,7 +16894,7 @@ namespace IdeoBEM
                             for (size_type i = 0; i < m; i++)
                               {
                                 local_x_for_Tvmult(i) =
-                                  x((*row_indices)[0] + i);
+                                  x((*row_index_range)[0] + i);
                               }
 
                             fullmatrix->Tvmult(local_y_for_Tvmult,
@@ -16872,7 +16906,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                y((*col_indices)[0] + j) +=
+                                y((*col_index_range)[0] + j) +=
                                   local_y_for_Tvmult(j);
                               }
 
@@ -16937,7 +16971,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -16947,7 +16981,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += local_y(i);
+                                y((*row_index_range)[0] + i) += local_y(i);
                               }
 
                             break;
@@ -16968,7 +17002,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -16978,7 +17012,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += local_y(i);
+                                y((*row_index_range)[0] + i) += local_y(i);
                               }
 
                             break;
@@ -17029,7 +17063,7 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < n; j++)
                       {
-                        local_x(j) = x((*col_indices)[0] + j);
+                        local_x(j) = x((*col_index_range)[0] + j);
                       }
 
                     rkmatrix->vmult(local_y, local_x);
@@ -17039,7 +17073,7 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < m; i++)
                       {
-                        y((*row_indices)[0] + i) += local_y(i);
+                        y((*row_index_range)[0] + i) += local_y(i);
                       }
 
                     break;
@@ -17083,7 +17117,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y, local_x);
@@ -17093,7 +17127,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += local_y(i);
+                                y((*row_index_range)[0] + i) += local_y(i);
                               }
 
                             Vector<Number> local_y_for_Tvmult(n);
@@ -17106,7 +17140,7 @@ namespace IdeoBEM
                             for (size_type i = 0; i < m; i++)
                               {
                                 local_x_for_Tvmult(i) =
-                                  x((*row_indices)[0] + i);
+                                  x((*row_index_range)[0] + i);
                               }
 
                             rkmatrix->Tvmult(local_y_for_Tvmult,
@@ -17118,7 +17152,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                y((*col_indices)[0] + j) +=
+                                y((*col_index_range)[0] + j) +=
                                   local_y_for_Tvmult(j);
                               }
 
@@ -17174,7 +17208,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y, local_x);
@@ -17184,7 +17218,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += local_y(i);
+                                y((*row_index_range)[0] + i) += local_y(i);
                               }
 
                             break;
@@ -17266,7 +17300,7 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < n; j++)
                       {
-                        local_x(j) = x((*col_indices)[0] + j);
+                        local_x(j) = x((*col_index_range)[0] + j);
                       }
 
                     fullmatrix->vmult(local_y, local_x);
@@ -17276,7 +17310,7 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < m; i++)
                       {
-                        y((*row_indices)[0] + i) += alpha * local_y(i);
+                        y((*row_index_range)[0] + i) += alpha * local_y(i);
                       }
 
                     break;
@@ -17320,7 +17354,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -17330,7 +17364,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += alpha * local_y(i);
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             break;
@@ -17360,7 +17395,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -17370,7 +17405,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += alpha * local_y(i);
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             Vector<Number> local_y_for_Tvmult(n);
@@ -17383,7 +17419,7 @@ namespace IdeoBEM
                             for (size_type i = 0; i < m; i++)
                               {
                                 local_x_for_Tvmult(i) =
-                                  x((*row_indices)[0] + i);
+                                  x((*row_index_range)[0] + i);
                               }
 
                             fullmatrix->Tvmult(local_y_for_Tvmult,
@@ -17395,7 +17431,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                y((*col_indices)[0] + j) +=
+                                y((*col_index_range)[0] + j) +=
                                   alpha * local_y_for_Tvmult(j);
                               }
 
@@ -17458,7 +17494,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -17468,7 +17504,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += alpha * local_y(i);
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             break;
@@ -17489,7 +17526,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -17499,7 +17536,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += alpha * local_y(i);
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             break;
@@ -17551,7 +17589,7 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < n; j++)
                       {
-                        local_x(j) = x((*col_indices)[0] + j);
+                        local_x(j) = x((*col_index_range)[0] + j);
                       }
 
                     rkmatrix->vmult(local_y, local_x);
@@ -17561,7 +17599,7 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < m; i++)
                       {
-                        y((*row_indices)[0] + i) += alpha * local_y(i);
+                        y((*row_index_range)[0] + i) += alpha * local_y(i);
                       }
 
                     break;
@@ -17606,7 +17644,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y, local_x);
@@ -17616,7 +17654,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += alpha * local_y(i);
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             Vector<Number> local_y_for_Tvmult(n);
@@ -17629,7 +17668,7 @@ namespace IdeoBEM
                             for (size_type i = 0; i < m; i++)
                               {
                                 local_x_for_Tvmult(i) =
-                                  x((*row_indices)[0] + i);
+                                  x((*row_index_range)[0] + i);
                               }
 
                             rkmatrix->Tvmult(local_y_for_Tvmult,
@@ -17641,7 +17680,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                y((*col_indices)[0] + j) +=
+                                y((*col_index_range)[0] + j) +=
                                   alpha * local_y_for_Tvmult(j);
                               }
 
@@ -17697,7 +17736,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x(j) = x((*col_indices)[0] + j);
+                                local_x(j) = x((*col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y, local_x);
@@ -17707,7 +17746,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) += alpha * local_y(i);
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             break;
@@ -17789,8 +17829,8 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < n; j++)
                       {
-                        local_x(j) = x((*col_indices)[0] -
-                                       (*starting_hmat.col_indices)[0] + j);
+                        local_x(j) = x((*col_index_range)[0] -
+                                       (*starting_hmat.col_index_range)[0] + j);
                       }
 
                     fullmatrix->vmult(local_y, local_x);
@@ -17800,8 +17840,9 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < m; i++)
                       {
-                        y((*row_indices)[0] - (*starting_hmat.row_indices)[0] +
-                          i) += local_y(i);
+                        y((*row_index_range)[0] -
+                          (*starting_hmat.row_index_range)[0] + i) +=
+                          local_y(i);
                       }
 
                     break;
@@ -17846,8 +17887,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -17857,8 +17898,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -17889,8 +17930,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -17900,8 +17941,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -17915,8 +17956,8 @@ namespace IdeoBEM
                             for (size_type i = 0; i < m; i++)
                               {
                                 local_x_for_Tvmult(i) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + i);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + i);
                               }
 
                             fullmatrix->Tvmult(local_y_for_Tvmult,
@@ -17928,8 +17969,8 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + j) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j) +=
                                   local_y_for_Tvmult(j);
                               }
 
@@ -17992,8 +18033,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -18003,8 +18044,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -18027,8 +18068,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -18038,8 +18079,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -18092,8 +18133,8 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < n; j++)
                       {
-                        local_x(j) = x((*col_indices)[0] -
-                                       (*starting_hmat.col_indices)[0] + j);
+                        local_x(j) = x((*col_index_range)[0] -
+                                       (*starting_hmat.col_index_range)[0] + j);
                       }
 
                     rkmatrix->vmult(local_y, local_x);
@@ -18103,8 +18144,9 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < m; i++)
                       {
-                        y((*row_indices)[0] - (*starting_hmat.row_indices)[0] +
-                          i) += local_y(i);
+                        y((*row_index_range)[0] -
+                          (*starting_hmat.row_index_range)[0] + i) +=
+                          local_y(i);
                       }
 
                     break;
@@ -18150,8 +18192,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y, local_x);
@@ -18161,8 +18203,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -18176,8 +18218,8 @@ namespace IdeoBEM
                             for (size_type i = 0; i < m; i++)
                               {
                                 local_x_for_Tvmult(i) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + i);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + i);
                               }
 
                             rkmatrix->Tvmult(local_y_for_Tvmult,
@@ -18189,8 +18231,8 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + j) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j) +=
                                   local_y_for_Tvmult(j);
                               }
 
@@ -18247,8 +18289,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y, local_x);
@@ -18258,8 +18300,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -18343,8 +18385,8 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < n; j++)
                       {
-                        local_x(j) = x((*col_indices)[0] -
-                                       (*starting_hmat.col_indices)[0] + j);
+                        local_x(j) = x((*col_index_range)[0] -
+                                       (*starting_hmat.col_index_range)[0] + j);
                       }
 
                     fullmatrix->vmult(local_y, local_x);
@@ -18354,8 +18396,9 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < m; i++)
                       {
-                        y((*row_indices)[0] - (*starting_hmat.row_indices)[0] +
-                          i) += alpha * local_y(i);
+                        y((*row_index_range)[0] -
+                          (*starting_hmat.row_index_range)[0] + i) +=
+                          alpha * local_y(i);
                       }
 
                     break;
@@ -18400,8 +18443,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -18411,8 +18454,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -18444,8 +18487,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -18455,8 +18498,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -18470,8 +18513,8 @@ namespace IdeoBEM
                             for (size_type i = 0; i < m; i++)
                               {
                                 local_x_for_Tvmult(i) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + i);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + i);
                               }
 
                             fullmatrix->Tvmult(local_y_for_Tvmult,
@@ -18483,8 +18526,8 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + j) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j) +=
                                   alpha * local_y_for_Tvmult(j);
                               }
 
@@ -18548,8 +18591,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -18559,8 +18602,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -18583,8 +18626,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y, local_x);
@@ -18594,8 +18637,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -18648,8 +18691,8 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < n; j++)
                       {
-                        local_x(j) = x((*col_indices)[0] -
-                                       (*starting_hmat.col_indices)[0] + j);
+                        local_x(j) = x((*col_index_range)[0] -
+                                       (*starting_hmat.col_index_range)[0] + j);
                       }
 
                     rkmatrix->vmult(local_y, local_x);
@@ -18659,8 +18702,9 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < m; i++)
                       {
-                        y((*row_indices)[0] - (*starting_hmat.row_indices)[0] +
-                          i) += alpha * local_y(i);
+                        y((*row_index_range)[0] -
+                          (*starting_hmat.row_index_range)[0] + i) +=
+                          alpha * local_y(i);
                       }
 
                     break;
@@ -18707,8 +18751,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y, local_x);
@@ -18718,8 +18762,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -18733,8 +18777,8 @@ namespace IdeoBEM
                             for (size_type i = 0; i < m; i++)
                               {
                                 local_x_for_Tvmult(i) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + i);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + i);
                               }
 
                             rkmatrix->Tvmult(local_y_for_Tvmult,
@@ -18746,8 +18790,8 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + j) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + j) +=
                                   alpha * local_y_for_Tvmult(j);
                               }
 
@@ -18805,8 +18849,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y, local_x);
@@ -18816,8 +18860,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -18899,7 +18943,7 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < m; j++)
                       {
-                        local_x(j) = x((*row_indices)[0] + j);
+                        local_x(j) = x((*row_index_range)[0] + j);
                       }
 
                     fullmatrix->Tvmult(local_y, local_x);
@@ -18909,7 +18953,7 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < n; i++)
                       {
-                        y((*col_indices)[0] + i) += local_y(i);
+                        y((*col_index_range)[0] + i) += local_y(i);
                       }
 
                     break;
@@ -18952,7 +18996,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -18962,7 +19006,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += local_y(i);
+                                y((*col_index_range)[0] + i) += local_y(i);
                               }
 
                             break;
@@ -18989,7 +19033,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -18999,7 +19043,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += local_y(i);
+                                y((*col_index_range)[0] + i) += local_y(i);
                               }
 
                             Vector<Number> local_y_for_vmult(m);
@@ -19010,7 +19054,8 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x_for_vmult(j) = x((*col_indices)[0] + j);
+                                local_x_for_vmult(j) =
+                                  x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y_for_vmult,
@@ -19021,7 +19066,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) +=
+                                y((*row_index_range)[0] + i) +=
                                   local_y_for_vmult(i);
                               }
 
@@ -19085,7 +19130,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -19095,7 +19140,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += local_y(i);
+                                y((*col_index_range)[0] + i) += local_y(i);
                               }
 
                             break;
@@ -19115,7 +19160,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -19125,7 +19170,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += local_y(i);
+                                y((*col_index_range)[0] + i) += local_y(i);
                               }
 
                             break;
@@ -19178,7 +19223,7 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < m; j++)
                       {
-                        local_x(j) = x((*row_indices)[0] + j);
+                        local_x(j) = x((*row_index_range)[0] + j);
                       }
 
                     rkmatrix->Tvmult(local_y, local_x);
@@ -19188,7 +19233,7 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < n; i++)
                       {
-                        y((*col_indices)[0] + i) += local_y(i);
+                        y((*col_index_range)[0] + i) += local_y(i);
                       }
 
                     break;
@@ -19232,7 +19277,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             rkmatrix->Tvmult(local_y, local_x);
@@ -19242,7 +19287,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += local_y(i);
+                                y((*col_index_range)[0] + i) += local_y(i);
                               }
 
                             Vector<Number> local_y_for_vmult(m);
@@ -19253,7 +19298,8 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x_for_vmult(j) = x((*col_indices)[0] + j);
+                                local_x_for_vmult(j) =
+                                  x((*col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y_for_vmult,
@@ -19264,7 +19310,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) +=
+                                y((*row_index_range)[0] + i) +=
                                   local_y_for_vmult(i);
                               }
 
@@ -19320,7 +19366,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             rkmatrix->Tvmult(local_y, local_x);
@@ -19330,7 +19376,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += local_y(i);
+                                y((*col_index_range)[0] + i) += local_y(i);
                               }
 
                             break;
@@ -19412,7 +19458,7 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < m; j++)
                       {
-                        local_x(j) = x((*row_indices)[0] + j);
+                        local_x(j) = x((*row_index_range)[0] + j);
                       }
 
                     fullmatrix->Tvmult(local_y, local_x);
@@ -19422,7 +19468,7 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < n; i++)
                       {
-                        y((*col_indices)[0] + i) += alpha * local_y(i);
+                        y((*col_index_range)[0] + i) += alpha * local_y(i);
                       }
 
                     break;
@@ -19465,7 +19511,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -19475,7 +19521,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += alpha * local_y(i);
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             break;
@@ -19502,7 +19549,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -19512,7 +19559,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += alpha * local_y(i);
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             Vector<Number> local_y_for_vmult(m);
@@ -19523,7 +19571,8 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x_for_vmult(j) = x((*col_indices)[0] + j);
+                                local_x_for_vmult(j) =
+                                  x((*col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y_for_vmult,
@@ -19534,7 +19583,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) +=
+                                y((*row_index_range)[0] + i) +=
                                   alpha * local_y_for_vmult(i);
                               }
 
@@ -19598,7 +19647,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -19608,7 +19657,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += alpha * local_y(i);
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             break;
@@ -19628,7 +19678,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -19638,7 +19688,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += alpha * local_y(i);
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             break;
@@ -19691,7 +19742,7 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < m; j++)
                       {
-                        local_x(j) = x((*row_indices)[0] + j);
+                        local_x(j) = x((*row_index_range)[0] + j);
                       }
 
                     rkmatrix->Tvmult(local_y, local_x);
@@ -19701,7 +19752,7 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < n; i++)
                       {
-                        y((*col_indices)[0] + i) += alpha * local_y(i);
+                        y((*col_index_range)[0] + i) += alpha * local_y(i);
                       }
 
                     break;
@@ -19745,7 +19796,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             rkmatrix->Tvmult(local_y, local_x);
@@ -19755,7 +19806,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += alpha * local_y(i);
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             Vector<Number> local_y_for_vmult(m);
@@ -19766,7 +19818,8 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < n; j++)
                               {
-                                local_x_for_vmult(j) = x((*col_indices)[0] + j);
+                                local_x_for_vmult(j) =
+                                  x((*col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y_for_vmult,
@@ -19777,7 +19830,7 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] + i) +=
+                                y((*row_index_range)[0] + i) +=
                                   alpha * local_y_for_vmult(i);
                               }
 
@@ -19833,7 +19886,7 @@ namespace IdeoBEM
                              */
                             for (size_type j = 0; j < m; j++)
                               {
-                                local_x(j) = x((*row_indices)[0] + j);
+                                local_x(j) = x((*row_index_range)[0] + j);
                               }
 
                             rkmatrix->Tvmult(local_y, local_x);
@@ -19843,7 +19896,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] + i) += alpha * local_y(i);
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
                               }
 
                             break;
@@ -19925,8 +19979,8 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < m; j++)
                       {
-                        local_x(j) = x((*row_indices)[0] -
-                                       (*starting_hmat.row_indices)[0] + j);
+                        local_x(j) = x((*row_index_range)[0] -
+                                       (*starting_hmat.row_index_range)[0] + j);
                       }
 
                     fullmatrix->Tvmult(local_y, local_x);
@@ -19936,8 +19990,9 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < n; i++)
                       {
-                        y((*col_indices)[0] - (*starting_hmat.col_indices)[0] +
-                          i) += local_y(i);
+                        y((*col_index_range)[0] -
+                          (*starting_hmat.col_index_range)[0] + i) +=
+                          local_y(i);
                       }
 
                     break;
@@ -19981,8 +20036,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -19992,8 +20047,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -20022,8 +20077,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -20033,8 +20088,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -20047,8 +20102,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x_for_vmult(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y_for_vmult,
@@ -20059,8 +20114,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   local_y_for_vmult(i);
                               }
 
@@ -20125,8 +20180,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -20136,8 +20191,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -20159,8 +20214,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -20170,8 +20225,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -20225,8 +20280,8 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < m; j++)
                       {
-                        local_x(j) = x((*row_indices)[0] -
-                                       (*starting_hmat.row_indices)[0] + j);
+                        local_x(j) = x((*row_index_range)[0] -
+                                       (*starting_hmat.row_index_range)[0] + j);
                       }
 
                     rkmatrix->Tvmult(local_y, local_x);
@@ -20236,8 +20291,9 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < n; i++)
                       {
-                        y((*col_indices)[0] - (*starting_hmat.col_indices)[0] +
-                          i) += local_y(i);
+                        y((*col_index_range)[0] -
+                          (*starting_hmat.col_index_range)[0] + i) +=
+                          local_y(i);
                       }
 
                     break;
@@ -20282,8 +20338,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             rkmatrix->Tvmult(local_y, local_x);
@@ -20293,8 +20349,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -20307,8 +20363,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x_for_vmult(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y_for_vmult,
@@ -20319,8 +20375,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   local_y_for_vmult(i);
                               }
 
@@ -20377,8 +20433,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             rkmatrix->Tvmult(local_y, local_x);
@@ -20388,8 +20444,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   local_y(i);
                               }
 
@@ -20474,8 +20530,8 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < m; j++)
                       {
-                        local_x(j) = x((*row_indices)[0] -
-                                       (*starting_hmat.row_indices)[0] + j);
+                        local_x(j) = x((*row_index_range)[0] -
+                                       (*starting_hmat.row_index_range)[0] + j);
                       }
 
                     fullmatrix->Tvmult(local_y, local_x);
@@ -20485,8 +20541,9 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < n; i++)
                       {
-                        y((*col_indices)[0] - (*starting_hmat.col_indices)[0] +
-                          i) += alpha * local_y(i);
+                        y((*col_index_range)[0] -
+                          (*starting_hmat.col_index_range)[0] + i) +=
+                          alpha * local_y(i);
                       }
 
                     break;
@@ -20530,8 +20587,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -20541,8 +20598,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -20571,8 +20628,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -20582,8 +20639,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -20596,8 +20653,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x_for_vmult(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             fullmatrix->vmult(local_y_for_vmult,
@@ -20608,8 +20665,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   alpha * local_y_for_vmult(i);
                               }
 
@@ -20674,8 +20731,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -20685,8 +20742,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -20708,8 +20765,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             fullmatrix->Tvmult(local_y, local_x);
@@ -20719,8 +20776,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -20774,8 +20831,8 @@ namespace IdeoBEM
                      */
                     for (size_type j = 0; j < m; j++)
                       {
-                        local_x(j) = x((*row_indices)[0] -
-                                       (*starting_hmat.row_indices)[0] + j);
+                        local_x(j) = x((*row_index_range)[0] -
+                                       (*starting_hmat.row_index_range)[0] + j);
                       }
 
                     rkmatrix->Tvmult(local_y, local_x);
@@ -20785,8 +20842,9 @@ namespace IdeoBEM
                      */
                     for (size_type i = 0; i < n; i++)
                       {
-                        y((*col_indices)[0] - (*starting_hmat.col_indices)[0] +
-                          i) += alpha * local_y(i);
+                        y((*col_index_range)[0] -
+                          (*starting_hmat.col_index_range)[0] + i) +=
+                          alpha * local_y(i);
                       }
 
                     break;
@@ -20830,8 +20888,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             rkmatrix->Tvmult(local_y, local_x);
@@ -20841,8 +20899,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -20855,8 +20913,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < n; j++)
                               {
                                 local_x_for_vmult(j) =
-                                  x((*col_indices)[0] -
-                                    (*starting_hmat.col_indices)[0] + j);
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
                               }
 
                             rkmatrix->vmult(local_y_for_vmult,
@@ -20867,8 +20925,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < m; i++)
                               {
-                                y((*row_indices)[0] -
-                                  (*starting_hmat.row_indices)[0] + i) +=
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
                                   alpha * local_y_for_vmult(i);
                               }
 
@@ -20925,8 +20983,8 @@ namespace IdeoBEM
                             for (size_type j = 0; j < m; j++)
                               {
                                 local_x(j) =
-                                  x((*row_indices)[0] -
-                                    (*starting_hmat.row_indices)[0] + j);
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
                               }
 
                             rkmatrix->Tvmult(local_y, local_x);
@@ -20936,8 +20994,8 @@ namespace IdeoBEM
                              */
                             for (size_type i = 0; i < n; i++)
                               {
-                                y((*col_indices)[0] -
-                                  (*starting_hmat.col_indices)[0] + i) +=
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
                                   alpha * local_y(i);
                               }
 
@@ -21953,8 +22011,8 @@ namespace IdeoBEM
             B.restrictToFullMatrix(B_row_index_range,
                                    B_col_index_range,
                                    fullmatrix_from_rk,
-                                   *(row_indices),
-                                   *(col_indices));
+                                   *(row_index_range),
+                                   *(col_index_range));
 
             /**
              * \alert{2022-05-06 The explicit type cast here for
@@ -21985,8 +22043,8 @@ namespace IdeoBEM
              * Create a local rank-k matrix by restricting from the original
              * large rank-k matrix.
              */
-            RkMatrix<Number> rkmatrix_by_restriction(*(row_indices),
-                                                     *(col_indices),
+            RkMatrix<Number> rkmatrix_by_restriction(*(row_index_range),
+                                                     *(col_index_range),
                                                      B,
                                                      B_row_index_range,
                                                      B_col_index_range);
@@ -22085,8 +22143,8 @@ namespace IdeoBEM
             B.restrictToFullMatrix(B_row_index_range,
                                    B_col_index_range,
                                    fullmatrix_from_rk,
-                                   *(row_indices),
-                                   *(col_indices));
+                                   *(row_index_range),
+                                   *(col_index_range));
 
             this->fullmatrix->add(b,
                                   (const LAPACKFullMatrixExt<Number> &)
@@ -22109,8 +22167,8 @@ namespace IdeoBEM
              * Create a local rank-k matrix by restricting from the original
              * large rank-k matrix.
              */
-            RkMatrix<Number> rkmatrix_by_restriction(*(row_indices),
-                                                     *(col_indices),
+            RkMatrix<Number> rkmatrix_by_restriction(*(row_index_range),
+                                                     *(col_index_range),
                                                      B,
                                                      B_row_index_range,
                                                      B_col_index_range);
@@ -22136,8 +22194,8 @@ namespace IdeoBEM
     AssertDimension(n, B.get_n());
 
     this->add(B,
-              *row_indices,
-              *col_indices,
+              *row_index_range,
+              *col_index_range,
               fixed_rank_k,
               is_result_matrix_store_tril_only);
   }
@@ -22155,8 +22213,8 @@ namespace IdeoBEM
 
     this->add(b,
               B,
-              *row_indices,
-              *col_indices,
+              *row_index_range,
+              *col_index_range,
               fixed_rank_k,
               is_result_matrix_store_tril_only);
   }
@@ -22203,9 +22261,9 @@ namespace IdeoBEM
             Assert(type == HierarchicalMatrixType, ExcInvalidHMatrixType(type));
 
             std::array<types::global_dof_index, 2> &t1_index_range =
-              *(submatrices[0]->row_indices);
+              *(submatrices[0]->row_index_range);
             std::array<types::global_dof_index, 2> &t2_index_range =
-              *(submatrices[3]->row_indices);
+              *(submatrices[3]->row_index_range);
 
             LAPACKFullMatrixExt<Number> E1(t1_index_range[1] -
                                              t1_index_range[0],
@@ -22221,7 +22279,7 @@ namespace IdeoBEM
             for (size_type i = 0; i < E1.m(); i++)
               {
                 E1.fill_row(i,
-                            t1_index_range[0] - (*this->row_indices)[0] + i,
+                            t1_index_range[0] - (*this->row_index_range)[0] + i,
                             E,
                             std::sqrt(2.0));
               }
@@ -22233,7 +22291,7 @@ namespace IdeoBEM
             for (size_type i = 0; i < E2.m(); i++)
               {
                 E2.fill_row(i,
-                            t2_index_range[0] - (*this->row_indices)[0] + i,
+                            t2_index_range[0] - (*this->row_index_range)[0] + i,
                             E,
                             std::sqrt(2.0));
               }
@@ -22311,7 +22369,7 @@ namespace IdeoBEM
          */
         for (size_type j = 0; j < n; j++)
           {
-            local_b(j) = b((*col_indices)[0] + j);
+            local_b(j) = b((*col_index_range)[0] + j);
           }
 
         /**
@@ -22333,7 +22391,7 @@ namespace IdeoBEM
          */
         for (size_type i = 0; i < m; i++)
           {
-            b((*row_indices)[0] + i) = local_b(i);
+            b((*row_index_range)[0] + i) = local_b(i);
           }
       }
     else
@@ -22411,8 +22469,8 @@ namespace IdeoBEM
          */
         for (size_type j = 0; j < n; j++)
           {
-            local_b(j) =
-              b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j);
+            local_b(j) = b((*col_index_range)[0] -
+                           (*starting_hmat.col_index_range)[0] + j);
           }
 
         /**
@@ -22434,7 +22492,7 @@ namespace IdeoBEM
          */
         for (size_type i = 0; i < m; i++)
           {
-            b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i) =
+            b((*row_index_range)[0] - (*starting_hmat.row_index_range)[0] + i) =
               local_b(i);
           }
       }
@@ -22702,7 +22760,7 @@ namespace IdeoBEM
          */
         for (size_type i = 0; i < m; i++)
           {
-            local_b(i) = b((*row_indices)[0] + i);
+            local_b(i) = b((*row_index_range)[0] + i);
           }
 
         /**
@@ -22716,7 +22774,7 @@ namespace IdeoBEM
          */
         for (size_type j = 0; j < n; j++)
           {
-            b((*col_indices)[0] + j) = local_b(j);
+            b((*col_index_range)[0] + j) = local_b(j);
           }
       }
     else
@@ -22793,8 +22851,8 @@ namespace IdeoBEM
          */
         for (size_type i = 0; i < m; i++)
           {
-            local_b(i) =
-              b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i);
+            local_b(i) = b((*row_index_range)[0] -
+                           (*starting_hmat.row_index_range)[0] + i);
           }
 
         /**
@@ -22808,7 +22866,7 @@ namespace IdeoBEM
          */
         for (size_type j = 0; j < n; j++)
           {
-            b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j) =
+            b((*col_index_range)[0] - (*starting_hmat.col_index_range)[0] + j) =
               local_b(j);
           }
       }
@@ -23253,7 +23311,7 @@ namespace IdeoBEM
              */
             for (size_type j = 0; j < n; j++)
               {
-                local_b(j) = b((*col_indices)[0] + j);
+                local_b(j) = b((*col_index_range)[0] + j);
               }
 
             /**
@@ -23268,7 +23326,7 @@ namespace IdeoBEM
              */
             for (size_type i = 0; i < m; i++)
               {
-                b((*row_indices)[0] + i) = local_b(i);
+                b((*row_index_range)[0] + i) = local_b(i);
               }
           }
       }
@@ -23363,8 +23421,8 @@ namespace IdeoBEM
              */
             for (size_type j = 0; j < n; j++)
               {
-                local_b(j) =
-                  b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j);
+                local_b(j) = b((*col_index_range)[0] -
+                               (*starting_hmat.col_index_range)[0] + j);
               }
 
             /**
@@ -23379,8 +23437,8 @@ namespace IdeoBEM
              */
             for (size_type i = 0; i < m; i++)
               {
-                b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i) =
-                  local_b(i);
+                b((*row_index_range)[0] - (*starting_hmat.row_index_range)[0] +
+                  i) = local_b(i);
               }
           }
       }
@@ -23512,7 +23570,7 @@ namespace IdeoBEM
          */
         for (size_type j = 0; j < n; j++)
           {
-            local_b(j) = b((*col_indices)[0] + j);
+            local_b(j) = b((*col_index_range)[0] + j);
           }
 
         /**
@@ -23527,7 +23585,7 @@ namespace IdeoBEM
          */
         for (size_type i = 0; i < m; i++)
           {
-            b((*row_indices)[0] + i) = local_b(i);
+            b((*row_index_range)[0] + i) = local_b(i);
           }
       }
     else
@@ -23610,8 +23668,8 @@ namespace IdeoBEM
          */
         for (size_type j = 0; j < n; j++)
           {
-            local_b(j) =
-              b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j);
+            local_b(j) = b((*col_index_range)[0] -
+                           (*starting_hmat.col_index_range)[0] + j);
           }
 
         /**
@@ -23626,7 +23684,7 @@ namespace IdeoBEM
          */
         for (size_type i = 0; i < m; i++)
           {
-            b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i) =
+            b((*row_index_range)[0] - (*starting_hmat.row_index_range)[0] + i) =
               local_b(i);
           }
       }
@@ -23728,7 +23786,7 @@ namespace IdeoBEM
              */
             for (size_type j = 0; j < n; j++)
               {
-                local_b(j) = b((*col_indices)[0] + j);
+                local_b(j) = b((*col_index_range)[0] + j);
               }
 
             /**
@@ -23743,7 +23801,7 @@ namespace IdeoBEM
              */
             for (size_type i = 0; i < m; i++)
               {
-                b((*row_indices)[0] + i) = local_b(i);
+                b((*row_index_range)[0] + i) = local_b(i);
               }
           }
       }
@@ -23843,8 +23901,8 @@ namespace IdeoBEM
              */
             for (size_type j = 0; j < n; j++)
               {
-                local_b(j) =
-                  b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j);
+                local_b(j) = b((*col_index_range)[0] -
+                               (*starting_hmat.col_index_range)[0] + j);
               }
 
             /**
@@ -23859,8 +23917,8 @@ namespace IdeoBEM
              */
             for (size_type i = 0; i < m; i++)
               {
-                b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i) =
-                  local_b(i);
+                b((*row_index_range)[0] - (*starting_hmat.row_index_range)[0] +
+                  i) = local_b(i);
               }
           }
       }
@@ -23952,7 +24010,7 @@ namespace IdeoBEM
          */
         for (size_type i = 0; i < m; i++)
           {
-            local_b(i) = b((*row_indices)[0] + i);
+            local_b(i) = b((*row_index_range)[0] + i);
           }
 
         /**
@@ -23971,7 +24029,7 @@ namespace IdeoBEM
          */
         for (size_type j = 0; j < n; j++)
           {
-            b((*col_indices)[0] + j) = local_b(j);
+            b((*col_index_range)[0] + j) = local_b(j);
           }
       }
     else
@@ -24052,8 +24110,8 @@ namespace IdeoBEM
          */
         for (size_type i = 0; i < m; i++)
           {
-            local_b(i) =
-              b((*row_indices)[0] - (*starting_hmat.row_indices)[0] + i);
+            local_b(i) = b((*row_index_range)[0] -
+                           (*starting_hmat.row_index_range)[0] + i);
           }
 
         /**
@@ -24070,7 +24128,7 @@ namespace IdeoBEM
          */
         for (size_type j = 0; j < n; j++)
           {
-            b((*col_indices)[0] - (*starting_hmat.col_indices)[0] + j) =
+            b((*col_index_range)[0] - (*starting_hmat.col_index_range)[0] + j) =
               local_b(j);
           }
       }
@@ -24984,33 +25042,33 @@ namespace IdeoBEM
 
   template <int spacedim, typename Number>
   std::array<types::global_dof_index, 2> *
-  HMatrix<spacedim, Number>::get_row_indices()
+  HMatrix<spacedim, Number>::get_row_index_range()
   {
-    return row_indices;
+    return row_index_range;
   }
 
 
   template <int spacedim, typename Number>
   const std::array<types::global_dof_index, 2> *
-  HMatrix<spacedim, Number>::get_row_indices() const
+  HMatrix<spacedim, Number>::get_row_index_range() const
   {
-    return row_indices;
+    return row_index_range;
   }
 
 
   template <int spacedim, typename Number>
   std::array<types::global_dof_index, 2> *
-  HMatrix<spacedim, Number>::get_col_indices()
+  HMatrix<spacedim, Number>::get_col_index_range()
   {
-    return col_indices;
+    return col_index_range;
   }
 
 
   template <int spacedim, typename Number>
   const std::array<types::global_dof_index, 2> *
-  HMatrix<spacedim, Number>::get_col_indices() const
+  HMatrix<spacedim, Number>::get_col_index_range() const
   {
-    return col_indices;
+    return col_index_range;
   }
 
 
@@ -25379,10 +25437,10 @@ namespace IdeoBEM
      * Count the memory for other members in the current \hmatnode.
      */
     memory_for_hmat_node +=
-      sizeof(bc_node) + sizeof(block_type) + sizeof(col_indices) +
+      sizeof(bc_node) + sizeof(block_type) + sizeof(col_index_range) +
       sizeof(fullmatrix) + memory_consumption_of_vector(leaf_set) + sizeof(m) +
       sizeof(n) + sizeof(parent) + sizeof(property) + sizeof(rkmatrix) +
-      sizeof(row_indices) + memory_consumption_of_vector(Sigma_F) +
+      sizeof(row_index_range) + memory_consumption_of_vector(Sigma_F) +
       memory_consumption_of_vector(Sigma_P) +
       memory_consumption_of_vector(Sigma_R) + sizeof(state) +
       memory_consumption_of_vector(submatrices) + sizeof(submatrix_index) +

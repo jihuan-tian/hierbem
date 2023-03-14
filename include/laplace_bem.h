@@ -13,6 +13,7 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/subscriptor.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -49,6 +50,7 @@
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 #include "config.h"
+#include "debug_tools.hcu"
 #include "dof_tools_ext.h"
 #include "grid_out_ext.h"
 #include "hblockmatrix_skew_symm.h"
@@ -2171,6 +2173,10 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::assemble_hmatrix_system()
   {
+    LogStream::Prefix prefix_string("assemble_hmatrix_system");
+
+    Timer timer;
+
     MultithreadInfo::set_thread_limit(thread_num);
 
     /**
@@ -2190,7 +2196,7 @@ namespace IdeoBEM
 
             if (is_interior_problem)
               {
-                std::cerr << "=== Assemble sigma I + K ===" << std::endl;
+                std::cerr << "=== Assemble sigma*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2218,10 +2224,12 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+                timer.stop();
+                print_wall_time(deallog, timer, "assemble sigma I + K");
               }
             else
               {
-                std::cerr << "=== Assemble (sigma-1) I + K ===" << std::endl;
+                std::cerr << "=== Assemble (sigma-1)*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2249,6 +2257,8 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+                timer.stop();
+                print_wall_time(deallog, timer, "assemble (sigma-1) I + K");
               }
 
 #if ENABLE_PRINTOUT == 1
@@ -2266,9 +2276,13 @@ namespace IdeoBEM
 
             std::cerr << "=== Assemble the RHS vector ===" << std::endl;
 
+            timer.start();
             K2_hmat_with_mass_matrix.vmult(system_rhs_on_dirichlet_domain,
                                            dirichlet_bc_internal_dof_numbering,
                                            HMatrixSupport::Property::general);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble RHS vector");
+
 #if ENABLE_PRINTOUT == 1
             // Print the RHS vector.
             print_vector_to_mat(out_mat,
@@ -2286,6 +2300,7 @@ namespace IdeoBEM
 
             std::cerr << "=== Assemble V ===" << std::endl;
 
+            timer.start();
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               V1_hmat,
@@ -2310,6 +2325,8 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble V");
 #if ENABLE_PRINTOUT == 1
             V1_hmat.print_as_formatted_full_matrix(out_mat, "V", 15, true, 25);
 
@@ -2332,7 +2349,7 @@ namespace IdeoBEM
 
             if (is_interior_problem)
               {
-                std::cerr << "=== Assemble (1-sigma) I - K' ===" << std::endl;
+                std::cerr << "=== Assemble (1-sigma)*I-K' ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2360,10 +2377,12 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+                timer.stop();
+                print_wall_time(deallog, timer, "assemble (1-sigma) I - K'");
               }
             else
               {
-                std::cerr << "=== Assemble -sigma I - K' ===" << std::endl;
+                std::cerr << "=== Assemble -sigma*I-K' ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2391,6 +2410,8 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+                timer.stop();
+                print_wall_time(deallog, timer, "assemble -sigma I - K'");
               }
 
 #if ENABLE_PRINTOUT == 1
@@ -2410,10 +2431,14 @@ namespace IdeoBEM
              * Calculate the RHS vector.
              */
             std::cerr << "=== Assemble the RHS vector ===" << std::endl;
+
+            timer.start();
             K_prime2_hmat_with_mass_matrix.vmult(
               system_rhs_on_neumann_domain,
               neumann_bc_internal_dof_numbering,
               HMatrixSupport::Property::general);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble RHS vector");
 #if ENABLE_PRINTOUT == 1
             // Print the RHS vector.
             print_vector_to_mat(out_mat,
@@ -2430,12 +2455,16 @@ namespace IdeoBEM
             /**
              * Solve the natural density.
              */
+            timer.start();
             solve_natural_density();
+            timer.stop();
+            print_wall_time(deallog, timer, "solve natural density weq");
 
             /**
              * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
              * is the multiplication of the mass matrix and the natural density.
              */
+            timer.start();
             assemble_fem_mass_matrix_vmult<dim,
                                            spacedim,
                                            double,
@@ -2445,6 +2474,8 @@ namespace IdeoBEM
               natural_density,
               QGauss<2>(fe_order_for_dirichlet_space + 1),
               mass_vmult_weq);
+            timer.stop();
+            print_wall_time(deallog, timer, "calculate a=M*weq");
 
             /**
              * Assemble the regularized bilinear form for the hyper-singular
@@ -2452,6 +2483,7 @@ namespace IdeoBEM
              */
             std::cerr << "=== Assemble D ===" << std::endl;
 
+            timer.start();
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               D1_hmat,
@@ -2478,6 +2510,8 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble D");
 
 #if ENABLE_PRINTOUT == 1
             D1_hmat.print_as_formatted_full_matrix(out_mat, "D", 15, true, 25);
@@ -2507,7 +2541,7 @@ namespace IdeoBEM
 
             if (is_interior_problem)
               {
-                std::cerr << "=== Assemble sigma I + K ===" << std::endl;
+                std::cerr << "=== Assemble sigma*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2535,9 +2569,12 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+                timer.stop();
+                print_wall_time(deallog, timer, "assemble sigma*I+K");
 
-                std::cerr << "=== Assemble (1-sigma) I - K' ===" << std::endl;
+                std::cerr << "=== Assemble (1-sigma)*I-K' ===" << std::endl;
 
+                timer.start();
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
                   K_prime2_hmat_with_mass_matrix,
@@ -2564,10 +2601,12 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+                timer.stop();
+                print_wall_time(deallog, timer, "assemble (1-sigma)*I-K'");
               }
             else
               {
-                std::cerr << "=== Assemble (sigma-1) I + K ===" << std::endl;
+                std::cerr << "=== Assemble (sigma-1)*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2595,9 +2634,12 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+                timer.stop();
+                print_wall_time(deallog, timer, "assemble (sigma-1)*I+K");
 
-                std::cerr << "=== Assemble -sigma I - K' ===" << std::endl;
+                std::cerr << "=== Assemble -sigma*I-K' ===" << std::endl;
 
+                timer.start();
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
                   K_prime2_hmat_with_mass_matrix,
@@ -2624,10 +2666,13 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+                timer.stop();
+                print_wall_time(deallog, timer, "assemble -sigma*I-K'");
               }
 
             std::cerr << "=== Assemble -V2 ===" << std::endl;
 
+            timer.start();
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               V2_hmat,
@@ -2652,9 +2697,12 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble -V2");
 
             std::cerr << "=== Assemble -D2 ===" << std::endl;
 
+            timer.start();
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               D2_hmat,
@@ -2679,6 +2727,8 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble -D2");
 
 #if ENABLE_PRINTOUT == 1
             // Print RHS matrices.
@@ -2713,13 +2763,19 @@ namespace IdeoBEM
             // Calculate the RHS vectors in the mixed boundary value problem.
             std::cerr << "=== Assemble RHS vectors ===" << std::endl;
 
+            timer.start();
             K2_hmat_with_mass_matrix.vmult(system_rhs_on_dirichlet_domain,
                                            dirichlet_bc_internal_dof_numbering,
                                            HMatrixSupport::Property::general);
             V2_hmat.vmult(system_rhs_on_dirichlet_domain,
                           neumann_bc_internal_dof_numbering,
                           HMatrixSupport::Property::general);
+            timer.stop();
+            print_wall_time(deallog,
+                            timer,
+                            "assemble RHS vector on Dirichlet domain");
 
+            timer.start();
             D2_hmat.vmult(system_rhs_on_neumann_domain,
                           dirichlet_bc_internal_dof_numbering,
                           HMatrixSupport::Property::general);
@@ -2727,6 +2783,10 @@ namespace IdeoBEM
               system_rhs_on_neumann_domain,
               neumann_bc_internal_dof_numbering,
               HMatrixSupport::Property::general);
+            timer.stop();
+            print_wall_time(deallog,
+                            timer,
+                            "assemble RHS vector on Neumann domain");
 
             // Combine the two part of RHS vectors.
             copy_vector(system_rhs_on_combined_domain,
@@ -2774,6 +2834,7 @@ namespace IdeoBEM
 
             std::cerr << "=== Assemble V1 ===" << std::endl;
 
+            timer.start();
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               V1_hmat,
@@ -2798,9 +2859,12 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble V1");
 
             std::cerr << "=== Assemble -K1 ===" << std::endl;
 
+            timer.start();
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               K1_hmat,
@@ -2825,9 +2889,12 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble -K1");
 
             std::cerr << "=== Assemble D1 ===" << std::endl;
 
+            timer.start();
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               D1_hmat,
@@ -2852,6 +2919,8 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble D1");
 
             // Assemble the block matrix.
             std::cerr << "=== Assemble system block matrix ===" << std::endl;
@@ -2894,6 +2963,10 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::assemble_hmatrix_preconditioner()
   {
+    LogStream::Prefix prefix_string("assemble_hmatrix_preconditioner");
+
+    Timer timer;
+
     MultithreadInfo::set_thread_limit(thread_num);
 
     switch (problem_type)
@@ -2907,6 +2980,8 @@ namespace IdeoBEM
 
             V1_hmat_preconditioner.truncate_to_rank_preserve_positive_definite(
               max_hmat_rank_for_preconditioner);
+            timer.stop();
+            print_wall_time(deallog, timer, "truncate V");
 
             /**
              * Perform Cholesky factorisation of the preconditioner.
@@ -2914,26 +2989,34 @@ namespace IdeoBEM
             std::cerr
               << "=== Cholesky factorization of the preconditioner for V ==="
               << std::endl;
+            timer.start();
             V1_hmat_preconditioner.compute_cholesky_factorization(
               max_hmat_rank_for_preconditioner);
+            timer.stop();
+            print_wall_time(deallog, timer, "Cholesky factorization of V");
 
             break;
           }
           case NeumannBCProblem: {
-            std::cerr << "=== Assemble preconditioner for D===" << std::endl;
+            std::cerr << "=== Assemble preconditioner for D ===" << std::endl;
 
             // Directly make a copy of the existing \hmat and then truncate
             // its rank.
             D1_hmat_preconditioner = D1_hmat;
             D1_hmat_preconditioner.truncate_to_rank_preserve_positive_definite(
               max_hmat_rank_for_preconditioner);
+            timer.stop();
+            print_wall_time(deallog, timer, "truncate D");
 
             /**
              * Perform Cholesky factorisation of the preconditioner.
              */
             std::cerr << "=== Cholesky factorization of D ===" << std::endl;
+            timer.start();
             D1_hmat_preconditioner.compute_cholesky_factorization(
               max_hmat_rank_for_preconditioner);
+            timer.stop();
+            print_wall_time(deallog, timer, "Cholesky factorization of D");
 
             break;
           }
@@ -2951,10 +3034,20 @@ namespace IdeoBEM
 
             M11_in_preconditioner.truncate_to_rank_preserve_positive_definite(
               max_hmat_rank_for_preconditioner);
+            timer.stop();
+            print_wall_time(deallog, timer, "truncate M11(==V1)");
+
+            timer.start();
             M12_in_preconditioner.truncate_to_rank(
               max_hmat_rank_for_preconditioner);
+            timer.stop();
+            print_wall_time(deallog, timer, "truncate M12(==K1)");
+
+            timer.start();
             M22_in_preconditioner.truncate_to_rank_preserve_positive_definite(
               max_hmat_rank_for_preconditioner);
+            timer.stop();
+            print_wall_time(deallog, timer, "truncate M22(==D1)");
 
             M_hmat_preconditioner =
               HBlockMatrixSkewSymmPreconditioner<spacedim>(
@@ -2965,8 +3058,11 @@ namespace IdeoBEM
             // Perform \hmat-LU factorization to the block preconditioner.
             std::cerr << "=== LU factorization of system block matrix ==="
                       << std::endl;
+            timer.start();
             M_hmat_preconditioner.compute_lu_factorization(
               max_hmat_rank_for_preconditioner);
+            timer.stop();
+            print_wall_time(deallog, timer, "LU factorization of M");
 
             break;
           }
@@ -3520,20 +3616,42 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::run()
   {
+    LogStream::Prefix prefix_string("run");
+
+    Timer timer;
     setup_system();
+    timer.stop();
+    print_wall_time(deallog, timer, "setup system");
 
     if (!is_use_hmat)
       {
+        timer.start();
         assemble_full_matrix_system();
+        timer.stop();
+        print_wall_time(deallog, timer, "assemble full matrix system");
       }
     else
       {
+        timer.start();
         assemble_hmatrix_system();
+        timer.stop();
+        print_wall_time(deallog, timer, "assemble H-matrix system");
+
+        timer.start();
         assemble_hmatrix_preconditioner();
+        timer.stop();
+        print_wall_time(deallog, timer, "assemble H-matrix preconditioner");
       }
 
+    timer.start();
     solve();
+    timer.stop();
+    print_wall_time(deallog, timer, "solve equation");
+
+    timer.start();
     output_results();
+    timer.stop();
+    print_wall_time(deallog, timer, "output results");
   }
 
 
