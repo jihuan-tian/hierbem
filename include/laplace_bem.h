@@ -2225,7 +2225,7 @@ namespace IdeoBEM
                     SameTriangulations,
                   false);
                 timer.stop();
-                print_wall_time(deallog, timer, "assemble sigma I + K");
+                print_wall_time(deallog, timer, "assemble sigma*I+K");
               }
             else
               {
@@ -2258,7 +2258,7 @@ namespace IdeoBEM
                     SameTriangulations,
                   false);
                 timer.stop();
-                print_wall_time(deallog, timer, "assemble (sigma-1) I + K");
+                print_wall_time(deallog, timer, "assemble (sigma-1)*I+K");
               }
 
 #if ENABLE_PRINTOUT == 1
@@ -2327,6 +2327,7 @@ namespace IdeoBEM
               true);
             timer.stop();
             print_wall_time(deallog, timer, "assemble V");
+
 #if ENABLE_PRINTOUT == 1
             V1_hmat.print_as_formatted_full_matrix(out_mat, "V", 15, true, 25);
 
@@ -2378,7 +2379,7 @@ namespace IdeoBEM
                     SameTriangulations,
                   false);
                 timer.stop();
-                print_wall_time(deallog, timer, "assemble (1-sigma) I - K'");
+                print_wall_time(deallog, timer, "assemble (1-sigma)*I-K'");
               }
             else
               {
@@ -2411,7 +2412,7 @@ namespace IdeoBEM
                     SameTriangulations,
                   false);
                 timer.stop();
-                print_wall_time(deallog, timer, "assemble -sigma I - K'");
+                print_wall_time(deallog, timer, "assemble -sigma*I-K'");
               }
 
 #if ENABLE_PRINTOUT == 1
@@ -2439,6 +2440,7 @@ namespace IdeoBEM
               HMatrixSupport::Property::general);
             timer.stop();
             print_wall_time(deallog, timer, "assemble RHS vector");
+
 #if ENABLE_PRINTOUT == 1
             // Print the RHS vector.
             print_vector_to_mat(out_mat,
@@ -2455,6 +2457,8 @@ namespace IdeoBEM
             /**
              * Solve the natural density.
              */
+            std::cerr << "=== Solve the natural density weq ===" << std::endl;
+
             timer.start();
             solve_natural_density();
             timer.stop();
@@ -2464,6 +2468,8 @@ namespace IdeoBEM
              * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
              * is the multiplication of the mass matrix and the natural density.
              */
+            std::cerr << "=== Calculate the vector a=M*weq ===" << std::endl;
+
             timer.start();
             assemble_fem_mass_matrix_vmult<dim,
                                            spacedim,
@@ -2989,6 +2995,7 @@ namespace IdeoBEM
             std::cerr
               << "=== Cholesky factorization of the preconditioner for V ==="
               << std::endl;
+
             timer.start();
             V1_hmat_preconditioner.compute_cholesky_factorization(
               max_hmat_rank_for_preconditioner);
@@ -3012,6 +3019,7 @@ namespace IdeoBEM
              * Perform Cholesky factorisation of the preconditioner.
              */
             std::cerr << "=== Cholesky factorization of D ===" << std::endl;
+
             timer.start();
             D1_hmat_preconditioner.compute_cholesky_factorization(
               max_hmat_rank_for_preconditioner);
@@ -3058,6 +3066,7 @@ namespace IdeoBEM
             // Perform \hmat-LU factorization to the block preconditioner.
             std::cerr << "=== LU factorization of system block matrix ==="
                       << std::endl;
+
             timer.start();
             M_hmat_preconditioner.compute_lu_factorization(
               max_hmat_rank_for_preconditioner);

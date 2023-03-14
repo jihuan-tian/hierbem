@@ -2048,7 +2048,8 @@ namespace IdeoBEM
     RangeNumberType *quad_values_in_thread_blocks;
 
     /**
-     * Constructor to be used for assembling full BEM matrix.
+     * Constructor to be used for assembling full BEM matrix, which does not
+     * involve @p thread_id.
      *
      * @param kx_fe
      * @param ky_fe
@@ -2184,10 +2185,14 @@ namespace IdeoBEM
     }
 
     /**
-     * Constructor
+     * Constructor for assembling hierarchical BEM matrix, which involves
+     * @p thread_id.
      *
+     * @param thread_id
      * @param kx_fe
      * @param ky_fe
+     * @param kx_mapping
+     * @param ky_mapping
      * @param bem_values
      */
     PairCellWiseScratchData(int                                      thread_id,
