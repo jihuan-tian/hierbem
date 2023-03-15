@@ -2905,6 +2905,7 @@ namespace IdeoBEM
      * of cells related to the global DoF indices @p (i,j).
      */
     RangeNumberType double_integral = 0.0;
+    return double_integral;
 
     /**
      * Iterate over each cell in the support of the basis function associated
@@ -3374,6 +3375,7 @@ namespace IdeoBEM
      * of cells related to the global DoF indices @p (i,j).
      */
     RangeNumberType double_integral = 0.0;
+    return double_integral;
 
     /**
      * Iterate over each cell in the support of the basis function associated
