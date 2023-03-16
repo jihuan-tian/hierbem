@@ -2905,7 +2905,6 @@ namespace IdeoBEM
      * of cells related to the global DoF indices @p (i,j).
      */
     RangeNumberType double_integral = 0.0;
-    return double_integral;
 
     /**
      * Iterate over each cell in the support of the basis function associated
@@ -2990,171 +2989,178 @@ namespace IdeoBEM
               ky_mapping_copy,
               false);
 
-            /**
-             * @internal Copy the scratch data and copy data from CPU to GPU.
-             */
-#if ENABLE_TIMER == 1
-            scratch_data.timer.start();
-#endif
-            scratch_data_gpu.assign_from_host(scratch_data);
-            copy_data_gpu.assign_from_host(copy_data,
-                                           scratch_data.cuda_stream_handle);
-
-            cudaError_t error_code =
-              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-#if ENABLE_TIMER == 1
-            scratch_data.timer.stop();
-            print_wall_time(scratch_data.log_stream,
-                            scratch_data.timer,
-                            "copy scratch data from host to device");
-#endif
-
-            /**
-             * @internal Determine thread block dimensions.
-             */
-            dim3 blocks_rect;
-            dim3 threads_rect;
-            IdeoBEM::CUDAWrappers::configure_thread_blocks(
-              cell_neighboring_type, bem_values, blocks_rect, threads_rect);
-
-#if ENABLE_TIMER == 1
-            scratch_data.timer.start();
-#endif
-            switch (cell_neighboring_type)
-              {
-                  case CellNeighboringType::SamePanel: {
-                    IdeoBEM::CUDAWrappers::
-                      calc_jacobian_normals_for_sauter_quad_same_panel<<<
-                        blocks_rect,
-                        threads_rect,
-                        0,
-                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case CellNeighboringType::CommonEdge: {
-                    IdeoBEM::CUDAWrappers::
-                      calc_jacobian_normals_for_sauter_quad_common_edge<<<
-                        blocks_rect,
-                        threads_rect,
-                        0,
-                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case CellNeighboringType::CommonVertex: {
-                    IdeoBEM::CUDAWrappers::
-                      calc_jacobian_normals_for_sauter_quad_common_vertex<<<
-                        blocks_rect,
-                        threads_rect,
-                        0,
-                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case CellNeighboringType::Regular: {
-                    IdeoBEM::CUDAWrappers::
-                      calc_jacobian_normals_for_sauter_quad_regular<<<
-                        blocks_rect,
-                        threads_rect,
-                        0,
-                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  default: {
-                    Assert(false, ExcInternalError());
-
-                    break;
-                  }
-              }
-
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-#if ENABLE_TIMER == 1
-            scratch_data.timer.stop();
-            print_wall_time(scratch_data.log_stream,
-                            scratch_data.timer,
-                            "calculate Jacobians and normal vectors");
-#endif
-
-            /**
-             * When the bilinear form for the hyper singular operator is
-             * evaluated, the covariant transformation is required.
-             */
-            if (kernel.kernel_type == HyperSingularRegular)
-              {
-#if ENABLE_TIMER == 1
-                scratch_data.timer.start();
-#endif
-                switch (cell_neighboring_type)
-                  {
-                      case CellNeighboringType::SamePanel: {
-                        IdeoBEM::CUDAWrappers::
-                          calc_covariant_transformations_same_panel<<<
-                            blocks_rect,
-                            threads_rect,
-                            0,
-                            scratch_data.cuda_stream_handle>>>(
-                            bem_values_gpu, scratch_data_gpu);
-
-                        break;
-                      }
-                      case CellNeighboringType::CommonEdge: {
-                        IdeoBEM::CUDAWrappers::
-                          calc_covariant_transformations_common_edge<<<
-                            blocks_rect,
-                            threads_rect,
-                            0,
-                            scratch_data.cuda_stream_handle>>>(
-                            bem_values_gpu, scratch_data_gpu);
-
-                        break;
-                      }
-                      case CellNeighboringType::CommonVertex: {
-                        IdeoBEM::CUDAWrappers::
-                          calc_covariant_transformations_common_vertex<<<
-                            blocks_rect,
-                            threads_rect,
-                            0,
-                            scratch_data.cuda_stream_handle>>>(
-                            bem_values_gpu, scratch_data_gpu);
-
-                        break;
-                      }
-                      case CellNeighboringType::Regular: {
-                        IdeoBEM::CUDAWrappers::
-                          calc_covariant_transformations_regular<<<
-                            blocks_rect,
-                            threads_rect,
-                            0,
-                            scratch_data.cuda_stream_handle>>>(
-                            bem_values_gpu, scratch_data_gpu);
-
-                        break;
-                      }
-                      default: {
-                        Assert(false, ExcInternalError());
-
-                        break;
-                      }
-                  }
-
-                error_code =
-                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-                AssertCuda(error_code);
-#if ENABLE_TIMER == 1
-                scratch_data.timer.stop();
-                print_wall_time(scratch_data.log_stream,
-                                scratch_data.timer,
-                                "calculate covariant matrices");
-#endif
-              }
+            //            /**
+            //             * @internal Copy the scratch data and copy data from
+            //             CPU to GPU.
+            //             */
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.start();
+            //#endif
+            //            scratch_data_gpu.assign_from_host(scratch_data);
+            //            copy_data_gpu.assign_from_host(copy_data,
+            //                                           scratch_data.cuda_stream_handle);
+            //
+            //            cudaError_t error_code =
+            //              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.stop();
+            //            print_wall_time(scratch_data.log_stream,
+            //                            scratch_data.timer,
+            //                            "copy scratch data from host to
+            //                            device");
+            //#endif
+            //
+            //            /**
+            //             * @internal Determine thread block dimensions.
+            //             */
+            //            dim3 blocks_rect;
+            //            dim3 threads_rect;
+            //            IdeoBEM::CUDAWrappers::configure_thread_blocks(
+            //              cell_neighboring_type, bem_values, blocks_rect,
+            //              threads_rect);
+            //
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.start();
+            //#endif
+            //            switch (cell_neighboring_type)
+            //              {
+            //                  case CellNeighboringType::SamePanel: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      calc_jacobian_normals_for_sauter_quad_same_panel<<<
+            //                        blocks_rect,
+            //                        threads_rect,
+            //                        0,
+            //                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case CellNeighboringType::CommonEdge: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      calc_jacobian_normals_for_sauter_quad_common_edge<<<
+            //                        blocks_rect,
+            //                        threads_rect,
+            //                        0,
+            //                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case CellNeighboringType::CommonVertex: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      calc_jacobian_normals_for_sauter_quad_common_vertex<<<
+            //                        blocks_rect,
+            //                        threads_rect,
+            //                        0,
+            //                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case CellNeighboringType::Regular: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      calc_jacobian_normals_for_sauter_quad_regular<<<
+            //                        blocks_rect,
+            //                        threads_rect,
+            //                        0,
+            //                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  default: {
+            //                    Assert(false, ExcInternalError());
+            //
+            //                    break;
+            //                  }
+            //              }
+            //
+            //            error_code =
+            //            cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.stop();
+            //            print_wall_time(scratch_data.log_stream,
+            //                            scratch_data.timer,
+            //                            "calculate Jacobians and normal
+            //                            vectors");
+            //#endif
+            //
+            //            /**
+            //             * When the bilinear form for the hyper singular
+            //             operator is
+            //             * evaluated, the covariant transformation is
+            //             required.
+            //             */
+            //            if (kernel.kernel_type == HyperSingularRegular)
+            //              {
+            //#if ENABLE_TIMER == 1
+            //                scratch_data.timer.start();
+            //#endif
+            //                switch (cell_neighboring_type)
+            //                  {
+            //                      case CellNeighboringType::SamePanel: {
+            //                        IdeoBEM::CUDAWrappers::
+            //                          calc_covariant_transformations_same_panel<<<
+            //                            blocks_rect,
+            //                            threads_rect,
+            //                            0,
+            //                            scratch_data.cuda_stream_handle>>>(
+            //                            bem_values_gpu, scratch_data_gpu);
+            //
+            //                        break;
+            //                      }
+            //                      case CellNeighboringType::CommonEdge: {
+            //                        IdeoBEM::CUDAWrappers::
+            //                          calc_covariant_transformations_common_edge<<<
+            //                            blocks_rect,
+            //                            threads_rect,
+            //                            0,
+            //                            scratch_data.cuda_stream_handle>>>(
+            //                            bem_values_gpu, scratch_data_gpu);
+            //
+            //                        break;
+            //                      }
+            //                      case CellNeighboringType::CommonVertex: {
+            //                        IdeoBEM::CUDAWrappers::
+            //                          calc_covariant_transformations_common_vertex<<<
+            //                            blocks_rect,
+            //                            threads_rect,
+            //                            0,
+            //                            scratch_data.cuda_stream_handle>>>(
+            //                            bem_values_gpu, scratch_data_gpu);
+            //
+            //                        break;
+            //                      }
+            //                      case CellNeighboringType::Regular: {
+            //                        IdeoBEM::CUDAWrappers::
+            //                          calc_covariant_transformations_regular<<<
+            //                            blocks_rect,
+            //                            threads_rect,
+            //                            0,
+            //                            scratch_data.cuda_stream_handle>>>(
+            //                            bem_values_gpu, scratch_data_gpu);
+            //
+            //                        break;
+            //                      }
+            //                      default: {
+            //                        Assert(false, ExcInternalError());
+            //
+            //                        break;
+            //                      }
+            //                  }
+            //
+            //                error_code =
+            //                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //                AssertCuda(error_code);
+            //#if ENABLE_TIMER == 1
+            //                scratch_data.timer.stop();
+            //                print_wall_time(scratch_data.log_stream,
+            //                                scratch_data.timer,
+            //                                "calculate covariant matrices");
+            //#endif
+            //              }
 
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
@@ -3184,105 +3190,113 @@ namespace IdeoBEM
             unsigned int j_index =
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-            // Apply 4d Sauter numerical quadrature on the GPU device.
-#if ENABLE_TIMER == 1
-            scratch_data.timer.start();
-#endif
-            switch (cell_neighboring_type)
-              {
-                  case BEMTools::CellNeighboringType::SamePanel: {
-                    IdeoBEM::CUDAWrappers::
-                      ApplyQuadratureUsingBEMValuesSamePanel<<<
-                        blocks_rect.x,
-                        threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
-                        scratch_data.cuda_stream_handle>>>(kernel,
-                                                           kernel_factor,
-                                                           i_index,
-                                                           j_index,
-                                                           bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case BEMTools::CellNeighboringType::CommonEdge: {
-                    IdeoBEM::CUDAWrappers::
-                      ApplyQuadratureUsingBEMValuesCommonEdge<<<
-                        blocks_rect.x,
-                        threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
-                        scratch_data.cuda_stream_handle>>>(kernel,
-                                                           kernel_factor,
-                                                           i_index,
-                                                           j_index,
-                                                           bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case BEMTools::CellNeighboringType::CommonVertex: {
-                    IdeoBEM::CUDAWrappers::
-                      ApplyQuadratureUsingBEMValuesCommonVertex<<<
-                        blocks_rect.x,
-                        threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
-                        scratch_data.cuda_stream_handle>>>(kernel,
-                                                           kernel_factor,
-                                                           i_index,
-                                                           j_index,
-                                                           bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case BEMTools::CellNeighboringType::Regular: {
-                    IdeoBEM::CUDAWrappers::
-                      ApplyQuadratureUsingBEMValuesRegular<<<
-                        blocks_rect.x,
-                        threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
-                        scratch_data.cuda_stream_handle>>>(kernel,
-                                                           kernel_factor,
-                                                           i_index,
-                                                           j_index,
-                                                           bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  default: {
-                    Assert(false, ExcInternalError());
-                    break;
-                  }
-              }
-
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-
-            /**
-             * @internal Extract quadrature results accumulated from all thread
-             * blocks.
-             */
-            error_code =
-              cudaMemcpyAsync(scratch_data.quad_values_in_thread_blocks,
-                              scratch_data_gpu.quad_values_in_thread_blocks,
-                              sizeof(RangeNumberType) * blocks_rect.x,
-                              cudaMemcpyDeviceToHost,
-                              scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-
-            for (unsigned int t = 0; t < blocks_rect.x; t++)
-              {
-                double_integral += scratch_data.quad_values_in_thread_blocks[t];
-              }
-#if ENABLE_TIMER == 1
-            scratch_data.timer.stop();
-            print_wall_time(scratch_data.log_stream,
-                            scratch_data.timer,
-                            "apply Sauter quadrature");
-#endif
+            //            // Apply 4d Sauter numerical quadrature on the GPU
+            //            device.
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.start();
+            //#endif
+            //            switch (cell_neighboring_type)
+            //              {
+            //                  case BEMTools::CellNeighboringType::SamePanel: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      ApplyQuadratureUsingBEMValuesSamePanel<<<
+            //                        blocks_rect.x,
+            //                        threads_rect.x,
+            //                        threads_rect.x * sizeof(RangeNumberType),
+            //                        scratch_data.cuda_stream_handle>>>(kernel,
+            //                                                           kernel_factor,
+            //                                                           i_index,
+            //                                                           j_index,
+            //                                                           bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case BEMTools::CellNeighboringType::CommonEdge:
+            //                  {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      ApplyQuadratureUsingBEMValuesCommonEdge<<<
+            //                        blocks_rect.x,
+            //                        threads_rect.x,
+            //                        threads_rect.x * sizeof(RangeNumberType),
+            //                        scratch_data.cuda_stream_handle>>>(kernel,
+            //                                                           kernel_factor,
+            //                                                           i_index,
+            //                                                           j_index,
+            //                                                           bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case
+            //                  BEMTools::CellNeighboringType::CommonVertex: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      ApplyQuadratureUsingBEMValuesCommonVertex<<<
+            //                        blocks_rect.x,
+            //                        threads_rect.x,
+            //                        threads_rect.x * sizeof(RangeNumberType),
+            //                        scratch_data.cuda_stream_handle>>>(kernel,
+            //                                                           kernel_factor,
+            //                                                           i_index,
+            //                                                           j_index,
+            //                                                           bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case BEMTools::CellNeighboringType::Regular: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      ApplyQuadratureUsingBEMValuesRegular<<<
+            //                        blocks_rect.x,
+            //                        threads_rect.x,
+            //                        threads_rect.x * sizeof(RangeNumberType),
+            //                        scratch_data.cuda_stream_handle>>>(kernel,
+            //                                                           kernel_factor,
+            //                                                           i_index,
+            //                                                           j_index,
+            //                                                           bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  default: {
+            //                    Assert(false, ExcInternalError());
+            //                    break;
+            //                  }
+            //              }
+            //
+            //            error_code =
+            //            cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //
+            //            /**
+            //             * @internal Extract quadrature results accumulated
+            //             from all thread
+            //             * blocks.
+            //             */
+            //            error_code =
+            //              cudaMemcpyAsync(scratch_data.quad_values_in_thread_blocks,
+            //                              scratch_data_gpu.quad_values_in_thread_blocks,
+            //                              sizeof(RangeNumberType) *
+            //                              blocks_rect.x,
+            //                              cudaMemcpyDeviceToHost,
+            //                              scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //            error_code =
+            //            cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //
+            //            for (unsigned int t = 0; t < blocks_rect.x; t++)
+            //              {
+            //                double_integral +=
+            //                scratch_data.quad_values_in_thread_blocks[t];
+            //              }
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.stop();
+            //            print_wall_time(scratch_data.log_stream,
+            //                            scratch_data.timer,
+            //                            "apply Sauter quadrature");
+            //#endif
           }
       }
 
@@ -3375,7 +3389,6 @@ namespace IdeoBEM
      * of cells related to the global DoF indices @p (i,j).
      */
     RangeNumberType double_integral = 0.0;
-    return double_integral;
 
     /**
      * Iterate over each cell in the support of the basis function associated
@@ -3458,169 +3471,176 @@ namespace IdeoBEM
               ky_mapping_copy,
               false);
 
-            /**
-             * @internal Copy the scratch data and copy data from CPU to GPU.
-             */
-#if ENABLE_TIMER == 1
-            scratch_data.timer.start();
-#endif
-            scratch_data_gpu.assign_from_host(scratch_data);
-            copy_data_gpu.assign_from_host(copy_data,
-                                           scratch_data.cuda_stream_handle);
-
-            cudaError_t error_code =
-              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-#if ENABLE_TIMER == 1
-            scratch_data.timer.stop();
-            print_wall_time(scratch_data.log_stream,
-                            scratch_data.timer,
-                            "copy scratch data from host to device");
-#endif
-
-            // Determine thread block dimensions.
-            dim3 blocks_rect;
-            dim3 threads_rect;
-            IdeoBEM::CUDAWrappers::configure_thread_blocks(
-              cell_neighboring_type, bem_values, blocks_rect, threads_rect);
-
-#if ENABLE_TIMER == 1
-            scratch_data.timer.start();
-#endif
-            switch (cell_neighboring_type)
-              {
-                  case CellNeighboringType::SamePanel: {
-                    IdeoBEM::CUDAWrappers::
-                      calc_jacobian_normals_for_sauter_quad_same_panel<<<
-                        blocks_rect,
-                        threads_rect,
-                        0,
-                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case CellNeighboringType::CommonEdge: {
-                    IdeoBEM::CUDAWrappers::
-                      calc_jacobian_normals_for_sauter_quad_common_edge<<<
-                        blocks_rect,
-                        threads_rect,
-                        0,
-                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case CellNeighboringType::CommonVertex: {
-                    IdeoBEM::CUDAWrappers::
-                      calc_jacobian_normals_for_sauter_quad_common_vertex<<<
-                        blocks_rect,
-                        threads_rect,
-                        0,
-                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case CellNeighboringType::Regular: {
-                    IdeoBEM::CUDAWrappers::
-                      calc_jacobian_normals_for_sauter_quad_regular<<<
-                        blocks_rect,
-                        threads_rect,
-                        0,
-                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  default: {
-                    Assert(false, ExcInternalError());
-
-                    break;
-                  }
-              }
-
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-#if ENABLE_TIMER == 1
-            scratch_data.timer.stop();
-            print_wall_time(scratch_data.log_stream,
-                            scratch_data.timer,
-                            "calculate Jacobians and normal vectors");
-#endif
-
-            /**
-             * When the bilinear form for the hyper singular operator is
-             * evaluated, the covariant transformation is required.
-             */
-            if (kernel.kernel_type == HyperSingularRegular)
-              {
-#if ENABLE_TIMER == 1
-                scratch_data.timer.start();
-#endif
-                switch (cell_neighboring_type)
-                  {
-                      case CellNeighboringType::SamePanel: {
-                        IdeoBEM::CUDAWrappers::
-                          calc_covariant_transformations_same_panel<<<
-                            blocks_rect,
-                            threads_rect,
-                            0,
-                            scratch_data.cuda_stream_handle>>>(
-                            bem_values_gpu, scratch_data_gpu);
-
-                        break;
-                      }
-                      case CellNeighboringType::CommonEdge: {
-                        IdeoBEM::CUDAWrappers::
-                          calc_covariant_transformations_common_edge<<<
-                            blocks_rect,
-                            threads_rect,
-                            0,
-                            scratch_data.cuda_stream_handle>>>(
-                            bem_values_gpu, scratch_data_gpu);
-
-                        break;
-                      }
-                      case CellNeighboringType::CommonVertex: {
-                        IdeoBEM::CUDAWrappers::
-                          calc_covariant_transformations_common_vertex<<<
-                            blocks_rect,
-                            threads_rect,
-                            0,
-                            scratch_data.cuda_stream_handle>>>(
-                            bem_values_gpu, scratch_data_gpu);
-
-                        break;
-                      }
-                      case CellNeighboringType::Regular: {
-                        IdeoBEM::CUDAWrappers::
-                          calc_covariant_transformations_regular<<<
-                            blocks_rect,
-                            threads_rect,
-                            0,
-                            scratch_data.cuda_stream_handle>>>(
-                            bem_values_gpu, scratch_data_gpu);
-
-                        break;
-                      }
-                      default: {
-                        Assert(false, ExcInternalError());
-
-                        break;
-                      }
-                  }
-
-                error_code =
-                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-                AssertCuda(error_code);
-#if ENABLE_TIMER == 1
-                scratch_data.timer.stop();
-                print_wall_time(scratch_data.log_stream,
-                                scratch_data.timer,
-                                "calculate covariant matrices");
-#endif
-              }
+            //            /**
+            //             * @internal Copy the scratch data and copy data from
+            //             CPU to GPU.
+            //             */
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.start();
+            //#endif
+            //            scratch_data_gpu.assign_from_host(scratch_data);
+            //            copy_data_gpu.assign_from_host(copy_data,
+            //                                           scratch_data.cuda_stream_handle);
+            //
+            //            cudaError_t error_code =
+            //              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.stop();
+            //            print_wall_time(scratch_data.log_stream,
+            //                            scratch_data.timer,
+            //                            "copy scratch data from host to
+            //                            device");
+            //#endif
+            //
+            //            // Determine thread block dimensions.
+            //            dim3 blocks_rect;
+            //            dim3 threads_rect;
+            //            IdeoBEM::CUDAWrappers::configure_thread_blocks(
+            //              cell_neighboring_type, bem_values, blocks_rect,
+            //              threads_rect);
+            //
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.start();
+            //#endif
+            //            switch (cell_neighboring_type)
+            //              {
+            //                  case CellNeighboringType::SamePanel: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      calc_jacobian_normals_for_sauter_quad_same_panel<<<
+            //                        blocks_rect,
+            //                        threads_rect,
+            //                        0,
+            //                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case CellNeighboringType::CommonEdge: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      calc_jacobian_normals_for_sauter_quad_common_edge<<<
+            //                        blocks_rect,
+            //                        threads_rect,
+            //                        0,
+            //                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case CellNeighboringType::CommonVertex: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      calc_jacobian_normals_for_sauter_quad_common_vertex<<<
+            //                        blocks_rect,
+            //                        threads_rect,
+            //                        0,
+            //                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case CellNeighboringType::Regular: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      calc_jacobian_normals_for_sauter_quad_regular<<<
+            //                        blocks_rect,
+            //                        threads_rect,
+            //                        0,
+            //                        scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  default: {
+            //                    Assert(false, ExcInternalError());
+            //
+            //                    break;
+            //                  }
+            //              }
+            //
+            //            error_code =
+            //            cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.stop();
+            //            print_wall_time(scratch_data.log_stream,
+            //                            scratch_data.timer,
+            //                            "calculate Jacobians and normal
+            //                            vectors");
+            //#endif
+            //
+            //            /**
+            //             * When the bilinear form for the hyper singular
+            //             operator is
+            //             * evaluated, the covariant transformation is
+            //             required.
+            //             */
+            //            if (kernel.kernel_type == HyperSingularRegular)
+            //              {
+            //#if ENABLE_TIMER == 1
+            //                scratch_data.timer.start();
+            //#endif
+            //                switch (cell_neighboring_type)
+            //                  {
+            //                      case CellNeighboringType::SamePanel: {
+            //                        IdeoBEM::CUDAWrappers::
+            //                          calc_covariant_transformations_same_panel<<<
+            //                            blocks_rect,
+            //                            threads_rect,
+            //                            0,
+            //                            scratch_data.cuda_stream_handle>>>(
+            //                            bem_values_gpu, scratch_data_gpu);
+            //
+            //                        break;
+            //                      }
+            //                      case CellNeighboringType::CommonEdge: {
+            //                        IdeoBEM::CUDAWrappers::
+            //                          calc_covariant_transformations_common_edge<<<
+            //                            blocks_rect,
+            //                            threads_rect,
+            //                            0,
+            //                            scratch_data.cuda_stream_handle>>>(
+            //                            bem_values_gpu, scratch_data_gpu);
+            //
+            //                        break;
+            //                      }
+            //                      case CellNeighboringType::CommonVertex: {
+            //                        IdeoBEM::CUDAWrappers::
+            //                          calc_covariant_transformations_common_vertex<<<
+            //                            blocks_rect,
+            //                            threads_rect,
+            //                            0,
+            //                            scratch_data.cuda_stream_handle>>>(
+            //                            bem_values_gpu, scratch_data_gpu);
+            //
+            //                        break;
+            //                      }
+            //                      case CellNeighboringType::Regular: {
+            //                        IdeoBEM::CUDAWrappers::
+            //                          calc_covariant_transformations_regular<<<
+            //                            blocks_rect,
+            //                            threads_rect,
+            //                            0,
+            //                            scratch_data.cuda_stream_handle>>>(
+            //                            bem_values_gpu, scratch_data_gpu);
+            //
+            //                        break;
+            //                      }
+            //                      default: {
+            //                        Assert(false, ExcInternalError());
+            //
+            //                        break;
+            //                      }
+            //                  }
+            //
+            //                error_code =
+            //                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //                AssertCuda(error_code);
+            //#if ENABLE_TIMER == 1
+            //                scratch_data.timer.stop();
+            //                print_wall_time(scratch_data.log_stream,
+            //                                scratch_data.timer,
+            //                                "calculate covariant matrices");
+            //#endif
+            //              }
 
             /**
              * Find the index of the i-th DoF in the permuted DoF indices of
@@ -3650,105 +3670,113 @@ namespace IdeoBEM
             unsigned int j_index =
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-            // Apply 4d Sauter numerical quadrature on the GPU device.
-#if ENABLE_TIMER == 1
-            scratch_data.timer.start();
-#endif
-            switch (cell_neighboring_type)
-              {
-                  case BEMTools::CellNeighboringType::SamePanel: {
-                    IdeoBEM::CUDAWrappers::
-                      ApplyQuadratureUsingBEMValuesSamePanel<<<
-                        blocks_rect.x,
-                        threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
-                        scratch_data.cuda_stream_handle>>>(kernel,
-                                                           kernel_factor,
-                                                           i_index,
-                                                           j_index,
-                                                           bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case BEMTools::CellNeighboringType::CommonEdge: {
-                    IdeoBEM::CUDAWrappers::
-                      ApplyQuadratureUsingBEMValuesCommonEdge<<<
-                        blocks_rect.x,
-                        threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
-                        scratch_data.cuda_stream_handle>>>(kernel,
-                                                           kernel_factor,
-                                                           i_index,
-                                                           j_index,
-                                                           bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case BEMTools::CellNeighboringType::CommonVertex: {
-                    IdeoBEM::CUDAWrappers::
-                      ApplyQuadratureUsingBEMValuesCommonVertex<<<
-                        blocks_rect.x,
-                        threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
-                        scratch_data.cuda_stream_handle>>>(kernel,
-                                                           kernel_factor,
-                                                           i_index,
-                                                           j_index,
-                                                           bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  case BEMTools::CellNeighboringType::Regular: {
-                    IdeoBEM::CUDAWrappers::
-                      ApplyQuadratureUsingBEMValuesRegular<<<
-                        blocks_rect.x,
-                        threads_rect.x,
-                        threads_rect.x * sizeof(RangeNumberType),
-                        scratch_data.cuda_stream_handle>>>(kernel,
-                                                           kernel_factor,
-                                                           i_index,
-                                                           j_index,
-                                                           bem_values_gpu,
-                                                           scratch_data_gpu);
-
-                    break;
-                  }
-                  default: {
-                    Assert(false, ExcInternalError());
-                    break;
-                  }
-              }
-
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-
-            /**
-             * @internal Extract quadrature results accumulated from all thread
-             * blocks.
-             */
-            error_code =
-              cudaMemcpyAsync(scratch_data.quad_values_in_thread_blocks,
-                              scratch_data_gpu.quad_values_in_thread_blocks,
-                              sizeof(RangeNumberType) * blocks_rect.x,
-                              cudaMemcpyDeviceToHost,
-                              scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-
-            for (unsigned int t = 0; t < blocks_rect.x; t++)
-              {
-                double_integral += scratch_data.quad_values_in_thread_blocks[t];
-              }
-#if ENABLE_TIMER == 1
-            scratch_data.timer.stop();
-            print_wall_time(scratch_data.log_stream,
-                            scratch_data.timer,
-                            "apply Sauter quadrature");
-#endif
+            //            // Apply 4d Sauter numerical quadrature on the GPU
+            //            device.
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.start();
+            //#endif
+            //            switch (cell_neighboring_type)
+            //              {
+            //                  case BEMTools::CellNeighboringType::SamePanel: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      ApplyQuadratureUsingBEMValuesSamePanel<<<
+            //                        blocks_rect.x,
+            //                        threads_rect.x,
+            //                        threads_rect.x * sizeof(RangeNumberType),
+            //                        scratch_data.cuda_stream_handle>>>(kernel,
+            //                                                           kernel_factor,
+            //                                                           i_index,
+            //                                                           j_index,
+            //                                                           bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case BEMTools::CellNeighboringType::CommonEdge:
+            //                  {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      ApplyQuadratureUsingBEMValuesCommonEdge<<<
+            //                        blocks_rect.x,
+            //                        threads_rect.x,
+            //                        threads_rect.x * sizeof(RangeNumberType),
+            //                        scratch_data.cuda_stream_handle>>>(kernel,
+            //                                                           kernel_factor,
+            //                                                           i_index,
+            //                                                           j_index,
+            //                                                           bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case
+            //                  BEMTools::CellNeighboringType::CommonVertex: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      ApplyQuadratureUsingBEMValuesCommonVertex<<<
+            //                        blocks_rect.x,
+            //                        threads_rect.x,
+            //                        threads_rect.x * sizeof(RangeNumberType),
+            //                        scratch_data.cuda_stream_handle>>>(kernel,
+            //                                                           kernel_factor,
+            //                                                           i_index,
+            //                                                           j_index,
+            //                                                           bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  case BEMTools::CellNeighboringType::Regular: {
+            //                    IdeoBEM::CUDAWrappers::
+            //                      ApplyQuadratureUsingBEMValuesRegular<<<
+            //                        blocks_rect.x,
+            //                        threads_rect.x,
+            //                        threads_rect.x * sizeof(RangeNumberType),
+            //                        scratch_data.cuda_stream_handle>>>(kernel,
+            //                                                           kernel_factor,
+            //                                                           i_index,
+            //                                                           j_index,
+            //                                                           bem_values_gpu,
+            //                                                           scratch_data_gpu);
+            //
+            //                    break;
+            //                  }
+            //                  default: {
+            //                    Assert(false, ExcInternalError());
+            //                    break;
+            //                  }
+            //              }
+            //
+            //            error_code =
+            //            cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //
+            //            /**
+            //             * @internal Extract quadrature results accumulated
+            //             from all thread
+            //             * blocks.
+            //             */
+            //            error_code =
+            //              cudaMemcpyAsync(scratch_data.quad_values_in_thread_blocks,
+            //                              scratch_data_gpu.quad_values_in_thread_blocks,
+            //                              sizeof(RangeNumberType) *
+            //                              blocks_rect.x,
+            //                              cudaMemcpyDeviceToHost,
+            //                              scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //            error_code =
+            //            cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            //            AssertCuda(error_code);
+            //
+            //            for (unsigned int t = 0; t < blocks_rect.x; t++)
+            //              {
+            //                double_integral +=
+            //                scratch_data.quad_values_in_thread_blocks[t];
+            //              }
+            //#if ENABLE_TIMER == 1
+            //            scratch_data.timer.stop();
+            //            print_wall_time(scratch_data.log_stream,
+            //                            scratch_data.timer,
+            //                            "apply Sauter quadrature");
+            //#endif
 
             /**
              * Append the FEM mass matrix contribution.
