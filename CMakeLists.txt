@@ -12,19 +12,28 @@ ENDIF()
 
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
-# For running with Valgrind.
+# Project name
+PROJECT("hierbem" LANGUAGES CUDA CXX)
+
+# # Set CXX flags in debug mode oriented for performance profiling in Valgrind.
 # if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-#   # Disable function inlining.
+#   # Disable function inlining for performance profiling in Valgrind.
 #   include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
 #   ADD_FLAGS(DEAL_II_CXX_FLAGS_DEBUG "-fno-inline")
 
-#   # Replace -O0 with -O1.
+#   # Replace -O0 with -O1 for performance profiling in Valgrind.
 #   include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
 #   REPLACE_FLAG(DEAL_II_CXX_FLAGS_DEBUG "-O0" "-O1")
 # endif()
 
-# Project name
-PROJECT("hierbem" LANGUAGES CUDA CXX)
+# Set CUDA compiler flags for debug mode: N.B. -G -lineinfo has already been
+# held by CUDA_NVCC_FLAGS, so here we only add -g and the default-stream
+# options.
+SET(DEAL_II_CUDA_FLAGS_DEBUG "-g --default-stream per-thread")
+# Without line number information for performance profiling.
+SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
+# With line number information for per-thread profiling.
+# SET(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo -O2 --default-stream per-thread")
 
 # Folder for header files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
