@@ -592,7 +592,9 @@ namespace IdeoBEM
    */
   template <int dim>
   void
-  print_qgauss(std::ostream &out, const QGauss<dim> &quad_cpu)
+  print_qgauss(std::ostream      &out,
+               const QGauss<dim> &quad_cpu,
+               const std::string &separator = std::string(","))
   {
     for (unsigned int q = 0; q < quad_cpu.size(); q++)
       {
@@ -606,7 +608,7 @@ namespace IdeoBEM
               }
             else
               {
-                out << quad_cpu.point(q)(i) << ",";
+                out << quad_cpu.point(q)(i) << separator;
               }
           }
 

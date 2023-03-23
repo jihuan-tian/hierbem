@@ -374,10 +374,6 @@ namespace IdeoBEM
    * \mynote{This version involves @p PairCellWiseScratchData and
    * @p PairCellWisePerTaskData.
    *
-   * Inside this function, whether DoF indices in \f$K_x\f$ will be extracted
-   * depends on the flag @p is_scratch_data_for_kx_uncalculated. The DoF
-   * indices in \f$K_y\f$ will always be extracted.}
-   *
    * @param scratch
    * @param data
    * @param kx_cell_iter
@@ -394,25 +390,13 @@ namespace IdeoBEM
     const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter,
     const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter,
     const MappingQGenericExt<dim, spacedim>                 &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>                 &ky_mapping,
-    const bool is_scratch_data_for_kx_uncalculated = true)
+    const MappingQGenericExt<dim, spacedim>                 &ky_mapping)
   {
     // Geometry information.
     const unsigned int vertices_per_cell = GeometryInfo<dim>::vertices_per_cell;
 
     const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
     const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
-
-    // N.B. The vector holding local DoF indices has to have the right size
-    // before being passed to the function <code>get_dof_indices</code>. And
-    // this has been performed during the initialization of the scratch data.
-    if (is_scratch_data_for_kx_uncalculated)
-      {
-        kx_cell_iter->get_dof_indices(
-          scratch.kx_local_dof_indices_in_default_dof_order);
-      }
-    ky_cell_iter->get_dof_indices(
-      scratch.ky_local_dof_indices_in_default_dof_order);
 
     switch (cell_neighboring_type)
       {
@@ -2665,7 +2649,10 @@ namespace IdeoBEM
    * node in an \hmatrix, which must be a full matrix, the Sauter's quadrature
    * is built in the paradigm of "on a pair of DoFs" instead of "on a pair of
    * cells". This is because the two cluster trees associated with an \hmatrix
-   * use partition by DoF support points in stead of partition by cells.}
+   * use partition by DoF support points in stead of partition by cells.
+   *
+   * Before calling this function, the mapping support points and DoF indices in
+   * \f$K_x\f$ should have been calculated.}
    *
    * @param kernel
    * @param factor
@@ -2679,7 +2666,6 @@ namespace IdeoBEM
    * @param bem_values
    * @param scratch
    * @param data
-   * @param is_scratch_data_for_kx_uncalculated
    */
   template <int dim,
             int spacedim,
@@ -2706,8 +2692,7 @@ namespace IdeoBEM
       method_for_cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType>         &bem_values,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    const bool is_scratch_data_for_kx_uncalculated = true)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     /**
      * Detect the cell neighboring type based on cell vertex indices.
@@ -2735,29 +2720,23 @@ namespace IdeoBEM
     const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
 
     /**
-     * Calculate the real support points in the cell \f$K_x\f$ as well as
-     * \f$K_y\f$ via the mapping object. Since such data will be held and
-     * updated in-situ in the mapping object, which has been passed into this
-     * working function by const reference, a copy of it should be made.
+     * @internal Calculate the mapping support points and DoF indices in the
+     * cell \f$K_y\f$ via the mapping object. N.B. Corresponding data for
+     * \f$K_x\f$ have already been calculated in the outer loop of
+     * @p assemble_bem_full_matrix.
+     *
+     * Because the calculated mapping support points are stored in a member
+     * variable in the mapping object @p ky_mapping and several instances of
+     * this function will be called by @p assemble_bem_full_matrix in parallel,
+     * @p ky_mapping is passed as const reference into this function and a
+     * local copy @p ky_mapping_copy of it is made.
      */
-    MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
-    if (is_scratch_data_for_kx_uncalculated)
-      {
-        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
-      }
     MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
     ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
-
-    /**
-     * Copy the newly calculated support points into @p ScratchData.
-     */
-    if (is_scratch_data_for_kx_uncalculated)
-      {
-        scratch_data.kx_mapping_support_points_in_default_order =
-          kx_mapping_copy.get_support_points();
-      }
     scratch_data.ky_mapping_support_points_in_default_order =
       ky_mapping_copy.get_support_points();
+    ky_cell_iter->get_dof_indices(
+      scratch_data.ky_local_dof_indices_in_default_dof_order);
 
     permute_dofs_and_mapping_support_points_for_sauter_quad(
       scratch_data,
@@ -2765,9 +2744,8 @@ namespace IdeoBEM
       cell_neighboring_type,
       kx_cell_iter,
       ky_cell_iter,
-      kx_mapping_copy,
-      ky_mapping_copy,
-      is_scratch_data_for_kx_uncalculated);
+      kx_mapping,
+      ky_mapping_copy);
 
     calc_jacobian_normals_for_sauter_quad(cell_neighboring_type,
                                           bem_values,
@@ -2917,10 +2895,13 @@ namespace IdeoBEM
         std::advance(kx_cell_iter, kx_cell_index);
 
         /**
-         * Calculate the real support points in the cell \f$K_x\f$ via the
-         * mapping object. Since such data will be held and updated in-situ in
-         * the mapping object, which has been passed into this working function
-         * by const reference, a copy of it should be made.
+         * @internal Calculate the real support points in the cell \f$K_x\f$ via
+         * the mapping object. Because the calculated mapping support points are
+         * stored in a member variable in the mapping object @p kx_mapping and
+         * the caller @p fill_hmatrix_leaf_node_with_aca_plus of this function
+         * will be executed in several TBB threads, computation of the mapping
+         * support points should be performed in thread dependent local copies
+         * of @p kx_mapping.
          */
         MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
         kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
@@ -2958,10 +2939,7 @@ namespace IdeoBEM
                 scratch_data.common_vertex_pair_local_indices);
 
             /**
-             * Calculate the real support points in the cell \f$K_y\f$ via the
-             * mapping object. Since such data will be held and updated in-situ
-             * in the mapping object, which has been passed into this working
-             * function by const reference, a copy of it should be made.
+             * @internal Similar to making a local copy of @p kx_mapping.
              */
             MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
             ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
@@ -2970,15 +2948,12 @@ namespace IdeoBEM
              */
             scratch_data.ky_mapping_support_points_in_default_order =
               ky_mapping_copy.get_support_points();
-
             /**
-             * \mynote{1. Inside this function, whether DoF indices in \f$K_x\f$
-             * will be extracted depends on the flag
-             * @p is_scratch_data_for_kx_uncalculated. The DoF indices in
-             * \f$K_y\f$ will always be extracted.
-             * 2. DoF indices and mapping support points will be permuted for
-             * both \f$K_x\f$ and \f$K_y\f$.}
+             * Update the DoF indices.
              */
+            ky_cell_iter->get_dof_indices(
+              scratch_data.ky_local_dof_indices_in_default_dof_order);
+
             permute_dofs_and_mapping_support_points_for_sauter_quad(
               scratch_data,
               copy_data,
@@ -2986,8 +2961,7 @@ namespace IdeoBEM
               kx_cell_iter,
               ky_cell_iter,
               kx_mapping_copy,
-              ky_mapping_copy,
-              false);
+              ky_mapping_copy);
 
             /**
              * @internal Copy the scratch data and copy data from CPU to GPU.
@@ -3386,10 +3360,13 @@ namespace IdeoBEM
         std::advance(kx_cell_iter, kx_cell_index);
 
         /**
-         * Calculate the real support points in the cell \f$K_x\f$ via the
-         * mapping object. Since such data will be held and updated in-situ in
-         * the mapping object, which has been passed into this working function
-         * by const reference, a copy of it should be made.
+         * @internal Calculate the real support points in the cell \f$K_x\f$ via
+         * the mapping object. Because the calculated mapping support points are
+         * stored in a member variable in the mapping object @p kx_mapping and
+         * the caller @p fill_hmatrix_leaf_node_with_aca_plus of this function
+         * will be executed in several TBB threads, computation of the mapping
+         * support points should be performed in thread dependent local copies
+         * of @p kx_mapping.
          */
         MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
         kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
@@ -3439,13 +3416,12 @@ namespace IdeoBEM
              */
             scratch_data.ky_mapping_support_points_in_default_order =
               ky_mapping_copy.get_support_points();
-
             /**
-             * \mynote{Inside this function, whether DoF indices in \f$K_x\f$
-             * will be extracted depends on the flag
-             * @p is_scratch_data_for_kx_uncalculated. The DoF indices in
-             * \f$K_y\f$ will always be extracted.}
+             * Update the DoF indices.
              */
+            ky_cell_iter->get_dof_indices(
+              scratch_data.ky_local_dof_indices_in_default_dof_order);
+
             permute_dofs_and_mapping_support_points_for_sauter_quad(
               scratch_data,
               copy_data,
@@ -3453,8 +3429,7 @@ namespace IdeoBEM
               kx_cell_iter,
               ky_cell_iter,
               kx_mapping_copy,
-              ky_mapping_copy,
-              false);
+              ky_mapping_copy);
 
             /**
              * @internal Copy the scratch data and copy data from CPU to GPU.
