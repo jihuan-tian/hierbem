@@ -40,6 +40,14 @@ octave-workspace
 # Ignore temporary output files from the testers.
 *.output[0-9]
 
+# Ignore LaTeX temporary files
+*.aux
+*.thm
+*.dvi
+
+# Ignore Eclipse preference files
+*.prefs
+
 # Ignore binary files
 *.a
 

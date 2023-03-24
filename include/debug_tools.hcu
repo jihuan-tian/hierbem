@@ -657,6 +657,47 @@ namespace IdeoBEM
 
 
   /**
+   * Print the vector of @p Point objects as a @p n*dim matrix in Octave format.
+   *
+   * @tparam dim
+   * @tparam RangeNumberType
+   * @param out
+   * @param name
+   * @param values
+   * @param precision
+   * @param width
+   */
+  template <int dim, typename RangeNumberType = double>
+  void
+  print_point_vector_to_mat(
+    std::ostream                                   &out,
+    const std::string                              &name,
+    const std::vector<Point<dim, RangeNumberType>> &values,
+    const unsigned int                              precision = 6,
+    const unsigned int                              width     = 10)
+  {
+    out << "# name: " << name << "\n";
+    out << "# type: matrix\n";
+    out << "# rows: " << values.size() << "\n";
+    out << "# columns: " << dim << "\n";
+
+    for (const auto &p : values)
+      {
+        for (unsigned int d = 0; d < dim - 1; d++)
+          {
+            out << std::setprecision(precision) << std::setw(width) << p[d]
+                << " ";
+          }
+
+        out << std::setprecision(precision) << std::setw(width) << p[dim - 1]
+            << "\n";
+      }
+
+    out << "\n\n";
+  }
+
+
+  /**
    * Check the equality of the quadrature objects on CPU and GPU.
    *
    * @tparam dim
