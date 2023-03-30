@@ -144,8 +144,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(row_vector.size(), column_dof_indices.size());
 
@@ -185,8 +184,7 @@ namespace IdeoBEM
           method_for_cell_neighboring_type,
           scratch_data,
           scratch_data_gpu,
-          copy_data,
-          copy_data_gpu);
+          copy_data);
       }
   }
 
@@ -262,8 +260,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(row_vector.size(), column_dof_indices.size());
 
@@ -303,8 +300,7 @@ namespace IdeoBEM
           method_for_cell_neighboring_type,
           scratch_data,
           scratch_data_gpu,
-          copy_data,
-          copy_data_gpu);
+          copy_data);
 
         row_vector(j) += stabilization_factor * mass_vmult_weq(row_dof_index) *
                          mass_vmult_weq(column_dof_indices[j]);
@@ -379,8 +375,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -420,8 +415,7 @@ namespace IdeoBEM
           method_for_cell_neighboring_type,
           scratch_data,
           scratch_data_gpu,
-          copy_data,
-          copy_data_gpu);
+          copy_data);
       }
   }
 
@@ -496,8 +490,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -537,8 +530,7 @@ namespace IdeoBEM
           method_for_cell_neighboring_type,
           scratch_data,
           scratch_data_gpu,
-          copy_data,
-          copy_data_gpu);
+          copy_data);
 
         col_vector(i) += stabilization_factor *
                          mass_vmult_weq(row_dof_indices[i]) *
@@ -619,8 +611,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(row_vector.size(), col_dof_indices.size());
 
@@ -674,8 +665,7 @@ namespace IdeoBEM
                                 method_for_cell_neighboring_type,
                                 scratch_data,
                                 scratch_data_gpu,
-                                copy_data,
-                                copy_data_gpu);
+                                copy_data);
 
             if (LinAlg::is_all_zero(row_vector))
               {
@@ -803,8 +793,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(row_vector.size(), col_dof_indices.size());
 
@@ -860,8 +849,7 @@ namespace IdeoBEM
                                 method_for_cell_neighboring_type,
                                 scratch_data,
                                 scratch_data_gpu,
-                                copy_data,
-                                copy_data_gpu);
+                                copy_data);
 
             if (LinAlg::is_all_zero(row_vector))
               {
@@ -1072,8 +1060,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -1127,8 +1114,7 @@ namespace IdeoBEM
                                    method_for_cell_neighboring_type,
                                    scratch_data,
                                    scratch_data_gpu,
-                                   copy_data,
-                                   copy_data_gpu);
+                                   copy_data);
 
             if (LinAlg::is_all_zero(col_vector))
               {
@@ -1256,8 +1242,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     AssertDimension(col_vector.size(), row_dof_indices.size());
 
@@ -1313,8 +1298,7 @@ namespace IdeoBEM
                                    method_for_cell_neighboring_type,
                                    scratch_data,
                                    scratch_data_gpu,
-                                   copy_data,
-                                   copy_data_gpu);
+                                   copy_data);
 
             if (LinAlg::is_all_zero(col_vector))
               {
@@ -1521,8 +1505,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     /**
      * Get the size of each dimension of the matrix block to be built.
@@ -1608,8 +1591,7 @@ namespace IdeoBEM
                             method_for_cell_neighboring_type,
                             scratch_data,
                             scratch_data_gpu,
-                            copy_data,
-                            copy_data_gpu);
+                            copy_data);
 
     if (r == m)
       {
@@ -1645,8 +1627,7 @@ namespace IdeoBEM
                                method_for_cell_neighboring_type,
                                scratch_data,
                                scratch_data_gpu,
-                               copy_data,
-                               copy_data_gpu);
+                               copy_data);
 
     if (c == n)
       {
@@ -1763,8 +1744,7 @@ namespace IdeoBEM
                                 method_for_cell_neighboring_type,
                                 scratch_data,
                                 scratch_data_gpu,
-                                copy_data,
-                                copy_data_gpu);
+                                copy_data);
 
             /**
              * \mynote{Here the counter \f$l\f$ iterates over all the previous
@@ -1828,8 +1808,7 @@ namespace IdeoBEM
                                    method_for_cell_neighboring_type,
                                    scratch_data,
                                    scratch_data_gpu,
-                                   copy_data,
-                                   copy_data_gpu);
+                                   copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -1874,8 +1853,7 @@ namespace IdeoBEM
                                    method_for_cell_neighboring_type,
                                    scratch_data,
                                    scratch_data_gpu,
-                                   copy_data,
-                                   copy_data_gpu);
+                                   copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -1925,8 +1903,7 @@ namespace IdeoBEM
                                 method_for_cell_neighboring_type,
                                 scratch_data,
                                 scratch_data_gpu,
-                                copy_data,
-                                copy_data_gpu);
+                                copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -1995,8 +1972,7 @@ namespace IdeoBEM
                                       method_for_cell_neighboring_type,
                                       scratch_data,
                                       scratch_data_gpu,
-                                      copy_data,
-                                      copy_data_gpu);
+                                      copy_data);
 
             if (r == m)
               {
@@ -2077,8 +2053,7 @@ namespace IdeoBEM
                                        method_for_cell_neighboring_type,
                                        scratch_data,
                                        scratch_data_gpu,
-                                       copy_data,
-                                       copy_data_gpu);
+                                       copy_data);
 
             if (c == n)
               {
@@ -2240,8 +2215,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     /**
      * Get the size of each dimension of the matrix block to be built.
@@ -2329,8 +2303,7 @@ namespace IdeoBEM
                             method_for_cell_neighboring_type,
                             scratch_data,
                             scratch_data_gpu,
-                            copy_data,
-                            copy_data_gpu);
+                            copy_data);
 
     if (r == m)
       {
@@ -2368,8 +2341,7 @@ namespace IdeoBEM
                                method_for_cell_neighboring_type,
                                scratch_data,
                                scratch_data_gpu,
-                               copy_data,
-                               copy_data_gpu);
+                               copy_data);
 
     if (c == n)
       {
@@ -2488,8 +2460,7 @@ namespace IdeoBEM
                                 method_for_cell_neighboring_type,
                                 scratch_data,
                                 scratch_data_gpu,
-                                copy_data,
-                                copy_data_gpu);
+                                copy_data);
 
             /**
              * \mynote{Here the counter \f$l\f$ iterates over all the previous
@@ -2555,8 +2526,7 @@ namespace IdeoBEM
                                    method_for_cell_neighboring_type,
                                    scratch_data,
                                    scratch_data_gpu,
-                                   copy_data,
-                                   copy_data_gpu);
+                                   copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -2603,8 +2573,7 @@ namespace IdeoBEM
                                    method_for_cell_neighboring_type,
                                    scratch_data,
                                    scratch_data_gpu,
-                                   copy_data,
-                                   copy_data_gpu);
+                                   copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -2656,8 +2625,7 @@ namespace IdeoBEM
                                 method_for_cell_neighboring_type,
                                 scratch_data,
                                 scratch_data_gpu,
-                                copy_data,
-                                copy_data_gpu);
+                                copy_data);
 
             for (size_type l = 1; l < k; l++)
               {
@@ -2728,8 +2696,7 @@ namespace IdeoBEM
                                       method_for_cell_neighboring_type,
                                       scratch_data,
                                       scratch_data_gpu,
-                                      copy_data,
-                                      copy_data_gpu);
+                                      copy_data);
 
             if (r == m)
               {
@@ -2812,8 +2779,7 @@ namespace IdeoBEM
                                        method_for_cell_neighboring_type,
                                        scratch_data,
                                        scratch_data_gpu,
-                                       copy_data,
-                                       copy_data_gpu);
+                                       copy_data);
 
             if (c == n)
               {
@@ -3434,7 +3400,6 @@ namespace IdeoBEM
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
     const std::array<types::global_dof_index, 2> *row_index_range =
@@ -3518,8 +3483,7 @@ namespace IdeoBEM
                                     method_for_cell_neighboring_type,
                                     scratch_data,
                                     scratch_data_gpu,
-                                    copy_data,
-                                    copy_data_gpu);
+                                    copy_data);
                               }
                           }
 
@@ -3580,8 +3544,7 @@ namespace IdeoBEM
                                     method_for_cell_neighboring_type,
                                     scratch_data,
                                     scratch_data_gpu,
-                                    copy_data,
-                                    copy_data_gpu);
+                                    copy_data);
                               }
                           }
 
@@ -3635,8 +3598,7 @@ namespace IdeoBEM
                           method_for_cell_neighboring_type,
                           scratch_data,
                           scratch_data_gpu,
-                          copy_data,
-                          copy_data_gpu);
+                          copy_data);
                       }
                   }
               }
@@ -3686,8 +3648,7 @@ namespace IdeoBEM
                                  method_for_cell_neighboring_type,
                                  scratch_data,
                                  scratch_data_gpu,
-                                 copy_data,
-                                 copy_data_gpu);
+                                 copy_data);
 
                         break;
                       }
@@ -3737,8 +3698,7 @@ namespace IdeoBEM
                          method_for_cell_neighboring_type,
                          scratch_data,
                          scratch_data_gpu,
-                         copy_data,
-                         copy_data_gpu);
+                         copy_data);
               }
 
             break;
@@ -3833,7 +3793,6 @@ namespace IdeoBEM
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
     const std::array<types::global_dof_index, 2> *row_index_range =
@@ -3917,8 +3876,7 @@ namespace IdeoBEM
                                     method_for_cell_neighboring_type,
                                     scratch_data,
                                     scratch_data_gpu,
-                                    copy_data,
-                                    copy_data_gpu);
+                                    copy_data);
 
                                 // N.B. The internal and local DoF indices are
                                 // used directly to access the result vector of
@@ -3987,8 +3945,7 @@ namespace IdeoBEM
                                     method_for_cell_neighboring_type,
                                     scratch_data,
                                     scratch_data_gpu,
-                                    copy_data,
-                                    copy_data_gpu);
+                                    copy_data);
 
                                 // N.B. The internal and local DoF indices are
                                 // used directly to access the result vector of
@@ -4050,8 +4007,7 @@ namespace IdeoBEM
                           method_for_cell_neighboring_type,
                           scratch_data,
                           scratch_data_gpu,
-                          copy_data,
-                          copy_data_gpu);
+                          copy_data);
 
                         // N.B. The internal and local DoF indices are
                         // used directly to access the result vector of
@@ -4111,8 +4067,7 @@ namespace IdeoBEM
                                  method_for_cell_neighboring_type,
                                  scratch_data,
                                  scratch_data_gpu,
-                                 copy_data,
-                                 copy_data_gpu);
+                                 copy_data);
 
                         break;
                       }
@@ -4164,8 +4119,7 @@ namespace IdeoBEM
                          method_for_cell_neighboring_type,
                          scratch_data,
                          scratch_data_gpu,
-                         copy_data,
-                         copy_data_gpu);
+                         copy_data);
               }
 
             break;
@@ -4254,7 +4208,6 @@ namespace IdeoBEM
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu,
     const bool enable_build_symmetric_hmat = false)
   {
     const std::array<types::global_dof_index, 2> *row_index_range =
@@ -4340,8 +4293,7 @@ namespace IdeoBEM
                                     mass_matrix_scratch_data,
                                     scratch_data,
                                     scratch_data_gpu,
-                                    copy_data,
-                                    copy_data_gpu);
+                                    copy_data);
                               }
                           }
 
@@ -4404,8 +4356,7 @@ namespace IdeoBEM
                                     mass_matrix_scratch_data,
                                     scratch_data,
                                     scratch_data_gpu,
-                                    copy_data,
-                                    copy_data_gpu);
+                                    copy_data);
                               }
                           }
 
@@ -4458,8 +4409,7 @@ namespace IdeoBEM
                           mass_matrix_scratch_data,
                           scratch_data,
                           scratch_data_gpu,
-                          copy_data,
-                          copy_data_gpu);
+                          copy_data);
                       }
                   }
               }
@@ -4501,8 +4451,7 @@ namespace IdeoBEM
                                  method_for_cell_neighboring_type,
                                  scratch_data,
                                  scratch_data_gpu,
-                                 copy_data,
-                                 copy_data_gpu);
+                                 copy_data);
 
                         break;
                       }
@@ -4552,8 +4501,7 @@ namespace IdeoBEM
                          method_for_cell_neighboring_type,
                          scratch_data,
                          scratch_data_gpu,
-                         copy_data,
-                         copy_data_gpu);
+                         copy_data);
               }
 
             break;
@@ -4648,11 +4596,8 @@ namespace IdeoBEM
      */
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                       scratch_data_gpu;
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
-
+        scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     cudaError_t error_code =
       cudaStreamSynchronize(scratch_data.cuda_stream_handle);
@@ -4686,7 +4631,6 @@ namespace IdeoBEM
           scratch_data,
           scratch_data_gpu,
           copy_data,
-          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
 
@@ -4694,7 +4638,6 @@ namespace IdeoBEM
      * Release pair cell wise scratch and copy data.
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-    copy_data_gpu.release(scratch_data.cuda_stream_handle);
 
     error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
     AssertCuda(error_code);
@@ -4796,11 +4739,8 @@ namespace IdeoBEM
      */
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                       scratch_data_gpu;
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
-
+        scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     cudaError_t error_code =
       cudaStreamSynchronize(scratch_data.cuda_stream_handle);
@@ -4836,7 +4776,6 @@ namespace IdeoBEM
           scratch_data,
           scratch_data_gpu,
           copy_data,
-          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
 
@@ -4844,7 +4783,6 @@ namespace IdeoBEM
      * Release pair cell wise scratch and copy data.
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-    copy_data_gpu.release(scratch_data.cuda_stream_handle);
 
     error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
     AssertCuda(error_code);
@@ -4954,11 +4892,8 @@ namespace IdeoBEM
      */
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                       scratch_data_gpu;
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
-
+        scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     cudaError_t error_code =
       cudaStreamSynchronize(scratch_data.cuda_stream_handle);
@@ -4994,7 +4929,6 @@ namespace IdeoBEM
           scratch_data,
           scratch_data_gpu,
           copy_data,
-          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
 
@@ -5002,7 +4936,6 @@ namespace IdeoBEM
      * Release pair cell wise scratch and copy data.
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-    copy_data_gpu.release(scratch_data.cuda_stream_handle);
 
     error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
     AssertCuda(error_code);
@@ -5133,11 +5066,8 @@ namespace IdeoBEM
      */
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                       scratch_data_gpu;
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
-
+        scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
@@ -5164,7 +5094,6 @@ namespace IdeoBEM
           scratch_data,
           scratch_data_gpu,
           copy_data,
-          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
 
@@ -5178,7 +5107,6 @@ namespace IdeoBEM
      */
     scratch_data.release();
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-    copy_data_gpu.release(scratch_data.cuda_stream_handle);
   }
 
 
@@ -5284,11 +5212,8 @@ namespace IdeoBEM
      */
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                                                       scratch_data_gpu;
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
-
+        scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
-    copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);
 
     for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
       {
@@ -5317,7 +5242,6 @@ namespace IdeoBEM
           scratch_data,
           scratch_data_gpu,
           copy_data,
-          copy_data_gpu,
           enable_build_symmetric_hmat);
       }
 
@@ -5331,7 +5255,6 @@ namespace IdeoBEM
      */
     scratch_data.release();
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-    copy_data_gpu.release(scratch_data.cuda_stream_handle);
   }
 
 

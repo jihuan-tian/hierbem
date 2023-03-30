@@ -2875,8 +2875,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     /**
      * @internal This result variable accumulates all contributions from pairs
@@ -2970,8 +2969,6 @@ namespace IdeoBEM
             scratch_data.timer.start();
 #endif
             scratch_data_gpu.assign_from_host(scratch_data);
-            copy_data_gpu.assign_from_host(copy_data,
-                                           scratch_data.cuda_stream_handle);
 
             cudaError_t error_code =
               cudaStreamSynchronize(scratch_data.cuda_stream_handle);
@@ -3340,8 +3337,7 @@ namespace IdeoBEM
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-    IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData      &copy_data_gpu)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     /**
      * @internal This result variable accumulates all contributions from pairs
@@ -3438,8 +3434,6 @@ namespace IdeoBEM
             scratch_data.timer.start();
 #endif
             scratch_data_gpu.assign_from_host(scratch_data);
-            copy_data_gpu.assign_from_host(copy_data,
-                                           scratch_data.cuda_stream_handle);
 
             cudaError_t error_code =
               cudaStreamSynchronize(scratch_data.cuda_stream_handle);
