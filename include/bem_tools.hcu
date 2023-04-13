@@ -3471,6 +3471,131 @@ namespace IdeoBEM
 
 
       /**
+       * Calculate Jacobian determinant, normal vector and covariant matrix (if
+       * the kernel function is hypersingular) at the specified k3 term and
+       * quadrature point.
+       *
+       * @tparam spacedim
+       * @tparam RangeNumberType
+       * @param k3_index
+       * @param quad_no
+       * @param shape_grad_matrix_table
+       * @param support_points_in_real_cell Starting address of the list of support points in the real cell
+       * @param normal_vector
+       * @param covariant_matrix
+       * @param is_normal_vector_negated
+       * @param if_calculate_covariant
+       * @return Jacobian determinant
+       */
+      template <int spacedim, typename RangeNumberType = double>
+      __device__ RangeNumberType
+      surface_jacobian_det_normal_vector_and_covariant(
+        const unsigned int k3_index,
+        const unsigned int quad_no,
+        const IdeoBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+                                             &shape_grad_matrix_table,
+        Point<spacedim, RangeNumberType>     *support_points_in_real_cell,
+        Tensor<1, spacedim, RangeNumberType> &normal_vector,
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+                  &covariant_matrix,
+        const bool is_normal_vector_negated,
+        const bool if_calculate_covariant)
+      {
+        /**
+         * @internal Currently, only @p spacedim=3 is supported.
+         */
+        assert(spacedim == 3);
+
+        /**
+         * Extract the shape function's gradient matrix under the specified
+         * \f$k_3\f$ index and quadrature point. @p CUDAFullMatrix is just a
+         * wrapper of the existing linear memory allocated for the matrix. Its
+         * first dimension is the shape function index and its second dimension
+         * is coordinate component index in the unit cell.
+         */
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          shape_grad_matrix_at_quad_point(
+            const_cast<RangeNumberType *>(
+              &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
+            shape_grad_matrix_table.size(3),
+            shape_grad_matrix_table.size(2));
+        /**
+         * @internal The number of columns of the gradient matrix should be 2.
+         */
+        assert(shape_grad_matrix_at_quad_point.n() == 2);
+
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          support_point_coordinate_matrix(
+            (RangeNumberType *)(support_points_in_real_cell),
+            spacedim,
+            shape_grad_matrix_at_quad_point.m());
+
+        RangeNumberType jacobian_matrix_data[spacedim * 2];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
+          jacobian_matrix_data, spacedim, 2);
+
+        support_point_coordinate_matrix.mmult(jacobian_matrix,
+                                              shape_grad_matrix_at_quad_point);
+        /**
+         * @internal Compute the Gramian matrix.
+         */
+        RangeNumberType                                        G_data[4];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(G_data, 2, 2);
+        jacobian_matrix.Tmmult(G, jacobian_matrix);
+
+        if (if_calculate_covariant)
+          {
+            /**
+             * @internal Compute the inverse of the Gramian matrix.
+             */
+            RangeNumberType G_inv_data[4];
+            IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(
+              G_inv_data, 2, 2);
+            G_inv.invert2x2(G);
+            /**
+             * @internal Compute the covariant matrix.
+             */
+            jacobian_matrix.mmult(covariant_matrix, G_inv);
+          }
+
+        RangeNumberType surface_jacobian_det = std::sqrt(G.determinant2x2());
+
+        if (is_normal_vector_negated)
+          {
+            normal_vector[0] =
+              (jacobian_matrix_data[2] * jacobian_matrix_data[4] -
+               jacobian_matrix_data[1] * jacobian_matrix_data[5]) /
+              surface_jacobian_det;
+            normal_vector[1] =
+              (jacobian_matrix_data[0] * jacobian_matrix_data[5] -
+               jacobian_matrix_data[2] * jacobian_matrix_data[3]) /
+              surface_jacobian_det;
+            normal_vector[2] =
+              (jacobian_matrix_data[1] * jacobian_matrix_data[3] -
+               jacobian_matrix_data[0] * jacobian_matrix_data[4]) /
+              surface_jacobian_det;
+          }
+        else
+          {
+            normal_vector[0] =
+              (jacobian_matrix_data[1] * jacobian_matrix_data[5] -
+               jacobian_matrix_data[2] * jacobian_matrix_data[4]) /
+              surface_jacobian_det;
+            normal_vector[1] =
+              (jacobian_matrix_data[2] * jacobian_matrix_data[3] -
+               jacobian_matrix_data[0] * jacobian_matrix_data[5]) /
+              surface_jacobian_det;
+            normal_vector[2] =
+              (jacobian_matrix_data[0] * jacobian_matrix_data[4] -
+               jacobian_matrix_data[1] * jacobian_matrix_data[3]) /
+              surface_jacobian_det;
+          }
+
+        return surface_jacobian_det;
+      }
+
+
+      /**
        * Calculate the covariant transformation matrix for mapping the gradient
        * in local coordinate chart to global coordinates. This version runs on
        * the GPU device.
@@ -3547,14 +3672,14 @@ namespace IdeoBEM
         all_component_coords.mmult(jacobian_matrix,
                                    shape_grad_matrix_at_quad_point);
 
-        // Metric tensor
-        RangeNumberType metric_tensor_data[4];
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(
-          metric_tensor_data, 2, 2);
+        // Gramian tensor
+        RangeNumberType                                        G_data[4];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(G_data, 2, 2);
         // Inverse of the metric tensor
-        RangeNumberType metric_tensor_inv_data[4];
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(
-          metric_tensor_inv_data, 2, 2);
+        RangeNumberType                                        G_inv_data[4];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(G_inv_data,
+                                                                     2,
+                                                                     2);
 
         // Compute \f$G=J^T J\f$.
         jacobian_matrix.Tmmult(G, jacobian_matrix);
@@ -3593,7 +3718,7 @@ namespace IdeoBEM
         const unsigned int shape_num = shape_value_table.size(0);
 
         // Reset all coordinate components to zero.
-        // N.B. The operator for assignment from a scalar value in the parenet
+        // N.B. The operator for assignment from a scalar value in the parent
         // class is called.
         for (unsigned int i = 0; i < spacedim; i++)
           {
@@ -3609,6 +3734,41 @@ namespace IdeoBEM
             real_coords =
               real_coords + shape_value_table(i, k3_index, quad_no) *
                               support_points_in_real_cell(i);
+          }
+      }
+
+
+      template <int spacedim, typename RangeNumberType = double>
+      __device__ void
+      transform_quad_point_from_unit_to_permuted_real_cell(
+        const unsigned int k3_index,
+        const unsigned int quad_no,
+        const IdeoBEM::CUDAWrappers::CUDATable<3, RangeNumberType>
+          &mapping_shape_value_table,
+        const Point<spacedim, RangeNumberType>
+                                         *mapping_support_points_in_real_cell,
+        Point<spacedim, RangeNumberType> &quad_point_in_real_cell)
+      {
+        const unsigned int shape_num = mapping_shape_value_table.size(0);
+
+        // Reset all coordinate components to zero.
+        // N.B. The operator for assignment from a scalar value in the parent
+        // class is called.
+        for (unsigned int i = 0; i < spacedim; i++)
+          {
+            quad_point_in_real_cell(i) = 0.;
+          }
+
+        /**
+         * Linear combination of support point coordinates and evaluation of
+         * shape functions at the specified area coordinates.
+         */
+        for (unsigned int i = 0; i < shape_num; i++)
+          {
+            quad_point_in_real_cell =
+              quad_point_in_real_cell +
+              mapping_shape_value_table(i, k3_index, quad_no) *
+                *(mapping_support_points_in_real_cell + i);
           }
       }
     } // namespace CUDAWrappers

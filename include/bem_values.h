@@ -21,6 +21,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "bem_tools.hcu"
@@ -1719,7 +1720,7 @@ namespace IdeoBEM
     /**
      * ID for the working thread associated with this scratch data.
      */
-    int thread_id;
+    std::thread::id thread_id;
 
     /**
      * Timer object associated with the scratch data, which is bound to a
@@ -2062,8 +2063,7 @@ namespace IdeoBEM
                             const MappingQGenericExt<dim, spacedim> &kx_mapping,
                             const MappingQGenericExt<dim, spacedim> &ky_mapping,
                             const BEMValues<dim, spacedim>          &bem_values)
-      : thread_id(-1)
-      , cuda_stream_handle(0)
+      : cuda_stream_handle(0)
       , common_vertex_pair_local_indices(0)
       , kx_mapping_support_points_in_default_order(
           bem_values.kx_mapping_data.n_shape_functions)
@@ -2195,7 +2195,7 @@ namespace IdeoBEM
      * @param ky_mapping
      * @param bem_values
      */
-    PairCellWiseScratchData(int                                      thread_id,
+    PairCellWiseScratchData(std::thread::id                          thread_id,
                             const FiniteElement<dim, spacedim>      &kx_fe,
                             const FiniteElement<dim, spacedim>      &ky_fe,
                             const MappingQGenericExt<dim, spacedim> &kx_mapping,
@@ -2302,7 +2302,9 @@ namespace IdeoBEM
        * @internal Open the log stream in append mode, in case there is an
        * existing log file with the same name.
        */
-      log_stream.open(std::string("thread-") + std::to_string(thread_id),
+      std::stringstream thread_id_strstream;
+      thread_id_strstream << thread_id;
+      log_stream.open(std::string("thread-") + thread_id_strstream.str(),
                       std::ios_base::app);
 
       cudaError_t error_code;

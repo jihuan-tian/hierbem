@@ -7,8 +7,8 @@
  * @date 2022-03-07
  * @author Jihuan Tian
  */
-#ifndef INCLUDE_ACA_PLUS_H_
-#define INCLUDE_ACA_PLUS_H_
+#ifndef INCLUDE_ACA_PLUS_HCU_
+#define INCLUDE_ACA_PLUS_HCU_
 
 #include <deal.II/base/parallel.h>
 
@@ -17,16 +17,21 @@
 #include <tbb/tbb_thread.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <forward_list>
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <mutex>
 #include <random>
+#include <thread>
 #include <vector>
 
 #include "bem_kernels.hcu"
 #include "cu_bem_values.hcu"
+#include "cu_table.hcu"
 #include "debug_tools.hcu"
 #include "generic_functors.h"
 #include "hmatrix.h"
@@ -195,8 +200,8 @@ namespace IdeoBEM
    *
    * \mynote{1. The memory for @p row_vector should be preallocated, since inside
    * the function there is no reinitialization of this vector anymore.
-   * 2. This version is especially for assembling the regularized hyper-singular
-   * matrix with the stabilization term.}
+   * 2. This version is especially for assembling the regularized
+   * hyper-singular matrix with the stabilization term.}
    *
    * @param row_vector
    * @param kernel
@@ -426,8 +431,8 @@ namespace IdeoBEM
    *
    * \mynote{1. The memory for @p col_vector should be preallocated, since inside
    * the function there is no reinitialization of this vector anymore.
-   * 2. This version is especially for assembling the regularized hyper-singular
-   * matrix with the stabilization term.}
+   * 2. This version is especially for assembling the regularized
+   * hyper-singular matrix with the stabilization term.}
    *
    * @param col_vector
    * @param kernel
@@ -701,8 +706,8 @@ namespace IdeoBEM
             else
               {
                 /**
-                 * Because the selected row for the next step is the same as the
-                 * current reference row, try another valid selection.
+                 * Because the selected row for the next step is the same as
+                 * the current reference row, try another valid selection.
                  */
                 continue;
               }
@@ -720,8 +725,8 @@ namespace IdeoBEM
    * \mynote{1. The data type for DoF index is @p types::global_dof_index, while
    * the data type for matrix row or column index is @p size_type, which is the
    * unsigned version of @p blas::int.
-   * 2. This version is especially for assembling the regularized hyper-singular
-   * matrix with the stabilization term.}
+   * 2. This version is especially for assembling the regularized
+   * hyper-singular matrix with the stabilization term.}
    *
    * @param row_vector
    * @param kernel
@@ -885,8 +890,8 @@ namespace IdeoBEM
             else
               {
                 /**
-                 * Because the selected row for the next step is the same as the
-                 * current reference row, try another valid selection.
+                 * Because the selected row for the next step is the same as
+                 * the current reference row, try another valid selection.
                  */
                 continue;
               }
@@ -976,8 +981,8 @@ namespace IdeoBEM
             else
               {
                 /**
-                 * Because the selected row for the next step is the same as the
-                 * current reference row, try another valid selection.
+                 * Because the selected row for the next step is the same as
+                 * the current reference row, try another valid selection.
                  */
                 continue;
               }
@@ -989,8 +994,8 @@ namespace IdeoBEM
 
 
   /**
-   * Randomly select a reference column index from the remaining column indices
-   * for the next ACA step.
+   * Randomly select a reference column index from the remaining column
+   * indices for the next ACA step.
    *
    * \mynote{The data type for DoF index is @p types::global_dof_index, while
    * the data type for matrix row or column index is @p size_type, which is the
@@ -1074,8 +1079,8 @@ namespace IdeoBEM
      */
     size_type next_ref_col_index(col_dof_indices.size());
     /**
-     * The column DoF index corresponding to the selected reference column index
-     * for the next ACA step.
+     * The column DoF index corresponding to the selected reference column
+     * index for the next ACA step.
      */
     types::global_dof_index next_ref_col_dof_index;
 
@@ -1130,8 +1135,8 @@ namespace IdeoBEM
             else
               {
                 /**
-                 * When the extracted column vector is not zero-valued, it is a
-                 * valid choice. Hence, return the selected column index.
+                 * When the extracted column vector is not zero-valued, it is
+                 * a valid choice. Hence, return the selected column index.
                  */
                 return next_ref_col_index;
               }
@@ -1141,17 +1146,18 @@ namespace IdeoBEM
             if (size(remaining_col_indices) == 1)
               {
                 /**
-                 * If there is only one column index left, there is no reference
-                 * column can be selected. Then return the invalid reference
-                 * column index.
+                 * If there is only one column index left, there is no
+                 * reference column can be selected. Then return the invalid
+                 * reference column index.
                  */
                 return pass_the_end_ref_col_index;
               }
             else
               {
                 /**
-                 * Because the selected column for the next step is the same as
-                 * the current reference column, try another valid selection.
+                 * Because the selected column for the next step is the same
+                 * as the current reference column, try another valid
+                 * selection.
                  */
                 continue;
               }
@@ -1163,14 +1169,14 @@ namespace IdeoBEM
 
 
   /**
-   * Randomly select a reference column index from the remaining column indices
-   * for the next ACA step.
+   * Randomly select a reference column index from the remaining column
+   * indices for the next ACA step.
    *
    * \mynote{1. The data type for DoF index is @p types::global_dof_index, while
    * the data type for matrix row or column index is @p size_type, which is the
    * unsigned version of @p blas::int.
-   * 2. This version is especially for assembling the regularized hyper-singular
-   * matrix with the stabilization term.}
+   * 2. This version is especially for assembling the regularized
+   * hyper-singular matrix with the stabilization term.}
    *
    * @param col_vector
    * @param kernel
@@ -1256,8 +1262,8 @@ namespace IdeoBEM
      */
     size_type next_ref_col_index(col_dof_indices.size());
     /**
-     * The column DoF index corresponding to the selected reference column index
-     * for the next ACA step.
+     * The column DoF index corresponding to the selected reference column
+     * index for the next ACA step.
      */
     types::global_dof_index next_ref_col_dof_index;
 
@@ -1314,8 +1320,8 @@ namespace IdeoBEM
             else
               {
                 /**
-                 * When the extracted column vector is not zero-valued, it is a
-                 * valid choice. Hence, return the selected column index.
+                 * When the extracted column vector is not zero-valued, it is
+                 * a valid choice. Hence, return the selected column index.
                  */
                 return next_ref_col_index;
               }
@@ -1325,17 +1331,18 @@ namespace IdeoBEM
             if (size(remaining_col_indices) == 1)
               {
                 /**
-                 * If there is only one column index left, there is no reference
-                 * column can be selected. Then return the invalid reference
-                 * column index.
+                 * If there is only one column index left, there is no
+                 * reference column can be selected. Then return the invalid
+                 * reference column index.
                  */
                 return pass_the_end_ref_col_index;
               }
             else
               {
                 /**
-                 * Because the selected column for the next step is the same as
-                 * the current reference column, try another valid selection.
+                 * Because the selected column for the next step is the same
+                 * as the current reference column, try another valid
+                 * selection.
                  */
                 continue;
               }
@@ -1403,8 +1410,8 @@ namespace IdeoBEM
             else
               {
                 /**
-                 * When the extracted column vector is not zero-valued, it is a
-                 * valid choice. Hence, return the selected column index.
+                 * When the extracted column vector is not zero-valued, it is
+                 * a valid choice. Hence, return the selected column index.
                  */
                 return next_ref_col_index;
               }
@@ -1414,17 +1421,18 @@ namespace IdeoBEM
             if (size(remaining_col_indices) == 1)
               {
                 /**
-                 * If there is only one column index left, there is no reference
-                 * column can be selected. Then return the invalid reference
-                 * column index.
+                 * If there is only one column index left, there is no
+                 * reference column can be selected. Then return the invalid
+                 * reference column index.
                  */
                 return pass_the_end_ref_col_index;
               }
             else
               {
                 /**
-                 * Because the selected column for the next step is the same as
-                 * the current reference column, try another valid selection.
+                 * Because the selected column for the next step is the same
+                 * as the current reference column, try another valid
+                 * selection.
                  */
                 continue;
               }
@@ -1517,7 +1525,8 @@ namespace IdeoBEM
     AssertDimension(rkmat.get_n(), n);
 
     /**
-     * Adjust the maximum ACA+ iteration if is larger than the matrix dimension.
+     * Adjust the maximum ACA+ iteration if is larger than the matrix
+     * dimension.
      */
     unsigned int effective_max_iter = aca_config.max_iter;
     if (effective_max_iter > std::min(m, n))
@@ -1631,8 +1640,8 @@ namespace IdeoBEM
 
     if (c == n)
       {
-        // When there is no reference column can be selected, the current matrix
-        // block is purely zero. Then return a zero rank-k matrix.
+        // When there is no reference column can be selected, the current
+        // matrix block is purely zero. Then return a zero rank-k matrix.
         rkmat.reinit(m, n, 0);
         return;
       }
@@ -1766,8 +1775,8 @@ namespace IdeoBEM
               }
 
             /**
-             * Select the column index from the maximizer of the absolute values
-             * of \f$\widetilde{v}_k\f$.
+             * Select the column index from the maximizer of the absolute
+             * values of \f$\widetilde{v}_k\f$.
              */
             std::transform(vk.begin(),
                            vk.end(),
@@ -1981,7 +1990,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -2024,8 +2034,8 @@ namespace IdeoBEM
         if (jk == c)
           {
             /**
-             * When the index of the selected column is the same as that of the
-             * reference column, reselect a reference column.
+             * When the index of the selected column is the same as that of
+             * the reference column, reselect a reference column.
              */
             c =
               random_select_ref_column(uc,
@@ -2062,7 +2072,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -2126,7 +2137,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -2148,8 +2160,8 @@ namespace IdeoBEM
    *
    * \mynote{1. At present, the simple convergence condition in this paper is
    * adopted instead of that in Bebendorf's book.
-   * 2. This version is especially for assembling the regularized hyper-singular
-   * matrix with the stabilization term.}
+   * 2. This version is especially for assembling the regularized
+   * hyper-singular matrix with the stabilization term.}
    *
    * @param rkmat
    * @param aca_config
@@ -2227,7 +2239,8 @@ namespace IdeoBEM
     AssertDimension(rkmat.get_n(), n);
 
     /**
-     * Adjust the maximum ACA+ iteration if is larger than the matrix dimension.
+     * Adjust the maximum ACA+ iteration if is larger than the matrix
+     * dimension.
      */
     unsigned int effective_max_iter = aca_config.max_iter;
     if (effective_max_iter > std::min(m, n))
@@ -2345,8 +2358,8 @@ namespace IdeoBEM
 
     if (c == n)
       {
-        // When there is no reference column can be selected, the current matrix
-        // block is purely zero. Then return a zero rank-k matrix.
+        // When there is no reference column can be selected, the current
+        // matrix block is purely zero. Then return a zero rank-k matrix.
         rkmat.reinit(m, n, 0);
         return;
       }
@@ -2482,8 +2495,8 @@ namespace IdeoBEM
               }
 
             /**
-             * Select the column index from the maximizer of the absolute values
-             * of \f$\widetilde{v}_k\f$.
+             * Select the column index from the maximizer of the absolute
+             * values of \f$\widetilde{v}_k\f$.
              */
             std::transform(vk.begin(),
                            vk.end(),
@@ -2705,7 +2718,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -2748,8 +2762,8 @@ namespace IdeoBEM
         if (jk == c)
           {
             /**
-             * When the index of the selected column is the same as that of the
-             * reference column, reselect a reference column.
+             * When the index of the selected column is the same as that of
+             * the reference column, reselect a reference column.
              */
             c =
               random_select_ref_column(uc,
@@ -2788,7 +2802,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -2852,7 +2867,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -2937,8 +2953,8 @@ namespace IdeoBEM
 
     if (c == n)
       {
-        // When there is no reference column can be selected, the current matrix
-        // block is purely zero. Then return a zero rank-k matrix.
+        // When there is no reference column can be selected, the current
+        // matrix block is purely zero. Then return a zero rank-k matrix.
         rkmat.reinit(m, n, 0);
         return;
       }
@@ -3045,8 +3061,8 @@ namespace IdeoBEM
               }
 
             /**
-             * Select the column index from the maximizer of the absolute values
-             * of \f$\widetilde{v}_k\f$.
+             * Select the column index from the maximizer of the absolute
+             * values of \f$\widetilde{v}_k\f$.
              */
             std::transform(vk.begin(),
                            vk.end(),
@@ -3161,7 +3177,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -3204,8 +3221,8 @@ namespace IdeoBEM
         if (jk == c)
           {
             /**
-             * When the index of the selected column is the same as that of the
-             * reference column, reselect a reference column.
+             * When the index of the selected column is the same as that of
+             * the reference column, reselect a reference column.
              */
             c = random_select_ref_column(uc, A, remaining_col_indices, c, n);
 
@@ -3216,7 +3233,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -3307,7 +3325,8 @@ namespace IdeoBEM
                 if (k < aca_config.max_iter)
                   {
                     /**
-                     * If the number of ACA+ iterations is less than the allowed
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
@@ -3335,9 +3354,10 @@ namespace IdeoBEM
    * @p RkMatrixType, the memory for the full or rank-k matrix in the leaf node
    * has been allocated.
    *
-   * For the near field matrix, full matrices will be built whose elements will
-   * be obtained from the evaluation of the double integral in Galerkin-BEM. For
-   * the far field admissible matrix, rank-k matrices will be built using ACA+.
+   * For the near field matrix, full matrices will be built whose elements
+   * will be obtained from the evaluation of the double integral in
+   * Galerkin-BEM. For the far field admissible matrix, rank-k matrices will
+   * be built using ACA+.
    *
    * \mynote{This is used as the work function for parallel \hmatrix
    * construction using ACA+.}
@@ -3402,11 +3422,18 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
+    /**
+     * @internal Row and column index ranges in the internal DoF numbering.
+     */
     const std::array<types::global_dof_index, 2> *row_index_range =
       leaf_mat->get_row_index_range();
     const std::array<types::global_dof_index, 2> *col_index_range =
       leaf_mat->get_col_index_range();
 
+    /**
+     * @internal Global DoF indices in the external numbering for the current
+     * matrix entry.
+     */
     types::global_dof_index i_global_dof_index;
     types::global_dof_index j_global_dof_index;
 
@@ -3499,9 +3526,9 @@ namespace IdeoBEM
                       }
                       case HMatrixSupport::lower_triangular_block: {
                         /**
-                         * When the current \hmatrix block belongs to the lower
-                         * triangular part, evaluate all of its elements as
-                         * usual.
+                         * When the current \hmatrix block belongs to the
+                         * lower triangular part, evaluate all of its elements
+                         * as usual.
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
@@ -3610,9 +3637,9 @@ namespace IdeoBEM
              * When the \hmatrix block type is rank-k matrix, when the top
              * level \hmatrix is symmetric and the flag
              * @p enable_build_symmetric_hmat is true, only those matrix blocks
-             * belong to the lower triangular part will be computed. Otherwise,
-             * the rank-k matrix block will always be computed. ACA+ will be
-             * used for building the rank-k matrix.
+             * belong to the lower triangular part will be computed.
+             * Otherwise, the rank-k matrix block will always be computed.
+             * ACA+ will be used for building the rank-k matrix.
              */
             RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
 
@@ -3622,8 +3649,8 @@ namespace IdeoBEM
                   {
                       case HMatrixSupport::lower_triangular_block: {
                         /**
-                         * Build the \hmatrix block when it belongs to the lower
-                         * triangular part using ACA+.
+                         * Build the \hmatrix block when it belongs to the
+                         * lower triangular part using ACA+.
                          */
                         aca_plus((*rkmat),
                                  aca_config,
@@ -3715,14 +3742,15 @@ namespace IdeoBEM
    * @p RkMatrixType, the memory for the full or rank-k matrix in the leaf node
    * has been allocated.
    *
-   * For the near field matrix, full matrices will be built whose elements will
-   * be obtained from the evaluation of the double integral in Galerkin-BEM. For
-   * the far field admissible matrix, rank-k matrices will be built using ACA+.
+   * For the near field matrix, full matrices will be built whose elements
+   * will be obtained from the evaluation of the double integral in
+   * Galerkin-BEM. For the far field admissible matrix, rank-k matrices will
+   * be built using ACA+.
    *
    * \mynote{1. This is used as the work function for parallel \hmatrix
    * construction using ACA+.
-   * 2. This version is especially for assembling the regularized hyper-singular
-   * matrix with the stabilization term.}
+   * 2. This version is especially for assembling the regularized
+   * hyper-singular matrix with the stabilization term.}
    *
    * @param leaf_mat
    * @param aca_config
@@ -3879,8 +3907,8 @@ namespace IdeoBEM
                                     copy_data);
 
                                 // N.B. The internal and local DoF indices are
-                                // used directly to access the result vector of
-                                // \f$M w_{\rm eq}\f$.
+                                // used directly to access the result vector
+                                // of \f$M w_{\rm eq}\f$.
                                 (*fullmat)(i, j) +=
                                   stabilization_factor *
                                   mass_vmult_weq((*row_index_range)[0] + i) *
@@ -3900,9 +3928,9 @@ namespace IdeoBEM
                       }
                       case HMatrixSupport::lower_triangular_block: {
                         /**
-                         * When the current \hmatrix block belongs to the lower
-                         * triangular part, evaluate all of its elements as
-                         * usual.
+                         * When the current \hmatrix block belongs to the
+                         * lower triangular part, evaluate all of its elements
+                         * as usual.
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
@@ -3948,8 +3976,8 @@ namespace IdeoBEM
                                     copy_data);
 
                                 // N.B. The internal and local DoF indices are
-                                // used directly to access the result vector of
-                                // \f$M w_{\rm eq}\f$.
+                                // used directly to access the result vector
+                                // of \f$M w_{\rm eq}\f$.
                                 (*fullmat)(i, j) +=
                                   stabilization_factor *
                                   mass_vmult_weq((*row_index_range)[0] + i) *
@@ -4027,9 +4055,9 @@ namespace IdeoBEM
              * When the \hmatrix block type is rank-k matrix, when the top
              * level \hmatrix is symmetric and the flag
              * @p enable_build_symmetric_hmat is true, only those matrix blocks
-             * belong to the lower triangular part will be computed. Otherwise,
-             * the rank-k matrix block will always be computed. ACA+ will be
-             * used for building the rank-k matrix.
+             * belong to the lower triangular part will be computed.
+             * Otherwise, the rank-k matrix block will always be computed.
+             * ACA+ will be used for building the rank-k matrix.
              */
             RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
 
@@ -4039,8 +4067,8 @@ namespace IdeoBEM
                   {
                       case HMatrixSupport::lower_triangular_block: {
                         /**
-                         * Build the \hmatrix block when it belongs to the lower
-                         * triangular part using ACA+.
+                         * Build the \hmatrix block when it belongs to the
+                         * lower triangular part using ACA+.
                          */
                         aca_plus((*rkmat),
                                  aca_config,
@@ -4134,15 +4162,16 @@ namespace IdeoBEM
   /**
    * Fill a single leaf node of the \hmatrix using ACA+.
    *
-   * In the mean time, the FEM mass matrix multiplied by a factor will be added
-   * to the near field matrix block.
+   * In the mean time, the FEM mass matrix multiplied by a factor will be
+   * added to the near field matrix block.
    *
    * If the matrix type is @p RkMatrixType, the memory for the full or rank-k
    * matrix in the leaf node has been allocated.
    *
-   * For the near field matrix, full matrices will be built whose elements will
-   * be obtained from the evaluation of the double integral in Galerkin-BEM. For
-   * the far field admissible matrix, rank-k matrices will be built using ACA+.
+   * For the near field matrix, full matrices will be built whose elements
+   * will be obtained from the evaluation of the double integral in
+   * Galerkin-BEM. For the far field admissible matrix, rank-k matrices will
+   * be built using ACA+.
    *
    * \mynote{This is used as the work function for parallel \hmatrix
    * construction using ACA+.}
@@ -4309,9 +4338,9 @@ namespace IdeoBEM
                       }
                       case HMatrixSupport::lower_triangular_block: {
                         /**
-                         * When the current \hmatrix block belongs to the lower
-                         * triangular part, evaluate all of its elements as
-                         * usual.
+                         * When the current \hmatrix block belongs to the
+                         * lower triangular part, evaluate all of its elements
+                         * as usual.
                          */
                         for (size_t i = 0; i < fullmat->m(); i++)
                           {
@@ -4425,8 +4454,8 @@ namespace IdeoBEM
                   {
                       case HMatrixSupport::lower_triangular_block: {
                         /**
-                         * Build the \hmatrix block when it belongs to the lower
-                         * triangular part using ACA+.
+                         * Build the \hmatrix block when it belongs to the
+                         * lower triangular part using ACA+.
                          */
                         aca_plus((*rkmat),
                                  aca_config,
@@ -4572,7 +4601,7 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
-    const int current_thread_id = tbb::task_arena::current_thread_index();
+    const std::thread::id current_thread_id = std::this_thread::get_id();
     std::cerr << "WorkStream " << current_thread_id << " starts..."
               << std::endl;
 
@@ -4653,8 +4682,8 @@ namespace IdeoBEM
    * Fill the leaf nodes in a subrange of an \hmatrix using ACA+.
    *
    * \mynote{1. This function is to be used for TBB parallelization.
-   * 2. This version is especially for assembling the regularized hyper-singular
-   * matrix with the stabilization term.}
+   * 2. This version is especially for assembling the regularized
+   * hyper-singular matrix with the stabilization term.}
    *
    * @param range
    * @param aca_config
@@ -4715,7 +4744,7 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
-    const int current_thread_id = tbb::task_arena::current_thread_index();
+    const std::thread::id current_thread_id = std::this_thread::get_id();
     std::cerr << "WorkStream " << current_thread_id << " starts..."
               << std::endl;
 
@@ -4797,8 +4826,8 @@ namespace IdeoBEM
   /**
    * Fill the leaf nodes in a subrange of an \hmatrix using ACA+.
    *
-   * In the mean time, the FEM mass matrix multiplied by a factor will be added
-   * to the near field matrix block.
+   * In the mean time, the FEM mass matrix multiplied by a factor will be
+   * added to the near field matrix block.
    *
    * \mynote{This function is to be used for TBB parallelization.}
    *
@@ -4859,7 +4888,7 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
-    const int current_thread_id = tbb::task_arena::current_thread_index();
+    const std::thread::id current_thread_id = std::this_thread::get_id();
     std::cerr << "WorkStream " << current_thread_id << " starts..."
               << std::endl;
 
@@ -4948,16 +4977,152 @@ namespace IdeoBEM
 
 
   /**
+   * Add the regularization matrix for the bilinear form of the hyper-singular
+   * kernel to the range of near field matrices. The regularization matrix is
+   * \f$\alpha a a^T\f$, where \f$a = M w_{\rm eq}\f$ as a column vector is the
+   * multiplication of FEM mass matrix and the natural density.
+   *
+   * @tparam spacedim
+   * @tparam RangeNumberType
+   * @param range
+   * @param mass_vmult_weq
+   * @param stabilization_factor
+   * @param enable_build_symmetric_hmat
+   */
+  template <int spacedim, typename RangeNumberType = double>
+  void
+  regularize_near_field_hmatrices_for_hypersingular_kernel(
+    const tbb::blocked_range<
+      typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
+                                  &range,
+    const Vector<RangeNumberType> &mass_vmult_weq,
+    const RangeNumberType          stabilization_factor,
+    const bool                     enable_build_symmetric_hmat = true)
+  {
+    for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
+           iter = range.begin();
+         iter != range.end();
+         iter++)
+      {
+        HMatrix<spacedim, RangeNumberType> *leaf_mat = (*iter);
+        Assert(leaf_mat->get_type() == HMatrixType::FullMatrixType,
+               ExcInternalError());
+
+        const std::array<types::global_dof_index, 2> *row_index_range =
+          leaf_mat->get_row_index_range();
+        const std::array<types::global_dof_index, 2> *col_index_range =
+          leaf_mat->get_col_index_range();
+
+        LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+          leaf_mat->get_fullmatrix();
+
+        if (enable_build_symmetric_hmat)
+          {
+            /**
+             * @internal When the leaf \hmatrix node is symmetric, different
+             * operations will be adopted for different block types.
+             */
+            switch (leaf_mat->get_block_type())
+              {
+                  case HMatrixSupport::diagonal_block: {
+                    /**
+                     * @internal Only evaluate the diagonal and lower triangular
+                     * elements in the full matrix.
+                     */
+                    Assert(leaf_mat->get_property() ==
+                             HMatrixSupport::symmetric,
+                           ExcInvalidHMatrixProperty(leaf_mat->get_property()));
+                    Assert(fullmat->get_property() == LAPACKSupport::symmetric,
+                           ExcInvalidLAPACKFullMatrixProperty(
+                             fullmat->get_property()));
+
+                    for (size_t i = 0; i < fullmat->m(); i++)
+                      {
+                        for (size_t j = 0; j <= i; j++)
+                          {
+                            /**
+                             * @internal The vector \f$a = M w_{\rm eq}\f$ is
+                             * accessed using the global DoF indices in the
+                             * internal numbering.
+                             */
+                            (*fullmat)(i, j) +=
+                              stabilization_factor *
+                              mass_vmult_weq((*row_index_range)[0] + i) *
+                              mass_vmult_weq((*col_index_range)[0] + j);
+                          }
+                      }
+
+                    break;
+                  }
+                  case HMatrixSupport::upper_triangular_block: {
+                    /**
+                     * @internal Do not build \hmatrix block belonging to the
+                     * upper triangular part.
+                     */
+
+                    break;
+                  }
+                  case HMatrixSupport::lower_triangular_block: {
+                    /**
+                     * @internal When the current \hmatrix block belongs to the
+                     * lower triangular part, evaluate all of its elements
+                     * as usual.
+                     */
+                    for (size_t i = 0; i < fullmat->m(); i++)
+                      {
+                        for (size_t j = 0; j < fullmat->n(); j++)
+                          {
+                            (*fullmat)(i, j) +=
+                              stabilization_factor *
+                              mass_vmult_weq((*row_index_range)[0] + i) *
+                              mass_vmult_weq((*col_index_range)[0] + j);
+                          }
+                      }
+
+                    break;
+                  }
+                  case HMatrixSupport::undefined_block: {
+                    Assert(false,
+                           ExcInvalidHMatrixBlockType(
+                             leaf_mat->get_block_type()));
+
+                    break;
+                  }
+              }
+          }
+        else
+          {
+            /**
+             * @internal All matrix entries should be computed without
+             * consideration of the symmetry of the hypersingular kernel.
+             */
+            for (size_t i = 0; i < fullmat->m(); i++)
+              {
+                for (size_t j = 0; j < fullmat->n(); j++)
+                  {
+                    (*fullmat)(i, j) +=
+                      stabilization_factor *
+                      mass_vmult_weq((*row_index_range)[0] + i) *
+                      mass_vmult_weq((*col_index_range)[0] + j);
+                  }
+              }
+          }
+      }
+  }
+
+
+  /**
    * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
    * structure of the \hmatrix has been built with respect to a block cluster
    * tree and the memory for the matrices in the leaf set has been allocated.
    *
    * For the near field matrices in the leaf set, full matrices will be built
-   * whose elements will be obtained from the evaluation of the double integral
-   * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
-   * rank-k matrices will be built using ACA+.
+   * whose elements will be obtained from the evaluation of the double
+   * integral in Galerkin-BEM. For the far field admissible matrices in the
+   * leaf set, rank-k matrices will be built using ACA+.
    *
-   * This version serially processes each \hmatnode in the leaf set one-by-one.
+   * This version serially processes each \hmatnode in the leaf set
+   * one-by-one.
    *
    * @param hmat
    * @param aca_config
@@ -5264,12 +5429,17 @@ namespace IdeoBEM
    * tree and the memory for the matrices in the leaf set has been allocated.
    *
    * For the near field matrices in the leaf set, full matrices will be built
-   * whose elements will be obtained from the evaluation of the double integral
-   * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
-   * rank-k matrices will be built using ACA+.
+   * whose elements will be obtained from the evaluation of the double
+   * integral in Galerkin-BEM. For the far field admissible matrices in the
+   * leaf set, rank-k matrices will be built using ACA+.
    *
-   * \mynote{In this version, the computation of the list of \hmatnodes in the
-   * leaf set is parallelized.}
+   * \mynote{For the near field leaf set, CUDA parallelization is distributed
+   * over each pair of cells associated with a full matrix entry. The
+   * parallelization is realized in a producer-consumer model.
+   *
+   * For the far field leaf set, the first level GPU parallelization is
+   * distributed over each \hmat node in the set and the second level GPU
+   * parallelization is distributed over each quadrature point.}
    *
    * @param thread_num
    * @param hmat
@@ -5325,10 +5495,9 @@ namespace IdeoBEM
     const bool                            enable_build_symmetric_hmat = false)
   {
     /**
-     * Precalculate data tables for shape values at quadrature points.
+     * Precalculate shape function values and their gradient values
+     * at each quadrature point.
      *
-     * \mynote{Precalculate shape function values and their gradient values
-     * at each quadrature point. N.B.
      * 1. The data tables for shape function values and their gradient
      * values should be calculated for both function space on \f$K_x\f$ and
      * function space on \f$K_y\f$.
@@ -5360,94 +5529,348 @@ namespace IdeoBEM
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
-    std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
-      hmat.get_leaf_set();
     /**
-     * Estimate the grain size.
+     * @internal First stage: fill near field \hmatrix nodes using the
+     * parallel producer-consumer model.
      */
-    unsigned int grain_size = leaf_set.size() / thread_num;
-    if (grain_size == 0)
+    const unsigned int block_size          = 256;
+    const unsigned int block_num           = 8;
+    const unsigned int capacity            = block_size * block_num;
+    unsigned int       producer_thread_num = 2;
+
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_same_panel;
+    ring_buffer_for_same_panel.allocate(capacity,
+                                        CellNeighboringType::SamePanel,
+                                        bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_common_edge;
+    ring_buffer_for_common_edge.allocate(capacity,
+                                         CellNeighboringType::CommonEdge,
+                                         bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_common_vertex;
+    ring_buffer_for_common_vertex.allocate(capacity,
+                                           CellNeighboringType::CommonVertex,
+                                           bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_regular;
+    ring_buffer_for_regular.allocate(capacity,
+                                     CellNeighboringType::Regular,
+                                     bem_values);
+
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_same_panel;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_common_edge;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_common_vertex;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_regular;
+
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
+      hmat.get_near_field_leaf_set();
+    const unsigned int near_field_set_size = near_field_leaf_set.size();
+    if (near_field_set_size < producer_thread_num)
       {
-        grain_size = 1;
+        producer_thread_num = near_field_set_size;
+      }
+
+    std::vector<std::thread> producers;
+    producers.reserve(producer_thread_num);
+
+    const unsigned int number_of_hmat_nodes_per_thread =
+      std::ceil(static_cast<double>(near_field_set_size) /
+                static_cast<double>(producer_thread_num));
+
+    /**
+     * @internal Start the producer threads.
+     */
+    for (unsigned int i = 0; i < producer_thread_num; i++)
+      {
+        producers.emplace_back(
+          static_cast<void (*)(
+            const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
+            const unsigned int,
+            const unsigned int,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            const std::vector<std::vector<unsigned int>> &,
+            const std::vector<std::vector<unsigned int>> &,
+            const BEMValues<dim, spacedim, RangeNumberType> &,
+            const IdeoBEM::CUDAWrappers::
+              CUDABEMValues<dim, spacedim, RangeNumberType> &,
+            const DoFHandler<dim, spacedim> &,
+            const DoFHandler<dim, spacedim> &,
+            const std::vector<types::global_dof_index> *,
+            const std::vector<types::global_dof_index> *,
+            const std::vector<types::global_dof_index> &,
+            const std::vector<types::global_dof_index> &,
+            const MappingQGenericExt<dim, spacedim> &,
+            const MappingQGenericExt<dim, spacedim> &,
+            const std::map<
+              typename Triangulation<dim, spacedim>::cell_iterator,
+              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+            const std::map<
+              typename Triangulation<dim, spacedim>::cell_iterator,
+              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+            const DetectCellNeighboringTypeMethod,
+            const bool,
+            const bool)>(
+            IdeoBEM::CUDAWrappers::
+              sauter_quadrature_for_near_field_matrix_entries_producer),
+          std::cref(hmat.get_near_field_leaf_set()),
+          i * number_of_hmat_nodes_per_thread,
+          (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
+            near_field_set_size :
+            (i + 1) * number_of_hmat_nodes_per_thread,
+          std::ref(ring_buffer_for_same_panel),
+          std::ref(ring_buffer_for_common_edge),
+          std::ref(ring_buffer_for_common_vertex),
+          std::ref(ring_buffer_for_regular),
+          std::ref(mutex_for_same_panel),
+          std::ref(mutex_for_common_edge),
+          std::ref(mutex_for_common_vertex),
+          std::ref(mutex_for_regular),
+          std::cref(kx_dof_to_cell_topo),
+          std::cref(ky_dof_to_cell_topo),
+          std::cref(bem_values),
+          std::cref(bem_values_gpu),
+          std::cref(kx_dof_handler),
+          std::cref(ky_dof_handler),
+          kx_map_from_local_to_full_dof_indices,
+          ky_map_from_local_to_full_dof_indices,
+          std::cref(kx_dof_i2e_numbering),
+          std::cref(ky_dof_i2e_numbering),
+          std::cref(kx_mapping),
+          std::cref(ky_mapping),
+          std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+          std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+          method_for_cell_neighboring_type,
+          kernel.is_symmetric(),
+          enable_build_symmetric_hmat);
       }
 
     /**
-     * \mynote{N.B. There are two places where argument passing for
-     * parallelization is involved: 1. passing to @p std::bind; 2. passing to
-     * the working function.
-     *
-     * Local variables captured by @p std::bind are by default pass-by-value.
-     * Hence, for capturing large objects, pass-by-reference should be adopted
-     * instead of pass-by-value, which is realized by adding the prefix
-     * @p std::cref for const reference or @p std::ref for mutable reference.
-     *
-     * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
-     * captured by @p std::bind via pass-by-value, then for each working thread,
-     * a copy of them will automatically be made.
-     *
-     * Meanwhile, in a same working thread, the working function will be
-     * called for each object specified by the index or iterator in
-     * the blocked range, during which @p PairCellWiseScratchData and
-     * @p PairCellWisePerTaskData can be reused. Therefore, they should be
-     * passed into the working function by non-const reference.
-     *
-     * For other variables to be captured like @p bem_values,
-     * @p kx/ky_dof_handler, * @p kx/ky_mapping and
-     * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
-     * modified at all, they are captured by @p std::bind via const reference
-     * and then passed to the working function by const reference.}
+     * @internal Start the consumer threads.
      */
-    parallel::internal::parallel_for(
-      leaf_set.begin(),
-      leaf_set.end(),
-      std::bind(static_cast<void (*)(
-                  const tbb::blocked_range<typename std::vector<
-                    HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-                  const ACAConfig &,
-                  const KernelFunctionType<spacedim, RangeNumberType> &,
-                  const RangeNumberType,
-                  const std::vector<std::vector<unsigned int>> &,
-                  const std::vector<std::vector<unsigned int>> &,
-                  const BEMValues<dim, spacedim, RangeNumberType> &,
-                  const IdeoBEM::CUDAWrappers::
-                    CUDABEMValues<dim, spacedim, RangeNumberType> &,
-                  const DoFHandler<dim, spacedim> &,
-                  const DoFHandler<dim, spacedim> &,
-                  const std::vector<types::global_dof_index> *,
-                  const std::vector<types::global_dof_index> *,
-                  const std::vector<types::global_dof_index> &,
-                  const std::vector<types::global_dof_index> &,
-                  const MappingQGenericExt<dim, spacedim> &,
-                  const MappingQGenericExt<dim, spacedim> &,
-                  const std::map<
-                    typename Triangulation<dim, spacedim>::cell_iterator,
-                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-                  const std::map<
-                    typename Triangulation<dim, spacedim>::cell_iterator,
-                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-                  const DetectCellNeighboringTypeMethod,
-                  const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
-                std::placeholders::_1,
-                std::cref(aca_config),
-                std::cref(kernel),
-                kernel_factor,
-                std::cref(kx_dof_to_cell_topo),
-                std::cref(ky_dof_to_cell_topo),
-                std::cref(bem_values),
-                std::cref(bem_values_gpu),
-                std::cref(kx_dof_handler),
-                std::cref(ky_dof_handler),
-                kx_map_from_local_to_full_dof_indices,
-                ky_map_from_local_to_full_dof_indices,
-                std::cref(kx_dof_i2e_numbering),
-                std::cref(ky_dof_i2e_numbering),
-                std::cref(kx_mapping),
-                std::cref(ky_mapping),
-                std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-                std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-                method_for_cell_neighboring_type,
-                enable_build_symmetric_hmat),
-      grain_size);
+    std::thread same_panel_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_same_panel),
+      std::ref(mutex_for_same_panel),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread common_edge_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_common_edge),
+      std::ref(mutex_for_common_edge),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread common_vertex_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_common_vertex),
+      std::ref(mutex_for_common_vertex),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread regular_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_regular),
+      std::ref(mutex_for_regular),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    /**
+     * @internal Wait for all producer and consumer threads to exit.
+     */
+    for (auto &producer : producers)
+      {
+        producer.join();
+      }
+
+    same_panel_consumer.join();
+    common_edge_consumer.join();
+    common_vertex_consumer.join();
+    regular_consumer.join();
+
+    /**
+     * @internal Release all ring buffers.
+     */
+    ring_buffer_for_same_panel.release();
+    ring_buffer_for_common_edge.release();
+    ring_buffer_for_common_vertex.release();
+    ring_buffer_for_regular.release();
+
+    /**
+     * @internal Second stage: fill far field \hmatrix nodes by applying the
+     * parallelization only to applying Sauter quadrature.
+     */
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &far_field_leaf_set =
+      hmat.get_far_field_leaf_set();
+
+    if (far_field_leaf_set.size() > 0)
+      {
+        /**
+         * Estimate the grain size.
+         */
+        unsigned int grain_size = far_field_leaf_set.size() / thread_num;
+        if (grain_size == 0)
+          {
+            grain_size = 1;
+          }
+
+        /**
+         * \mynote{N.B. There are two places where argument passing for
+         * parallelization is involved: 1. passing to @p std::bind; 2. passing to
+         * the working function.
+         *
+         * Local variables captured by @p std::bind are by default pass-by-value.
+         * Hence, for capturing large objects, pass-by-reference should be
+         * adopted instead of pass-by-value, which is realized by adding the
+         * prefix
+         * @p std::cref for const reference or @p std::ref for mutable reference.
+         *
+         * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
+         * captured by @p std::bind via pass-by-value, then for each working thread,
+         * a copy of them will automatically be made.
+         *
+         * Meanwhile, in a same working thread, the working function will be
+         * called for each object specified by the index or iterator in
+         * the blocked range, during which @p PairCellWiseScratchData and
+         * @p PairCellWisePerTaskData can be reused. Therefore, they should be
+         * passed into the working function by non-const reference.
+         *
+         * For other variables to be captured like @p bem_values,
+         * @p kx/ky_dof_handler, * @p kx/ky_mapping and
+         * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+         * modified at all, they are captured by @p std::bind via const reference
+         * and then passed to the working function by const reference.}
+         */
+        parallel::internal::parallel_for(
+          far_field_leaf_set.begin(),
+          far_field_leaf_set.end(),
+          std::bind(
+            static_cast<void (*)(
+              const tbb::blocked_range<typename std::vector<
+                HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+              const ACAConfig &,
+              const KernelFunctionType<spacedim, RangeNumberType> &,
+              const RangeNumberType,
+              const std::vector<std::vector<unsigned int>> &,
+              const std::vector<std::vector<unsigned int>> &,
+              const BEMValues<dim, spacedim, RangeNumberType> &,
+              const IdeoBEM::CUDAWrappers::
+                CUDABEMValues<dim, spacedim, RangeNumberType> &,
+              const DoFHandler<dim, spacedim> &,
+              const DoFHandler<dim, spacedim> &,
+              const std::vector<types::global_dof_index> *,
+              const std::vector<types::global_dof_index> *,
+              const std::vector<types::global_dof_index> &,
+              const std::vector<types::global_dof_index> &,
+              const MappingQGenericExt<dim, spacedim> &,
+              const MappingQGenericExt<dim, spacedim> &,
+              const std::map<
+                typename Triangulation<dim, spacedim>::cell_iterator,
+                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+              const std::map<
+                typename Triangulation<dim, spacedim>::cell_iterator,
+                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+              const DetectCellNeighboringTypeMethod,
+              const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
+            std::placeholders::_1,
+            std::cref(aca_config),
+            std::cref(kernel),
+            kernel_factor,
+            std::cref(kx_dof_to_cell_topo),
+            std::cref(ky_dof_to_cell_topo),
+            std::cref(bem_values),
+            std::cref(bem_values_gpu),
+            std::cref(kx_dof_handler),
+            std::cref(ky_dof_handler),
+            kx_map_from_local_to_full_dof_indices,
+            ky_map_from_local_to_full_dof_indices,
+            std::cref(kx_dof_i2e_numbering),
+            std::cref(ky_dof_i2e_numbering),
+            std::cref(kx_mapping),
+            std::cref(ky_mapping),
+            std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+            std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+            method_for_cell_neighboring_type,
+            enable_build_symmetric_hmat),
+          grain_size);
+      }
 
     /**
      * Release BEM values on the GPU device.
@@ -5462,14 +5885,20 @@ namespace IdeoBEM
    * tree and the memory for the matrices in the leaf set has been allocated.
    *
    * For the near field matrices in the leaf set, full matrices will be built
-   * whose elements will be obtained from the evaluation of the double integral
-   * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
-   * rank-k matrices will be built using ACA+.
+   * whose elements will be obtained from the evaluation of the double
+   * integral in Galerkin-BEM. For the far field admissible matrices in the
+   * leaf set, rank-k matrices will be built using ACA+.
    *
-   * \mynote{1. In this version, the computation of the list of \hmatnodes in
-   * the leaf set is parallelized.
-   * 2. This version is especially for assembling the regularized hyper-singular
-   * matrix with the stabilization term.}
+   * This version is used for assembling the regularized hyper-singular matrix
+   * with the stabilization term.
+   *
+   * \mynote{For the near field leaf set, CUDA parallelization is distributed
+   * over each pair of cells associated with a full matrix entry. The
+   * parallelization is realized in a producer-consumer model.
+   *
+   * For the far field leaf set, the first level GPU parallelization is
+   * distributed over each \hmat node in the set and the second level GPU
+   * parallelization is distributed over each quadrature point.}
    *
    * @param thread_num
    * @param hmat
@@ -5568,98 +5997,376 @@ namespace IdeoBEM
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
-    std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
-      hmat.get_leaf_set();
     /**
-     * Estimate the grain size.
+     * @internal First stage: fill near field \hmatrix nodes using the
+     * parallel producer-consumer model.
      */
-    unsigned int grain_size = leaf_set.size() / thread_num;
+    const unsigned int block_size          = 256;
+    const unsigned int block_num           = 8;
+    const unsigned int capacity            = block_size * block_num;
+    unsigned int       producer_thread_num = 2;
+
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_same_panel;
+    ring_buffer_for_same_panel.allocate(capacity,
+                                        CellNeighboringType::SamePanel,
+                                        bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_common_edge;
+    ring_buffer_for_common_edge.allocate(capacity,
+                                         CellNeighboringType::CommonEdge,
+                                         bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_common_vertex;
+    ring_buffer_for_common_vertex.allocate(capacity,
+                                           CellNeighboringType::CommonVertex,
+                                           bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_regular;
+    ring_buffer_for_regular.allocate(capacity,
+                                     CellNeighboringType::Regular,
+                                     bem_values);
+
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_same_panel;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_common_edge;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_common_vertex;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_regular;
+
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
+      hmat.get_near_field_leaf_set();
+    const unsigned int near_field_set_size = near_field_leaf_set.size();
+    if (near_field_set_size < producer_thread_num)
+      {
+        producer_thread_num = near_field_set_size;
+      }
+
+    std::vector<std::thread> producers;
+    producers.reserve(producer_thread_num);
+
+    const unsigned int number_of_hmat_nodes_per_thread =
+      std::ceil(static_cast<double>(near_field_set_size) /
+                static_cast<double>(producer_thread_num));
+
+    /**
+     * @internal Start the producer threads.
+     */
+    for (unsigned int i = 0; i < producer_thread_num; i++)
+      {
+        producers.emplace_back(
+          static_cast<void (*)(
+            const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
+            const unsigned int,
+            const unsigned int,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            const std::vector<std::vector<unsigned int>> &,
+            const std::vector<std::vector<unsigned int>> &,
+            const BEMValues<dim, spacedim, RangeNumberType> &,
+            const IdeoBEM::CUDAWrappers::
+              CUDABEMValues<dim, spacedim, RangeNumberType> &,
+            const DoFHandler<dim, spacedim> &,
+            const DoFHandler<dim, spacedim> &,
+            const std::vector<types::global_dof_index> *,
+            const std::vector<types::global_dof_index> *,
+            const std::vector<types::global_dof_index> &,
+            const std::vector<types::global_dof_index> &,
+            const MappingQGenericExt<dim, spacedim> &,
+            const MappingQGenericExt<dim, spacedim> &,
+            const std::map<
+              typename Triangulation<dim, spacedim>::cell_iterator,
+              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+            const std::map<
+              typename Triangulation<dim, spacedim>::cell_iterator,
+              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+            const DetectCellNeighboringTypeMethod,
+            const bool,
+            const bool)>(
+            IdeoBEM::CUDAWrappers::
+              sauter_quadrature_for_near_field_matrix_entries_producer),
+          std::cref(hmat.get_near_field_leaf_set()),
+          i * number_of_hmat_nodes_per_thread,
+          (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
+            near_field_set_size :
+            (i + 1) * number_of_hmat_nodes_per_thread,
+          std::ref(ring_buffer_for_same_panel),
+          std::ref(ring_buffer_for_common_edge),
+          std::ref(ring_buffer_for_common_vertex),
+          std::ref(ring_buffer_for_regular),
+          std::ref(mutex_for_same_panel),
+          std::ref(mutex_for_common_edge),
+          std::ref(mutex_for_common_vertex),
+          std::ref(mutex_for_regular),
+          std::cref(kx_dof_to_cell_topo),
+          std::cref(ky_dof_to_cell_topo),
+          std::cref(bem_values),
+          std::cref(bem_values_gpu),
+          std::cref(kx_dof_handler),
+          std::cref(ky_dof_handler),
+          kx_map_from_local_to_full_dof_indices,
+          ky_map_from_local_to_full_dof_indices,
+          std::cref(kx_dof_i2e_numbering),
+          std::cref(ky_dof_i2e_numbering),
+          std::cref(kx_mapping),
+          std::cref(ky_mapping),
+          std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+          std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+          method_for_cell_neighboring_type,
+          kernel.is_symmetric(),
+          enable_build_symmetric_hmat);
+      }
+
+    /**
+     * @internal Start the consumer threads.
+     */
+    std::thread same_panel_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_same_panel),
+      std::ref(mutex_for_same_panel),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread common_edge_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_common_edge),
+      std::ref(mutex_for_common_edge),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread common_vertex_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_common_vertex),
+      std::ref(mutex_for_common_vertex),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread regular_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_regular),
+      std::ref(mutex_for_regular),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    /**
+     * @internal Wait for all producer and consumer threads to exit.
+     */
+    for (auto &producer : producers)
+      {
+        producer.join();
+      }
+
+    same_panel_consumer.join();
+    common_edge_consumer.join();
+    common_vertex_consumer.join();
+    regular_consumer.join();
+
+    /**
+     * @internal Release all ring buffers.
+     */
+    ring_buffer_for_same_panel.release();
+    ring_buffer_for_common_edge.release();
+    ring_buffer_for_common_vertex.release();
+    ring_buffer_for_regular.release();
+
+    /**
+     * @internal Perform regularization to the kernel.
+     */
+    unsigned int grain_size = near_field_leaf_set.size() / thread_num;
     if (grain_size == 0)
       {
         grain_size = 1;
       }
 
-    /**
-     * \mynote{N.B. There are two places where argument passing for
-     * parallelization is involved: 1. passing to @p std::bind; 2. passing to
-     * the working function.
-     *
-     * Local variables captured by @p std::bind are by default pass-by-value.
-     * Hence, for capturing large objects, pass-by-reference should be adopted
-     * instead of pass-by-value, which is realized by adding the prefix
-     * @p std::cref for const reference or @p std::ref for mutable reference.
-     *
-     * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
-     * captured by @p std::bind via pass-by-value, then for each working thread,
-     * a copy of them will automatically be made.
-     *
-     * Meanwhile, in a same working thread, the working function will be
-     * called for each object specified by the index or iterator in
-     * the blocked range, during which @p PairCellWiseScratchData and
-     * @p PairCellWisePerTaskData can be reused. Therefore, they should be
-     * passed into the working function by non-const reference.
-     *
-     * For other variables to be captured like @p bem_values,
-     * @p kx/ky_dof_handler, * @p kx/ky_mapping and
-     * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
-     * modified at all, they are captured by @p std::bind via const reference
-     * and then passed to the working function by const reference.}
-     */
     parallel::internal::parallel_for(
-      leaf_set.begin(),
-      leaf_set.end(),
-      std::bind(static_cast<void (*)(
-                  const tbb::blocked_range<typename std::vector<
-                    HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-                  const ACAConfig &,
-                  const KernelFunctionType<spacedim, RangeNumberType> &,
-                  const RangeNumberType,
-                  const Vector<RangeNumberType> &,
-                  const RangeNumberType,
-                  const std::vector<std::vector<unsigned int>> &,
-                  const std::vector<std::vector<unsigned int>> &,
-                  const BEMValues<dim, spacedim, RangeNumberType> &,
-                  const IdeoBEM::CUDAWrappers::
-                    CUDABEMValues<dim, spacedim, RangeNumberType> &,
-                  const DoFHandler<dim, spacedim> &,
-                  const DoFHandler<dim, spacedim> &,
-                  const std::vector<types::global_dof_index> *,
-                  const std::vector<types::global_dof_index> *,
-                  const std::vector<types::global_dof_index> &,
-                  const std::vector<types::global_dof_index> &,
-                  const MappingQGenericExt<dim, spacedim> &,
-                  const MappingQGenericExt<dim, spacedim> &,
-                  const std::map<
-                    typename Triangulation<dim, spacedim>::cell_iterator,
-                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-                  const std::map<
-                    typename Triangulation<dim, spacedim>::cell_iterator,
-                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-                  const DetectCellNeighboringTypeMethod,
-                  const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
+      near_field_leaf_set.begin(),
+      near_field_leaf_set.end(),
+      std::bind(static_cast<
+                  void (*)(const tbb::blocked_range<typename std::vector<
+                             HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+                           const Vector<RangeNumberType> &,
+                           const RangeNumberType,
+                           const bool)>(
+                  regularize_near_field_hmatrices_for_hypersingular_kernel<
+                    spacedim,
+                    RangeNumberType>),
                 std::placeholders::_1,
-                std::cref(aca_config),
-                std::cref(kernel),
-                kernel_factor,
                 std::cref(mass_vmult_weq),
                 stabilization_factor,
-                std::cref(kx_dof_to_cell_topo),
-                std::cref(ky_dof_to_cell_topo),
-                std::cref(bem_values),
-                std::cref(bem_values_gpu),
-                std::cref(kx_dof_handler),
-                std::cref(ky_dof_handler),
-                kx_map_from_local_to_full_dof_indices,
-                ky_map_from_local_to_full_dof_indices,
-                std::cref(kx_dof_i2e_numbering),
-                std::cref(ky_dof_i2e_numbering),
-                std::cref(kx_mapping),
-                std::cref(ky_mapping),
-                std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-                std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-                method_for_cell_neighboring_type,
                 enable_build_symmetric_hmat),
       grain_size);
+
+    /**
+     * @internal Second stage: fill far field \hmatrix nodes by applying the
+     * parallelization only to applying Sauter quadrature.
+     */
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &far_field_leaf_set =
+      hmat.get_far_field_leaf_set();
+
+    if (far_field_leaf_set.size() > 0)
+      {
+        unsigned int grain_size = far_field_leaf_set.size() / thread_num;
+        if (grain_size == 0)
+          {
+            grain_size = 1;
+          }
+
+        /**
+         * \mynote{N.B. There are two places where argument passing for
+         * parallelization is involved: 1. passing to @p std::bind; 2. passing to
+         * the working function.
+         *
+         * Local variables captured by @p std::bind are by default pass-by-value.
+         * Hence, for capturing large objects, pass-by-reference should be
+         * adopted instead of pass-by-value, which is realized by adding the
+         * prefix
+         * @p std::cref for const reference or @p std::ref for mutable reference.
+         *
+         * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
+         * captured by @p std::bind via pass-by-value, then for each working thread,
+         * a copy of them will automatically be made.
+         *
+         * Meanwhile, in a same working thread, the working function will be
+         * called for each object specified by the index or iterator in
+         * the blocked range, during which @p PairCellWiseScratchData and
+         * @p PairCellWisePerTaskData can be reused. Therefore, they should be
+         * passed into the working function by non-const reference.
+         *
+         * For other variables to be captured like @p bem_values,
+         * @p kx/ky_dof_handler, * @p kx/ky_mapping and
+         * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+         * modified at all, they are captured by @p std::bind via const reference
+         * and then passed to the working function by const reference.}
+         */
+        parallel::internal::parallel_for(
+          far_field_leaf_set.begin(),
+          far_field_leaf_set.end(),
+          std::bind(
+            static_cast<void (*)(
+              const tbb::blocked_range<typename std::vector<
+                HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+              const ACAConfig &,
+              const KernelFunctionType<spacedim, RangeNumberType> &,
+              const RangeNumberType,
+              const Vector<RangeNumberType> &,
+              const RangeNumberType,
+              const std::vector<std::vector<unsigned int>> &,
+              const std::vector<std::vector<unsigned int>> &,
+              const BEMValues<dim, spacedim, RangeNumberType> &,
+              const IdeoBEM::CUDAWrappers::
+                CUDABEMValues<dim, spacedim, RangeNumberType> &,
+              const DoFHandler<dim, spacedim> &,
+              const DoFHandler<dim, spacedim> &,
+              const std::vector<types::global_dof_index> *,
+              const std::vector<types::global_dof_index> *,
+              const std::vector<types::global_dof_index> &,
+              const std::vector<types::global_dof_index> &,
+              const MappingQGenericExt<dim, spacedim> &,
+              const MappingQGenericExt<dim, spacedim> &,
+              const std::map<
+                typename Triangulation<dim, spacedim>::cell_iterator,
+                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+              const std::map<
+                typename Triangulation<dim, spacedim>::cell_iterator,
+                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+              const DetectCellNeighboringTypeMethod,
+              const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
+            std::placeholders::_1,
+            std::cref(aca_config),
+            std::cref(kernel),
+            kernel_factor,
+            std::cref(mass_vmult_weq),
+            stabilization_factor,
+            std::cref(kx_dof_to_cell_topo),
+            std::cref(ky_dof_to_cell_topo),
+            std::cref(bem_values),
+            std::cref(bem_values_gpu),
+            std::cref(kx_dof_handler),
+            std::cref(ky_dof_handler),
+            kx_map_from_local_to_full_dof_indices,
+            ky_map_from_local_to_full_dof_indices,
+            std::cref(kx_dof_i2e_numbering),
+            std::cref(ky_dof_i2e_numbering),
+            std::cref(kx_mapping),
+            std::cref(ky_mapping),
+            std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+            std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+            method_for_cell_neighboring_type,
+            enable_build_symmetric_hmat),
+          grain_size);
+      }
 
     /**
      * Release BEM values on the GPU device.
@@ -5673,13 +6380,21 @@ namespace IdeoBEM
    * structure of the \hmatrix has been built with respect to a block cluster
    * tree and the memory for the matrices in the leaf set has been allocated.
    *
-   * In the mean time, the FEM mass matrix multiplied by a factor will be added
-   * to the near field matrix block.
+   * In the mean time, the FEM mass matrix multiplied by a factor will be
+   * added to the near field matrix block.
    *
    * For the near field matrices in the leaf set, full matrices will be built
-   * whose elements will be obtained from the evaluation of the double integral
-   * in Galerkin-BEM. For the far field admissible matrices in the leaf set,
-   * rank-k matrices will be built using ACA+.
+   * whose elements will be obtained from the evaluation of the double
+   * integral in Galerkin-BEM. For the far field admissible matrices in the
+   * leaf set, rank-k matrices will be built using ACA+.
+   *
+   * \mynote{For the near field leaf set, CUDA parallelization is distributed
+   * over each pair of cells associated with a full matrix entry. The
+   * parallelization is realized in a producer-consumer model.
+   *
+   * For the far field leaf set, the first level GPU parallelization is
+   * distributed over each \hmat node in the set and the second level GPU
+   * parallelization is distributed over each quadrature point.}
    *
    * @param thread_num
    * @param hmat
@@ -5774,98 +6489,356 @@ namespace IdeoBEM
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
-    std::vector<HMatrix<spacedim, RangeNumberType> *> &leaf_set =
-      hmat.get_leaf_set();
     /**
-     * Estimate the grain size.
+     * @internal First stage: fill near field \hmatrix nodes using the
+     * parallel producer-consumer model.
      */
-    unsigned int grain_size = leaf_set.size() / thread_num;
-    if (grain_size == 0)
+    const unsigned int block_size          = 256;
+    const unsigned int block_num           = 8;
+    const unsigned int capacity            = block_size * block_num;
+    unsigned int       producer_thread_num = 2;
+
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_same_panel;
+    ring_buffer_for_same_panel.allocate(capacity,
+                                        CellNeighboringType::SamePanel,
+                                        bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_common_edge;
+    ring_buffer_for_common_edge.allocate(capacity,
+                                         CellNeighboringType::CommonEdge,
+                                         bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_common_vertex;
+    ring_buffer_for_common_vertex.allocate(capacity,
+                                           CellNeighboringType::CommonVertex,
+                                           bem_values);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        ring_buffer_for_regular;
+    ring_buffer_for_regular.allocate(capacity,
+                                     CellNeighboringType::Regular,
+                                     bem_values);
+
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_same_panel;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_common_edge;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_common_vertex;
+    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
+      mutex_for_regular;
+
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
+      hmat.get_near_field_leaf_set();
+    const unsigned int near_field_set_size = near_field_leaf_set.size();
+    if (near_field_set_size < producer_thread_num)
       {
-        grain_size = 1;
+        producer_thread_num = near_field_set_size;
+      }
+
+    std::vector<std::thread> producers;
+    producers.reserve(producer_thread_num);
+
+    const unsigned int number_of_hmat_nodes_per_thread =
+      std::ceil(static_cast<double>(near_field_set_size) /
+                static_cast<double>(producer_thread_num));
+
+    /**
+     * @internal Start the producer threads.
+     */
+    for (unsigned int i = 0; i < producer_thread_num; i++)
+      {
+        producers.emplace_back(
+          static_cast<void (*)(
+            const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
+            const unsigned int,
+            const unsigned int,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::
+              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            const RangeNumberType,
+            const std::vector<std::vector<unsigned int>> &,
+            const std::vector<std::vector<unsigned int>> &,
+            const BEMValues<dim, spacedim, RangeNumberType> &,
+            const IdeoBEM::CUDAWrappers::
+              CUDABEMValues<dim, spacedim, RangeNumberType> &,
+            const QGauss<dim> &,
+            const DoFHandler<dim, spacedim> &,
+            const DoFHandler<dim, spacedim> &,
+            const std::vector<types::global_dof_index> *,
+            const std::vector<types::global_dof_index> *,
+            const std::vector<types::global_dof_index> &,
+            const std::vector<types::global_dof_index> &,
+            const MappingQGenericExt<dim, spacedim> &,
+            const MappingQGenericExt<dim, spacedim> &,
+            const std::map<
+              typename Triangulation<dim, spacedim>::cell_iterator,
+              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+            const std::map<
+              typename Triangulation<dim, spacedim>::cell_iterator,
+              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+            const DetectCellNeighboringTypeMethod,
+            const bool,
+            const bool)>(
+            IdeoBEM::CUDAWrappers::
+              sauter_quadrature_for_near_field_matrix_entries_producer),
+          std::cref(hmat.get_near_field_leaf_set()),
+          i * number_of_hmat_nodes_per_thread,
+          (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
+            near_field_set_size :
+            (i + 1) * number_of_hmat_nodes_per_thread,
+          std::ref(ring_buffer_for_same_panel),
+          std::ref(ring_buffer_for_common_edge),
+          std::ref(ring_buffer_for_common_vertex),
+          std::ref(ring_buffer_for_regular),
+          std::ref(mutex_for_same_panel),
+          std::ref(mutex_for_common_edge),
+          std::ref(mutex_for_common_vertex),
+          std::ref(mutex_for_regular),
+          mass_matrix_factor,
+          std::cref(kx_dof_to_cell_topo),
+          std::cref(ky_dof_to_cell_topo),
+          std::cref(bem_values),
+          std::cref(bem_values_gpu),
+          std::cref(mass_matrix_quadrature_formula),
+          std::cref(kx_dof_handler),
+          std::cref(ky_dof_handler),
+          kx_map_from_local_to_full_dof_indices,
+          ky_map_from_local_to_full_dof_indices,
+          std::cref(kx_dof_i2e_numbering),
+          std::cref(ky_dof_i2e_numbering),
+          std::cref(kx_mapping),
+          std::cref(ky_mapping),
+          std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+          std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+          method_for_cell_neighboring_type,
+          kernel.is_symmetric(),
+          enable_build_symmetric_hmat);
       }
 
     /**
-     * \mynote{N.B. There are two places where argument passing for
-     * parallelization is involved: 1. passing to @p std::bind; 2. passing to
-     * the working function.
-     *
-     * Local variables captured by @p std::bind are by default pass-by-value.
-     * Hence, for capturing large objects, pass-by-reference should be adopted
-     * instead of pass-by-value, which is realized by adding the prefix
-     * @p std::cref for const reference or @p std::ref for mutable reference.
-     *
-     * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
-     * captured by @p std::bind via pass-by-value, then for each working thread,
-     * a copy of them will automatically be made.
-     *
-     * Meanwhile, in a same working thread, the working function will be
-     * called for each object specified by the index or iterator in
-     * the blocked range, during which @p PairCellWiseScratchData and
-     * @p PairCellWisePerTaskData can be reused. Therefore, they should be
-     * passed into the working function by non-const reference.
-     *
-     * For other variables to be captured like @p bem_values,
-     * @p kx/ky_dof_handler, * @p kx/ky_mapping and
-     * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
-     * modified at all, they are captured by @p std::bind via const reference
-     * and then passed to the working function by const reference.}
+     * @internal Start the consumer threads.
      */
-    parallel::internal::parallel_for(
-      leaf_set.begin(),
-      leaf_set.end(),
-      std::bind(static_cast<void (*)(
-                  const tbb::blocked_range<typename std::vector<
-                    HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-                  const ACAConfig &,
-                  const KernelFunctionType<spacedim, RangeNumberType> &,
-                  const RangeNumberType,
-                  const RangeNumberType,
-                  const std::vector<std::vector<unsigned int>> &,
-                  const std::vector<std::vector<unsigned int>> &,
-                  const BEMValues<dim, spacedim, RangeNumberType> &,
-                  const IdeoBEM::CUDAWrappers::
-                    CUDABEMValues<dim, spacedim, RangeNumberType> &,
-                  const QGauss<dim> &,
-                  const DoFHandler<dim, spacedim> &,
-                  const DoFHandler<dim, spacedim> &,
-                  const std::vector<types::global_dof_index> *,
-                  const std::vector<types::global_dof_index> *,
-                  const std::vector<types::global_dof_index> &,
-                  const std::vector<types::global_dof_index> &,
-                  const MappingQGenericExt<dim, spacedim> &,
-                  const MappingQGenericExt<dim, spacedim> &,
-                  const std::map<
-                    typename Triangulation<dim, spacedim>::cell_iterator,
-                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-                  const std::map<
-                    typename Triangulation<dim, spacedim>::cell_iterator,
-                    typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-                  const DetectCellNeighboringTypeMethod,
-                  const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
-                std::placeholders::_1,
-                std::cref(aca_config),
-                std::cref(kernel),
-                kernel_factor,
-                mass_matrix_factor,
-                std::cref(kx_dof_to_cell_topo),
-                std::cref(ky_dof_to_cell_topo),
-                std::cref(bem_values),
-                std::cref(bem_values_gpu),
-                std::cref(mass_matrix_quadrature_formula),
-                std::cref(kx_dof_handler),
-                std::cref(ky_dof_handler),
-                kx_map_from_local_to_full_dof_indices,
-                ky_map_from_local_to_full_dof_indices,
-                std::cref(kx_dof_i2e_numbering),
-                std::cref(ky_dof_i2e_numbering),
-                std::cref(kx_mapping),
-                std::cref(ky_mapping),
-                std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-                std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-                method_for_cell_neighboring_type,
-                enable_build_symmetric_hmat),
-      grain_size);
+    std::thread same_panel_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_same_panel),
+      std::ref(mutex_for_same_panel),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread common_edge_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_common_edge),
+      std::ref(mutex_for_common_edge),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread common_vertex_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_common_vertex),
+      std::ref(mutex_for_common_vertex),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    std::thread regular_consumer(
+      static_cast<void (*)(
+        const KernelFunctionType<spacedim, RangeNumberType> &,
+        const RangeNumberType,
+        IdeoBEM::CUDAWrappers::
+          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+        const IdeoBEM::CUDAWrappers::
+          CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        const unsigned int,
+        const unsigned int)>(
+        IdeoBEM::CUDAWrappers::
+          sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::cref(kernel),
+      kernel_factor,
+      std::ref(ring_buffer_for_regular),
+      std::ref(mutex_for_regular),
+      std::cref(bem_values_gpu),
+      block_size,
+      block_num);
+
+    /**
+     * @internal Wait for all producer and consumer threads to exit.
+     */
+    for (auto &producer : producers)
+      {
+        producer.join();
+      }
+
+    same_panel_consumer.join();
+    common_edge_consumer.join();
+    common_vertex_consumer.join();
+    regular_consumer.join();
+
+    /**
+     * @internal Release all ring buffers.
+     */
+    ring_buffer_for_same_panel.release();
+    ring_buffer_for_common_edge.release();
+    ring_buffer_for_common_vertex.release();
+    ring_buffer_for_regular.release();
+
+    /**
+     * @internal Second stage: fill far field \hmatrix nodes by applying the
+     * parallelization only to applying Sauter quadrature.
+     */
+    std::vector<HMatrix<spacedim, RangeNumberType> *> &far_field_leaf_set =
+      hmat.get_far_field_leaf_set();
+
+    if (far_field_leaf_set.size() > 0)
+      {
+        /**
+         * Estimate the grain size.
+         */
+        unsigned int grain_size = far_field_leaf_set.size() / thread_num;
+        if (grain_size == 0)
+          {
+            grain_size = 1;
+          }
+
+        /**
+         * \mynote{N.B. There are two places where argument passing for
+         * parallelization is involved: 1. passing to @p std::bind; 2. passing to
+         * the working function.
+         *
+         * Local variables captured by @p std::bind are by default pass-by-value.
+         * Hence, for capturing large objects, pass-by-reference should be
+         * adopted instead of pass-by-value, which is realized by adding the
+         * prefix
+         * @p std::cref for const reference or @p std::ref for mutable reference.
+         *
+         * @p PairCellWiseScratchData and @p PairCellWisePerTaskData should be
+         * captured by @p std::bind via pass-by-value, then for each working thread,
+         * a copy of them will automatically be made.
+         *
+         * Meanwhile, in a same working thread, the working function will be
+         * called for each object specified by the index or iterator in
+         * the blocked range, during which @p PairCellWiseScratchData and
+         * @p PairCellWisePerTaskData can be reused. Therefore, they should be
+         * passed into the working function by non-const reference.
+         *
+         * For other variables to be captured like @p bem_values,
+         * @p kx/ky_dof_handler, * @p kx/ky_mapping and
+         * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+         * modified at all, they are captured by @p std::bind via const reference
+         * and then passed to the working function by const reference.}
+         */
+        parallel::internal::parallel_for(
+          far_field_leaf_set.begin(),
+          far_field_leaf_set.end(),
+          std::bind(
+            static_cast<void (*)(
+              const tbb::blocked_range<typename std::vector<
+                HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+              const ACAConfig &,
+              const KernelFunctionType<spacedim, RangeNumberType> &,
+              const RangeNumberType,
+              const RangeNumberType,
+              const std::vector<std::vector<unsigned int>> &,
+              const std::vector<std::vector<unsigned int>> &,
+              const BEMValues<dim, spacedim, RangeNumberType> &,
+              const IdeoBEM::CUDAWrappers::
+                CUDABEMValues<dim, spacedim, RangeNumberType> &,
+              const QGauss<dim> &,
+              const DoFHandler<dim, spacedim> &,
+              const DoFHandler<dim, spacedim> &,
+              const std::vector<types::global_dof_index> *,
+              const std::vector<types::global_dof_index> *,
+              const std::vector<types::global_dof_index> &,
+              const std::vector<types::global_dof_index> &,
+              const MappingQGenericExt<dim, spacedim> &,
+              const MappingQGenericExt<dim, spacedim> &,
+              const std::map<
+                typename Triangulation<dim, spacedim>::cell_iterator,
+                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+              const std::map<
+                typename Triangulation<dim, spacedim>::cell_iterator,
+                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
+              const DetectCellNeighboringTypeMethod,
+              const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
+            std::placeholders::_1,
+            std::cref(aca_config),
+            std::cref(kernel),
+            kernel_factor,
+            mass_matrix_factor,
+            std::cref(kx_dof_to_cell_topo),
+            std::cref(ky_dof_to_cell_topo),
+            std::cref(bem_values),
+            std::cref(bem_values_gpu),
+            std::cref(mass_matrix_quadrature_formula),
+            std::cref(kx_dof_handler),
+            std::cref(ky_dof_handler),
+            kx_map_from_local_to_full_dof_indices,
+            ky_map_from_local_to_full_dof_indices,
+            std::cref(kx_dof_i2e_numbering),
+            std::cref(ky_dof_i2e_numbering),
+            std::cref(kx_mapping),
+            std::cref(ky_mapping),
+            std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
+            std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
+            method_for_cell_neighboring_type,
+            enable_build_symmetric_hmat),
+          grain_size);
+      }
 
     /**
      * Release BEM values on the GPU device.
@@ -5874,4 +6847,4 @@ namespace IdeoBEM
   }
 } // namespace IdeoBEM
 
-#endif /* INCLUDE_ACA_PLUS_H_ */
+#endif /* INCLUDE_ACA_PLUS_HCU_ */

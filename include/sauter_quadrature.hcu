@@ -36,6 +36,7 @@
 #include "cu_bem_values.hcu"
 #include "cu_qgauss.hcu"
 #include "debug_tools.hcu"
+#include "hmatrix.h"
 #include "mapping_q_generic_ext.h"
 #include "sauter_quadrature_tools.h"
 
@@ -1452,7 +1453,7 @@ namespace IdeoBEM
                         bem_values.kx_shape_grad_matrix_table_for_same_panel(
                           k3_index, quad_no, i, kx_dof_index);
                       ky_shape_grad_in_unit_cell[i] =
-                        bem_values.kx_shape_grad_matrix_table_for_same_panel(
+                        bem_values.ky_shape_grad_matrix_table_for_same_panel(
                           k3_index, quad_no, i, ky_dof_index);
                     }
 
@@ -1666,7 +1667,7 @@ namespace IdeoBEM
                         bem_values.kx_shape_grad_matrix_table_for_common_edge(
                           k3_index, quad_no, i, kx_dof_index);
                       ky_shape_grad_in_unit_cell[i] =
-                        bem_values.kx_shape_grad_matrix_table_for_common_edge(
+                        bem_values.ky_shape_grad_matrix_table_for_common_edge(
                           k3_index, quad_no, i, ky_dof_index);
                     }
 
@@ -1705,7 +1706,7 @@ namespace IdeoBEM
                    * the volume gradient vector.
                    *
                    * \mynote{The cross product operation requires the input
-                   * vectors be transformed to tensors.}
+                   * vectors to be transformed to tensors.}
                    */
                   Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
                     cross_product_3d(
@@ -1873,7 +1874,7 @@ namespace IdeoBEM
                         bem_values.kx_shape_grad_matrix_table_for_common_vertex(
                           k3_index, quad_no, i, kx_dof_index);
                       ky_shape_grad_in_unit_cell[i] =
-                        bem_values.kx_shape_grad_matrix_table_for_common_vertex(
+                        bem_values.ky_shape_grad_matrix_table_for_common_vertex(
                           k3_index, quad_no, i, ky_dof_index);
                     }
 
@@ -1912,7 +1913,7 @@ namespace IdeoBEM
                    * the volume gradient vector.
                    *
                    * \mynote{The cross product operation requires the input
-                   * vectors be transformed to tensors.}
+                   * vectors to be transformed to tensors.}
                    */
                   Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
                     cross_product_3d(
@@ -2070,7 +2071,7 @@ namespace IdeoBEM
                     bem_values.kx_shape_grad_matrix_table_for_regular(
                       0, quad_no, i, kx_dof_index);
                   ky_shape_grad_in_unit_cell[i] =
-                    bem_values.kx_shape_grad_matrix_table_for_regular(
+                    bem_values.ky_shape_grad_matrix_table_for_regular(
                       0, quad_no, i, ky_dof_index);
                 }
 
@@ -2196,6 +2197,3595 @@ namespace IdeoBEM
         }
 
       __syncthreads();
+    }
+
+    /**
+     * Ring buffer for holding Sauter quadrature tasks, which is used in the
+     * producer-consumer model.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    class SauterQuadratureTaskRingBuffer
+    {
+    public:
+      /**
+       * Allocate memory for the ring buffer.
+       *
+       * @param capacity Size of the ring buffer
+       * @param cell_neighboring_type Cell neighboring type to be handled in
+       * this queue
+       * @param bem_values @p BEMValues on the host is used to pass necessary
+       * data sizes, such as number of shape functions used by the mapping and
+       * number of quadrature points.
+       * @param scratch_data Scratch data which holds the current thread id and
+       * CUDA stream id.
+       */
+      __host__ void
+      allocate(const unsigned int              capacity,
+               const CellNeighboringType       cell_neighboring_type,
+               const BEMValues<dim, spacedim> &bem_values);
+
+      /**
+       * Release the memory
+       */
+      __host__ void
+      release();
+
+      /**
+       * Flag indicating if all matrix entries in all near filed \hmatrices have
+       * been added as evaluation tasks to the ring buffer. If it is @p true,
+       * even though the number of tasks in the buffer (@p task_num) is less than
+       * the total number of GPU threads for computing Sauter quadrature, the
+       * consumer threads will get all of them directly and perform the
+       * computation.
+       */
+      bool if_all_near_field_hmat_entries_added;
+      /**
+       * The cell neighboring type that the queue handles.
+       *
+       * \mynote{All quadratures in the queue should have a same cell
+       * neighboring type.}
+       */
+      CellNeighboringType cell_neighboring_type;
+
+      /**
+       * List of permuted mapping support points in \f$K_x\f$.
+       *
+       * 1. First dimension: task index in the ring buffer.
+       * 2. Second dimension: point index in the permuted mapping support points
+       * in \f$K_x\f$.
+       *
+       * \mynote{Because @p CUDATable class is adopted for storing the list of
+       * permuted mapping support points, the size of its second dimension is
+       * constant, which prescribes that all cells in the mesh adopt a same
+       * mapping object.}
+       */
+      CUDATable<2, Point<spacedim, RangeNumberType>>
+        kx_mapping_support_points_permuted_ring_buffer;
+
+      /**
+       * List of permuted mapping support points in \f$K_y\f$.
+       *
+       * 1. First dimension: task index in the ring buffer.
+       * 2. Second dimension: point index in the permuted mapping support points
+       * in \f$K_y\f$.
+       *
+       * \mynote{Because @p CUDATable class is adopted for storing the list of
+       * permuted mapping support points, the size of its second dimension is
+       * constant, which prescribes that all cells in the mesh adopt a same
+       * mapping object.}
+       */
+      CUDATable<2, Point<spacedim, RangeNumberType>>
+        ky_mapping_support_points_permuted_ring_buffer;
+
+      CUDATable<3, RangeNumberType> kx_jacobians_same_panel_ring_buffer;
+      CUDATable<3, RangeNumberType> kx_jacobians_common_edge_ring_buffer;
+      CUDATable<3, RangeNumberType> kx_jacobians_common_vertex_ring_buffer;
+      CUDATable<3, RangeNumberType> kx_jacobians_regular_ring_buffer;
+
+      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+        kx_normals_same_panel_ring_buffer;
+      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+        kx_normals_common_edge_ring_buffer;
+      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+        kx_normals_common_vertex_ring_buffer;
+      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+        kx_normals_regular_ring_buffer;
+
+      CUDATable<5, RangeNumberType> kx_covariants_same_panel_ring_buffer;
+      CUDATable<5, RangeNumberType> kx_covariants_common_edge_ring_buffer;
+      CUDATable<5, RangeNumberType> kx_covariants_common_vertex_ring_buffer;
+      CUDATable<5, RangeNumberType> kx_covariants_regular_ring_buffer;
+
+      CUDATable<3, Point<spacedim, RangeNumberType>>
+        kx_quad_points_same_panel_ring_buffer;
+      CUDATable<3, Point<spacedim, RangeNumberType>>
+        kx_quad_points_common_edge_ring_buffer;
+      CUDATable<3, Point<spacedim, RangeNumberType>>
+        kx_quad_points_common_vertex_ring_buffer;
+      CUDATable<3, Point<spacedim, RangeNumberType>>
+        kx_quad_points_regular_ring_buffer;
+
+      CUDATable<3, RangeNumberType> ky_jacobians_same_panel_ring_buffer;
+      CUDATable<3, RangeNumberType> ky_jacobians_common_edge_ring_buffer;
+      CUDATable<3, RangeNumberType> ky_jacobians_common_vertex_ring_buffer;
+      CUDATable<3, RangeNumberType> ky_jacobians_regular_ring_buffer;
+
+      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+        ky_normals_same_panel_ring_buffer;
+      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+        ky_normals_common_edge_ring_buffer;
+      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+        ky_normals_common_vertex_ring_buffer;
+      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
+        ky_normals_regular_ring_buffer;
+
+      CUDATable<5, RangeNumberType> ky_covariants_same_panel_ring_buffer;
+      CUDATable<5, RangeNumberType> ky_covariants_common_edge_ring_buffer;
+      CUDATable<5, RangeNumberType> ky_covariants_common_vertex_ring_buffer;
+      CUDATable<5, RangeNumberType> ky_covariants_regular_ring_buffer;
+
+      CUDATable<3, Point<spacedim, RangeNumberType>>
+        ky_quad_points_same_panel_ring_buffer;
+      CUDATable<3, Point<spacedim, RangeNumberType>>
+        ky_quad_points_common_edge_ring_buffer;
+      CUDATable<3, Point<spacedim, RangeNumberType>>
+        ky_quad_points_common_vertex_ring_buffer;
+      CUDATable<3, Point<spacedim, RangeNumberType>>
+        ky_quad_points_regular_ring_buffer;
+
+      /**
+       * Array of pointers to the full matrices held within the near field
+       * \hmatrix leaf nodes.
+       */
+      LAPACKFullMatrixExt<RangeNumberType> **fullmat_ring_buffer;
+
+      /**
+       * Array of row indices for the entries in the corresponding full matrix.
+       */
+      unsigned int *fullmat_row_index_ring_buffer;
+
+      /**
+       * Array of column indices for the entries in the corresponding full
+       * matrix.
+       */
+      unsigned int *fullmat_col_index_ring_buffer;
+
+      /**
+       * Array of local DoF indices in \f$K_x\f$ corresponding to the global DoF
+       * index \f$i\f$.
+       */
+      unsigned int *i_local_index_ring_buffer;
+
+      /**
+       * Array of local DoF indices in \f$K_y\f$ corresponding to the global DoF
+       * index \f$j\f$.
+       */
+      unsigned int *j_local_index_ring_buffer;
+
+      /**
+       * Mass matrix entries
+       */
+      RangeNumberType *mass_matrix_entries;
+
+      /**
+       * Array of quadrature values on the host.
+       */
+      RangeNumberType *quadrature_value_ring_buffer_cpu;
+
+      /**
+       * Array of quadrature values on the device.
+       */
+      RangeNumberType *quadrature_value_ring_buffer_gpu;
+
+      /**
+       * Size of the ring buffer.
+       */
+      unsigned int capacity;
+
+      /**
+       * Index of the front position in the ring buffer, from where a task can
+       * be fetched.
+       */
+      unsigned int front_index;
+
+      /**
+       * Index of the back position in the ring buffer, at which a new task can
+       * be added into the buffer.
+       */
+      unsigned int back_index;
+
+      /**
+       * Total number of tasks (instantaneous) in the ring buffer.
+       */
+      unsigned int task_num;
+    };
+
+    class SauterQuadratureTaskRingBufferMutex
+    {
+    public:
+      /**
+       * Mutex for protecting multi-threaded access to the ring buffer.
+       */
+      std::mutex lock;
+
+      /**
+       * Condition indicating the ring buffer not being full, i.e. a new task is
+       * allowed to be added.
+       */
+      std::condition_variable not_full;
+
+      /**
+       * Condition indicating the ring buffer not being empty, i.e. a taskk can
+       * be fetched.
+       */
+      std::condition_variable not_empty;
+    };
+
+    /**
+     * Perform Sauter quadrature for a pair of DoFs with associated pair of
+     * cells \f$K_x\f$ and \f$K_y\f$, which have the same panel neighboring
+     * type.
+     *
+     * \mynote{There can be several pairs of cells contributing to the full
+     * matrix entries associated with the pair of DoFs, because the
+     * support of each DoF usually contains more than one cells.}
+     */
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    process_sauter_task_on_one_pair_of_dofs_same_panel(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel,
+      const RangeNumberType                               kernel_factor,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                          ring_buffer,
+      const unsigned int                                  start_task_index,
+      const unsigned int                                  fetched_task_num,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    {
+      /**
+       * @internal For simplicity, we use 1D linear thread grid.
+       */
+      const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+      /**
+       * @internal The number of allocated CUDA threads for executing this
+       * kernel function is always enough to hold the fetched tasks. Hence,
+       * those threads with linear IDs less than @p fetched_task_num actually
+       * perform the computation.
+       */
+      if (thread_idx < fetched_task_num)
+        {
+          /**
+           * @internal Calculate the task index in the ring buffer.
+           */
+          const unsigned int task_index =
+            (thread_idx + start_task_index) % ring_buffer.capacity;
+
+          /**
+           * @internal Get the list of quadrature points in the Sauter
+           * parametric space.
+           */
+          const CUDATable<2, double> &quad_points =
+            bem_values.quad_rule_for_same_panel.get_points();
+
+          /**
+           * @internal Initialize the quadrature value stored in the register,
+           * which is efficient for accumulating values contributed from all
+           * \f$k_3\f$ terms and quadrature points.
+           */
+          RangeNumberType quad_value = 0.;
+
+          /**
+           * @internal Iterate over each quadrature point.
+           */
+          for (unsigned int quad_no = 0;
+               quad_no < bem_values.quad_rule_for_same_panel.size();
+               quad_no++)
+            {
+              /**
+               * @internal Initialize the register variable for storing the
+               * kernel function value at the current quadrature point, which is
+               * also multiplied by Jacobians from unit cells to real cells as
+               * well as shape function values in \f$K_x\f$ and \f$K_y\f$.
+               *
+               * \mynote{When the kernel function is @p HyperSingularRegular,
+               * the scalar product of surface curls in \f$K_x\f$ and \f$K_y\f$
+               * will be multiplied to @p kernel_value instead of the shape
+               * function values.}
+               */
+              RangeNumberType kernel_value = 0.;
+              /**
+               * @internal Iterate over each k3 term.
+               */
+              for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
+                {
+                  /**
+                   * @internal Create a wrapper matrix for the covariant matrix
+                   * on \f$K_x\f$. N.B. Only when the kernel function is
+                   * @p HyperSingularRegular, this matrix will be evaluated.
+                   */
+                  CUDAFullMatrix<RangeNumberType> covariant_matrix(
+                    &ring_buffer.kx_covariants_same_panel_ring_buffer(
+                      task_index, k3_index, quad_no, 0, 0),
+                    spacedim,
+                    dim);
+
+                  /**
+                   * @internal Calculate Jacobians, normal vectors and covariant
+                   * matrices (if needed) for all quadrature points in
+                   * \f$K_x\f$.
+                   */
+                  ring_buffer.kx_jacobians_same_panel_ring_buffer(
+                    task_index, k3_index, quad_no) = BEMTools::CUDAWrappers::
+                    surface_jacobian_det_normal_vector_and_covariant(
+                      k3_index,
+                      quad_no,
+                      bem_values
+                        .kx_mapping_shape_grad_matrix_table_for_same_panel,
+                      &ring_buffer
+                         .kx_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.kx_normals_same_panel_ring_buffer(task_index,
+                                                                    k3_index,
+                                                                    quad_no),
+                      covariant_matrix,
+                      false,
+                      kernel.kernel_type == KernelType::HyperSingularRegular);
+
+                  /**
+                   * Reinitialize the wrapper matrix for the covariant matrix on
+                   * \f$K_y\f$.
+                   */
+                  covariant_matrix.reinit(
+                    &ring_buffer.ky_covariants_same_panel_ring_buffer(
+                      task_index, k3_index, quad_no, 0, 0),
+                    spacedim,
+                    dim);
+
+                  /**
+                   * @internal Calculate Jacobians, normal vectors and covariant
+                   * matrices (if needed) for all quadrature points in
+                   * \f$K_y\f$.
+                   */
+                  ring_buffer.ky_jacobians_same_panel_ring_buffer(
+                    task_index, k3_index, quad_no) = BEMTools::CUDAWrappers::
+                    surface_jacobian_det_normal_vector_and_covariant(
+                      k3_index,
+                      quad_no,
+                      bem_values
+                        .ky_mapping_shape_grad_matrix_table_for_same_panel,
+                      &ring_buffer
+                         .ky_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.ky_normals_same_panel_ring_buffer(task_index,
+                                                                    k3_index,
+                                                                    quad_no),
+                      covariant_matrix,
+                      false,
+                      kernel.kernel_type == KernelType::HyperSingularRegular);
+
+                  /**
+                   * @internal Calculate the quadrature points in \f$K_x\f$.
+                   */
+                  BEMTools::CUDAWrappers::
+                    transform_quad_point_from_unit_to_permuted_real_cell(
+                      k3_index,
+                      quad_no,
+                      bem_values.kx_mapping_shape_value_table_for_same_panel,
+                      &ring_buffer
+                         .kx_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.kx_quad_points_same_panel_ring_buffer(
+                        task_index, k3_index, quad_no));
+
+                  /**
+                   * @internal Calculate the quadrature points in \f$K_y\f$.
+                   */
+                  BEMTools::CUDAWrappers::
+                    transform_quad_point_from_unit_to_permuted_real_cell(
+                      k3_index,
+                      quad_no,
+                      bem_values.ky_mapping_shape_value_table_for_same_panel,
+                      &ring_buffer
+                         .ky_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.ky_quad_points_same_panel_ring_buffer(
+                        task_index, k3_index, quad_no));
+
+                  if (kernel.kernel_type == HyperSingularRegular)
+                    {
+                      /**
+                       * @internal Extract the gradient values of the current
+                       * shape function at the current quadrature point in the
+                       * unit cells for \f$K_x\f$ and \f$K_y\f$.
+                       */
+                      RangeNumberType kx_shape_grad_in_unit_cell[dim];
+                      RangeNumberType ky_shape_grad_in_unit_cell[dim];
+                      CUDAVector<RangeNumberType>
+                        kx_shape_grad_in_unit_cell_vector(
+                          kx_shape_grad_in_unit_cell, dim);
+                      CUDAVector<RangeNumberType>
+                        ky_shape_grad_in_unit_cell_vector(
+                          ky_shape_grad_in_unit_cell, dim);
+
+                      for (unsigned int d = 0; d < dim; d++)
+                        {
+                          kx_shape_grad_in_unit_cell[d] =
+                            bem_values
+                              .kx_shape_grad_matrix_table_for_same_panel(
+                                k3_index,
+                                quad_no,
+                                d,
+                                ring_buffer
+                                  .i_local_index_ring_buffer[task_index]);
+                          ky_shape_grad_in_unit_cell[d] =
+                            bem_values
+                              .ky_shape_grad_matrix_table_for_same_panel(
+                                k3_index,
+                                quad_no,
+                                d,
+                                ring_buffer
+                                  .j_local_index_ring_buffer[task_index]);
+                        }
+
+                      /**
+                       * Apply covariant transformation \f$JG^{-1}\f$ to the
+                       * gradient tensors in the unit cells, then we get the
+                       * gradient tensors in the real cells.
+                       */
+                      RangeNumberType kx_shape_grad_in_real_cell[spacedim];
+                      RangeNumberType ky_shape_grad_in_real_cell[spacedim];
+                      CUDAVector<RangeNumberType>
+                        kx_shape_grad_in_real_cell_vector(
+                          kx_shape_grad_in_real_cell, spacedim);
+                      CUDAVector<RangeNumberType>
+                        ky_shape_grad_in_real_cell_vector(
+                          ky_shape_grad_in_real_cell, spacedim);
+
+                      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+                        &(ring_buffer.kx_covariants_same_panel_ring_buffer(
+                          task_index, k3_index, quad_no, 0, 0)),
+                        spacedim,
+                        dim);
+                      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+                        &(ring_buffer.ky_covariants_same_panel_ring_buffer(
+                          task_index, k3_index, quad_no, 0, 0)),
+                        spacedim,
+                        dim);
+
+                      kx_covariant_matrix.vmult(
+                        kx_shape_grad_in_real_cell_vector,
+                        kx_shape_grad_in_unit_cell_vector);
+                      ky_covariant_matrix.vmult(
+                        ky_shape_grad_in_real_cell_vector,
+                        ky_shape_grad_in_unit_cell_vector);
+
+                      /**
+                       * Calculate the surface gradient tensor of the shape
+                       * functions, which is the cross product of normal vector
+                       * and the volume gradient vector.
+                       *
+                       * \mynote{The cross product operation requires the input
+                       * vectors to be transformed to tensors.}
+                       */
+                      Tensor<1, spacedim, RangeNumberType>
+                        kx_shape_surface_curl = cross_product_3d(
+                          ring_buffer.kx_normals_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          kx_shape_grad_in_real_cell_vector);
+                      Tensor<1, spacedim, RangeNumberType>
+                        ky_shape_surface_curl = cross_product_3d(
+                          ring_buffer.ky_normals_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ky_shape_grad_in_real_cell_vector);
+
+                      kernel_value +=
+                        kernel.value(
+                          ring_buffer.kx_quad_points_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_quad_points_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.kx_normals_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_normals_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no)) *
+                        ring_buffer.kx_jacobians_same_panel_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        ring_buffer.ky_jacobians_same_panel_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        scalar_product(kx_shape_surface_curl,
+                                       ky_shape_surface_curl);
+                    }
+                  else
+                    {
+                      kernel_value +=
+                        kernel.value(
+                          ring_buffer.kx_quad_points_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_quad_points_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.kx_normals_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_normals_same_panel_ring_buffer(
+                            task_index, k3_index, quad_no)) *
+                        ring_buffer.kx_jacobians_same_panel_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        ring_buffer.ky_jacobians_same_panel_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        bem_values.kx_shape_value_table_for_same_panel(
+                          ring_buffer.i_local_index_ring_buffer[task_index],
+                          k3_index,
+                          quad_no) *
+                        bem_values.ky_shape_value_table_for_same_panel(
+                          ring_buffer.j_local_index_ring_buffer[task_index],
+                          k3_index,
+                          quad_no);
+                    }
+                }
+
+              quad_value +=
+                kernel_value * quad_points(quad_no, 0) *
+                (1 - quad_points(quad_no, 0)) *
+                (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1)) *
+                bem_values.quad_rule_for_same_panel.get_weights()[quad_no];
+            }
+
+          /**
+           * @internal Save the scaled quadrature value to the ring buffer.
+           */
+          ring_buffer.quadrature_value_ring_buffer_gpu[task_index] =
+            quad_value * kernel_factor;
+        }
+    }
+
+
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    process_sauter_task_on_one_pair_of_dofs_common_edge(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel,
+      const RangeNumberType                               kernel_factor,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                          ring_buffer,
+      const unsigned int                                  start_task_index,
+      const unsigned int                                  fetched_task_num,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    {
+      /**
+       * @internal For simplicity, we use 1D linear thread grid.
+       */
+      const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+      /**
+       * @internal The number of allocated CUDA threads for executing this
+       * kernel function is always enough to hold the fetched tasks. Hence,
+       * those threads with linear IDs less than @p fetched_task_num actually
+       * perform the computation.
+       */
+      if (thread_idx < fetched_task_num)
+        {
+          /**
+           * @internal Calculate the task index in the ring buffer.
+           */
+          const unsigned int task_index =
+            (thread_idx + start_task_index) % ring_buffer.capacity;
+
+          /**
+           * @internal Get the list of quadrature points in the Sauter
+           * parametric space.
+           */
+          const CUDATable<2, double> &quad_points =
+            bem_values.quad_rule_for_common_edge.get_points();
+
+          /**
+           * @internal Initialize the quadrature value stored in the register,
+           * which is efficient for accumulating values contributed from all
+           * \f$k_3\f$ terms and quadrature points.
+           */
+          RangeNumberType quad_value = 0.;
+
+          /**
+           * @internal Iterate over each quadrature point.
+           */
+          for (unsigned int quad_no = 0;
+               quad_no < bem_values.quad_rule_for_common_edge.size();
+               quad_no++)
+            {
+              RangeNumberType jacobian_det1 = quad_points(quad_no, 0) *
+                                              quad_points(quad_no, 0) *
+                                              (1 - quad_points(quad_no, 0));
+              RangeNumberType jacobian_det2 =
+                quad_points(quad_no, 0) * quad_points(quad_no, 0) *
+                (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
+
+              /**
+               * @internal Initialize the register variable for storing the
+               * kernel function value at the current quadrature point, which is
+               * also multiplied by Jacobians from unit cells to real cells as
+               * well as shape function values in \f$K_x\f$ and \f$K_y\f$.
+               *
+               * \mynote{When the kernel function is @p HyperSingularRegular,
+               * the scalar product of surface curls in \f$K_x\f$ and \f$K_y\f$
+               * will be multiplied to @p kernel_value instead of the shape
+               * function values.}
+               */
+              RangeNumberType kernel_value = 0.;
+              /**
+               * @internal Iterate over each k3 term.
+               */
+              for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
+                {
+                  /**
+                   * @internal Create a wrapper matrix for the covariant matrix
+                   * on \f$K_x\f$. N.B. Only when the kernel function is
+                   * @p HyperSingularRegular, this matrix will be evaluated.
+                   */
+                  CUDAFullMatrix<RangeNumberType> covariant_matrix(
+                    &ring_buffer.kx_covariants_common_edge_ring_buffer(
+                      task_index, k3_index, quad_no, 0, 0),
+                    spacedim,
+                    dim);
+
+                  /**
+                   * @internal Calculate Jacobians, normal vectors and covariant
+                   * matrices (if needed) for all quadrature points in
+                   * \f$K_x\f$.
+                   */
+                  ring_buffer.kx_jacobians_common_edge_ring_buffer(
+                    task_index, k3_index, quad_no) = BEMTools::CUDAWrappers::
+                    surface_jacobian_det_normal_vector_and_covariant(
+                      k3_index,
+                      quad_no,
+                      bem_values
+                        .kx_mapping_shape_grad_matrix_table_for_common_edge,
+                      &ring_buffer
+                         .kx_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.kx_normals_common_edge_ring_buffer(task_index,
+                                                                     k3_index,
+                                                                     quad_no),
+                      covariant_matrix,
+                      false,
+                      kernel.kernel_type == KernelType::HyperSingularRegular);
+
+                  /**
+                   * Reinitialize the wrapper matrix for the covariant matrix on
+                   * \f$K_y\f$.
+                   */
+                  covariant_matrix.reinit(
+                    &ring_buffer.ky_covariants_common_edge_ring_buffer(
+                      task_index, k3_index, quad_no, 0, 0),
+                    spacedim,
+                    dim);
+
+                  /**
+                   * @internal Calculate Jacobians, normal vectors and covariant
+                   * matrices (if needed) for all quadrature points in
+                   * \f$K_y\f$.
+                   */
+                  ring_buffer.ky_jacobians_common_edge_ring_buffer(
+                    task_index, k3_index, quad_no) = BEMTools::CUDAWrappers::
+                    surface_jacobian_det_normal_vector_and_covariant(
+                      k3_index,
+                      quad_no,
+                      bem_values
+                        .ky_mapping_shape_grad_matrix_table_for_common_edge,
+                      &ring_buffer
+                         .ky_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.ky_normals_common_edge_ring_buffer(task_index,
+                                                                     k3_index,
+                                                                     quad_no),
+                      covariant_matrix,
+                      false,
+                      kernel.kernel_type == KernelType::HyperSingularRegular);
+
+                  /**
+                   * @internal Calculate the quadrature points in \f$K_x\f$.
+                   */
+                  BEMTools::CUDAWrappers::
+                    transform_quad_point_from_unit_to_permuted_real_cell(
+                      k3_index,
+                      quad_no,
+                      bem_values.kx_mapping_shape_value_table_for_common_edge,
+                      &ring_buffer
+                         .kx_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.kx_quad_points_common_edge_ring_buffer(
+                        task_index, k3_index, quad_no));
+
+                  /**
+                   * @internal Calculate the quadrature points in \f$K_y\f$.
+                   */
+                  BEMTools::CUDAWrappers::
+                    transform_quad_point_from_unit_to_permuted_real_cell(
+                      k3_index,
+                      quad_no,
+                      bem_values.ky_mapping_shape_value_table_for_common_edge,
+                      &ring_buffer
+                         .ky_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.ky_quad_points_common_edge_ring_buffer(
+                        task_index, k3_index, quad_no));
+
+                  if (kernel.kernel_type == HyperSingularRegular)
+                    {
+                      /**
+                       * @internal Extract the gradient values of the current
+                       * shape function at the current quadrature point in the
+                       * unit cells for \f$K_x\f$ and \f$K_y\f$.
+                       */
+                      RangeNumberType kx_shape_grad_in_unit_cell[dim];
+                      RangeNumberType ky_shape_grad_in_unit_cell[dim];
+                      CUDAVector<RangeNumberType>
+                        kx_shape_grad_in_unit_cell_vector(
+                          kx_shape_grad_in_unit_cell, dim);
+                      CUDAVector<RangeNumberType>
+                        ky_shape_grad_in_unit_cell_vector(
+                          ky_shape_grad_in_unit_cell, dim);
+
+                      for (unsigned int d = 0; d < dim; d++)
+                        {
+                          kx_shape_grad_in_unit_cell[d] =
+                            bem_values
+                              .kx_shape_grad_matrix_table_for_common_edge(
+                                k3_index,
+                                quad_no,
+                                d,
+                                ring_buffer
+                                  .i_local_index_ring_buffer[task_index]);
+                          ky_shape_grad_in_unit_cell[d] =
+                            bem_values
+                              .ky_shape_grad_matrix_table_for_common_edge(
+                                k3_index,
+                                quad_no,
+                                d,
+                                ring_buffer
+                                  .j_local_index_ring_buffer[task_index]);
+                        }
+
+                      /**
+                       * Apply covariant transformation \f$JG^{-1}\f$ to the
+                       * gradient tensors in the unit cells, then we get the
+                       * gradient tensors in the real cells.
+                       */
+                      RangeNumberType kx_shape_grad_in_real_cell[spacedim];
+                      RangeNumberType ky_shape_grad_in_real_cell[spacedim];
+                      CUDAVector<RangeNumberType>
+                        kx_shape_grad_in_real_cell_vector(
+                          kx_shape_grad_in_real_cell, spacedim);
+                      CUDAVector<RangeNumberType>
+                        ky_shape_grad_in_real_cell_vector(
+                          ky_shape_grad_in_real_cell, spacedim);
+
+                      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+                        &(ring_buffer.kx_covariants_common_edge_ring_buffer(
+                          task_index, k3_index, quad_no, 0, 0)),
+                        spacedim,
+                        dim);
+                      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+                        &(ring_buffer.ky_covariants_common_edge_ring_buffer(
+                          task_index, k3_index, quad_no, 0, 0)),
+                        spacedim,
+                        dim);
+
+                      kx_covariant_matrix.vmult(
+                        kx_shape_grad_in_real_cell_vector,
+                        kx_shape_grad_in_unit_cell_vector);
+                      ky_covariant_matrix.vmult(
+                        ky_shape_grad_in_real_cell_vector,
+                        ky_shape_grad_in_unit_cell_vector);
+
+                      /**
+                       * Calculate the surface gradient tensor of the shape
+                       * functions, which is the cross product of normal vector
+                       * and the volume gradient vector.
+                       *
+                       * \mynote{The cross product operation requires the input
+                       * vectors to be transformed to tensors.}
+                       */
+                      Tensor<1, spacedim, RangeNumberType>
+                        kx_shape_surface_curl = cross_product_3d(
+                          ring_buffer.kx_normals_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          kx_shape_grad_in_real_cell_vector);
+                      Tensor<1, spacedim, RangeNumberType>
+                        ky_shape_surface_curl = cross_product_3d(
+                          -ring_buffer.ky_normals_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ky_shape_grad_in_real_cell_vector);
+
+                      kernel_value +=
+                        kernel.value(
+                          ring_buffer.kx_quad_points_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_quad_points_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.kx_normals_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          -ring_buffer.ky_normals_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no)) *
+                        ring_buffer.kx_jacobians_common_edge_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        ring_buffer.ky_jacobians_common_edge_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        scalar_product(kx_shape_surface_curl,
+                                       ky_shape_surface_curl) *
+                        (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
+                    }
+                  else
+                    {
+                      kernel_value +=
+                        kernel.value(
+                          ring_buffer.kx_quad_points_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_quad_points_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.kx_normals_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          -ring_buffer.ky_normals_common_edge_ring_buffer(
+                            task_index, k3_index, quad_no)) *
+                        ring_buffer.kx_jacobians_common_edge_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        ring_buffer.ky_jacobians_common_edge_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        bem_values.kx_shape_value_table_for_common_edge(
+                          ring_buffer.i_local_index_ring_buffer[task_index],
+                          k3_index,
+                          quad_no) *
+                        bem_values.ky_shape_value_table_for_common_edge(
+                          ring_buffer.j_local_index_ring_buffer[task_index],
+                          k3_index,
+                          quad_no) *
+                        (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
+                    }
+                }
+
+              quad_value +=
+                kernel_value *
+                bem_values.quad_rule_for_common_edge.get_weights()[quad_no];
+            }
+
+          /**
+           * @internal Save the scaled quadrature value to the ring buffer.
+           */
+          ring_buffer.quadrature_value_ring_buffer_gpu[task_index] =
+            quad_value * kernel_factor;
+        }
+    }
+
+
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    process_sauter_task_on_one_pair_of_dofs_common_vertex(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel,
+      const RangeNumberType                               kernel_factor,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                          ring_buffer,
+      const unsigned int                                  start_task_index,
+      const unsigned int                                  fetched_task_num,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    {
+      /**
+       * @internal For simplicity, we use 1D linear thread grid.
+       */
+      const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+      /**
+       * @internal The number of allocated CUDA threads for executing this
+       * kernel function is always enough to hold the fetched tasks. Hence,
+       * those threads with linear IDs less than @p fetched_task_num actually
+       * perform the computation.
+       */
+      if (thread_idx < fetched_task_num)
+        {
+          /**
+           * @internal Calculate the task index in the ring buffer.
+           */
+          const unsigned int task_index =
+            (thread_idx + start_task_index) % ring_buffer.capacity;
+
+          /**
+           * @internal Get the list of quadrature points in the Sauter
+           * parametric space.
+           */
+          const CUDATable<2, double> &quad_points =
+            bem_values.quad_rule_for_common_vertex.get_points();
+
+          /**
+           * @internal Initialize the quadrature value stored in the register,
+           * which is efficient for accumulating values contributed from all
+           * \f$k_3\f$ terms and quadrature points.
+           */
+          RangeNumberType quad_value = 0.;
+
+          /**
+           * @internal Iterate over each quadrature point.
+           */
+          for (unsigned int quad_no = 0;
+               quad_no < bem_values.quad_rule_for_common_vertex.size();
+               quad_no++)
+            {
+              /**
+               * @internal Initialize the register variable for storing the
+               * kernel function value at the current quadrature point, which is
+               * also multiplied by Jacobians from unit cells to real cells as
+               * well as shape function values in \f$K_x\f$ and \f$K_y\f$.
+               *
+               * \mynote{When the kernel function is @p HyperSingularRegular,
+               * the scalar product of surface curls in \f$K_x\f$ and \f$K_y\f$
+               * will be multiplied to @p kernel_value instead of the shape
+               * function values.}
+               */
+              RangeNumberType kernel_value = 0.;
+              /**
+               * @internal Iterate over each k3 term.
+               */
+              for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
+                {
+                  /**
+                   * @internal Create a wrapper matrix for the covariant matrix
+                   * on \f$K_x\f$. N.B. Only when the kernel function is
+                   * @p HyperSingularRegular, this matrix will be evaluated.
+                   */
+                  CUDAFullMatrix<RangeNumberType> covariant_matrix(
+                    &ring_buffer.kx_covariants_common_vertex_ring_buffer(
+                      task_index, k3_index, quad_no, 0, 0),
+                    spacedim,
+                    dim);
+
+                  /**
+                   * @internal Calculate Jacobians, normal vectors and covariant
+                   * matrices (if needed) for all quadrature points in
+                   * \f$K_x\f$.
+                   */
+                  ring_buffer.kx_jacobians_common_vertex_ring_buffer(task_index,
+                                                                     k3_index,
+                                                                     quad_no) =
+                    BEMTools::CUDAWrappers::
+                      surface_jacobian_det_normal_vector_and_covariant(
+                        k3_index,
+                        quad_no,
+                        bem_values
+                          .kx_mapping_shape_grad_matrix_table_for_common_vertex,
+                        &ring_buffer
+                           .kx_mapping_support_points_permuted_ring_buffer(
+                             task_index, 0),
+                        ring_buffer.kx_normals_common_vertex_ring_buffer(
+                          task_index, k3_index, quad_no),
+                        covariant_matrix,
+                        false,
+                        kernel.kernel_type == KernelType::HyperSingularRegular);
+
+                  /**
+                   * Reinitialize the wrapper matrix for the covariant matrix on
+                   * \f$K_y\f$.
+                   */
+                  covariant_matrix.reinit(
+                    &ring_buffer.ky_covariants_common_vertex_ring_buffer(
+                      task_index, k3_index, quad_no, 0, 0),
+                    spacedim,
+                    dim);
+
+                  /**
+                   * @internal Calculate Jacobians, normal vectors and covariant
+                   * matrices (if needed) for all quadrature points in
+                   * \f$K_y\f$.
+                   */
+                  ring_buffer.ky_jacobians_common_vertex_ring_buffer(task_index,
+                                                                     k3_index,
+                                                                     quad_no) =
+                    BEMTools::CUDAWrappers::
+                      surface_jacobian_det_normal_vector_and_covariant(
+                        k3_index,
+                        quad_no,
+                        bem_values
+                          .ky_mapping_shape_grad_matrix_table_for_common_vertex,
+                        &ring_buffer
+                           .ky_mapping_support_points_permuted_ring_buffer(
+                             task_index, 0),
+                        ring_buffer.ky_normals_common_vertex_ring_buffer(
+                          task_index, k3_index, quad_no),
+                        covariant_matrix,
+                        false,
+                        kernel.kernel_type == KernelType::HyperSingularRegular);
+
+                  /**
+                   * @internal Calculate the quadrature points in \f$K_x\f$.
+                   */
+                  BEMTools::CUDAWrappers::
+                    transform_quad_point_from_unit_to_permuted_real_cell(
+                      k3_index,
+                      quad_no,
+                      bem_values.kx_mapping_shape_value_table_for_common_vertex,
+                      &ring_buffer
+                         .kx_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.kx_quad_points_common_vertex_ring_buffer(
+                        task_index, k3_index, quad_no));
+
+                  /**
+                   * @internal Calculate the quadrature points in \f$K_y\f$.
+                   */
+                  BEMTools::CUDAWrappers::
+                    transform_quad_point_from_unit_to_permuted_real_cell(
+                      k3_index,
+                      quad_no,
+                      bem_values.ky_mapping_shape_value_table_for_common_vertex,
+                      &ring_buffer
+                         .ky_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ring_buffer.ky_quad_points_common_vertex_ring_buffer(
+                        task_index, k3_index, quad_no));
+
+                  if (kernel.kernel_type == HyperSingularRegular)
+                    {
+                      /**
+                       * @internal Extract the gradient values of the current
+                       * shape function at the current quadrature point in the
+                       * unit cells for \f$K_x\f$ and \f$K_y\f$.
+                       */
+                      RangeNumberType kx_shape_grad_in_unit_cell[dim];
+                      RangeNumberType ky_shape_grad_in_unit_cell[dim];
+                      CUDAVector<RangeNumberType>
+                        kx_shape_grad_in_unit_cell_vector(
+                          kx_shape_grad_in_unit_cell, dim);
+                      CUDAVector<RangeNumberType>
+                        ky_shape_grad_in_unit_cell_vector(
+                          ky_shape_grad_in_unit_cell, dim);
+
+                      for (unsigned int d = 0; d < dim; d++)
+                        {
+                          kx_shape_grad_in_unit_cell[d] =
+                            bem_values
+                              .kx_shape_grad_matrix_table_for_common_vertex(
+                                k3_index,
+                                quad_no,
+                                d,
+                                ring_buffer
+                                  .i_local_index_ring_buffer[task_index]);
+                          ky_shape_grad_in_unit_cell[d] =
+                            bem_values
+                              .ky_shape_grad_matrix_table_for_common_vertex(
+                                k3_index,
+                                quad_no,
+                                d,
+                                ring_buffer
+                                  .j_local_index_ring_buffer[task_index]);
+                        }
+
+                      /**
+                       * Apply covariant transformation \f$JG^{-1}\f$ to the
+                       * gradient tensors in the unit cells, then we get the
+                       * gradient tensors in the real cells.
+                       */
+                      RangeNumberType kx_shape_grad_in_real_cell[spacedim];
+                      RangeNumberType ky_shape_grad_in_real_cell[spacedim];
+                      CUDAVector<RangeNumberType>
+                        kx_shape_grad_in_real_cell_vector(
+                          kx_shape_grad_in_real_cell, spacedim);
+                      CUDAVector<RangeNumberType>
+                        ky_shape_grad_in_real_cell_vector(
+                          ky_shape_grad_in_real_cell, spacedim);
+
+                      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+                        &(ring_buffer.kx_covariants_common_vertex_ring_buffer(
+                          task_index, k3_index, quad_no, 0, 0)),
+                        spacedim,
+                        dim);
+                      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+                        &(ring_buffer.ky_covariants_common_vertex_ring_buffer(
+                          task_index, k3_index, quad_no, 0, 0)),
+                        spacedim,
+                        dim);
+
+                      kx_covariant_matrix.vmult(
+                        kx_shape_grad_in_real_cell_vector,
+                        kx_shape_grad_in_unit_cell_vector);
+                      ky_covariant_matrix.vmult(
+                        ky_shape_grad_in_real_cell_vector,
+                        ky_shape_grad_in_unit_cell_vector);
+
+                      /**
+                       * Calculate the surface gradient tensor of the shape
+                       * functions, which is the cross product of normal vector
+                       * and the volume gradient vector.
+                       *
+                       * \mynote{The cross product operation requires the input
+                       * vectors to be transformed to tensors.}
+                       */
+                      Tensor<1, spacedim, RangeNumberType>
+                        kx_shape_surface_curl = cross_product_3d(
+                          ring_buffer.kx_normals_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          kx_shape_grad_in_real_cell_vector);
+                      Tensor<1, spacedim, RangeNumberType>
+                        ky_shape_surface_curl = cross_product_3d(
+                          ring_buffer.ky_normals_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ky_shape_grad_in_real_cell_vector);
+
+                      kernel_value +=
+                        kernel.value(
+                          ring_buffer.kx_quad_points_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_quad_points_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.kx_normals_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_normals_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no)) *
+                        ring_buffer.kx_jacobians_common_vertex_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        ring_buffer.ky_jacobians_common_vertex_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        scalar_product(kx_shape_surface_curl,
+                                       ky_shape_surface_curl);
+                    }
+                  else
+                    {
+                      kernel_value +=
+                        kernel.value(
+                          ring_buffer.kx_quad_points_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_quad_points_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.kx_normals_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no),
+                          ring_buffer.ky_normals_common_vertex_ring_buffer(
+                            task_index, k3_index, quad_no)) *
+                        ring_buffer.kx_jacobians_common_vertex_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        ring_buffer.ky_jacobians_common_vertex_ring_buffer(
+                          task_index, k3_index, quad_no) *
+                        bem_values.kx_shape_value_table_for_common_vertex(
+                          ring_buffer.i_local_index_ring_buffer[task_index],
+                          k3_index,
+                          quad_no) *
+                        bem_values.ky_shape_value_table_for_common_vertex(
+                          ring_buffer.j_local_index_ring_buffer[task_index],
+                          k3_index,
+                          quad_no);
+                    }
+                }
+
+              quad_value +=
+                kernel_value *
+                IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                  quad_points(quad_no, 0)) *
+                bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
+            }
+
+          /**
+           * @internal Save the scaled quadrature value to the ring buffer.
+           */
+          ring_buffer.quadrature_value_ring_buffer_gpu[task_index] =
+            quad_value * kernel_factor;
+        }
+    }
+
+
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    process_sauter_task_on_one_pair_of_dofs_regular(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel,
+      const RangeNumberType                               kernel_factor,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                          ring_buffer,
+      const unsigned int                                  start_task_index,
+      const unsigned int                                  fetched_task_num,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    {
+      /**
+       * @internal For simplicity, we use 1D linear thread grid.
+       */
+      const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+      /**
+       * @internal The number of allocated CUDA threads for executing this
+       * kernel function is always enough to hold the fetched tasks. Hence,
+       * those threads with linear IDs less than @p fetched_task_num actually
+       * perform the computation.
+       */
+      if (thread_idx < fetched_task_num)
+        {
+          /**
+           * @internal Calculate the task index in the ring buffer.
+           */
+          const unsigned int task_index =
+            (thread_idx + start_task_index) % ring_buffer.capacity;
+
+          /**
+           * @internal Get the list of quadrature points in the Sauter
+           * parametric space.
+           */
+          const CUDATable<2, double> &quad_points =
+            bem_values.quad_rule_for_regular.get_points();
+
+          /**
+           * @internal Initialize the quadrature value stored in the register,
+           * which is efficient for accumulating values contributed from all
+           * \f$k_3\f$ terms and quadrature points.
+           */
+          RangeNumberType quad_value = 0.;
+
+          /**
+           * @internal Iterate over each quadrature point.
+           */
+          for (unsigned int quad_no = 0;
+               quad_no < bem_values.quad_rule_for_regular.size();
+               quad_no++)
+            {
+              /**
+               * @internal Create a wrapper matrix for the covariant matrix
+               * on \f$K_x\f$. N.B. Only when the kernel function is
+               * @p HyperSingularRegular, this matrix will be evaluated.
+               */
+              CUDAFullMatrix<RangeNumberType> covariant_matrix(
+                &ring_buffer.kx_covariants_regular_ring_buffer(
+                  task_index, 0, quad_no, 0, 0),
+                spacedim,
+                dim);
+
+              /**
+               * @internal Calculate Jacobians, normal vectors and covariant
+               * matrices (if needed) for all quadrature points in
+               * \f$K_x\f$.
+               */
+              ring_buffer.kx_jacobians_regular_ring_buffer(task_index,
+                                                           0,
+                                                           quad_no) = BEMTools::
+                CUDAWrappers::surface_jacobian_det_normal_vector_and_covariant(
+                  0,
+                  quad_no,
+                  bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
+                  &ring_buffer.kx_mapping_support_points_permuted_ring_buffer(
+                    task_index, 0),
+                  ring_buffer.kx_normals_regular_ring_buffer(task_index,
+                                                             0,
+                                                             quad_no),
+                  covariant_matrix,
+                  false,
+                  kernel.kernel_type == KernelType::HyperSingularRegular);
+
+              /**
+               * Reinitialize the wrapper matrix for the covariant matrix on
+               * \f$K_y\f$.
+               */
+              covariant_matrix.reinit(
+                &ring_buffer.ky_covariants_regular_ring_buffer(
+                  task_index, 0, quad_no, 0, 0),
+                spacedim,
+                dim);
+
+              /**
+               * @internal Calculate Jacobians, normal vectors and covariant
+               * matrices (if needed) for all quadrature points in
+               * \f$K_y\f$.
+               */
+              ring_buffer.ky_jacobians_regular_ring_buffer(task_index,
+                                                           0,
+                                                           quad_no) = BEMTools::
+                CUDAWrappers::surface_jacobian_det_normal_vector_and_covariant(
+                  0,
+                  quad_no,
+                  bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
+                  &ring_buffer.ky_mapping_support_points_permuted_ring_buffer(
+                    task_index, 0),
+                  ring_buffer.ky_normals_regular_ring_buffer(task_index,
+                                                             0,
+                                                             quad_no),
+                  covariant_matrix,
+                  false,
+                  kernel.kernel_type == KernelType::HyperSingularRegular);
+
+              /**
+               * @internal Calculate the quadrature points in \f$K_x\f$.
+               */
+              BEMTools::CUDAWrappers::
+                transform_quad_point_from_unit_to_permuted_real_cell(
+                  0,
+                  quad_no,
+                  bem_values.kx_mapping_shape_value_table_for_regular,
+                  &ring_buffer.kx_mapping_support_points_permuted_ring_buffer(
+                    task_index, 0),
+                  ring_buffer.kx_quad_points_regular_ring_buffer(task_index,
+                                                                 0,
+                                                                 quad_no));
+
+              /**
+               * @internal Calculate the quadrature points in \f$K_y\f$.
+               */
+              BEMTools::CUDAWrappers::
+                transform_quad_point_from_unit_to_permuted_real_cell(
+                  0,
+                  quad_no,
+                  bem_values.ky_mapping_shape_value_table_for_regular,
+                  &ring_buffer.ky_mapping_support_points_permuted_ring_buffer(
+                    task_index, 0),
+                  ring_buffer.ky_quad_points_regular_ring_buffer(task_index,
+                                                                 0,
+                                                                 quad_no));
+
+              if (kernel.kernel_type == HyperSingularRegular)
+                {
+                  /**
+                   * @internal Extract the gradient values of the current
+                   * shape function at the current quadrature point in the
+                   * unit cells for \f$K_x\f$ and \f$K_y\f$.
+                   */
+                  RangeNumberType             kx_shape_grad_in_unit_cell[dim];
+                  RangeNumberType             ky_shape_grad_in_unit_cell[dim];
+                  CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                    kx_shape_grad_in_unit_cell, dim);
+                  CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                    ky_shape_grad_in_unit_cell, dim);
+
+                  for (unsigned int d = 0; d < dim; d++)
+                    {
+                      kx_shape_grad_in_unit_cell[d] =
+                        bem_values.kx_shape_grad_matrix_table_for_regular(
+                          0,
+                          quad_no,
+                          d,
+                          ring_buffer.i_local_index_ring_buffer[task_index]);
+                      ky_shape_grad_in_unit_cell[d] =
+                        bem_values.ky_shape_grad_matrix_table_for_regular(
+                          0,
+                          quad_no,
+                          d,
+                          ring_buffer.j_local_index_ring_buffer[task_index]);
+                    }
+
+                  /**
+                   * Apply covariant transformation \f$JG^{-1}\f$ to the
+                   * gradient tensors in the unit cells, then we get the
+                   * gradient tensors in the real cells.
+                   */
+                  RangeNumberType kx_shape_grad_in_real_cell[spacedim];
+                  RangeNumberType ky_shape_grad_in_real_cell[spacedim];
+                  CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                    kx_shape_grad_in_real_cell, spacedim);
+                  CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                    ky_shape_grad_in_real_cell, spacedim);
+
+                  CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+                    &(ring_buffer.kx_covariants_regular_ring_buffer(
+                      task_index, 0, quad_no, 0, 0)),
+                    spacedim,
+                    dim);
+                  CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+                    &(ring_buffer.ky_covariants_regular_ring_buffer(
+                      task_index, 0, quad_no, 0, 0)),
+                    spacedim,
+                    dim);
+
+                  kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
+                                            kx_shape_grad_in_unit_cell_vector);
+                  ky_covariant_matrix.vmult(ky_shape_grad_in_real_cell_vector,
+                                            ky_shape_grad_in_unit_cell_vector);
+
+                  /**
+                   * Calculate the surface gradient tensor of the shape
+                   * functions, which is the cross product of normal vector
+                   * and the volume gradient vector.
+                   *
+                   * \mynote{The cross product operation requires the input
+                   * vectors to be transformed to tensors.}
+                   */
+                  Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                    cross_product_3d(ring_buffer.kx_normals_regular_ring_buffer(
+                                       task_index, 0, quad_no),
+                                     kx_shape_grad_in_real_cell_vector);
+                  Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                    cross_product_3d(ring_buffer.ky_normals_regular_ring_buffer(
+                                       task_index, 0, quad_no),
+                                     ky_shape_grad_in_real_cell_vector);
+
+                  quad_value +=
+                    kernel.value(ring_buffer.kx_quad_points_regular_ring_buffer(
+                                   task_index, 0, quad_no),
+                                 ring_buffer.ky_quad_points_regular_ring_buffer(
+                                   task_index, 0, quad_no),
+                                 ring_buffer.kx_normals_regular_ring_buffer(
+                                   task_index, 0, quad_no),
+                                 ring_buffer.ky_normals_regular_ring_buffer(
+                                   task_index, 0, quad_no)) *
+                    ring_buffer.kx_jacobians_regular_ring_buffer(task_index,
+                                                                 0,
+                                                                 quad_no) *
+                    ring_buffer.ky_jacobians_regular_ring_buffer(task_index,
+                                                                 0,
+                                                                 quad_no) *
+                    scalar_product(kx_shape_surface_curl,
+                                   ky_shape_surface_curl) *
+                    bem_values.quad_rule_for_regular.get_weights()[quad_no];
+                }
+              else
+                {
+                  quad_value +=
+                    kernel.value(ring_buffer.kx_quad_points_regular_ring_buffer(
+                                   task_index, 0, quad_no),
+                                 ring_buffer.ky_quad_points_regular_ring_buffer(
+                                   task_index, 0, quad_no),
+                                 ring_buffer.kx_normals_regular_ring_buffer(
+                                   task_index, 0, quad_no),
+                                 ring_buffer.ky_normals_regular_ring_buffer(
+                                   task_index, 0, quad_no)) *
+                    ring_buffer.kx_jacobians_regular_ring_buffer(task_index,
+                                                                 0,
+                                                                 quad_no) *
+                    ring_buffer.ky_jacobians_regular_ring_buffer(task_index,
+                                                                 0,
+                                                                 quad_no) *
+                    bem_values.kx_shape_value_table_for_regular(
+                      ring_buffer.i_local_index_ring_buffer[task_index],
+                      0,
+                      quad_no) *
+                    bem_values.ky_shape_value_table_for_regular(
+                      ring_buffer.j_local_index_ring_buffer[task_index],
+                      0,
+                      quad_no) *
+                    bem_values.quad_rule_for_regular.get_weights()[quad_no];
+                }
+            }
+
+          /**
+           * @internal Save the scaled quadrature value to the ring buffer.
+           */
+          ring_buffer.quadrature_value_ring_buffer_gpu[task_index] =
+            quad_value * kernel_factor;
+        }
+    }
+
+    template <int dim, int spacedim, typename RangeNumberType>
+    __host__ void
+    SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>::allocate(
+      const unsigned int              capacity,
+      const CellNeighboringType       cell_neighboring_type,
+      const BEMValues<dim, spacedim> &bem_values)
+    {
+      if_all_near_field_hmat_entries_added = false;
+      this->cell_neighboring_type          = cell_neighboring_type;
+      this->capacity                       = capacity;
+      front_index                          = 0;
+      back_index                           = 0;
+      task_num                             = 0;
+
+      /**
+       * @internal For each data table in @p PairCellWiseScratchData, its
+       * counterpart in the ring buffer should have one more dimension which
+       * corresponds to the task index.
+       */
+      kx_mapping_support_points_permuted_ring_buffer.allocate(
+        TableIndices<2>(capacity,
+                        bem_values.kx_mapping_data.n_shape_functions));
+      ky_mapping_support_points_permuted_ring_buffer.allocate(
+        TableIndices<2>(capacity,
+                        bem_values.ky_mapping_data.n_shape_functions));
+
+      switch (cell_neighboring_type)
+        {
+            case CellNeighboringType::SamePanel: {
+              kx_jacobians_same_panel_ring_buffer.allocate(TableIndices<3>(
+                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
+              ky_jacobians_same_panel_ring_buffer.allocate(TableIndices<3>(
+                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
+              kx_normals_same_panel_ring_buffer.allocate(TableIndices<3>(
+                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
+              ky_normals_same_panel_ring_buffer.allocate(TableIndices<3>(
+                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
+              kx_covariants_same_panel_ring_buffer.allocate(
+                TableIndices<5>(capacity,
+                                8,
+                                bem_values.quad_rule_for_same_panel.size(),
+                                dim,
+                                spacedim));
+              ky_covariants_same_panel_ring_buffer.allocate(
+                TableIndices<5>(capacity,
+                                8,
+                                bem_values.quad_rule_for_same_panel.size(),
+                                dim,
+                                spacedim));
+              kx_quad_points_same_panel_ring_buffer.allocate(TableIndices<3>(
+                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
+              ky_quad_points_same_panel_ring_buffer.allocate(TableIndices<3>(
+                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
+
+              break;
+            }
+            case CellNeighboringType::CommonEdge: {
+              kx_jacobians_common_edge_ring_buffer.allocate(TableIndices<3>(
+                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
+              ky_jacobians_common_edge_ring_buffer.allocate(TableIndices<3>(
+                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
+              kx_normals_common_edge_ring_buffer.allocate(TableIndices<3>(
+                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
+              ky_normals_common_edge_ring_buffer.allocate(TableIndices<3>(
+                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
+              kx_covariants_common_edge_ring_buffer.allocate(
+                TableIndices<5>(capacity,
+                                6,
+                                bem_values.quad_rule_for_common_edge.size(),
+                                dim,
+                                spacedim));
+              ky_covariants_common_edge_ring_buffer.allocate(
+                TableIndices<5>(capacity,
+                                6,
+                                bem_values.quad_rule_for_common_edge.size(),
+                                dim,
+                                spacedim));
+              kx_quad_points_common_edge_ring_buffer.allocate(TableIndices<3>(
+                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
+              ky_quad_points_common_edge_ring_buffer.allocate(TableIndices<3>(
+                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
+
+              break;
+            }
+            case CellNeighboringType::CommonVertex: {
+              kx_jacobians_common_vertex_ring_buffer.allocate(TableIndices<3>(
+                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
+              ky_jacobians_common_vertex_ring_buffer.allocate(TableIndices<3>(
+                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
+              kx_normals_common_vertex_ring_buffer.allocate(TableIndices<3>(
+                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
+              ky_normals_common_vertex_ring_buffer.allocate(TableIndices<3>(
+                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
+              kx_covariants_common_vertex_ring_buffer.allocate(
+                TableIndices<5>(capacity,
+                                4,
+                                bem_values.quad_rule_for_common_vertex.size(),
+                                dim,
+                                spacedim));
+              ky_covariants_common_vertex_ring_buffer.allocate(
+                TableIndices<5>(capacity,
+                                4,
+                                bem_values.quad_rule_for_common_vertex.size(),
+                                dim,
+                                spacedim));
+              kx_quad_points_common_vertex_ring_buffer.allocate(TableIndices<3>(
+                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
+              ky_quad_points_common_vertex_ring_buffer.allocate(TableIndices<3>(
+                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
+
+              break;
+            }
+            case CellNeighboringType::Regular: {
+              kx_jacobians_regular_ring_buffer.allocate(TableIndices<3>(
+                capacity, 1, bem_values.quad_rule_for_regular.size()));
+              ky_jacobians_regular_ring_buffer.allocate(TableIndices<3>(
+                capacity, 1, bem_values.quad_rule_for_regular.size()));
+              kx_normals_regular_ring_buffer.allocate(TableIndices<3>(
+                capacity, 1, bem_values.quad_rule_for_regular.size()));
+              ky_normals_regular_ring_buffer.allocate(TableIndices<3>(
+                capacity, 1, bem_values.quad_rule_for_regular.size()));
+              kx_covariants_regular_ring_buffer.allocate(
+                TableIndices<5>(capacity,
+                                1,
+                                bem_values.quad_rule_for_regular.size(),
+                                dim,
+                                spacedim));
+              ky_covariants_regular_ring_buffer.allocate(
+                TableIndices<5>(capacity,
+                                1,
+                                bem_values.quad_rule_for_regular.size(),
+                                dim,
+                                spacedim));
+              kx_quad_points_regular_ring_buffer.allocate(TableIndices<3>(
+                capacity, 1, bem_values.quad_rule_for_regular.size()));
+              ky_quad_points_regular_ring_buffer.allocate(TableIndices<3>(
+                capacity, 1, bem_values.quad_rule_for_regular.size()));
+
+              break;
+            }
+            default: {
+              Assert(false, ExcInternalError());
+
+              break;
+            }
+        }
+
+      fullmat_ring_buffer =
+        new LAPACKFullMatrixExt<RangeNumberType> *[capacity];
+      fullmat_row_index_ring_buffer = new unsigned int[capacity];
+      fullmat_col_index_ring_buffer = new unsigned int[capacity];
+      i_local_index_ring_buffer     = new unsigned int[capacity];
+      j_local_index_ring_buffer     = new unsigned int[capacity];
+
+      /**
+       * @internal Allocate memory for mass matrix entries.
+       */
+      mass_matrix_entries = new RangeNumberType[capacity];
+
+      /**
+       * @internal Allocate pinned memory on the host for the quadrature values.
+       */
+      cudaError_t error_code =
+        cudaMallocHost((void **)&quadrature_value_ring_buffer_cpu,
+                       capacity * sizeof(RangeNumberType));
+      AssertCuda(error_code);
+
+      error_code = cudaMalloc((void **)&quadrature_value_ring_buffer_gpu,
+                              capacity * sizeof(RangeNumberType));
+      AssertCuda(error_code);
+    }
+
+
+    template <int dim, int spacedim, typename RangeNumberType>
+    __host__ void
+    SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>::release()
+    {
+      kx_mapping_support_points_permuted_ring_buffer.release();
+      ky_mapping_support_points_permuted_ring_buffer.release();
+
+      switch (cell_neighboring_type)
+        {
+            case CellNeighboringType::SamePanel: {
+              kx_jacobians_same_panel_ring_buffer.release();
+              ky_jacobians_same_panel_ring_buffer.release();
+              kx_normals_same_panel_ring_buffer.release();
+              ky_normals_same_panel_ring_buffer.release();
+              kx_covariants_same_panel_ring_buffer.release();
+              ky_covariants_same_panel_ring_buffer.release();
+              kx_quad_points_same_panel_ring_buffer.release();
+              ky_quad_points_same_panel_ring_buffer.release();
+
+              break;
+            }
+            case CellNeighboringType::CommonEdge: {
+              kx_jacobians_common_edge_ring_buffer.release();
+              ky_jacobians_common_edge_ring_buffer.release();
+              kx_normals_common_edge_ring_buffer.release();
+              ky_normals_common_edge_ring_buffer.release();
+              kx_covariants_common_edge_ring_buffer.release();
+              ky_covariants_common_edge_ring_buffer.release();
+              kx_quad_points_common_edge_ring_buffer.release();
+              ky_quad_points_common_edge_ring_buffer.release();
+
+              break;
+            }
+            case CellNeighboringType::CommonVertex: {
+              kx_jacobians_common_vertex_ring_buffer.release();
+              ky_jacobians_common_vertex_ring_buffer.release();
+              kx_normals_common_vertex_ring_buffer.release();
+              ky_normals_common_vertex_ring_buffer.release();
+              kx_covariants_common_vertex_ring_buffer.release();
+              ky_covariants_common_vertex_ring_buffer.release();
+              kx_quad_points_common_vertex_ring_buffer.release();
+              ky_quad_points_common_vertex_ring_buffer.release();
+
+              break;
+            }
+            case CellNeighboringType::Regular: {
+              kx_jacobians_regular_ring_buffer.release();
+              ky_jacobians_regular_ring_buffer.release();
+              kx_normals_regular_ring_buffer.release();
+              ky_normals_regular_ring_buffer.release();
+              kx_covariants_regular_ring_buffer.release();
+              ky_covariants_regular_ring_buffer.release();
+              kx_quad_points_regular_ring_buffer.release();
+              ky_quad_points_regular_ring_buffer.release();
+
+              break;
+            }
+            default: {
+              Assert(false, ExcInternalError());
+
+              break;
+            }
+        }
+
+      if (fullmat_ring_buffer != nullptr)
+        {
+          delete[] fullmat_ring_buffer;
+        }
+
+      if (fullmat_row_index_ring_buffer != nullptr)
+        {
+          delete[] fullmat_row_index_ring_buffer;
+        }
+
+      if (fullmat_col_index_ring_buffer != nullptr)
+        {
+          delete[] fullmat_col_index_ring_buffer;
+        }
+
+      if (i_local_index_ring_buffer != nullptr)
+        {
+          delete[] i_local_index_ring_buffer;
+        }
+
+      if (j_local_index_ring_buffer != nullptr)
+        {
+          delete[] j_local_index_ring_buffer;
+        }
+
+      if (mass_matrix_entries != nullptr)
+        {
+          delete[] mass_matrix_entries;
+        }
+
+      cudaError_t error_code;
+      if (quadrature_value_ring_buffer_cpu != nullptr)
+        {
+          error_code = cudaFreeHost(quadrature_value_ring_buffer_cpu);
+          AssertCuda(error_code);
+        }
+
+      if (quadrature_value_ring_buffer_gpu != nullptr)
+        {
+          error_code = cudaFree(quadrature_value_ring_buffer_gpu);
+          AssertCuda(error_code);
+        }
+    }
+
+
+    /**
+     * Add a Sauter quadrature task to the ring buffer, which is called by a
+     * producer thread.
+     *
+     * \mynote{About the @p scratch_data argument
+     * 1. It data fields for permuted mapping support points in \f$K_x\f$ and
+     * \f$K_y\f$ should have been computed for a pair of DoFs on the CPU.
+     * 2. It is created with the creation of the associated producer thread.
+     * During its initialization, a CUDA stream is created for this producer
+     * thread.
+     * 3. When adding a Sauter quadrature task, its data fields for permuted
+     * mapping support points in \f$K_x\f$ and \f$K_y\f$ will be copied to the
+     * related data fields in the ring buffer.
+     * 4. For other quadrature related values, namely Jacobians, normal
+     * vectors, covariant matrices and quadrature point coordinates in real
+     * cells, they will be computed on the device when being fetched from the
+     * ring buffer. The results will be stored in the ring buffer.}
+     *
+     * @param fullmat Full matrix within a \hmatrix node
+     * @param fullmat_row_index
+     * @param fullmat_col_index
+     * @param i_local_index
+     * @param j_local_index
+     * @param scratch_data
+     * @param is_last_task Whether this task is the final task for building the
+     * near field \hmatrix nodes.
+     */
+    template <int dim, int spacedim, typename RangeNumberType>
+    void
+    ring_buffer_add_task(
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                           &ring_buffer,
+      SauterQuadratureTaskRingBufferMutex  &ring_buffer_mutex,
+      LAPACKFullMatrixExt<RangeNumberType> *fullmat,
+      const unsigned int                    fullmat_row_index,
+      const unsigned int                    fullmat_col_index,
+      const unsigned int                    i_local_index,
+      const unsigned int                    j_local_index,
+      const RangeNumberType                 mass_matrix_entry,
+      const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                &scratch_data,
+      const bool is_last_task)
+    {
+      std::unique_lock<std::mutex> l(ring_buffer_mutex.lock);
+
+      /**
+       * @internal Wait until the number of tasks in the ring buffer is smaller
+       * than its capacity, i.e. there is still room left for adding a new task.
+       */
+      ring_buffer_mutex.not_full.wait(l, [&ring_buffer]() {
+        return ring_buffer.task_num < ring_buffer.capacity;
+      });
+
+      /**
+       * @internal Append the new task at the back of the ring buffer.
+       *
+       * 1. Copy permuted mapping support points in \f$K_x\f$ from host to
+       * device.
+       * 2. Copy permuted mapping support points in \f$K_y\f$ from host to
+       * device.
+       * 3. Copy the pointer to the current full matrix, matrix row and column
+       * indices, array indices of the global DoF indices in the permuted cell
+       * local DoF indices.
+       */
+      cudaError_t error_code = cudaMemcpyAsync(
+        (void *)(&ring_buffer.kx_mapping_support_points_permuted_ring_buffer(
+          ring_buffer.back_index, 0)),
+        (void *)(scratch_data.kx_mapping_support_points_permuted.data()),
+        scratch_data.kx_mapping_support_points_permuted.size() *
+          sizeof(Point<spacedim, RangeNumberType>),
+        cudaMemcpyHostToDevice,
+        scratch_data.cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code = cudaMemcpyAsync(
+        (void *)(&ring_buffer.ky_mapping_support_points_permuted_ring_buffer(
+          ring_buffer.back_index, 0)),
+        (void *)(scratch_data.ky_mapping_support_points_permuted.data()),
+        scratch_data.ky_mapping_support_points_permuted.size() *
+          sizeof(Point<spacedim, RangeNumberType>),
+        cudaMemcpyHostToDevice,
+        scratch_data.cuda_stream_handle);
+      AssertCuda(error_code);
+
+      ring_buffer.fullmat_ring_buffer[ring_buffer.back_index] = fullmat;
+      ring_buffer.fullmat_row_index_ring_buffer[ring_buffer.back_index] =
+        fullmat_row_index;
+      ring_buffer.fullmat_col_index_ring_buffer[ring_buffer.back_index] =
+        fullmat_col_index;
+      ring_buffer.i_local_index_ring_buffer[ring_buffer.back_index] =
+        i_local_index;
+      ring_buffer.j_local_index_ring_buffer[ring_buffer.back_index] =
+        j_local_index;
+      ring_buffer.if_all_near_field_hmat_entries_added = is_last_task;
+
+      /**
+       * @internal When there is no contribution from mass matrix,
+       * @p mass_matrix_entry is zero.
+       */
+      ring_buffer.mass_matrix_entries[ring_buffer.back_index] =
+        mass_matrix_entry;
+
+      /**
+       * @internal After task data written to the ring buffer, update the back
+       * index and number of tasks.
+       */
+      ring_buffer.back_index =
+        (ring_buffer.back_index + 1) % ring_buffer.capacity;
+      ring_buffer.task_num++;
+
+      error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+      AssertCuda(error_code);
+
+      l.unlock();
+      ring_buffer_mutex.not_empty.notify_all();
+    }
+
+
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    bool
+    ring_buffer_fetch_and_process_tasks(
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                          &ring_buffer,
+      SauterQuadratureTaskRingBufferMutex                 &ring_buffer_mutex,
+      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+      const RangeNumberType                                kernel_factor,
+      unsigned int                                         num_to_fetch,
+      const unsigned int                                   block_size,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+      const cudaStream_t                                   cuda_stream_handle)
+    {
+      std::unique_lock<std::mutex> l(ring_buffer_mutex.lock);
+
+      /**
+       * @internal Wait for the condition:
+       * 1. When all matrix entries from all near field \hmatrices are added,
+       * there are no producer threads any more. As long as there are tasks in
+       * the buffer, the consumer thread will start to process.
+       * 2. When not all matrix entries have been added, wait for
+       * @p num_to_fetch number of tasks.
+       */
+      ring_buffer_mutex.not_empty.wait(l, [&ring_buffer, num_to_fetch]() {
+        if (ring_buffer.if_all_near_field_hmat_entries_added)
+          {
+            return true;
+          }
+        else
+          {
+            return ring_buffer.task_num >= num_to_fetch;
+          }
+      });
+
+      if (ring_buffer.task_num > 0)
+        {
+          /**
+           * @internal When there are not enough tasks, get the remaining tasks.
+           */
+          if (ring_buffer.task_num < num_to_fetch)
+            {
+              num_to_fetch = ring_buffer.task_num;
+            }
+
+          /**
+           * @internal Recalculate the number of thread blocks to be used, since
+           * the actual number of tasks may be smaller than the originally
+           * expected.
+           */
+          const unsigned int block_num =
+            (num_to_fetch + block_size - 1) / block_size;
+
+          /**
+           * Perform Sauter quadrature.
+           *
+           * N.B. In reality, because four ring buffers have been created for
+           * the four cell neighboring types, the current cell neighboring type
+           * is definite and only one case below is reachable.
+           */
+          switch (ring_buffer.cell_neighboring_type)
+            {
+                case CellNeighboringType::SamePanel: {
+                  process_sauter_task_on_one_pair_of_dofs_same_panel<<<
+                    block_num,
+                    block_size,
+                    0,
+                    cuda_stream_handle>>>(kernel,
+                                          kernel_factor,
+                                          ring_buffer,
+                                          ring_buffer.front_index,
+                                          num_to_fetch,
+                                          bem_values);
+
+                  break;
+                }
+                case CellNeighboringType::CommonEdge: {
+                  process_sauter_task_on_one_pair_of_dofs_common_edge<<<
+                    block_num,
+                    block_size,
+                    0,
+                    cuda_stream_handle>>>(kernel,
+                                          kernel_factor,
+                                          ring_buffer,
+                                          ring_buffer.front_index,
+                                          num_to_fetch,
+                                          bem_values);
+
+                  break;
+                }
+                case CellNeighboringType::CommonVertex: {
+                  process_sauter_task_on_one_pair_of_dofs_common_vertex<<<
+                    block_num,
+                    block_size,
+                    0,
+                    cuda_stream_handle>>>(kernel,
+                                          kernel_factor,
+                                          ring_buffer,
+                                          ring_buffer.front_index,
+                                          num_to_fetch,
+                                          bem_values);
+
+                  break;
+                }
+                case CellNeighboringType::Regular: {
+                  process_sauter_task_on_one_pair_of_dofs_regular<<<
+                    block_num,
+                    block_size,
+                    0,
+                    cuda_stream_handle>>>(kernel,
+                                          kernel_factor,
+                                          ring_buffer,
+                                          ring_buffer.front_index,
+                                          num_to_fetch,
+                                          bem_values);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInternalError());
+
+                  break;
+                }
+            }
+
+          /**
+           * Copy the quadrature result data from the device to the host.
+           */
+          cudaError_t error_code;
+          if (ring_buffer.front_index + num_to_fetch <= ring_buffer.capacity)
+            {
+              /**
+               * @internal When the data in the ring buffer are in a contiguous
+               * block, perform one time of memory copy.
+               */
+              error_code =
+                cudaMemcpyAsync(ring_buffer.quadrature_value_ring_buffer_cpu +
+                                  ring_buffer.front_index,
+                                ring_buffer.quadrature_value_ring_buffer_gpu +
+                                  ring_buffer.front_index,
+                                num_to_fetch * sizeof(RangeNumberType),
+                                cudaMemcpyDeviceToHost,
+                                cuda_stream_handle);
+              AssertCuda(error_code);
+
+              error_code = cudaStreamSynchronize(cuda_stream_handle);
+              AssertCuda(error_code);
+
+              /**
+               * Assemble the result to full matrix in \hmatrix node.
+               */
+              /**
+               * todo Lock full matrix entry or lock full matrix
+               */
+              for (unsigned int i = ring_buffer.front_index;
+                   i < ring_buffer.front_index + num_to_fetch;
+                   i++)
+                {
+                  (*ring_buffer.fullmat_ring_buffer[i])(
+                    ring_buffer.fullmat_row_index_ring_buffer[i],
+                    ring_buffer.fullmat_col_index_ring_buffer[i]) +=
+                    ring_buffer.quadrature_value_ring_buffer_cpu[i] +
+                    ring_buffer.mass_matrix_entries[i];
+                }
+            }
+          else
+            {
+              /**
+               * @internal When the data in the ring buffer are not contiguous,
+               * we should perform two times of memory copy.
+               */
+              const unsigned int number_of_data_until_buffer_end =
+                ring_buffer.capacity - ring_buffer.front_index;
+              const unsigned int number_of_data_from_buffer_start =
+                num_to_fetch - number_of_data_until_buffer_end;
+
+              error_code =
+                cudaMemcpyAsync(ring_buffer.quadrature_value_ring_buffer_cpu +
+                                  ring_buffer.front_index,
+                                ring_buffer.quadrature_value_ring_buffer_gpu +
+                                  ring_buffer.front_index,
+                                number_of_data_until_buffer_end *
+                                  sizeof(RangeNumberType),
+                                cudaMemcpyDeviceToHost,
+                                cuda_stream_handle);
+              AssertCuda(error_code);
+
+              error_code =
+                cudaMemcpyAsync(ring_buffer.quadrature_value_ring_buffer_cpu,
+                                ring_buffer.quadrature_value_ring_buffer_gpu,
+                                number_of_data_from_buffer_start *
+                                  sizeof(RangeNumberType),
+                                cudaMemcpyDeviceToHost,
+                                cuda_stream_handle);
+              AssertCuda(error_code);
+
+              error_code = cudaStreamSynchronize(cuda_stream_handle);
+              AssertCuda(error_code);
+
+              /**
+               * Assemble the result to full matrix in \hmatrix node.
+               */
+              for (unsigned int i = ring_buffer.front_index;
+                   i < ring_buffer.capacity;
+                   i++)
+                {
+                  (*ring_buffer.fullmat_ring_buffer[i])(
+                    ring_buffer.fullmat_row_index_ring_buffer[i],
+                    ring_buffer.fullmat_col_index_ring_buffer[i]) +=
+                    ring_buffer.quadrature_value_ring_buffer_cpu[i] +
+                    ring_buffer.mass_matrix_entries[i];
+                }
+
+              for (unsigned int i = 0; i < number_of_data_from_buffer_start;
+                   i++)
+                {
+                  (*ring_buffer.fullmat_ring_buffer[i])(
+                    ring_buffer.fullmat_row_index_ring_buffer[i],
+                    ring_buffer.fullmat_col_index_ring_buffer[i]) +=
+                    ring_buffer.quadrature_value_ring_buffer_cpu[i] +
+                    ring_buffer.mass_matrix_entries[i];
+                }
+            }
+
+          ring_buffer.front_index =
+            (ring_buffer.front_index + num_to_fetch) % ring_buffer.capacity;
+          ring_buffer.task_num -= num_to_fetch;
+
+          l.unlock();
+          ring_buffer_mutex.not_full.notify_all();
+        }
+
+      /**
+       * @internal Check whether all the quadrature tasks for the current
+       * cell neighboring type have been processed.
+       */
+      if (ring_buffer.if_all_near_field_hmat_entries_added &&
+          ring_buffer.task_num == 0)
+        {
+          return true;
+        }
+      else
+        {
+          return false;
+        }
+    }
+
+
+    /**
+     * Iterate over each matrix entry of the full matrices in the collection of
+     * near field \hmatrices and add it as a Sauter quadrature task.
+     *
+     * This is the work function associated with a producer thread.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param near_field_leaf_set
+     * @param start_leaf_set_index
+     * @param end_leaf_set_index It is the pass-the-end index.
+     * @param ring_buffer_for_same_panel
+     * @param ring_buffer_for_common_edge
+     * @param ring_buffer_for_common_vertex
+     * @param ring_buffer_for_regular
+     * @param kx_dof_to_cell_topo
+     * @param ky_dof_to_cell_topo
+     * @param bem_values
+     * @param bem_values_gpu
+     * @param kx_dof_handler
+     * @param ky_dof_handler
+     * @param kx_map_from_local_to_full_dof_indices
+     * @param ky_map_from_local_to_full_dof_indices
+     * @param kx_dof_i2e_numbering
+     * @param ky_dof_i2e_numbering
+     * @param kx_mapping
+     * @param ky_mapping
+     * @param map_from_kx_boundary_mesh_to_volume_mesh
+     * @param map_from_ky_boundary_mesh_to_volume_mesh
+     * @param method_for_cell_neighboring_type
+     * @param is_kernel_symmetric
+     * @param enable_build_symmetric_hmat
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    void
+    sauter_quadrature_for_near_field_matrix_entries_producer(
+      const std::vector<HMatrix<spacedim, RangeNumberType> *>
+                        &near_field_leaf_set,
+      const unsigned int start_leaf_set_index,
+      const unsigned int end_leaf_set_index,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_same_panel,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_common_edge,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_common_vertex,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                      &ring_buffer_for_regular,
+      SauterQuadratureTaskRingBufferMutex             &mutex_for_same_panel,
+      SauterQuadratureTaskRingBufferMutex             &mutex_for_common_edge,
+      SauterQuadratureTaskRingBufferMutex             &mutex_for_common_vertex,
+      SauterQuadratureTaskRingBufferMutex             &mutex_for_regular,
+      const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+      const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
+      const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+      const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                      &bem_values_gpu,
+      const DoFHandler<dim, spacedim> &kx_dof_handler,
+      const DoFHandler<dim, spacedim> &ky_dof_handler,
+      const std::vector<types::global_dof_index>
+        *kx_map_from_local_to_full_dof_indices,
+      const std::vector<types::global_dof_index>
+        *ky_map_from_local_to_full_dof_indices,
+      const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+      const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+      const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+      const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_kx_boundary_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_ky_boundary_mesh_to_volume_mesh,
+      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+      const bool                            is_kernel_symmetric,
+      const bool                            enable_build_symmetric_hmat = false)
+    {
+      const std::thread::id current_thread_id = std::this_thread::get_id();
+      std::cerr << "Producer thread " << current_thread_id << " starts..."
+                << std::endl;
+
+      const unsigned int producer_wait_time_ms = 10;
+
+      /**
+       * @internal Define @p PairCellWiseScratchData and
+       * @p PairCellWisePerTaskData which are local to the current working
+       * thread. This is mandatory because each producer thread should
+       * have its own copy of these data.
+       *
+       * N.B. A CUDA stream is created during the construction of the scratch
+       * data.
+       */
+      PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+        current_thread_id,
+        kx_dof_handler.get_fe(),
+        ky_dof_handler.get_fe(),
+        kx_mapping,
+        ky_mapping,
+        bem_values);
+      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
+        kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+      /**
+       * @internal Iterate over each \hmatrix node in the near field leaf set.
+       */
+      for (unsigned int l = start_leaf_set_index; l < end_leaf_set_index; l++)
+        {
+          HMatrix<spacedim, RangeNumberType> *leaf_mat = near_field_leaf_set[l];
+          LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+            leaf_mat->get_fullmatrix();
+
+          Assert(fullmat != nullptr, ExcInternalError());
+
+          /**
+           * @internal The row index range and column index range follow the
+           * internal DoF numbering.
+           */
+          const std::array<types::global_dof_index, 2> *row_index_range =
+            leaf_mat->get_row_index_range();
+          const std::array<types::global_dof_index, 2> *col_index_range =
+            leaf_mat->get_col_index_range();
+
+          /**
+           * @internal Global DoF indices in the external DoF numbering, which
+           * are associated with the current full matrix's row and column
+           * indices.
+           */
+          types::global_dof_index i_global_dof_index;
+          types::global_dof_index j_global_dof_index;
+
+          if (enable_build_symmetric_hmat && is_kernel_symmetric)
+            {
+              /**
+               * When the flag @p enable_build_symmetric_hmat is true and the
+               * kernel function is symmetric, try to build a symmetric
+               * \hmatrix. Otherwise, the whole full matrix will be built.
+               */
+              switch (leaf_mat->get_block_type())
+                {
+                    case HMatrixSupport::diagonal_block: {
+                      /**
+                       * A diagonal \hmatrix block as well as its associated
+                       * full matrix should be symmetric.
+                       */
+                      Assert(
+                        leaf_mat->get_property() == HMatrixSupport::symmetric,
+                        ExcInvalidHMatrixProperty(leaf_mat->get_property()));
+                      Assert(fullmat->get_property() ==
+                               LAPACKSupport::symmetric,
+                             ExcInvalidLAPACKFullMatrixProperty(
+                               fullmat->get_property()));
+
+                      /**
+                       * Only evaluate the diagonal and lower triangular
+                       * elements in the full matrix.
+                       */
+                      for (size_t fullmat_row_index = 0;
+                           fullmat_row_index < fullmat->m();
+                           fullmat_row_index++)
+                        {
+                          i_global_dof_index =
+                            (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                              kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                   fullmat_row_index] :
+                              kx_map_from_local_to_full_dof_indices->at(
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     fullmat_row_index]);
+
+                          for (size_t fullmat_col_index = 0;
+                               fullmat_col_index <= fullmat_row_index;
+                               fullmat_col_index++)
+                            {
+                              j_global_dof_index =
+                                (ky_map_from_local_to_full_dof_indices ==
+                                 nullptr) ?
+                                  ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                       fullmat_col_index] :
+                                  ky_map_from_local_to_full_dof_indices->at(
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                         fullmat_col_index]);
+
+                              create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+                                ring_buffer_for_same_panel,
+                                ring_buffer_for_common_edge,
+                                ring_buffer_for_common_vertex,
+                                ring_buffer_for_regular,
+                                mutex_for_same_panel,
+                                mutex_for_common_edge,
+                                mutex_for_common_vertex,
+                                mutex_for_regular,
+                                fullmat,
+                                fullmat_row_index,
+                                fullmat_col_index,
+                                i_global_dof_index,
+                                j_global_dof_index,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_mapping,
+                                ky_mapping,
+                                map_from_kx_boundary_mesh_to_volume_mesh,
+                                map_from_ky_boundary_mesh_to_volume_mesh,
+                                method_for_cell_neighboring_type,
+                                scratch_data,
+                                copy_data,
+                                (l == end_leaf_set_index - 1) &&
+                                  (fullmat_row_index == fullmat->m() - 1) &&
+                                  (fullmat_col_index == fullmat_row_index));
+
+                              std::this_thread::sleep_for(
+                                std::chrono::milliseconds(
+                                  producer_wait_time_ms));
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::upper_triangular_block: {
+                      /**
+                       * Do not build \hmatrix block belonging to the upper
+                       * triangular part.
+                       */
+
+                      break;
+                    }
+                    case HMatrixSupport::lower_triangular_block: {
+                      /**
+                       * When the current \hmatrix block belongs to the lower
+                       * triangular part, evaluate all of its elements as
+                       * usual.
+                       */
+                      for (size_t fullmat_row_index = 0;
+                           fullmat_row_index < fullmat->m();
+                           fullmat_row_index++)
+                        {
+                          i_global_dof_index =
+                            (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                              kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                   fullmat_row_index] :
+                              kx_map_from_local_to_full_dof_indices->at(
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     fullmat_row_index]);
+
+                          for (size_t fullmat_col_index = 0;
+                               fullmat_col_index < fullmat->n();
+                               fullmat_col_index++)
+                            {
+                              j_global_dof_index =
+                                (ky_map_from_local_to_full_dof_indices ==
+                                 nullptr) ?
+                                  ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                       fullmat_col_index] :
+                                  ky_map_from_local_to_full_dof_indices->at(
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                         fullmat_col_index]);
+
+                              create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+                                ring_buffer_for_same_panel,
+                                ring_buffer_for_common_edge,
+                                ring_buffer_for_common_vertex,
+                                ring_buffer_for_regular,
+                                mutex_for_same_panel,
+                                mutex_for_common_edge,
+                                mutex_for_common_vertex,
+                                mutex_for_regular,
+                                fullmat,
+                                fullmat_row_index,
+                                fullmat_col_index,
+                                i_global_dof_index,
+                                j_global_dof_index,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_mapping,
+                                ky_mapping,
+                                map_from_kx_boundary_mesh_to_volume_mesh,
+                                map_from_ky_boundary_mesh_to_volume_mesh,
+                                method_for_cell_neighboring_type,
+                                scratch_data,
+                                copy_data,
+                                (l == end_leaf_set_index - 1) &&
+                                  (fullmat_row_index == fullmat->m() - 1) &&
+                                  (fullmat_col_index == fullmat->n() - 1));
+
+                              std::this_thread::sleep_for(
+                                std::chrono::milliseconds(
+                                  producer_wait_time_ms));
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::undefined_block: {
+                      Assert(false,
+                             ExcInvalidHMatrixBlockType(
+                               leaf_mat->get_block_type()));
+
+                      break;
+                    }
+                }
+            }
+          else
+            {
+              /**
+               * Evaluate the whole full matrix.
+               */
+              for (size_t fullmat_row_index = 0;
+                   fullmat_row_index < fullmat->m();
+                   fullmat_row_index++)
+                {
+                  i_global_dof_index =
+                    (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                      kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                           fullmat_row_index] :
+                      kx_map_from_local_to_full_dof_indices->at(
+                        kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                             fullmat_row_index]);
+
+                  for (size_t fullmat_col_index = 0;
+                       fullmat_col_index < fullmat->n();
+                       fullmat_col_index++)
+                    {
+                      j_global_dof_index =
+                        (ky_map_from_local_to_full_dof_indices == nullptr) ?
+                          ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                               fullmat_col_index] :
+                          ky_map_from_local_to_full_dof_indices->at(
+                            ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                 fullmat_col_index]);
+
+                      create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+                        ring_buffer_for_same_panel,
+                        ring_buffer_for_common_edge,
+                        ring_buffer_for_common_vertex,
+                        ring_buffer_for_regular,
+                        mutex_for_same_panel,
+                        mutex_for_common_edge,
+                        mutex_for_common_vertex,
+                        mutex_for_regular,
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        i_global_dof_index,
+                        j_global_dof_index,
+                        kx_dof_to_cell_topo,
+                        ky_dof_to_cell_topo,
+                        kx_dof_handler,
+                        ky_dof_handler,
+                        kx_mapping,
+                        ky_mapping,
+                        map_from_kx_boundary_mesh_to_volume_mesh,
+                        map_from_ky_boundary_mesh_to_volume_mesh,
+                        method_for_cell_neighboring_type,
+                        scratch_data,
+                        copy_data,
+                        (l == end_leaf_set_index - 1) &&
+                          (fullmat_row_index == fullmat->m() - 1) &&
+                          (fullmat_col_index == fullmat->n() - 1));
+
+                      std::this_thread::sleep_for(
+                        std::chrono::milliseconds(producer_wait_time_ms));
+                    }
+                }
+            }
+        }
+
+      /**
+       * @internal Before destroying the CUDA stream when the scratch data is
+       * released, perform a stream synchronization in case there are unfinished
+       * tasks.
+       */
+      cudaError_t error_code =
+        cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+      AssertCuda(error_code);
+
+      /**
+       * @internal During releasing the scratch data, the CUDA stream will also
+       * be destroyed.
+       */
+      scratch_data.release();
+      copy_data.release();
+
+      std::cerr << "Producer thread " << current_thread_id << " exits..."
+                << std::endl;
+    }
+
+
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    void
+    sauter_quadrature_for_near_field_matrix_entries_producer(
+      const std::vector<HMatrix<spacedim, RangeNumberType> *>
+                        &near_field_leaf_set,
+      const unsigned int start_leaf_set_index,
+      const unsigned int end_leaf_set_index,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_same_panel,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_common_edge,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_common_vertex,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                      &ring_buffer_for_regular,
+      SauterQuadratureTaskRingBufferMutex             &mutex_for_same_panel,
+      SauterQuadratureTaskRingBufferMutex             &mutex_for_common_edge,
+      SauterQuadratureTaskRingBufferMutex             &mutex_for_common_vertex,
+      SauterQuadratureTaskRingBufferMutex             &mutex_for_regular,
+      const RangeNumberType                            mass_matrix_factor,
+      const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
+      const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
+      const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+      const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                      &bem_values_gpu,
+      const QGauss<dim>               &mass_matrix_quadrature_formula,
+      const DoFHandler<dim, spacedim> &kx_dof_handler,
+      const DoFHandler<dim, spacedim> &ky_dof_handler,
+      const std::vector<types::global_dof_index>
+        *kx_map_from_local_to_full_dof_indices,
+      const std::vector<types::global_dof_index>
+        *ky_map_from_local_to_full_dof_indices,
+      const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+      const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+      const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+      const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_kx_boundary_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_ky_boundary_mesh_to_volume_mesh,
+      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+      const bool                            is_kernel_symmetric,
+      const bool                            enable_build_symmetric_hmat = false)
+    {
+      const std::thread::id current_thread_id = std::this_thread::get_id();
+      std::cerr << "Producer thread " << current_thread_id << " starts..."
+                << std::endl;
+
+      const unsigned int producer_wait_time_ms = 10;
+
+      /**
+       * Define @p CellWiseScratchData which is local to the current working thread.
+       */
+      CellWiseScratchDataForMassMatrix<dim, spacedim> mass_matrix_scratch_data(
+        kx_dof_handler.get_fe(),
+        ky_dof_handler.get_fe(),
+        mass_matrix_quadrature_formula,
+        update_values | update_JxW_values);
+
+      /**
+       * @internal Define @p PairCellWiseScratchData and
+       * @p PairCellWisePerTaskData which are local to the current working
+       * thread. This is mandatory because each producer thread should
+       * have its own copy of these data.
+       *
+       * N.B. A CUDA stream is created during the construction of the scratch
+       * data.
+       */
+      PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+        current_thread_id,
+        kx_dof_handler.get_fe(),
+        ky_dof_handler.get_fe(),
+        kx_mapping,
+        ky_mapping,
+        bem_values);
+      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
+        kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+      /**
+       * @internal Iterate over each \hmatrix node in the near field leaf set.
+       */
+      for (unsigned int l = start_leaf_set_index; l < end_leaf_set_index; l++)
+        {
+          HMatrix<spacedim, RangeNumberType> *leaf_mat = near_field_leaf_set[l];
+          LAPACKFullMatrixExt<RangeNumberType> *fullmat =
+            leaf_mat->get_fullmatrix();
+
+          Assert(fullmat != nullptr, ExcInternalError());
+
+          /**
+           * @internal The row index range and column index range follow the
+           * internal DoF numbering.
+           */
+          const std::array<types::global_dof_index, 2> *row_index_range =
+            leaf_mat->get_row_index_range();
+          const std::array<types::global_dof_index, 2> *col_index_range =
+            leaf_mat->get_col_index_range();
+
+          /**
+           * @internal Global DoF indices in the external DoF numbering, which
+           * are associated with the current full matrix's row and column
+           * indices.
+           */
+          types::global_dof_index i_global_dof_index;
+          types::global_dof_index j_global_dof_index;
+
+          if (enable_build_symmetric_hmat && is_kernel_symmetric)
+            {
+              /**
+               * When the flag @p enable_build_symmetric_hmat is true and the
+               * kernel function is symmetric, try to build a symmetric
+               * \hmatrix. Otherwise, the whole full matrix will be built.
+               */
+              switch (leaf_mat->get_block_type())
+                {
+                    case HMatrixSupport::diagonal_block: {
+                      /**
+                       * A diagonal \hmatrix block as well as its associated
+                       * full matrix should be symmetric.
+                       */
+                      Assert(
+                        leaf_mat->get_property() == HMatrixSupport::symmetric,
+                        ExcInvalidHMatrixProperty(leaf_mat->get_property()));
+                      Assert(fullmat->get_property() ==
+                               LAPACKSupport::symmetric,
+                             ExcInvalidLAPACKFullMatrixProperty(
+                               fullmat->get_property()));
+
+                      /**
+                       * Only evaluate the diagonal and lower triangular
+                       * elements in the full matrix.
+                       */
+                      for (size_t fullmat_row_index = 0;
+                           fullmat_row_index < fullmat->m();
+                           fullmat_row_index++)
+                        {
+                          i_global_dof_index =
+                            (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                              kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                   fullmat_row_index] :
+                              kx_map_from_local_to_full_dof_indices->at(
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     fullmat_row_index]);
+
+                          for (size_t fullmat_col_index = 0;
+                               fullmat_col_index <= fullmat_row_index;
+                               fullmat_col_index++)
+                            {
+                              j_global_dof_index =
+                                (ky_map_from_local_to_full_dof_indices ==
+                                 nullptr) ?
+                                  ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                       fullmat_col_index] :
+                                  ky_map_from_local_to_full_dof_indices->at(
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                         fullmat_col_index]);
+
+                              create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+                                ring_buffer_for_same_panel,
+                                ring_buffer_for_common_edge,
+                                ring_buffer_for_common_vertex,
+                                ring_buffer_for_regular,
+                                mutex_for_same_panel,
+                                mutex_for_common_edge,
+                                mutex_for_common_vertex,
+                                mutex_for_regular,
+                                mass_matrix_factor,
+                                fullmat,
+                                fullmat_row_index,
+                                fullmat_col_index,
+                                i_global_dof_index,
+                                j_global_dof_index,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_mapping,
+                                ky_mapping,
+                                map_from_kx_boundary_mesh_to_volume_mesh,
+                                map_from_ky_boundary_mesh_to_volume_mesh,
+                                method_for_cell_neighboring_type,
+                                mass_matrix_scratch_data,
+                                scratch_data,
+                                copy_data,
+                                (l == end_leaf_set_index - 1) &&
+                                  (fullmat_row_index == fullmat->m() - 1) &&
+                                  (fullmat_col_index == fullmat_row_index));
+
+                              std::this_thread::sleep_for(
+                                std::chrono::milliseconds(
+                                  producer_wait_time_ms));
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::upper_triangular_block: {
+                      /**
+                       * Do not build \hmatrix block belonging to the upper
+                       * triangular part.
+                       */
+
+                      break;
+                    }
+                    case HMatrixSupport::lower_triangular_block: {
+                      /**
+                       * When the current \hmatrix block belongs to the lower
+                       * triangular part, evaluate all of its elements as
+                       * usual.
+                       */
+                      for (size_t fullmat_row_index = 0;
+                           fullmat_row_index < fullmat->m();
+                           fullmat_row_index++)
+                        {
+                          i_global_dof_index =
+                            (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                              kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                   fullmat_row_index] :
+                              kx_map_from_local_to_full_dof_indices->at(
+                                kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                                     fullmat_row_index]);
+
+                          for (size_t fullmat_col_index = 0;
+                               fullmat_col_index < fullmat->n();
+                               fullmat_col_index++)
+                            {
+                              j_global_dof_index =
+                                (ky_map_from_local_to_full_dof_indices ==
+                                 nullptr) ?
+                                  ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                       fullmat_col_index] :
+                                  ky_map_from_local_to_full_dof_indices->at(
+                                    ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                         fullmat_col_index]);
+
+                              create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+                                ring_buffer_for_same_panel,
+                                ring_buffer_for_common_edge,
+                                ring_buffer_for_common_vertex,
+                                ring_buffer_for_regular,
+                                mutex_for_same_panel,
+                                mutex_for_common_edge,
+                                mutex_for_common_vertex,
+                                mutex_for_regular,
+                                mass_matrix_factor,
+                                fullmat,
+                                fullmat_row_index,
+                                fullmat_col_index,
+                                i_global_dof_index,
+                                j_global_dof_index,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_mapping,
+                                ky_mapping,
+                                map_from_kx_boundary_mesh_to_volume_mesh,
+                                map_from_ky_boundary_mesh_to_volume_mesh,
+                                method_for_cell_neighboring_type,
+                                mass_matrix_scratch_data,
+                                scratch_data,
+                                copy_data,
+                                (l == end_leaf_set_index - 1) &&
+                                  (fullmat_row_index == fullmat->m() - 1) &&
+                                  (fullmat_col_index == fullmat->n() - 1));
+
+                              std::this_thread::sleep_for(
+                                std::chrono::milliseconds(
+                                  producer_wait_time_ms));
+                            }
+                        }
+
+                      break;
+                    }
+                    case HMatrixSupport::undefined_block: {
+                      Assert(false,
+                             ExcInvalidHMatrixBlockType(
+                               leaf_mat->get_block_type()));
+
+                      break;
+                    }
+                }
+            }
+          else
+            {
+              /**
+               * Evaluate the whole full matrix.
+               */
+              for (size_t fullmat_row_index = 0;
+                   fullmat_row_index < fullmat->m();
+                   fullmat_row_index++)
+                {
+                  i_global_dof_index =
+                    (kx_map_from_local_to_full_dof_indices == nullptr) ?
+                      kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                           fullmat_row_index] :
+                      kx_map_from_local_to_full_dof_indices->at(
+                        kx_dof_i2e_numbering[(*row_index_range)[0] +
+                                             fullmat_row_index]);
+
+                  for (size_t fullmat_col_index = 0;
+                       fullmat_col_index < fullmat->n();
+                       fullmat_col_index++)
+                    {
+                      j_global_dof_index =
+                        (ky_map_from_local_to_full_dof_indices == nullptr) ?
+                          ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                               fullmat_col_index] :
+                          ky_map_from_local_to_full_dof_indices->at(
+                            ky_dof_i2e_numbering[(*col_index_range)[0] +
+                                                 fullmat_col_index]);
+
+                      create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+                        ring_buffer_for_same_panel,
+                        ring_buffer_for_common_edge,
+                        ring_buffer_for_common_vertex,
+                        ring_buffer_for_regular,
+                        mutex_for_same_panel,
+                        mutex_for_common_edge,
+                        mutex_for_common_vertex,
+                        mutex_for_regular,
+                        mass_matrix_factor,
+                        fullmat,
+                        fullmat_row_index,
+                        fullmat_col_index,
+                        i_global_dof_index,
+                        j_global_dof_index,
+                        kx_dof_to_cell_topo,
+                        ky_dof_to_cell_topo,
+                        kx_dof_handler,
+                        ky_dof_handler,
+                        kx_mapping,
+                        ky_mapping,
+                        map_from_kx_boundary_mesh_to_volume_mesh,
+                        map_from_ky_boundary_mesh_to_volume_mesh,
+                        method_for_cell_neighboring_type,
+                        mass_matrix_scratch_data,
+                        scratch_data,
+                        copy_data,
+                        (l == end_leaf_set_index - 1) &&
+                          (fullmat_row_index == fullmat->m() - 1) &&
+                          (fullmat_col_index == fullmat->n() - 1));
+
+                      std::this_thread::sleep_for(
+                        std::chrono::milliseconds(producer_wait_time_ms));
+                    }
+                }
+            }
+        }
+
+      /**
+       * @internal Before destroying the CUDA stream when the scratch data is
+       * released, perform a stream synchronization in case there are unfinished
+       * tasks.
+       */
+      cudaError_t error_code =
+        cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+      AssertCuda(error_code);
+
+      /**
+       * @internal During releasing the scratch data, the CUDA stream will also
+       * be destroyed.
+       */
+      scratch_data.release();
+      copy_data.release();
+
+      std::cerr << "Producer thread " << current_thread_id << " exits..."
+                << std::endl;
+    }
+
+
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    void
+    sauter_quadrature_for_near_field_matrix_entries_consumer(
+      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+      const RangeNumberType                                kernel_factor,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                          &ring_buffer,
+      SauterQuadratureTaskRingBufferMutex                 &ring_buffer_mutex,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values_gpu,
+      const unsigned int                                   block_size,
+      const unsigned int                                   block_num)
+    {
+      const std::thread::id current_thread_id = std::this_thread::get_id();
+      std::cerr << "Consumer thread " << current_thread_id << " starts..."
+                << std::endl;
+
+      const unsigned int consumer_wait_time_ms = 10;
+      const unsigned int num_to_fetch          = block_size * block_num;
+
+      cudaStream_t cuda_stream_handle;
+      cudaError_t  error_code = cudaStreamCreate(&cuda_stream_handle);
+      AssertCuda(error_code);
+
+      /**
+       * Continuously process the Sauter quadrature tasks in the ring buffer for
+       * same panel case.
+       */
+      while (true)
+        {
+          ring_buffer_fetch_and_process_tasks(ring_buffer,
+                                              ring_buffer_mutex,
+                                              kernel,
+                                              kernel_factor,
+                                              num_to_fetch,
+                                              block_size,
+                                              bem_values_gpu,
+                                              cuda_stream_handle);
+
+          /**
+           * @internal When the last Sauter quadrature task has been added and
+           * there are no tasks in the ring buffer, exit the processing loop.
+           */
+          if (ring_buffer.task_num == 0 &&
+              ring_buffer.if_all_near_field_hmat_entries_added)
+            {
+              break;
+            }
+
+          std::this_thread::sleep_for(
+            std::chrono::milliseconds(consumer_wait_time_ms));
+        }
+
+      /**
+       * @internal Before destroying the CUDA stream, perform a stream
+       * synchronization in case there are unfinished tasks.
+       */
+      error_code = cudaStreamSynchronize(cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code = cudaStreamDestroy(cuda_stream_handle);
+      AssertCuda(error_code);
+
+      std::cerr << "Consumer thread " << current_thread_id << " exits..."
+                << std::endl;
+    }
+
+    /**
+     * Create Sauter quadrature tasks which are associated with a pair of global
+     * DoF indices in the external numbering with respect to the complete DoF
+     * set in the DoF handler.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param ring_buffer_for_same_panel
+     * @param ring_buffer_for_common_edge
+     * @param ring_buffer_for_common_vertex
+     * @param ring_buffer_for_regular
+     * @param fullmat
+     * @param fullmat_row_index
+     * @param fullmat_col_index
+     * @param i_global_dof_index Global DoF index in the external numbering. If only a subset of
+     * the complete DoFs in the associated DoF handler is effective or selected,
+     * this index is with respect to the complete DoF set.
+     * @param j_global_dof_index Global DoF index in the external numbering. If only a subset of
+     * the complete DoFs in the associated DoF handler is effective or selected,
+     * this index is with respect to the complete DoF set.
+     * @param kx_dof_to_cell_topo
+     * @param ky_dof_to_cell_topo
+     * @param kx_dof_handler
+     * @param ky_dof_handler
+     * @param kx_mapping
+     * @param ky_mapping
+     * @param map_from_kx_boundary_mesh_to_volume_mesh
+     * @param map_from_ky_boundary_mesh_to_volume_mesh
+     * @param method_for_cell_neighboring_type
+     * @param scratch_data
+     * @param copy_data
+     * @param is_last_task
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    void
+    create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_same_panel,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_common_edge,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_common_vertex,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                   &ring_buffer_for_regular,
+      SauterQuadratureTaskRingBufferMutex          &mutex_for_same_panel,
+      SauterQuadratureTaskRingBufferMutex          &mutex_for_common_edge,
+      SauterQuadratureTaskRingBufferMutex          &mutex_for_common_vertex,
+      SauterQuadratureTaskRingBufferMutex          &mutex_for_regular,
+      LAPACKFullMatrixExt<RangeNumberType>         *fullmat,
+      const unsigned int                            fullmat_row_index,
+      const unsigned int                            fullmat_col_index,
+      const types::global_dof_index                 i_global_dof_index,
+      const types::global_dof_index                 j_global_dof_index,
+      const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+      const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+      const DoFHandler<dim, spacedim>              &kx_dof_handler,
+      const DoFHandler<dim, spacedim>              &ky_dof_handler,
+      const MappingQGenericExt<dim, spacedim>      &kx_mapping,
+      const MappingQGenericExt<dim, spacedim>      &ky_mapping,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_kx_boundary_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_ky_boundary_mesh_to_volume_mesh,
+      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+      PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+      const bool                                               is_last_task)
+    {
+      /**
+       * Iterate over each cell in the support of the basis function associated
+       * with the i-th global DoF in the external numbering.
+       */
+      for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i_global_dof_index])
+        {
+          typename DoFHandler<dim, spacedim>::active_cell_iterator
+            kx_cell_iter = kx_dof_handler.begin_active();
+          std::advance(kx_cell_iter, kx_cell_index);
+
+          /**
+           * @internal Calculate the real support points in the cell \f$K_x\f$
+           * via the mapping object. Because the calculated mapping support
+           * points are
+           * stored in a member variable in the mapping object @p kx_mapping and
+           * the caller @p fill_hmatrix_leaf_node_with_aca_plus of this function
+           * will be executed in several TBB threads, computation of the mapping
+           * support points should be performed in thread dependent local copies
+           * of @p kx_mapping.
+           */
+          MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+          kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+          /**
+           * Copy the newly calculated support points into @p ScratchData.
+           */
+          scratch_data.kx_mapping_support_points_in_default_order =
+            kx_mapping_copy.get_support_points();
+          /**
+           * Update the DoF indices.
+           */
+          kx_cell_iter->get_dof_indices(
+            scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+          /**
+           * Iterate over each cell in the support of the basis function
+           * associated with the j-th global DoF in the external numbering.
+           */
+          for (unsigned int ky_cell_index :
+               ky_dof_to_cell_topo[j_global_dof_index])
+            {
+              typename DoFHandler<dim, spacedim>::active_cell_iterator
+                ky_cell_iter = ky_dof_handler.begin_active();
+              std::advance(ky_cell_iter, ky_cell_index);
+
+              /**
+               * Detect the cell neighboring type based on cell vertex indices.
+               */
+              CellNeighboringType cell_neighboring_type =
+                detect_cell_neighboring_type<dim, spacedim>(
+                  method_for_cell_neighboring_type,
+                  kx_cell_iter,
+                  ky_cell_iter,
+                  map_from_kx_boundary_mesh_to_volume_mesh,
+                  map_from_ky_boundary_mesh_to_volume_mesh,
+                  scratch_data.common_vertex_pair_local_indices);
+
+              /**
+               * @internal Similar to making a local copy of @p kx_mapping.
+               */
+              MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+              ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+              /**
+               * Copy the newly calculated support points into @p ScratchData.
+               */
+              scratch_data.ky_mapping_support_points_in_default_order =
+                ky_mapping_copy.get_support_points();
+              /**
+               * Update the DoF indices.
+               */
+              ky_cell_iter->get_dof_indices(
+                scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+              permute_dofs_and_mapping_support_points_for_sauter_quad(
+                scratch_data,
+                copy_data,
+                cell_neighboring_type,
+                kx_cell_iter,
+                ky_cell_iter,
+                kx_mapping_copy,
+                ky_mapping_copy);
+
+              /**
+               * @internal Find the array index in the permuted DoF indices of
+               * \f$K_x\f$ for the i-th global DoF in the external numbering
+               * with respect to the complete DoF set in the DoF handler.
+               *
+               * \mynote{The permuted cell DoF indices are stored in the
+               * @p CopyData.}
+               */
+              typename std::vector<types::global_dof_index>::const_iterator
+                i_iter =
+                  std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                            copy_data.kx_local_dof_indices_permuted.end(),
+                            i_global_dof_index);
+              Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                     ExcInternalError());
+              unsigned int i_index =
+                i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+              /**
+               * @internal Find the array index in the permuted DoF indices of
+               * \f$K_y\f$ for the j-th global DoF in the external numbering
+               * with respect to the complete DoF set in the DoF handler.
+               */
+              typename std::vector<types::global_dof_index>::const_iterator
+                j_iter =
+                  std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                            copy_data.ky_local_dof_indices_permuted.end(),
+                            j_global_dof_index);
+              Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                     ExcInternalError());
+              unsigned int j_index =
+                j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+              switch (cell_neighboring_type)
+                {
+                    case CellNeighboringType::SamePanel: {
+                      ring_buffer_add_task(ring_buffer_for_same_panel,
+                                           mutex_for_same_panel,
+                                           fullmat,
+                                           fullmat_row_index,
+                                           fullmat_col_index,
+                                           i_index,
+                                           j_index,
+                                           0.,
+                                           scratch_data,
+                                           is_last_task);
+
+                      break;
+                    }
+                    case CellNeighboringType::CommonEdge: {
+                      ring_buffer_add_task(ring_buffer_for_common_edge,
+                                           mutex_for_common_edge,
+                                           fullmat,
+                                           fullmat_row_index,
+                                           fullmat_col_index,
+                                           i_index,
+                                           j_index,
+                                           0.,
+                                           scratch_data,
+                                           is_last_task);
+
+                      break;
+                    }
+                    case CellNeighboringType::CommonVertex: {
+                      ring_buffer_add_task(ring_buffer_for_common_vertex,
+                                           mutex_for_common_vertex,
+                                           fullmat,
+                                           fullmat_row_index,
+                                           fullmat_col_index,
+                                           i_index,
+                                           j_index,
+                                           0.,
+                                           scratch_data,
+                                           is_last_task);
+
+                      break;
+                    }
+                    case CellNeighboringType::Regular: {
+                      ring_buffer_add_task(ring_buffer_for_regular,
+                                           mutex_for_regular,
+                                           fullmat,
+                                           fullmat_row_index,
+                                           fullmat_col_index,
+                                           i_index,
+                                           j_index,
+                                           0.,
+                                           scratch_data,
+                                           is_last_task);
+
+                      break;
+                    }
+                    default: {
+                      Assert(false, ExcInternalError());
+
+                      break;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Create Sauter quadrature tasks which are associated with a pair of global
+     * DoF indices in the external numbering with respect to the complete set of
+     * DoFs in the DoF handler. This version handles the case when a mass
+     * matrix (scaled by @p mass_matrix_factor) is to be added to the bilinear form.
+     *
+     * \mynote{Before performing the Sauter quadrature, we first compute the
+     * mass matrix entry if needed. The final result will be the addition of
+     * this value and the Sauter quadrature result.}
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param ring_buffer_for_same_panel
+     * @param ring_buffer_for_common_edge
+     * @param ring_buffer_for_common_vertex
+     * @param ring_buffer_for_regular
+     * @param mass_matrix_factor
+     * @param fullmat
+     * @param fullmat_row_index
+     * @param fullmat_col_index
+     * @param i_global_dof_index Global DoF index in the external numbering. If only a subset of
+     * the complete DoFs in the associated DoF handler is effective or selected,
+     * this index is with respect to the complete DoF set.
+     * @param j_global_dof_index Global DoF index in the external numbering. If only a subset of
+     * the complete DoFs in the associated DoF handler is effective or selected,
+     * this index is with respect to the complete DoF set.
+     * @param kx_dof_to_cell_topo
+     * @param ky_dof_to_cell_topo
+     * @param kx_dof_handler
+     * @param ky_dof_handler
+     * @param kx_mapping
+     * @param ky_mapping
+     * @param map_from_kx_boundary_mesh_to_volume_mesh
+     * @param map_from_ky_boundary_mesh_to_volume_mesh
+     * @param method_for_cell_neighboring_type
+     * @param mass_matrix_scratch_data
+     * @param scratch_data
+     * @param copy_data
+     * @param is_last_task
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    void
+    create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_same_panel,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_common_edge,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+        &ring_buffer_for_common_vertex,
+      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+                                                   &ring_buffer_for_regular,
+      SauterQuadratureTaskRingBufferMutex          &mutex_for_same_panel,
+      SauterQuadratureTaskRingBufferMutex          &mutex_for_common_edge,
+      SauterQuadratureTaskRingBufferMutex          &mutex_for_common_vertex,
+      SauterQuadratureTaskRingBufferMutex          &mutex_for_regular,
+      const RangeNumberType                         mass_matrix_factor,
+      LAPACKFullMatrixExt<RangeNumberType>         *fullmat,
+      const unsigned int                            fullmat_row_index,
+      const unsigned int                            fullmat_col_index,
+      const types::global_dof_index                 i_global_dof_index,
+      const types::global_dof_index                 j_global_dof_index,
+      const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
+      const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
+      const DoFHandler<dim, spacedim>              &kx_dof_handler,
+      const DoFHandler<dim, spacedim>              &ky_dof_handler,
+      const MappingQGenericExt<dim, spacedim>      &kx_mapping,
+      const MappingQGenericExt<dim, spacedim>      &ky_mapping,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_kx_boundary_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                     typename Triangulation<dim + 1, spacedim>::face_iterator>
+        &map_from_ky_boundary_mesh_to_volume_mesh,
+      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+      CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
+      PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+      const bool                                               is_last_task)
+    {
+      /**
+       * Iterate over each cell in the support of the basis function associated
+       * with the i-th global DoF in the external numbering.
+       */
+      for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i_global_dof_index])
+        {
+          typename DoFHandler<dim, spacedim>::active_cell_iterator
+            kx_cell_iter = kx_dof_handler.begin_active();
+          std::advance(kx_cell_iter, kx_cell_index);
+
+          /**
+           * @internal Calculate the real support points in the cell \f$K_x\f$
+           * via the mapping object. Because the calculated mapping support
+           * points are
+           * stored in a member variable in the mapping object @p kx_mapping and
+           * the caller @p fill_hmatrix_leaf_node_with_aca_plus of this function
+           * will be executed in several TBB threads, computation of the mapping
+           * support points should be performed in thread dependent local copies
+           * of @p kx_mapping.
+           */
+          MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+          kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+          /**
+           * Copy the newly calculated support points into @p ScratchData.
+           */
+          scratch_data.kx_mapping_support_points_in_default_order =
+            kx_mapping_copy.get_support_points();
+          /**
+           * Update the DoF indices.
+           */
+          kx_cell_iter->get_dof_indices(
+            scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+          /**
+           * Iterate over each cell in the support of the basis function
+           * associated with the j-th global DoF in the external numbering.
+           */
+          for (unsigned int ky_cell_index :
+               ky_dof_to_cell_topo[j_global_dof_index])
+            {
+              typename DoFHandler<dim, spacedim>::active_cell_iterator
+                ky_cell_iter = ky_dof_handler.begin_active();
+              std::advance(ky_cell_iter, ky_cell_index);
+
+              /**
+               * Detect the cell neighboring type based on cell vertex indices.
+               */
+              CellNeighboringType cell_neighboring_type =
+                detect_cell_neighboring_type<dim, spacedim>(
+                  method_for_cell_neighboring_type,
+                  kx_cell_iter,
+                  ky_cell_iter,
+                  map_from_kx_boundary_mesh_to_volume_mesh,
+                  map_from_ky_boundary_mesh_to_volume_mesh,
+                  scratch_data.common_vertex_pair_local_indices);
+
+              /**
+               * @internal Similar to making a local copy of @p kx_mapping.
+               */
+              MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+              ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+              /**
+               * Copy the newly calculated support points into @p ScratchData.
+               */
+              scratch_data.ky_mapping_support_points_in_default_order =
+                ky_mapping_copy.get_support_points();
+              /**
+               * Update the DoF indices.
+               */
+              ky_cell_iter->get_dof_indices(
+                scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+              permute_dofs_and_mapping_support_points_for_sauter_quad(
+                scratch_data,
+                copy_data,
+                cell_neighboring_type,
+                kx_cell_iter,
+                ky_cell_iter,
+                kx_mapping_copy,
+                ky_mapping_copy);
+
+              /**
+               * @internal Before creating the Sauter quadrature task, compute
+               * the FEM mass matrix entry if necessary.
+               *
+               * \myalert{N.B. The DoF handlers for the test and ansatz spaces
+               * should be constructed on a same triangulation. Then the
+               * following comparison <code>kx_cell_index ==
+               * ky_cell_index</code> is meaningful.}
+               */
+              RangeNumberType mass_matrix_entry;
+              if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
+                {
+                  Assert(cell_neighboring_type ==
+                           CellNeighboringType::SamePanel,
+                         ExcInternalError());
+
+                  /**
+                   * @internal Update the finite element values for the test
+                   * space.
+                   */
+                  mass_matrix_scratch_data.fe_values_for_test_space.reinit(
+                    kx_cell_iter);
+
+                  /**
+                   * @internal Update the finite element values for the trial
+                   * space.
+                   *
+                   * \mynote{N.B. The @p FEValues related to the trial
+                   * space must also be updated, since the trial space may
+                   * be different from the test space.}
+                   */
+                  mass_matrix_scratch_data.fe_values_for_trial_space.reinit(
+                    ky_cell_iter);
+
+                  const unsigned int n_q_points =
+                    mass_matrix_scratch_data.fe_values_for_test_space
+                      .get_quadrature()
+                      .size();
+                  /**
+                   * @internal The trial space is on a same triangulation as the
+                   * test space and they share a same quadrature object. Hence,
+                   * we make assertion about their quadrature sizes.
+                   */
+                  AssertDimension(n_q_points,
+                                  mass_matrix_scratch_data
+                                    .fe_values_for_trial_space.get_quadrature()
+                                    .size());
+
+                  /**
+                   * Get the array index of the global DoF index
+                   * @p i_global_dof_index in the current cell \f$K_x\f$.
+                   *
+                   * \mynote{N.B. The local DoF index in \f$K_x\f$ is
+                   * searched from the list of DoF indices held in the
+                   * @p ScratchData for BEM. This is valid because the
+                   * test and trial spaces associated with the mass matrix
+                   * and the BEM bilinear form are the same.
+                   *
+                   * Since there is no support point permutation during FEM mass
+                   * matrix assembly, the cell DoF indices here are in the
+                   * default order. BTW, the permuted cell DoF indices are
+                   * stored in the @p CopyData.}
+                   */
+                  auto i_local_dof_iter = std::find(
+                    scratch_data.kx_local_dof_indices_in_default_dof_order
+                      .begin(),
+                    scratch_data.kx_local_dof_indices_in_default_dof_order
+                      .end(),
+                    i_global_dof_index);
+                  Assert(i_local_dof_iter !=
+                           scratch_data
+                             .kx_local_dof_indices_in_default_dof_order.end(),
+                         ExcMessage(
+                           std::string("Cannot find the global DoF index ") +
+                           std::to_string(i_global_dof_index) +
+                           std::string(" in the list of cell DoF indices!")));
+                  const unsigned int i_local_dof_index =
+                    i_local_dof_iter -
+                    scratch_data.kx_local_dof_indices_in_default_dof_order
+                      .begin();
+
+                  /**
+                   * Get the array index of the global DoF index
+                   * @p j_global_dof_index in the current cell \f$K_y\f$.
+                   */
+                  auto j_local_dof_iter = std::find(
+                    scratch_data.ky_local_dof_indices_in_default_dof_order
+                      .begin(),
+                    scratch_data.ky_local_dof_indices_in_default_dof_order
+                      .end(),
+                    j_global_dof_index);
+                  Assert(j_local_dof_iter !=
+                           scratch_data
+                             .ky_local_dof_indices_in_default_dof_order.end(),
+                         ExcMessage(
+                           std::string("Cannot find the global DoF index ") +
+                           std::to_string(j_global_dof_index) +
+                           std::string(" in the list of cell DoF indices!")));
+                  const unsigned int j_local_dof_index =
+                    j_local_dof_iter -
+                    scratch_data.ky_local_dof_indices_in_default_dof_order
+                      .begin();
+
+                  /**
+                   * @internal Iterate over each quadrature point.
+                   */
+                  for (unsigned int q = 0; q < n_q_points; q++)
+                    {
+                      mass_matrix_entry +=
+                        mass_matrix_scratch_data.fe_values_for_test_space
+                          .shape_value(i_local_dof_index, q) *
+                        mass_matrix_scratch_data.fe_values_for_trial_space
+                          .shape_value(j_local_dof_index, q) *
+                        mass_matrix_scratch_data.fe_values_for_test_space.JxW(
+                          q);
+                    }
+
+                  mass_matrix_entry *= mass_matrix_factor;
+                }
+              else
+                {
+                  /**
+                   * @internal The mass matrix does not contribute to the
+                   * current matrix entry.
+                   */
+                  mass_matrix_entry = 0.;
+                }
+
+              /**
+               * @internal Now we start to create the Sauter quadrature task.
+               */
+
+              /**
+               * @internal Find the array index in the permuted DoF indices of
+               * \f$K_x\f$ for the i-th global DoF in the external numbering
+               * with respect to the complete DoF set in the DoF handler.
+               *
+               * \mynote{The permuted cell DoF indices are stored in the
+               * @p CopyData.}
+               */
+              typename std::vector<types::global_dof_index>::const_iterator
+                i_iter =
+                  std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                            copy_data.kx_local_dof_indices_permuted.end(),
+                            i_global_dof_index);
+              Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                     ExcInternalError());
+              unsigned int i_index =
+                i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+              /**
+               * @internal Find the array index in the permuted DoF indices of
+               * \f$K_y\f$ for the j-th global DoF in the external numbering
+               * with respect to the complete DoF set in the DoF handler.
+               */
+              typename std::vector<types::global_dof_index>::const_iterator
+                j_iter =
+                  std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                            copy_data.ky_local_dof_indices_permuted.end(),
+                            j_global_dof_index);
+              Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                     ExcInternalError());
+              unsigned int j_index =
+                j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+              switch (cell_neighboring_type)
+                {
+                    case CellNeighboringType::SamePanel: {
+                      ring_buffer_add_task(ring_buffer_for_same_panel,
+                                           mutex_for_same_panel,
+                                           fullmat,
+                                           fullmat_row_index,
+                                           fullmat_col_index,
+                                           i_index,
+                                           j_index,
+                                           mass_matrix_entry,
+                                           scratch_data,
+                                           is_last_task);
+
+                      break;
+                    }
+                    case CellNeighboringType::CommonEdge: {
+                      ring_buffer_add_task(ring_buffer_for_common_edge,
+                                           mutex_for_common_edge,
+                                           fullmat,
+                                           fullmat_row_index,
+                                           fullmat_col_index,
+                                           i_index,
+                                           j_index,
+                                           mass_matrix_entry,
+                                           scratch_data,
+                                           is_last_task);
+
+                      break;
+                    }
+                    case CellNeighboringType::CommonVertex: {
+                      ring_buffer_add_task(ring_buffer_for_common_vertex,
+                                           mutex_for_common_vertex,
+                                           fullmat,
+                                           fullmat_row_index,
+                                           fullmat_col_index,
+                                           i_index,
+                                           j_index,
+                                           mass_matrix_entry,
+                                           scratch_data,
+                                           is_last_task);
+
+                      break;
+                    }
+                    case CellNeighboringType::Regular: {
+                      ring_buffer_add_task(ring_buffer_for_regular,
+                                           mutex_for_regular,
+                                           fullmat,
+                                           fullmat_row_index,
+                                           fullmat_col_index,
+                                           i_index,
+                                           j_index,
+                                           mass_matrix_entry,
+                                           scratch_data,
+                                           is_last_task);
+
+                      break;
+                    }
+                    default: {
+                      Assert(false, ExcInternalError());
+
+                      break;
+                    }
+                }
+            }
+        }
     }
   } // namespace CUDAWrappers
 
@@ -2828,8 +6418,12 @@ namespace IdeoBEM
    *
    * @param kernel
    * @param factor
-   * @param i External DoF numbering
-   * @param j External DoF numbering
+   * @param i Global DoF index in the external numbering. If only a subset of
+   * the complete DoFs in the associated DoF handler is effective or selected,
+   * this index is with respect to the complete DoF set.
+   * @param j Global DoF index in the external numbering. If only a subset of
+   * the complete DoFs in the associated DoF handler is effective or selected,
+   * this index is with respect to the complete DoF set.
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
    * @param bem_values
@@ -3287,8 +6881,12 @@ namespace IdeoBEM
    * @param kernel
    * @param kernel_factor
    * @param mass_matrix_factor
-   * @param i
-   * @param j
+   * @param i Global DoF index in the external numbering. If only a subset of
+   * the complete DoFs in the associated DoF handler is effective or selected,
+   * this index is with respect to the complete DoF set.
+   * @param j Global DoF index in the external numbering. If only a subset of
+   * the complete DoFs in the associated DoF handler is effective or selected,
+   * this index is with respect to the complete DoF set.
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
    * @param bem_values

@@ -42,8 +42,8 @@
 #include <array>
 #include <cmath>
 #include <vector>
+#include "aca_plus.hcu"
 
-#include "aca_plus.h"
 #include "bem_general.h"
 #include "bem_tools.hcu"
 #include "bem_values.h"

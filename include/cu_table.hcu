@@ -405,6 +405,44 @@ namespace IdeoBEM
                  const size_type l);
 
       /**
+       * Get the const reference to the element (i,j,k,l,m) in the table.
+       *
+       * \mynote{The table should have five dimensions.}
+       *
+       * @param i
+       * @param j
+       * @param k
+       * @param l
+       * @param m
+       * @return
+       */
+      __device__ const T &
+      operator()(const size_type i,
+                 const size_type j,
+                 const size_type k,
+                 const size_type l,
+                 const size_type m) const;
+
+      /**
+       * Get the reference to the element (i,j,k,l,m) in the table.
+       *
+       * \mynote{The table should have five dimensions.}
+       *
+       * @param i
+       * @param j
+       * @param k
+       * @param l
+       * @param m
+       * @return
+       */
+      __device__ T &
+      operator()(const size_type i,
+                 const size_type j,
+                 const size_type k,
+                 const size_type l,
+                 const size_type m);
+
+      /**
        * Get table sizes.
        *
        * @return
@@ -966,6 +1004,40 @@ namespace IdeoBEM
       return values[((i * table_size[1] + j) * table_size[2] + k) *
                       table_size[3] +
                     l];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline const T &
+    CUDATable<N, T>::operator()(const size_type i,
+                                const size_type j,
+                                const size_type k,
+                                const size_type l,
+                                const size_type m) const
+    {
+      assert(N == 5);
+
+      return values
+        [(((i * table_size[1] + j) * table_size[2] + k) * table_size[3] + l) *
+           table_size[4] +
+         m];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline T &
+    CUDATable<N, T>::operator()(const size_type i,
+                                const size_type j,
+                                const size_type k,
+                                const size_type l,
+                                const size_type m)
+    {
+      assert(N == 5);
+
+      return values
+        [(((i * table_size[1] + j) * table_size[2] + k) * table_size[3] + l) *
+           table_size[4] +
+         m];
     }
 
 

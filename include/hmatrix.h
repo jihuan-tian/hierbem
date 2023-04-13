@@ -1122,6 +1122,14 @@ namespace IdeoBEM
                                    const double       threshold   = 0.) const;
 
     /**
+     * Print the leaf set information.
+     *
+     * @param out
+     */
+    void
+    print_leaf_set_info(std::ostream &out) const;
+
+    /**
      * Write formatted full matrix leaf node to the output stream.
      *
      * The leaf node is written in the following format:
@@ -2701,8 +2709,22 @@ namespace IdeoBEM
     const std::vector<HMatrix<spacedim, Number> *> &
     get_leaf_set() const;
 
+    std::vector<HMatrix<spacedim, Number> *> &
+    get_near_field_leaf_set();
+
+    const std::vector<HMatrix<spacedim, Number> *> &
+    get_near_field_leaf_set() const;
+
+    std::vector<HMatrix<spacedim, Number> *> &
+    get_far_field_leaf_set();
+
+    const std::vector<HMatrix<spacedim, Number> *> &
+    get_far_field_leaf_set() const;
+
     /**
      * Get the pointer to the global row index range.
+     *
+     * \mynote{The index range follows the internal DoF numbering.}
      *
      * @return
      */
@@ -2712,6 +2734,8 @@ namespace IdeoBEM
     /**
      * Get the pointer to the global row index range (const version).
      *
+     * \mynote{The index range follows the internal DoF numbering.}
+     *
      * @return
      */
     const std::array<types::global_dof_index, 2> *
@@ -2720,6 +2744,8 @@ namespace IdeoBEM
     /**
      * Get the pointer to the global column index range.
      *
+     * \mynote{The index range follows the internal DoF numbering.}
+     *
      * @return
      */
     std::array<types::global_dof_index, 2> *
@@ -2727,6 +2753,8 @@ namespace IdeoBEM
 
     /**
      * Get the pointer to the global column index range (const version).
+     *
+     * \mynote{The index range follows the internal DoF numbering.}
      *
      * @return
      */
@@ -2912,7 +2940,9 @@ namespace IdeoBEM
      * @param total_leaf_set
      */
     void
-    _build_leaf_set(std::vector<HMatrix *> &total_leaf_set) const;
+    _build_leaf_set(std::vector<HMatrix *> &total_leaf_set,
+                    std::vector<HMatrix *> &total_near_field_leaf_set,
+                    std::vector<HMatrix *> &total_far_field_leaf_set) const;
 
     void
     distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves(
@@ -3032,6 +3062,16 @@ namespace IdeoBEM
      * A list of submatrices in the leaf set.
      */
     std::vector<HMatrix<spacedim, Number> *> leaf_set;
+
+    /**
+     * Near field \hmatrix leaf node set.
+     */
+    std::vector<HMatrix<spacedim, Number> *> near_field_leaf_set;
+
+    /**
+     * Far field \hmatrix leaf node set.
+     */
+    std::vector<HMatrix<spacedim, Number> *> far_field_leaf_set;
 
     /**
      * Pointer to the rank-k matrix. It is not null when the current HMatrix
@@ -14000,6 +14040,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14028,6 +14070,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14060,6 +14104,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14091,6 +14137,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14127,6 +14175,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14165,6 +14215,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14197,6 +14249,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14229,6 +14283,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14260,6 +14316,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14287,6 +14345,8 @@ namespace IdeoBEM
     , parent(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
+    , near_field_leaf_set(0)
+    , far_field_leaf_set(0)
     , rkmatrix(nullptr)
     , fullmatrix(nullptr)
     , bc_node(nullptr)
@@ -14314,6 +14374,8 @@ namespace IdeoBEM
     , parent(H.parent)
     , submatrix_index(H.submatrix_index)
     , leaf_set(H.leaf_set)
+    , near_field_leaf_set(H.near_field_leaf_set)
+    , far_field_leaf_set(H.far_field_leaf_set)
     , rkmatrix(H.rkmatrix)
     , fullmatrix(H.fullmatrix)
     , bc_node(H.bc_node)
@@ -14655,24 +14717,30 @@ namespace IdeoBEM
   template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::_build_leaf_set(
-    std::vector<HMatrix *> &total_leaf_set) const
+    std::vector<HMatrix *> &total_leaf_set,
+    std::vector<HMatrix *> &total_near_field_leaf_set,
+    std::vector<HMatrix *> &total_far_field_leaf_set) const
   {
     switch (type)
       {
           case FullMatrixType: {
             total_leaf_set.push_back(const_cast<HMatrix *>(this));
+            total_near_field_leaf_set.push_back(const_cast<HMatrix *>(this));
 
             break;
           }
           case RkMatrixType: {
             total_leaf_set.push_back(const_cast<HMatrix *>(this));
+            total_far_field_leaf_set.push_back(const_cast<HMatrix *>(this));
 
             break;
           }
           case HierarchicalMatrixType: {
             for (HMatrix *submatrix : submatrices)
               {
-                submatrix->_build_leaf_set(total_leaf_set);
+                submatrix->_build_leaf_set(total_leaf_set,
+                                           total_near_field_leaf_set,
+                                           total_far_field_leaf_set);
               }
 
             break;
@@ -14917,6 +14985,8 @@ namespace IdeoBEM
 
     submatrices.clear();
     leaf_set.clear();
+    near_field_leaf_set.clear();
+    far_field_leaf_set.clear();
 
     type            = UndefinedMatrixType;
     state           = HMatrixSupport::matrix;
@@ -14992,6 +15062,8 @@ namespace IdeoBEM
     parent          = nullptr;
     submatrix_index = submatrix_index_invalid;
     leaf_set.clear();
+    near_field_leaf_set.clear();
+    far_field_leaf_set.clear();
     rkmatrix        = nullptr;
     fullmatrix      = nullptr;
     bc_node         = nullptr;
@@ -15815,6 +15887,50 @@ namespace IdeoBEM
                                    zero_string,
                                    denominator,
                                    threshold);
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::print_leaf_set_info(std::ostream &out) const
+  {
+    /**
+     * @internal Calculate the total number of matrix entries in the near field
+     * set.
+     */
+    types::global_dof_index near_field_matrix_entries_num = 0;
+    for (auto mat : near_field_leaf_set)
+      {
+        Assert(mat->fullmatrix != nullptr, ExcInternalError());
+
+        near_field_matrix_entries_num +=
+          mat->fullmatrix->m() * mat->fullmatrix->n();
+      }
+
+    /**
+     * @internal Calculate the maximum total number of matrix entries in the far
+     * field set.
+     */
+    types::global_dof_index far_field_matrix_entries_num = 0;
+    for (auto mat : far_field_leaf_set)
+      {
+        Assert(mat->rkmatrix != nullptr, ExcInternalError());
+
+        far_field_matrix_entries_num +=
+          (mat->rkmatrix->get_m() + mat->rkmatrix->get_n()) *
+          mat->rkmatrix->get_formal_rank();
+      }
+
+    out << "Number of H-matrix nodes in the leaf set: " << leaf_set.size()
+        << "\n"
+        << "Number of H-matrix nodes in the near field set: "
+        << near_field_leaf_set.size() << "\n"
+        << "Number of H-matrix nodes in the far field set: "
+        << far_field_leaf_set.size() << "\n"
+        << "Number of matrix entries in the near field set: "
+        << near_field_matrix_entries_num << "\n"
+        << "Maximum number of matrix entries in the far field set: "
+        << far_field_matrix_entries_num << std::endl;
   }
 
 
@@ -25020,7 +25136,10 @@ namespace IdeoBEM
   HMatrix<spacedim, Number>::build_leaf_set()
   {
     leaf_set.clear();
-    _build_leaf_set(leaf_set);
+    near_field_leaf_set.clear();
+    far_field_leaf_set.clear();
+
+    _build_leaf_set(leaf_set, near_field_leaf_set, far_field_leaf_set);
   }
 
 
@@ -25039,6 +25158,37 @@ namespace IdeoBEM
     return leaf_set;
   }
 
+
+  template <int spacedim, typename Number>
+  std::vector<HMatrix<spacedim, Number> *> &
+  HMatrix<spacedim, Number>::get_near_field_leaf_set()
+  {
+    return near_field_leaf_set;
+  }
+
+
+  template <int spacedim, typename Number>
+  const std::vector<HMatrix<spacedim, Number> *> &
+  HMatrix<spacedim, Number>::get_near_field_leaf_set() const
+  {
+    return near_field_leaf_set;
+  }
+
+
+  template <int spacedim, typename Number>
+  std::vector<HMatrix<spacedim, Number> *> &
+  HMatrix<spacedim, Number>::get_far_field_leaf_set()
+  {
+    return far_field_leaf_set;
+  }
+
+
+  template <int spacedim, typename Number>
+  const std::vector<HMatrix<spacedim, Number> *> &
+  HMatrix<spacedim, Number>::get_far_field_leaf_set() const
+  {
+    return far_field_leaf_set;
+  }
 
   template <int spacedim, typename Number>
   std::array<types::global_dof_index, 2> *
@@ -25438,8 +25588,10 @@ namespace IdeoBEM
      */
     memory_for_hmat_node +=
       sizeof(bc_node) + sizeof(block_type) + sizeof(col_index_range) +
-      sizeof(fullmatrix) + memory_consumption_of_vector(leaf_set) + sizeof(m) +
-      sizeof(n) + sizeof(parent) + sizeof(property) + sizeof(rkmatrix) +
+      sizeof(fullmatrix) + memory_consumption_of_vector(leaf_set) +
+      memory_consumption_of_vector(near_field_leaf_set) +
+      memory_consumption_of_vector(far_field_leaf_set) + sizeof(m) + sizeof(n) +
+      sizeof(parent) + sizeof(property) + sizeof(rkmatrix) +
       sizeof(row_index_range) + memory_consumption_of_vector(Sigma_F) +
       memory_consumption_of_vector(Sigma_P) +
       memory_consumption_of_vector(Sigma_R) + sizeof(state) +

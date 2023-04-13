@@ -823,7 +823,7 @@ namespace IdeoBEM
 
       /**
        * Copy some of the calculated data in @p PairCellWiseScratchData on the host to
-       * device.
+       * the device.
        *
        * @param scratch_cpu
        */
