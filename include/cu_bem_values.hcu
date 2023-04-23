@@ -866,21 +866,37 @@ namespace IdeoBEM
       /**
        * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
        * \f$k_3\f$ term and at each quadrature point for the same panel case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, RangeNumberType> kx_jacobians_same_panel;
       /**
        * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
        * \f$k_3\f$ term and at each quadrature point for the common edge case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, RangeNumberType> kx_jacobians_common_edge;
       /**
        * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
        * \f$k_3\f$ term and at each quadrature point for the common vertex case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, RangeNumberType> kx_jacobians_common_vertex;
       /**
        * Jacobian from the unit cell to the real cell \f$K_x\f$ for each
        * \f$k_3\f$ term and at each quadrature point for the regular case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, RangeNumberType> kx_jacobians_regular;
 
@@ -956,21 +972,37 @@ namespace IdeoBEM
       /**
        * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
        * \f$k_3\f$ term and at each quadrature point for the same panel case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, RangeNumberType> ky_jacobians_same_panel;
       /**
        * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
        * \f$k_3\f$ term and at each quadrature point for the common edge case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, RangeNumberType> ky_jacobians_common_edge;
       /**
        * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
        * \f$k_3\f$ term and at each quadrature point for the common vertex case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, RangeNumberType> ky_jacobians_common_vertex;
       /**
        * Jacobian from the unit cell to the real cell \f$K_y\f$ for each
        * \f$k_3\f$ term and at each quadrature point for the regular case.
+       *
+       * Table dimensions
+       * 1. k3 term index
+       * 2. Quadrature point index
        */
       CUDATable<2, RangeNumberType> ky_jacobians_regular;
 

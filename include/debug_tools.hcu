@@ -718,8 +718,8 @@ namespace IdeoBEM
         quad_gpu.get_points().copy_to_host(quad_points_from_gpu);
 
         double     *weights_from_gpu = new double[quad_num];
-        cudaError_t error_code       = cudaMemcpy(weights_from_gpu,
-                                            quad_gpu.get_weights(),
+        cudaError_t error_code       = cudaMemcpy((void *)weights_from_gpu,
+                                            (void *)(quad_gpu.get_weights()),
                                             sizeof(double) * quad_num,
                                             cudaMemcpyDeviceToHost);
         AssertCuda(error_code);

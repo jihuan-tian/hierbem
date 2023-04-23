@@ -2212,16 +2212,14 @@ namespace IdeoBEM
     {
     public:
       /**
-       * Allocate memory for the ring buffer.
+       * Allocate memory for the ring buffer on the host and device.
        *
        * @param capacity Size of the ring buffer
        * @param cell_neighboring_type Cell neighboring type to be handled in
        * this queue
        * @param bem_values @p BEMValues on the host is used to pass necessary
-       * data sizes, such as number of shape functions used by the mapping and
-       * number of quadrature points.
-       * @param scratch_data Scratch data which holds the current thread id and
-       * CUDA stream id.
+       * data sizes, such as number of shape functions used by the mapping
+       * objects, number of quadrature points, etc.
        */
       __host__ void
       allocate(const unsigned int              capacity,
@@ -2229,16 +2227,16 @@ namespace IdeoBEM
                const BEMValues<dim, spacedim> &bem_values);
 
       /**
-       * Release the memory
+       * Release the memory on the host and device.
        */
       __host__ void
       release();
 
       /**
        * Flag indicating if all matrix entries in all near filed \hmatrices have
-       * been added as evaluation tasks to the ring buffer. If it is @p true,
-       * even though the number of tasks in the buffer (@p task_num) is less than
-       * the total number of GPU threads for computing Sauter quadrature, the
+       * been added as tasks to the ring buffer. If it is true, even though the
+       * number of tasks in the buffer (@p task_num) is less than the total
+       * number of GPU threads specified to compute the Sauter quadrature, the
        * consumer threads will get all of them directly and perform the
        * computation.
        */
@@ -2246,7 +2244,7 @@ namespace IdeoBEM
       /**
        * The cell neighboring type that the queue handles.
        *
-       * \mynote{All quadratures in the queue should have a same cell
+       * \mynote{All quadratures in the task queue should have a same cell
        * neighboring type.}
        */
       CellNeighboringType cell_neighboring_type;
@@ -2261,7 +2259,10 @@ namespace IdeoBEM
        * \mynote{Because @p CUDATable class is adopted for storing the list of
        * permuted mapping support points, the size of its second dimension is
        * constant, which prescribes that all cells in the mesh adopt a same
-       * mapping object.}
+       * mapping object.
+       *
+       * TODO When different mapping objects are adopted for different
+       * subdomains, this should be modified accordingly.}
        */
       CUDATable<2, Point<spacedim, RangeNumberType>>
         kx_mapping_support_points_permuted_ring_buffer;
@@ -2276,64 +2277,467 @@ namespace IdeoBEM
        * \mynote{Because @p CUDATable class is adopted for storing the list of
        * permuted mapping support points, the size of its second dimension is
        * constant, which prescribes that all cells in the mesh adopt a same
-       * mapping object.}
+       * mapping object.
+       *
+       * TODO When different mapping objects are adopted for different
+       * subdomains, this should be modified accordingly.}
        */
       CUDATable<2, Point<spacedim, RangeNumberType>>
         ky_mapping_support_points_permuted_ring_buffer;
 
+      /**
+       * Data table storing the Jacobian determinants at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is same panel.
+       */
       CUDATable<3, RangeNumberType> kx_jacobians_same_panel_ring_buffer;
+      /**
+       * Data table storing the Jacobian determinants at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common edge.
+       */
       CUDATable<3, RangeNumberType> kx_jacobians_common_edge_ring_buffer;
+      /**
+       * Data table storing the Jacobian determinants at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common vertex.
+       */
       CUDATable<3, RangeNumberType> kx_jacobians_common_vertex_ring_buffer;
+      /**
+       * Data table storing the Jacobian determinants at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is regular.
+       */
       CUDATable<3, RangeNumberType> kx_jacobians_regular_ring_buffer;
 
+      /**
+       * Data table storing the normal vectors at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is same panel.
+       */
       CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
         kx_normals_same_panel_ring_buffer;
+      /**
+       * Data table storing the normal vectors at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common edge.
+       */
       CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
         kx_normals_common_edge_ring_buffer;
+      /**
+       * Data table storing the normal vectors at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common vertex.
+       */
       CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
         kx_normals_common_vertex_ring_buffer;
+      /**
+       * Data table storing the normal vectors at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is regular.
+       */
       CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
         kx_normals_regular_ring_buffer;
 
+      /**
+       * Data table storing the covariant transformation matrices at all Sauter
+       * quadrature points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       * 4. Manifold coordinate index
+       * 5. Space coordinate index
+       *
+       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
+       * the Fortran index style. Meanwhile, the data table adopts the C style.
+       * Therefore, the space coordinate index goes after the manifold
+       * coordinate index.}
+       *
+       * Cell neighboring type is same panel.
+       */
       CUDATable<5, RangeNumberType> kx_covariants_same_panel_ring_buffer;
+      /**
+       * Data table storing the covariant transformation matrices at all Sauter
+       * quadrature points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       * 4. Manifold coordinate index
+       * 5. Space coordinate index
+       *
+       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
+       * the Fortran index style. Meanwhile, the data table adopts the C style.
+       * Therefore, the space coordinate index goes after the manifold
+       * coordinate index.}
+       *
+       * Cell neighboring type is common edge.
+       */
       CUDATable<5, RangeNumberType> kx_covariants_common_edge_ring_buffer;
+      /**
+       * Data table storing the covariant transformation matrices at all Sauter
+       * quadrature points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       * 4. Manifold coordinate index
+       * 5. Space coordinate index
+       *
+       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
+       * the Fortran index style. Meanwhile, the data table adopts the C style.
+       * Therefore, the space coordinate index goes after the manifold
+       * coordinate index.}
+       *
+       * Cell neighboring type is common vertex.
+       */
       CUDATable<5, RangeNumberType> kx_covariants_common_vertex_ring_buffer;
+      /**
+       * Data table storing the covariant transformation matrices at all Sauter
+       * quadrature points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       * 4. Manifold coordinate index
+       * 5. Space coordinate index
+       *
+       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
+       * the Fortran index style. Meanwhile, the data table adopts the C style.
+       * Therefore, the space coordinate index goes after the manifold
+       * coordinate index.}
+       *
+       * Cell neighboring type is regular.
+       */
       CUDATable<5, RangeNumberType> kx_covariants_regular_ring_buffer;
 
+      /**
+       * Data table for quadrature points.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is same panel.
+       */
       CUDATable<3, Point<spacedim, RangeNumberType>>
         kx_quad_points_same_panel_ring_buffer;
+      /**
+       * Data table for quadrature points.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common edge.
+       */
       CUDATable<3, Point<spacedim, RangeNumberType>>
         kx_quad_points_common_edge_ring_buffer;
+      /**
+       * Data table for quadrature points.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common vertex.
+       */
       CUDATable<3, Point<spacedim, RangeNumberType>>
         kx_quad_points_common_vertex_ring_buffer;
+      /**
+       * Data table for quadrature points.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is regular.
+       */
       CUDATable<3, Point<spacedim, RangeNumberType>>
         kx_quad_points_regular_ring_buffer;
 
+      /**
+       * Data table storing the Jacobian determinants at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is same panel.
+       */
       CUDATable<3, RangeNumberType> ky_jacobians_same_panel_ring_buffer;
+      /**
+       * Data table storing the Jacobian determinants at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common edge.
+       */
       CUDATable<3, RangeNumberType> ky_jacobians_common_edge_ring_buffer;
+      /**
+       * Data table storing the Jacobian determinants at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common vertex.
+       */
       CUDATable<3, RangeNumberType> ky_jacobians_common_vertex_ring_buffer;
+      /**
+       * Data table storing the Jacobian determinants at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is regular.
+       */
       CUDATable<3, RangeNumberType> ky_jacobians_regular_ring_buffer;
 
+      /**
+       * Data table storing the normal vectors at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is same panel.
+       */
       CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
         ky_normals_same_panel_ring_buffer;
+      /**
+       * Data table storing the normal vectors at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common edge.
+       */
       CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
         ky_normals_common_edge_ring_buffer;
+      /**
+       * Data table storing the normal vectors at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common vertex.
+       */
       CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
         ky_normals_common_vertex_ring_buffer;
+      /**
+       * Data table storing the normal vectors at all Sauter quadrature
+       * points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is regular.
+       */
       CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
         ky_normals_regular_ring_buffer;
 
+      /**
+       * Data table storing the covariant transformation matrices at all Sauter
+       * quadrature points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       * 4. Manifold coordinate index
+       * 5. Space coordinate index
+       *
+       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
+       * the Fortran index style. Meanwhile, the data table adopts the C style.
+       * Therefore, the space coordinate index goes after the manifold
+       * coordinate index.}
+       *
+       * Cell neighboring type is same panel.
+       */
       CUDATable<5, RangeNumberType> ky_covariants_same_panel_ring_buffer;
+      /**
+       * Data table storing the covariant transformation matrices at all Sauter
+       * quadrature points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       * 4. Manifold coordinate index
+       * 5. Space coordinate index
+       *
+       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
+       * the Fortran index style. Meanwhile, the data table adopts the C style.
+       * Therefore, the space coordinate index goes after the manifold
+       * coordinate index.}
+       *
+       * Cell neighboring type is common edge.
+       */
       CUDATable<5, RangeNumberType> ky_covariants_common_edge_ring_buffer;
+      /**
+       * Data table storing the covariant transformation matrices at all Sauter
+       * quadrature points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       * 4. Manifold coordinate index
+       * 5. Space coordinate index
+       *
+       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
+       * the Fortran index style. Meanwhile, the data table adopts the C style.
+       * Therefore, the space coordinate index goes after the manifold
+       * coordinate index.}
+       *
+       * Cell neighboring type is common vertex.
+       */
       CUDATable<5, RangeNumberType> ky_covariants_common_vertex_ring_buffer;
+      /**
+       * Data table storing the covariant transformation matrices at all Sauter
+       * quadrature points for all the tasks in the ring buffer.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       * 4. Manifold coordinate index
+       * 5. Space coordinate index
+       *
+       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
+       * the Fortran index style. Meanwhile, the data table adopts the C style.
+       * Therefore, the space coordinate index goes after the manifold
+       * coordinate index.}
+       *
+       * Cell neighboring type is regular.
+       */
       CUDATable<5, RangeNumberType> ky_covariants_regular_ring_buffer;
 
+      /**
+       * Data table for quadrature points.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is same panel.
+       */
       CUDATable<3, Point<spacedim, RangeNumberType>>
         ky_quad_points_same_panel_ring_buffer;
+      /**
+       * Data table for quadrature points.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common edge.
+       */
       CUDATable<3, Point<spacedim, RangeNumberType>>
         ky_quad_points_common_edge_ring_buffer;
+      /**
+       * Data table for quadrature points.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is common vertex.
+       */
       CUDATable<3, Point<spacedim, RangeNumberType>>
         ky_quad_points_common_vertex_ring_buffer;
+      /**
+       * Data table for quadrature points.
+       *
+       * Table dimensions
+       * 1. Task index in the ring buffer
+       * 2. k3 term index
+       * 3. Quadrature point index
+       *
+       * Cell neighboring type is regular.
+       */
       CUDATable<3, Point<spacedim, RangeNumberType>>
         ky_quad_points_regular_ring_buffer;
 
@@ -2419,8 +2823,7 @@ namespace IdeoBEM
       std::condition_variable not_full;
 
       /**
-       * Condition indicating the ring buffer not being empty, i.e. a taskk can
-       * be fetched.
+       * Condition indicating the ring buffer not being empty.
        */
       std::condition_variable not_empty;
     };
@@ -3398,6 +3801,7 @@ namespace IdeoBEM
        * @internal For simplicity, we use 1D linear thread grid.
        */
       const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
+      RangeNumberType    kx_jacobian, ky_jacobian;
 
       /**
        * @internal The number of allocated CUDA threads for executing this
@@ -3412,13 +3816,6 @@ namespace IdeoBEM
            */
           const unsigned int task_index =
             (thread_idx + start_task_index) % ring_buffer.capacity;
-
-          /**
-           * @internal Get the list of quadrature points in the Sauter
-           * parametric space.
-           */
-          const CUDATable<2, double> &quad_points =
-            bem_values.quad_rule_for_regular.get_points();
 
           /**
            * @internal Initialize the quadrature value stored in the register,
@@ -3450,10 +3847,26 @@ namespace IdeoBEM
                * matrices (if needed) for all quadrature points in
                * \f$K_x\f$.
                */
-              ring_buffer.kx_jacobians_regular_ring_buffer(task_index,
-                                                           0,
-                                                           quad_no) = BEMTools::
-                CUDAWrappers::surface_jacobian_det_normal_vector_and_covariant(
+              //              ring_buffer.kx_jacobians_regular_ring_buffer(task_index,
+              //                                                           0,
+              //                                                           quad_no)
+              //                                                           =
+              //                                                           BEMTools::
+              //                CUDAWrappers::surface_jacobian_det_normal_vector_and_covariant(
+              //                  0,
+              //                  quad_no,
+              //                  bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
+              //                  &ring_buffer.kx_mapping_support_points_permuted_ring_buffer(
+              //                    task_index, 0),
+              //                  ring_buffer.kx_normals_regular_ring_buffer(task_index,
+              //                                                             0,
+              //                                                             quad_no),
+              //                  covariant_matrix,
+              //                  false,
+              //                  kernel.kernel_type ==
+              //                  KernelType::HyperSingularRegular);
+              kx_jacobian = BEMTools::CUDAWrappers::
+                surface_jacobian_det_normal_vector_and_covariant(
                   0,
                   quad_no,
                   bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
@@ -3981,77 +4394,78 @@ namespace IdeoBEM
                 &scratch_data,
       const bool is_last_task)
     {
-      std::unique_lock<std::mutex> l(ring_buffer_mutex.lock);
+      {
+        std::unique_lock<std::mutex> ul(ring_buffer_mutex.lock);
+
+        /**
+         * @internal Wait until the number of tasks in the ring buffer is
+         * smaller than its capacity, i.e. there is empty space for adding a
+         * new task.
+         */
+        ring_buffer_mutex.not_full.wait(ul, [&ring_buffer]() {
+          return ring_buffer.task_num < ring_buffer.capacity;
+        });
+
+        /**
+         * @internal Append the new task at the back of the ring buffer.
+         *
+         * 1. Copy permuted mapping support points in \f$K_x\f$ from host to
+         * device.
+         * 2. Copy permuted mapping support points in \f$K_y\f$ from host to
+         * device.
+         * 3. Copy the pointer to the current full matrix, matrix row and column
+         * indices, array indices of the global DoF indices in the permuted cell
+         * local DoF indices.
+         */
+        ring_buffer.kx_mapping_support_points_permuted_ring_buffer
+          .assign_from_host(
+            scratch_data.kx_mapping_support_points_permuted.data(),
+            ring_buffer.kx_mapping_support_points_permuted_ring_buffer.offset(
+              ring_buffer.back_index, 0),
+            scratch_data.kx_mapping_support_points_permuted.size(),
+            scratch_data.cuda_stream_handle);
+
+        ring_buffer.ky_mapping_support_points_permuted_ring_buffer
+          .assign_from_host(
+            scratch_data.ky_mapping_support_points_permuted.data(),
+            ring_buffer.ky_mapping_support_points_permuted_ring_buffer.offset(
+              ring_buffer.back_index, 0),
+            scratch_data.ky_mapping_support_points_permuted.size(),
+            scratch_data.cuda_stream_handle);
+
+        ring_buffer.fullmat_ring_buffer[ring_buffer.back_index] = fullmat;
+        ring_buffer.fullmat_row_index_ring_buffer[ring_buffer.back_index] =
+          fullmat_row_index;
+        ring_buffer.fullmat_col_index_ring_buffer[ring_buffer.back_index] =
+          fullmat_col_index;
+        ring_buffer.i_local_index_ring_buffer[ring_buffer.back_index] =
+          i_local_index;
+        ring_buffer.j_local_index_ring_buffer[ring_buffer.back_index] =
+          j_local_index;
+        ring_buffer.if_all_near_field_hmat_entries_added = is_last_task;
+
+        /**
+         * @internal When there is no contribution from mass matrix,
+         * @p mass_matrix_entry is zero.
+         */
+        ring_buffer.mass_matrix_entries[ring_buffer.back_index] =
+          mass_matrix_entry;
+
+        cudaError_t error_code =
+          cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+        AssertCuda(error_code);
+
+        /**
+         * @internal Update ring buffer properties.
+         */
+        ring_buffer.back_index =
+          (ring_buffer.back_index + 1) % ring_buffer.capacity;
+        ring_buffer.task_num++;
+      } // Release the lock
 
       /**
-       * @internal Wait until the number of tasks in the ring buffer is smaller
-       * than its capacity, i.e. there is still room left for adding a new task.
+       * @internal Notify a consumer thread to try to process the tasks.
        */
-      ring_buffer_mutex.not_full.wait(l, [&ring_buffer]() {
-        return ring_buffer.task_num < ring_buffer.capacity;
-      });
-
-      /**
-       * @internal Append the new task at the back of the ring buffer.
-       *
-       * 1. Copy permuted mapping support points in \f$K_x\f$ from host to
-       * device.
-       * 2. Copy permuted mapping support points in \f$K_y\f$ from host to
-       * device.
-       * 3. Copy the pointer to the current full matrix, matrix row and column
-       * indices, array indices of the global DoF indices in the permuted cell
-       * local DoF indices.
-       */
-      cudaError_t error_code = cudaMemcpyAsync(
-        (void *)(&ring_buffer.kx_mapping_support_points_permuted_ring_buffer(
-          ring_buffer.back_index, 0)),
-        (void *)(scratch_data.kx_mapping_support_points_permuted.data()),
-        scratch_data.kx_mapping_support_points_permuted.size() *
-          sizeof(Point<spacedim, RangeNumberType>),
-        cudaMemcpyHostToDevice,
-        scratch_data.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      error_code = cudaMemcpyAsync(
-        (void *)(&ring_buffer.ky_mapping_support_points_permuted_ring_buffer(
-          ring_buffer.back_index, 0)),
-        (void *)(scratch_data.ky_mapping_support_points_permuted.data()),
-        scratch_data.ky_mapping_support_points_permuted.size() *
-          sizeof(Point<spacedim, RangeNumberType>),
-        cudaMemcpyHostToDevice,
-        scratch_data.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      ring_buffer.fullmat_ring_buffer[ring_buffer.back_index] = fullmat;
-      ring_buffer.fullmat_row_index_ring_buffer[ring_buffer.back_index] =
-        fullmat_row_index;
-      ring_buffer.fullmat_col_index_ring_buffer[ring_buffer.back_index] =
-        fullmat_col_index;
-      ring_buffer.i_local_index_ring_buffer[ring_buffer.back_index] =
-        i_local_index;
-      ring_buffer.j_local_index_ring_buffer[ring_buffer.back_index] =
-        j_local_index;
-      ring_buffer.if_all_near_field_hmat_entries_added = is_last_task;
-
-      /**
-       * @internal When there is no contribution from mass matrix,
-       * @p mass_matrix_entry is zero.
-       */
-      ring_buffer.mass_matrix_entries[ring_buffer.back_index] =
-        mass_matrix_entry;
-
-      /**
-       * @internal After task data written to the ring buffer, update the back
-       * index and number of tasks.
-       */
-      ring_buffer.back_index =
-        (ring_buffer.back_index + 1) % ring_buffer.capacity;
-      ring_buffer.task_num++;
-
-      error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      l.unlock();
       ring_buffer_mutex.not_empty.notify_all();
     }
 
@@ -4073,237 +4487,240 @@ namespace IdeoBEM
       const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
       const cudaStream_t                                   cuda_stream_handle)
     {
-      std::unique_lock<std::mutex> l(ring_buffer_mutex.lock);
+      bool is_finished;
 
-      /**
-       * @internal Wait for the condition:
-       * 1. When all matrix entries from all near field \hmatrices are added,
-       * there are no producer threads any more. As long as there are tasks in
-       * the buffer, the consumer thread will start to process.
-       * 2. When not all matrix entries have been added, wait for
-       * @p num_to_fetch number of tasks.
-       */
-      ring_buffer_mutex.not_empty.wait(l, [&ring_buffer, num_to_fetch]() {
-        if (ring_buffer.if_all_near_field_hmat_entries_added)
-          {
-            return true;
-          }
-        else
-          {
-            return ring_buffer.task_num >= num_to_fetch;
-          }
-      });
+      {
+        std::unique_lock<std::mutex> ul(ring_buffer_mutex.lock);
 
-      if (ring_buffer.task_num > 0)
-        {
-          /**
-           * @internal When there are not enough tasks, get the remaining tasks.
-           */
-          if (ring_buffer.task_num < num_to_fetch)
+        /**
+         * @internal Wait for the condition:
+         * 1. When all matrix entries from all near field \hmatrices are added,
+         * there are no producer threads any more. As long as there are tasks in
+         * the buffer, the consumer thread will start to process.
+         * 2. When not all matrix entries have been added, wait for
+         * @p num_to_fetch number of tasks.
+         */
+        ring_buffer_mutex.not_empty.wait(ul, [&ring_buffer, num_to_fetch]() {
+          if (ring_buffer.if_all_near_field_hmat_entries_added)
             {
-              num_to_fetch = ring_buffer.task_num;
-            }
-
-          /**
-           * @internal Recalculate the number of thread blocks to be used, since
-           * the actual number of tasks may be smaller than the originally
-           * expected.
-           */
-          const unsigned int block_num =
-            (num_to_fetch + block_size - 1) / block_size;
-
-          /**
-           * Perform Sauter quadrature.
-           *
-           * N.B. In reality, because four ring buffers have been created for
-           * the four cell neighboring types, the current cell neighboring type
-           * is definite and only one case below is reachable.
-           */
-          switch (ring_buffer.cell_neighboring_type)
-            {
-                case CellNeighboringType::SamePanel: {
-                  process_sauter_task_on_one_pair_of_dofs_same_panel<<<
-                    block_num,
-                    block_size,
-                    0,
-                    cuda_stream_handle>>>(kernel,
-                                          kernel_factor,
-                                          ring_buffer,
-                                          ring_buffer.front_index,
-                                          num_to_fetch,
-                                          bem_values);
-
-                  break;
-                }
-                case CellNeighboringType::CommonEdge: {
-                  process_sauter_task_on_one_pair_of_dofs_common_edge<<<
-                    block_num,
-                    block_size,
-                    0,
-                    cuda_stream_handle>>>(kernel,
-                                          kernel_factor,
-                                          ring_buffer,
-                                          ring_buffer.front_index,
-                                          num_to_fetch,
-                                          bem_values);
-
-                  break;
-                }
-                case CellNeighboringType::CommonVertex: {
-                  process_sauter_task_on_one_pair_of_dofs_common_vertex<<<
-                    block_num,
-                    block_size,
-                    0,
-                    cuda_stream_handle>>>(kernel,
-                                          kernel_factor,
-                                          ring_buffer,
-                                          ring_buffer.front_index,
-                                          num_to_fetch,
-                                          bem_values);
-
-                  break;
-                }
-                case CellNeighboringType::Regular: {
-                  process_sauter_task_on_one_pair_of_dofs_regular<<<
-                    block_num,
-                    block_size,
-                    0,
-                    cuda_stream_handle>>>(kernel,
-                                          kernel_factor,
-                                          ring_buffer,
-                                          ring_buffer.front_index,
-                                          num_to_fetch,
-                                          bem_values);
-
-                  break;
-                }
-                default: {
-                  Assert(false, ExcInternalError());
-
-                  break;
-                }
-            }
-
-          /**
-           * Copy the quadrature result data from the device to the host.
-           */
-          cudaError_t error_code;
-          if (ring_buffer.front_index + num_to_fetch <= ring_buffer.capacity)
-            {
-              /**
-               * @internal When the data in the ring buffer are in a contiguous
-               * block, perform one time of memory copy.
-               */
-              error_code =
-                cudaMemcpyAsync(ring_buffer.quadrature_value_ring_buffer_cpu +
-                                  ring_buffer.front_index,
-                                ring_buffer.quadrature_value_ring_buffer_gpu +
-                                  ring_buffer.front_index,
-                                num_to_fetch * sizeof(RangeNumberType),
-                                cudaMemcpyDeviceToHost,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
-
-              error_code = cudaStreamSynchronize(cuda_stream_handle);
-              AssertCuda(error_code);
-
-              /**
-               * Assemble the result to full matrix in \hmatrix node.
-               */
-              /**
-               * todo Lock full matrix entry or lock full matrix
-               */
-              for (unsigned int i = ring_buffer.front_index;
-                   i < ring_buffer.front_index + num_to_fetch;
-                   i++)
-                {
-                  (*ring_buffer.fullmat_ring_buffer[i])(
-                    ring_buffer.fullmat_row_index_ring_buffer[i],
-                    ring_buffer.fullmat_col_index_ring_buffer[i]) +=
-                    ring_buffer.quadrature_value_ring_buffer_cpu[i] +
-                    ring_buffer.mass_matrix_entries[i];
-                }
+              return true;
             }
           else
             {
-              /**
-               * @internal When the data in the ring buffer are not contiguous,
-               * we should perform two times of memory copy.
-               */
-              const unsigned int number_of_data_until_buffer_end =
-                ring_buffer.capacity - ring_buffer.front_index;
-              const unsigned int number_of_data_from_buffer_start =
-                num_to_fetch - number_of_data_until_buffer_end;
-
-              error_code =
-                cudaMemcpyAsync(ring_buffer.quadrature_value_ring_buffer_cpu +
-                                  ring_buffer.front_index,
-                                ring_buffer.quadrature_value_ring_buffer_gpu +
-                                  ring_buffer.front_index,
-                                number_of_data_until_buffer_end *
-                                  sizeof(RangeNumberType),
-                                cudaMemcpyDeviceToHost,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
-
-              error_code =
-                cudaMemcpyAsync(ring_buffer.quadrature_value_ring_buffer_cpu,
-                                ring_buffer.quadrature_value_ring_buffer_gpu,
-                                number_of_data_from_buffer_start *
-                                  sizeof(RangeNumberType),
-                                cudaMemcpyDeviceToHost,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
-
-              error_code = cudaStreamSynchronize(cuda_stream_handle);
-              AssertCuda(error_code);
-
-              /**
-               * Assemble the result to full matrix in \hmatrix node.
-               */
-              for (unsigned int i = ring_buffer.front_index;
-                   i < ring_buffer.capacity;
-                   i++)
-                {
-                  (*ring_buffer.fullmat_ring_buffer[i])(
-                    ring_buffer.fullmat_row_index_ring_buffer[i],
-                    ring_buffer.fullmat_col_index_ring_buffer[i]) +=
-                    ring_buffer.quadrature_value_ring_buffer_cpu[i] +
-                    ring_buffer.mass_matrix_entries[i];
-                }
-
-              for (unsigned int i = 0; i < number_of_data_from_buffer_start;
-                   i++)
-                {
-                  (*ring_buffer.fullmat_ring_buffer[i])(
-                    ring_buffer.fullmat_row_index_ring_buffer[i],
-                    ring_buffer.fullmat_col_index_ring_buffer[i]) +=
-                    ring_buffer.quadrature_value_ring_buffer_cpu[i] +
-                    ring_buffer.mass_matrix_entries[i];
-                }
+              return ring_buffer.task_num >= num_to_fetch;
             }
+        });
 
-          ring_buffer.front_index =
-            (ring_buffer.front_index + num_to_fetch) % ring_buffer.capacity;
-          ring_buffer.task_num -= num_to_fetch;
+        if (ring_buffer.task_num > 0)
+          {
+            /**
+             * @internal When there are not enough tasks, get the remaining
+             * tasks.
+             */
+            if (ring_buffer.task_num < num_to_fetch)
+              {
+                num_to_fetch = ring_buffer.task_num;
+              }
 
-          l.unlock();
-          ring_buffer_mutex.not_full.notify_all();
-        }
+            /**
+             * @internal Recalculate the number of thread blocks to be used,
+             * since the actual number of tasks may be smaller than the
+             * originally expected.
+             */
+            const unsigned int block_num =
+              (num_to_fetch + block_size - 1) / block_size;
 
-      /**
-       * @internal Check whether all the quadrature tasks for the current
-       * cell neighboring type have been processed.
-       */
-      if (ring_buffer.if_all_near_field_hmat_entries_added &&
-          ring_buffer.task_num == 0)
-        {
-          return true;
-        }
-      else
-        {
-          return false;
-        }
+            /**
+             * Perform Sauter quadrature.
+             *
+             * N.B. In reality, because four ring buffers have been created for
+             * the four cell neighboring types, the current cell neighboring
+             * type is definite and only one case below is reachable.
+             */
+            switch (ring_buffer.cell_neighboring_type)
+              {
+                  case CellNeighboringType::SamePanel: {
+                    process_sauter_task_on_one_pair_of_dofs_same_panel<<<
+                      block_num,
+                      block_size,
+                      0,
+                      cuda_stream_handle>>>(kernel,
+                                            kernel_factor,
+                                            ring_buffer,
+                                            ring_buffer.front_index,
+                                            num_to_fetch,
+                                            bem_values);
+
+                    break;
+                  }
+                  case CellNeighboringType::CommonEdge: {
+                    process_sauter_task_on_one_pair_of_dofs_common_edge<<<
+                      block_num,
+                      block_size,
+                      0,
+                      cuda_stream_handle>>>(kernel,
+                                            kernel_factor,
+                                            ring_buffer,
+                                            ring_buffer.front_index,
+                                            num_to_fetch,
+                                            bem_values);
+
+                    break;
+                  }
+                  case CellNeighboringType::CommonVertex: {
+                    process_sauter_task_on_one_pair_of_dofs_common_vertex<<<
+                      block_num,
+                      block_size,
+                      0,
+                      cuda_stream_handle>>>(kernel,
+                                            kernel_factor,
+                                            ring_buffer,
+                                            ring_buffer.front_index,
+                                            num_to_fetch,
+                                            bem_values);
+
+                    break;
+                  }
+                  case CellNeighboringType::Regular: {
+                    process_sauter_task_on_one_pair_of_dofs_regular<<<
+                      block_num,
+                      block_size,
+                      0,
+                      cuda_stream_handle>>>(kernel,
+                                            kernel_factor,
+                                            ring_buffer,
+                                            ring_buffer.front_index,
+                                            num_to_fetch,
+                                            bem_values);
+
+                    break;
+                  }
+                  default: {
+                    Assert(false, ExcInternalError());
+
+                    break;
+                  }
+              }
+
+            /**
+             * Copy the quadrature result data from the device to the host.
+             */
+            cudaError_t error_code;
+            if (ring_buffer.front_index + num_to_fetch <= ring_buffer.capacity)
+              {
+                /**
+                 * @internal When the data in the ring buffer are in a
+                 * contiguous block, perform one time of memory copy.
+                 */
+                error_code = cudaMemcpyAsync(
+                  (void *)(ring_buffer.quadrature_value_ring_buffer_cpu +
+                           ring_buffer.front_index),
+                  (void *)(ring_buffer.quadrature_value_ring_buffer_gpu +
+                           ring_buffer.front_index),
+                  num_to_fetch * sizeof(RangeNumberType),
+                  cudaMemcpyDeviceToHost,
+                  cuda_stream_handle);
+                AssertCuda(error_code);
+
+                error_code = cudaStreamSynchronize(cuda_stream_handle);
+                AssertCuda(error_code);
+
+                /**
+                 * Assemble the result to full matrix in \hmatrix node.
+                 */
+                /**
+                 * todo Lock full matrix entry or lock full matrix
+                 */
+                for (unsigned int i = ring_buffer.front_index;
+                     i < ring_buffer.front_index + num_to_fetch;
+                     i++)
+                  {
+                    (*ring_buffer.fullmat_ring_buffer[i])(
+                      ring_buffer.fullmat_row_index_ring_buffer[i],
+                      ring_buffer.fullmat_col_index_ring_buffer[i]) +=
+                      ring_buffer.quadrature_value_ring_buffer_cpu[i] +
+                      ring_buffer.mass_matrix_entries[i];
+                  }
+              }
+            else
+              {
+                /**
+                 * @internal When the data in the ring buffer are not
+                 * contiguous, we should perform two times of memory copy.
+                 */
+                const unsigned int number_of_data_until_buffer_end =
+                  ring_buffer.capacity - ring_buffer.front_index;
+                const unsigned int number_of_data_from_buffer_start =
+                  num_to_fetch - number_of_data_until_buffer_end;
+
+                error_code = cudaMemcpyAsync(
+                  (void *)(ring_buffer.quadrature_value_ring_buffer_cpu +
+                           ring_buffer.front_index),
+                  (void *)(ring_buffer.quadrature_value_ring_buffer_gpu +
+                           ring_buffer.front_index),
+                  number_of_data_until_buffer_end * sizeof(RangeNumberType),
+                  cudaMemcpyDeviceToHost,
+                  cuda_stream_handle);
+                AssertCuda(error_code);
+
+                error_code = cudaMemcpyAsync(
+                  (void *)(ring_buffer.quadrature_value_ring_buffer_cpu),
+                  (void *)(ring_buffer.quadrature_value_ring_buffer_gpu),
+                  number_of_data_from_buffer_start * sizeof(RangeNumberType),
+                  cudaMemcpyDeviceToHost,
+                  cuda_stream_handle);
+                AssertCuda(error_code);
+
+                error_code = cudaStreamSynchronize(cuda_stream_handle);
+                AssertCuda(error_code);
+
+                /**
+                 * Assemble the result to full matrix in \hmatrix node.
+                 */
+                for (unsigned int i = ring_buffer.front_index;
+                     i < ring_buffer.capacity;
+                     i++)
+                  {
+                    (*ring_buffer.fullmat_ring_buffer[i])(
+                      ring_buffer.fullmat_row_index_ring_buffer[i],
+                      ring_buffer.fullmat_col_index_ring_buffer[i]) +=
+                      ring_buffer.quadrature_value_ring_buffer_cpu[i] +
+                      ring_buffer.mass_matrix_entries[i];
+                  }
+
+                for (unsigned int i = 0; i < number_of_data_from_buffer_start;
+                     i++)
+                  {
+                    (*ring_buffer.fullmat_ring_buffer[i])(
+                      ring_buffer.fullmat_row_index_ring_buffer[i],
+                      ring_buffer.fullmat_col_index_ring_buffer[i]) +=
+                      ring_buffer.quadrature_value_ring_buffer_cpu[i] +
+                      ring_buffer.mass_matrix_entries[i];
+                  }
+              }
+
+            ring_buffer.front_index =
+              (ring_buffer.front_index + num_to_fetch) % ring_buffer.capacity;
+            ring_buffer.task_num -= num_to_fetch;
+          }
+
+        /**
+         * @internal Check whether all the quadrature tasks for the current
+         * cell neighboring type have been processed.
+         */
+        if (ring_buffer.if_all_near_field_hmat_entries_added &&
+            ring_buffer.task_num == 0)
+          {
+            is_finished = true;
+          }
+        else
+          {
+            is_finished = false;
+          }
+      } // Release the lock
+
+      ring_buffer_mutex.not_full.notify_all();
+      return is_finished;
     }
 
 
@@ -5101,27 +5518,15 @@ namespace IdeoBEM
        * Continuously process the Sauter quadrature tasks in the ring buffer for
        * same panel case.
        */
-      while (true)
+      while (ring_buffer_fetch_and_process_tasks(ring_buffer,
+                                                 ring_buffer_mutex,
+                                                 kernel,
+                                                 kernel_factor,
+                                                 num_to_fetch,
+                                                 block_size,
+                                                 bem_values_gpu,
+                                                 cuda_stream_handle))
         {
-          ring_buffer_fetch_and_process_tasks(ring_buffer,
-                                              ring_buffer_mutex,
-                                              kernel,
-                                              kernel_factor,
-                                              num_to_fetch,
-                                              block_size,
-                                              bem_values_gpu,
-                                              cuda_stream_handle);
-
-          /**
-           * @internal When the last Sauter quadrature task has been added and
-           * there are no tasks in the ring buffer, exit the processing loop.
-           */
-          if (ring_buffer.task_num == 0 &&
-              ring_buffer.if_all_near_field_hmat_entries_added)
-            {
-              break;
-            }
-
           std::this_thread::sleep_for(
             std::chrono::milliseconds(consumer_wait_time_ms));
         }
@@ -5211,6 +5616,10 @@ namespace IdeoBEM
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
       const bool                                               is_last_task)
     {
+#if ENABLE_DEBUG == 1
+      LogStream::Prefix prefix_string("create_sauter_task");
+#endif
+
       /**
        * Iterate over each cell in the support of the basis function associated
        * with the i-th global DoF in the external numbering.
@@ -5324,6 +5733,13 @@ namespace IdeoBEM
                      ExcInternalError());
               unsigned int j_index =
                 j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+#if ENABLE_DEBUG == 1
+              deallog << "Create Sauter task: " << fullmat << ","
+                      << i_global_dof_index << "," << j_global_dof_index << ","
+                      << fullmat_row_index << "," << fullmat_col_index << ","
+                      << i_index << "," << j_index << std::endl;
+#endif
 
               switch (cell_neighboring_type)
                 {
@@ -5474,6 +5890,10 @@ namespace IdeoBEM
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
       const bool                                               is_last_task)
     {
+#if ENABLE_DEBUG == 1
+      LogStream::Prefix prefix_string("create_sauter_task");
+#endif
+
       /**
        * Iterate over each cell in the support of the basis function associated
        * with the i-th global DoF in the external numbering.
@@ -5719,6 +6139,14 @@ namespace IdeoBEM
                      ExcInternalError());
               unsigned int j_index =
                 j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+#if ENABLE_DEBUG == 1
+              deallog << "Create Sauter task: " << fullmat << ","
+                      << i_global_dof_index << "," << j_global_dof_index << ","
+                      << fullmat_row_index << "," << fullmat_col_index << ","
+                      << i_index << "," << j_index
+                      << ",mass=" << mass_matrix_entry << std::endl;
+#endif
 
               switch (cell_neighboring_type)
                 {
@@ -6827,12 +7255,12 @@ namespace IdeoBEM
              * @internal Extract quadrature results accumulated from all thread
              * blocks.
              */
-            error_code =
-              cudaMemcpyAsync(scratch_data.quad_values_in_thread_blocks,
-                              scratch_data_gpu.quad_values_in_thread_blocks,
-                              sizeof(RangeNumberType) * blocks_rect.x,
-                              cudaMemcpyDeviceToHost,
-                              scratch_data.cuda_stream_handle);
+            error_code = cudaMemcpyAsync(
+              (void *)(scratch_data.quad_values_in_thread_blocks),
+              (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
+              sizeof(RangeNumberType) * blocks_rect.x,
+              cudaMemcpyDeviceToHost,
+              scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
@@ -7294,12 +7722,12 @@ namespace IdeoBEM
              * @internal Extract quadrature results accumulated from all thread
              * blocks.
              */
-            error_code =
-              cudaMemcpyAsync(scratch_data.quad_values_in_thread_blocks,
-                              scratch_data_gpu.quad_values_in_thread_blocks,
-                              sizeof(RangeNumberType) * blocks_rect.x,
-                              cudaMemcpyDeviceToHost,
-                              scratch_data.cuda_stream_handle);
+            error_code = cudaMemcpyAsync(
+              (void *)(scratch_data.quad_values_in_thread_blocks),
+              (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
+              sizeof(RangeNumberType) * blocks_rect.x,
+              cudaMemcpyDeviceToHost,
+              scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);

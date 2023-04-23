@@ -5575,6 +5575,9 @@ namespace IdeoBEM
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
     const unsigned int near_field_set_size = near_field_leaf_set.size();
+
+    Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
+
     if (near_field_set_size < producer_thread_num)
       {
         producer_thread_num = near_field_set_size;
@@ -5668,7 +5671,10 @@ namespace IdeoBEM
     /**
      * @internal Start the consumer threads.
      */
-    std::thread same_panel_consumer(
+    std::vector<std::thread> consumers;
+    consumers.reserve(4);
+
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -5689,7 +5695,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread common_edge_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -5710,7 +5716,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread common_vertex_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -5731,7 +5737,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread regular_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -5760,10 +5766,10 @@ namespace IdeoBEM
         producer.join();
       }
 
-    same_panel_consumer.join();
-    common_edge_consumer.join();
-    common_vertex_consumer.join();
-    regular_consumer.join();
+    for (auto &consumer : consumers)
+      {
+        consumer.join();
+      }
 
     /**
      * @internal Release all ring buffers.
@@ -6043,6 +6049,9 @@ namespace IdeoBEM
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
     const unsigned int near_field_set_size = near_field_leaf_set.size();
+
+    Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
+
     if (near_field_set_size < producer_thread_num)
       {
         producer_thread_num = near_field_set_size;
@@ -6136,7 +6145,10 @@ namespace IdeoBEM
     /**
      * @internal Start the consumer threads.
      */
-    std::thread same_panel_consumer(
+    std::vector<std::thread> consumers;
+    consumers.reserve(4);
+
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -6157,7 +6169,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread common_edge_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -6178,7 +6190,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread common_vertex_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -6199,7 +6211,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread regular_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -6228,10 +6240,10 @@ namespace IdeoBEM
         producer.join();
       }
 
-    same_panel_consumer.join();
-    common_edge_consumer.join();
-    common_vertex_consumer.join();
-    regular_consumer.join();
+    for (auto &consumer : consumers)
+      {
+        consumer.join();
+      }
 
     /**
      * @internal Release all ring buffers.
@@ -6535,6 +6547,9 @@ namespace IdeoBEM
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
     const unsigned int near_field_set_size = near_field_leaf_set.size();
+
+    Assert(near_field_set_size > 0, ExcLowerRange(near_field_set_size, 1));
+
     if (near_field_set_size < producer_thread_num)
       {
         producer_thread_num = near_field_set_size;
@@ -6595,7 +6610,7 @@ namespace IdeoBEM
             const bool)>(
             IdeoBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
-          std::cref(hmat.get_near_field_leaf_set()),
+          std::cref(near_field_leaf_set),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
             near_field_set_size :
@@ -6632,7 +6647,10 @@ namespace IdeoBEM
     /**
      * @internal Start the consumer threads.
      */
-    std::thread same_panel_consumer(
+    std::vector<std::thread> consumers;
+    consumers.reserve(4);
+
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -6653,7 +6671,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread common_edge_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -6674,7 +6692,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread common_vertex_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -6695,7 +6713,7 @@ namespace IdeoBEM
       block_size,
       block_num);
 
-    std::thread regular_consumer(
+    consumers.emplace_back(
       static_cast<void (*)(
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
@@ -6724,10 +6742,10 @@ namespace IdeoBEM
         producer.join();
       }
 
-    same_panel_consumer.join();
-    common_edge_consumer.join();
-    common_vertex_consumer.join();
-    regular_consumer.join();
+    for (auto &consumer : consumers)
+      {
+        consumer.join();
+      }
 
     /**
      * @internal Release all ring buffers.

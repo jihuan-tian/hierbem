@@ -138,8 +138,8 @@ namespace IdeoBEM
                 const typename Vector<number>::size_type src_start_index,
                 const typename Vector<number>::size_type number_of_data)
     {
-      std::memcpy(dst_vec.data() + dst_start_index,
-                  src_vec.data() + src_start_index,
+      std::memcpy((void *)(dst_vec.data() + dst_start_index),
+                  (void *)(src_vec.data() + src_start_index),
                   number_of_data * sizeof(number));
     }
   } // namespace LinAlg

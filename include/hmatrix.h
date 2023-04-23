@@ -13920,25 +13920,27 @@ namespace IdeoBEM
   copy_hmatrix_node(HMatrix<spacedim, Number>  &hmat_dst,
                     HMatrix<spacedim, Number> &&hmat_src)
   {
-    hmat_dst.type            = hmat_src.type;
-    hmat_dst.state           = hmat_src.state;
-    hmat_dst.property        = hmat_src.property;
-    hmat_dst.block_type      = hmat_src.block_type;
-    hmat_dst.submatrices     = hmat_src.submatrices;
-    hmat_dst.submatrix_index = hmat_src.submatrix_index;
-    hmat_dst.parent          = hmat_src.parent;
-    hmat_dst.leaf_set        = hmat_src.leaf_set;
-    hmat_dst.rkmatrix        = hmat_src.rkmatrix;
-    hmat_dst.fullmatrix      = hmat_src.fullmatrix;
-    hmat_dst.bc_node         = hmat_src.bc_node;
-    hmat_dst.row_index_range = hmat_src.row_index_range;
-    hmat_dst.col_index_range = hmat_src.col_index_range;
-    hmat_dst.m               = hmat_src.m;
-    hmat_dst.n               = hmat_src.n;
-    hmat_dst.Sigma_P         = hmat_src.Sigma_P;
-    hmat_dst.Sigma_R         = hmat_src.Sigma_R;
-    hmat_dst.Sigma_F         = hmat_src.Sigma_F;
-    hmat_dst.Tind            = std::move(hmat_src.Tind);
+    hmat_dst.type                = hmat_src.type;
+    hmat_dst.state               = hmat_src.state;
+    hmat_dst.property            = hmat_src.property;
+    hmat_dst.block_type          = hmat_src.block_type;
+    hmat_dst.submatrices         = hmat_src.submatrices;
+    hmat_dst.submatrix_index     = hmat_src.submatrix_index;
+    hmat_dst.parent              = hmat_src.parent;
+    hmat_dst.leaf_set            = hmat_src.leaf_set;
+    hmat_dst.near_field_leaf_set = hmat_src.near_field_leaf_set;
+    hmat_dst.far_field_leaf_set  = hmat_src.far_field_leaf_set;
+    hmat_dst.rkmatrix            = hmat_src.rkmatrix;
+    hmat_dst.fullmatrix          = hmat_src.fullmatrix;
+    hmat_dst.bc_node             = hmat_src.bc_node;
+    hmat_dst.row_index_range     = hmat_src.row_index_range;
+    hmat_dst.col_index_range     = hmat_src.col_index_range;
+    hmat_dst.m                   = hmat_src.m;
+    hmat_dst.n                   = hmat_src.n;
+    hmat_dst.Sigma_P             = hmat_src.Sigma_P;
+    hmat_dst.Sigma_R             = hmat_src.Sigma_R;
+    hmat_dst.Sigma_F             = hmat_src.Sigma_F;
+    hmat_dst.Tind                = std::move(hmat_src.Tind);
   }
 
 

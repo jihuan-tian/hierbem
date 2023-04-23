@@ -26,10 +26,9 @@ PROJECT("hierbem" LANGUAGES CUDA CXX)
 #   REPLACE_FLAG(DEAL_II_CXX_FLAGS_DEBUG "-O0" "-O1")
 # endif()
 
-# Set CUDA compiler flags for debug mode: N.B. -G -lineinfo has already been
-# held by CUDA_NVCC_FLAGS, so here we only add -g and the default-stream
-# options.
-SET(DEAL_II_CUDA_FLAGS_DEBUG "-g --default-stream per-thread")
+# Set CUDA compiler flags for debug mode. If the program is to be profiled,
+# -lineinfo should be added.
+SET(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread")
 # Without line number information for performance profiling.
 SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
 # With line number information for per-thread profiling.

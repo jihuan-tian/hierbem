@@ -23,6 +23,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <thread>
 
 #include "bem_tools.hcu"
 #include "cpu_table.h"
