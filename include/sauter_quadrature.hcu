@@ -2223,7 +2223,6 @@ namespace IdeoBEM
        */
       __host__ void
       allocate(const unsigned int              capacity,
-               const CellNeighboringType       cell_neighboring_type,
                const BEMValues<dim, spacedim> &bem_values);
 
       /**
@@ -2241,13 +2240,6 @@ namespace IdeoBEM
        * computation.
        */
       bool if_all_near_field_hmat_entries_added;
-      /**
-       * The cell neighboring type that the queue handles.
-       *
-       * \mynote{All quadratures in the task queue should have a same cell
-       * neighboring type.}
-       */
-      CellNeighboringType cell_neighboring_type;
 
       /**
        * List of permuted mapping support points in \f$K_x\f$.
@@ -2286,462 +2278,6 @@ namespace IdeoBEM
         ky_mapping_support_points_permuted_ring_buffer;
 
       /**
-       * Data table storing the Jacobian determinants at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is same panel.
-       */
-      CUDATable<3, RangeNumberType> kx_jacobians_same_panel_ring_buffer;
-      /**
-       * Data table storing the Jacobian determinants at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common edge.
-       */
-      CUDATable<3, RangeNumberType> kx_jacobians_common_edge_ring_buffer;
-      /**
-       * Data table storing the Jacobian determinants at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common vertex.
-       */
-      CUDATable<3, RangeNumberType> kx_jacobians_common_vertex_ring_buffer;
-      /**
-       * Data table storing the Jacobian determinants at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is regular.
-       */
-      CUDATable<3, RangeNumberType> kx_jacobians_regular_ring_buffer;
-
-      /**
-       * Data table storing the normal vectors at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is same panel.
-       */
-      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
-        kx_normals_same_panel_ring_buffer;
-      /**
-       * Data table storing the normal vectors at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common edge.
-       */
-      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
-        kx_normals_common_edge_ring_buffer;
-      /**
-       * Data table storing the normal vectors at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common vertex.
-       */
-      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
-        kx_normals_common_vertex_ring_buffer;
-      /**
-       * Data table storing the normal vectors at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is regular.
-       */
-      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
-        kx_normals_regular_ring_buffer;
-
-      /**
-       * Data table storing the covariant transformation matrices at all Sauter
-       * quadrature points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       * 4. Manifold coordinate index
-       * 5. Space coordinate index
-       *
-       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
-       * the Fortran index style. Meanwhile, the data table adopts the C style.
-       * Therefore, the space coordinate index goes after the manifold
-       * coordinate index.}
-       *
-       * Cell neighboring type is same panel.
-       */
-      CUDATable<5, RangeNumberType> kx_covariants_same_panel_ring_buffer;
-      /**
-       * Data table storing the covariant transformation matrices at all Sauter
-       * quadrature points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       * 4. Manifold coordinate index
-       * 5. Space coordinate index
-       *
-       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
-       * the Fortran index style. Meanwhile, the data table adopts the C style.
-       * Therefore, the space coordinate index goes after the manifold
-       * coordinate index.}
-       *
-       * Cell neighboring type is common edge.
-       */
-      CUDATable<5, RangeNumberType> kx_covariants_common_edge_ring_buffer;
-      /**
-       * Data table storing the covariant transformation matrices at all Sauter
-       * quadrature points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       * 4. Manifold coordinate index
-       * 5. Space coordinate index
-       *
-       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
-       * the Fortran index style. Meanwhile, the data table adopts the C style.
-       * Therefore, the space coordinate index goes after the manifold
-       * coordinate index.}
-       *
-       * Cell neighboring type is common vertex.
-       */
-      CUDATable<5, RangeNumberType> kx_covariants_common_vertex_ring_buffer;
-      /**
-       * Data table storing the covariant transformation matrices at all Sauter
-       * quadrature points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       * 4. Manifold coordinate index
-       * 5. Space coordinate index
-       *
-       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
-       * the Fortran index style. Meanwhile, the data table adopts the C style.
-       * Therefore, the space coordinate index goes after the manifold
-       * coordinate index.}
-       *
-       * Cell neighboring type is regular.
-       */
-      CUDATable<5, RangeNumberType> kx_covariants_regular_ring_buffer;
-
-      /**
-       * Data table for quadrature points.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is same panel.
-       */
-      CUDATable<3, Point<spacedim, RangeNumberType>>
-        kx_quad_points_same_panel_ring_buffer;
-      /**
-       * Data table for quadrature points.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common edge.
-       */
-      CUDATable<3, Point<spacedim, RangeNumberType>>
-        kx_quad_points_common_edge_ring_buffer;
-      /**
-       * Data table for quadrature points.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common vertex.
-       */
-      CUDATable<3, Point<spacedim, RangeNumberType>>
-        kx_quad_points_common_vertex_ring_buffer;
-      /**
-       * Data table for quadrature points.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is regular.
-       */
-      CUDATable<3, Point<spacedim, RangeNumberType>>
-        kx_quad_points_regular_ring_buffer;
-
-      /**
-       * Data table storing the Jacobian determinants at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is same panel.
-       */
-      CUDATable<3, RangeNumberType> ky_jacobians_same_panel_ring_buffer;
-      /**
-       * Data table storing the Jacobian determinants at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common edge.
-       */
-      CUDATable<3, RangeNumberType> ky_jacobians_common_edge_ring_buffer;
-      /**
-       * Data table storing the Jacobian determinants at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common vertex.
-       */
-      CUDATable<3, RangeNumberType> ky_jacobians_common_vertex_ring_buffer;
-      /**
-       * Data table storing the Jacobian determinants at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is regular.
-       */
-      CUDATable<3, RangeNumberType> ky_jacobians_regular_ring_buffer;
-
-      /**
-       * Data table storing the normal vectors at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is same panel.
-       */
-      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
-        ky_normals_same_panel_ring_buffer;
-      /**
-       * Data table storing the normal vectors at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common edge.
-       */
-      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
-        ky_normals_common_edge_ring_buffer;
-      /**
-       * Data table storing the normal vectors at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common vertex.
-       */
-      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
-        ky_normals_common_vertex_ring_buffer;
-      /**
-       * Data table storing the normal vectors at all Sauter quadrature
-       * points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is regular.
-       */
-      CUDATable<3, Tensor<1, spacedim, RangeNumberType>>
-        ky_normals_regular_ring_buffer;
-
-      /**
-       * Data table storing the covariant transformation matrices at all Sauter
-       * quadrature points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       * 4. Manifold coordinate index
-       * 5. Space coordinate index
-       *
-       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
-       * the Fortran index style. Meanwhile, the data table adopts the C style.
-       * Therefore, the space coordinate index goes after the manifold
-       * coordinate index.}
-       *
-       * Cell neighboring type is same panel.
-       */
-      CUDATable<5, RangeNumberType> ky_covariants_same_panel_ring_buffer;
-      /**
-       * Data table storing the covariant transformation matrices at all Sauter
-       * quadrature points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       * 4. Manifold coordinate index
-       * 5. Space coordinate index
-       *
-       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
-       * the Fortran index style. Meanwhile, the data table adopts the C style.
-       * Therefore, the space coordinate index goes after the manifold
-       * coordinate index.}
-       *
-       * Cell neighboring type is common edge.
-       */
-      CUDATable<5, RangeNumberType> ky_covariants_common_edge_ring_buffer;
-      /**
-       * Data table storing the covariant transformation matrices at all Sauter
-       * quadrature points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       * 4. Manifold coordinate index
-       * 5. Space coordinate index
-       *
-       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
-       * the Fortran index style. Meanwhile, the data table adopts the C style.
-       * Therefore, the space coordinate index goes after the manifold
-       * coordinate index.}
-       *
-       * Cell neighboring type is common vertex.
-       */
-      CUDATable<5, RangeNumberType> ky_covariants_common_vertex_ring_buffer;
-      /**
-       * Data table storing the covariant transformation matrices at all Sauter
-       * quadrature points for all the tasks in the ring buffer.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       * 4. Manifold coordinate index
-       * 5. Space coordinate index
-       *
-       * \mynote{The covariant matrix has dimensions @p spacedim*dim. It adopts
-       * the Fortran index style. Meanwhile, the data table adopts the C style.
-       * Therefore, the space coordinate index goes after the manifold
-       * coordinate index.}
-       *
-       * Cell neighboring type is regular.
-       */
-      CUDATable<5, RangeNumberType> ky_covariants_regular_ring_buffer;
-
-      /**
-       * Data table for quadrature points.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is same panel.
-       */
-      CUDATable<3, Point<spacedim, RangeNumberType>>
-        ky_quad_points_same_panel_ring_buffer;
-      /**
-       * Data table for quadrature points.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common edge.
-       */
-      CUDATable<3, Point<spacedim, RangeNumberType>>
-        ky_quad_points_common_edge_ring_buffer;
-      /**
-       * Data table for quadrature points.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is common vertex.
-       */
-      CUDATable<3, Point<spacedim, RangeNumberType>>
-        ky_quad_points_common_vertex_ring_buffer;
-      /**
-       * Data table for quadrature points.
-       *
-       * Table dimensions
-       * 1. Task index in the ring buffer
-       * 2. k3 term index
-       * 3. Quadrature point index
-       *
-       * Cell neighboring type is regular.
-       */
-      CUDATable<3, Point<spacedim, RangeNumberType>>
-        ky_quad_points_regular_ring_buffer;
-
-      /**
        * Array of pointers to the full matrices held within the near field
        * \hmatrix leaf nodes.
        */
@@ -2761,12 +2297,16 @@ namespace IdeoBEM
       /**
        * Array of local DoF indices in \f$K_x\f$ corresponding to the global DoF
        * index \f$i\f$.
+       *
+       * \mynote{Allocated on the device.}
        */
       unsigned int *i_local_index_ring_buffer;
 
       /**
        * Array of local DoF indices in \f$K_y\f$ corresponding to the global DoF
        * index \f$j\f$.
+       *
+       * \mynote{Allocated on the device.}
        */
       unsigned int *j_local_index_ring_buffer;
 
@@ -2857,6 +2397,28 @@ namespace IdeoBEM
        */
       const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
+      RangeNumberType                      kx_jacobian, ky_jacobian;
+      Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
+      Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+      /**
+       * @internal Create a wrapper matrix for the covariant matrix
+       * on \f$K_x\f$. N.B. Only when the kernel function is
+       * @p HyperSingularRegular, this matrix will be evaluated.
+       */
+      RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
+      RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
+      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+        kx_covariant_matrix_data, spacedim, dim);
+      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+        ky_covariant_matrix_data, spacedim, dim);
+
+      /**
+       * @internal Get the list of quadrature points in the Sauter
+       * parametric space.
+       */
+      const CUDATable<2, double> &quad_points =
+        bem_values.quad_rule_for_same_panel.get_points();
+
       /**
        * @internal The number of allocated CUDA threads for executing this
        * kernel function is always enough to hold the fetched tasks. Hence,
@@ -2870,13 +2432,6 @@ namespace IdeoBEM
            */
           const unsigned int task_index =
             (thread_idx + start_task_index) % ring_buffer.capacity;
-
-          /**
-           * @internal Get the list of quadrature points in the Sauter
-           * parametric space.
-           */
-          const CUDATable<2, double> &quad_points =
-            bem_values.quad_rule_for_same_panel.get_points();
 
           /**
            * @internal Initialize the quadrature value stored in the register,
@@ -2910,23 +2465,11 @@ namespace IdeoBEM
               for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
                 {
                   /**
-                   * @internal Create a wrapper matrix for the covariant matrix
-                   * on \f$K_x\f$. N.B. Only when the kernel function is
-                   * @p HyperSingularRegular, this matrix will be evaluated.
+                   * @internal Calculate Jacobians, normal vectors, covariant
+                   * matrices and quadrature point coordinates in the real cell
+                   * for the current quadrature point in \f$K_x\f$.
                    */
-                  CUDAFullMatrix<RangeNumberType> covariant_matrix(
-                    &ring_buffer.kx_covariants_same_panel_ring_buffer(
-                      task_index, k3_index, quad_no, 0, 0),
-                    spacedim,
-                    dim);
-
-                  /**
-                   * @internal Calculate Jacobians, normal vectors and covariant
-                   * matrices (if needed) for all quadrature points in
-                   * \f$K_x\f$.
-                   */
-                  ring_buffer.kx_jacobians_same_panel_ring_buffer(
-                    task_index, k3_index, quad_no) = BEMTools::CUDAWrappers::
+                  kx_jacobian = BEMTools::CUDAWrappers::
                     surface_jacobian_det_normal_vector_and_covariant(
                       k3_index,
                       quad_no,
@@ -2935,48 +2478,11 @@ namespace IdeoBEM
                       &ring_buffer
                          .kx_mapping_support_points_permuted_ring_buffer(
                            task_index, 0),
-                      ring_buffer.kx_normals_same_panel_ring_buffer(task_index,
-                                                                    k3_index,
-                                                                    quad_no),
-                      covariant_matrix,
+                      kx_normal,
+                      kx_covariant_matrix,
                       false,
                       kernel.kernel_type == KernelType::HyperSingularRegular);
 
-                  /**
-                   * Reinitialize the wrapper matrix for the covariant matrix on
-                   * \f$K_y\f$.
-                   */
-                  covariant_matrix.reinit(
-                    &ring_buffer.ky_covariants_same_panel_ring_buffer(
-                      task_index, k3_index, quad_no, 0, 0),
-                    spacedim,
-                    dim);
-
-                  /**
-                   * @internal Calculate Jacobians, normal vectors and covariant
-                   * matrices (if needed) for all quadrature points in
-                   * \f$K_y\f$.
-                   */
-                  ring_buffer.ky_jacobians_same_panel_ring_buffer(
-                    task_index, k3_index, quad_no) = BEMTools::CUDAWrappers::
-                    surface_jacobian_det_normal_vector_and_covariant(
-                      k3_index,
-                      quad_no,
-                      bem_values
-                        .ky_mapping_shape_grad_matrix_table_for_same_panel,
-                      &ring_buffer
-                         .ky_mapping_support_points_permuted_ring_buffer(
-                           task_index, 0),
-                      ring_buffer.ky_normals_same_panel_ring_buffer(task_index,
-                                                                    k3_index,
-                                                                    quad_no),
-                      covariant_matrix,
-                      false,
-                      kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                  /**
-                   * @internal Calculate the quadrature points in \f$K_x\f$.
-                   */
                   BEMTools::CUDAWrappers::
                     transform_quad_point_from_unit_to_permuted_real_cell(
                       k3_index,
@@ -2985,12 +2491,27 @@ namespace IdeoBEM
                       &ring_buffer
                          .kx_mapping_support_points_permuted_ring_buffer(
                            task_index, 0),
-                      ring_buffer.kx_quad_points_same_panel_ring_buffer(
-                        task_index, k3_index, quad_no));
+                      kx_quad_point);
 
                   /**
-                   * @internal Calculate the quadrature points in \f$K_y\f$.
+                   * @internal Calculate Jacobians, normal vectors, covariant
+                   * matrices and quadrature point coordinates in the real cell
+                   * for the current quadrature point in \f$K_y\f$.
                    */
+                  ky_jacobian = BEMTools::CUDAWrappers::
+                    surface_jacobian_det_normal_vector_and_covariant(
+                      k3_index,
+                      quad_no,
+                      bem_values
+                        .ky_mapping_shape_grad_matrix_table_for_same_panel,
+                      &ring_buffer
+                         .ky_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ky_normal,
+                      ky_covariant_matrix,
+                      false,
+                      kernel.kernel_type == KernelType::HyperSingularRegular);
+
                   BEMTools::CUDAWrappers::
                     transform_quad_point_from_unit_to_permuted_real_cell(
                       k3_index,
@@ -2999,8 +2520,7 @@ namespace IdeoBEM
                       &ring_buffer
                          .ky_mapping_support_points_permuted_ring_buffer(
                            task_index, 0),
-                      ring_buffer.ky_quad_points_same_panel_ring_buffer(
-                        task_index, k3_index, quad_no));
+                      ky_quad_point);
 
                   if (kernel.kernel_type == HyperSingularRegular)
                     {
@@ -3052,17 +2572,6 @@ namespace IdeoBEM
                         ky_shape_grad_in_real_cell_vector(
                           ky_shape_grad_in_real_cell, spacedim);
 
-                      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-                        &(ring_buffer.kx_covariants_same_panel_ring_buffer(
-                          task_index, k3_index, quad_no, 0, 0)),
-                        spacedim,
-                        dim);
-                      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-                        &(ring_buffer.ky_covariants_same_panel_ring_buffer(
-                          task_index, k3_index, quad_no, 0, 0)),
-                        spacedim,
-                        dim);
-
                       kx_covariant_matrix.vmult(
                         kx_shape_grad_in_real_cell_vector,
                         kx_shape_grad_in_unit_cell_vector);
@@ -3079,49 +2588,30 @@ namespace IdeoBEM
                        * vectors to be transformed to tensors.}
                        */
                       Tensor<1, spacedim, RangeNumberType>
-                        kx_shape_surface_curl = cross_product_3d(
-                          ring_buffer.kx_normals_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          kx_shape_grad_in_real_cell_vector);
+                        kx_shape_surface_curl =
+                          cross_product_3d(kx_normal,
+                                           kx_shape_grad_in_real_cell_vector);
                       Tensor<1, spacedim, RangeNumberType>
-                        ky_shape_surface_curl = cross_product_3d(
-                          ring_buffer.ky_normals_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ky_shape_grad_in_real_cell_vector);
+                        ky_shape_surface_curl =
+                          cross_product_3d(ky_normal,
+                                           ky_shape_grad_in_real_cell_vector);
 
-                      kernel_value +=
-                        kernel.value(
-                          ring_buffer.kx_quad_points_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_quad_points_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.kx_normals_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_normals_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no)) *
-                        ring_buffer.kx_jacobians_same_panel_ring_buffer(
-                          task_index, k3_index, quad_no) *
-                        ring_buffer.ky_jacobians_same_panel_ring_buffer(
-                          task_index, k3_index, quad_no) *
-                        scalar_product(kx_shape_surface_curl,
-                                       ky_shape_surface_curl);
+                      kernel_value += kernel.value(kx_quad_point,
+                                                   ky_quad_point,
+                                                   kx_normal,
+                                                   ky_normal) *
+                                      kx_jacobian * ky_jacobian *
+                                      scalar_product(kx_shape_surface_curl,
+                                                     ky_shape_surface_curl);
                     }
                   else
                     {
                       kernel_value +=
-                        kernel.value(
-                          ring_buffer.kx_quad_points_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_quad_points_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.kx_normals_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_normals_same_panel_ring_buffer(
-                            task_index, k3_index, quad_no)) *
-                        ring_buffer.kx_jacobians_same_panel_ring_buffer(
-                          task_index, k3_index, quad_no) *
-                        ring_buffer.ky_jacobians_same_panel_ring_buffer(
-                          task_index, k3_index, quad_no) *
+                        kernel.value(kx_quad_point,
+                                     ky_quad_point,
+                                     kx_normal,
+                                     ky_normal) *
+                        kx_jacobian * ky_jacobian *
                         bem_values.kx_shape_value_table_for_same_panel(
                           ring_buffer.i_local_index_ring_buffer[task_index],
                           k3_index,
@@ -3169,6 +2659,28 @@ namespace IdeoBEM
        */
       const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
+      RangeNumberType                      kx_jacobian, ky_jacobian;
+      Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
+      Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+      /**
+       * @internal Create a wrapper matrix for the covariant matrix
+       * on \f$K_x\f$. N.B. Only when the kernel function is
+       * @p HyperSingularRegular, this matrix will be evaluated.
+       */
+      RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
+      RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
+      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+        kx_covariant_matrix_data, spacedim, dim);
+      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+        ky_covariant_matrix_data, spacedim, dim);
+
+      /**
+       * @internal Get the list of quadrature points in the Sauter
+       * parametric space.
+       */
+      const CUDATable<2, double> &quad_points =
+        bem_values.quad_rule_for_common_edge.get_points();
+
       /**
        * @internal The number of allocated CUDA threads for executing this
        * kernel function is always enough to hold the fetched tasks. Hence,
@@ -3182,13 +2694,6 @@ namespace IdeoBEM
            */
           const unsigned int task_index =
             (thread_idx + start_task_index) % ring_buffer.capacity;
-
-          /**
-           * @internal Get the list of quadrature points in the Sauter
-           * parametric space.
-           */
-          const CUDATable<2, double> &quad_points =
-            bem_values.quad_rule_for_common_edge.get_points();
 
           /**
            * @internal Initialize the quadrature value stored in the register,
@@ -3229,23 +2734,11 @@ namespace IdeoBEM
               for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
                 {
                   /**
-                   * @internal Create a wrapper matrix for the covariant matrix
-                   * on \f$K_x\f$. N.B. Only when the kernel function is
-                   * @p HyperSingularRegular, this matrix will be evaluated.
+                   * @internal Calculate Jacobians, normal vectors, covariant
+                   * matrices and quadrature point coordinates in the real cell
+                   * for the current quadrature point in \f$K_x\f$.
                    */
-                  CUDAFullMatrix<RangeNumberType> covariant_matrix(
-                    &ring_buffer.kx_covariants_common_edge_ring_buffer(
-                      task_index, k3_index, quad_no, 0, 0),
-                    spacedim,
-                    dim);
-
-                  /**
-                   * @internal Calculate Jacobians, normal vectors and covariant
-                   * matrices (if needed) for all quadrature points in
-                   * \f$K_x\f$.
-                   */
-                  ring_buffer.kx_jacobians_common_edge_ring_buffer(
-                    task_index, k3_index, quad_no) = BEMTools::CUDAWrappers::
+                  kx_jacobian = BEMTools::CUDAWrappers::
                     surface_jacobian_det_normal_vector_and_covariant(
                       k3_index,
                       quad_no,
@@ -3254,48 +2747,11 @@ namespace IdeoBEM
                       &ring_buffer
                          .kx_mapping_support_points_permuted_ring_buffer(
                            task_index, 0),
-                      ring_buffer.kx_normals_common_edge_ring_buffer(task_index,
-                                                                     k3_index,
-                                                                     quad_no),
-                      covariant_matrix,
+                      kx_normal,
+                      kx_covariant_matrix,
                       false,
                       kernel.kernel_type == KernelType::HyperSingularRegular);
 
-                  /**
-                   * Reinitialize the wrapper matrix for the covariant matrix on
-                   * \f$K_y\f$.
-                   */
-                  covariant_matrix.reinit(
-                    &ring_buffer.ky_covariants_common_edge_ring_buffer(
-                      task_index, k3_index, quad_no, 0, 0),
-                    spacedim,
-                    dim);
-
-                  /**
-                   * @internal Calculate Jacobians, normal vectors and covariant
-                   * matrices (if needed) for all quadrature points in
-                   * \f$K_y\f$.
-                   */
-                  ring_buffer.ky_jacobians_common_edge_ring_buffer(
-                    task_index, k3_index, quad_no) = BEMTools::CUDAWrappers::
-                    surface_jacobian_det_normal_vector_and_covariant(
-                      k3_index,
-                      quad_no,
-                      bem_values
-                        .ky_mapping_shape_grad_matrix_table_for_common_edge,
-                      &ring_buffer
-                         .ky_mapping_support_points_permuted_ring_buffer(
-                           task_index, 0),
-                      ring_buffer.ky_normals_common_edge_ring_buffer(task_index,
-                                                                     k3_index,
-                                                                     quad_no),
-                      covariant_matrix,
-                      false,
-                      kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                  /**
-                   * @internal Calculate the quadrature points in \f$K_x\f$.
-                   */
                   BEMTools::CUDAWrappers::
                     transform_quad_point_from_unit_to_permuted_real_cell(
                       k3_index,
@@ -3304,12 +2760,27 @@ namespace IdeoBEM
                       &ring_buffer
                          .kx_mapping_support_points_permuted_ring_buffer(
                            task_index, 0),
-                      ring_buffer.kx_quad_points_common_edge_ring_buffer(
-                        task_index, k3_index, quad_no));
+                      kx_quad_point);
 
                   /**
-                   * @internal Calculate the quadrature points in \f$K_y\f$.
+                   * @internal Calculate Jacobians, normal vectors, covariant
+                   * matrices and quadrature point coordinates in the real cell
+                   * for the current quadrature point in \f$K_y\f$.
                    */
+                  ky_jacobian = BEMTools::CUDAWrappers::
+                    surface_jacobian_det_normal_vector_and_covariant(
+                      k3_index,
+                      quad_no,
+                      bem_values
+                        .ky_mapping_shape_grad_matrix_table_for_common_edge,
+                      &ring_buffer
+                         .ky_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ky_normal,
+                      ky_covariant_matrix,
+                      false,
+                      kernel.kernel_type == KernelType::HyperSingularRegular);
+
                   BEMTools::CUDAWrappers::
                     transform_quad_point_from_unit_to_permuted_real_cell(
                       k3_index,
@@ -3318,8 +2789,7 @@ namespace IdeoBEM
                       &ring_buffer
                          .ky_mapping_support_points_permuted_ring_buffer(
                            task_index, 0),
-                      ring_buffer.ky_quad_points_common_edge_ring_buffer(
-                        task_index, k3_index, quad_no));
+                      ky_quad_point);
 
                   if (kernel.kernel_type == HyperSingularRegular)
                     {
@@ -3371,17 +2841,6 @@ namespace IdeoBEM
                         ky_shape_grad_in_real_cell_vector(
                           ky_shape_grad_in_real_cell, spacedim);
 
-                      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-                        &(ring_buffer.kx_covariants_common_edge_ring_buffer(
-                          task_index, k3_index, quad_no, 0, 0)),
-                        spacedim,
-                        dim);
-                      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-                        &(ring_buffer.ky_covariants_common_edge_ring_buffer(
-                          task_index, k3_index, quad_no, 0, 0)),
-                        spacedim,
-                        dim);
-
                       kx_covariant_matrix.vmult(
                         kx_shape_grad_in_real_cell_vector,
                         kx_shape_grad_in_unit_cell_vector);
@@ -3395,33 +2854,26 @@ namespace IdeoBEM
                        * and the volume gradient vector.
                        *
                        * \mynote{The cross product operation requires the input
-                       * vectors to be transformed to tensors.}
+                       * vectors to be transformed to tensors.
+                       *
+                       * When in common edge case, the normal vector in
+                       * \f$K_y\f$ should be negated.}
                        */
                       Tensor<1, spacedim, RangeNumberType>
-                        kx_shape_surface_curl = cross_product_3d(
-                          ring_buffer.kx_normals_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          kx_shape_grad_in_real_cell_vector);
+                        kx_shape_surface_curl =
+                          cross_product_3d(kx_normal,
+                                           kx_shape_grad_in_real_cell_vector);
                       Tensor<1, spacedim, RangeNumberType>
-                        ky_shape_surface_curl = cross_product_3d(
-                          -ring_buffer.ky_normals_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ky_shape_grad_in_real_cell_vector);
+                        ky_shape_surface_curl =
+                          cross_product_3d(-ky_normal,
+                                           ky_shape_grad_in_real_cell_vector);
 
                       kernel_value +=
-                        kernel.value(
-                          ring_buffer.kx_quad_points_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_quad_points_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.kx_normals_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          -ring_buffer.ky_normals_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no)) *
-                        ring_buffer.kx_jacobians_common_edge_ring_buffer(
-                          task_index, k3_index, quad_no) *
-                        ring_buffer.ky_jacobians_common_edge_ring_buffer(
-                          task_index, k3_index, quad_no) *
+                        kernel.value(kx_quad_point,
+                                     ky_quad_point,
+                                     kx_normal,
+                                     -ky_normal) *
+                        kx_jacobian * ky_jacobian *
                         scalar_product(kx_shape_surface_curl,
                                        ky_shape_surface_curl) *
                         (k3_index <= 1 ? jacobian_det1 : jacobian_det2);
@@ -3429,19 +2881,11 @@ namespace IdeoBEM
                   else
                     {
                       kernel_value +=
-                        kernel.value(
-                          ring_buffer.kx_quad_points_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_quad_points_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.kx_normals_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          -ring_buffer.ky_normals_common_edge_ring_buffer(
-                            task_index, k3_index, quad_no)) *
-                        ring_buffer.kx_jacobians_common_edge_ring_buffer(
-                          task_index, k3_index, quad_no) *
-                        ring_buffer.ky_jacobians_common_edge_ring_buffer(
-                          task_index, k3_index, quad_no) *
+                        kernel.value(kx_quad_point,
+                                     ky_quad_point,
+                                     kx_normal,
+                                     -ky_normal) *
+                        kx_jacobian * ky_jacobian *
                         bem_values.kx_shape_value_table_for_common_edge(
                           ring_buffer.i_local_index_ring_buffer[task_index],
                           k3_index,
@@ -3488,6 +2932,28 @@ namespace IdeoBEM
        */
       const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
+      RangeNumberType                      kx_jacobian, ky_jacobian;
+      Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
+      Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+      /**
+       * @internal Create a wrapper matrix for the covariant matrix
+       * on \f$K_x\f$. N.B. Only when the kernel function is
+       * @p HyperSingularRegular, this matrix will be evaluated.
+       */
+      RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
+      RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
+      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+        kx_covariant_matrix_data, spacedim, dim);
+      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+        ky_covariant_matrix_data, spacedim, dim);
+
+      /**
+       * @internal Get the list of quadrature points in the Sauter
+       * parametric space.
+       */
+      const CUDATable<2, double> &quad_points =
+        bem_values.quad_rule_for_common_vertex.get_points();
+
       /**
        * @internal The number of allocated CUDA threads for executing this
        * kernel function is always enough to hold the fetched tasks. Hence,
@@ -3501,13 +2967,6 @@ namespace IdeoBEM
            */
           const unsigned int task_index =
             (thread_idx + start_task_index) % ring_buffer.capacity;
-
-          /**
-           * @internal Get the list of quadrature points in the Sauter
-           * parametric space.
-           */
-          const CUDATable<2, double> &quad_points =
-            bem_values.quad_rule_for_common_vertex.get_points();
 
           /**
            * @internal Initialize the quadrature value stored in the register,
@@ -3541,75 +3000,24 @@ namespace IdeoBEM
               for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
                 {
                   /**
-                   * @internal Create a wrapper matrix for the covariant matrix
-                   * on \f$K_x\f$. N.B. Only when the kernel function is
-                   * @p HyperSingularRegular, this matrix will be evaluated.
+                   * @internal Calculate Jacobians, normal vectors, covariant
+                   * matrices and quadrature point coordinates in the real cell
+                   * for the current quadrature point in \f$K_x\f$.
                    */
-                  CUDAFullMatrix<RangeNumberType> covariant_matrix(
-                    &ring_buffer.kx_covariants_common_vertex_ring_buffer(
-                      task_index, k3_index, quad_no, 0, 0),
-                    spacedim,
-                    dim);
+                  kx_jacobian = BEMTools::CUDAWrappers::
+                    surface_jacobian_det_normal_vector_and_covariant(
+                      k3_index,
+                      quad_no,
+                      bem_values
+                        .kx_mapping_shape_grad_matrix_table_for_common_vertex,
+                      &ring_buffer
+                         .kx_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      kx_normal,
+                      kx_covariant_matrix,
+                      false,
+                      kernel.kernel_type == KernelType::HyperSingularRegular);
 
-                  /**
-                   * @internal Calculate Jacobians, normal vectors and covariant
-                   * matrices (if needed) for all quadrature points in
-                   * \f$K_x\f$.
-                   */
-                  ring_buffer.kx_jacobians_common_vertex_ring_buffer(task_index,
-                                                                     k3_index,
-                                                                     quad_no) =
-                    BEMTools::CUDAWrappers::
-                      surface_jacobian_det_normal_vector_and_covariant(
-                        k3_index,
-                        quad_no,
-                        bem_values
-                          .kx_mapping_shape_grad_matrix_table_for_common_vertex,
-                        &ring_buffer
-                           .kx_mapping_support_points_permuted_ring_buffer(
-                             task_index, 0),
-                        ring_buffer.kx_normals_common_vertex_ring_buffer(
-                          task_index, k3_index, quad_no),
-                        covariant_matrix,
-                        false,
-                        kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                  /**
-                   * Reinitialize the wrapper matrix for the covariant matrix on
-                   * \f$K_y\f$.
-                   */
-                  covariant_matrix.reinit(
-                    &ring_buffer.ky_covariants_common_vertex_ring_buffer(
-                      task_index, k3_index, quad_no, 0, 0),
-                    spacedim,
-                    dim);
-
-                  /**
-                   * @internal Calculate Jacobians, normal vectors and covariant
-                   * matrices (if needed) for all quadrature points in
-                   * \f$K_y\f$.
-                   */
-                  ring_buffer.ky_jacobians_common_vertex_ring_buffer(task_index,
-                                                                     k3_index,
-                                                                     quad_no) =
-                    BEMTools::CUDAWrappers::
-                      surface_jacobian_det_normal_vector_and_covariant(
-                        k3_index,
-                        quad_no,
-                        bem_values
-                          .ky_mapping_shape_grad_matrix_table_for_common_vertex,
-                        &ring_buffer
-                           .ky_mapping_support_points_permuted_ring_buffer(
-                             task_index, 0),
-                        ring_buffer.ky_normals_common_vertex_ring_buffer(
-                          task_index, k3_index, quad_no),
-                        covariant_matrix,
-                        false,
-                        kernel.kernel_type == KernelType::HyperSingularRegular);
-
-                  /**
-                   * @internal Calculate the quadrature points in \f$K_x\f$.
-                   */
                   BEMTools::CUDAWrappers::
                     transform_quad_point_from_unit_to_permuted_real_cell(
                       k3_index,
@@ -3618,12 +3026,27 @@ namespace IdeoBEM
                       &ring_buffer
                          .kx_mapping_support_points_permuted_ring_buffer(
                            task_index, 0),
-                      ring_buffer.kx_quad_points_common_vertex_ring_buffer(
-                        task_index, k3_index, quad_no));
+                      kx_quad_point);
 
                   /**
-                   * @internal Calculate the quadrature points in \f$K_y\f$.
+                   * @internal Calculate Jacobians, normal vectors, covariant
+                   * matrices and quadrature point coordinates in the real cell
+                   * for the current quadrature point in \f$K_y\f$.
                    */
+                  ky_jacobian = BEMTools::CUDAWrappers::
+                    surface_jacobian_det_normal_vector_and_covariant(
+                      k3_index,
+                      quad_no,
+                      bem_values
+                        .ky_mapping_shape_grad_matrix_table_for_common_vertex,
+                      &ring_buffer
+                         .ky_mapping_support_points_permuted_ring_buffer(
+                           task_index, 0),
+                      ky_normal,
+                      ky_covariant_matrix,
+                      false,
+                      kernel.kernel_type == KernelType::HyperSingularRegular);
+
                   BEMTools::CUDAWrappers::
                     transform_quad_point_from_unit_to_permuted_real_cell(
                       k3_index,
@@ -3632,8 +3055,7 @@ namespace IdeoBEM
                       &ring_buffer
                          .ky_mapping_support_points_permuted_ring_buffer(
                            task_index, 0),
-                      ring_buffer.ky_quad_points_common_vertex_ring_buffer(
-                        task_index, k3_index, quad_no));
+                      ky_quad_point);
 
                   if (kernel.kernel_type == HyperSingularRegular)
                     {
@@ -3685,17 +3107,6 @@ namespace IdeoBEM
                         ky_shape_grad_in_real_cell_vector(
                           ky_shape_grad_in_real_cell, spacedim);
 
-                      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-                        &(ring_buffer.kx_covariants_common_vertex_ring_buffer(
-                          task_index, k3_index, quad_no, 0, 0)),
-                        spacedim,
-                        dim);
-                      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-                        &(ring_buffer.ky_covariants_common_vertex_ring_buffer(
-                          task_index, k3_index, quad_no, 0, 0)),
-                        spacedim,
-                        dim);
-
                       kx_covariant_matrix.vmult(
                         kx_shape_grad_in_real_cell_vector,
                         kx_shape_grad_in_unit_cell_vector);
@@ -3712,49 +3123,30 @@ namespace IdeoBEM
                        * vectors to be transformed to tensors.}
                        */
                       Tensor<1, spacedim, RangeNumberType>
-                        kx_shape_surface_curl = cross_product_3d(
-                          ring_buffer.kx_normals_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          kx_shape_grad_in_real_cell_vector);
+                        kx_shape_surface_curl =
+                          cross_product_3d(kx_normal,
+                                           kx_shape_grad_in_real_cell_vector);
                       Tensor<1, spacedim, RangeNumberType>
-                        ky_shape_surface_curl = cross_product_3d(
-                          ring_buffer.ky_normals_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ky_shape_grad_in_real_cell_vector);
+                        ky_shape_surface_curl =
+                          cross_product_3d(ky_normal,
+                                           ky_shape_grad_in_real_cell_vector);
 
-                      kernel_value +=
-                        kernel.value(
-                          ring_buffer.kx_quad_points_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_quad_points_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.kx_normals_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_normals_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no)) *
-                        ring_buffer.kx_jacobians_common_vertex_ring_buffer(
-                          task_index, k3_index, quad_no) *
-                        ring_buffer.ky_jacobians_common_vertex_ring_buffer(
-                          task_index, k3_index, quad_no) *
-                        scalar_product(kx_shape_surface_curl,
-                                       ky_shape_surface_curl);
+                      kernel_value += kernel.value(kx_quad_point,
+                                                   ky_quad_point,
+                                                   kx_normal,
+                                                   ky_normal) *
+                                      kx_jacobian * ky_jacobian *
+                                      scalar_product(kx_shape_surface_curl,
+                                                     ky_shape_surface_curl);
                     }
                   else
                     {
                       kernel_value +=
-                        kernel.value(
-                          ring_buffer.kx_quad_points_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_quad_points_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.kx_normals_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no),
-                          ring_buffer.ky_normals_common_vertex_ring_buffer(
-                            task_index, k3_index, quad_no)) *
-                        ring_buffer.kx_jacobians_common_vertex_ring_buffer(
-                          task_index, k3_index, quad_no) *
-                        ring_buffer.ky_jacobians_common_vertex_ring_buffer(
-                          task_index, k3_index, quad_no) *
+                        kernel.value(kx_quad_point,
+                                     ky_quad_point,
+                                     kx_normal,
+                                     ky_normal) *
+                        kx_jacobian * ky_jacobian *
                         bem_values.kx_shape_value_table_for_common_vertex(
                           ring_buffer.i_local_index_ring_buffer[task_index],
                           k3_index,
@@ -3801,7 +3193,21 @@ namespace IdeoBEM
        * @internal For simplicity, we use 1D linear thread grid.
        */
       const unsigned int thread_idx = blockIdx.x * blockDim.x + threadIdx.x;
-      RangeNumberType    kx_jacobian, ky_jacobian;
+
+      RangeNumberType                      kx_jacobian, ky_jacobian;
+      Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
+      Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+      /**
+       * @internal Create a wrapper matrix for the covariant matrix
+       * on \f$K_x\f$. N.B. Only when the kernel function is
+       * @p HyperSingularRegular, this matrix will be evaluated.
+       */
+      RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
+      RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
+      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+        kx_covariant_matrix_data, spacedim, dim);
+      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+        ky_covariant_matrix_data, spacedim, dim);
 
       /**
        * @internal The number of allocated CUDA threads for executing this
@@ -3832,39 +3238,10 @@ namespace IdeoBEM
                quad_no++)
             {
               /**
-               * @internal Create a wrapper matrix for the covariant matrix
-               * on \f$K_x\f$. N.B. Only when the kernel function is
-               * @p HyperSingularRegular, this matrix will be evaluated.
+               * @internal Calculate Jacobians, normal vectors, covariant
+               * matrices and quadrature point coordinates in the real cell for
+               * the current quadrature point in \f$K_x\f$.
                */
-              CUDAFullMatrix<RangeNumberType> covariant_matrix(
-                &ring_buffer.kx_covariants_regular_ring_buffer(
-                  task_index, 0, quad_no, 0, 0),
-                spacedim,
-                dim);
-
-              /**
-               * @internal Calculate Jacobians, normal vectors and covariant
-               * matrices (if needed) for all quadrature points in
-               * \f$K_x\f$.
-               */
-              //              ring_buffer.kx_jacobians_regular_ring_buffer(task_index,
-              //                                                           0,
-              //                                                           quad_no)
-              //                                                           =
-              //                                                           BEMTools::
-              //                CUDAWrappers::surface_jacobian_det_normal_vector_and_covariant(
-              //                  0,
-              //                  quad_no,
-              //                  bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
-              //                  &ring_buffer.kx_mapping_support_points_permuted_ring_buffer(
-              //                    task_index, 0),
-              //                  ring_buffer.kx_normals_regular_ring_buffer(task_index,
-              //                                                             0,
-              //                                                             quad_no),
-              //                  covariant_matrix,
-              //                  false,
-              //                  kernel.kernel_type ==
-              //                  KernelType::HyperSingularRegular);
               kx_jacobian = BEMTools::CUDAWrappers::
                 surface_jacobian_det_normal_vector_and_covariant(
                   0,
@@ -3872,47 +3249,11 @@ namespace IdeoBEM
                   bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
                   &ring_buffer.kx_mapping_support_points_permuted_ring_buffer(
                     task_index, 0),
-                  ring_buffer.kx_normals_regular_ring_buffer(task_index,
-                                                             0,
-                                                             quad_no),
-                  covariant_matrix,
+                  kx_normal,
+                  kx_covariant_matrix,
                   false,
                   kernel.kernel_type == KernelType::HyperSingularRegular);
 
-              /**
-               * Reinitialize the wrapper matrix for the covariant matrix on
-               * \f$K_y\f$.
-               */
-              covariant_matrix.reinit(
-                &ring_buffer.ky_covariants_regular_ring_buffer(
-                  task_index, 0, quad_no, 0, 0),
-                spacedim,
-                dim);
-
-              /**
-               * @internal Calculate Jacobians, normal vectors and covariant
-               * matrices (if needed) for all quadrature points in
-               * \f$K_y\f$.
-               */
-              ring_buffer.ky_jacobians_regular_ring_buffer(task_index,
-                                                           0,
-                                                           quad_no) = BEMTools::
-                CUDAWrappers::surface_jacobian_det_normal_vector_and_covariant(
-                  0,
-                  quad_no,
-                  bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
-                  &ring_buffer.ky_mapping_support_points_permuted_ring_buffer(
-                    task_index, 0),
-                  ring_buffer.ky_normals_regular_ring_buffer(task_index,
-                                                             0,
-                                                             quad_no),
-                  covariant_matrix,
-                  false,
-                  kernel.kernel_type == KernelType::HyperSingularRegular);
-
-              /**
-               * @internal Calculate the quadrature points in \f$K_x\f$.
-               */
               BEMTools::CUDAWrappers::
                 transform_quad_point_from_unit_to_permuted_real_cell(
                   0,
@@ -3920,13 +3261,25 @@ namespace IdeoBEM
                   bem_values.kx_mapping_shape_value_table_for_regular,
                   &ring_buffer.kx_mapping_support_points_permuted_ring_buffer(
                     task_index, 0),
-                  ring_buffer.kx_quad_points_regular_ring_buffer(task_index,
-                                                                 0,
-                                                                 quad_no));
+                  kx_quad_point);
 
               /**
-               * @internal Calculate the quadrature points in \f$K_y\f$.
+               * @internal Calculate Jacobians, normal vectors, covariant
+               * matrices and quadrature point coordinates in the real cell for
+               * the current quadrature point in \f$K_y\f$.
                */
+              ky_jacobian = BEMTools::CUDAWrappers::
+                surface_jacobian_det_normal_vector_and_covariant(
+                  0,
+                  quad_no,
+                  bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
+                  &ring_buffer.ky_mapping_support_points_permuted_ring_buffer(
+                    task_index, 0),
+                  ky_normal,
+                  ky_covariant_matrix,
+                  false,
+                  kernel.kernel_type == KernelType::HyperSingularRegular);
+
               BEMTools::CUDAWrappers::
                 transform_quad_point_from_unit_to_permuted_real_cell(
                   0,
@@ -3934,9 +3287,7 @@ namespace IdeoBEM
                   bem_values.ky_mapping_shape_value_table_for_regular,
                   &ring_buffer.ky_mapping_support_points_permuted_ring_buffer(
                     task_index, 0),
-                  ring_buffer.ky_quad_points_regular_ring_buffer(task_index,
-                                                                 0,
-                                                                 quad_no));
+                  ky_quad_point);
 
               if (kernel.kernel_type == HyperSingularRegular)
                 {
@@ -3980,17 +3331,6 @@ namespace IdeoBEM
                   CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
                     ky_shape_grad_in_real_cell, spacedim);
 
-                  CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
-                    &(ring_buffer.kx_covariants_regular_ring_buffer(
-                      task_index, 0, quad_no, 0, 0)),
-                    spacedim,
-                    dim);
-                  CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
-                    &(ring_buffer.ky_covariants_regular_ring_buffer(
-                      task_index, 0, quad_no, 0, 0)),
-                    spacedim,
-                    dim);
-
                   kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
                                             kx_shape_grad_in_unit_cell_vector);
                   ky_covariant_matrix.vmult(ky_shape_grad_in_real_cell_vector,
@@ -4005,29 +3345,18 @@ namespace IdeoBEM
                    * vectors to be transformed to tensors.}
                    */
                   Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
-                    cross_product_3d(ring_buffer.kx_normals_regular_ring_buffer(
-                                       task_index, 0, quad_no),
+                    cross_product_3d(kx_normal,
                                      kx_shape_grad_in_real_cell_vector);
                   Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
-                    cross_product_3d(ring_buffer.ky_normals_regular_ring_buffer(
-                                       task_index, 0, quad_no),
+                    cross_product_3d(ky_normal,
                                      ky_shape_grad_in_real_cell_vector);
 
                   quad_value +=
-                    kernel.value(ring_buffer.kx_quad_points_regular_ring_buffer(
-                                   task_index, 0, quad_no),
-                                 ring_buffer.ky_quad_points_regular_ring_buffer(
-                                   task_index, 0, quad_no),
-                                 ring_buffer.kx_normals_regular_ring_buffer(
-                                   task_index, 0, quad_no),
-                                 ring_buffer.ky_normals_regular_ring_buffer(
-                                   task_index, 0, quad_no)) *
-                    ring_buffer.kx_jacobians_regular_ring_buffer(task_index,
-                                                                 0,
-                                                                 quad_no) *
-                    ring_buffer.ky_jacobians_regular_ring_buffer(task_index,
-                                                                 0,
-                                                                 quad_no) *
+                    kernel.value(kx_quad_point,
+                                 ky_quad_point,
+                                 kx_normal,
+                                 ky_normal) *
+                    kx_jacobian * ky_jacobian *
                     scalar_product(kx_shape_surface_curl,
                                    ky_shape_surface_curl) *
                     bem_values.quad_rule_for_regular.get_weights()[quad_no];
@@ -4035,20 +3364,11 @@ namespace IdeoBEM
               else
                 {
                   quad_value +=
-                    kernel.value(ring_buffer.kx_quad_points_regular_ring_buffer(
-                                   task_index, 0, quad_no),
-                                 ring_buffer.ky_quad_points_regular_ring_buffer(
-                                   task_index, 0, quad_no),
-                                 ring_buffer.kx_normals_regular_ring_buffer(
-                                   task_index, 0, quad_no),
-                                 ring_buffer.ky_normals_regular_ring_buffer(
-                                   task_index, 0, quad_no)) *
-                    ring_buffer.kx_jacobians_regular_ring_buffer(task_index,
-                                                                 0,
-                                                                 quad_no) *
-                    ring_buffer.ky_jacobians_regular_ring_buffer(task_index,
-                                                                 0,
-                                                                 quad_no) *
+                    kernel.value(kx_quad_point,
+                                 ky_quad_point,
+                                 kx_normal,
+                                 ky_normal) *
+                    kx_jacobian * ky_jacobian *
                     bem_values.kx_shape_value_table_for_regular(
                       ring_buffer.i_local_index_ring_buffer[task_index],
                       0,
@@ -4073,11 +3393,9 @@ namespace IdeoBEM
     __host__ void
     SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>::allocate(
       const unsigned int              capacity,
-      const CellNeighboringType       cell_neighboring_type,
       const BEMValues<dim, spacedim> &bem_values)
     {
       if_all_near_field_hmat_entries_added = false;
-      this->cell_neighboring_type          = cell_neighboring_type;
       this->capacity                       = capacity;
       front_index                          = 0;
       back_index                           = 0;
@@ -4095,133 +3413,21 @@ namespace IdeoBEM
         TableIndices<2>(capacity,
                         bem_values.ky_mapping_data.n_shape_functions));
 
-      switch (cell_neighboring_type)
-        {
-            case CellNeighboringType::SamePanel: {
-              kx_jacobians_same_panel_ring_buffer.allocate(TableIndices<3>(
-                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
-              ky_jacobians_same_panel_ring_buffer.allocate(TableIndices<3>(
-                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
-              kx_normals_same_panel_ring_buffer.allocate(TableIndices<3>(
-                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
-              ky_normals_same_panel_ring_buffer.allocate(TableIndices<3>(
-                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
-              kx_covariants_same_panel_ring_buffer.allocate(
-                TableIndices<5>(capacity,
-                                8,
-                                bem_values.quad_rule_for_same_panel.size(),
-                                dim,
-                                spacedim));
-              ky_covariants_same_panel_ring_buffer.allocate(
-                TableIndices<5>(capacity,
-                                8,
-                                bem_values.quad_rule_for_same_panel.size(),
-                                dim,
-                                spacedim));
-              kx_quad_points_same_panel_ring_buffer.allocate(TableIndices<3>(
-                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
-              ky_quad_points_same_panel_ring_buffer.allocate(TableIndices<3>(
-                capacity, 8, bem_values.quad_rule_for_same_panel.size()));
-
-              break;
-            }
-            case CellNeighboringType::CommonEdge: {
-              kx_jacobians_common_edge_ring_buffer.allocate(TableIndices<3>(
-                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
-              ky_jacobians_common_edge_ring_buffer.allocate(TableIndices<3>(
-                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
-              kx_normals_common_edge_ring_buffer.allocate(TableIndices<3>(
-                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
-              ky_normals_common_edge_ring_buffer.allocate(TableIndices<3>(
-                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
-              kx_covariants_common_edge_ring_buffer.allocate(
-                TableIndices<5>(capacity,
-                                6,
-                                bem_values.quad_rule_for_common_edge.size(),
-                                dim,
-                                spacedim));
-              ky_covariants_common_edge_ring_buffer.allocate(
-                TableIndices<5>(capacity,
-                                6,
-                                bem_values.quad_rule_for_common_edge.size(),
-                                dim,
-                                spacedim));
-              kx_quad_points_common_edge_ring_buffer.allocate(TableIndices<3>(
-                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
-              ky_quad_points_common_edge_ring_buffer.allocate(TableIndices<3>(
-                capacity, 6, bem_values.quad_rule_for_common_edge.size()));
-
-              break;
-            }
-            case CellNeighboringType::CommonVertex: {
-              kx_jacobians_common_vertex_ring_buffer.allocate(TableIndices<3>(
-                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
-              ky_jacobians_common_vertex_ring_buffer.allocate(TableIndices<3>(
-                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
-              kx_normals_common_vertex_ring_buffer.allocate(TableIndices<3>(
-                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
-              ky_normals_common_vertex_ring_buffer.allocate(TableIndices<3>(
-                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
-              kx_covariants_common_vertex_ring_buffer.allocate(
-                TableIndices<5>(capacity,
-                                4,
-                                bem_values.quad_rule_for_common_vertex.size(),
-                                dim,
-                                spacedim));
-              ky_covariants_common_vertex_ring_buffer.allocate(
-                TableIndices<5>(capacity,
-                                4,
-                                bem_values.quad_rule_for_common_vertex.size(),
-                                dim,
-                                spacedim));
-              kx_quad_points_common_vertex_ring_buffer.allocate(TableIndices<3>(
-                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
-              ky_quad_points_common_vertex_ring_buffer.allocate(TableIndices<3>(
-                capacity, 4, bem_values.quad_rule_for_common_vertex.size()));
-
-              break;
-            }
-            case CellNeighboringType::Regular: {
-              kx_jacobians_regular_ring_buffer.allocate(TableIndices<3>(
-                capacity, 1, bem_values.quad_rule_for_regular.size()));
-              ky_jacobians_regular_ring_buffer.allocate(TableIndices<3>(
-                capacity, 1, bem_values.quad_rule_for_regular.size()));
-              kx_normals_regular_ring_buffer.allocate(TableIndices<3>(
-                capacity, 1, bem_values.quad_rule_for_regular.size()));
-              ky_normals_regular_ring_buffer.allocate(TableIndices<3>(
-                capacity, 1, bem_values.quad_rule_for_regular.size()));
-              kx_covariants_regular_ring_buffer.allocate(
-                TableIndices<5>(capacity,
-                                1,
-                                bem_values.quad_rule_for_regular.size(),
-                                dim,
-                                spacedim));
-              ky_covariants_regular_ring_buffer.allocate(
-                TableIndices<5>(capacity,
-                                1,
-                                bem_values.quad_rule_for_regular.size(),
-                                dim,
-                                spacedim));
-              kx_quad_points_regular_ring_buffer.allocate(TableIndices<3>(
-                capacity, 1, bem_values.quad_rule_for_regular.size()));
-              ky_quad_points_regular_ring_buffer.allocate(TableIndices<3>(
-                capacity, 1, bem_values.quad_rule_for_regular.size()));
-
-              break;
-            }
-            default: {
-              Assert(false, ExcInternalError());
-
-              break;
-            }
-        }
-
+      /**
+       * @internal These data will be used for add the quadrature results to the
+       * full matrix on CPU. Hence, their memory is allocated using C++ @p new.
+       */
       fullmat_ring_buffer =
         new LAPACKFullMatrixExt<RangeNumberType> *[capacity];
       fullmat_row_index_ring_buffer = new unsigned int[capacity];
       fullmat_col_index_ring_buffer = new unsigned int[capacity];
-      i_local_index_ring_buffer     = new unsigned int[capacity];
-      j_local_index_ring_buffer     = new unsigned int[capacity];
+
+      cudaError_t error_code = cudaMalloc((void **)&i_local_index_ring_buffer,
+                                          capacity * sizeof(unsigned int));
+      AssertCuda(error_code);
+      error_code = cudaMalloc((void **)&j_local_index_ring_buffer,
+                              capacity * sizeof(unsigned int));
+      AssertCuda(error_code);
 
       /**
        * @internal Allocate memory for mass matrix entries.
@@ -4231,9 +3437,8 @@ namespace IdeoBEM
       /**
        * @internal Allocate pinned memory on the host for the quadrature values.
        */
-      cudaError_t error_code =
-        cudaMallocHost((void **)&quadrature_value_ring_buffer_cpu,
-                       capacity * sizeof(RangeNumberType));
+      error_code = cudaMallocHost((void **)&quadrature_value_ring_buffer_cpu,
+                                  capacity * sizeof(RangeNumberType));
       AssertCuda(error_code);
 
       error_code = cudaMalloc((void **)&quadrature_value_ring_buffer_gpu,
@@ -4248,63 +3453,6 @@ namespace IdeoBEM
     {
       kx_mapping_support_points_permuted_ring_buffer.release();
       ky_mapping_support_points_permuted_ring_buffer.release();
-
-      switch (cell_neighboring_type)
-        {
-            case CellNeighboringType::SamePanel: {
-              kx_jacobians_same_panel_ring_buffer.release();
-              ky_jacobians_same_panel_ring_buffer.release();
-              kx_normals_same_panel_ring_buffer.release();
-              ky_normals_same_panel_ring_buffer.release();
-              kx_covariants_same_panel_ring_buffer.release();
-              ky_covariants_same_panel_ring_buffer.release();
-              kx_quad_points_same_panel_ring_buffer.release();
-              ky_quad_points_same_panel_ring_buffer.release();
-
-              break;
-            }
-            case CellNeighboringType::CommonEdge: {
-              kx_jacobians_common_edge_ring_buffer.release();
-              ky_jacobians_common_edge_ring_buffer.release();
-              kx_normals_common_edge_ring_buffer.release();
-              ky_normals_common_edge_ring_buffer.release();
-              kx_covariants_common_edge_ring_buffer.release();
-              ky_covariants_common_edge_ring_buffer.release();
-              kx_quad_points_common_edge_ring_buffer.release();
-              ky_quad_points_common_edge_ring_buffer.release();
-
-              break;
-            }
-            case CellNeighboringType::CommonVertex: {
-              kx_jacobians_common_vertex_ring_buffer.release();
-              ky_jacobians_common_vertex_ring_buffer.release();
-              kx_normals_common_vertex_ring_buffer.release();
-              ky_normals_common_vertex_ring_buffer.release();
-              kx_covariants_common_vertex_ring_buffer.release();
-              ky_covariants_common_vertex_ring_buffer.release();
-              kx_quad_points_common_vertex_ring_buffer.release();
-              ky_quad_points_common_vertex_ring_buffer.release();
-
-              break;
-            }
-            case CellNeighboringType::Regular: {
-              kx_jacobians_regular_ring_buffer.release();
-              ky_jacobians_regular_ring_buffer.release();
-              kx_normals_regular_ring_buffer.release();
-              ky_normals_regular_ring_buffer.release();
-              kx_covariants_regular_ring_buffer.release();
-              ky_covariants_regular_ring_buffer.release();
-              kx_quad_points_regular_ring_buffer.release();
-              ky_quad_points_regular_ring_buffer.release();
-
-              break;
-            }
-            default: {
-              Assert(false, ExcInternalError());
-
-              break;
-            }
-        }
 
       if (fullmat_ring_buffer != nullptr)
         {
@@ -4321,22 +3469,25 @@ namespace IdeoBEM
           delete[] fullmat_col_index_ring_buffer;
         }
 
-      if (i_local_index_ring_buffer != nullptr)
-        {
-          delete[] i_local_index_ring_buffer;
-        }
-
-      if (j_local_index_ring_buffer != nullptr)
-        {
-          delete[] j_local_index_ring_buffer;
-        }
-
       if (mass_matrix_entries != nullptr)
         {
           delete[] mass_matrix_entries;
         }
 
       cudaError_t error_code;
+
+      if (i_local_index_ring_buffer != nullptr)
+        {
+          error_code = cudaFree(i_local_index_ring_buffer);
+          AssertCuda(error_code);
+        }
+
+      if (j_local_index_ring_buffer != nullptr)
+        {
+          error_code = cudaFree(j_local_index_ring_buffer);
+          AssertCuda(error_code);
+        }
+
       if (quadrature_value_ring_buffer_cpu != nullptr)
         {
           error_code = cudaFreeHost(quadrature_value_ring_buffer_cpu);
@@ -4438,11 +3589,25 @@ namespace IdeoBEM
           fullmat_row_index;
         ring_buffer.fullmat_col_index_ring_buffer[ring_buffer.back_index] =
           fullmat_col_index;
-        ring_buffer.i_local_index_ring_buffer[ring_buffer.back_index] =
-          i_local_index;
-        ring_buffer.j_local_index_ring_buffer[ring_buffer.back_index] =
-          j_local_index;
         ring_buffer.if_all_near_field_hmat_entries_added = is_last_task;
+
+        cudaError_t error_code =
+          cudaMemcpyAsync((void *)(ring_buffer.i_local_index_ring_buffer +
+                                   ring_buffer.back_index),
+                          &i_local_index,
+                          sizeof(unsigned int),
+                          cudaMemcpyHostToDevice,
+                          scratch_data.cuda_stream_handle);
+        AssertCuda(error_code);
+
+        error_code =
+          cudaMemcpyAsync((void *)(ring_buffer.j_local_index_ring_buffer +
+                                   ring_buffer.back_index),
+                          &j_local_index,
+                          sizeof(unsigned int),
+                          cudaMemcpyHostToDevice,
+                          scratch_data.cuda_stream_handle);
+        AssertCuda(error_code);
 
         /**
          * @internal When there is no contribution from mass matrix,
@@ -4451,8 +3616,7 @@ namespace IdeoBEM
         ring_buffer.mass_matrix_entries[ring_buffer.back_index] =
           mass_matrix_entry;
 
-        cudaError_t error_code =
-          cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+        error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
         AssertCuda(error_code);
 
         /**
@@ -4478,8 +3642,9 @@ namespace IdeoBEM
     bool
     ring_buffer_fetch_and_process_tasks(
       SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
-                                                          &ring_buffer,
-      SauterQuadratureTaskRingBufferMutex                 &ring_buffer_mutex,
+                                          &ring_buffer,
+      SauterQuadratureTaskRingBufferMutex &ring_buffer_mutex,
+      const CellNeighboringType            cell_neighboring_type,
       const KernelFunctionType<spacedim, RangeNumberType> &kernel,
       const RangeNumberType                                kernel_factor,
       unsigned int                                         num_to_fetch,
@@ -4537,7 +3702,7 @@ namespace IdeoBEM
              * the four cell neighboring types, the current cell neighboring
              * type is definite and only one case below is reachable.
              */
-            switch (ring_buffer.cell_neighboring_type)
+            switch (cell_neighboring_type)
               {
                   case CellNeighboringType::SamePanel: {
                     process_sauter_task_on_one_pair_of_dofs_same_panel<<<
@@ -5497,8 +4662,9 @@ namespace IdeoBEM
       const KernelFunctionType<spacedim, RangeNumberType> &kernel,
       const RangeNumberType                                kernel_factor,
       SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
-                                                          &ring_buffer,
-      SauterQuadratureTaskRingBufferMutex                 &ring_buffer_mutex,
+                                          &ring_buffer,
+      SauterQuadratureTaskRingBufferMutex &ring_buffer_mutex,
+      const CellNeighboringType            cell_neighboring_type,
       const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values_gpu,
       const unsigned int                                   block_size,
       const unsigned int                                   block_num)
@@ -5520,6 +4686,7 @@ namespace IdeoBEM
        */
       while (ring_buffer_fetch_and_process_tasks(ring_buffer,
                                                  ring_buffer_mutex,
+                                                 cell_neighboring_type,
                                                  kernel,
                                                  kernel_factor,
                                                  num_to_fetch,
