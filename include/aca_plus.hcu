@@ -5535,7 +5535,7 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num;
+    const unsigned int capacity            = block_size * block_num * 4;
     unsigned int       producer_thread_num = 2;
 
     IdeoBEM::CUDAWrappers::
@@ -5585,10 +5585,13 @@ namespace IdeoBEM
     /**
      * @internal Start the producer threads.
      */
+    std::pair<std::mutex, unsigned int> active_producer_thread_num;
+    active_producer_thread_num.second = 0;
     for (unsigned int i = 0; i < producer_thread_num; i++)
       {
         producers.emplace_back(
           static_cast<void (*)(
+            std::pair<std::mutex, unsigned int> &,
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
@@ -5628,6 +5631,7 @@ namespace IdeoBEM
             const bool)>(
             IdeoBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
+          std::ref(active_producer_thread_num),
           std::cref(hmat.get_near_field_leaf_set()),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
@@ -5668,6 +5672,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -5680,6 +5685,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
@@ -5691,6 +5697,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -5703,6 +5710,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
@@ -5714,6 +5722,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -5726,6 +5735,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
@@ -5737,6 +5747,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -5749,6 +5760,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_regular),
@@ -6009,7 +6021,7 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num;
+    const unsigned int capacity            = block_size * block_num * 4;
     unsigned int       producer_thread_num = 2;
 
     IdeoBEM::CUDAWrappers::
@@ -6059,10 +6071,13 @@ namespace IdeoBEM
     /**
      * @internal Start the producer threads.
      */
+    std::pair<std::mutex, unsigned int> active_producer_thread_num;
+    active_producer_thread_num.second = 0;
     for (unsigned int i = 0; i < producer_thread_num; i++)
       {
         producers.emplace_back(
           static_cast<void (*)(
+            std::pair<std::mutex, unsigned int> &,
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
@@ -6102,6 +6117,7 @@ namespace IdeoBEM
             const bool)>(
             IdeoBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
+          std::ref(active_producer_thread_num),
           std::cref(hmat.get_near_field_leaf_set()),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
@@ -6142,6 +6158,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -6154,6 +6171,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
@@ -6165,6 +6183,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -6177,6 +6196,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
@@ -6188,6 +6208,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -6200,6 +6221,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
@@ -6211,6 +6233,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -6223,6 +6246,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_regular),
@@ -6507,7 +6531,7 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num;
+    const unsigned int capacity            = block_size * block_num * 4;
     unsigned int       producer_thread_num = 2;
 
     IdeoBEM::CUDAWrappers::
@@ -6557,10 +6581,13 @@ namespace IdeoBEM
     /**
      * @internal Start the producer threads.
      */
+    std::pair<std::mutex, unsigned int> active_producer_thread_num;
+    active_producer_thread_num.second = 0;
     for (unsigned int i = 0; i < producer_thread_num; i++)
       {
         producers.emplace_back(
           static_cast<void (*)(
+            std::pair<std::mutex, unsigned int> &,
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
@@ -6602,6 +6629,7 @@ namespace IdeoBEM
             const bool)>(
             IdeoBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
+          std::ref(active_producer_thread_num),
           std::cref(near_field_leaf_set),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
@@ -6644,6 +6672,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -6656,6 +6685,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
@@ -6667,6 +6697,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -6679,6 +6710,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
@@ -6690,6 +6722,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -6702,6 +6735,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
@@ -6713,6 +6747,7 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
+        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
         IdeoBEM::CUDAWrappers::
@@ -6725,6 +6760,7 @@ namespace IdeoBEM
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
+      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_regular),

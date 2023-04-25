@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <mutex>
 #include <vector>
 
 #include "bem_kernels.hcu"
@@ -2232,16 +2233,6 @@ namespace IdeoBEM
       release();
 
       /**
-       * Flag indicating if all matrix entries in all near filed \hmatrices have
-       * been added as tasks to the ring buffer. If it is true, even though the
-       * number of tasks in the buffer (@p task_num) is less than the total
-       * number of GPU threads specified to compute the Sauter quadrature, the
-       * consumer threads will get all of them directly and perform the
-       * computation.
-       */
-      bool if_all_near_field_hmat_entries_added;
-
-      /**
        * List of permuted mapping support points in \f$K_x\f$.
        *
        * 1. First dimension: task index in the ring buffer.
@@ -2348,6 +2339,10 @@ namespace IdeoBEM
       unsigned int task_num;
     };
 
+    /**
+     * Class holding mutex and conditions variables for protecting Sauter
+     * quadrature task ring buffer properties.
+     */
     class SauterQuadratureTaskRingBufferMutex
     {
     public:
@@ -2363,9 +2358,19 @@ namespace IdeoBEM
       std::condition_variable not_full;
 
       /**
-       * Condition indicating the ring buffer not being empty.
+       * Condition indicating the ring buffer not being empty, i.e. a consumer
+       * thread can start to check if there are enough tasks that can be
+       * acquired.
        */
       std::condition_variable not_empty;
+    };
+
+    class SauterQuadratureTaskDataMutex
+    {
+    public:
+      std::mutex              lock;
+      std::condition_variable task_data_processed;
+      std::condition_variable task_data_ready;
     };
 
     /**
@@ -3395,11 +3400,10 @@ namespace IdeoBEM
       const unsigned int              capacity,
       const BEMValues<dim, spacedim> &bem_values)
     {
-      if_all_near_field_hmat_entries_added = false;
-      this->capacity                       = capacity;
-      front_index                          = 0;
-      back_index                           = 0;
-      task_num                             = 0;
+      this->capacity = capacity;
+      front_index    = 0;
+      back_index     = 0;
+      task_num       = 0;
 
       /**
        * @internal For each data table in @p PairCellWiseScratchData, its
@@ -3542,8 +3546,7 @@ namespace IdeoBEM
       const unsigned int                    j_local_index,
       const RangeNumberType                 mass_matrix_entry,
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
-                &scratch_data,
-      const bool is_last_task)
+        &scratch_data)
     {
       {
         std::unique_lock<std::mutex> ul(ring_buffer_mutex.lock);
@@ -3589,7 +3592,6 @@ namespace IdeoBEM
           fullmat_row_index;
         ring_buffer.fullmat_col_index_ring_buffer[ring_buffer.back_index] =
           fullmat_col_index;
-        ring_buffer.if_all_near_field_hmat_entries_added = is_last_task;
 
         cudaError_t error_code =
           cudaMemcpyAsync((void *)(ring_buffer.i_local_index_ring_buffer +
@@ -3641,6 +3643,7 @@ namespace IdeoBEM
               typename RangeNumberType = double>
     bool
     ring_buffer_fetch_and_process_tasks(
+      std::pair<std::mutex, unsigned int> &active_producer_thread_num,
       SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
                                           &ring_buffer,
       SauterQuadratureTaskRingBufferMutex &ring_buffer_mutex,
@@ -3665,16 +3668,46 @@ namespace IdeoBEM
          * 2. When not all matrix entries have been added, wait for
          * @p num_to_fetch number of tasks.
          */
-        ring_buffer_mutex.not_empty.wait(ul, [&ring_buffer, num_to_fetch]() {
-          if (ring_buffer.if_all_near_field_hmat_entries_added)
-            {
-              return true;
-            }
-          else
-            {
-              return ring_buffer.task_num >= num_to_fetch;
-            }
-        });
+        bool no_producers_predicate;
+        ring_buffer_mutex.not_empty.wait(
+          ul,
+          [&ring_buffer,
+           num_to_fetch,
+           &no_producers_predicate,
+           &active_producer_thread_num,
+           cell_neighboring_type]() {
+            std::unique_lock<std::mutex> l(active_producer_thread_num.first);
+            //            std::cerr <<
+            //            cell_neighboring_type_name(cell_neighboring_type)
+            //                      << ": active_producer_thread_num.second="
+            //                      << active_producer_thread_num.second <<
+            //                      std::endl;
+            no_producers_predicate = (active_producer_thread_num.second == 0);
+            l.unlock();
+
+            if (no_producers_predicate)
+              {
+                /**
+                 * @internal Directly acquire the lock when there are no
+                 * producers anymore.
+                 */
+                // std::cerr << "No producers anymore!" << std::endl;
+                return true;
+              }
+            else
+              {
+                /**
+                 * @internal Wait for a batch of tasks.
+                 */
+                //                std::cerr <<
+                //                cell_neighboring_type_name(cell_neighboring_type)
+                //                          << ": Current number of tasks in
+                //                          ring buffer: "
+                //                          << ring_buffer.task_num <<
+                //                          std::endl;
+                return ring_buffer.task_num >= num_to_fetch;
+              }
+          });
 
         if (ring_buffer.task_num > 0)
           {
@@ -3873,8 +3906,7 @@ namespace IdeoBEM
          * @internal Check whether all the quadrature tasks for the current
          * cell neighboring type have been processed.
          */
-        if (ring_buffer.if_all_near_field_hmat_entries_added &&
-            ring_buffer.task_num == 0)
+        if (no_producers_predicate && ring_buffer.task_num == 0)
           {
             is_finished = true;
           }
@@ -3926,6 +3958,7 @@ namespace IdeoBEM
     template <int dim, int spacedim, typename RangeNumberType = double>
     void
     sauter_quadrature_for_near_field_matrix_entries_producer(
+      std::pair<std::mutex, unsigned int> &active_producer_thread_num,
       const std::vector<HMatrix<spacedim, RangeNumberType> *>
                         &near_field_leaf_set,
       const unsigned int start_leaf_set_index,
@@ -3968,10 +4001,14 @@ namespace IdeoBEM
       const bool                            enable_build_symmetric_hmat = false)
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
-      std::cerr << "Producer thread " << current_thread_id << " starts..."
-                << std::endl;
+      std::unique_lock<std::mutex> ul(active_producer_thread_num.first);
+      active_producer_thread_num.second++;
+      std::cerr << "Producer thread " << current_thread_id << " starts...\n";
+      std::cerr << "Current number of producers: "
+                << active_producer_thread_num.second << std::endl;
+      ul.unlock();
 
-      const unsigned int producer_wait_time_ms = 10;
+      const unsigned int producer_wait_time_ms = 1;
 
       /**
        * @internal Define @p PairCellWiseScratchData and
@@ -4095,10 +4132,7 @@ namespace IdeoBEM
                                 map_from_ky_boundary_mesh_to_volume_mesh,
                                 method_for_cell_neighboring_type,
                                 scratch_data,
-                                copy_data,
-                                (l == end_leaf_set_index - 1) &&
-                                  (fullmat_row_index == fullmat->m() - 1) &&
-                                  (fullmat_col_index == fullmat_row_index));
+                                copy_data);
 
                               std::this_thread::sleep_for(
                                 std::chrono::milliseconds(
@@ -4171,10 +4205,7 @@ namespace IdeoBEM
                                 map_from_ky_boundary_mesh_to_volume_mesh,
                                 method_for_cell_neighboring_type,
                                 scratch_data,
-                                copy_data,
-                                (l == end_leaf_set_index - 1) &&
-                                  (fullmat_row_index == fullmat->m() - 1) &&
-                                  (fullmat_col_index == fullmat->n() - 1));
+                                copy_data);
 
                               std::this_thread::sleep_for(
                                 std::chrono::milliseconds(
@@ -4246,10 +4277,7 @@ namespace IdeoBEM
                         map_from_ky_boundary_mesh_to_volume_mesh,
                         method_for_cell_neighboring_type,
                         scratch_data,
-                        copy_data,
-                        (l == end_leaf_set_index - 1) &&
-                          (fullmat_row_index == fullmat->m() - 1) &&
-                          (fullmat_col_index == fullmat->n() - 1));
+                        copy_data);
 
                       std::this_thread::sleep_for(
                         std::chrono::milliseconds(producer_wait_time_ms));
@@ -4274,14 +4302,24 @@ namespace IdeoBEM
       scratch_data.release();
       copy_data.release();
 
-      std::cerr << "Producer thread " << current_thread_id << " exits..."
-                << std::endl;
+      ul.lock();
+      active_producer_thread_num.second--;
+      std::cerr << "Producer thread " << current_thread_id << " exits...\n";
+      std::cerr << "Current number of producers: "
+                << active_producer_thread_num.second << std::endl;
+      ul.unlock();
+
+      mutex_for_same_panel.not_empty.notify_all();
+      mutex_for_common_edge.not_empty.notify_all();
+      mutex_for_common_vertex.not_empty.notify_all();
+      mutex_for_regular.not_empty.notify_all();
     }
 
 
     template <int dim, int spacedim, typename RangeNumberType = double>
     void
     sauter_quadrature_for_near_field_matrix_entries_producer(
+      std::pair<std::mutex, unsigned int> &active_producer_thread_num,
       const std::vector<HMatrix<spacedim, RangeNumberType> *>
                         &near_field_leaf_set,
       const unsigned int start_leaf_set_index,
@@ -4326,10 +4364,14 @@ namespace IdeoBEM
       const bool                            enable_build_symmetric_hmat = false)
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
-      std::cerr << "Producer thread " << current_thread_id << " starts..."
-                << std::endl;
+      std::unique_lock<std::mutex> ul(active_producer_thread_num.first);
+      active_producer_thread_num.second++;
+      std::cerr << "Producer thread " << current_thread_id << " starts...\n";
+      std::cerr << "Current number of producers: "
+                << active_producer_thread_num.second << std::endl;
+      ul.unlock();
 
-      const unsigned int producer_wait_time_ms = 10;
+      const unsigned int producer_wait_time_ms = 1;
 
       /**
        * Define @p CellWiseScratchData which is local to the current working thread.
@@ -4464,10 +4506,7 @@ namespace IdeoBEM
                                 method_for_cell_neighboring_type,
                                 mass_matrix_scratch_data,
                                 scratch_data,
-                                copy_data,
-                                (l == end_leaf_set_index - 1) &&
-                                  (fullmat_row_index == fullmat->m() - 1) &&
-                                  (fullmat_col_index == fullmat_row_index));
+                                copy_data);
 
                               std::this_thread::sleep_for(
                                 std::chrono::milliseconds(
@@ -4542,10 +4581,7 @@ namespace IdeoBEM
                                 method_for_cell_neighboring_type,
                                 mass_matrix_scratch_data,
                                 scratch_data,
-                                copy_data,
-                                (l == end_leaf_set_index - 1) &&
-                                  (fullmat_row_index == fullmat->m() - 1) &&
-                                  (fullmat_col_index == fullmat->n() - 1));
+                                copy_data);
 
                               std::this_thread::sleep_for(
                                 std::chrono::milliseconds(
@@ -4619,10 +4655,7 @@ namespace IdeoBEM
                         method_for_cell_neighboring_type,
                         mass_matrix_scratch_data,
                         scratch_data,
-                        copy_data,
-                        (l == end_leaf_set_index - 1) &&
-                          (fullmat_row_index == fullmat->m() - 1) &&
-                          (fullmat_col_index == fullmat->n() - 1));
+                        copy_data);
 
                       std::this_thread::sleep_for(
                         std::chrono::milliseconds(producer_wait_time_ms));
@@ -4647,8 +4680,17 @@ namespace IdeoBEM
       scratch_data.release();
       copy_data.release();
 
-      std::cerr << "Producer thread " << current_thread_id << " exits..."
-                << std::endl;
+      ul.lock();
+      active_producer_thread_num.second--;
+      std::cerr << "Producer thread " << current_thread_id << " exits...\n";
+      std::cerr << "Current number of producers: "
+                << active_producer_thread_num.second << std::endl;
+      ul.unlock();
+
+      mutex_for_same_panel.not_empty.notify_all();
+      mutex_for_common_edge.not_empty.notify_all();
+      mutex_for_common_vertex.not_empty.notify_all();
+      mutex_for_regular.not_empty.notify_all();
     }
 
 
@@ -4659,6 +4701,7 @@ namespace IdeoBEM
               typename RangeNumberType = double>
     void
     sauter_quadrature_for_near_field_matrix_entries_consumer(
+      std::pair<std::mutex, unsigned int> &active_producer_thread_num,
       const KernelFunctionType<spacedim, RangeNumberType> &kernel,
       const RangeNumberType                                kernel_factor,
       SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
@@ -4670,10 +4713,11 @@ namespace IdeoBEM
       const unsigned int                                   block_num)
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
-      std::cerr << "Consumer thread " << current_thread_id << " starts..."
-                << std::endl;
+      std::cerr << "Consumer thread " << current_thread_id << " for "
+                << cell_neighboring_type_name(cell_neighboring_type)
+                << " starts..." << std::endl;
 
-      const unsigned int consumer_wait_time_ms = 10;
+      const unsigned int consumer_wait_time_ms = 1;
       const unsigned int num_to_fetch          = block_size * block_num;
 
       cudaStream_t cuda_stream_handle;
@@ -4684,15 +4728,16 @@ namespace IdeoBEM
        * Continuously process the Sauter quadrature tasks in the ring buffer for
        * same panel case.
        */
-      while (ring_buffer_fetch_and_process_tasks(ring_buffer,
-                                                 ring_buffer_mutex,
-                                                 cell_neighboring_type,
-                                                 kernel,
-                                                 kernel_factor,
-                                                 num_to_fetch,
-                                                 block_size,
-                                                 bem_values_gpu,
-                                                 cuda_stream_handle))
+      while (!ring_buffer_fetch_and_process_tasks(active_producer_thread_num,
+                                                  ring_buffer,
+                                                  ring_buffer_mutex,
+                                                  cell_neighboring_type,
+                                                  kernel,
+                                                  kernel_factor,
+                                                  num_to_fetch,
+                                                  block_size,
+                                                  bem_values_gpu,
+                                                  cuda_stream_handle))
         {
           std::this_thread::sleep_for(
             std::chrono::milliseconds(consumer_wait_time_ms));
@@ -4708,8 +4753,9 @@ namespace IdeoBEM
       error_code = cudaStreamDestroy(cuda_stream_handle);
       AssertCuda(error_code);
 
-      std::cerr << "Consumer thread " << current_thread_id << " exits..."
-                << std::endl;
+      std::cerr << "Consumer thread " << current_thread_id << " for "
+                << cell_neighboring_type_name(cell_neighboring_type)
+                << " exits..." << std::endl;
     }
 
     /**
@@ -4780,12 +4826,11 @@ namespace IdeoBEM
         &map_from_ky_boundary_mesh_to_volume_mesh,
       const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-      const bool                                               is_last_task)
+      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
     {
-#if ENABLE_DEBUG == 1
-      LogStream::Prefix prefix_string("create_sauter_task");
-#endif
+      //#if ENABLE_DEBUG == 1
+      //      LogStream::Prefix prefix_string("create_sauter_task");
+      //#endif
 
       /**
        * Iterate over each cell in the support of the basis function associated
@@ -4901,12 +4946,15 @@ namespace IdeoBEM
               unsigned int j_index =
                 j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-#if ENABLE_DEBUG == 1
-              deallog << "Create Sauter task: " << fullmat << ","
-                      << i_global_dof_index << "," << j_global_dof_index << ","
-                      << fullmat_row_index << "," << fullmat_col_index << ","
-                      << i_index << "," << j_index << std::endl;
-#endif
+              //#if ENABLE_DEBUG == 1
+              //              deallog << "Create Sauter task: " << fullmat <<
+              //              ","
+              //                      << i_global_dof_index << "," <<
+              //                      j_global_dof_index << ","
+              //                      << fullmat_row_index << "," <<
+              //                      fullmat_col_index << ","
+              //                      << i_index << "," << j_index << std::endl;
+              //#endif
 
               switch (cell_neighboring_type)
                 {
@@ -4919,8 +4967,7 @@ namespace IdeoBEM
                                            i_index,
                                            j_index,
                                            0.,
-                                           scratch_data,
-                                           is_last_task);
+                                           scratch_data);
 
                       break;
                     }
@@ -4933,8 +4980,7 @@ namespace IdeoBEM
                                            i_index,
                                            j_index,
                                            0.,
-                                           scratch_data,
-                                           is_last_task);
+                                           scratch_data);
 
                       break;
                     }
@@ -4947,8 +4993,7 @@ namespace IdeoBEM
                                            i_index,
                                            j_index,
                                            0.,
-                                           scratch_data,
-                                           is_last_task);
+                                           scratch_data);
 
                       break;
                     }
@@ -4961,8 +5006,7 @@ namespace IdeoBEM
                                            i_index,
                                            j_index,
                                            0.,
-                                           scratch_data,
-                                           is_last_task);
+                                           scratch_data);
 
                       break;
                     }
@@ -5054,12 +5098,11 @@ namespace IdeoBEM
       const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
       CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
-      const bool                                               is_last_task)
+      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
     {
-#if ENABLE_DEBUG == 1
-      LogStream::Prefix prefix_string("create_sauter_task");
-#endif
+      //#if ENABLE_DEBUG == 1
+      //      LogStream::Prefix prefix_string("create_sauter_task");
+      //#endif
 
       /**
        * Iterate over each cell in the support of the basis function associated
@@ -5307,13 +5350,17 @@ namespace IdeoBEM
               unsigned int j_index =
                 j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-#if ENABLE_DEBUG == 1
-              deallog << "Create Sauter task: " << fullmat << ","
-                      << i_global_dof_index << "," << j_global_dof_index << ","
-                      << fullmat_row_index << "," << fullmat_col_index << ","
-                      << i_index << "," << j_index
-                      << ",mass=" << mass_matrix_entry << std::endl;
-#endif
+              //#if ENABLE_DEBUG == 1
+              //              deallog << "Create Sauter task: " << fullmat <<
+              //              ","
+              //                      << i_global_dof_index << "," <<
+              //                      j_global_dof_index << ","
+              //                      << fullmat_row_index << "," <<
+              //                      fullmat_col_index << ","
+              //                      << i_index << "," << j_index
+              //                      << ",mass=" << mass_matrix_entry <<
+              //                      std::endl;
+              //#endif
 
               switch (cell_neighboring_type)
                 {
@@ -5326,8 +5373,7 @@ namespace IdeoBEM
                                            i_index,
                                            j_index,
                                            mass_matrix_entry,
-                                           scratch_data,
-                                           is_last_task);
+                                           scratch_data);
 
                       break;
                     }
@@ -5340,8 +5386,7 @@ namespace IdeoBEM
                                            i_index,
                                            j_index,
                                            mass_matrix_entry,
-                                           scratch_data,
-                                           is_last_task);
+                                           scratch_data);
 
                       break;
                     }
@@ -5354,8 +5399,7 @@ namespace IdeoBEM
                                            i_index,
                                            j_index,
                                            mass_matrix_entry,
-                                           scratch_data,
-                                           is_last_task);
+                                           scratch_data);
 
                       break;
                     }
@@ -5368,8 +5412,7 @@ namespace IdeoBEM
                                            i_index,
                                            j_index,
                                            mass_matrix_entry,
-                                           scratch_data,
-                                           is_last_task);
+                                           scratch_data);
 
                       break;
                     }
