@@ -5535,34 +5535,33 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num * 4;
+    const unsigned int capacity            = block_size * block_num * 8;
     unsigned int       producer_thread_num = 2;
 
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
-    ring_buffer_for_same_panel.allocate(capacity, bem_values);
+    ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
+                                        capacity,
+                                        bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
-    ring_buffer_for_common_edge.allocate(capacity, bem_values);
+    ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
+                                         capacity,
+                                         bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
-    ring_buffer_for_common_vertex.allocate(capacity, bem_values);
+    ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
+                                           capacity,
+                                           bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
-    ring_buffer_for_regular.allocate(capacity, bem_values);
-
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_same_panel;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_common_edge;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_common_vertex;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_regular;
+    ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
+                                     capacity,
+                                     bem_values);
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
@@ -5585,28 +5584,33 @@ namespace IdeoBEM
     /**
      * @internal Start the producer threads.
      */
-    std::pair<std::mutex, unsigned int> active_producer_thread_num;
-    active_producer_thread_num.second = 0;
     for (unsigned int i = 0; i < producer_thread_num; i++)
       {
         producers.emplace_back(
           static_cast<void (*)(
-            std::pair<std::mutex, unsigned int> &,
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
             const std::vector<std::vector<unsigned int>> &,
             const std::vector<std::vector<unsigned int>> &,
             const BEMValues<dim, spacedim, RangeNumberType> &,
@@ -5631,7 +5635,6 @@ namespace IdeoBEM
             const bool)>(
             IdeoBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
-          std::ref(active_producer_thread_num),
           std::cref(hmat.get_near_field_leaf_set()),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
@@ -5641,10 +5644,6 @@ namespace IdeoBEM
           std::ref(ring_buffer_for_common_edge),
           std::ref(ring_buffer_for_common_vertex),
           std::ref(ring_buffer_for_regular),
-          std::ref(mutex_for_same_panel),
-          std::ref(mutex_for_common_edge),
-          std::ref(mutex_for_common_vertex),
-          std::ref(mutex_for_regular),
           std::cref(kx_dof_to_cell_topo),
           std::cref(ky_dof_to_cell_topo),
           std::cref(bem_values),
@@ -5672,103 +5671,83 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
-      std::ref(mutex_for_same_panel),
-      CellNeighboringType::SamePanel,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
-      std::ref(mutex_for_common_edge),
-      CellNeighboringType::CommonEdge,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
-      std::ref(mutex_for_common_vertex),
-      CellNeighboringType::CommonVertex,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_regular),
-      std::ref(mutex_for_regular),
-      CellNeighboringType::Regular,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     /**
      * @internal Wait for all producer and consumer threads to exit.
@@ -5777,6 +5756,13 @@ namespace IdeoBEM
       {
         producer.join();
       }
+
+    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added.store(true);
+    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added.store(
+      true);
+    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added.store(
+      true);
+    ring_buffer_for_regular.if_all_near_field_hmat_entries_added.store(true);
 
     for (auto &consumer : consumers)
       {
@@ -6021,34 +6007,33 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num * 4;
+    const unsigned int capacity            = block_size * block_num * 8;
     unsigned int       producer_thread_num = 2;
 
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
-    ring_buffer_for_same_panel.allocate(capacity, bem_values);
+    ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
+                                        capacity,
+                                        bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
-    ring_buffer_for_common_edge.allocate(capacity, bem_values);
+    ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
+                                         capacity,
+                                         bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
-    ring_buffer_for_common_vertex.allocate(capacity, bem_values);
+    ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
+                                           capacity,
+                                           bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
-    ring_buffer_for_regular.allocate(capacity, bem_values);
-
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_same_panel;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_common_edge;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_common_vertex;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_regular;
+    ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
+                                     capacity,
+                                     bem_values);
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
@@ -6071,28 +6056,33 @@ namespace IdeoBEM
     /**
      * @internal Start the producer threads.
      */
-    std::pair<std::mutex, unsigned int> active_producer_thread_num;
-    active_producer_thread_num.second = 0;
     for (unsigned int i = 0; i < producer_thread_num; i++)
       {
         producers.emplace_back(
           static_cast<void (*)(
-            std::pair<std::mutex, unsigned int> &,
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
             const std::vector<std::vector<unsigned int>> &,
             const std::vector<std::vector<unsigned int>> &,
             const BEMValues<dim, spacedim, RangeNumberType> &,
@@ -6117,7 +6107,6 @@ namespace IdeoBEM
             const bool)>(
             IdeoBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
-          std::ref(active_producer_thread_num),
           std::cref(hmat.get_near_field_leaf_set()),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
@@ -6127,10 +6116,6 @@ namespace IdeoBEM
           std::ref(ring_buffer_for_common_edge),
           std::ref(ring_buffer_for_common_vertex),
           std::ref(ring_buffer_for_regular),
-          std::ref(mutex_for_same_panel),
-          std::ref(mutex_for_common_edge),
-          std::ref(mutex_for_common_vertex),
-          std::ref(mutex_for_regular),
           std::cref(kx_dof_to_cell_topo),
           std::cref(ky_dof_to_cell_topo),
           std::cref(bem_values),
@@ -6158,103 +6143,83 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
-      std::ref(mutex_for_same_panel),
-      CellNeighboringType::SamePanel,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
-      std::ref(mutex_for_common_edge),
-      CellNeighboringType::CommonEdge,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
-      std::ref(mutex_for_common_vertex),
-      CellNeighboringType::CommonVertex,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_regular),
-      std::ref(mutex_for_regular),
-      CellNeighboringType::Regular,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     /**
      * @internal Wait for all producer and consumer threads to exit.
@@ -6263,6 +6228,13 @@ namespace IdeoBEM
       {
         producer.join();
       }
+
+    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added.store(true);
+    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added.store(
+      true);
+    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added.store(
+      true);
+    ring_buffer_for_regular.if_all_near_field_hmat_entries_added.store(true);
 
     for (auto &consumer : consumers)
       {
@@ -6531,34 +6503,33 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num * 4;
+    const unsigned int capacity            = block_size * block_num * 8;
     unsigned int       producer_thread_num = 2;
 
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
-    ring_buffer_for_same_panel.allocate(capacity, bem_values);
+    ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
+                                        capacity,
+                                        bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
-    ring_buffer_for_common_edge.allocate(capacity, bem_values);
+    ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
+                                         capacity,
+                                         bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
-    ring_buffer_for_common_vertex.allocate(capacity, bem_values);
+    ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
+                                           capacity,
+                                           bem_values);
     IdeoBEM::CUDAWrappers::
-      SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType>
+      SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
-    ring_buffer_for_regular.allocate(capacity, bem_values);
-
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_same_panel;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_common_edge;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_common_vertex;
-    IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex
-      mutex_for_regular;
+    ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
+                                     capacity,
+                                     bem_values);
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
@@ -6581,28 +6552,33 @@ namespace IdeoBEM
     /**
      * @internal Start the producer threads.
      */
-    std::pair<std::mutex, unsigned int> active_producer_thread_num;
-    active_producer_thread_num.second = 0;
     for (unsigned int i = 0; i < producer_thread_num; i++)
       {
         producers.emplace_back(
           static_cast<void (*)(
-            std::pair<std::mutex, unsigned int> &,
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::
-              SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
+            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+              capacity,
+              dim,
+              spacedim,
+              RangeNumberType> &,
             const RangeNumberType,
             const std::vector<std::vector<unsigned int>> &,
             const std::vector<std::vector<unsigned int>> &,
@@ -6629,7 +6605,6 @@ namespace IdeoBEM
             const bool)>(
             IdeoBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
-          std::ref(active_producer_thread_num),
           std::cref(near_field_leaf_set),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
@@ -6639,10 +6614,6 @@ namespace IdeoBEM
           std::ref(ring_buffer_for_common_edge),
           std::ref(ring_buffer_for_common_vertex),
           std::ref(ring_buffer_for_regular),
-          std::ref(mutex_for_same_panel),
-          std::ref(mutex_for_common_edge),
-          std::ref(mutex_for_common_vertex),
-          std::ref(mutex_for_regular),
           mass_matrix_factor,
           std::cref(kx_dof_to_cell_topo),
           std::cref(ky_dof_to_cell_topo),
@@ -6672,103 +6643,83 @@ namespace IdeoBEM
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
-      std::ref(mutex_for_same_panel),
-      CellNeighboringType::SamePanel,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
-      std::ref(mutex_for_common_edge),
-      CellNeighboringType::CommonEdge,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
-      std::ref(mutex_for_common_vertex),
-      CellNeighboringType::CommonVertex,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     consumers.emplace_back(
       static_cast<void (*)(
-        std::pair<std::mutex, unsigned int> &,
         const KernelFunctionType<spacedim, RangeNumberType> &,
         const RangeNumberType,
-        IdeoBEM::CUDAWrappers::
-          SauterQuadratureTaskRingBuffer<dim, spacedim, RangeNumberType> &,
-        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBufferMutex &,
-        const CellNeighboringType,
+        IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<capacity,
+                                                              dim,
+                                                              spacedim,
+                                                              RangeNumberType>
+          &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
-        const unsigned int,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
-      std::ref(active_producer_thread_num),
       std::cref(kernel),
       kernel_factor,
       std::ref(ring_buffer_for_regular),
-      std::ref(mutex_for_regular),
-      CellNeighboringType::Regular,
       std::cref(bem_values_gpu),
-      block_size,
-      block_num);
+      block_size);
 
     /**
      * @internal Wait for all producer and consumer threads to exit.
@@ -6777,6 +6728,13 @@ namespace IdeoBEM
       {
         producer.join();
       }
+
+    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added.store(true);
+    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added.store(
+      true);
+    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added.store(
+      true);
+    ring_buffer_for_regular.if_all_near_field_hmat_entries_added.store(true);
 
     for (auto &consumer : consumers)
       {
