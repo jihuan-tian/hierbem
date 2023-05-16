@@ -5535,33 +5535,36 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num * 8;
-    unsigned int       producer_thread_num = 2;
+    const unsigned int batch_size          = block_size * block_num;
+    const unsigned int capacity            = batch_size * 8 + 1;
+    unsigned int       producer_thread_num = 4;
 
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
     ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
-                                        capacity,
+                                        batch_size,
                                         bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
     ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
-                                         capacity,
+                                         batch_size,
                                          bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
     ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
-                                           capacity,
+                                           batch_size,
                                            bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
     ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
-                                     capacity,
+                                     batch_size,
                                      bem_values);
+
+    std::mutex result_lock;
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
@@ -5680,6 +5683,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -5687,6 +5691,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -5700,6 +5705,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -5707,6 +5713,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -5720,6 +5727,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -5727,6 +5735,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -5740,6 +5749,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -5747,6 +5757,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_regular),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     /**
@@ -5757,12 +5768,29 @@ namespace IdeoBEM
         producer.join();
       }
 
-    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added.store(true);
-    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added.store(
-      true);
-    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added.store(
-      true);
-    ring_buffer_for_regular.if_all_near_field_hmat_entries_added.store(true);
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
+      ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_same_panel.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_common_edge.buffer_lock);
+      ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_common_edge.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_common_vertex.buffer_lock);
+      ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_common_vertex.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_regular.buffer_lock);
+      ring_buffer_for_regular.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_regular.batch_task_ready.notify_one();
 
     for (auto &consumer : consumers)
       {
@@ -6007,33 +6035,36 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num * 8;
-    unsigned int       producer_thread_num = 2;
+    const unsigned int batch_size          = block_size * block_num;
+    const unsigned int capacity            = batch_size * 8 + 1;
+    unsigned int       producer_thread_num = 4;
 
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
     ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
-                                        capacity,
+                                        batch_size,
                                         bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
     ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
-                                         capacity,
+                                         batch_size,
                                          bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
     ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
-                                           capacity,
+                                           batch_size,
                                            bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
     ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
-                                     capacity,
+                                     batch_size,
                                      bem_values);
+
+    std::mutex result_lock;
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
@@ -6152,6 +6183,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -6159,6 +6191,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -6172,6 +6205,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -6179,6 +6213,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -6192,6 +6227,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -6199,6 +6235,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -6212,6 +6249,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -6219,6 +6257,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_regular),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     /**
@@ -6229,12 +6268,29 @@ namespace IdeoBEM
         producer.join();
       }
 
-    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added.store(true);
-    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added.store(
-      true);
-    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added.store(
-      true);
-    ring_buffer_for_regular.if_all_near_field_hmat_entries_added.store(true);
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
+      ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_same_panel.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_common_edge.buffer_lock);
+      ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_common_edge.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_common_vertex.buffer_lock);
+      ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_common_vertex.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_regular.buffer_lock);
+      ring_buffer_for_regular.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_regular.batch_task_ready.notify_one();
 
     for (auto &consumer : consumers)
       {
@@ -6503,33 +6559,36 @@ namespace IdeoBEM
      */
     const unsigned int block_size          = 256;
     const unsigned int block_num           = 8;
-    const unsigned int capacity            = block_size * block_num * 8;
-    unsigned int       producer_thread_num = 2;
+    const unsigned int batch_size          = block_size * block_num;
+    const unsigned int capacity            = batch_size * 8 + 1;
+    unsigned int       producer_thread_num = 4;
 
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
     ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
-                                        capacity,
+                                        batch_size,
                                         bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
     ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
-                                         capacity,
+                                         batch_size,
                                          bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
     ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
-                                           capacity,
+                                           batch_size,
                                            bem_values);
     IdeoBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
     ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
-                                     capacity,
+                                     batch_size,
                                      bem_values);
+
+    std::mutex result_lock;
 
     std::vector<HMatrix<spacedim, RangeNumberType> *> &near_field_leaf_set =
       hmat.get_near_field_leaf_set();
@@ -6652,6 +6711,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -6659,6 +6719,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_same_panel),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -6672,6 +6733,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -6679,6 +6741,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_common_edge),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -6692,6 +6755,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -6699,6 +6763,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_common_vertex),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     consumers.emplace_back(
@@ -6712,6 +6777,7 @@ namespace IdeoBEM
           &,
         const IdeoBEM::CUDAWrappers::
           CUDABEMValues<dim, spacedim, RangeNumberType> &,
+        std::mutex &,
         const unsigned int)>(
         IdeoBEM::CUDAWrappers::
           sauter_quadrature_for_near_field_matrix_entries_consumer),
@@ -6719,6 +6785,7 @@ namespace IdeoBEM
       kernel_factor,
       std::ref(ring_buffer_for_regular),
       std::cref(bem_values_gpu),
+      std::ref(result_lock),
       block_size);
 
     /**
@@ -6729,12 +6796,29 @@ namespace IdeoBEM
         producer.join();
       }
 
-    ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added.store(true);
-    ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added.store(
-      true);
-    ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added.store(
-      true);
-    ring_buffer_for_regular.if_all_near_field_hmat_entries_added.store(true);
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_same_panel.buffer_lock);
+      ring_buffer_for_same_panel.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_same_panel.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_common_edge.buffer_lock);
+      ring_buffer_for_common_edge.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_common_edge.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_common_vertex.buffer_lock);
+      ring_buffer_for_common_vertex.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_common_vertex.batch_task_ready.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lg(ring_buffer_for_regular.buffer_lock);
+      ring_buffer_for_regular.if_all_near_field_hmat_entries_added = true;
+    }
+    ring_buffer_for_regular.batch_task_ready.notify_one();
 
     for (auto &consumer : consumers)
       {

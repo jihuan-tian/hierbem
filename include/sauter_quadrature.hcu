@@ -2306,6 +2306,12 @@ namespace IdeoBEM
                const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
                  &scratch_data);
 
+      /**
+       * @param result_lock This should be a mutex for a same set of ring
+       * buffers for the four types of cell neighbouring types. Since for a same
+       * pair of global DoFs, it may be from pairs of cells having different
+       * neighbouring types.
+       */
       template <template <int, typename> typename KernelFunctionType>
       __host__ bool
       fetch_and_process_task_batch(
@@ -2313,7 +2319,11 @@ namespace IdeoBEM
         const RangeNumberType                                kernel_factor,
         const unsigned int                                   block_size,
         const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+        std::mutex                                          &result_lock,
         const cudaStream_t cuda_stream_handle);
+
+      __host__ void
+      print_pointers(LogStream &log_stream) const;
 
       CellNeighboringType cell_neighboring_type;
 
@@ -2321,11 +2331,6 @@ namespace IdeoBEM
        * Mutex for protecting multi-threaded access to the ring buffer.
        */
       std::mutex buffer_lock;
-
-      /**
-       * Mutex for protecting assembly of result data to full matrix entries.
-       */
-      std::mutex result_lock;
 
       /**
        * Condition indicating the ring buffer not being full, i.e. a new task is
@@ -2435,7 +2440,7 @@ namespace IdeoBEM
        * consumer threads will get all of them directly and perform the
        * computation.
        */
-      std::atomic<bool> if_all_near_field_hmat_entries_added;
+      bool if_all_near_field_hmat_entries_added;
 
       /**
        * Number of tasks in a batch for fetching.
@@ -2540,7 +2545,7 @@ namespace IdeoBEM
             (thread_idx + start_task_index) % capacity;
 
           /**
-           * @internal Initialize the quadrature value stored in the register,
+           * @internal Initialise the quadrature value stored in the register,
            * which is efficient for accumulating values contributed from all
            * \f$k_3\f$ terms and quadrature points.
            */
@@ -3492,13 +3497,13 @@ namespace IdeoBEM
                const unsigned int              num_to_fetch,
                const BEMValues<dim, spacedim> &bem_values)
     {
-      cell_neighboring_type = neighboring_type;
-      std::atomic_init(&if_all_near_field_hmat_entries_added, false);
-      head_pending   = 0;
-      head_committed = 0;
-      tail_pending   = 0;
-      tail_committed = 0;
-      batch_size     = num_to_fetch;
+      cell_neighboring_type                = neighboring_type;
+      if_all_near_field_hmat_entries_added = false;
+      head_pending                         = 0;
+      head_committed                       = 0;
+      tail_pending                         = 0;
+      tail_committed                       = 0;
+      batch_size                           = num_to_fetch;
 
       /**
        * @internal For each data table in @p PairCellWiseScratchData, its
@@ -3663,6 +3668,12 @@ namespace IdeoBEM
                const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
                  &scratch_data)
     {
+#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+      LogStream::Prefix prefix_string(
+        std::string("add_task in ") +
+        std::string(cell_neighboring_type_name(cell_neighboring_type)));
+#endif
+
       unsigned int task_index;
 
       {
@@ -3676,6 +3687,10 @@ namespace IdeoBEM
         buffer_not_full.wait(ul, [this]() { return this->is_not_full(); });
         task_index   = tail_pending;
         tail_pending = (tail_pending + 1) % capacity;
+
+#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+        print_pointers(deallog);
+#endif
       } // Release lock on the ring buffer
 
       /**
@@ -3766,31 +3781,24 @@ namespace IdeoBEM
               }
           }
 
-        if (if_all_near_field_hmat_entries_added.load())
+        /**
+         * @internal When the current task is not the last one, do not
+         * notify consumer threads until the number of tasks reaches the
+         * batch size.
+         */
+        if (task_num_ready_for_processing() >= batch_size)
           {
-            /**
-             * @internal When the current task is the last one, directly
-             * notify consumer threads to process remaining tasks in the
-             * buffer.
-             */
             if_notify_consumers = true;
           }
         else
           {
-            /**
-             * @internal When the current task is not the last one, do not
-             * notify consumer threads until the number of tasks reaches the
-             * batch size.
-             */
-            if (task_num_ready_for_processing() >= batch_size)
-              {
-                if_notify_consumers = true;
-              }
-            else
-              {
-                if_notify_consumers = false;
-              }
+            if_notify_consumers = false;
           }
+
+#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+        deallog << "Task " << task_index << " created" << std::endl;
+        print_pointers(deallog);
+#endif
       } // Release the ring buffer lock
 
       if (if_notify_consumers)
@@ -3809,17 +3817,24 @@ namespace IdeoBEM
         const RangeNumberType                                kernel_factor,
         const unsigned int                                   block_size,
         const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+        std::mutex                                          &result_lock,
         const cudaStream_t                                   cuda_stream_handle)
     {
+#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+      LogStream::Prefix prefix_string(
+        std::string("process_task in ") +
+        std::string(cell_neighboring_type_name(cell_neighboring_type)));
+#endif
+
       bool         is_finished;
       unsigned int task_num_to_fetch;
-      unsigned int task_start_index_to_fetch;
+      unsigned int task_start_index_to_fetch = 0;
 
       {
         std::unique_lock<std::mutex> ul(buffer_lock);
 
         batch_task_ready.wait(ul, [this]() {
-          if (this->if_all_near_field_hmat_entries_added.load())
+          if (if_all_near_field_hmat_entries_added)
             {
               /**
                * @internal When all quadrature tasks have been added, the
@@ -3847,8 +3862,7 @@ namespace IdeoBEM
             task_num_to_fetch = batch_size;
           }
 
-        if (if_all_near_field_hmat_entries_added.load() &&
-            task_num_to_fetch == 0)
+        if (if_all_near_field_hmat_entries_added && task_num_to_fetch == 0)
           {
             /**
              * @internal When all tasks have been added and there are no more
@@ -3863,6 +3877,10 @@ namespace IdeoBEM
             task_start_index_to_fetch = head_pending;
             head_pending = (head_pending + task_num_to_fetch) % capacity;
           }
+
+#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+        print_pointers(deallog);
+#endif
       } // Release the buffer lock
 
 
@@ -3884,8 +3902,8 @@ namespace IdeoBEM
            * @internal When the data in the ring buffer are not
            * contiguous, we should perform two times of memory copy.
            */
-          unsigned int number_of_data_until_buffer_end;
-          unsigned int number_of_data_from_buffer_start;
+          unsigned int number_of_data_until_buffer_end  = 0;
+          unsigned int number_of_data_from_buffer_start = 0;
 
           /**
            * Set task status to be @p during_processing.
@@ -4076,7 +4094,7 @@ namespace IdeoBEM
                     task_status_ring_buffer[i].store(
                       SauterQuadratureTaskStatus::before_creation);
                   }
-              }
+              } // Release result lock
             }
           else
             {
@@ -4140,7 +4158,7 @@ namespace IdeoBEM
                     task_status_ring_buffer[i].store(
                       SauterQuadratureTaskStatus::before_creation);
                   }
-              }
+              } // Release result lock
             }
 
           {
@@ -4164,12 +4182,31 @@ namespace IdeoBEM
                       }
                   }
               }
+
+#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+            deallog << "Tasks [" << task_start_index_to_fetch << ", "
+                    << task_start_index_to_fetch + task_num_to_fetch
+                    << ") are processed" << std::endl;
+            print_pointers(deallog);
+#endif
           } // Release the buffer lock
         }
 
       buffer_not_full.notify_all();
 
       return is_finished;
+    }
+
+
+    template <int capacity, int dim, int spacedim, typename RangeNumberType>
+    void
+    SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
+      print_pointers(LogStream &log_stream) const
+    {
+      log_stream << "head_committed=" << head_committed
+                 << ", head_pending=" << head_pending
+                 << ", tail_committed=" << tail_committed
+                 << ", tail_pending=" << tail_pending << std::endl;
     }
 
 
@@ -4875,6 +4912,7 @@ namespace IdeoBEM
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
                                                           &ring_buffer,
       const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values_gpu,
+      std::mutex                                          &result_lock,
       const unsigned int                                   block_size)
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
@@ -4892,8 +4930,12 @@ namespace IdeoBEM
        * Continuously process the Sauter quadrature tasks in the ring buffer
        * for same panel case.
        */
-      while (!ring_buffer.fetch_and_process_task_batch(
-        kernel, kernel_factor, block_size, bem_values_gpu, cuda_stream_handle))
+      while (!ring_buffer.fetch_and_process_task_batch(kernel,
+                                                       kernel_factor,
+                                                       block_size,
+                                                       bem_values_gpu,
+                                                       result_lock,
+                                                       cuda_stream_handle))
         {
           std::this_thread::sleep_for(
             std::chrono::milliseconds(consumer_wait_time_ms));
@@ -4901,7 +4943,7 @@ namespace IdeoBEM
 
       /**
        * @internal Before destroying the CUDA stream, perform a stream
-       * synchronization in case there are unfinished tasks.
+       * synchronisation in case there are unfinished tasks.
        */
       error_code = cudaStreamSynchronize(cuda_stream_handle);
       AssertCuda(error_code);
@@ -5250,9 +5292,9 @@ namespace IdeoBEM
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
     {
-      //#if ENABLE_DEBUG == 1
-      //      LogStream::Prefix prefix_string("create_sauter_task");
-      //#endif
+#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+      LogStream::Prefix prefix_string("create_sauter_task");
+#endif
 
       /**
        * Iterate over each cell in the support of the basis function
@@ -5346,7 +5388,7 @@ namespace IdeoBEM
                * following comparison <code>kx_cell_index ==
                * ky_cell_index</code> is meaningful.}
                */
-              RangeNumberType mass_matrix_entry;
+              RangeNumberType mass_matrix_entry = 0.;
               if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
                 {
                   Assert(cell_neighboring_type ==
@@ -5455,14 +5497,13 @@ namespace IdeoBEM
                     }
 
                   mass_matrix_entry *= mass_matrix_factor;
-                }
-              else
-                {
-                  /**
-                   * @internal The mass matrix does not contribute to the
-                   * current matrix entry.
-                   */
-                  mass_matrix_entry = 0.;
+
+#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+                  deallog << "kx=" << kx_cell_index << ", ky=" << ky_cell_index
+                          << ", i=" << i_global_dof_index
+                          << ", j=" << j_global_dof_index
+                          << ", Mij=" << mass_matrix_entry << std::endl;
+#endif
                 }
 
               /**
