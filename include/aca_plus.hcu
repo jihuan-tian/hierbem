@@ -123,9 +123,13 @@ namespace IdeoBEM
     const RangeNumberType                                kernel_factor,
     const types::global_dof_index                        row_dof_index,
     const std::vector<types::global_dof_index>          &column_dof_indices,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -239,9 +243,13 @@ namespace IdeoBEM
     const RangeNumberType                                stabilization_factor,
     const types::global_dof_index                        row_dof_index,
     const std::vector<types::global_dof_index>          &column_dof_indices,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -354,9 +362,13 @@ namespace IdeoBEM
     const RangeNumberType                                factor,
     const std::vector<types::global_dof_index>          &row_dof_indices,
     const types::global_dof_index                        col_dof_index,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -469,9 +481,13 @@ namespace IdeoBEM
     const RangeNumberType                                stabilization_factor,
     const std::vector<types::global_dof_index>          &row_dof_indices,
     const types::global_dof_index                        col_dof_index,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -587,11 +603,15 @@ namespace IdeoBEM
     const RangeNumberType                                kernel_factor,
     std::forward_list<size_type>                        &remaining_row_indices,
     const size_type                                      current_ref_row_index,
-    const size_type                                  pass_the_end_ref_row_index,
-    const std::vector<types::global_dof_index>      &row_dof_indices,
-    const std::vector<types::global_dof_index>      &col_dof_indices,
-    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
+    const size_type                             pass_the_end_ref_row_index,
+    const std::vector<types::global_dof_index> &row_dof_indices,
+    const std::vector<types::global_dof_index> &col_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
@@ -769,11 +789,15 @@ namespace IdeoBEM
     const RangeNumberType                                stabilization_factor,
     std::forward_list<size_type>                        &remaining_row_indices,
     const size_type                                      current_ref_row_index,
-    const size_type                                  pass_the_end_ref_row_index,
-    const std::vector<types::global_dof_index>      &row_dof_indices,
-    const std::vector<types::global_dof_index>      &col_dof_indices,
-    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
+    const size_type                             pass_the_end_ref_row_index,
+    const std::vector<types::global_dof_index> &row_dof_indices,
+    const std::vector<types::global_dof_index> &col_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
@@ -1036,11 +1060,15 @@ namespace IdeoBEM
     const RangeNumberType                                factor,
     std::forward_list<size_type>                        &remaining_col_indices,
     const size_type                                      current_ref_col_index,
-    const size_type                                  pass_the_end_ref_col_index,
-    const std::vector<types::global_dof_index>      &row_dof_indices,
-    const std::vector<types::global_dof_index>      &col_dof_indices,
-    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
+    const size_type                             pass_the_end_ref_col_index,
+    const std::vector<types::global_dof_index> &row_dof_indices,
+    const std::vector<types::global_dof_index> &col_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
@@ -1219,11 +1247,15 @@ namespace IdeoBEM
     const RangeNumberType                                stabilization_factor,
     std::forward_list<size_type>                        &remaining_col_indices,
     const size_type                                      current_ref_col_index,
-    const size_type                                  pass_the_end_ref_col_index,
-    const std::vector<types::global_dof_index>      &row_dof_indices,
-    const std::vector<types::global_dof_index>      &col_dof_indices,
-    const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
+    const size_type                             pass_the_end_ref_col_index,
+    const std::vector<types::global_dof_index> &row_dof_indices,
+    const std::vector<types::global_dof_index> &col_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
@@ -1487,9 +1519,13 @@ namespace IdeoBEM
     const RangeNumberType                                factor,
     const std::array<types::global_dof_index, 2>        &row_dof_index_range,
     const std::array<types::global_dof_index, 2>        &col_dof_index_range,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -2201,9 +2237,13 @@ namespace IdeoBEM
     const RangeNumberType                                stabilization_factor,
     const std::array<types::global_dof_index, 2>        &row_dof_index_range,
     const std::array<types::global_dof_index, 2>        &col_dof_index_range,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -3393,9 +3433,13 @@ namespace IdeoBEM
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -3794,9 +3838,13 @@ namespace IdeoBEM
     const RangeNumberType                                kernel_factor,
     const Vector<RangeNumberType>                       &mass_vmult_weq,
     const RangeNumberType                                stabilization_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -4209,9 +4257,13 @@ namespace IdeoBEM
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const RangeNumberType                                mass_matrix_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -4577,9 +4629,13 @@ namespace IdeoBEM
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -4720,9 +4776,13 @@ namespace IdeoBEM
     const RangeNumberType                                kernel_factor,
     const Vector<RangeNumberType>                       &mass_vmult_weq,
     const RangeNumberType                                stabilization_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -4863,9 +4923,13 @@ namespace IdeoBEM
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const RangeNumberType                                mass_matrix_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const QGauss<dim>               &mass_matrix_quadrature_formula,
@@ -5152,11 +5216,15 @@ namespace IdeoBEM
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim>                     &sauter_quad_rule,
-    const DoFHandler<dim, spacedim>                     &kx_dof_handler,
-    const DoFHandler<dim, spacedim>                     &ky_dof_handler,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                    &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
@@ -5287,9 +5355,13 @@ namespace IdeoBEM
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const RangeNumberType                                mass_matrix_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim>                     &sauter_quad_rule,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                    &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &sauter_quad_rule,
     const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -5470,11 +5542,15 @@ namespace IdeoBEM
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim>                     &sauter_quad_rule,
-    const DoFHandler<dim, spacedim>                     &kx_dof_handler,
-    const DoFHandler<dim, spacedim>                     &ky_dof_handler,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                    &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
@@ -5614,8 +5690,10 @@ namespace IdeoBEM
               dim,
               spacedim,
               RangeNumberType> &,
-            const std::vector<std::vector<unsigned int>> &,
-            const std::vector<std::vector<unsigned int>> &,
+            const std::vector<std::vector<
+              const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
+            const std::vector<std::vector<
+              const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
             const BEMValues<dim, spacedim, RangeNumberType> &,
             const IdeoBEM::CUDAWrappers::
               CUDABEMValues<dim, spacedim, RangeNumberType> &,
@@ -5860,8 +5938,10 @@ namespace IdeoBEM
               const ACAConfig &,
               const KernelFunctionType<spacedim, RangeNumberType> &,
               const RangeNumberType,
-              const std::vector<std::vector<unsigned int>> &,
-              const std::vector<std::vector<unsigned int>> &,
+              const std::vector<std::vector<
+                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
+              const std::vector<std::vector<
+                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
               const BEMValues<dim, spacedim, RangeNumberType> &,
               const IdeoBEM::CUDAWrappers::
                 CUDABEMValues<dim, spacedim, RangeNumberType> &,
@@ -5969,11 +6049,15 @@ namespace IdeoBEM
     const RangeNumberType                                kernel_factor,
     const Vector<RangeNumberType>                       &mass_vmult_weq,
     const RangeNumberType                                stabilization_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim>                     &sauter_quad_rule,
-    const DoFHandler<dim, spacedim>                     &kx_dof_handler,
-    const DoFHandler<dim, spacedim>                     &ky_dof_handler,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                    &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
@@ -6114,8 +6198,10 @@ namespace IdeoBEM
               dim,
               spacedim,
               RangeNumberType> &,
-            const std::vector<std::vector<unsigned int>> &,
-            const std::vector<std::vector<unsigned int>> &,
+            const std::vector<std::vector<
+              const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
+            const std::vector<std::vector<
+              const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
             const BEMValues<dim, spacedim, RangeNumberType> &,
             const IdeoBEM::CUDAWrappers::
               CUDABEMValues<dim, spacedim, RangeNumberType> &,
@@ -6386,8 +6472,10 @@ namespace IdeoBEM
               const RangeNumberType,
               const Vector<RangeNumberType> &,
               const RangeNumberType,
-              const std::vector<std::vector<unsigned int>> &,
-              const std::vector<std::vector<unsigned int>> &,
+              const std::vector<std::vector<
+                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
+              const std::vector<std::vector<
+                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
               const BEMValues<dim, spacedim, RangeNumberType> &,
               const IdeoBEM::CUDAWrappers::
                 CUDABEMValues<dim, spacedim, RangeNumberType> &,
@@ -6492,9 +6580,13 @@ namespace IdeoBEM
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const RangeNumberType                                mass_matrix_factor,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim>                     &sauter_quad_rule,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                    &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &sauter_quad_rule,
     const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -6639,8 +6731,10 @@ namespace IdeoBEM
               spacedim,
               RangeNumberType> &,
             const RangeNumberType,
-            const std::vector<std::vector<unsigned int>> &,
-            const std::vector<std::vector<unsigned int>> &,
+            const std::vector<std::vector<
+              const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
+            const std::vector<std::vector<
+              const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
             const BEMValues<dim, spacedim, RangeNumberType> &,
             const IdeoBEM::CUDAWrappers::
               CUDABEMValues<dim, spacedim, RangeNumberType> &,
@@ -6889,8 +6983,10 @@ namespace IdeoBEM
               const KernelFunctionType<spacedim, RangeNumberType> &,
               const RangeNumberType,
               const RangeNumberType,
-              const std::vector<std::vector<unsigned int>> &,
-              const std::vector<std::vector<unsigned int>> &,
+              const std::vector<std::vector<
+                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
+              const std::vector<std::vector<
+                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
               const BEMValues<dim, spacedim, RangeNumberType> &,
               const IdeoBEM::CUDAWrappers::
                 CUDABEMValues<dim, spacedim, RangeNumberType> &,

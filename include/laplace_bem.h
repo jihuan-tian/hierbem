@@ -42,8 +42,8 @@
 #include <array>
 #include <cmath>
 #include <vector>
-#include "aca_plus.hcu"
 
+#include "aca_plus.hcu"
 #include "bem_general.h"
 #include "bem_tools.hcu"
 #include "bem_values.h"
@@ -271,6 +271,9 @@ namespace IdeoBEM
     }
 
   private:
+    void
+    generate_cell_iterators();
+
     /**
      * Initialize the mapping data object.
      */
@@ -420,12 +423,21 @@ namespace IdeoBEM
     const std::vector<types::global_dof_index>
       *dof_i2e_numbering_for_neumann_space_on_neumann_domain;
 
+    std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+      cell_iterators_for_dirichlet_space;
+    std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+      cell_iterators_for_neumann_space;
+
     /**
      * DoF-to-cell topologies for various DoF handlers, which are used for
      * matrix assembly on a pair of DoFs.
      */
-    std::vector<std::vector<unsigned int>> dof_to_cell_topo_for_dirichlet_space;
-    std::vector<std::vector<unsigned int>> dof_to_cell_topo_for_neumann_space;
+    std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      dof_to_cell_topo_for_dirichlet_space;
+    std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      dof_to_cell_topo_for_neumann_space;
 
     /**
      * Polynomial order for describing the geometric mapping for the Dirichlet
@@ -991,6 +1003,28 @@ namespace IdeoBEM
 
   template <int dim, int spacedim>
   void
+  LaplaceBEM<dim, spacedim>::generate_cell_iterators()
+  {
+    cell_iterators_for_dirichlet_space.reserve(
+      dof_handler_for_dirichlet_space.get_triangulation().n_active_cells());
+    for (const auto &cell :
+         dof_handler_for_dirichlet_space.active_cell_iterators())
+      {
+        cell_iterators_for_dirichlet_space.push_back(cell);
+      }
+
+    cell_iterators_for_neumann_space.reserve(
+      dof_handler_for_neumann_space.get_triangulation().n_active_cells());
+    for (const auto &cell :
+         dof_handler_for_neumann_space.active_cell_iterators())
+      {
+        cell_iterators_for_neumann_space.push_back(cell);
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
   LaplaceBEM<dim, spacedim>::setup_system()
   {
     switch (problem_type)
@@ -1023,9 +1057,12 @@ namespace IdeoBEM
                 /**
                  * Build the DoF-to-cell topology.
                  */
+                generate_cell_iterators();
                 build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
+                                           cell_iterators_for_dirichlet_space,
                                            dof_handler_for_dirichlet_space);
                 build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
+                                           cell_iterators_for_neumann_space,
                                            dof_handler_for_neumann_space);
 
                 /**
@@ -1236,9 +1273,12 @@ namespace IdeoBEM
                 /**
                  * Build the DoF-to-cell topology.
                  */
+                generate_cell_iterators();
                 build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
+                                           cell_iterators_for_dirichlet_space,
                                            dof_handler_for_dirichlet_space);
                 build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
+                                           cell_iterators_for_neumann_space,
                                            dof_handler_for_neumann_space);
 
                 /**
@@ -1538,9 +1578,12 @@ namespace IdeoBEM
              * \mynote{Access of this topology for the Dirichlet space
              * requires the map from local to full DoF indices.}
              */
+            generate_cell_iterators();
             build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
+                                       cell_iterators_for_dirichlet_space,
                                        dof_handler_for_dirichlet_space);
             build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
+                                       cell_iterators_for_neumann_space,
                                        dof_handler_for_neumann_space);
 
             /**

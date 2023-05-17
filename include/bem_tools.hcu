@@ -2841,9 +2841,9 @@ namespace IdeoBEM
     CellNeighboringType
     detect_cell_neighboring_type(
       const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-      const typename Triangulation<dim, spacedim>::active_cell_iterator
+      const typename Triangulation<dim, spacedim>::cell_iterator
         &first_cell_iter,
-      const typename Triangulation<dim, spacedim>::active_cell_iterator
+      const typename Triangulation<dim, spacedim>::cell_iterator
         &second_cell_iter,
       const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                      typename Triangulation<dim + 1, spacedim>::face_iterator>

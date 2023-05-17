@@ -61,9 +61,13 @@ namespace IdeoBEM
   template <int dim, int spacedim>
   void
   build_dof_to_cell_topology(
-    std::vector<std::vector<unsigned int>> &dof_to_cell_topo,
-    const DoFHandler<dim, spacedim>        &dof_handler,
-    const unsigned int                      fe_index = 0)
+    std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &dof_to_cell_topo,
+    const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+                                    &cell_iterators_in_dof_handler,
+    const DoFHandler<dim, spacedim> &dof_handler,
+    const unsigned int               fe_index = 0)
   {
     const types::global_dof_index        n_dofs = dof_handler.n_dofs();
     const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
@@ -72,17 +76,12 @@ namespace IdeoBEM
 
     dof_to_cell_topo.resize(n_dofs);
 
-    /**
-     * Iterate over each active cell in the triangulation and extract the DoF
-     * indices.
-     */
-    for (const typename DoFHandler<dim, spacedim>::active_cell_iterator &cell :
-         dof_handler.active_cell_iterators())
+    for (const auto &cell : cell_iterators_in_dof_handler)
       {
         cell->get_dof_indices(local_dof_indices);
         for (auto dof_index : local_dof_indices)
           {
-            dof_to_cell_topo[dof_index].push_back(cell->active_cell_index());
+            dof_to_cell_topo[dof_index].push_back(&cell);
           }
       }
   }
@@ -140,17 +139,6 @@ namespace IdeoBEM
   //          }
   //      }
   //  }
-
-
-  /**
-   * Print out the topological information about DoF support point-to-cell
-   * relation.
-   *
-   * @param dof_to_cell_topo
-   */
-  void
-  print_dof_to_cell_topology(
-    const std::vector<std::vector<unsigned int>> &dof_to_cell_topo);
 
 
   /**
@@ -4261,9 +4249,13 @@ namespace IdeoBEM
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         &ring_buffer_for_common_vertex,
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-                                                      &ring_buffer_for_regular,
-      const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
-      const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
+        &ring_buffer_for_regular,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+        &kx_dof_to_cell_topo,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                      &ky_dof_to_cell_topo,
       const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
       const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                       &bem_values_gpu,
@@ -4580,10 +4572,14 @@ namespace IdeoBEM
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         &ring_buffer_for_common_vertex,
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-                                                      &ring_buffer_for_regular,
-      const RangeNumberType                            mass_matrix_factor,
-      const std::vector<std::vector<unsigned int>>    &kx_dof_to_cell_topo,
-      const std::vector<std::vector<unsigned int>>    &ky_dof_to_cell_topo,
+                           &ring_buffer_for_regular,
+      const RangeNumberType mass_matrix_factor,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+        &kx_dof_to_cell_topo,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                      &ky_dof_to_cell_topo,
       const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
       const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                       &bem_values_gpu,
@@ -5003,18 +4999,22 @@ namespace IdeoBEM
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         &ring_buffer_for_common_vertex,
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-                                                   &ring_buffer_for_regular,
-      LAPACKFullMatrixExt<RangeNumberType>         *fullmat,
-      const unsigned int                            fullmat_row_index,
-      const unsigned int                            fullmat_col_index,
-      const types::global_dof_index                 i_global_dof_index,
-      const types::global_dof_index                 j_global_dof_index,
-      const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
-      const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
-      const DoFHandler<dim, spacedim>              &kx_dof_handler,
-      const DoFHandler<dim, spacedim>              &ky_dof_handler,
-      const MappingQGenericExt<dim, spacedim>      &kx_mapping,
-      const MappingQGenericExt<dim, spacedim>      &ky_mapping,
+                                           &ring_buffer_for_regular,
+      LAPACKFullMatrixExt<RangeNumberType> *fullmat,
+      const unsigned int                    fullmat_row_index,
+      const unsigned int                    fullmat_col_index,
+      const types::global_dof_index         i_global_dof_index,
+      const types::global_dof_index         j_global_dof_index,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+        &kx_dof_to_cell_topo,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                              &ky_dof_to_cell_topo,
+      const DoFHandler<dim, spacedim>         &kx_dof_handler,
+      const DoFHandler<dim, spacedim>         &ky_dof_handler,
+      const MappingQGenericExt<dim, spacedim> &kx_mapping,
+      const MappingQGenericExt<dim, spacedim> &ky_mapping,
       const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                      typename Triangulation<dim + 1, spacedim>::face_iterator>
         &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5033,11 +5033,10 @@ namespace IdeoBEM
        * Iterate over each cell in the support of the basis function
        * associated with the i-th global DoF in the external numbering.
        */
-      for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i_global_dof_index])
+      for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i_global_dof_index])
         {
-          typename DoFHandler<dim, spacedim>::active_cell_iterator
-            kx_cell_iter = kx_dof_handler.begin_active();
-          std::advance(kx_cell_iter, kx_cell_index);
+          const typename DoFHandler<dim, spacedim>::cell_iterator
+            &kx_cell_iter = *kx_cell_iter_pointer;
 
           /**
            * @internal Calculate the real support points in the cell \f$K_x\f$
@@ -5067,12 +5066,11 @@ namespace IdeoBEM
            * Iterate over each cell in the support of the basis function
            * associated with the j-th global DoF in the external numbering.
            */
-          for (unsigned int ky_cell_index :
+          for (auto ky_cell_iter_pointer :
                ky_dof_to_cell_topo[j_global_dof_index])
             {
-              typename DoFHandler<dim, spacedim>::active_cell_iterator
-                ky_cell_iter = ky_dof_handler.begin_active();
-              std::advance(ky_cell_iter, ky_cell_index);
+              const typename DoFHandler<dim, spacedim>::cell_iterator
+                &ky_cell_iter = *ky_cell_iter_pointer;
 
               /**
                * Detect the cell neighboring type based on cell vertex
@@ -5268,19 +5266,23 @@ namespace IdeoBEM
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         &ring_buffer_for_common_vertex,
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
-                                                   &ring_buffer_for_regular,
-      const RangeNumberType                         mass_matrix_factor,
-      LAPACKFullMatrixExt<RangeNumberType>         *fullmat,
-      const unsigned int                            fullmat_row_index,
-      const unsigned int                            fullmat_col_index,
-      const types::global_dof_index                 i_global_dof_index,
-      const types::global_dof_index                 j_global_dof_index,
-      const std::vector<std::vector<unsigned int>> &kx_dof_to_cell_topo,
-      const std::vector<std::vector<unsigned int>> &ky_dof_to_cell_topo,
-      const DoFHandler<dim, spacedim>              &kx_dof_handler,
-      const DoFHandler<dim, spacedim>              &ky_dof_handler,
-      const MappingQGenericExt<dim, spacedim>      &kx_mapping,
-      const MappingQGenericExt<dim, spacedim>      &ky_mapping,
+                                           &ring_buffer_for_regular,
+      const RangeNumberType                 mass_matrix_factor,
+      LAPACKFullMatrixExt<RangeNumberType> *fullmat,
+      const unsigned int                    fullmat_row_index,
+      const unsigned int                    fullmat_col_index,
+      const types::global_dof_index         i_global_dof_index,
+      const types::global_dof_index         j_global_dof_index,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+        &kx_dof_to_cell_topo,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                              &ky_dof_to_cell_topo,
+      const DoFHandler<dim, spacedim>         &kx_dof_handler,
+      const DoFHandler<dim, spacedim>         &ky_dof_handler,
+      const MappingQGenericExt<dim, spacedim> &kx_mapping,
+      const MappingQGenericExt<dim, spacedim> &ky_mapping,
       const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
                      typename Triangulation<dim + 1, spacedim>::face_iterator>
         &map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5300,11 +5302,11 @@ namespace IdeoBEM
        * Iterate over each cell in the support of the basis function
        * associated with the i-th global DoF in the external numbering.
        */
-      for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i_global_dof_index])
+      for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i_global_dof_index])
         {
-          typename DoFHandler<dim, spacedim>::active_cell_iterator
-            kx_cell_iter = kx_dof_handler.begin_active();
-          std::advance(kx_cell_iter, kx_cell_index);
+          const typename DoFHandler<dim, spacedim>::cell_iterator
+                            &kx_cell_iter  = *kx_cell_iter_pointer;
+          const unsigned int kx_cell_index = kx_cell_iter->active_cell_index();
 
           /**
            * @internal Calculate the real support points in the cell \f$K_x\f$
@@ -5334,12 +5336,13 @@ namespace IdeoBEM
            * Iterate over each cell in the support of the basis function
            * associated with the j-th global DoF in the external numbering.
            */
-          for (unsigned int ky_cell_index :
+          for (auto ky_cell_iter_pointer :
                ky_dof_to_cell_topo[j_global_dof_index])
             {
-              typename DoFHandler<dim, spacedim>::active_cell_iterator
-                ky_cell_iter = ky_dof_handler.begin_active();
-              std::advance(ky_cell_iter, ky_cell_index);
+              const typename DoFHandler<dim, spacedim>::cell_iterator
+                                &ky_cell_iter = *ky_cell_iter_pointer;
+              const unsigned int ky_cell_index =
+                ky_cell_iter->active_cell_index();
 
               /**
                * Detect the cell neighboring type based on cell vertex
@@ -6271,9 +6274,13 @@ namespace IdeoBEM
     const RangeNumberType                                kernel_factor,
     const types::global_dof_index                        i,
     const types::global_dof_index                        j,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                             &bem_values_gpu,
     const DoFHandler<dim, spacedim>         &kx_dof_handler,
@@ -6303,11 +6310,10 @@ namespace IdeoBEM
      * Iterate over each cell in the support of the basis function associated
      * with the i-th DoF.
      */
-    for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
+    for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i])
       {
-        typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
-          kx_dof_handler.begin_active();
-        std::advance(kx_cell_iter, kx_cell_index);
+        const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+          *kx_cell_iter_pointer;
 
         /**
          * @internal Calculate the real support points in the cell \f$K_x\f$
@@ -6336,11 +6342,10 @@ namespace IdeoBEM
          * Iterate over each cell in the support of the basis function
          * associated with the j-th DoF.
          */
-        for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
+        for (auto ky_cell_iter_pointer : ky_dof_to_cell_topo[j])
           {
-            typename DoFHandler<dim, spacedim>::active_cell_iterator
-              ky_cell_iter = ky_dof_handler.begin_active();
-            std::advance(ky_cell_iter, ky_cell_index);
+            const typename DoFHandler<dim, spacedim>::cell_iterator
+              &ky_cell_iter = *ky_cell_iter_pointer;
 
             /**
              * Detect the cell neighboring type based on cell vertex indices.
@@ -6737,9 +6742,13 @@ namespace IdeoBEM
     const RangeNumberType                                mass_matrix_factor,
     const types::global_dof_index                        i,
     const types::global_dof_index                        j,
-    const std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo,
-    const std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                             &bem_values_gpu,
     const DoFHandler<dim, spacedim>         &kx_dof_handler,
@@ -6770,11 +6779,11 @@ namespace IdeoBEM
      * Iterate over each cell in the support of the basis function associated
      * with the i-th DoF.
      */
-    for (unsigned int kx_cell_index : kx_dof_to_cell_topo[i])
+    for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i])
       {
-        typename DoFHandler<dim, spacedim>::active_cell_iterator kx_cell_iter =
-          kx_dof_handler.begin_active();
-        std::advance(kx_cell_iter, kx_cell_index);
+        const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+          *kx_cell_iter_pointer;
+        const unsigned int kx_cell_index = kx_cell_iter->active_cell_index();
 
         /**
          * @internal Calculate the real support points in the cell \f$K_x\f$
@@ -6803,11 +6812,12 @@ namespace IdeoBEM
          * Iterate over each cell in the support of the basis function
          * associated with the j-th DoF.
          */
-        for (unsigned int ky_cell_index : ky_dof_to_cell_topo[j])
+        for (auto ky_cell_iter_pointer : ky_dof_to_cell_topo[j])
           {
-            typename DoFHandler<dim, spacedim>::active_cell_iterator
-              ky_cell_iter = ky_dof_handler.begin_active();
-            std::advance(ky_cell_iter, ky_cell_index);
+            const typename DoFHandler<dim, spacedim>::cell_iterator
+                              &ky_cell_iter = *ky_cell_iter_pointer;
+            const unsigned int ky_cell_index =
+              ky_cell_iter->active_cell_index();
 
             /**
              * Detect the cell neighboring type based on cell vertex indices.

@@ -140,7 +140,7 @@ main(int argc, char *argv[])
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     true, // is interior problem
     4,    // n_min for cluster tree
-    10,   // n_min for block cluster tree
+    32,   // n_min for block cluster tree
     0.8,  // eta for H-matrix
     5,    // max rank for H-matrix
     0.01, // aca epsilon for H-matrix
