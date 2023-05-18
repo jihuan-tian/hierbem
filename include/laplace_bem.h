@@ -11,6 +11,7 @@
 #define INCLUDE_LAPLACE_BEM_H_
 
 #include <deal.II/base/function.h>
+#include <deal.II/base/logstream.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/subscriptor.h>
 #include <deal.II/base/timer.h>
@@ -977,9 +978,15 @@ namespace IdeoBEM
     grid_in.read_msh(in);
     in.close();
 
+    std::cout << "=== Volume mesh information ===" << std::endl;
+    print_mesh_info(std::cout, volume_triangulation);
+
     map_from_surface_mesh_to_volume_mesh =
       GridGenerator::extract_boundary_mesh(volume_triangulation,
                                            surface_triangulation);
+
+    std::cout << "=== Surface mesh information ===" << std::endl;
+    print_mesh_info(std::cout, surface_triangulation);
   }
 
 
@@ -1027,6 +1034,11 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::setup_system()
   {
+    LogStream::Prefix prefix_string("setup_system");
+
+    Timer timer;
+    timer.stop();
+
     switch (problem_type)
       {
           case DirichletBCProblem: {
@@ -1057,6 +1069,8 @@ namespace IdeoBEM
                 /**
                  * Build the DoF-to-cell topology.
                  */
+                timer.start();
+
                 generate_cell_iterators();
                 build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
                                            cell_iterators_for_dirichlet_space,
@@ -1064,6 +1078,9 @@ namespace IdeoBEM
                 build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
                                            cell_iterators_for_neumann_space,
                                            dof_handler_for_neumann_space);
+
+                timer.stop();
+                print_wall_time(deallog, timer, "build dof-to-cell topology");
 
                 /**
                  * Generate lists of DoF indices.
@@ -1117,6 +1134,8 @@ namespace IdeoBEM
                 /**
                  * Initialize the cluster trees.
                  */
+                timer.start();
+
                 ct_for_dirichlet_space_on_dirichlet_domain = ClusterTree<
                   spacedim>(
                   dof_indices_for_dirichlet_space_on_dirichlet_domain,
@@ -1157,9 +1176,14 @@ namespace IdeoBEM
                   &(ct_for_neumann_space_on_dirichlet_domain
                       .get_internal_to_external_dof_numbering());
 
+                timer.stop();
+                print_wall_time(deallog, timer, "build cluster trees");
+
                 /**
                  * Create the block cluster trees.
                  */
+                timer.start();
+
                 bct_for_bilinear_form_V1 = BlockClusterTree<spacedim>(
                   ct_for_neumann_space_on_dirichlet_domain,
                   ct_for_neumann_space_on_dirichlet_domain,
@@ -1186,16 +1210,34 @@ namespace IdeoBEM
                   dof_average_cell_size_for_neumann_space_on_dirichlet_domain,
                   dof_average_cell_size_for_dirichlet_space_on_dirichlet_domain);
 
+                timer.stop();
+                print_wall_time(deallog, timer, "build block cluster trees");
+
                 /**
                  * Initialize \hmatrices.
                  */
+                timer.start();
+
                 V1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_V1,
                                                 max_hmat_rank);
+
+                std::cout << "=== Leaf set information of V1_hmat ==="
+                          << std::endl;
+                V1_hmat.print_leaf_set_info(std::cout);
+
                 K2_hmat_with_mass_matrix =
                   HMatrix<spacedim>(bct_for_bilinear_form_K2,
                                     max_hmat_rank,
                                     HMatrixSupport::Property::general,
                                     HMatrixSupport::BlockType::diagonal_block);
+
+                std::cout
+                  << "=== Leaf set information of K2_hmat_with_mass_matrix ==="
+                  << std::endl;
+                K2_hmat_with_mass_matrix.print_leaf_set_info(std::cout);
+
+                timer.stop();
+                print_wall_time(deallog, timer, "initialize H-matrices");
               }
 
             /**
@@ -1204,6 +1246,8 @@ namespace IdeoBEM
              * TODO When there are multiple Dirichlet subdomains assigned
              * different boundary values, they should be handled separately.
              */
+            timer.start();
+
             dirichlet_bc.reinit(n_dofs_for_dirichlet_space);
             VectorTools::interpolate(dof_handler_for_dirichlet_space,
                                      *dirichlet_bc_functor_ptr,
@@ -1222,6 +1266,9 @@ namespace IdeoBEM
                   *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
                   dirichlet_bc_internal_dof_numbering);
               }
+
+            timer.stop();
+            print_wall_time(deallog, timer, "interpolate boundary condition");
 
             /**
              * Allocate memory for the right-hand-side vector and solution
@@ -1273,6 +1320,8 @@ namespace IdeoBEM
                 /**
                  * Build the DoF-to-cell topology.
                  */
+                timer.start();
+
                 generate_cell_iterators();
                 build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
                                            cell_iterators_for_dirichlet_space,
@@ -1280,6 +1329,9 @@ namespace IdeoBEM
                 build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
                                            cell_iterators_for_neumann_space,
                                            dof_handler_for_neumann_space);
+
+                timer.stop();
+                print_wall_time(deallog, timer, "build dof-to-cell topology");
 
                 /**
                  * Generate lists of DoF indices.
@@ -1333,6 +1385,8 @@ namespace IdeoBEM
                 /**
                  * Initialize the cluster trees.
                  */
+                timer.start();
+
                 ct_for_dirichlet_space_on_neumann_domain =
                   ClusterTree<spacedim>(
                     dof_indices_for_dirichlet_space_on_neumann_domain,
@@ -1372,9 +1426,14 @@ namespace IdeoBEM
                   &(ct_for_neumann_space_on_neumann_domain
                       .get_internal_to_external_dof_numbering());
 
+                timer.stop();
+                print_wall_time(deallog, timer, "build cluster trees");
+
                 /**
                  * Create the block cluster trees.
                  */
+                timer.start();
+
                 bct_for_bilinear_form_D1 = BlockClusterTree<spacedim>(
                   ct_for_dirichlet_space_on_neumann_domain,
                   ct_for_dirichlet_space_on_neumann_domain,
@@ -1410,29 +1469,54 @@ namespace IdeoBEM
                   support_points_for_neumann_space_on_neumann_domain,
                   dof_average_cell_size_for_neumann_space_on_neumann_domain);
 
+                timer.stop();
+                print_wall_time(deallog, timer, "build block cluster trees");
+
                 /**
                  * Initialize \hmatrices.
                  */
+                timer.start();
+
                 D1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_D1,
                                                 max_hmat_rank);
+
+                std::cout << "=== Leaf set information of D1_hmat ==="
+                          << std::endl;
+                D1_hmat.print_leaf_set_info(std::cout);
+
                 K_prime2_hmat_with_mass_matrix =
                   HMatrix<spacedim>(bct_for_bilinear_form_K_prime2,
                                     max_hmat_rank,
                                     HMatrixSupport::Property::general,
                                     HMatrixSupport::BlockType::diagonal_block);
 
+                std::cout
+                  << "=== Leaf set information of K_prime2_hmat_with_mass_matrix ==="
+                  << std::endl;
+                K_prime2_hmat_with_mass_matrix.print_leaf_set_info(std::cout);
+
                 /**
                  * SLP matrix for solving the natural density \f$w_{\rm eq}\f$.
                  */
                 V1_hmat = HMatrixSymm<spacedim>(bct_for_bilinear_form_V1,
                                                 max_hmat_rank);
+
+                std::cout << "=== Leaf set information of V1_hmat ==="
+                          << std::endl;
+                V1_hmat.print_leaf_set_info(std::cout);
+
+                timer.stop();
+                print_wall_time(deallog, timer, "initialize H-matrices");
               }
 
             /**
              * Interpolate the Neumann boundary data.
+             *
              * TODO When there are multiple Neumann subdomains assigned
              * different boundary values, they should be handled separately.
              */
+            timer.start();
+
             neumann_bc.reinit(n_dofs_for_neumann_space);
             VectorTools::interpolate(dof_handler_for_neumann_space,
                                      *neumann_bc_functor_ptr,
@@ -1451,6 +1535,9 @@ namespace IdeoBEM
                   *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
                   neumann_bc_internal_dof_numbering);
               }
+
+            timer.stop();
+            print_wall_time(deallog, timer, "interpolate boundary condition");
 
             /**
              * Allocate memory for the natural density \f$w_{\rm eq}\in
@@ -1493,6 +1580,8 @@ namespace IdeoBEM
 
             // Generate DoF selectors for the Dirichlet space on the extended
             // Dirichlet domain and retracted Neumann domain.
+            timer.start();
+
             dof_selectors_for_dirichlet_space_on_dirichlet_domain.resize(
               dof_handler_for_dirichlet_space.n_dofs());
             dof_selectors_for_dirichlet_space_on_neumann_domain.resize(
@@ -1562,6 +1651,9 @@ namespace IdeoBEM
                   }
               }
 
+            timer.stop();
+            print_wall_time(deallog, timer, "generate DoF selectors");
+
             // Get the number of effective DoF number for each DoF handler.
             const unsigned int n_dofs_for_dirichlet_space_on_dirichlet_domain =
               local_to_full_dirichlet_dof_indices_on_dirichlet_domain.size();
@@ -1578,6 +1670,8 @@ namespace IdeoBEM
              * \mynote{Access of this topology for the Dirichlet space
              * requires the map from local to full DoF indices.}
              */
+            timer.start();
+
             generate_cell_iterators();
             build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
                                        cell_iterators_for_dirichlet_space,
@@ -1585,6 +1679,9 @@ namespace IdeoBEM
             build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
                                        cell_iterators_for_neumann_space,
                                        dof_handler_for_neumann_space);
+
+            timer.stop();
+            print_wall_time(deallog, timer, "build dof-to-cell topology");
 
             /**
              * Generate lists of DoF indices.
@@ -1679,6 +1776,8 @@ namespace IdeoBEM
             /**
              * Initialize the cluster trees.
              */
+            timer.start();
+
             ct_for_dirichlet_space_on_dirichlet_domain = ClusterTree<spacedim>(
               dof_indices_for_dirichlet_space_on_dirichlet_domain,
               support_points_for_dirichlet_space_on_dirichlet_domain,
@@ -1745,9 +1844,14 @@ namespace IdeoBEM
               &(ct_for_neumann_space_on_neumann_domain
                   .get_internal_to_external_dof_numbering());
 
+            timer.stop();
+            print_wall_time(deallog, timer, "build cluster trees");
+
             /**
              * Create the block cluster trees.
              */
+            timer.start();
+
             bct_for_bilinear_form_V1 = BlockClusterTree<spacedim>(
               ct_for_neumann_space_on_dirichlet_domain,
               ct_for_neumann_space_on_dirichlet_domain,
@@ -1831,43 +1935,84 @@ namespace IdeoBEM
               dof_average_cell_size_for_dirichlet_space_on_neumann_domain,
               dof_average_cell_size_for_neumann_space_on_neumann_domain);
 
+            timer.stop();
+            print_wall_time(deallog, timer, "build block cluster trees");
+
             /**
              * Initialize \hmatrices.
              */
+            timer.start();
+
             V1_hmat =
               HMatrixSymm<spacedim>(bct_for_bilinear_form_V1, max_hmat_rank);
+
+            std::cout << "=== Leaf set information of V1_hmat ===" << std::endl;
+            V1_hmat.print_leaf_set_info(std::cout);
+
             K1_hmat =
               HMatrix<spacedim>(bct_for_bilinear_form_K1,
                                 max_hmat_rank,
                                 HMatrixSupport::Property::general,
                                 HMatrixSupport::BlockType::diagonal_block);
+
+            std::cout << "=== Leaf set information of K1_hmat ===" << std::endl;
+            K1_hmat.print_leaf_set_info(std::cout);
+
             D1_hmat =
               HMatrixSymm<spacedim>(bct_for_bilinear_form_D1, max_hmat_rank);
+
+            std::cout << "=== Leaf set information of D1_hmat ===" << std::endl;
+            D1_hmat.print_leaf_set_info(std::cout);
+
             K2_hmat_with_mass_matrix =
               HMatrix<spacedim>(bct_for_bilinear_form_K2,
                                 max_hmat_rank,
                                 HMatrixSupport::Property::general,
                                 HMatrixSupport::BlockType::diagonal_block);
+
+            std::cout
+              << "=== Leaf set information of K2_hmat_with_mass_matrix ==="
+              << std::endl;
+            K2_hmat_with_mass_matrix.print_leaf_set_info(std::cout);
+
             V2_hmat =
               HMatrix<spacedim>(bct_for_bilinear_form_V2,
                                 max_hmat_rank,
                                 HMatrixSupport::Property::general,
                                 HMatrixSupport::BlockType::diagonal_block);
+
+            std::cout << "=== Leaf set information of V2_hmat ===" << std::endl;
+            V2_hmat.print_leaf_set_info(std::cout);
+
             D2_hmat =
               HMatrix<spacedim>(bct_for_bilinear_form_D2,
                                 max_hmat_rank,
                                 HMatrixSupport::Property::general,
                                 HMatrixSupport::BlockType::diagonal_block);
+
+            std::cout << "=== Leaf set information of D2_hmat ===" << std::endl;
+            D2_hmat.print_leaf_set_info(std::cout);
+
             K_prime2_hmat_with_mass_matrix =
               HMatrix<spacedim>(bct_for_bilinear_form_K_prime2,
                                 max_hmat_rank,
                                 HMatrixSupport::Property::general,
                                 HMatrixSupport::BlockType::diagonal_block);
 
+            std::cout
+              << "=== Leaf set information of K_prime2_hmat_with_mass_matrix ==="
+              << std::endl;
+            K_prime2_hmat_with_mass_matrix.print_leaf_set_info(std::cout);
+
+            timer.stop();
+            print_wall_time(deallog, timer, "initialize H-matrices");
+
             /**
              * Interpolate the Dirichlet boundary data on the extended Dirichlet
              * domain and set those unselected DoFs to be zero.
              */
+            timer.start();
+
             dirichlet_bc.reinit(dof_handler_for_dirichlet_space.n_dofs());
             VectorTools::interpolate(dof_handler_for_dirichlet_space,
                                      *dirichlet_bc_functor_ptr,
@@ -1936,6 +2081,9 @@ namespace IdeoBEM
               neumann_bc_on_selected_dofs,
               *dof_i2e_numbering_for_neumann_space_on_neumann_domain,
               neumann_bc_internal_dof_numbering);
+
+            timer.stop();
+            print_wall_time(deallog, timer, "interpolate boundary condition");
 
             /**
              * Allocate memory for the right-hand-side vectors and solution
@@ -2016,7 +2164,7 @@ namespace IdeoBEM
              * integration of \f$2N-1\f$-th polynomial, where \f$N\f is the
              * number of quadrature points in 1D.}
              */
-            std::cerr << "=== Assemble scaled mass matrix ===" << std::endl;
+            std::cout << "=== Assemble scaled mass matrix ===" << std::endl;
 
             /**
              * For the interior Laplace problem, \f$\frac{1}{2}I\f$ is
@@ -2048,7 +2196,7 @@ namespace IdeoBEM
              * Assemble the DLP matrix, which is added with the previous
              * scaled FEM mass matrix.
              */
-            std::cerr << "=== Assemble DLP matrix ===" << std::endl;
+            std::cout << "=== Assemble DLP matrix ===" << std::endl;
             assemble_bem_full_matrix(
               double_layer_kernel,
               1.0,
@@ -2068,7 +2216,7 @@ namespace IdeoBEM
             /**
              * Assemble the SLP matrix.
              */
-            std::cerr << "=== Assemble SLP matrix ===" << std::endl;
+            std::cout << "=== Assemble SLP matrix ===" << std::endl;
             assemble_bem_full_matrix(
               single_layer_kernel,
               1.0,
@@ -2094,7 +2242,7 @@ namespace IdeoBEM
             break;
           }
           case NeumannBCProblem: {
-            std::cerr << "=== Assemble scaled mass matrix ===" << std::endl;
+            std::cout << "=== Assemble scaled mass matrix ===" << std::endl;
 
             /**
              * For the interior Laplace problem, \f$\frac{1}{2}I\f$ is
@@ -2125,7 +2273,7 @@ namespace IdeoBEM
              * previous
              * scaled FEM mass matrix.
              */
-            std::cerr << "=== Assemble ADLP matrix ===" << std::endl;
+            std::cout << "=== Assemble ADLP matrix ===" << std::endl;
             assemble_bem_full_matrix(
               adjoint_double_layer_kernel,
               -1.0,
@@ -2146,7 +2294,7 @@ namespace IdeoBEM
              * Assemble the matrix for the hyper singular operator, where the
              * regularization method is adopted.
              */
-            std::cerr << "=== Assemble D matrix ===" << std::endl;
+            std::cout << "=== Assemble D matrix ===" << std::endl;
 
             assemble_bem_full_matrix(
               hyper_singular_kernel,
@@ -2230,7 +2378,7 @@ namespace IdeoBEM
     switch (problem_type)
       {
           case DirichletBCProblem: {
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Output stream for matrices and vectors.
             std::ofstream out_mat;
             // Output stream for block cluster trees.
@@ -2239,7 +2387,7 @@ namespace IdeoBEM
 
             if (is_interior_problem)
               {
-                std::cerr << "=== Assemble sigma*I+K ===" << std::endl;
+                std::cout << "=== Assemble sigma*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2267,12 +2415,13 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble sigma*I+K");
               }
             else
               {
-                std::cerr << "=== Assemble (sigma-1)*I+K ===" << std::endl;
+                std::cout << "=== Assemble (sigma-1)*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2300,11 +2449,12 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble (sigma-1)*I+K");
               }
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Print the RHS matrix.
             out_mat.open("matrices.dat");
 
@@ -2317,16 +2467,17 @@ namespace IdeoBEM
             out_bct.close();
 #endif
 
-            std::cerr << "=== Assemble the RHS vector ===" << std::endl;
+            std::cout << "=== Assemble the RHS vector ===" << std::endl;
 
             timer.start();
             K2_hmat_with_mass_matrix.vmult(system_rhs_on_dirichlet_domain,
                                            dirichlet_bc_internal_dof_numbering,
                                            HMatrixSupport::Property::general);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble RHS vector");
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Print the RHS vector.
             print_vector_to_mat(out_mat,
                                 "system_rhs",
@@ -2337,13 +2488,14 @@ namespace IdeoBEM
 #endif
 
             // Release the RHS matrix.
-            std::cerr << "=== Release the RHS matrix ===" << std::endl;
+            std::cout << "=== Release the RHS matrix ===" << std::endl;
 
             K2_hmat_with_mass_matrix.release();
 
-            std::cerr << "=== Assemble V ===" << std::endl;
+            std::cout << "=== Assemble V ===" << std::endl;
 
             timer.start();
+
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               V1_hmat,
@@ -2368,10 +2520,11 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble V");
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             V1_hmat.print_as_formatted_full_matrix(out_mat, "V", 15, true, 25);
 
             out_bct.open("V_bct.dat");
@@ -2384,7 +2537,7 @@ namespace IdeoBEM
             break;
           }
           case NeumannBCProblem: {
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Output stream for matrices and vectors.
             std::ofstream out_mat;
             // Output stream for block cluster trees.
@@ -2393,7 +2546,7 @@ namespace IdeoBEM
 
             if (is_interior_problem)
               {
-                std::cerr << "=== Assemble (1-sigma)*I-K' ===" << std::endl;
+                std::cout << "=== Assemble (1-sigma)*I-K' ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2421,12 +2574,13 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble (1-sigma)*I-K'");
               }
             else
               {
-                std::cerr << "=== Assemble -sigma*I-K' ===" << std::endl;
+                std::cout << "=== Assemble -sigma*I-K' ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2454,11 +2608,12 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble -sigma*I-K'");
               }
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Print the RHS matrix.
             out_mat.open("matrices.dat");
 
@@ -2474,17 +2629,19 @@ namespace IdeoBEM
             /**
              * Calculate the RHS vector.
              */
-            std::cerr << "=== Assemble the RHS vector ===" << std::endl;
+            std::cout << "=== Assemble the RHS vector ===" << std::endl;
 
             timer.start();
+
             K_prime2_hmat_with_mass_matrix.vmult(
               system_rhs_on_neumann_domain,
               neumann_bc_internal_dof_numbering,
               HMatrixSupport::Property::general);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble RHS vector");
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Print the RHS vector.
             print_vector_to_mat(out_mat,
                                 "system_rhs",
@@ -2494,16 +2651,18 @@ namespace IdeoBEM
                                 25);
 #endif
 
-            std::cerr << "=== Release K' ===" << std::endl;
+            std::cout << "=== Release K' ===" << std::endl;
             K_prime2_hmat_with_mass_matrix.release();
 
             /**
              * Solve the natural density.
              */
-            std::cerr << "=== Solve the natural density weq ===" << std::endl;
+            std::cout << "=== Solve the natural density weq ===" << std::endl;
 
             timer.start();
+
             solve_natural_density();
+
             timer.stop();
             print_wall_time(deallog, timer, "solve natural density weq");
 
@@ -2511,9 +2670,10 @@ namespace IdeoBEM
              * Calculate the vector \f$a\f$ in \f$\alpha a a^T\f$, where \f$a\f$
              * is the multiplication of the mass matrix and the natural density.
              */
-            std::cerr << "=== Calculate the vector a=M*weq ===" << std::endl;
+            std::cout << "=== Calculate the vector a=M*weq ===" << std::endl;
 
             timer.start();
+
             assemble_fem_mass_matrix_vmult<dim,
                                            spacedim,
                                            double,
@@ -2523,6 +2683,7 @@ namespace IdeoBEM
               natural_density,
               QGauss<2>(fe_order_for_dirichlet_space + 1),
               mass_vmult_weq);
+
             timer.stop();
             print_wall_time(deallog, timer, "calculate a=M*weq");
 
@@ -2530,9 +2691,10 @@ namespace IdeoBEM
              * Assemble the regularized bilinear form for the hyper-singular
              * operator along with the stabilization term.
              */
-            std::cerr << "=== Assemble D ===" << std::endl;
+            std::cout << "=== Assemble D ===" << std::endl;
 
             timer.start();
+
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               D1_hmat,
@@ -2559,10 +2721,11 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble D");
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             D1_hmat.print_as_formatted_full_matrix(out_mat, "D", 15, true, 25);
 
             out_bct.open("D_bct.dat");
@@ -2581,7 +2744,7 @@ namespace IdeoBEM
              * matrices for saving the memory, we continue to assemble the left
              * hand side matrices, i.e. stiff matrices.
              */
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Output stream for matrices and vectors.
             std::ofstream out_mat;
             // Output stream for block cluster trees.
@@ -2590,7 +2753,7 @@ namespace IdeoBEM
 
             if (is_interior_problem)
               {
-                std::cerr << "=== Assemble sigma*I+K ===" << std::endl;
+                std::cout << "=== Assemble sigma*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2618,12 +2781,14 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble sigma*I+K");
 
-                std::cerr << "=== Assemble (1-sigma)*I-K' ===" << std::endl;
+                std::cout << "=== Assemble (1-sigma)*I-K' ===" << std::endl;
 
                 timer.start();
+
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
                   K_prime2_hmat_with_mass_matrix,
@@ -2650,12 +2815,13 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble (1-sigma)*I-K'");
               }
             else
               {
-                std::cerr << "=== Assemble (sigma-1)*I+K ===" << std::endl;
+                std::cout << "=== Assemble (sigma-1)*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
@@ -2683,12 +2849,14 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble (sigma-1)*I+K");
 
-                std::cerr << "=== Assemble -sigma*I-K' ===" << std::endl;
+                std::cout << "=== Assemble -sigma*I-K' ===" << std::endl;
 
                 timer.start();
+
                 fill_hmatrix_with_aca_plus_smp(
                   thread_num,
                   K_prime2_hmat_with_mass_matrix,
@@ -2715,13 +2883,15 @@ namespace IdeoBEM
                   IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
+
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble -sigma*I-K'");
               }
 
-            std::cerr << "=== Assemble -V2 ===" << std::endl;
+            std::cout << "=== Assemble -V2 ===" << std::endl;
 
             timer.start();
+
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               V2_hmat,
@@ -2746,12 +2916,14 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble -V2");
 
-            std::cerr << "=== Assemble -D2 ===" << std::endl;
+            std::cout << "=== Assemble -D2 ===" << std::endl;
 
             timer.start();
+
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               D2_hmat,
@@ -2776,10 +2948,11 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble -D2");
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Print RHS matrices.
             out_mat.open("matrices.dat");
 
@@ -2810,21 +2983,24 @@ namespace IdeoBEM
 #endif
 
             // Calculate the RHS vectors in the mixed boundary value problem.
-            std::cerr << "=== Assemble RHS vectors ===" << std::endl;
+            std::cout << "=== Assemble RHS vectors ===" << std::endl;
 
             timer.start();
+
             K2_hmat_with_mass_matrix.vmult(system_rhs_on_dirichlet_domain,
                                            dirichlet_bc_internal_dof_numbering,
                                            HMatrixSupport::Property::general);
             V2_hmat.vmult(system_rhs_on_dirichlet_domain,
                           neumann_bc_internal_dof_numbering,
                           HMatrixSupport::Property::general);
+
             timer.stop();
             print_wall_time(deallog,
                             timer,
                             "assemble RHS vector on Dirichlet domain");
 
             timer.start();
+
             D2_hmat.vmult(system_rhs_on_neumann_domain,
                           dirichlet_bc_internal_dof_numbering,
                           HMatrixSupport::Property::general);
@@ -2832,6 +3008,7 @@ namespace IdeoBEM
               system_rhs_on_neumann_domain,
               neumann_bc_internal_dof_numbering,
               HMatrixSupport::Property::general);
+
             timer.stop();
             print_wall_time(deallog,
                             timer,
@@ -2849,7 +3026,7 @@ namespace IdeoBEM
                         0,
                         system_rhs_on_neumann_domain.size());
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Print RHS vectors.
             print_vector_to_mat(out_mat,
                                 "system_rhs_on_combined_domain",
@@ -2874,16 +3051,17 @@ namespace IdeoBEM
 #endif
 
             // Release the RHS matrices.
-            std::cerr << "=== Release RHS matrices ===" << std::endl;
+            std::cout << "=== Release RHS matrices ===" << std::endl;
 
             K2_hmat_with_mass_matrix.release();
             K_prime2_hmat_with_mass_matrix.release();
             V2_hmat.release();
             D2_hmat.release();
 
-            std::cerr << "=== Assemble V1 ===" << std::endl;
+            std::cout << "=== Assemble V1 ===" << std::endl;
 
             timer.start();
+
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               V1_hmat,
@@ -2908,12 +3086,14 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble V1");
 
-            std::cerr << "=== Assemble -K1 ===" << std::endl;
+            std::cout << "=== Assemble -K1 ===" << std::endl;
 
             timer.start();
+
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               K1_hmat,
@@ -2938,12 +3118,14 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble -K1");
 
-            std::cerr << "=== Assemble D1 ===" << std::endl;
+            std::cout << "=== Assemble D1 ===" << std::endl;
 
             timer.start();
+
             fill_hmatrix_with_aca_plus_smp(
               thread_num,
               D1_hmat,
@@ -2968,15 +3150,16 @@ namespace IdeoBEM
               IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
+
             timer.stop();
             print_wall_time(deallog, timer, "assemble D1");
 
             // Assemble the block matrix.
-            std::cerr << "=== Assemble system block matrix ===" << std::endl;
+            std::cout << "=== Assemble system block matrix ===" << std::endl;
             M_hmat =
               HBlockMatrixSkewSymm<spacedim>(&V1_hmat, &K1_hmat, &D1_hmat);
 
-#if ENABLE_PRINTOUT == 1
+#if ENABLE_MATRIX_EXPORT == 1
             // Print LHS matrices.
             V1_hmat.print_as_formatted_full_matrix(out_mat, "V1", 15, true, 25);
             K1_hmat.print_as_formatted_full_matrix(out_mat, "K1", 15, true, 25);
@@ -3021,7 +3204,7 @@ namespace IdeoBEM
     switch (problem_type)
       {
           case DirichletBCProblem: {
-            std::cerr << "=== Assemble preconditioner for V ===" << std::endl;
+            std::cout << "=== Assemble preconditioner for V ===" << std::endl;
 
             // Directly make a copy of the existing \hmat and then truncate
             // its rank.
@@ -3029,43 +3212,49 @@ namespace IdeoBEM
 
             V1_hmat_preconditioner.truncate_to_rank_preserve_positive_definite(
               max_hmat_rank_for_preconditioner);
+
             timer.stop();
             print_wall_time(deallog, timer, "truncate V");
 
             /**
              * Perform Cholesky factorisation of the preconditioner.
              */
-            std::cerr
+            std::cout
               << "=== Cholesky factorization of the preconditioner for V ==="
               << std::endl;
 
             timer.start();
+
             V1_hmat_preconditioner.compute_cholesky_factorization(
               max_hmat_rank_for_preconditioner);
+
             timer.stop();
             print_wall_time(deallog, timer, "Cholesky factorization of V");
 
             break;
           }
           case NeumannBCProblem: {
-            std::cerr << "=== Assemble preconditioner for D ===" << std::endl;
+            std::cout << "=== Assemble preconditioner for D ===" << std::endl;
 
             // Directly make a copy of the existing \hmat and then truncate
             // its rank.
             D1_hmat_preconditioner = D1_hmat;
             D1_hmat_preconditioner.truncate_to_rank_preserve_positive_definite(
               max_hmat_rank_for_preconditioner);
+
             timer.stop();
             print_wall_time(deallog, timer, "truncate D");
 
             /**
              * Perform Cholesky factorisation of the preconditioner.
              */
-            std::cerr << "=== Cholesky factorization of D ===" << std::endl;
+            std::cout << "=== Cholesky factorization of D ===" << std::endl;
 
             timer.start();
+
             D1_hmat_preconditioner.compute_cholesky_factorization(
               max_hmat_rank_for_preconditioner);
+
             timer.stop();
             print_wall_time(deallog, timer, "Cholesky factorization of D");
 
@@ -3073,7 +3262,7 @@ namespace IdeoBEM
           }
           case MixedBCProblem: {
             // Assemble preconditioners for the mixed boundary value problem.
-            std::cerr
+            std::cout
               << "=== Assemble preconditioner for the system block matrix ==="
               << std::endl;
 
@@ -3085,18 +3274,23 @@ namespace IdeoBEM
 
             M11_in_preconditioner.truncate_to_rank_preserve_positive_definite(
               max_hmat_rank_for_preconditioner);
+
             timer.stop();
             print_wall_time(deallog, timer, "truncate M11(==V1)");
 
             timer.start();
+
             M12_in_preconditioner.truncate_to_rank(
               max_hmat_rank_for_preconditioner);
+
             timer.stop();
             print_wall_time(deallog, timer, "truncate M12(==K1)");
 
             timer.start();
+
             M22_in_preconditioner.truncate_to_rank_preserve_positive_definite(
               max_hmat_rank_for_preconditioner);
+
             timer.stop();
             print_wall_time(deallog, timer, "truncate M22(==D1)");
 
@@ -3107,12 +3301,14 @@ namespace IdeoBEM
                 &M22_in_preconditioner);
 
             // Perform \hmat-LU factorization to the block preconditioner.
-            std::cerr << "=== LU factorization of system block matrix ==="
+            std::cout << "=== LU factorization of system block matrix ==="
                       << std::endl;
 
             timer.start();
+
             M_hmat_preconditioner.compute_lu_factorization(
               max_hmat_rank_for_preconditioner);
+
             timer.stop();
             print_wall_time(deallog, timer, "LU factorization of M");
 
@@ -3130,7 +3326,7 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::solve()
   {
-    std::cerr << "=== Solve problem ===" << std::endl;
+    std::cout << "=== Solve problem ===" << std::endl;
 
     if (!is_use_hmat)
       {
@@ -3285,7 +3481,7 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::output_results()
   {
-    std::cerr << "=== Output results ===" << std::endl;
+    std::cout << "=== Output results ===" << std::endl;
 
     switch (problem_type)
       {
@@ -3437,7 +3633,7 @@ namespace IdeoBEM
                  * int} u(y) \intd s_y
                  * \f]
                  */
-                std::cerr << "=== Evaluate DLP potential values ==="
+                std::cout << "=== Evaluate DLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(double_layer_kernel,
                                              -1.0,
@@ -3453,7 +3649,7 @@ namespace IdeoBEM
                  * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
                  * \intd s_y \f]
                  */
-                std::cerr << "=== Evaluate SLP potential values ==="
+                std::cout << "=== Evaluate SLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(single_layer_kernel,
                                              1.0,
@@ -3473,7 +3669,7 @@ namespace IdeoBEM
                  * int} u(y) \intd s_y
                  * \f]
                  */
-                std::cerr << "=== Evaluate DLP potential values ==="
+                std::cout << "=== Evaluate DLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(double_layer_kernel,
                                              1.0,
@@ -3489,7 +3685,7 @@ namespace IdeoBEM
                  * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
                  * \intd s_y \f]
                  */
-                std::cerr << "=== Evaluate SLP potential values ==="
+                std::cout << "=== Evaluate SLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(single_layer_kernel,
                                              -1.0,
@@ -3513,7 +3709,7 @@ namespace IdeoBEM
                  * int} u(y) \intd s_y
                  * \f]
                  */
-                std::cerr << "=== Evaluate DLP potential values ==="
+                std::cout << "=== Evaluate DLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(double_layer_kernel,
                                              -1.0,
@@ -3529,7 +3725,7 @@ namespace IdeoBEM
                  * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
                  * \intd s_y \f]
                  */
-                std::cerr << "=== Evaluate SLP potential values ==="
+                std::cout << "=== Evaluate SLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(single_layer_kernel,
                                              1.0,
@@ -3549,7 +3745,7 @@ namespace IdeoBEM
                  * int} u(y) \intd s_y
                  * \f]
                  */
-                std::cerr << "=== Evaluate DLP potential values ==="
+                std::cout << "=== Evaluate DLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(double_layer_kernel,
                                              1.0,
@@ -3565,7 +3761,7 @@ namespace IdeoBEM
                  * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
                  * \intd s_y \f]
                  */
-                std::cerr << "=== Evaluate SLP potential values ==="
+                std::cout << "=== Evaluate SLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(single_layer_kernel,
                                              -1.0,
@@ -3589,7 +3785,7 @@ namespace IdeoBEM
                  * int} u(y) \intd s_y
                  * \f]
                  */
-                std::cerr << "=== Evaluate DLP potential values ==="
+                std::cout << "=== Evaluate DLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(double_layer_kernel,
                                              -1.0,
@@ -3605,7 +3801,7 @@ namespace IdeoBEM
                  * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
                  * \intd s_y \f]
                  */
-                std::cerr << "=== Evaluate SLP potential values ==="
+                std::cout << "=== Evaluate SLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(single_layer_kernel,
                                              1.0,
@@ -3625,7 +3821,7 @@ namespace IdeoBEM
                  * int} u(y) \intd s_y
                  * \f]
                  */
-                std::cerr << "=== Evaluate DLP potential values ==="
+                std::cout << "=== Evaluate DLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(double_layer_kernel,
                                              1.0,
@@ -3641,7 +3837,7 @@ namespace IdeoBEM
                  * data. \f[ \int_{\Gamma} G(x,y) \widetilde{\gamma}_{1,y} u(y)
                  * \intd s_y \f]
                  */
-                std::cerr << "=== Evaluate SLP potential values ==="
+                std::cout << "=== Evaluate SLP potential values ==="
                           << std::endl;
                 evaluate_potential_at_points(single_layer_kernel,
                                              -1.0,
@@ -3816,7 +4012,7 @@ namespace IdeoBEM
          * Assemble the SLP matrix which is used for solving the natural
          * density \f$w_{\rm eq}\f$.
          */
-        std::cerr << "=== Assemble V for solving the natural density === "
+        std::cout << "=== Assemble V for solving the natural density === "
                   << std::endl;
 
         assemble_bem_full_matrix(
@@ -3842,7 +4038,7 @@ namespace IdeoBEM
          */
         ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
 
-        std::cerr << "=== Assemble V for solving the natural density ==="
+        std::cout << "=== Assemble V for solving the natural density ==="
                   << std::endl;
 
         fill_hmatrix_with_aca_plus_smp(
@@ -3875,7 +4071,7 @@ namespace IdeoBEM
      * Assemble the RHS vector for solving the natural density \f$w_{\rm
      * eq}\f$.
      */
-    std::cerr << "=== Assemble the RHS vector for natural density ==="
+    std::cout << "=== Assemble the RHS vector for natural density ==="
               << std::endl;
 
     assemble_rhs_linear_form_vector(1.0,
@@ -3898,7 +4094,7 @@ namespace IdeoBEM
       }
     else
       {
-        std::cerr << "=== Assemble preconditioner for the V matrix ==="
+        std::cout << "=== Assemble preconditioner for the V matrix ==="
                   << std::endl;
 
         V1_hmat_preconditioner = V1_hmat;
@@ -3908,7 +4104,7 @@ namespace IdeoBEM
         /**
          * Perform Cholesky factorisation of the preconditioner.
          */
-        std::cerr << "=== Cholesky factorization of V ===" << std::endl;
+        std::cout << "=== Cholesky factorization of V ===" << std::endl;
         V1_hmat_preconditioner.compute_cholesky_factorization(
           max_hmat_rank_for_preconditioner);
 
@@ -3917,7 +4113,7 @@ namespace IdeoBEM
                      system_rhs_for_natural_density,
                      V1_hmat_preconditioner);
 
-        std::cerr << "=== Release V and its preconditioner ===" << std::endl;
+        std::cout << "=== Release V and its preconditioner ===" << std::endl;
         V1_hmat.release();
         V1_hmat_preconditioner.release();
       }
@@ -3932,7 +4128,7 @@ namespace IdeoBEM
     std::cout << "Neumann stabilization factor: " << alpha_for_neumann
               << std::endl;
 
-    std::cerr << "=== Release the RHS vector for solving natural density ==="
+    std::cout << "=== Release the RHS vector for solving natural density ==="
               << std::endl;
     system_rhs_for_natural_density.reinit(0);
   }

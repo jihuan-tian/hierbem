@@ -102,13 +102,16 @@ namespace IdeoBEM
    */
   template <int dim, int spacedim>
   void
-  print_mesh_info(const Triangulation<dim, spacedim> &triangulation)
+  print_mesh_info(std::ostream                       &out,
+                  const Triangulation<dim, spacedim> &triangulation)
   {
-    std::cout << "=== Mesh info ===\n"
-              << "Manifold dimension: " << dim << "\n"
-              << "Space dimension: " << spacedim << "\n"
-              << "No. of cells: " << triangulation.n_active_cells()
-              << std::endl;
+    out << "Manifold dimension: " << dim << "\n"
+        << "Space dimension: " << spacedim << "\n"
+        << "No. of cells: " << triangulation.n_cells() << "\n"
+        << "No. of active cells: " << triangulation.n_active_cells() << "\n"
+        << "No. of faces: " << triangulation.n_faces() << "\n"
+        << "No. of active faces: " << triangulation.n_active_faces() << "\n"
+        << "No. of vertices: " << triangulation.n_vertices() << std::endl;
 
     {
       std::map<types::boundary_id, unsigned int> boundary_count;
@@ -124,13 +127,13 @@ namespace IdeoBEM
             }
         }
 
-      std::cout << "Boundary indicators: ";
+      out << "Boundary indicators: ";
       for (const std::pair<const types::boundary_id, unsigned int> &pair :
            boundary_count)
         {
-          std::cout << pair.first << "(" << pair.second << " cells) ";
+          out << pair.first << "(" << pair.second << " cells) ";
         }
-      std::cout << std::endl;
+      out << std::endl;
     }
   }
 

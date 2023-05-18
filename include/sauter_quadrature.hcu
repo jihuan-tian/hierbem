@@ -3656,7 +3656,7 @@ namespace IdeoBEM
                const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
                  &scratch_data)
     {
-#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+#if ENABLE_DEBUG == 1
       LogStream::Prefix prefix_string(
         std::string("add_task in ") +
         std::string(cell_neighboring_type_name(cell_neighboring_type)));
@@ -3676,7 +3676,7 @@ namespace IdeoBEM
         task_index   = tail_pending;
         tail_pending = (tail_pending + 1) % capacity;
 
-#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+#if ENABLE_DEBUG == 1
         print_pointers(deallog);
 #endif
       } // Release lock on the ring buffer
@@ -3783,7 +3783,7 @@ namespace IdeoBEM
             if_notify_consumers = false;
           }
 
-#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+#if ENABLE_DEBUG == 1
         deallog << "Task " << task_index << " created" << std::endl;
         print_pointers(deallog);
 #endif
@@ -3791,7 +3791,7 @@ namespace IdeoBEM
 
       if (if_notify_consumers)
         {
-          batch_task_ready.notify_one();
+          batch_task_ready.notify_all();
         }
     }
 
@@ -3808,7 +3808,7 @@ namespace IdeoBEM
         std::mutex                                          &result_lock,
         const cudaStream_t                                   cuda_stream_handle)
     {
-#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+#if ENABLE_DEBUG == 1
       LogStream::Prefix prefix_string(
         std::string("process_task in ") +
         std::string(cell_neighboring_type_name(cell_neighboring_type)));
@@ -3866,7 +3866,7 @@ namespace IdeoBEM
             head_pending = (head_pending + task_num_to_fetch) % capacity;
           }
 
-#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+#if ENABLE_DEBUG == 1
         print_pointers(deallog);
 #endif
       } // Release the buffer lock
@@ -4171,7 +4171,7 @@ namespace IdeoBEM
                   }
               }
 
-#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+#if ENABLE_DEBUG == 1
             deallog << "Tasks [" << task_start_index_to_fetch << ", "
                     << task_start_index_to_fetch + task_num_to_fetch
                     << ") are processed" << std::endl;
@@ -5294,7 +5294,7 @@ namespace IdeoBEM
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
     {
-#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+#if ENABLE_DEBUG == 1
       LogStream::Prefix prefix_string("create_sauter_task");
 #endif
 
@@ -5501,7 +5501,7 @@ namespace IdeoBEM
 
                   mass_matrix_entry *= mass_matrix_factor;
 
-#if ENABLE_DEBUG == 1 && ENABLE_PRINTOUT == 1
+#if ENABLE_DEBUG == 1
                   deallog << "kx=" << kx_cell_index << ", ky=" << ky_cell_index
                           << ", i=" << i_global_dof_index
                           << ", j=" << j_global_dof_index
@@ -7251,6 +7251,270 @@ namespace IdeoBEM
                       mass_matrix_scratch_data.fe_values_for_test_space.JxW(q);
                   }
               }
+          }
+      }
+
+    return double_integral;
+  }
+
+
+  /**
+   * Sauter quadrature for a pair of DoFs which belongs to a far field \hmatrix
+   * node.
+   *
+   * 1. There is no contribution from mass matrix.
+   * 2. There is no need to detect the cell neighboring type, since it can only
+   * be @p regular.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  RangeNumberType
+  sauter_assemble_on_one_pair_of_dofs(
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const types::global_dof_index                        i,
+    const types::global_dof_index                        j,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                                            &bem_values_gpu,
+    const DoFHandler<dim, spacedim>                         &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                         &ky_dof_handler,
+    const MappingQGenericExt<dim, spacedim>                 &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>                 &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    /**
+     * @internal This result variable accumulates all contributions from pairs
+     * of cells related to the global DoF indices @p (i,j).
+     */
+    RangeNumberType double_integral = 0.0;
+
+    /**
+     * Iterate over each cell in the support of the basis function associated
+     * with the i-th DoF.
+     */
+    for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i])
+      {
+        const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter =
+          *kx_cell_iter_pointer;
+
+        /**
+         * @internal Calculate the real support points in the cell \f$K_x\f$
+         * via the mapping object. Because the calculated mapping support
+         * points are
+         * stored in a member variable in the mapping object @p kx_mapping and
+         * the caller @p fill_hmatrix_leaf_node_with_aca_plus of this function
+         * will be executed in several TBB threads, computation of the mapping
+         * support points should be performed in thread dependent local copies
+         * of @p kx_mapping.
+         */
+        MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+        /**
+         * Copy the newly calculated support points into @p ScratchData.
+         */
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping_copy.get_support_points();
+        /**
+         * Update the DoF indices.
+         */
+        kx_cell_iter->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+        /**
+         * Iterate over each cell in the support of the basis function
+         * associated with the j-th DoF.
+         */
+        for (auto ky_cell_iter_pointer : ky_dof_to_cell_topo[j])
+          {
+            const typename DoFHandler<dim, spacedim>::cell_iterator
+              &ky_cell_iter = *ky_cell_iter_pointer;
+
+            /**
+             * @internal Similar to making a local copy of @p kx_mapping.
+             */
+            MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+            ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+            /**
+             * Copy the newly calculated support points into @p ScratchData.
+             */
+            scratch_data.ky_mapping_support_points_in_default_order =
+              ky_mapping_copy.get_support_points();
+            /**
+             * Update the DoF indices.
+             */
+            ky_cell_iter->get_dof_indices(
+              scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+            permute_dofs_and_mapping_support_points_for_sauter_quad(
+              scratch_data,
+              copy_data,
+              CellNeighboringType::Regular,
+              kx_cell_iter,
+              ky_cell_iter,
+              kx_mapping_copy,
+              ky_mapping_copy);
+
+            /**
+             * @internal Copy the scratch data and copy data from CPU to GPU.
+             */
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
+            scratch_data_gpu.assign_from_host(scratch_data);
+
+            cudaError_t error_code =
+              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "copy scratch data from host to device");
+#endif
+
+            /**
+             * @internal Determine thread block dimensions.
+             */
+            dim3 blocks_rect;
+            dim3 threads_rect;
+            IdeoBEM::CUDAWrappers::configure_thread_blocks(
+              CellNeighboringType::Regular,
+              bem_values,
+              blocks_rect,
+              threads_rect);
+
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
+            IdeoBEM::CUDAWrappers::
+              calc_jacobian_normals_for_sauter_quad_regular<<<
+                blocks_rect,
+                threads_rect,
+                0,
+                scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                   scratch_data_gpu);
+
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "calculate Jacobians and normal vectors");
+#endif
+
+            /**
+             * When the bilinear form for the hyper singular operator is
+             * evaluated, the covariant transformation is required.
+             */
+            if (kernel.kernel_type == HyperSingularRegular)
+              {
+#if ENABLE_TIMER == 1
+                scratch_data.timer.start();
+#endif
+
+                IdeoBEM::CUDAWrappers::calc_covariant_transformations_regular<<<
+                  blocks_rect,
+                  threads_rect,
+                  0,
+                  scratch_data.cuda_stream_handle>>>(bem_values_gpu,
+                                                     scratch_data_gpu);
+
+                error_code =
+                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+                AssertCuda(error_code);
+#if ENABLE_TIMER == 1
+                scratch_data.timer.stop();
+                print_wall_time(scratch_data.log_stream,
+                                scratch_data.timer,
+                                "calculate covariant matrices");
+#endif
+              }
+
+            /**
+             * Find the index of the i-th DoF in the permuted DoF indices of
+             * \f$K_x\f$.
+             */
+            typename std::vector<types::global_dof_index>::const_iterator
+              i_iter =
+                std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                          copy_data.kx_local_dof_indices_permuted.end(),
+                          i);
+            Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                   ExcInternalError());
+            unsigned int i_index =
+              i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+            /**
+             * Find the index of the j-th DoF in the permuted DoF indices of
+             * \f$K_y\f$.
+             */
+            typename std::vector<types::global_dof_index>::const_iterator
+              j_iter =
+                std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                          copy_data.ky_local_dof_indices_permuted.end(),
+                          j);
+            Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                   ExcInternalError());
+            unsigned int j_index =
+              j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+            // Apply 4d Sauter numerical quadrature on the GPU device.
+#if ENABLE_TIMER == 1
+            scratch_data.timer.start();
+#endif
+            IdeoBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
+              blocks_rect.x,
+              threads_rect.x,
+              threads_rect.x * sizeof(RangeNumberType),
+              scratch_data.cuda_stream_handle>>>(kernel,
+                                                 kernel_factor,
+                                                 i_index,
+                                                 j_index,
+                                                 bem_values_gpu,
+                                                 scratch_data_gpu);
+
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+
+            /**
+             * @internal Extract quadrature results accumulated from all
+             * thread blocks.
+             */
+            error_code = cudaMemcpyAsync(
+              (void *)(scratch_data.quad_values_in_thread_blocks),
+              (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
+              sizeof(RangeNumberType) * blocks_rect.x,
+              cudaMemcpyDeviceToHost,
+              scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
+            AssertCuda(error_code);
+
+            for (unsigned int t = 0; t < blocks_rect.x; t++)
+              {
+                double_integral += scratch_data.quad_values_in_thread_blocks[t];
+              }
+#if ENABLE_TIMER == 1
+            scratch_data.timer.stop();
+            print_wall_time(scratch_data.log_stream,
+                            scratch_data.timer,
+                            "apply Sauter quadrature");
+#endif
           }
       }
 

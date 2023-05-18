@@ -8,8 +8,8 @@
 #ifndef INCLUDE_CONFIG_H_
 #define INCLUDE_CONFIG_H_
 
-#define ENABLE_PRINTOUT 0
 #define ENABLE_DEBUG 0
 #define ENABLE_TIMER 1
+#define ENABLE_MATRIX_EXPORT 1
 
 #endif /* INCLUDE_CONFIG_H_ */
