@@ -1723,6 +1723,7 @@ namespace IdeoBEM
      */
     std::thread::id thread_id;
 
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
     /**
      * Timer object associated with the scratch data, which is bound to a
      * working thread.
@@ -1734,6 +1735,7 @@ namespace IdeoBEM
      * which will record log messages, such as timing.
      */
     std::ofstream log_stream;
+#endif
 
     /**
      * CUDA stream associated with this CPU work stream.
@@ -2154,11 +2156,13 @@ namespace IdeoBEM
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
       , quad_values_in_thread_blocks(nullptr)
     {
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
       /**
        * @internal Stop the timer at the moment, which will be started
        * afterwards when needed.
        */
       timer.stop();
+#endif
 
       common_vertex_pair_local_indices.reserve(
         GeometryInfo<dim>::vertices_per_cell);
@@ -2293,6 +2297,7 @@ namespace IdeoBEM
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
       , quad_values_in_thread_blocks(nullptr)
     {
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
       /**
        * @internal Stop the timer at the moment, which will be started
        * afterwards when needed.
@@ -2307,6 +2312,7 @@ namespace IdeoBEM
       thread_id_strstream << thread_id;
       log_stream.open(std::string("thread-") + thread_id_strstream.str(),
                       std::ios_base::app);
+#endif
 
       cudaError_t error_code;
       error_code = cudaStreamCreate(&cuda_stream_handle);
@@ -2540,7 +2546,9 @@ namespace IdeoBEM
     void
     release()
     {
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
       log_stream.close();
+#endif
 
       cudaError_t error_code = cudaStreamDestroy(cuda_stream_handle);
       AssertCuda(error_code);

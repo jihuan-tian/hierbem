@@ -15,6 +15,20 @@ DEAL_II_INITIALIZE_CACHED_VARIABLES()
 # Project name
 PROJECT("hierbem" LANGUAGES CUDA CXX)
 
+message("=== Default compiler and linker flags configured by deal.ii ===")
+message("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
+message("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
+message("DEAL_II_CXX_FLAGS_RELEASE: ${DEAL_II_CXX_FLAGS_RELEASE}")
+
+message("DEAL_II_CUDA_FLAGS: ${DEAL_II_CUDA_FLAGS}")
+message("DEAL_II_CUDA_FLAGS_DEBUG: ${DEAL_II_CUDA_FLAGS_DEBUG}")
+message("DEAL_II_CUDA_FLAGS_RELEASE: ${DEAL_II_CUDA_FLAGS_RELEASE}")
+
+message("DEAL_II_LINKER_FLAGS: ${DEAL_II_LINKER_FLAGS}")
+message("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
+message("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
+message("====================================================")
+
 # # Set CXX flags in debug mode oriented for performance profiling in Valgrind.
 # if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 #   # Disable function inlining for performance profiling in Valgrind.
@@ -29,10 +43,24 @@ PROJECT("hierbem" LANGUAGES CUDA CXX)
 # Set CUDA compiler flags for debug mode. If the program is to be profiled,
 # -lineinfo should be added.
 SET(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread")
-# Without line number information for performance profiling.
-SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
-# With line number information for per-thread profiling.
-# SET(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo -O2 --default-stream per-thread")
+# Release mode without line number information for performance profiling.
+# SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
+# Release model With line number information for per-thread profiling.
+SET(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo --default-stream per-thread")
+
+message("=== Compiler and linker flags after customization ===")
+message("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
+message("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
+message("DEAL_II_CXX_FLAGS_RELEASE: ${DEAL_II_CXX_FLAGS_RELEASE}")
+
+message("DEAL_II_CUDA_FLAGS: ${DEAL_II_CUDA_FLAGS}")
+message("DEAL_II_CUDA_FLAGS_DEBUG: ${DEAL_II_CUDA_FLAGS_DEBUG}")
+message("DEAL_II_CUDA_FLAGS_RELEASE: ${DEAL_II_CUDA_FLAGS_RELEASE}")
+
+message("DEAL_II_LINKER_FLAGS: ${DEAL_II_LINKER_FLAGS}")
+message("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
+message("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
+message("====================================================")
 
 # Folder for header files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)

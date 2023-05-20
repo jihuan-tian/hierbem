@@ -3246,7 +3246,7 @@ namespace IdeoBEM
             print_wall_time(deallog, timer, "truncate D");
 
             /**
-             * Perform Cholesky factorisation of the preconditioner.
+             * Perform Cholesky factorization of the preconditioner.
              */
             std::cout << "=== Cholesky factorization of D ===" << std::endl;
 
