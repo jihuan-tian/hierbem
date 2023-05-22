@@ -132,7 +132,7 @@ main(int argc, char *argv[])
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                is_interior_problem = false;
+  const bool                is_interior_problem = true;
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space

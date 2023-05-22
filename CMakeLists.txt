@@ -44,9 +44,9 @@ message("====================================================")
 # -lineinfo should be added.
 SET(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread")
 # Release mode without line number information for performance profiling.
-# SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
+SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
 # Release model With line number information for per-thread profiling.
-SET(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo --default-stream per-thread")
+# SET(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo --default-stream per-thread")
 
 message("=== Compiler and linker flags after customization ===")
 message("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")

@@ -4518,10 +4518,6 @@ namespace IdeoBEM
         scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
 
-    cudaError_t error_code =
-      cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-    AssertCuda(error_code);
-
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -4557,10 +4553,6 @@ namespace IdeoBEM
      * Release pair cell wise scratch and copy data.
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-
-    error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-    AssertCuda(error_code);
-
     scratch_data.release();
     copy_data.release();
 
@@ -4665,10 +4657,6 @@ namespace IdeoBEM
         scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
 
-    cudaError_t error_code =
-      cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-    AssertCuda(error_code);
-
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -4706,10 +4694,6 @@ namespace IdeoBEM
      * Release pair cell wise scratch and copy data.
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-
-    error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-    AssertCuda(error_code);
-
     scratch_data.release();
     copy_data.release();
 
@@ -4822,10 +4806,6 @@ namespace IdeoBEM
         scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
 
-    cudaError_t error_code =
-      cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-    AssertCuda(error_code);
-
     for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
            iter = range.begin();
          iter != range.end();
@@ -4863,10 +4843,6 @@ namespace IdeoBEM
      * Release pair cell wise scratch and copy data.
      */
     scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-
-    error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-    AssertCuda(error_code);
-
     scratch_data.release();
     copy_data.release();
 

@@ -4542,15 +4542,6 @@ namespace IdeoBEM
         }
 
       /**
-       * @internal Before destroying the CUDA stream when the scratch data is
-       * released, perform a stream synchronization in case there are
-       * unfinished tasks.
-       */
-      cudaError_t error_code =
-        cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      /**
        * @internal During releasing the scratch data, the CUDA stream will
        * also be destroyed.
        */
@@ -4882,15 +4873,6 @@ namespace IdeoBEM
         }
 
       /**
-       * @internal Before destroying the CUDA stream when the scratch data is
-       * released, perform a stream synchronization in case there are
-       * unfinished tasks.
-       */
-      cudaError_t error_code =
-        cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-      AssertCuda(error_code);
-
-      /**
        * @internal During releasing the scratch data, the CUDA stream will
        * also be destroyed.
        */
@@ -4942,13 +4924,6 @@ namespace IdeoBEM
           std::this_thread::sleep_for(
             std::chrono::milliseconds(consumer_wait_time_ms));
         }
-
-      /**
-       * @internal Before destroying the CUDA stream, perform a stream
-       * synchronisation in case there are unfinished tasks.
-       */
-      error_code = cudaStreamSynchronize(cuda_stream_handle);
-      AssertCuda(error_code);
 
       error_code = cudaStreamDestroy(cuda_stream_handle);
       AssertCuda(error_code);
@@ -6398,9 +6373,6 @@ namespace IdeoBEM
 #endif
             scratch_data_gpu.assign_from_host(scratch_data);
 
-            cudaError_t error_code =
-              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
@@ -6472,8 +6444,6 @@ namespace IdeoBEM
                   }
               }
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
@@ -6543,9 +6513,6 @@ namespace IdeoBEM
                       }
                   }
 
-                error_code =
-                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-                AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
                 scratch_data.timer.stop();
                 print_wall_time(scratch_data.log_stream,
@@ -6654,20 +6621,18 @@ namespace IdeoBEM
                   }
               }
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-
             /**
              * @internal Extract quadrature results accumulated from all
              * thread blocks.
              */
-            error_code = cudaMemcpyAsync(
+            cudaError_t error_code = cudaMemcpyAsync(
               (void *)(scratch_data.quad_values_in_thread_blocks),
               (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
               sizeof(RangeNumberType) * blocks_rect.x,
               cudaMemcpyDeviceToHost,
               scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
+
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
 
@@ -6874,9 +6839,6 @@ namespace IdeoBEM
 #endif
             scratch_data_gpu.assign_from_host(scratch_data);
 
-            cudaError_t error_code =
-              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
@@ -6946,8 +6908,6 @@ namespace IdeoBEM
                   }
               }
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
@@ -7017,9 +6977,6 @@ namespace IdeoBEM
                       }
                   }
 
-                error_code =
-                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-                AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
                 scratch_data.timer.stop();
                 print_wall_time(scratch_data.log_stream,
@@ -7128,20 +7085,18 @@ namespace IdeoBEM
                   }
               }
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-
             /**
              * @internal Extract quadrature results accumulated from all
              * thread blocks.
              */
-            error_code = cudaMemcpyAsync(
+            cudaError_t error_code = cudaMemcpyAsync(
               (void *)(scratch_data.quad_values_in_thread_blocks),
               (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
               sizeof(RangeNumberType) * blocks_rect.x,
               cudaMemcpyDeviceToHost,
               scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
+
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
 
@@ -7382,9 +7337,6 @@ namespace IdeoBEM
 #endif
             scratch_data_gpu.assign_from_host(scratch_data);
 
-            cudaError_t error_code =
-              cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
@@ -7414,8 +7366,6 @@ namespace IdeoBEM
                 scratch_data.cuda_stream_handle>>>(bem_values_gpu,
                                                    scratch_data_gpu);
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
@@ -7440,9 +7390,6 @@ namespace IdeoBEM
                   scratch_data.cuda_stream_handle>>>(bem_values_gpu,
                                                      scratch_data_gpu);
 
-                error_code =
-                  cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-                AssertCuda(error_code);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
                 scratch_data.timer.stop();
                 print_wall_time(scratch_data.log_stream,
@@ -7494,20 +7441,18 @@ namespace IdeoBEM
                                                  bem_values_gpu,
                                                  scratch_data_gpu);
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
-
             /**
              * @internal Extract quadrature results accumulated from all
              * thread blocks.
              */
-            error_code = cudaMemcpyAsync(
+            cudaError_t error_code = cudaMemcpyAsync(
               (void *)(scratch_data.quad_values_in_thread_blocks),
               (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
               sizeof(RangeNumberType) * blocks_rect.x,
               cudaMemcpyDeviceToHost,
               scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
+
             error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
             AssertCuda(error_code);
 
