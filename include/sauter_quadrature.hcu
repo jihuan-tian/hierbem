@@ -1102,57 +1102,187 @@ namespace IdeoBEM
       const CUDABEMValues<dim, spacedim, RangeNumberType>         bem_values,
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data)
     {
-      // Number of threads in a row in the thread grid.
-      const unsigned int thread_num_per_row = gridDim.x * blockDim.x;
+      extern __shared__ RangeNumberType shared_data[];
+
       // Thread index in the X direction, which is mapped to the quadrature
       // point index.
       const unsigned int current_quad_point_index =
-        thread_num_per_row * blockIdx.y +
-        (blockIdx.x * blockDim.x + threadIdx.x);
-      // Quadrature point index stride for the current thread to process the
-      // next point. If enough thread blocks are allocated, each thread
-      // processes only one quadrature point.
-      const unsigned int stride = thread_num_per_row * gridDim.y;
+        blockIdx.x * blockDim.x + threadIdx.x;
 
-      for (unsigned int q = current_quad_point_index;
-           q < bem_values.quad_rule_for_regular.size();
-           q += stride)
+      if (current_quad_point_index < bem_values.quad_rule_for_regular.size())
         {
-          scratch_data.kx_jacobians_regular(threadIdx.y, q) =
-            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
-              threadIdx.y,
-              q,
-              bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
-              scratch_data.kx_mapping_support_points_permuted,
-              scratch_data.kx_mapping_support_points_permuted_xy_components,
-              scratch_data.kx_mapping_support_points_permuted_yz_components,
-              scratch_data.kx_mapping_support_points_permuted_zx_components,
-              scratch_data.kx_normals_regular(threadIdx.y, q));
+          const unsigned int kx_mapping_shape_grad_matrix_size =
+            bem_values.kx_mapping_shape_grad_matrix_table_for_regular.size(3) *
+            bem_values.kx_mapping_shape_grad_matrix_table_for_regular.size(2);
+          const unsigned int ky_mapping_shape_grad_matrix_size =
+            bem_values.ky_mapping_shape_grad_matrix_table_for_regular.size(3) *
+            bem_values.ky_mapping_shape_grad_matrix_table_for_regular.size(2);
+          const unsigned int
+            kx_mapping_support_points_permuted_two_components_size =
+              bem_values.kx_mapping_shape_grad_matrix_table_for_regular.size(
+                3) *
+              2;
+          const unsigned int
+            ky_mapping_support_points_permuted_two_components_size =
+              bem_values.ky_mapping_shape_grad_matrix_table_for_regular.size(
+                3) *
+              2;
 
-          scratch_data.ky_jacobians_regular(threadIdx.y, q) =
+          RangeNumberType *kx_mapping_shape_grad_matrix_table =
+            shared_data + threadIdx.x * kx_mapping_shape_grad_matrix_size;
+
+          unsigned int previous_data_block_size =
+            blockDim.x * kx_mapping_shape_grad_matrix_size;
+          RangeNumberType *ky_mapping_shape_grad_matrix_table =
+            shared_data + previous_data_block_size +
+            threadIdx.x * ky_mapping_shape_grad_matrix_size;
+
+          previous_data_block_size +=
+            blockDim.x * ky_mapping_shape_grad_matrix_size;
+          RangeNumberType *kx_mapping_support_points_permuted_xy_components =
+            shared_data + previous_data_block_size +
+            threadIdx.x *
+              kx_mapping_support_points_permuted_two_components_size;
+
+          previous_data_block_size +=
+            blockDim.x * kx_mapping_support_points_permuted_two_components_size;
+          RangeNumberType *kx_mapping_support_points_permuted_yz_components =
+            shared_data + previous_data_block_size +
+            threadIdx.x *
+              kx_mapping_support_points_permuted_two_components_size;
+
+          previous_data_block_size +=
+            blockDim.x * kx_mapping_support_points_permuted_two_components_size;
+          RangeNumberType *kx_mapping_support_points_permuted_zx_components =
+            shared_data + previous_data_block_size +
+            threadIdx.x *
+              kx_mapping_support_points_permuted_two_components_size;
+
+          previous_data_block_size +=
+            blockDim.x * kx_mapping_support_points_permuted_two_components_size;
+          RangeNumberType *ky_mapping_support_points_permuted_xy_components =
+            shared_data + previous_data_block_size +
+            threadIdx.x *
+              ky_mapping_support_points_permuted_two_components_size;
+
+          previous_data_block_size +=
+            blockDim.x * ky_mapping_support_points_permuted_two_components_size;
+          RangeNumberType *ky_mapping_support_points_permuted_yz_components =
+            shared_data + previous_data_block_size +
+            threadIdx.x *
+              ky_mapping_support_points_permuted_two_components_size;
+
+          previous_data_block_size +=
+            blockDim.x * ky_mapping_support_points_permuted_two_components_size;
+          RangeNumberType *ky_mapping_support_points_permuted_zx_components =
+            shared_data + previous_data_block_size +
+            threadIdx.x *
+              ky_mapping_support_points_permuted_two_components_size;
+
+          /**
+           * @internal Copy data from global memory to shared memory.
+           */
+#pragma unroll
+          for (unsigned int i = 0; i < 8; i++)
+            {
+              kx_mapping_shape_grad_matrix_table[i] =
+                *(&bem_values.kx_mapping_shape_grad_matrix_table_for_regular(
+                    0, current_quad_point_index, 0, 0) +
+                  i);
+            }
+
+#pragma unroll
+          for (unsigned int i = 0; i < 8; i++)
+            {
+              ky_mapping_shape_grad_matrix_table[i] =
+                *(&bem_values.ky_mapping_shape_grad_matrix_table_for_regular(
+                    0, current_quad_point_index, 0, 0) +
+                  i);
+            }
+
+#pragma unroll
+          for (unsigned int i = 0; i < 8; i++)
+            {
+              kx_mapping_support_points_permuted_xy_components[i] =
+                *((RangeNumberType
+                     *)(scratch_data
+                          .kx_mapping_support_points_permuted_xy_components
+                          .data()) +
+                  i);
+              kx_mapping_support_points_permuted_yz_components[i] =
+                *((RangeNumberType
+                     *)(scratch_data
+                          .kx_mapping_support_points_permuted_yz_components
+                          .data()) +
+                  i);
+              kx_mapping_support_points_permuted_zx_components[i] =
+                *((RangeNumberType
+                     *)(scratch_data
+                          .kx_mapping_support_points_permuted_zx_components
+                          .data()) +
+                  i);
+            }
+
+#pragma unroll
+          for (unsigned int i = 0; i < 8; i++)
+            {
+              ky_mapping_support_points_permuted_xy_components[i] =
+                *((RangeNumberType
+                     *)(scratch_data
+                          .ky_mapping_support_points_permuted_xy_components
+                          .data()) +
+                  i);
+              ky_mapping_support_points_permuted_yz_components[i] =
+                *((RangeNumberType
+                     *)(scratch_data
+                          .ky_mapping_support_points_permuted_yz_components
+                          .data()) +
+                  i);
+              ky_mapping_support_points_permuted_zx_components[i] =
+                *((RangeNumberType
+                     *)(scratch_data
+                          .ky_mapping_support_points_permuted_zx_components
+                          .data()) +
+                  i);
+            }
+
+          scratch_data.kx_jacobians_regular(0, current_quad_point_index) =
             BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
-              threadIdx.y,
-              q,
-              bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
-              scratch_data.ky_mapping_support_points_permuted,
-              scratch_data.ky_mapping_support_points_permuted_xy_components,
-              scratch_data.ky_mapping_support_points_permuted_yz_components,
-              scratch_data.ky_mapping_support_points_permuted_zx_components,
-              scratch_data.ky_normals_regular(threadIdx.y, q));
+              0,
+              current_quad_point_index,
+              kx_mapping_shape_grad_matrix_table,
+              bem_values.kx_mapping_shape_grad_matrix_table_for_regular.size(3),
+              bem_values.kx_mapping_shape_grad_matrix_table_for_regular.size(2),
+              kx_mapping_support_points_permuted_xy_components,
+              kx_mapping_support_points_permuted_yz_components,
+              kx_mapping_support_points_permuted_zx_components,
+              scratch_data.kx_normals_regular(0, current_quad_point_index));
+
+          scratch_data.ky_jacobians_regular(0, current_quad_point_index) =
+            BEMTools::CUDAWrappers::surface_jacobian_det_and_normal_vector(
+              0,
+              current_quad_point_index,
+              ky_mapping_shape_grad_matrix_table,
+              bem_values.ky_mapping_shape_grad_matrix_table_for_regular.size(3),
+              bem_values.ky_mapping_shape_grad_matrix_table_for_regular.size(2),
+              ky_mapping_support_points_permuted_xy_components,
+              ky_mapping_support_points_permuted_yz_components,
+              ky_mapping_support_points_permuted_zx_components,
+              scratch_data.ky_normals_regular(0, current_quad_point_index));
 
           BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-            threadIdx.y,
-            q,
+            0,
+            current_quad_point_index,
             bem_values.kx_mapping_shape_value_table_for_regular,
             scratch_data.kx_mapping_support_points_permuted,
-            scratch_data.kx_quad_points_regular(threadIdx.y, q));
+            scratch_data.kx_quad_points_regular(0, current_quad_point_index));
 
           BEMTools::CUDAWrappers::transform_unit_to_permuted_real_cell(
-            threadIdx.y,
-            q,
+            0,
+            current_quad_point_index,
             bem_values.ky_mapping_shape_value_table_for_regular,
             scratch_data.ky_mapping_support_points_permuted,
-            scratch_data.ky_quad_points_regular(threadIdx.y, q));
+            scratch_data.ky_quad_points_regular(0, current_quad_point_index));
         }
     }
 
@@ -6427,11 +6557,54 @@ namespace IdeoBEM
                     break;
                   }
                   case CellNeighboringType::Regular: {
+                    /**
+                     * @internal Compute data size for shared memory.
+                     */
+                    const unsigned int
+                      shared_mem_size_for_kx_shape_grad_matrices =
+                        threads_rect.x * sizeof(RangeNumberType) *
+                        bem_values_gpu
+                          .kx_mapping_shape_grad_matrix_table_for_regular.size(
+                            3) *
+                        bem_values_gpu
+                          .kx_mapping_shape_grad_matrix_table_for_regular.size(
+                            2);
+                    const unsigned int
+                      shared_mem_size_for_ky_shape_grad_matrices =
+                        threads_rect.x * sizeof(RangeNumberType) *
+                        bem_values_gpu
+                          .ky_mapping_shape_grad_matrix_table_for_regular.size(
+                            3) *
+                        bem_values_gpu
+                          .ky_mapping_shape_grad_matrix_table_for_regular.size(
+                            2);
+                    const unsigned int
+                      shared_mem_size_for_kx_mapping_support_points_permuted_two_components =
+                        threads_rect.x * sizeof(RangeNumberType) *
+                        scratch_data
+                          .kx_mapping_support_points_permuted_xy_components
+                          .size() *
+                        2;
+                    const unsigned int
+                      shared_mem_size_for_ky_mapping_support_points_permuted_two_components =
+                        threads_rect.x * sizeof(RangeNumberType) *
+                        scratch_data
+                          .ky_mapping_support_points_permuted_xy_components
+                          .size() *
+                        2;
+                    const unsigned int total_shared_mem_size =
+                      shared_mem_size_for_kx_shape_grad_matrices +
+                      shared_mem_size_for_ky_shape_grad_matrices +
+                      shared_mem_size_for_kx_mapping_support_points_permuted_two_components *
+                        3 +
+                      shared_mem_size_for_ky_mapping_support_points_permuted_two_components *
+                        3;
+
                     IdeoBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_regular<<<
                         blocks_rect,
                         threads_rect,
-                        0,
+                        total_shared_mem_size,
                         scratch_data.cuda_stream_handle>>>(bem_values_gpu,
                                                            scratch_data_gpu);
 
@@ -6891,11 +7064,54 @@ namespace IdeoBEM
                     break;
                   }
                   case CellNeighboringType::Regular: {
+                    /**
+                     * @internal Compute data size for shared memory.
+                     */
+                    const unsigned int
+                      shared_mem_size_for_kx_shape_grad_matrices =
+                        threads_rect.x * sizeof(RangeNumberType) *
+                        bem_values_gpu
+                          .kx_mapping_shape_grad_matrix_table_for_regular.size(
+                            3) *
+                        bem_values_gpu
+                          .kx_mapping_shape_grad_matrix_table_for_regular.size(
+                            2);
+                    const unsigned int
+                      shared_mem_size_for_ky_shape_grad_matrices =
+                        threads_rect.x * sizeof(RangeNumberType) *
+                        bem_values_gpu
+                          .ky_mapping_shape_grad_matrix_table_for_regular.size(
+                            3) *
+                        bem_values_gpu
+                          .ky_mapping_shape_grad_matrix_table_for_regular.size(
+                            2);
+                    const unsigned int
+                      shared_mem_size_for_kx_mapping_support_points_permuted_two_components =
+                        threads_rect.x * sizeof(RangeNumberType) *
+                        scratch_data
+                          .kx_mapping_support_points_permuted_xy_components
+                          .size() *
+                        2;
+                    const unsigned int
+                      shared_mem_size_for_ky_mapping_support_points_permuted_two_components =
+                        threads_rect.x * sizeof(RangeNumberType) *
+                        scratch_data
+                          .ky_mapping_support_points_permuted_xy_components
+                          .size() *
+                        2;
+                    const unsigned int total_shared_mem_size =
+                      shared_mem_size_for_kx_shape_grad_matrices +
+                      shared_mem_size_for_ky_shape_grad_matrices +
+                      shared_mem_size_for_kx_mapping_support_points_permuted_two_components *
+                        3 +
+                      shared_mem_size_for_ky_mapping_support_points_permuted_two_components *
+                        3;
+
                     IdeoBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_regular<<<
                         blocks_rect,
                         threads_rect,
-                        0,
+                        total_shared_mem_size,
                         scratch_data.cuda_stream_handle>>>(bem_values_gpu,
                                                            scratch_data_gpu);
 
@@ -7358,11 +7574,46 @@ namespace IdeoBEM
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
+            /**
+             * @internal Compute data size for shared memory.
+             */
+            const unsigned int shared_mem_size_for_kx_shape_grad_matrices =
+              threads_rect.x * sizeof(RangeNumberType) *
+              bem_values_gpu.kx_mapping_shape_grad_matrix_table_for_regular
+                .size(3) *
+              bem_values_gpu.kx_mapping_shape_grad_matrix_table_for_regular
+                .size(2);
+            const unsigned int shared_mem_size_for_ky_shape_grad_matrices =
+              threads_rect.x * sizeof(RangeNumberType) *
+              bem_values_gpu.ky_mapping_shape_grad_matrix_table_for_regular
+                .size(3) *
+              bem_values_gpu.ky_mapping_shape_grad_matrix_table_for_regular
+                .size(2);
+            const unsigned int
+              shared_mem_size_for_kx_mapping_support_points_permuted_two_components =
+                threads_rect.x * sizeof(RangeNumberType) *
+                scratch_data.kx_mapping_support_points_permuted_xy_components
+                  .size() *
+                2;
+            const unsigned int
+              shared_mem_size_for_ky_mapping_support_points_permuted_two_components =
+                threads_rect.x * sizeof(RangeNumberType) *
+                scratch_data.ky_mapping_support_points_permuted_xy_components
+                  .size() *
+                2;
+            const unsigned int total_shared_mem_size =
+              shared_mem_size_for_kx_shape_grad_matrices +
+              shared_mem_size_for_ky_shape_grad_matrices +
+              shared_mem_size_for_kx_mapping_support_points_permuted_two_components *
+                3 +
+              shared_mem_size_for_ky_mapping_support_points_permuted_two_components *
+                3;
+
             IdeoBEM::CUDAWrappers::
               calc_jacobian_normals_for_sauter_quad_regular<<<
                 blocks_rect,
                 threads_rect,
-                0,
+                total_shared_mem_size,
                 scratch_data.cuda_stream_handle>>>(bem_values_gpu,
                                                    scratch_data_gpu);
 

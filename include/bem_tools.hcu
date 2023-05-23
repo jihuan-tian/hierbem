@@ -3471,6 +3471,118 @@ namespace IdeoBEM
 
 
       /**
+       * Shared memory version
+       *
+       * @tparam spacedim
+       * @tparam RangeNumberType
+       * @param k3_index
+       * @param quad_no
+       * @param shape_grad_matrix_table
+       * @param support_points_in_real_cell
+       * @param support_points_in_real_cell_xy_components
+       * @param support_points_in_real_cell_yz_components
+       * @param support_points_in_real_cell_zx_components
+       * @param normal_vector
+       * @param is_normal_vector_negated
+       * @return
+       */
+      template <int spacedim, typename RangeNumberType = double>
+      __device__ RangeNumberType
+      surface_jacobian_det_and_normal_vector(
+        const unsigned int k3_index,
+        const unsigned int quad_no,
+        RangeNumberType   *shape_grad_matrix_table,
+        const unsigned int shape_grad_matrix_table_n_rows,
+        const unsigned int shape_grad_matrix_table_n_cols,
+        RangeNumberType   *support_points_in_real_cell_xy_components,
+        RangeNumberType   *support_points_in_real_cell_yz_components,
+        RangeNumberType   *support_points_in_real_cell_zx_components,
+        Tensor<1, spacedim, RangeNumberType> &normal_vector,
+        const bool                            is_normal_vector_negated = false)
+      {
+        /**
+         * @internal Currently, only @p spacedim=3 is supported.
+         */
+        assert(spacedim == 3);
+
+        /**
+         * Extract the shape function's gradient matrix under the specified
+         * \f$k_3\f$ index and quadrature point. @p CUDAFullMatrix is just a
+         * wrapper of the existing linear memory allocated for the matrix. Its
+         * first dimension is the shape function index and its second dimension
+         * is coordinate component index in the unit cell.
+         */
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          shape_grad_matrix_at_quad_point(shape_grad_matrix_table,
+                                          shape_grad_matrix_table_n_rows,
+                                          shape_grad_matrix_table_n_cols);
+
+        RangeNumberType jacobian_matrix_2x2_data[4];
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          jacobian_matrix_2x2(jacobian_matrix_2x2_data, 2, 2);
+
+        RangeNumberType surface_jacobian_det = 0.0;
+        RangeNumberType surface_jacobian_det_components[spacedim];
+
+        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+          two_component_coords(support_points_in_real_cell_xy_components,
+                               2,
+                               shape_grad_matrix_table_n_rows);
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[0] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[0] *
+                                surface_jacobian_det_components[0];
+
+        two_component_coords.reinit(support_points_in_real_cell_yz_components,
+                                    2,
+                                    shape_grad_matrix_table_n_rows);
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[1] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[1] *
+                                surface_jacobian_det_components[1];
+
+        two_component_coords.reinit(support_points_in_real_cell_zx_components,
+                                    2,
+                                    shape_grad_matrix_table_n_rows);
+        two_component_coords.mmult(jacobian_matrix_2x2,
+                                   shape_grad_matrix_at_quad_point);
+        surface_jacobian_det_components[2] =
+          jacobian_matrix_2x2.determinant2x2();
+        surface_jacobian_det += surface_jacobian_det_components[2] *
+                                surface_jacobian_det_components[2];
+
+        surface_jacobian_det = sqrt(surface_jacobian_det);
+
+        /**
+         * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
+         * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal
+         * vector.
+         */
+        for (unsigned int i = 0; i < spacedim; i++)
+          {
+            if (is_normal_vector_negated)
+              {
+                normal_vector[i] =
+                  -surface_jacobian_det_components[(i + 1) % spacedim] /
+                  surface_jacobian_det;
+              }
+            else
+              {
+                normal_vector[i] =
+                  surface_jacobian_det_components[(i + 1) % spacedim] /
+                  surface_jacobian_det;
+              }
+          }
+
+        return surface_jacobian_det;
+      }
+
+
+      /**
        * Calculate Jacobian determinant, normal vector and covariant matrix (if
        * the kernel function is hypersingular) at the specified k3 term and
        * quadrature point.
@@ -3720,9 +3832,12 @@ namespace IdeoBEM
         // Reset all coordinate components to zero.
         // N.B. The operator for assignment from a scalar value in the parent
         // class is called.
+        Point<spacedim, RangeNumberType> local_real_coords;
+
+#pragma unroll
         for (unsigned int i = 0; i < spacedim; i++)
           {
-            real_coords(i) = 0.;
+            local_real_coords(i) = 0.;
           }
 
         /**
@@ -3731,10 +3846,12 @@ namespace IdeoBEM
          */
         for (unsigned int i = 0; i < shape_num; i++)
           {
-            real_coords =
-              real_coords + shape_value_table(i, k3_index, quad_no) *
-                              support_points_in_real_cell(i);
+            local_real_coords =
+              local_real_coords + shape_value_table(i, k3_index, quad_no) *
+                                    support_points_in_real_cell(i);
           }
+
+        real_coords = local_real_coords;
       }
 
 
