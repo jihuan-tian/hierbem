@@ -129,6 +129,13 @@ main(int argc, char *argv[])
   AssertCuda(error_code);
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;
 
+  /**
+   * @internal Use 8-byte bank size in shared memory, since double value type is
+   * used.
+   */
+  //  error_code = cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte);
+  //  AssertCuda(error_code);
+
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 

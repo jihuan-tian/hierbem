@@ -3450,6 +3450,7 @@ namespace IdeoBEM
          * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal
          * vector.
          */
+#pragma unroll
         for (unsigned int i = 0; i < spacedim; i++)
           {
             if (is_normal_vector_negated)
@@ -3718,11 +3719,12 @@ namespace IdeoBEM
         const unsigned int shape_num = shape_value_table.size(0);
 
         // Reset all coordinate components to zero.
-        // N.B. The operator for assignment from a scalar value in the parent
-        // class is called.
+        Point<spacedim, RangeNumberType> local_real_coords;
+
+#pragma unroll
         for (unsigned int i = 0; i < spacedim; i++)
           {
-            real_coords(i) = 0.;
+            local_real_coords(i) = 0.;
           }
 
         /**
@@ -3731,10 +3733,12 @@ namespace IdeoBEM
          */
         for (unsigned int i = 0; i < shape_num; i++)
           {
-            real_coords =
-              real_coords + shape_value_table(i, k3_index, quad_no) *
-                              support_points_in_real_cell(i);
+            local_real_coords =
+              local_real_coords + shape_value_table(i, k3_index, quad_no) *
+                                    support_points_in_real_cell(i);
           }
+
+        real_coords = local_real_coords;
       }
 
 
@@ -3752,11 +3756,12 @@ namespace IdeoBEM
         const unsigned int shape_num = mapping_shape_value_table.size(0);
 
         // Reset all coordinate components to zero.
-        // N.B. The operator for assignment from a scalar value in the parent
-        // class is called.
+        Point<spacedim, RangeNumberType> local_quad_point_in_real_cell;
+
+#pragma unroll
         for (unsigned int i = 0; i < spacedim; i++)
           {
-            quad_point_in_real_cell(i) = 0.;
+            local_quad_point_in_real_cell(i) = 0.;
           }
 
         /**
@@ -3765,11 +3770,13 @@ namespace IdeoBEM
          */
         for (unsigned int i = 0; i < shape_num; i++)
           {
-            quad_point_in_real_cell =
-              quad_point_in_real_cell +
+            local_quad_point_in_real_cell =
+              local_quad_point_in_real_cell +
               mapping_shape_value_table(i, k3_index, quad_no) *
                 *(mapping_support_points_in_real_cell + i);
           }
+
+        quad_point_in_real_cell = local_quad_point_in_real_cell;
       }
     } // namespace CUDAWrappers
 
