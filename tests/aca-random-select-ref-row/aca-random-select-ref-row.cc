@@ -6,12 +6,12 @@
  * \date 2022-03-09
  */
 
+#include <aca_plus.hcu>
 #include <forward_list>
 #include <iostream>
 #include <iterator>
 #include <vector>
 
-#include "aca_plus.h"
 
 using namespace IdeoBEM;
 using namespace dealii;

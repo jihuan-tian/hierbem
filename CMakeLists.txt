@@ -12,19 +12,55 @@ ENDIF()
 
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
-# For running with Valgrind.
+# Project name
+PROJECT("hierbem" LANGUAGES CUDA CXX)
+
+message("=== Default compiler and linker flags configured by deal.ii ===")
+message("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
+message("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
+message("DEAL_II_CXX_FLAGS_RELEASE: ${DEAL_II_CXX_FLAGS_RELEASE}")
+
+message("DEAL_II_CUDA_FLAGS: ${DEAL_II_CUDA_FLAGS}")
+message("DEAL_II_CUDA_FLAGS_DEBUG: ${DEAL_II_CUDA_FLAGS_DEBUG}")
+message("DEAL_II_CUDA_FLAGS_RELEASE: ${DEAL_II_CUDA_FLAGS_RELEASE}")
+
+message("DEAL_II_LINKER_FLAGS: ${DEAL_II_LINKER_FLAGS}")
+message("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
+message("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
+message("====================================================")
+
+# # Set CXX flags in debug mode oriented for performance profiling in Valgrind.
 # if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-#   # Disable function inlining.
+#   # Disable function inlining for performance profiling in Valgrind.
 #   include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
 #   ADD_FLAGS(DEAL_II_CXX_FLAGS_DEBUG "-fno-inline")
 
-#   # Replace -O0 with -O1.
+#   # Replace -O0 with -O1 for performance profiling in Valgrind.
 #   include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
 #   REPLACE_FLAG(DEAL_II_CXX_FLAGS_DEBUG "-O0" "-O1")
 # endif()
 
-# Project name
-PROJECT("hierbem" LANGUAGES CUDA CXX)
+# Set CUDA compiler flags for debug mode. If the program is to be profiled,
+# -lineinfo should be added.
+SET(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread")
+# Release mode without line number information for performance profiling.
+SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
+# Release model With line number information for per-thread profiling.
+# SET(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo --default-stream per-thread")
+
+message("=== Compiler and linker flags after customization ===")
+message("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
+message("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
+message("DEAL_II_CXX_FLAGS_RELEASE: ${DEAL_II_CXX_FLAGS_RELEASE}")
+
+message("DEAL_II_CUDA_FLAGS: ${DEAL_II_CUDA_FLAGS}")
+message("DEAL_II_CUDA_FLAGS_DEBUG: ${DEAL_II_CUDA_FLAGS_DEBUG}")
+message("DEAL_II_CUDA_FLAGS_RELEASE: ${DEAL_II_CUDA_FLAGS_RELEASE}")
+
+message("DEAL_II_LINKER_FLAGS: ${DEAL_II_LINKER_FLAGS}")
+message("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
+message("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
+message("====================================================")
 
 # Folder for header files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
@@ -196,7 +232,7 @@ ENABLE_TESTING()
 # ADD_SUBDIRECTORY(tests/hmatrix-check-parent-and-submatrix-index)
 # ADD_SUBDIRECTORY(tests/hmatrix-find-diagonal-blocks)
 # ADD_SUBDIRECTORY(tests/hmatrix-truncate-to-fixed-rank-preserve-spd)
-# ADD_SUBDIRECTORY(tests/dof-to-cell-topology)
+ADD_SUBDIRECTORY(tests/dof-to-cell-topology)
 # ADD_SUBDIRECTORY(tests/aca-random-select-ref-row)
 # ADD_SUBDIRECTORY(tests/stl-gen-linear-indices)
 # ADD_SUBDIRECTORY(tests/dealii-vector-argmax-argmin)
@@ -248,10 +284,10 @@ ENABLE_TESTING()
 # ADD_SUBDIRECTORY(tests/verify-cross-product-of-tensors)
 # ADD_SUBDIRECTORY(tests/laplace-bem-neumann-full-matrix)
 ADD_SUBDIRECTORY(tests/laplace-bem-dirichlet-hmatrix)
-# ADD_SUBDIRECTORY(tests/laplace-bem-neumann-hmatrix)
+ADD_SUBDIRECTORY(tests/laplace-bem-neumann-hmatrix)
 # ADD_SUBDIRECTORY(tests/hmatrix-symm-vmult-symm)
 # ADD_SUBDIRECTORY(tests/lapack-matrix-fill-rows)
-# ADD_SUBDIRECTORY(tests/laplace-bem-mixed-hmatrix)
+ADD_SUBDIRECTORY(tests/laplace-bem-mixed-hmatrix)
 # ADD_SUBDIRECTORY(tests/verify-copy-vector)
 # ADD_SUBDIRECTORY(tests/hmatrix-tvmult)
 # ADD_SUBDIRECTORY(tests/hmatrix-tvmult-symm)
@@ -285,3 +321,7 @@ ADD_SUBDIRECTORY(tests/cu-scratch-data)
 # ADD_SUBDIRECTORY(tests/cudafullmatrix-invert-by-gauss-elim)
 # ADD_SUBDIRECTORY(tests/cudafullmatrix-det2x2)
 # ADD_SUBDIRECTORY(tests/cudafullmatrix-det3x3)
+ADD_SUBDIRECTORY(tests/verify-qgauss4-data-configuration)
+ADD_SUBDIRECTORY(tests/verify-sauter-quad-parametric-transform-same-panel)
+ADD_SUBDIRECTORY(tests/verify-sauter-quad-parametric-transform-common-edge)
+ADD_SUBDIRECTORY(tests/verify-sauter-quad-parametric-transform-common-vertex)

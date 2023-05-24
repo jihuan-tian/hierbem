@@ -6,9 +6,9 @@
  * @author Jihuan Tian
  */
 
-#include "aca_plus.h"
-
 #include <random>
+
+#include "aca_plus.hcu"
 
 namespace IdeoBEM
 {

@@ -134,8 +134,8 @@ namespace IdeoBEM
       // first quadrature point.
       points.assign_from_host((const double *)(quad_cpu.get_points().data()),
                               dim * quad_num);
-      cudaError_t error_code = cudaMemcpy(weights,
-                                          quad_cpu.get_weights().data(),
+      cudaError_t error_code = cudaMemcpy((void *)weights,
+                                          (void *)(quad_cpu.get_weights().data()),
                                           quad_num * sizeof(double),
                                           cudaMemcpyHostToDevice);
       AssertCuda(error_code);

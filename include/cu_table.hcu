@@ -405,6 +405,72 @@ namespace IdeoBEM
                  const size_type l);
 
       /**
+       * Get the const reference to the element (i,j,k,l,m) in the table.
+       *
+       * \mynote{The table should have five dimensions.}
+       *
+       * @param i
+       * @param j
+       * @param k
+       * @param l
+       * @param m
+       * @return
+       */
+      __device__ const T &
+      operator()(const size_type i,
+                 const size_type j,
+                 const size_type k,
+                 const size_type l,
+                 const size_type m) const;
+
+      /**
+       * Get the reference to the element (i,j,k,l,m) in the table.
+       *
+       * \mynote{The table should have five dimensions.}
+       *
+       * @param i
+       * @param j
+       * @param k
+       * @param l
+       * @param m
+       * @return
+       */
+      __device__ T &
+      operator()(const size_type i,
+                 const size_type j,
+                 const size_type k,
+                 const size_type l,
+                 const size_type m);
+
+      /**
+       * Compute the offset of the table entry.
+       *
+       * @param indices
+       * @return
+       */
+      __host__ __device__ size_type
+      offset(const CUDATableIndices<N> &indices) const;
+
+      __host__ __device__ size_type
+      offset(const size_type i, const size_type j) const;
+
+      __host__ __device__ size_type
+      offset(const size_type i, const size_type j, const size_type k) const;
+
+      __host__ __device__ size_type
+      offset(const size_type i,
+             const size_type j,
+             const size_type k,
+             const size_type l) const;
+
+      __host__ __device__ size_type
+      offset(const size_type i,
+             const size_type j,
+             const size_type k,
+             const size_type l,
+             const size_type m) const;
+
+      /**
        * Get table sizes.
        *
        * @return
@@ -566,8 +632,8 @@ namespace IdeoBEM
 
       // &(table_cpu(TableIndices<N>())): get the first element in the table,
       // then take its address.
-      cudaError_t error_code = cudaMemcpy(values,
-                                          &(table_cpu(TableIndices<N>())),
+      cudaError_t error_code = cudaMemcpy((void *)values,
+                                          (void *)(&(table_cpu(TableIndices<N>()))),
                                           element_num * sizeof(T),
                                           cudaMemcpyHostToDevice);
       AssertCuda(error_code);
@@ -586,8 +652,8 @@ namespace IdeoBEM
 
       // &(table_cpu(TableIndices<N>())): get the first element in the table,
       // then take its address.
-      cudaError_t error_code = cudaMemcpyAsync(values,
-                                               &(table_cpu(TableIndices<N>())),
+      cudaError_t error_code = cudaMemcpyAsync((void *)values,
+                                               (void *)(&(table_cpu(TableIndices<N>()))),
                                                element_num * sizeof(T),
                                                cudaMemcpyHostToDevice,
                                                stream);
@@ -603,8 +669,8 @@ namespace IdeoBEM
       Assert(values != nullptr,
              ExcMessage("Memory for this table has not be allocated!"));
 
-      cudaError_t error_code = cudaMemcpy(values,
-                                          data.data(),
+      cudaError_t error_code = cudaMemcpy((void *)values,
+                                          (void *)(data.data()),
                                           data.size() * sizeof(T),
                                           cudaMemcpyHostToDevice);
       AssertCuda(error_code);
@@ -620,8 +686,8 @@ namespace IdeoBEM
       Assert(values != nullptr,
              ExcMessage("Memory for this table has not be allocated!"));
 
-      cudaError_t error_code = cudaMemcpyAsync(values,
-                                               data.data(),
+      cudaError_t error_code = cudaMemcpyAsync((void *)values,
+                                               (void *)(data.data()),
                                                data.size() * sizeof(T),
                                                cudaMemcpyHostToDevice,
                                                stream);
@@ -639,7 +705,7 @@ namespace IdeoBEM
              ExcMessage("Memory for this table has not be allocated!"));
 
       cudaError_t error_code =
-        cudaMemcpy(values, data, size * sizeof(T), cudaMemcpyHostToDevice);
+        cudaMemcpy((void *)values, (void *)data, size * sizeof(T), cudaMemcpyHostToDevice);
       AssertCuda(error_code);
     }
 
@@ -656,7 +722,7 @@ namespace IdeoBEM
              ExcMessage("Memory for this table has not be allocated!"));
 
       cudaError_t error_code = cudaMemcpyAsync(
-        values, data, size * sizeof(T), cudaMemcpyHostToDevice, stream);
+        (void *)values, (void *)data, size * sizeof(T), cudaMemcpyHostToDevice, stream);
       AssertCuda(error_code);
     }
 
@@ -672,8 +738,8 @@ namespace IdeoBEM
              ExcMessage("Memory for this table has not be allocated!"));
       AssertIndexRange(offset_in_device_table + size - 1, element_num);
 
-      cudaError_t error_code = cudaMemcpy(values + offset_in_device_table,
-                                          data,
+      cudaError_t error_code = cudaMemcpy((void *)(values + offset_in_device_table),
+                                          (void *)data,
                                           size * sizeof(T),
                                           cudaMemcpyHostToDevice);
       AssertCuda(error_code);
@@ -692,8 +758,8 @@ namespace IdeoBEM
              ExcMessage("Memory for this table has not be allocated!"));
       AssertIndexRange(offset_in_device_table + size - 1, element_num);
 
-      cudaError_t error_code = cudaMemcpyAsync(values + offset_in_device_table,
-                                               data,
+      cudaError_t error_code = cudaMemcpyAsync((void *)(values + offset_in_device_table),
+                                               (void *)data,
                                                size * sizeof(T),
                                                cudaMemcpyHostToDevice,
                                                stream);
@@ -708,8 +774,8 @@ namespace IdeoBEM
       Assert(this->table_size == table_cpu.size(),
              ExcMessage("Table size mismatch!"));
 
-      cudaError_t error_code = cudaMemcpy(&(table_cpu(TableIndices<N>())),
-                                          values,
+      cudaError_t error_code = cudaMemcpy((void *)(&(table_cpu(TableIndices<N>()))),
+                                          (void *)values,
                                           element_num * sizeof(T),
                                           cudaMemcpyDeviceToHost);
       AssertCuda(error_code);
@@ -724,8 +790,8 @@ namespace IdeoBEM
       Assert(this->table_size == table_cpu.size(),
              ExcMessage("Table size mismatch!"));
 
-      cudaError_t error_code = cudaMemcpyAsync(&(table_cpu(TableIndices<N>())),
-                                               values,
+      cudaError_t error_code = cudaMemcpyAsync((void *)(&(table_cpu(TableIndices<N>()))),
+                                               (void *)values,
                                                element_num * sizeof(T),
                                                cudaMemcpyDeviceToHost,
                                                stream);
@@ -805,8 +871,8 @@ namespace IdeoBEM
           AssertCuda(error_code);
         }
 
-      cudaError_t error_code = cudaMemcpy(values,
-                                          src.values,
+      cudaError_t error_code = cudaMemcpy((void *)values,
+                                          (void *)(src.values),
                                           element_num * sizeof(T),
                                           cudaMemcpyDeviceToDevice);
       AssertCuda(error_code);
@@ -834,8 +900,8 @@ namespace IdeoBEM
           AssertCuda(error_code);
         }
 
-      cudaError_t error_code = cudaMemcpyAsync(values,
-                                               src.values,
+      cudaError_t error_code = cudaMemcpyAsync((void *)values,
+                                               (void *)(src.values),
                                                element_num * sizeof(T),
                                                cudaMemcpyDeviceToDevice,
                                                stream);
@@ -966,6 +1032,100 @@ namespace IdeoBEM
       return values[((i * table_size[1] + j) * table_size[2] + k) *
                       table_size[3] +
                     l];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline const T &
+    CUDATable<N, T>::operator()(const size_type i,
+                                const size_type j,
+                                const size_type k,
+                                const size_type l,
+                                const size_type m) const
+    {
+      assert(N == 5);
+
+      return values
+        [(((i * table_size[1] + j) * table_size[2] + k) * table_size[3] + l) *
+           table_size[4] +
+         m];
+    }
+
+
+    template <int N, typename T>
+    __device__ inline T &
+    CUDATable<N, T>::operator()(const size_type i,
+                                const size_type j,
+                                const size_type k,
+                                const size_type l,
+                                const size_type m)
+    {
+      assert(N == 5);
+
+      return values
+        [(((i * table_size[1] + j) * table_size[2] + k) * table_size[3] + l) *
+           table_size[4] +
+         m];
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline typename CUDATable<N, T>::size_type
+             CUDATable<N, T>::offset(const CUDATableIndices<N> &indices) const
+    {
+      return ndarray_indices_to_linear_index(indices, table_size);
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline typename CUDATable<N, T>::size_type
+             CUDATable<N, T>::offset(const size_type i, const size_type j) const
+    {
+      assert(N == 2);
+
+      return i * table_size[1] + j;
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline typename CUDATable<N, T>::size_type
+             CUDATable<N, T>::offset(const size_type i,
+                            const size_type j,
+                            const size_type k) const
+    {
+      assert(N == 3);
+
+      return (i * table_size[1] + j) * table_size[2] + k;
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline typename CUDATable<N, T>::size_type
+             CUDATable<N, T>::offset(const size_type i,
+                            const size_type j,
+                            const size_type k,
+                            const size_type l) const
+    {
+      assert(N == 4);
+
+      return ((i * table_size[1] + j) * table_size[2] + k) * table_size[3] + l;
+    }
+
+
+    template <int N, typename T>
+    __host__ __device__ inline typename CUDATable<N, T>::size_type
+             CUDATable<N, T>::offset(const size_type i,
+                            const size_type j,
+                            const size_type k,
+                            const size_type l,
+                            const size_type m) const
+    {
+      assert(N == 5);
+
+      return (((i * table_size[1] + j) * table_size[2] + k) * table_size[3] +
+              l) *
+               table_size[4] +
+             m;
     }
 
 

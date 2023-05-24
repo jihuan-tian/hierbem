@@ -6,8 +6,13 @@
  * \date 2022-09-23
  */
 
+#include <deal.II/base/logstream.h>
+
+#include <cuda_runtime.h>
+
 #include <iostream>
 
+#include "debug_tools.hcu"
 #include "laplace_bem.h"
 
 using namespace dealii;
@@ -99,27 +104,56 @@ private:
 int
 main(int argc, char *argv[])
 {
-  deallog.depth_console(2);
+  /**
+   * @internal Pop out the default "DEAL" prefix string.
+   */
+  deallog.pop();
+  deallog.depth_console(5);
+  LogStream::Prefix prefix_string("HierBEM");
+
+  /**
+   * @internal Create and start the timer.
+   */
+  Timer timer;
+
+  /**
+   * @internal Initialize the CUDA device parameters.
+   */
+  //  cudaError_t error_code = cudaSetDevice(0);
+  //  error_code =
+  //    cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceScheduleBlockingSync);
+  //  AssertCuda(error_code);
+
+  const size_t stack_size = 1024 * 10;
+  cudaError_t  error_code = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
+  AssertCuda(error_code);
+  deallog << "CUDA stack size has been set to " << stack_size << std::endl;
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
+  const bool                is_interior_problem = false;
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
     1, // mapping order for dirichlet domain
     1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
-    true, // is interior problem
-    4,    // n_min for cluster tree
-    10,   // n_min for block cluster tree
-    0.8,  // eta for H-matrix
-    5,    // max rank for H-matrix
-    0.01, // aca epsilon for H-matrix
-    1.0,  // eta for preconditioner
-    2,    // max rank for preconditioner
-    0.1,  // aca epsilon for preconditioner
+    is_interior_problem, // is interior problem
+    4,                   // n_min for cluster tree
+    32,                  // n_min for block cluster tree
+    0.8,                 // eta for H-matrix
+    5,                   // max rank for H-matrix
+    0.01,                // aca epsilon for H-matrix
+    1.0,                 // eta for preconditioner
+    2,                   // max rank for preconditioner
+    0.1,                 // aca epsilon for preconditioner
     MultithreadInfo::n_cores());
+
+  timer.stop();
+  print_wall_time(deallog, timer, "program preparation");
+
+  timer.start();
 
   if (argc > 1)
     {
@@ -127,10 +161,29 @@ main(int argc, char *argv[])
     }
   else
     {
-      bem.read_volume_mesh(std::string("sphere-from-gmsh-refine-2_hex.msh"));
+      bem.read_volume_mesh(std::string("sphere-from-gmsh_hex.msh"));
     }
 
-  const Point<3> source_loc(1, 1, 1);
+  timer.stop();
+  print_wall_time(deallog, timer, "read mesh");
+
+  timer.start();
+
+  /**
+   * @internal Set the Dirac source location according to interior or exterior
+   * problem.
+   */
+  Point<3> source_loc;
+
+  if (is_interior_problem)
+    {
+      source_loc = Point<3>(1, 1, 1);
+    }
+  else
+    {
+      source_loc = Point<3>(0.25, 0.25, 0.25);
+    }
+
   const Point<3> center(0, 0, 0);
   const double   radius(1);
 
@@ -140,7 +193,18 @@ main(int argc, char *argv[])
   bem.assign_dirichlet_bc(dirichlet_bc);
   bem.assign_neumann_bc(neumann_bc);
 
+  timer.stop();
+  print_wall_time(deallog, timer, "assign boundary conditions");
+
+  timer.start();
+
   bem.run();
+
+  timer.stop();
+  print_wall_time(deallog, timer, "run the solver");
+
+  deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
+          << std::endl;
 
   return 0;
 }

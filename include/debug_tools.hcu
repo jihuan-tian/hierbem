@@ -11,6 +11,7 @@
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/table.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
@@ -40,15 +41,77 @@ namespace IdeoBEM
 {
   using namespace dealii;
 
+  /**
+   * Print the elapsed wall time and the total wall time to log stream.
+   *
+   * @param log
+   * @param timer
+   * @param activity_name
+   */
+  void
+  print_wall_time(LogStream         &log,
+                  const Timer       &timer,
+                  const std::string &activity_name);
+
+
+  /**
+   * Print the elapsed wall time and the total wall time to output stream.
+   *
+   * @param out
+   * @param timer
+   * @param activity_name
+   */
+  void
+  print_wall_time(std::ostream      &out,
+                  const Timer       &timer,
+                  const std::string &activity_name);
+
+
+  /**
+   * Print the elapsed CPU time and the total CPU time to log stream.
+   *
+   * @param log
+   * @param timer
+   * @param activity_name
+   */
+  void
+  print_cpu_time(LogStream         &log,
+                 const Timer       &timer,
+                 const std::string &activity_name);
+
+
+  /**
+   * Print the elapsed CPU time and the total CPU time to output stream.
+   *
+   * @param out
+   * @param timer
+   * @param activity_name
+   */
+  void
+  print_cpu_time(std::ostream      &out,
+                 const Timer       &timer,
+                 const std::string &activity_name);
+
+
+  /**
+   * Print mesh information.
+   *
+   * @tparam dim
+   * @tparam spacedim
+   * @param triangulation
+   */
   template <int dim, int spacedim>
   void
-  print_mesh_info(const Triangulation<dim, spacedim> &triangulation)
+  print_mesh_info(std::ostream                       &out,
+                  const Triangulation<dim, spacedim> &triangulation)
   {
-    std::cout << "=== Mesh info ===\n"
-              << "Manifold dimension: " << dim << "\n"
-              << "Space dimension: " << spacedim << "\n"
-              << "No. of cells: " << triangulation.n_active_cells()
-              << std::endl;
+    out << "Manifold dimension: " << dim << "\n"
+        << "Space dimension: " << spacedim << "\n"
+        << "No. of cells: " << triangulation.n_cells() << "\n"
+        << "No. of active cells: " << triangulation.n_active_cells() << "\n"
+        << "No. of faces: " << triangulation.n_faces() << "\n"
+        << "No. of active faces: " << triangulation.n_active_faces() << "\n"
+        << "No. of vertices: " << triangulation.n_vertices() << std::endl;
 
     {
       std::map<types::boundary_id, unsigned int> boundary_count;
@@ -64,13 +127,13 @@ namespace IdeoBEM
             }
         }
 
-      std::cout << "Boundary indicators: ";
+      out << "Boundary indicators: ";
       for (const std::pair<const types::boundary_id, unsigned int> &pair :
            boundary_count)
         {
-          std::cout << pair.first << "(" << pair.second << " cells) ";
+          out << pair.first << "(" << pair.second << " cells) ";
         }
-      std::cout << std::endl;
+      out << std::endl;
     }
   }
 
@@ -532,7 +595,9 @@ namespace IdeoBEM
    */
   template <int dim>
   void
-  print_qgauss(std::ostream &out, const QGauss<dim> &quad_cpu)
+  print_qgauss(std::ostream      &out,
+               const QGauss<dim> &quad_cpu,
+               const std::string &separator = std::string(","))
   {
     for (unsigned int q = 0; q < quad_cpu.size(); q++)
       {
@@ -546,7 +611,7 @@ namespace IdeoBEM
               }
             else
               {
-                out << quad_cpu.point(q)(i) << ",";
+                out << quad_cpu.point(q)(i) << separator;
               }
           }
 
@@ -595,6 +660,47 @@ namespace IdeoBEM
 
 
   /**
+   * Print the vector of @p Point objects as a @p n*dim matrix in Octave format.
+   *
+   * @tparam dim
+   * @tparam RangeNumberType
+   * @param out
+   * @param name
+   * @param values
+   * @param precision
+   * @param width
+   */
+  template <int dim, typename RangeNumberType = double>
+  void
+  print_point_vector_to_mat(
+    std::ostream                                   &out,
+    const std::string                              &name,
+    const std::vector<Point<dim, RangeNumberType>> &values,
+    const unsigned int                              precision = 6,
+    const unsigned int                              width     = 10)
+  {
+    out << "# name: " << name << "\n";
+    out << "# type: matrix\n";
+    out << "# rows: " << values.size() << "\n";
+    out << "# columns: " << dim << "\n";
+
+    for (const auto &p : values)
+      {
+        for (unsigned int d = 0; d < dim - 1; d++)
+          {
+            out << std::setprecision(precision) << std::setw(width) << p[d]
+                << " ";
+          }
+
+        out << std::setprecision(precision) << std::setw(width) << p[dim - 1]
+            << "\n";
+      }
+
+    out << "\n\n";
+  }
+
+
+  /**
    * Check the equality of the quadrature objects on CPU and GPU.
    *
    * @tparam dim
@@ -615,8 +721,8 @@ namespace IdeoBEM
         quad_gpu.get_points().copy_to_host(quad_points_from_gpu);
 
         double     *weights_from_gpu = new double[quad_num];
-        cudaError_t error_code       = cudaMemcpy(weights_from_gpu,
-                                            quad_gpu.get_weights(),
+        cudaError_t error_code       = cudaMemcpy((void *)weights_from_gpu,
+                                            (void *)(quad_gpu.get_weights()),
                                             sizeof(double) * quad_num,
                                             cudaMemcpyDeviceToHost);
         AssertCuda(error_code);
