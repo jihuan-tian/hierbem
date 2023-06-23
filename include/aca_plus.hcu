@@ -3318,6 +3318,11 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      "fill_hmatrix_leaf_node_with_aca_plus");
+#endif
+
     /**
      * @internal Row and column index ranges in the internal DoF numbering.
      */
@@ -3717,6 +3722,11 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      "fill_hmatrix_leaf_node_with_aca_plus for hypersingular");
+#endif
+
     const std::array<types::global_dof_index, 2> *row_index_range =
       leaf_mat->get_row_index_range();
     const std::array<types::global_dof_index, 2> *col_index_range =
@@ -4131,6 +4141,11 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      "fill_hmatrix_leaf_node_with_aca_plus with mass matrix");
+#endif
+
     const std::array<types::global_dof_index, 2> *row_index_range =
       leaf_mat->get_row_index_range();
     const std::array<types::global_dof_index, 2> *col_index_range =
@@ -5380,7 +5395,10 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
-    LogStream::Prefix prefix_string("build_hmatrix_aca");
+    LogStream::Prefix                prefix_string("build_hmatrix_aca");
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmatrix_aca");
+#endif
 
     Timer timer;
 
@@ -5720,6 +5738,11 @@ namespace IdeoBEM
 
     if (far_field_leaf_set.size() > 0)
       {
+#if ENABLE_NVTX == 1
+        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+          "build far field hmatrix nodes");
+#endif
+
         /**
          * Estimate the grain size.
          */
@@ -5909,6 +5932,10 @@ namespace IdeoBEM
     const bool                            enable_build_symmetric_hmat = false)
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca with regularization");
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      "build_hmatrix_aca with regularization");
+#endif
 
     Timer timer;
 
@@ -6244,23 +6271,30 @@ namespace IdeoBEM
         grain_size = 1;
       }
 
-    parallel::internal::parallel_for(
-      near_field_leaf_set.begin(),
-      near_field_leaf_set.end(),
-      std::bind(static_cast<
-                  void (*)(const tbb::blocked_range<typename std::vector<
-                             HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-                           const Vector<RangeNumberType> &,
-                           const RangeNumberType,
-                           const bool)>(
-                  regularize_near_field_hmatrices_for_hypersingular_kernel<
-                    spacedim,
-                    RangeNumberType>),
-                std::placeholders::_1,
-                std::cref(mass_vmult_weq),
-                stabilization_factor,
-                enable_build_symmetric_hmat),
-      grain_size);
+    {
+#if ENABLE_NVTX == 1
+      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+        "regularize hypersingular kernel");
+#endif
+
+      parallel::internal::parallel_for(
+        near_field_leaf_set.begin(),
+        near_field_leaf_set.end(),
+        std::bind(static_cast<void (*)(
+                    const tbb::blocked_range<typename std::vector<
+                      HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+                    const Vector<RangeNumberType> &,
+                    const RangeNumberType,
+                    const bool)>(
+                    regularize_near_field_hmatrices_for_hypersingular_kernel<
+                      spacedim,
+                      RangeNumberType>),
+                  std::placeholders::_1,
+                  std::cref(mass_vmult_weq),
+                  stabilization_factor,
+                  enable_build_symmetric_hmat),
+        grain_size);
+    }
 
     timer.stop();
     print_wall_time(deallog, timer, "build near field H-matrix nodes");
@@ -6276,6 +6310,11 @@ namespace IdeoBEM
 
     if (far_field_leaf_set.size() > 0)
       {
+#if ENABLE_NVTX == 1
+        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+          "build far field hmatrix nodes");
+#endif
+
         unsigned int grain_size = far_field_leaf_set.size() / thread_num;
         if (grain_size == 0)
           {
@@ -6462,6 +6501,10 @@ namespace IdeoBEM
     const bool                            enable_build_symmetric_hmat = false)
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca with mass matrix");
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      "build_hmatrix_aca with mass matrix");
+#endif
 
     Timer timer;
 
@@ -6806,6 +6849,11 @@ namespace IdeoBEM
 
     if (far_field_leaf_set.size() > 0)
       {
+#if ENABLE_NVTX == 1
+        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+          "build far field hmatrix nodes");
+#endif
+
         /**
          * Estimate the grain size.
          */

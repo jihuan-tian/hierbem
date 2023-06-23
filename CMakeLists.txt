@@ -15,6 +15,10 @@ DEAL_II_INITIALIZE_CACHED_VARIABLES()
 # Project name
 PROJECT("hierbem" LANGUAGES CUDA CXX)
 
+# Include CMake macros provided by deal.i
+include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
+include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
+
 message("=== Default compiler and linker flags configured by deal.ii ===")
 message("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
 message("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
@@ -32,20 +36,24 @@ message("====================================================")
 # # Set CXX flags in debug mode oriented for performance profiling in Valgrind.
 # if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 #   # Disable function inlining for performance profiling in Valgrind.
-#   include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
 #   ADD_FLAGS(DEAL_II_CXX_FLAGS_DEBUG "-fno-inline")
 
 #   # Replace -O0 with -O1 for performance profiling in Valgrind.
-#   include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
 #   REPLACE_FLAG(DEAL_II_CXX_FLAGS_DEBUG "-O0" "-O1")
 # endif()
 
 # Set CUDA compiler flags for debug mode. If the program is to be profiled,
 # -lineinfo should be added.
 SET(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread")
-# Release mode without line number information for performance profiling.
+# Release mode without line number information.
 SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
-# Release model With line number information for per-thread profiling.
+
+# #########################################################
+# Configuration for performance profiling in nsight-sys
+# #########################################################
+# # Add CXX compiler flag for OS runtime libraries trace in nsight-sys
+# ADD_FLAGS(DEAL_II_CXX_FLAGS_RELEASE "-funwind-tables")
+# # Release model With line number information for performance profiling.
 # SET(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo --default-stream per-thread")
 
 message("=== Compiler and linker flags after customization ===")
@@ -326,3 +334,4 @@ ADD_SUBDIRECTORY(tests/verify-sauter-quad-parametric-transform-same-panel)
 ADD_SUBDIRECTORY(tests/verify-sauter-quad-parametric-transform-common-edge)
 ADD_SUBDIRECTORY(tests/verify-sauter-quad-parametric-transform-common-vertex)
 ADD_SUBDIRECTORY(tests/laplace-bem-mixed-spanner-model)
+ADD_SUBDIRECTORY(tests/laplace-bem-dirichlet-hmatrix-two-spheres)

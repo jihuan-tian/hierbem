@@ -51,6 +51,7 @@
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 #include "config.h"
+#include "cu_profile.hcu"
 #include "debug_tools.hcu"
 #include "dof_tools_ext.h"
 #include "grid_out_ext.h"
@@ -1034,7 +1035,10 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::setup_system()
   {
-    LogStream::Prefix prefix_string("setup_system");
+    LogStream::Prefix                prefix_string("setup_system");
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("setup_system");
+#endif
 
     Timer timer;
     timer.stop();
@@ -2364,7 +2368,10 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::assemble_hmatrix_system()
   {
-    LogStream::Prefix prefix_string("assemble_hmatrix_system");
+    LogStream::Prefix                prefix_string("assemble_hmatrix_system");
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_hmatrix_system");
+#endif
 
     Timer timer;
 
@@ -2387,6 +2394,11 @@ namespace IdeoBEM
 
             if (is_interior_problem)
               {
+#if ENABLE_NVTX == 1
+                IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                  "assemble sigma*I+K");
+#endif
+
                 std::cout << "=== Assemble sigma*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
@@ -2421,6 +2433,11 @@ namespace IdeoBEM
               }
             else
               {
+#if ENABLE_NVTX == 1
+                IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                  "assemble (sigma-1)*I+K");
+#endif
+
                 std::cout << "=== Assemble (sigma-1)*I+K ===" << std::endl;
 
                 fill_hmatrix_with_aca_plus_smp(
@@ -2492,37 +2509,43 @@ namespace IdeoBEM
 
             K2_hmat_with_mass_matrix.release();
 
-            std::cout << "=== Assemble V ===" << std::endl;
+            {
+#if ENABLE_NVTX == 1
+              IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("assemble V");
+#endif
 
-            timer.start();
+              std::cout << "=== Assemble V ===" << std::endl;
 
-            fill_hmatrix_with_aca_plus_smp(
-              thread_num,
-              V1_hmat,
-              aca_config,
-              single_layer_kernel,
-              1.0,
-              dof_to_cell_topo_for_neumann_space,
-              dof_to_cell_topo_for_neumann_space,
-              SauterQuadratureRule<dim>(5, 4, 4, 3),
-              dof_handler_for_neumann_space,
-              dof_handler_for_neumann_space,
-              nullptr,
-              nullptr,
-              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-              *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
-              kx_mapping_for_dirichlet_domain,
-              ky_mapping_for_dirichlet_domain,
-              *kx_mapping_data_for_dirichlet_domain,
-              *ky_mapping_data_for_dirichlet_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
-              true);
+              timer.start();
 
-            timer.stop();
-            print_wall_time(deallog, timer, "assemble V");
+              fill_hmatrix_with_aca_plus_smp(
+                thread_num,
+                V1_hmat,
+                aca_config,
+                single_layer_kernel,
+                1.0,
+                dof_to_cell_topo_for_neumann_space,
+                dof_to_cell_topo_for_neumann_space,
+                SauterQuadratureRule<dim>(5, 4, 4, 3),
+                dof_handler_for_neumann_space,
+                dof_handler_for_neumann_space,
+                nullptr,
+                nullptr,
+                *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+                *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
+                kx_mapping_for_dirichlet_domain,
+                ky_mapping_for_dirichlet_domain,
+                *kx_mapping_data_for_dirichlet_domain,
+                *ky_mapping_data_for_dirichlet_domain,
+                map_from_surface_mesh_to_volume_mesh,
+                map_from_surface_mesh_to_volume_mesh,
+                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  SameTriangulations,
+                true);
+
+              timer.stop();
+              print_wall_time(deallog, timer, "assemble V");
+            }
 
 #if ENABLE_MATRIX_EXPORT == 1
             V1_hmat.print_as_formatted_full_matrix(out_mat, "V", 15, true, 25);
@@ -3326,6 +3349,10 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::solve()
   {
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("solve");
+#endif
+
     std::cout << "=== Solve problem ===" << std::endl;
 
     if (!is_use_hmat)
@@ -3864,7 +3891,10 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::run()
   {
-    LogStream::Prefix prefix_string("run");
+    LogStream::Prefix                prefix_string("run");
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("run");
+#endif
 
     Timer timer;
     setup_system();

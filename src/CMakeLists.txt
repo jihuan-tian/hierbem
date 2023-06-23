@@ -37,6 +37,8 @@ DEAL_II_SETUP_TARGET(generic_tools)
 
 # Link TARGET to my generic_tools library.
 TARGET_LINK_LIBRARIES(${TARGET} boost_program_options generic_tools)
+# Link with dl library for NVTX instrumentation.
+TARGET_LINK_LIBRARIES(${TARGET} dl)
 
 # ###############################################
 # Executable target: generate_block_cluster_tree

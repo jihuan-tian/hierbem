@@ -2615,8 +2615,11 @@ namespace IdeoBEM
       error_code = cudaHostUnregister((void *)&(ky_quad_points_regular(0, 0)));
       AssertCuda(error_code);
 
-      error_code = cudaFreeHost(quad_values_in_thread_blocks);
-      AssertCuda(error_code);
+      if (quad_values_in_thread_blocks != nullptr)
+        {
+          error_code = cudaFreeHost(quad_values_in_thread_blocks);
+          AssertCuda(error_code);
+        }
     }
   };
 

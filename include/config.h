@@ -11,5 +11,6 @@
 #define ENABLE_DEBUG 0
 #define ENABLE_TIMER 1
 #define ENABLE_MATRIX_EXPORT 0
+#define ENABLE_NVTX 0
 
 #endif /* INCLUDE_CONFIG_H_ */

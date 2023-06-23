@@ -1,0 +1,36 @@
+/**
+ * @file cu_profile.hcu
+ * @brief CUDA performance profiling
+ *
+ * @date 2023-06-14
+ * @author Jihuan Tian
+ */
+#ifndef INCLUDE_CU_PROFILE_HCU_
+#define INCLUDE_CU_PROFILE_HCU_
+
+#include <nvtx3/nvToolsExt.h>
+
+#include <string>
+
+namespace IdeoBEM
+{
+  namespace CUDAWrappers
+  {
+    class NVTXRange
+    {
+    public:
+      NVTXRange(const std::string &message)
+      {
+        nvtxRangePush(message.c_str());
+      }
+
+      ~NVTXRange()
+      {
+        nvtxRangePop();
+      }
+    };
+  } // namespace CUDAWrappers
+} // namespace IdeoBEM
+
+
+#endif /* INCLUDE_CU_PROFILE_HCU_ */
