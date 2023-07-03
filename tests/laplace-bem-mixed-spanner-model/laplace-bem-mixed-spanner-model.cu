@@ -57,6 +57,14 @@ public:
   }
 };
 
+namespace IdeoBEM
+{
+  namespace CUDAWrappers
+  {
+    extern cudaDeviceProp device_properties;
+  }
+} // namespace IdeoBEM
+
 int
 main(int argc, char *argv[])
 {
@@ -84,6 +92,13 @@ main(int argc, char *argv[])
   cudaError_t  error_code = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
   AssertCuda(error_code);
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;
+
+  /**
+   * @internal Get GPU device properties.
+   */
+  error_code =
+    cudaGetDeviceProperties(&IdeoBEM::CUDAWrappers::device_properties, 0);
+  AssertCuda(error_code);
 
   /**
    * @internal Use 8-byte bank size in shared memory, since double value type is

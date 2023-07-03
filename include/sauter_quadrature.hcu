@@ -6133,7 +6133,7 @@ namespace IdeoBEM
       nvtxNameOsThread(getpid(), nvtx_thread_name.c_str());
 #endif
 
-      const unsigned int consumer_wait_time_ms = 1;
+      const unsigned int consumer_wait_time_us = 1;
 
       cudaStream_t cuda_stream_handle;
       cudaError_t  error_code = cudaStreamCreate(&cuda_stream_handle);
@@ -6151,7 +6151,7 @@ namespace IdeoBEM
                                                        cuda_stream_handle))
         {
           std::this_thread::sleep_for(
-            std::chrono::milliseconds(consumer_wait_time_ms));
+            std::chrono::microseconds(consumer_wait_time_us));
         }
 
       error_code = cudaStreamDestroy(cuda_stream_handle);
