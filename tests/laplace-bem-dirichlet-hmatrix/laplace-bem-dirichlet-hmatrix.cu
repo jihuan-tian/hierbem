@@ -102,6 +102,14 @@ private:
   double   model_sphere_radius;
 };
 
+namespace IdeoBEM
+{
+  namespace CUDAWrappers
+  {
+    extern cudaDeviceProp device_properties;
+  }
+} // namespace IdeoBEM
+
 int
 main(int argc, char *argv[])
 {
@@ -134,6 +142,13 @@ main(int argc, char *argv[])
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;
 
   /**
+   * @internal Get GPU device properties.
+   */
+  error_code =
+    cudaGetDeviceProperties(&IdeoBEM::CUDAWrappers::device_properties, 0);
+  AssertCuda(error_code);
+
+  /**
    * @internal Use 8-byte bank size in shared memory, since double value type is
    * used.
    */
@@ -152,7 +167,7 @@ main(int argc, char *argv[])
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem, // is interior problem
     4,                   // n_min for cluster tree
-    10,                   // n_min for block cluster tree
+    10,                  // n_min for block cluster tree
     0.8,                 // eta for H-matrix
     5,                   // max rank for H-matrix
     0.01,                // aca epsilon for H-matrix

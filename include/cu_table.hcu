@@ -151,7 +151,7 @@ namespace IdeoBEM
 
       /**
        * Assign values held within an array on the host to the device with
-       * an offset.
+       * an offset in the 1D memory on the device.
        *
        * @param data
        * @param size
@@ -163,7 +163,7 @@ namespace IdeoBEM
 
       /**
        * Assign values held within an array on the host to the device with
-       * an offset (asynchronous copy).
+       * an offset in the 1D memory on the device (asynchronous copy).
        *
        * @param data
        * @param offset_in_device_table

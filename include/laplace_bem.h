@@ -434,12 +434,8 @@ namespace IdeoBEM
      * DoF-to-cell topologies for various DoF handlers, which are used for
      * matrix assembly on a pair of DoFs.
      */
-    std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-      dof_to_cell_topo_for_dirichlet_space;
-    std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-      dof_to_cell_topo_for_neumann_space;
+    DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_dirichlet_space;
+    DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space;
 
     /**
      * Polynomial order for describing the geometric mapping for the Dirichlet
@@ -1035,7 +1031,7 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::setup_system()
   {
-    LogStream::Prefix                prefix_string("setup_system");
+    LogStream::Prefix prefix_string("setup_system");
 #if ENABLE_NVTX == 1
     IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("setup_system");
 #endif
@@ -2368,7 +2364,7 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::assemble_hmatrix_system()
   {
-    LogStream::Prefix                prefix_string("assemble_hmatrix_system");
+    LogStream::Prefix prefix_string("assemble_hmatrix_system");
 #if ENABLE_NVTX == 1
     IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_hmatrix_system");
 #endif
@@ -3891,7 +3887,7 @@ namespace IdeoBEM
   void
   LaplaceBEM<dim, spacedim>::run()
   {
-    LogStream::Prefix                prefix_string("run");
+    LogStream::Prefix prefix_string("run");
 #if ENABLE_NVTX == 1
     IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("run");
 #endif

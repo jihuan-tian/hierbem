@@ -48,6 +48,23 @@ namespace IdeoBEM
 {
   using namespace dealii;
 
+  template <int dim, int spacedim>
+  class DofToCellTopology
+  {
+  public:
+    /**
+     * The core structure describing the DoF-to-cell topology.
+     */
+    std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      topology;
+
+    /**
+     * Maximum number of cells associated with a DoF.
+     */
+    unsigned int max_cells_per_dof;
+  };
+
   /**
    * Build the topology for "DoF support point-to-cell" relation.
    *
@@ -84,6 +101,42 @@ namespace IdeoBEM
         for (auto dof_index : local_dof_indices)
           {
             dof_to_cell_topo[dof_index].push_back(&cell);
+          }
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  build_dof_to_cell_topology(
+    DofToCellTopology<dim, spacedim> &dof_to_cell_topo,
+    const std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+                                    &cell_iterators_in_dof_handler,
+    const DoFHandler<dim, spacedim> &dof_handler,
+    const unsigned int               fe_index = 0)
+  {
+    const types::global_dof_index        n_dofs = dof_handler.n_dofs();
+    const FiniteElement<dim, spacedim>  &fe     = dof_handler.get_fe(fe_index);
+    const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
+    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+    dof_to_cell_topo.topology.resize(n_dofs);
+    dof_to_cell_topo.max_cells_per_dof = 0;
+
+    for (const auto &cell : cell_iterators_in_dof_handler)
+      {
+        cell->get_dof_indices(local_dof_indices);
+        for (auto dof_index : local_dof_indices)
+          {
+            dof_to_cell_topo.topology[dof_index].push_back(&cell);
+          }
+      }
+
+    for (const auto &dof_to_cells : dof_to_cell_topo.topology)
+      {
+        if (dof_to_cells.size() > dof_to_cell_topo.max_cells_per_dof)
+          {
+            dof_to_cell_topo.max_cells_per_dof = dof_to_cells.size();
           }
       }
   }
@@ -749,6 +802,8 @@ namespace IdeoBEM
 
   namespace CUDAWrappers
   {
+    extern cudaDeviceProp device_properties;
+
     /**
      * Determine the dimensions of block rectangle and thread rectangle for CUDA
      * parallelization over Sauter quadrature points.
@@ -2338,7 +2393,7 @@ namespace IdeoBEM
 
       /**
        * List of permuted mapping support points in \f$K_x\f$, which are stored
-       * on the device.
+       * on the host.
        *
        * 1. First dimension: task index in the ring buffer.
        * 2. Second dimension: point index in the permuted mapping support points
@@ -2349,7 +2404,7 @@ namespace IdeoBEM
 
       /**
        * List of permuted mapping support points in \f$K_y\f$, which are stored
-       * on the device.
+       * on the host.
        *
        * 1. First dimension: task index in the ring buffer.
        * 2. Second dimension: point index in the permuted mapping support points
@@ -2512,6 +2567,229 @@ namespace IdeoBEM
        * be claimed to add.
        */
       unsigned int tail_pending;
+    };
+
+
+    /**
+     * Buffer class for the assembly of a row or column vector in an \hmat.
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    class SauterQuadratureTaskBufferForVector
+    {
+    public:
+      /**
+       * Constructor
+       *
+       * \mynote{The product of @p max_cells_per_dof_in_test_space and
+       * @p max_cells_per_dof_in_ansatz_space is used to estimate the number of
+       * pairs of cells contributing to a same pair of global DoFs.}
+       *
+       * @param v_vector_size
+       * @param max_cells_per_dof_in_test_space
+       * @param max_cells_per_dof_in_ansatz_space
+       * @param bem_values
+       * @param stream
+       */
+      SauterQuadratureTaskBufferForVector(
+        const unsigned int              v_vector_size,
+        const unsigned int              max_cells_per_dof_in_test_space,
+        const unsigned int              max_cells_per_dof_in_ansatz_space,
+        const BEMValues<dim, spacedim> &bem_values,
+        const cudaStream_t              stream);
+
+      /**
+       * Reinitialize the buffer to be used for another vector having the same
+       * size as before.
+       */
+      void
+      reinit();
+
+      /**
+       * Destructor
+       */
+      ~SauterQuadratureTaskBufferForVector();
+
+      /**
+       * Add a Sauter quadrature task to the buffer, the data of which are still
+       * on the host.
+       *
+       * @param i_local_index
+       * @param j_local_index
+       * @param scratch_data
+       */
+      void
+      add_task(const unsigned int i_local_index,
+               const unsigned int j_local_index,
+               const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                 &scratch_data);
+
+      /**
+       * Copy data from host to device and process all Sauter quadrature tasks
+       * in the buffer, which are used for build a whole row or column vector in
+       * the far field \hmat.
+       */
+      template <template <int, typename> typename KernelFunctionType>
+      void
+      process_tasks(
+        Vector<RangeNumberType>                             &hmat_vector,
+        const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+        const RangeNumberType                                kernel_factor,
+        const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+        const unsigned int                                   task_num_per_block,
+        const unsigned int block_size_for_quad_result_accumulation,
+        const cudaStream_t cuda_stream_handle);
+
+      void
+      compute_vector(Vector<RangeNumberType> &vec);
+
+      /**
+       * CUDA stream.
+       *
+       * \mynote{This CUDA stream handle is copied from that held within the
+       * scratch data. This class is not responsible for the creation and
+       * destroy of this handle.}
+       */
+      cudaStream_t cuda_stream_handle;
+
+      /**
+       * Number of elements in the row or column vector.
+       */
+      unsigned int vector_size;
+
+      /**
+       * Capacity of the task buffer, which is
+       * @p vector_size*max_cells_per_dof_in_test_space*max_cells_per_dof_in_ansatz_space.
+       */
+      unsigned int capacity;
+
+      /**
+       * Number of quadrature points.
+       *
+       * \mynote{For building far field \hmats, the cell neighboring type can
+       * only be @p regular, therefore the number of quadrature points is the
+       * size of the quadrature rule for this regular case, which can be
+       * acquired from @p BEMValues.}
+       */
+      unsigned int quad_point_num;
+
+      /**
+       * Actual number of Sauter quadrature tasks in the buffer.
+       */
+      unsigned int task_num;
+
+      unsigned int *starting_task_indices_for_dof_pairs_cpu;
+      unsigned int *starting_task_indices_for_dof_pairs_gpu;
+
+      /**
+       * List of permuted mapping support points in \f$K_x\f$, which are stored
+       * on the host.
+       *
+       * 1. First dimension: task index in the buffer.
+       * 2. Second dimension: point index in the permuted mapping support points
+       * in \f$K_x\f$.
+       */
+      Table<2, Point<spacedim, RangeNumberType>>
+        kx_mapping_support_points_permuted_buffer_cpu;
+
+      /**
+       * List of permuted mapping support points in \f$K_y\f$, which are stored
+       * on the host.
+       *
+       * 1. First dimension: task index in the buffer.
+       * 2. Second dimension: point index in the permuted mapping support points
+       * in \f$K_y\f$.
+       */
+      Table<2, Point<spacedim, RangeNumberType>>
+        ky_mapping_support_points_permuted_buffer_cpu;
+
+      /**
+       * List of permuted mapping support points in \f$K_x\f$, which are stored
+       * on the device.
+       *
+       * 1. First dimension: task index in the buffer.
+       * 2. Second dimension: point index in the permuted mapping support points
+       * in \f$K_x\f$.
+       *
+       * \mynote{Because @p CUDATable class is adopted for storing the list of
+       * permuted mapping support points, the size of its second dimension is
+       * constant, which prescribes that all cells in the mesh adopt a same
+       * mapping object.
+       *
+       * TODO When different mapping objects are adopted for different
+       * subdomains, this should be modified accordingly.}
+       */
+      CUDATable<2, Point<spacedim, RangeNumberType>>
+        kx_mapping_support_points_permuted_buffer_gpu;
+
+      /**
+       * List of permuted mapping support points in \f$K_y\f$, which are stored
+       * on the device.
+       *
+       * 1. First dimension: task index in the buffer.
+       * 2. Second dimension: point index in the permuted mapping support points
+       * in \f$K_y\f$.
+       *
+       * \mynote{Because @p CUDATable class is adopted for storing the list of
+       * permuted mapping support points, the size of its second dimension is
+       * constant, which prescribes that all cells in the mesh adopt a same
+       * mapping object.
+       *
+       * TODO When different mapping objects are adopted for different
+       * subdomains, this should be modified accordingly.}
+       */
+      CUDATable<2, Point<spacedim, RangeNumberType>>
+        ky_mapping_support_points_permuted_buffer_gpu;
+
+      /**
+       * Array of local indices for accessing global DoF indices in \f$K_x\f$,
+       * which are stored on the host.
+       */
+      unsigned int *i_local_index_buffer_cpu;
+
+      /**
+       * Array of local indices for accessing global DoF indices in \f$K_y\f$,
+       * which are stored on the host.
+       */
+      unsigned int *j_local_index_buffer_cpu;
+
+      /**
+       * Array of local DoF indices in \f$K_x\f$ corresponding to the global DoF
+       * index \f$i\f$.
+       *
+       * \mynote{Because the local index associated with the global DoF @p i
+       * will be used during the evaluation Sauter quadrature, this array is
+       * allocated on the device.}
+       */
+      unsigned int *i_local_index_buffer_gpu;
+
+      /**
+       * Array of local DoF indices in \f$K_y\f$ corresponding to the global DoF
+       * index \f$j\f$.
+       *
+       * \mynote{Because the local index associated with the global DoF @p j
+       * will be used during the evaluation Sauter quadrature, this array is
+       * allocated on the device.}
+       */
+      unsigned int *j_local_index_buffer_gpu;
+
+      /**
+       * Values at all quadrature points on the device, which need to be
+       * accumulated into the array @p vector_element_values_gpu, then copied
+       * into the row or column vector in the \hmat.
+       *
+       * The number of elements in this array is @p capacity*quad_point_num.
+       */
+      RangeNumberType *values_at_all_quad_points_gpu;
+
+      /**
+       * Vector element values on the device. The number of elements in this
+       * array is @p vector_size.
+       */
+      RangeNumberType *vector_element_values_gpu;
     };
 
 
@@ -3540,6 +3818,257 @@ namespace IdeoBEM
         }
     }
 
+
+    /**
+     * Process all Sauter quadrature tasks in the buffer which is used for
+     * assembling a row or column vector in a far field \hmat.
+     */
+    template <int dim,
+              int spacedim,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType = double>
+    __global__ void
+    process_sauter_tasks_in_buffer_for_far_field_hmat_vector(
+      const KernelFunctionType<spacedim, RangeNumberType> kernel,
+      const RangeNumberType                               kernel_factor,
+      CUDATable<2, Point<spacedim, RangeNumberType>>
+        kx_mapping_support_points_permuted_buffer,
+      CUDATable<2, Point<spacedim, RangeNumberType>>
+                         ky_mapping_support_points_permuted_buffer,
+      unsigned int      *i_local_index_buffer,
+      unsigned int      *j_local_index_buffer,
+      RangeNumberType   *values_at_all_quad_points_gpu,
+      const unsigned int task_num,
+      const unsigned int quad_point_num,
+      const CUDABEMValues<dim, spacedim, RangeNumberType> bem_values)
+    {
+      /**
+       * @internal We use a 2D thread block, the first dimension represents task
+       * index, while the second dimension represents quadrature point index.
+       */
+      const unsigned int task_index = blockIdx.x * blockDim.x + threadIdx.x;
+      const unsigned int quad_no    = blockIdx.y * blockDim.y + threadIdx.y;
+
+      RangeNumberType                      kx_jacobian, ky_jacobian;
+      Tensor<1, spacedim, RangeNumberType> kx_normal, ky_normal;
+      Point<spacedim, RangeNumberType>     kx_quad_point, ky_quad_point;
+      /**
+       * @internal Create a wrapper matrix for the covariant matrix
+       * on \f$K_x\f$. N.B. Only when the kernel function is
+       * @p HyperSingularRegular, this matrix will be evaluated.
+       */
+      RangeNumberType                 kx_covariant_matrix_data[spacedim * dim];
+      RangeNumberType                 ky_covariant_matrix_data[spacedim * dim];
+      CUDAFullMatrix<RangeNumberType> kx_covariant_matrix(
+        kx_covariant_matrix_data, spacedim, dim);
+      CUDAFullMatrix<RangeNumberType> ky_covariant_matrix(
+        ky_covariant_matrix_data, spacedim, dim);
+
+      if (task_index < task_num && quad_no < quad_point_num)
+        {
+          /**
+           * @internal Initialize the quadrature value stored in the register,
+           * which is efficient for accumulating values contributed from all
+           * \f$k_3\f$ terms and quadrature points.
+           */
+          RangeNumberType quad_value;
+
+          /**
+           * @internal Calculate Jacobians, normal vectors, covariant
+           * matrices and quadrature point coordinates in the real cell for
+           * the current quadrature point in \f$K_x\f$.
+           */
+          kx_jacobian = BEMTools::CUDAWrappers::
+            surface_jacobian_det_normal_vector_and_covariant(
+              0,
+              quad_no,
+              bem_values.kx_mapping_shape_grad_matrix_table_for_regular,
+              &kx_mapping_support_points_permuted_buffer(task_index, 0),
+              kx_normal,
+              kx_covariant_matrix,
+              false,
+              kernel.kernel_type == KernelType::HyperSingularRegular);
+
+          BEMTools::CUDAWrappers::
+            transform_quad_point_from_unit_to_permuted_real_cell(
+              0,
+              quad_no,
+              bem_values.kx_mapping_shape_value_table_for_regular,
+              &kx_mapping_support_points_permuted_buffer(task_index, 0),
+              kx_quad_point);
+
+          /**
+           * @internal Calculate Jacobians, normal vectors, covariant
+           * matrices and quadrature point coordinates in the real cell for
+           * the current quadrature point in \f$K_y\f$.
+           */
+          ky_jacobian = BEMTools::CUDAWrappers::
+            surface_jacobian_det_normal_vector_and_covariant(
+              0,
+              quad_no,
+              bem_values.ky_mapping_shape_grad_matrix_table_for_regular,
+              &ky_mapping_support_points_permuted_buffer(task_index, 0),
+              ky_normal,
+              ky_covariant_matrix,
+              false,
+              kernel.kernel_type == KernelType::HyperSingularRegular);
+
+          BEMTools::CUDAWrappers::
+            transform_quad_point_from_unit_to_permuted_real_cell(
+              0,
+              quad_no,
+              bem_values.ky_mapping_shape_value_table_for_regular,
+              &ky_mapping_support_points_permuted_buffer(task_index, 0),
+              ky_quad_point);
+
+          if (kernel.kernel_type == HyperSingularRegular)
+            {
+              /**
+               * @internal Extract the gradient values of the current
+               * shape function at the current quadrature point in the
+               * unit cells for \f$K_x\f$ and \f$K_y\f$.
+               */
+              RangeNumberType             kx_shape_grad_in_unit_cell[dim];
+              RangeNumberType             ky_shape_grad_in_unit_cell[dim];
+              CUDAVector<RangeNumberType> kx_shape_grad_in_unit_cell_vector(
+                kx_shape_grad_in_unit_cell, dim);
+              CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
+                ky_shape_grad_in_unit_cell, dim);
+
+              for (unsigned int d = 0; d < dim; d++)
+                {
+                  kx_shape_grad_in_unit_cell[d] =
+                    bem_values.kx_shape_grad_matrix_table_for_regular(
+                      0, quad_no, d, i_local_index_buffer[task_index]);
+                  ky_shape_grad_in_unit_cell[d] =
+                    bem_values.ky_shape_grad_matrix_table_for_regular(
+                      0, quad_no, d, j_local_index_buffer[task_index]);
+                }
+
+              /**
+               * Apply covariant transformation \f$JG^{-1}\f$ to the
+               * gradient tensors in the unit cells, then we get the
+               * gradient tensors in the real cells.
+               */
+              RangeNumberType             kx_shape_grad_in_real_cell[spacedim];
+              RangeNumberType             ky_shape_grad_in_real_cell[spacedim];
+              CUDAVector<RangeNumberType> kx_shape_grad_in_real_cell_vector(
+                kx_shape_grad_in_real_cell, spacedim);
+              CUDAVector<RangeNumberType> ky_shape_grad_in_real_cell_vector(
+                ky_shape_grad_in_real_cell, spacedim);
+
+              kx_covariant_matrix.vmult(kx_shape_grad_in_real_cell_vector,
+                                        kx_shape_grad_in_unit_cell_vector);
+              ky_covariant_matrix.vmult(ky_shape_grad_in_real_cell_vector,
+                                        ky_shape_grad_in_unit_cell_vector);
+
+              /**
+               * Calculate the surface gradient tensor of the shape
+               * functions, which is the cross product of normal vector
+               * and the volume gradient vector.
+               *
+               * \mynote{The cross product operation requires the input
+               * vectors to be transformed to tensors.}
+               */
+              Tensor<1, spacedim, RangeNumberType> kx_shape_surface_curl =
+                cross_product_3d(kx_normal, kx_shape_grad_in_real_cell_vector);
+              Tensor<1, spacedim, RangeNumberType> ky_shape_surface_curl =
+                cross_product_3d(ky_normal, ky_shape_grad_in_real_cell_vector);
+
+              quad_value =
+                kernel.value(kx_quad_point,
+                             ky_quad_point,
+                             kx_normal,
+                             ky_normal) *
+                kx_jacobian * ky_jacobian *
+                scalar_product(kx_shape_surface_curl, ky_shape_surface_curl) *
+                bem_values.quad_rule_for_regular.get_weights()[quad_no];
+            }
+          else
+            {
+              quad_value =
+                kernel.value(kx_quad_point,
+                             ky_quad_point,
+                             kx_normal,
+                             ky_normal) *
+                kx_jacobian * ky_jacobian *
+                bem_values.kx_shape_value_table_for_regular(
+                  i_local_index_buffer[task_index], 0, quad_no) *
+                bem_values.ky_shape_value_table_for_regular(
+                  j_local_index_buffer[task_index], 0, quad_no) *
+                bem_values.quad_rule_for_regular.get_weights()[quad_no];
+            }
+
+          /**
+           * @internal Save the scaled quadrature value to the result buffer.
+           */
+          values_at_all_quad_points_gpu[task_index * quad_point_num + quad_no] =
+            quad_value * kernel_factor;
+        }
+    }
+
+
+    /**
+     * Accumulate quadrature values at all quadrature points for all tasks
+     * associated with each vector element.
+     *
+     * @tparam RangeNumberType
+     * @param vector_size
+     * @param quad_point_num
+     * @param starting_task_indices_for_dof_pairs_gpu
+     * @param values_at_all_quad_points_gpu
+     * @param vector_element_values_gpu
+     */
+    template <typename RangeNumberType = double>
+    __global__ void
+    accumulate_quadrature_values_into_vector(
+      const unsigned int     vector_size,
+      const unsigned int     quad_point_num,
+      unsigned int          *starting_task_indices_for_dof_pairs_gpu,
+      const RangeNumberType *values_at_all_quad_points_gpu,
+      RangeNumberType       *vector_element_values_gpu)
+    {
+      /**
+       * @internal Here we use 1D thread block and the thread index @p idx is
+       * used as the element index in the vector.
+       */
+      const unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+      if (idx < vector_size)
+        {
+          /**
+           * @internal Accumulation of results into register variable.
+           */
+          RangeNumberType vector_element = 0.;
+
+          for (unsigned int task_index =
+                 starting_task_indices_for_dof_pairs_gpu[idx];
+               task_index < starting_task_indices_for_dof_pairs_gpu[idx + 1];
+               task_index++)
+            {
+              /**
+               * @internal For each Sauter quadrature task, there are
+               * @p quad_points_num number of values to be accumulated.
+               */
+              const unsigned int starting_index_in_result_vector =
+                task_index * quad_point_num;
+              for (unsigned int q = 0; q < quad_point_num; q++)
+                {
+                  vector_element += values_at_all_quad_points_gpu
+                    [starting_index_in_result_vector + q];
+                }
+            }
+
+          /**
+           * @internal Copy the accumulated results from register to global
+           * memory.
+           */
+          vector_element_values_gpu[idx] = vector_element;
+        }
+    }
+
+
     template <int capacity, int dim, int spacedim, typename RangeNumberType>
     __host__ void
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
@@ -4532,6 +5061,346 @@ namespace IdeoBEM
     }
 
 
+    template <int dim, int spacedim, typename RangeNumberType>
+    SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
+      SauterQuadratureTaskBufferForVector(
+        const unsigned int              v_vector_size,
+        const unsigned int              max_cells_per_dof_in_test_space,
+        const unsigned int              max_cells_per_dof_in_ansatz_space,
+        const BEMValues<dim, spacedim> &bem_values,
+        const cudaStream_t              stream)
+      : cuda_stream_handle(stream)
+      , vector_size(v_vector_size)
+      , capacity(vector_size * max_cells_per_dof_in_test_space *
+                 max_cells_per_dof_in_ansatz_space)
+      , quad_point_num(bem_values.quad_rule_for_regular.size())
+      , task_num(0)
+      , starting_task_indices_for_dof_pairs_cpu(nullptr)
+      , starting_task_indices_for_dof_pairs_gpu(nullptr)
+      , i_local_index_buffer_cpu(nullptr)
+      , j_local_index_buffer_cpu(nullptr)
+      , i_local_index_buffer_gpu(nullptr)
+      , j_local_index_buffer_gpu(nullptr)
+      , values_at_all_quad_points_gpu(nullptr)
+      , vector_element_values_gpu(nullptr)
+    {
+      /**
+       * @internal Allocate memory asynchronously on the device.
+       */
+      cudaError_t error_code;
+
+      error_code =
+        cudaMallocHost((void **)&starting_task_indices_for_dof_pairs_cpu,
+                       sizeof(unsigned int) * (vector_size + 1));
+      AssertCuda(error_code);
+      error_code =
+        cudaMallocAsync((void **)&starting_task_indices_for_dof_pairs_gpu,
+                        sizeof(unsigned int) * (vector_size + 1),
+                        cuda_stream_handle);
+      AssertCuda(error_code);
+
+      kx_mapping_support_points_permuted_buffer_gpu.allocate(
+        TableIndices<2>(capacity, bem_values.kx_mapping_data.n_shape_functions),
+        cuda_stream_handle);
+      ky_mapping_support_points_permuted_buffer_gpu.allocate(
+        TableIndices<2>(capacity, bem_values.ky_mapping_data.n_shape_functions),
+        cuda_stream_handle);
+
+      error_code = cudaMallocAsync((void **)&i_local_index_buffer_gpu,
+                                   capacity * sizeof(unsigned int),
+                                   cuda_stream_handle);
+      AssertCuda(error_code);
+      error_code = cudaMallocAsync((void **)&j_local_index_buffer_gpu,
+                                   capacity * sizeof(unsigned int),
+                                   cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code =
+        cudaMallocAsync((void **)&values_at_all_quad_points_gpu,
+                        capacity * quad_point_num * sizeof(RangeNumberType),
+                        cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code = cudaMallocAsync((void **)&vector_element_values_gpu,
+                                   vector_size * sizeof(RangeNumberType),
+                                   cuda_stream_handle);
+      AssertCuda(error_code);
+
+      /**
+       * @internal Allocate memory on the host.
+       *
+       * \mynote{These operations are placed after asynchronous memory
+       * allocations on the device, in order that they can run in parallel.}
+       */
+      kx_mapping_support_points_permuted_buffer_cpu.reinit(
+        TableIndices<2>(capacity,
+                        bem_values.kx_mapping_data.n_shape_functions));
+      error_code = cudaHostRegister(
+        (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0)),
+        kx_mapping_support_points_permuted_buffer_cpu.n_elements() *
+          sizeof(Point<spacedim, RangeNumberType>),
+        0);
+      AssertCuda(error_code);
+
+      ky_mapping_support_points_permuted_buffer_cpu.reinit(
+        TableIndices<2>(capacity,
+                        bem_values.ky_mapping_data.n_shape_functions));
+      error_code = cudaHostRegister(
+        (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0)),
+        ky_mapping_support_points_permuted_buffer_cpu.n_elements() *
+          sizeof(Point<spacedim, RangeNumberType>),
+        0);
+      AssertCuda(error_code);
+
+      error_code = cudaMallocHost((void **)&i_local_index_buffer_cpu,
+                                  capacity * sizeof(unsigned int));
+      AssertCuda(error_code);
+      error_code = cudaMallocHost((void **)&j_local_index_buffer_cpu,
+                                  capacity * sizeof(unsigned int));
+      AssertCuda(error_code);
+    }
+
+
+    template <int dim, int spacedim, typename RangeNumberType>
+    SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
+      ~SauterQuadratureTaskBufferForVector()
+    {
+      cudaError_t error_code;
+
+      if (starting_task_indices_for_dof_pairs_cpu != nullptr)
+        {
+          error_code = cudaFreeHost(starting_task_indices_for_dof_pairs_cpu);
+          AssertCuda(error_code);
+        }
+
+      if (starting_task_indices_for_dof_pairs_gpu != nullptr)
+        {
+          error_code = cudaFreeAsync(starting_task_indices_for_dof_pairs_gpu,
+                                     cuda_stream_handle);
+          AssertCuda(error_code);
+        }
+
+      kx_mapping_support_points_permuted_buffer_gpu.release(cuda_stream_handle);
+      ky_mapping_support_points_permuted_buffer_gpu.release(cuda_stream_handle);
+
+      if (i_local_index_buffer_gpu != nullptr)
+        {
+          error_code =
+            cudaFreeAsync(i_local_index_buffer_gpu, cuda_stream_handle);
+          AssertCuda(error_code);
+        }
+
+      if (j_local_index_buffer_gpu != nullptr)
+        {
+          error_code =
+            cudaFreeAsync(j_local_index_buffer_gpu, cuda_stream_handle);
+          AssertCuda(error_code);
+        }
+
+      if (values_at_all_quad_points_gpu != nullptr)
+        {
+          error_code =
+            cudaFreeAsync(values_at_all_quad_points_gpu, cuda_stream_handle);
+          AssertCuda(error_code);
+        }
+
+      if (vector_element_values_gpu != nullptr)
+        {
+          error_code =
+            cudaFreeAsync(vector_element_values_gpu, cuda_stream_handle);
+          AssertCuda(error_code);
+        }
+
+      error_code = cudaHostUnregister(
+        (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0)));
+      AssertCuda(error_code);
+
+      error_code = cudaHostUnregister(
+        (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0)));
+      AssertCuda(error_code);
+
+      if (i_local_index_buffer_cpu != nullptr)
+        {
+          error_code = cudaFreeHost(i_local_index_buffer_cpu);
+          AssertCuda(error_code);
+        }
+
+      if (j_local_index_buffer_cpu != nullptr)
+        {
+          error_code = cudaFreeHost(j_local_index_buffer_cpu);
+          AssertCuda(error_code);
+        }
+
+      vector_size    = 0;
+      capacity       = 0;
+      quad_point_num = 0;
+    }
+
+
+    template <int dim, int spacedim, typename RangeNumberType>
+    void
+    SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
+      reinit()
+    {
+      /**
+       * @internal Reset the number of quadrature tasks to zero.
+       */
+      task_num = 0;
+    }
+
+
+    template <int dim, int spacedim, typename RangeNumberType>
+    void
+    SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
+      add_task(const unsigned int i_local_index,
+               const unsigned int j_local_index,
+               const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                 &scratch_data)
+    {
+      AssertIndexRange(task_num, capacity);
+
+      /**
+       * @internal Copy task data to host, which include the array indices to
+       * access DoF indices in the cell and the permuted mapping support points.
+       */
+      i_local_index_buffer_cpu[task_num] = i_local_index;
+      j_local_index_buffer_cpu[task_num] = j_local_index;
+
+      for (unsigned int i = 0;
+           i < scratch_data.kx_mapping_support_points_permuted.size();
+           i++)
+        {
+          kx_mapping_support_points_permuted_buffer_cpu(task_num, i) =
+            scratch_data.kx_mapping_support_points_permuted[i];
+        }
+
+      for (unsigned int i = 0;
+           i < scratch_data.ky_mapping_support_points_permuted.size();
+           i++)
+        {
+          ky_mapping_support_points_permuted_buffer_cpu(task_num, i) =
+            scratch_data.ky_mapping_support_points_permuted[i];
+        }
+
+      /**
+       * @internal Increase the task counter.
+       */
+      task_num++;
+    }
+
+
+    template <int dim, int spacedim, typename RangeNumberType>
+    template <template <int, typename> typename KernelFunctionType>
+    void
+    SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
+      process_tasks(
+        Vector<RangeNumberType>                             &hmat_vector,
+        const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+        const RangeNumberType                                kernel_factor,
+        const CUDABEMValues<dim, spacedim, RangeNumberType> &bem_values,
+        const unsigned int                                   task_num_per_block,
+        const unsigned int block_size_for_quad_result_accumulation,
+        const cudaStream_t cuda_stream_handle)
+    {
+      cudaError_t error_code;
+
+      /**
+       * @internal Copy task data from host to device.
+       */
+      kx_mapping_support_points_permuted_buffer_gpu.assign_from_host(
+        &(kx_mapping_support_points_permuted_buffer_cpu(0, 0)),
+        0,
+        task_num * kx_mapping_support_points_permuted_buffer_cpu.size(1),
+        cuda_stream_handle);
+      ky_mapping_support_points_permuted_buffer_gpu.assign_from_host(
+        &(ky_mapping_support_points_permuted_buffer_cpu(0, 0)),
+        0,
+        task_num * ky_mapping_support_points_permuted_buffer_cpu.size(1),
+        cuda_stream_handle);
+
+      error_code = cudaMemcpyAsync((void *)i_local_index_buffer_gpu,
+                                   (void *)i_local_index_buffer_cpu,
+                                   sizeof(unsigned int) * task_num,
+                                   cudaMemcpyHostToDevice,
+                                   cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code = cudaMemcpyAsync((void *)j_local_index_buffer_gpu,
+                                   (void *)j_local_index_buffer_cpu,
+                                   sizeof(unsigned int) * task_num,
+                                   cudaMemcpyHostToDevice,
+                                   cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code =
+        cudaMemcpyAsync((void *)starting_task_indices_for_dof_pairs_gpu,
+                        (void *)starting_task_indices_for_dof_pairs_cpu,
+                        sizeof(unsigned int) * (vector_size + 1),
+                        cudaMemcpyHostToDevice,
+                        cuda_stream_handle);
+      AssertCuda(error_code);
+
+      /**
+       * @internal Process all Sauter quadrature tasks to the
+       * buffer for assembling the row or column vector.
+       */
+      const unsigned int quad_point_num_per_block =
+        device_properties.maxThreadsPerBlock / 2 / task_num_per_block;
+
+      dim3 threads_rect(task_num_per_block, quad_point_num_per_block);
+      dim3 blocks_rect((task_num + task_num_per_block - 1) / task_num_per_block,
+                       (quad_point_num + quad_point_num_per_block - 1) /
+                         quad_point_num_per_block);
+
+      /**
+       * @internal Evaluation at all quadrature points for all tasks.
+       */
+      process_sauter_tasks_in_buffer_for_far_field_hmat_vector<<<
+        blocks_rect,
+        threads_rect,
+        0,
+        cuda_stream_handle>>>(kernel,
+                              kernel_factor,
+                              kx_mapping_support_points_permuted_buffer_gpu,
+                              ky_mapping_support_points_permuted_buffer_gpu,
+                              i_local_index_buffer_gpu,
+                              j_local_index_buffer_gpu,
+                              values_at_all_quad_points_gpu,
+                              task_num,
+                              quad_point_num,
+                              bem_values);
+
+      /**
+       * Accumulate quadrature results for each vector element.
+       */
+      const unsigned int block_num_for_quad_result_accumulation =
+        (vector_size + block_size_for_quad_result_accumulation - 1) /
+        block_size_for_quad_result_accumulation;
+      accumulate_quadrature_values_into_vector<<<
+        block_num_for_quad_result_accumulation,
+        block_size_for_quad_result_accumulation,
+        0,
+        cuda_stream_handle>>>(vector_size,
+                              quad_point_num,
+                              starting_task_indices_for_dof_pairs_gpu,
+                              values_at_all_quad_points_gpu,
+                              vector_element_values_gpu);
+
+      /**
+       * Copy vector element values from device to host.
+       */
+      error_code = cudaMemcpyAsync((void *)hmat_vector.data(),
+                                   (void *)vector_element_values_gpu,
+                                   sizeof(RangeNumberType) * vector_size,
+                                   cudaMemcpyDeviceToHost,
+                                   cuda_stream_handle);
+      AssertCuda(error_code);
+
+      error_code = cudaStreamSynchronize(cuda_stream_handle);
+      AssertCuda(error_code);
+    }
+
+
     /**
      * Iterate over each matrix entry of the full matrices in the collection
      * of near field \hmatrices and add it as a Sauter quadrature task.
@@ -5290,6 +6159,9 @@ namespace IdeoBEM
      * global DoF indices in the external numbering with respect to the
      * complete DoF set in the DoF handler.
      *
+     * The created tasks are added to the ring buffer with the corresponding
+     * cell neighboring type.
+     *
      * @tparam dim
      * @tparam spacedim
      * @tparam RangeNumberType
@@ -5380,13 +6252,10 @@ namespace IdeoBEM
           /**
            * @internal Calculate the real support points in the cell \f$K_x\f$
            * via the mapping object. Because the calculated mapping support
-           * points are
-           * stored in a member variable in the mapping object @p kx_mapping and
-           * the caller @p fill_hmatrix_leaf_node_with_aca_plus of this function
-           * will be executed in several TBB threads, computation of the
-           * mapping support points should be performed in thread dependent
-           * local copies
-           * of @p kx_mapping.
+           * points are stored in a member variable in the mapping object
+           * @p kx_mapping and the current function will called by several
+           * producer threads, computation of the mapping support points should
+           * be performed in a local copy of @p kx_mapping.
            */
           MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
           kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
@@ -5574,8 +6443,8 @@ namespace IdeoBEM
      * Create Sauter quadrature tasks which are associated with a pair of
      * global DoF indices in the external numbering with respect to the
      * complete set of DoFs in the DoF handler. This version handles the case
-     * when a mass
-     * matrix (scaled by @p mass_matrix_factor) is to be added to the bilinear form.
+     * when a mass matrix (scaled by @p mass_matrix_factor) is to be added to
+     * the bilinear form.
      *
      * \mynote{Before performing the Sauter quadrature, we first compute the
      * mass matrix entry if needed. The final result will be the addition of
@@ -5676,13 +6545,10 @@ namespace IdeoBEM
           /**
            * @internal Calculate the real support points in the cell \f$K_x\f$
            * via the mapping object. Because the calculated mapping support
-           * points are
-           * stored in a member variable in the mapping object @p kx_mapping and
-           * the caller @p fill_hmatrix_leaf_node_with_aca_plus of this function
-           * will be executed in several TBB threads, computation of the
-           * mapping support points should be performed in thread dependent
-           * local copies
-           * of @p kx_mapping.
+           * points are stored in a member variable in the mapping object
+           * @p kx_mapping and the current function will called by several
+           * producer threads, computation of the mapping support points should
+           * be performed in a local copy of @p kx_mapping.
            */
           MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
           kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
@@ -6002,6 +6868,159 @@ namespace IdeoBEM
                 }
             }
         }
+    }
+
+
+    /**
+     * This version is used for assembling a row or column vector in a far field
+     * \hmat.
+     *
+     * \mynote{The cell neighboring type for each pair of cells is @p regular.}
+     *
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam RangeNumberType
+     * @param task_buffer
+     * @param vector_element_index
+     * @param i_global_dof_index
+     * @param j_global_dof_index
+     * @param kx_dof_to_cell_topo
+     * @param ky_dof_to_cell_topo
+     * @param kx_dof_handler
+     * @param ky_dof_handler
+     * @param kx_mapping
+     * @param ky_mapping
+     * @param scratch_data
+     * @param copy_data
+     * @return Number of Sauter quadrature tasks for the pair of DoFs.
+     */
+    template <int dim, int spacedim, typename RangeNumberType = double>
+    unsigned int
+    create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                   &task_buffer,
+      const types::global_dof_index i_global_dof_index,
+      const types::global_dof_index j_global_dof_index,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+        &kx_dof_to_cell_topo,
+      const std::vector<
+        std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                              &ky_dof_to_cell_topo,
+      const DoFHandler<dim, spacedim>         &kx_dof_handler,
+      const DoFHandler<dim, spacedim>         &ky_dof_handler,
+      const MappingQGenericExt<dim, spacedim> &kx_mapping,
+      const MappingQGenericExt<dim, spacedim> &ky_mapping,
+      PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+      PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    {
+      unsigned int number_of_tasks_for_dof_pair = 0;
+
+      /**
+       * Iterate over each cell in the support of the basis function
+       * associated with the i-th global DoF in the external numbering.
+       */
+      for (auto kx_cell_iter_pointer : kx_dof_to_cell_topo[i_global_dof_index])
+        {
+          const typename DoFHandler<dim, spacedim>::cell_iterator
+            &kx_cell_iter = *kx_cell_iter_pointer;
+
+          /**
+           * @internal Calculate the real support points in the cell \f$K_x\f$
+           * via the mapping object. Because the calculated mapping support
+           * points are stored in a member variable in the mapping object
+           * @p kx_mapping and the current function will called by several
+           * producer threads, computation of the mapping support points should
+           * be performed in a local copy of @p kx_mapping.
+           */
+          MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+          kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+          /**
+           * Copy the newly calculated support points into @p ScratchData.
+           */
+          scratch_data.kx_mapping_support_points_in_default_order =
+            kx_mapping_copy.get_support_points();
+          /**
+           * Update the DoF indices.
+           */
+          kx_cell_iter->get_dof_indices(
+            scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+          /**
+           * Iterate over each cell in the support of the basis function
+           * associated with the j-th global DoF in the external numbering.
+           */
+          for (auto ky_cell_iter_pointer :
+               ky_dof_to_cell_topo[j_global_dof_index])
+            {
+              const typename DoFHandler<dim, spacedim>::cell_iterator
+                &ky_cell_iter = *ky_cell_iter_pointer;
+
+              /**
+               * @internal Similar to making a local copy of @p kx_mapping.
+               */
+              MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+              ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+              /**
+               * Copy the newly calculated support points into @p ScratchData.
+               */
+              scratch_data.ky_mapping_support_points_in_default_order =
+                ky_mapping_copy.get_support_points();
+              /**
+               * Update the DoF indices.
+               */
+              ky_cell_iter->get_dof_indices(
+                scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+              permute_dofs_and_mapping_support_points_for_sauter_quad(
+                scratch_data,
+                copy_data,
+                CellNeighboringType::Regular,
+                kx_cell_iter,
+                ky_cell_iter,
+                kx_mapping_copy,
+                ky_mapping_copy);
+
+              /**
+               * @internal Find the array index in the permuted DoF indices of
+               * \f$K_x\f$ for the i-th global DoF in the external numbering
+               * with respect to the complete DoF set in the DoF handler.
+               *
+               * \mynote{The permuted cell DoF indices are stored in the
+               * @p CopyData.}
+               */
+              typename std::vector<types::global_dof_index>::const_iterator
+                i_iter =
+                  std::find(copy_data.kx_local_dof_indices_permuted.begin(),
+                            copy_data.kx_local_dof_indices_permuted.end(),
+                            i_global_dof_index);
+              Assert(i_iter != copy_data.kx_local_dof_indices_permuted.end(),
+                     ExcInternalError());
+              unsigned int i_index =
+                i_iter - copy_data.kx_local_dof_indices_permuted.begin();
+
+              /**
+               * @internal Find the array index in the permuted DoF indices of
+               * \f$K_y\f$ for the j-th global DoF in the external numbering
+               * with respect to the complete DoF set in the DoF handler.
+               */
+              typename std::vector<types::global_dof_index>::const_iterator
+                j_iter =
+                  std::find(copy_data.ky_local_dof_indices_permuted.begin(),
+                            copy_data.ky_local_dof_indices_permuted.end(),
+                            j_global_dof_index);
+              Assert(j_iter != copy_data.ky_local_dof_indices_permuted.end(),
+                     ExcInternalError());
+              unsigned int j_index =
+                j_iter - copy_data.ky_local_dof_indices_permuted.begin();
+
+              task_buffer.add_task(i_index, j_index, scratch_data);
+
+              number_of_tasks_for_dof_pair++;
+            }
+        }
+
+      return number_of_tasks_for_dof_pair;
     }
   } // namespace CUDAWrappers
 

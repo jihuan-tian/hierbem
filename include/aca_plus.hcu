@@ -16,6 +16,7 @@
 
 #include <deal.II/lac/vector.h>
 
+#include <cuda_runtime.h>
 #include <tbb/tbb_thread.h>
 
 #include <algorithm>
@@ -302,6 +303,184 @@ namespace IdeoBEM
 
 
   /**
+   * Assemble a row vector by evaluating the Galerkin-BEM double integral with
+   * respect to the kernel. This version parallelizes over each vector element.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  assemble_kernel_row(
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                                        &task_buffer,
+    Vector<RangeNumberType>                             &row_vector,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const types::global_dof_index                        row_dof_index,
+    const std::vector<types::global_dof_index>          &column_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    AssertDimension(row_vector.size(), column_dof_indices.size());
+
+    task_buffer.reinit();
+
+    /**
+     * @internal Add all Sauter quadrature tasks to the buffer for assembling
+     * the row or column vector.
+     */
+    types::global_dof_index i_global_dof_index =
+      (kx_map_from_local_to_full_dof_indices == nullptr) ?
+        kx_dof_i2e_numbering[row_dof_index] :
+        kx_map_from_local_to_full_dof_indices->at(
+          kx_dof_i2e_numbering[row_dof_index]);
+    types::global_dof_index j_global_dof_index;
+
+    /**
+     * @internal Iterate over each column DoF index.
+     */
+    task_buffer.starting_task_indices_for_dof_pairs_cpu[0] = 0;
+    for (size_type j = 0; j < column_dof_indices.size(); j++)
+      {
+        j_global_dof_index =
+          (ky_map_from_local_to_full_dof_indices == nullptr) ?
+            ky_dof_i2e_numbering[column_dof_indices[j]] :
+            ky_map_from_local_to_full_dof_indices->at(
+              ky_dof_i2e_numbering[column_dof_indices[j]]);
+
+        task_buffer.starting_task_indices_for_dof_pairs_cpu[j + 1] =
+          task_buffer.starting_task_indices_for_dof_pairs_cpu[j] +
+          IdeoBEM::CUDAWrappers::
+            create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+              task_buffer,
+              i_global_dof_index,
+              j_global_dof_index,
+              kx_dof_to_cell_topo,
+              ky_dof_to_cell_topo,
+              kx_dof_handler,
+              ky_dof_handler,
+              kx_mapping,
+              ky_mapping,
+              scratch_data,
+              copy_data);
+      }
+
+    /**
+     * @internal Process all Sauter quadrature tasks and generate the vector.
+     */
+    task_buffer.process_tasks(row_vector,
+                              kernel,
+                              kernel_factor,
+                              bem_values_gpu,
+                              128,
+                              128,
+                              scratch_data.cuda_stream_handle);
+  }
+
+
+  /**
+   * Assemble a row vector by evaluating the Galerkin-BEM double integral with
+   * respect to the kernel. This version regularizes the kernel and parallelizes
+   * over each vector element.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  assemble_kernel_row(
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                                        &task_buffer,
+    Vector<RangeNumberType>                             &row_vector,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const Vector<RangeNumberType>                       &mass_vmult_weq,
+    const RangeNumberType                                stabilization_factor,
+    const types::global_dof_index                        row_dof_index,
+    const std::vector<types::global_dof_index>          &column_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    assemble_kernel_row(task_buffer,
+                        row_vector,
+                        kernel,
+                        kernel_factor,
+                        row_dof_index,
+                        column_dof_indices,
+                        kx_dof_to_cell_topo,
+                        ky_dof_to_cell_topo,
+                        bem_values,
+                        bem_values_gpu,
+                        kx_dof_handler,
+                        ky_dof_handler,
+                        kx_map_from_local_to_full_dof_indices,
+                        ky_map_from_local_to_full_dof_indices,
+                        kx_dof_i2e_numbering,
+                        ky_dof_i2e_numbering,
+                        kx_mapping,
+                        ky_mapping,
+                        scratch_data,
+                        scratch_data_gpu,
+                        copy_data);
+
+    for (size_type j = 0; j < column_dof_indices.size(); j++)
+      {
+        row_vector(j) += stabilization_factor * mass_vmult_weq(row_dof_index) *
+                         mass_vmult_weq(column_dof_indices[j]);
+      }
+  }
+
+
+  /**
    * Assemble a column vector by evaluating the Galerkin-BEM double integral
    * with respect to the kernel.
    *
@@ -339,7 +518,7 @@ namespace IdeoBEM
   assemble_kernel_column(
     Vector<RangeNumberType>                             &col_vector,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-    const RangeNumberType                                factor,
+    const RangeNumberType                                kernel_factor,
     const std::vector<types::global_dof_index>          &row_dof_indices,
     const types::global_dof_index                        col_dof_index,
     const std::vector<
@@ -388,7 +567,7 @@ namespace IdeoBEM
               kx_dof_i2e_numbering[row_dof_indices[i]]);
 
         col_vector(i) = sauter_assemble_on_one_pair_of_dofs(kernel,
-                                                            factor,
+                                                            kernel_factor,
                                                             i_global_dof_index,
                                                             j_global_dof_index,
                                                             kx_dof_to_cell_topo,
@@ -511,6 +690,182 @@ namespace IdeoBEM
                                                             scratch_data_gpu,
                                                             copy_data);
 
+        col_vector(i) += stabilization_factor *
+                         mass_vmult_weq(row_dof_indices[i]) *
+                         mass_vmult_weq(col_dof_index);
+      }
+  }
+
+
+  /**
+   * Assemble a column vector by evaluating the Galerkin-BEM double integral
+   * with respect to the kernel. This version parallelizes over each vector
+   * element.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  assemble_kernel_column(
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                                        &task_buffer,
+    Vector<RangeNumberType>                             &col_vector,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const std::vector<types::global_dof_index>          &row_dof_indices,
+    const types::global_dof_index                        col_dof_index,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    AssertDimension(col_vector.size(), row_dof_indices.size());
+
+    task_buffer.reinit();
+
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index =
+      (ky_map_from_local_to_full_dof_indices == nullptr) ?
+        ky_dof_i2e_numbering[col_dof_index] :
+        ky_map_from_local_to_full_dof_indices->at(
+          ky_dof_i2e_numbering[col_dof_index]);
+
+    /**
+     * @internal Iterate over each row DoF index.
+     */
+    task_buffer.starting_task_indices_for_dof_pairs_cpu[0] = 0;
+    for (size_type i = 0; i < row_dof_indices.size(); i++)
+      {
+        i_global_dof_index =
+          (kx_map_from_local_to_full_dof_indices == nullptr) ?
+            kx_dof_i2e_numbering[row_dof_indices[i]] :
+            kx_map_from_local_to_full_dof_indices->at(
+              kx_dof_i2e_numbering[row_dof_indices[i]]);
+
+        task_buffer.starting_task_indices_for_dof_pairs_cpu[i + 1] =
+          task_buffer.starting_task_indices_for_dof_pairs_cpu[i] +
+          IdeoBEM::CUDAWrappers::
+            create_sauter_quadrature_tasks_on_one_pair_of_dofs(
+              task_buffer,
+              i_global_dof_index,
+              j_global_dof_index,
+              kx_dof_to_cell_topo,
+              ky_dof_to_cell_topo,
+              kx_dof_handler,
+              ky_dof_handler,
+              kx_mapping,
+              ky_mapping,
+              scratch_data,
+              copy_data);
+      }
+
+    /**
+     * @internal Process all Sauter quadrature tasks and generate the vector.
+     */
+    task_buffer.process_tasks(col_vector,
+                              kernel,
+                              kernel_factor,
+                              bem_values_gpu,
+                              128,
+                              128,
+                              scratch_data.cuda_stream_handle);
+  }
+
+
+  /**
+   * Assemble a column vector by evaluating the Galerkin-BEM double integral
+   * with respect to the kernel. This version regularizes the kernel and
+   * parallelizes over each vector element.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  assemble_kernel_column(
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                                        &task_buffer,
+    Vector<RangeNumberType>                             &col_vector,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const Vector<RangeNumberType>                       &mass_vmult_weq,
+    const RangeNumberType                                stabilization_factor,
+    const std::vector<types::global_dof_index>          &row_dof_indices,
+    const types::global_dof_index                        col_dof_index,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    assemble_kernel_column(task_buffer,
+                           col_vector,
+                           kernel,
+                           kernel_factor,
+                           row_dof_indices,
+                           col_dof_index,
+                           kx_dof_to_cell_topo,
+                           ky_dof_to_cell_topo,
+                           bem_values,
+                           bem_values_gpu,
+                           kx_dof_handler,
+                           ky_dof_handler,
+                           kx_map_from_local_to_full_dof_indices,
+                           ky_map_from_local_to_full_dof_indices,
+                           kx_dof_i2e_numbering,
+                           ky_dof_i2e_numbering,
+                           kx_mapping,
+                           ky_mapping,
+                           scratch_data,
+                           scratch_data_gpu,
+                           copy_data);
+
+    for (size_type i = 0; i < row_dof_indices.size(); i++)
+      {
         col_vector(i) += stabilization_factor *
                          mass_vmult_weq(row_dof_indices[i]) *
                          mass_vmult_weq(col_dof_index);
@@ -796,6 +1151,292 @@ namespace IdeoBEM
              * Get the @p next_ref_row_index'th row from the kernel evaluation.
              */
             assemble_kernel_row(row_vector,
+                                kernel,
+                                kernel_factor,
+                                mass_vmult_weq,
+                                stabilization_factor,
+                                next_ref_row_dof_index,
+                                col_dof_indices,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
+                                bem_values,
+                                bem_values_gpu,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_map_from_local_to_full_dof_indices,
+                                ky_map_from_local_to_full_dof_indices,
+                                kx_dof_i2e_numbering,
+                                ky_dof_i2e_numbering,
+                                kx_mapping,
+                                ky_mapping,
+                                scratch_data,
+                                scratch_data_gpu,
+                                copy_data);
+
+            if (LinAlg::is_all_zero(row_vector))
+              {
+                /**
+                 * When the extracted row vector is zero-valued, remove the
+                 * corresponding row index from the @p remaining_row_indices
+                 * and continue another try.
+                 */
+                erase_at(remaining_row_indices, next_ref_row_selection_index);
+
+                continue;
+              }
+            else
+              {
+                /**
+                 * When the extracted row vector is not zero-valued, it is a
+                 * valid choice. Hence, return the selected row index.
+                 */
+                return next_ref_row_index;
+              }
+          }
+        else
+          {
+            if (size(remaining_row_indices) == 1)
+              {
+                /**
+                 * If there is only one row index left, there is no reference
+                 * row can be selected. Then return the invalid reference row
+                 * index.
+                 */
+                return pass_the_end_ref_row_index;
+              }
+            else
+              {
+                /**
+                 * Because the selected row for the next step is the same as
+                 * the current reference row, try another valid selection.
+                 */
+                continue;
+              }
+          }
+      }
+
+    return pass_the_end_ref_row_index;
+  }
+
+
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  size_type
+  random_select_ref_row(
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                                        &task_buffer,
+    Vector<RangeNumberType>                             &row_vector,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    std::forward_list<size_type>                        &remaining_row_indices,
+    const size_type                                      current_ref_row_index,
+    const size_type                             pass_the_end_ref_row_index,
+    const std::vector<types::global_dof_index> &row_dof_indices,
+    const std::vector<types::global_dof_index> &col_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    AssertDimension(row_vector.size(), col_dof_indices.size());
+
+    /**
+     * The array index used to access the @p std::forward_list
+     * @p remaining_row_indices.
+     */
+    size_type next_ref_row_selection_index;
+    /**
+     * The reference row index to be selected for the next ACA step.
+     */
+    size_type next_ref_row_index(row_dof_indices.size());
+    /**
+     * The row DoF index corresponding to the selected reference row index for
+     * the next ACA step.
+     */
+    types::global_dof_index next_ref_row_dof_index;
+
+    while (!remaining_row_indices.empty())
+      {
+        next_ref_row_selection_index =
+          generate_random_index(0, size(remaining_row_indices) - 1);
+        next_ref_row_index =
+          value_at(remaining_row_indices, next_ref_row_selection_index);
+        next_ref_row_dof_index = row_dof_indices[next_ref_row_index];
+
+        if (next_ref_row_index != current_ref_row_index)
+          {
+            /**
+             * Get the @p next_ref_row_index'th row from the kernel evaluation.
+             */
+            assemble_kernel_row(task_buffer,
+                                row_vector,
+                                kernel,
+                                kernel_factor,
+                                next_ref_row_dof_index,
+                                col_dof_indices,
+                                kx_dof_to_cell_topo,
+                                ky_dof_to_cell_topo,
+                                bem_values,
+                                bem_values_gpu,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_map_from_local_to_full_dof_indices,
+                                ky_map_from_local_to_full_dof_indices,
+                                kx_dof_i2e_numbering,
+                                ky_dof_i2e_numbering,
+                                kx_mapping,
+                                ky_mapping,
+                                scratch_data,
+                                scratch_data_gpu,
+                                copy_data);
+
+            if (LinAlg::is_all_zero(row_vector))
+              {
+                /**
+                 * When the extracted row vector is zero-valued, remove the
+                 * corresponding row index from the @p remaining_row_indices
+                 * and continue another try.
+                 */
+                erase_at(remaining_row_indices, next_ref_row_selection_index);
+
+                continue;
+              }
+            else
+              {
+                /**
+                 * When the extracted row vector is not zero-valued, it is a
+                 * valid choice. Hence, return the selected row index.
+                 */
+                return next_ref_row_index;
+              }
+          }
+        else
+          {
+            if (size(remaining_row_indices) == 1)
+              {
+                /**
+                 * If there is only one row index left, there is no reference
+                 * row can be selected. Then return the invalid reference row
+                 * index.
+                 */
+                return pass_the_end_ref_row_index;
+              }
+            else
+              {
+                /**
+                 * Because the selected row for the next step is the same as
+                 * the current reference row, try another valid selection.
+                 */
+                continue;
+              }
+          }
+      }
+
+    return pass_the_end_ref_row_index;
+  }
+
+
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  size_type
+  random_select_ref_row(
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                                        &task_buffer,
+    Vector<RangeNumberType>                             &row_vector,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const Vector<RangeNumberType>                       &mass_vmult_weq,
+    const RangeNumberType                                stabilization_factor,
+    std::forward_list<size_type>                        &remaining_row_indices,
+    const size_type                                      current_ref_row_index,
+    const size_type                             pass_the_end_ref_row_index,
+    const std::vector<types::global_dof_index> &row_dof_indices,
+    const std::vector<types::global_dof_index> &col_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    AssertDimension(row_vector.size(), col_dof_indices.size());
+
+    /**
+     * The array index used to access the @p std::forward_list
+     * @p remaining_row_indices.
+     */
+    size_type next_ref_row_selection_index;
+    /**
+     * The reference row index to be selected for the next ACA step.
+     */
+    size_type next_ref_row_index(row_dof_indices.size());
+    /**
+     * The row DoF index corresponding to the selected reference row index for
+     * the next ACA step.
+     */
+    types::global_dof_index next_ref_row_dof_index;
+
+    while (!remaining_row_indices.empty())
+      {
+        next_ref_row_selection_index =
+          generate_random_index(0, size(remaining_row_indices) - 1);
+        next_ref_row_index =
+          value_at(remaining_row_indices, next_ref_row_selection_index);
+        next_ref_row_dof_index = row_dof_indices[next_ref_row_index];
+
+        if (next_ref_row_index != current_ref_row_index)
+          {
+            /**
+             * Get the @p next_ref_row_index'th row from the kernel evaluation.
+             */
+            assemble_kernel_row(task_buffer,
+                                row_vector,
                                 kernel,
                                 kernel_factor,
                                 mass_vmult_weq,
@@ -1303,6 +1944,294 @@ namespace IdeoBEM
   }
 
 
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  size_type
+  random_select_ref_column(
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                                        &task_buffer,
+    Vector<RangeNumberType>                             &col_vector,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                factor,
+    std::forward_list<size_type>                        &remaining_col_indices,
+    const size_type                                      current_ref_col_index,
+    const size_type                             pass_the_end_ref_col_index,
+    const std::vector<types::global_dof_index> &row_dof_indices,
+    const std::vector<types::global_dof_index> &col_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    AssertDimension(col_vector.size(), row_dof_indices.size());
+
+    /**
+     * The array index used to access the @p std::forward_list
+     * @p remaining_col_indices.
+     */
+    size_type next_ref_col_selection_index;
+    /**
+     * The reference column index to be selected for the next ACA step.
+     */
+    size_type next_ref_col_index(col_dof_indices.size());
+    /**
+     * The column DoF index corresponding to the selected reference column
+     * index for the next ACA step.
+     */
+    types::global_dof_index next_ref_col_dof_index;
+
+    while (!remaining_col_indices.empty())
+      {
+        next_ref_col_selection_index =
+          generate_random_index(0, size(remaining_col_indices) - 1);
+        next_ref_col_index =
+          value_at(remaining_col_indices, next_ref_col_selection_index);
+        next_ref_col_dof_index = col_dof_indices[next_ref_col_index];
+
+        if (next_ref_col_index != current_ref_col_index)
+          {
+            /**
+             * Get the @p next_ref_col_index'th column from the kernel evaluation.
+             */
+            assemble_kernel_column(task_buffer,
+                                   col_vector,
+                                   kernel,
+                                   factor,
+                                   row_dof_indices,
+                                   next_ref_col_dof_index,
+                                   kx_dof_to_cell_topo,
+                                   ky_dof_to_cell_topo,
+                                   bem_values,
+                                   bem_values_gpu,
+                                   kx_dof_handler,
+                                   ky_dof_handler,
+                                   kx_map_from_local_to_full_dof_indices,
+                                   ky_map_from_local_to_full_dof_indices,
+                                   kx_dof_i2e_numbering,
+                                   ky_dof_i2e_numbering,
+                                   kx_mapping,
+                                   ky_mapping,
+                                   scratch_data,
+                                   scratch_data_gpu,
+                                   copy_data);
+
+            if (LinAlg::is_all_zero(col_vector))
+              {
+                /**
+                 * When the extracted column vector is zero-valued, remove the
+                 * corresponding column index from the @p remaining_col_indices
+                 * and continue another try.
+                 */
+                erase_at(remaining_col_indices, next_ref_col_selection_index);
+
+                continue;
+              }
+            else
+              {
+                /**
+                 * When the extracted column vector is not zero-valued, it is
+                 * a valid choice. Hence, return the selected column index.
+                 */
+                return next_ref_col_index;
+              }
+          }
+        else
+          {
+            if (size(remaining_col_indices) == 1)
+              {
+                /**
+                 * If there is only one column index left, there is no
+                 * reference column can be selected. Then return the invalid
+                 * reference column index.
+                 */
+                return pass_the_end_ref_col_index;
+              }
+            else
+              {
+                /**
+                 * Because the selected column for the next step is the same
+                 * as the current reference column, try another valid
+                 * selection.
+                 */
+                continue;
+              }
+          }
+      }
+
+    return pass_the_end_ref_col_index;
+  }
+
+
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  size_type
+  random_select_ref_column(
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+                                                        &task_buffer,
+    Vector<RangeNumberType>                             &col_vector,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const Vector<RangeNumberType>                       &mass_vmult_weq,
+    const RangeNumberType                                stabilization_factor,
+    std::forward_list<size_type>                        &remaining_col_indices,
+    const size_type                                      current_ref_col_index,
+    const size_type                             pass_the_end_ref_col_index,
+    const std::vector<types::global_dof_index> &row_dof_indices,
+    const std::vector<types::global_dof_index> &col_dof_indices,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                                    &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    AssertDimension(col_vector.size(), row_dof_indices.size());
+
+    /**
+     * The array index used to access the @p std::forward_list
+     * @p remaining_col_indices.
+     */
+    size_type next_ref_col_selection_index;
+    /**
+     * The reference column index to be selected for the next ACA step.
+     */
+    size_type next_ref_col_index(col_dof_indices.size());
+    /**
+     * The column DoF index corresponding to the selected reference column
+     * index for the next ACA step.
+     */
+    types::global_dof_index next_ref_col_dof_index;
+
+    while (!remaining_col_indices.empty())
+      {
+        next_ref_col_selection_index =
+          generate_random_index(0, size(remaining_col_indices) - 1);
+        next_ref_col_index =
+          value_at(remaining_col_indices, next_ref_col_selection_index);
+        next_ref_col_dof_index = col_dof_indices[next_ref_col_index];
+
+        if (next_ref_col_index != current_ref_col_index)
+          {
+            /**
+             * Get the @p next_ref_col_index'th column from the kernel evaluation.
+             */
+            assemble_kernel_column(task_buffer,
+                                   col_vector,
+                                   kernel,
+                                   kernel_factor,
+                                   mass_vmult_weq,
+                                   stabilization_factor,
+                                   row_dof_indices,
+                                   next_ref_col_dof_index,
+                                   kx_dof_to_cell_topo,
+                                   ky_dof_to_cell_topo,
+                                   bem_values,
+                                   bem_values_gpu,
+                                   kx_dof_handler,
+                                   ky_dof_handler,
+                                   kx_map_from_local_to_full_dof_indices,
+                                   ky_map_from_local_to_full_dof_indices,
+                                   kx_dof_i2e_numbering,
+                                   ky_dof_i2e_numbering,
+                                   kx_mapping,
+                                   ky_mapping,
+                                   scratch_data,
+                                   scratch_data_gpu,
+                                   copy_data);
+
+            if (LinAlg::is_all_zero(col_vector))
+              {
+                /**
+                 * When the extracted column vector is zero-valued, remove the
+                 * corresponding column index from the @p remaining_col_indices
+                 * and continue another try.
+                 */
+                erase_at(remaining_col_indices, next_ref_col_selection_index);
+
+                continue;
+              }
+            else
+              {
+                /**
+                 * When the extracted column vector is not zero-valued, it is
+                 * a valid choice. Hence, return the selected column index.
+                 */
+                return next_ref_col_index;
+              }
+          }
+        else
+          {
+            if (size(remaining_col_indices) == 1)
+              {
+                /**
+                 * If there is only one column index left, there is no
+                 * reference column can be selected. Then return the invalid
+                 * reference column index.
+                 */
+                return pass_the_end_ref_col_index;
+              }
+            else
+              {
+                /**
+                 * Because the selected column for the next step is the same
+                 * as the current reference column, try another valid
+                 * selection.
+                 */
+                continue;
+              }
+          }
+      }
+
+    return pass_the_end_ref_col_index;
+  }
+
+
   /**
    * For debugging purpose: randomly select a reference column index from the
    * remaining column indices for the next ACA step.
@@ -1434,7 +2363,7 @@ namespace IdeoBEM
     RkMatrix<RangeNumberType>                           &rkmat,
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-    const RangeNumberType                                factor,
+    const RangeNumberType                                kernel_factor,
     const std::array<types::global_dof_index, 2>        &row_dof_index_range,
     const std::array<types::global_dof_index, 2>        &col_dof_index_range,
     const std::vector<
@@ -1463,7 +2392,7 @@ namespace IdeoBEM
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
     /**
-     * Get the size of each dimension of the matrix block to be built.
+     * @internal Get the size of each dimension of the matrix block to be built.
      */
     const size_type m = row_dof_index_range[1] - row_dof_index_range[0];
     const size_type n = col_dof_index_range[1] - col_dof_index_range[0];
@@ -1475,11 +2404,9 @@ namespace IdeoBEM
      * Adjust the maximum ACA+ iteration if is larger than the matrix
      * dimension.
      */
-    unsigned int effective_max_iter = aca_config.max_iter;
-    if (effective_max_iter > std::min(m, n))
-      {
-        effective_max_iter = std::min(m, n);
-      }
+    unsigned int effective_max_iter = (aca_config.max_iter > std::min(m, n)) ?
+                                        std::min(m, n) :
+                                        aca_config.max_iter;
 
     /**
      * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -1523,7 +2450,7 @@ namespace IdeoBEM
 
     size_type r = random_select_ref_row(vr,
                                         kernel,
-                                        factor,
+                                        kernel_factor,
                                         remaining_row_indices,
                                         m,
                                         m,
@@ -1556,7 +2483,7 @@ namespace IdeoBEM
     size_type c =
       random_select_ref_column(uc,
                                kernel,
-                               factor,
+                               kernel_factor,
                                remaining_col_indices,
                                n,
                                n,
@@ -1673,7 +2600,7 @@ namespace IdeoBEM
              */
             assemble_kernel_row(vk,
                                 kernel,
-                                factor,
+                                kernel_factor,
                                 row_dof_indices[ik],
                                 col_dof_indices,
                                 kx_dof_to_cell_topo,
@@ -1734,7 +2661,7 @@ namespace IdeoBEM
              */
             assemble_kernel_column(uk,
                                    kernel,
-                                   factor,
+                                   kernel_factor,
                                    row_dof_indices,
                                    col_dof_indices[jk],
                                    kx_dof_to_cell_topo,
@@ -1776,7 +2703,7 @@ namespace IdeoBEM
              */
             assemble_kernel_column(uk,
                                    kernel,
-                                   factor,
+                                   kernel_factor,
                                    row_dof_indices,
                                    col_dof_indices[jk],
                                    kx_dof_to_cell_topo,
@@ -1823,7 +2750,7 @@ namespace IdeoBEM
              */
             assemble_kernel_row(vk,
                                 kernel,
-                                factor,
+                                kernel_factor,
                                 row_dof_indices[ik],
                                 col_dof_indices,
                                 kx_dof_to_cell_topo,
@@ -1886,7 +2813,7 @@ namespace IdeoBEM
              */
             r = random_select_ref_row(vr,
                                       kernel,
-                                      factor,
+                                      kernel_factor,
                                       remaining_row_indices,
                                       r,
                                       m,
@@ -1964,7 +2891,7 @@ namespace IdeoBEM
              */
             c = random_select_ref_column(uc,
                                          kernel,
-                                         factor,
+                                         kernel_factor,
                                          remaining_col_indices,
                                          c,
                                          n,
@@ -2160,11 +3087,9 @@ namespace IdeoBEM
      * Adjust the maximum ACA+ iteration if is larger than the matrix
      * dimension.
      */
-    unsigned int effective_max_iter = aca_config.max_iter;
-    if (effective_max_iter > std::min(m, n))
-      {
-        effective_max_iter = std::min(m, n);
-      }
+    unsigned int effective_max_iter = (aca_config.max_iter > std::min(m, n)) ?
+                                        std::min(m, n) :
+                                        aca_config.max_iter;
 
     /**
      * Generate lists of internal DoF indices (internal DoF numbering) from
@@ -2771,6 +3696,1510 @@ namespace IdeoBEM
               }
           }
       }
+  }
+
+
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  aca_plus(
+    RkMatrix<RangeNumberType>                           &rkmat,
+    const ACAConfig                                     &aca_config,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const std::array<types::global_dof_index, 2>        &row_dof_index_range,
+    const std::array<types::global_dof_index, 2>        &col_dof_index_range,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    /**
+     * @internal Get the size of each dimension of the matrix block to be built.
+     */
+    const size_type m = row_dof_index_range[1] - row_dof_index_range[0];
+    const size_type n = col_dof_index_range[1] - col_dof_index_range[0];
+
+    AssertDimension(rkmat.get_m(), m);
+    AssertDimension(rkmat.get_n(), n);
+
+    /**
+     * @internal Create Sauter task buffers for assembling row vectors and
+     * column vectors.
+     */
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+        sauter_task_buffer_for_row_vector(n,
+                                          kx_dof_to_cell_topo.max_cells_per_dof,
+                                          ky_dof_to_cell_topo.max_cells_per_dof,
+                                          bem_values,
+                                          scratch_data.cuda_stream_handle);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+        sauter_task_buffer_for_col_vector(m,
+                                          kx_dof_to_cell_topo.max_cells_per_dof,
+                                          ky_dof_to_cell_topo.max_cells_per_dof,
+                                          bem_values,
+                                          scratch_data.cuda_stream_handle);
+
+    /**
+     * Adjust the maximum ACA+ iteration if is larger than the matrix
+     * dimension.
+     */
+    unsigned int effective_max_iter = (aca_config.max_iter > std::min(m, n)) ?
+                                        std::min(m, n) :
+                                        aca_config.max_iter;
+
+    /**
+     * Generate lists of internal DoF indices (internal DoF numbering) from
+     * corresponding index ranges.
+     */
+    std::vector<types::global_dof_index> row_dof_indices(m);
+    std::vector<types::global_dof_index> col_dof_indices(n);
+    gen_linear_indices<vector_uta, types::global_dof_index>(
+      row_dof_indices, row_dof_index_range[0]);
+    gen_linear_indices<vector_uta, types::global_dof_index>(
+      col_dof_indices, col_dof_index_range[0]);
+
+    /**
+     * Create matrix references associated with the component matrices in the
+     * rank-k matrix to be returned, which hold the row and column vectors in
+     * the selected crosses during the ACA iteration. The number of columns
+     * should be the same as the maximum iteration number in @p aca_config.
+     */
+    AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
+    LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
+    LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
+    u_mat                                       = 0;
+    v_mat                                       = 0;
+
+    /**
+     * Generate two lists for storing remaining row indices and column indices
+     * of the matrix block.
+     */
+    std::forward_list<size_type> remaining_row_indices(m);
+    std::forward_list<size_type> remaining_col_indices(n);
+
+    gen_linear_indices<forward_list_uta, size_type>(remaining_row_indices);
+    gen_linear_indices<forward_list_uta, size_type>(remaining_col_indices);
+
+    /**
+     * Select the initial reference row and column vectors and return their
+     * matrix indices.
+     */
+    Vector<RangeNumberType> vr(n);
+    Vector<RangeNumberType> uc(m);
+
+    cudaError_t error_code;
+
+    error_code =
+      cudaHostRegister((void *)(vr.data()), sizeof(RangeNumberType) * n, 0);
+    AssertCuda(error_code);
+    error_code =
+      cudaHostRegister((void *)(uc.data()), sizeof(RangeNumberType) * m, 0);
+    AssertCuda(error_code);
+
+    size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
+                                        vr,
+                                        kernel,
+                                        kernel_factor,
+                                        remaining_row_indices,
+                                        m,
+                                        m,
+                                        row_dof_indices,
+                                        col_dof_indices,
+                                        kx_dof_to_cell_topo.topology,
+                                        ky_dof_to_cell_topo.topology,
+                                        bem_values,
+                                        bem_values_gpu,
+                                        kx_dof_handler,
+                                        ky_dof_handler,
+                                        kx_map_from_local_to_full_dof_indices,
+                                        ky_map_from_local_to_full_dof_indices,
+                                        kx_dof_i2e_numbering,
+                                        ky_dof_i2e_numbering,
+                                        kx_mapping,
+                                        ky_mapping,
+                                        scratch_data,
+                                        scratch_data_gpu,
+                                        copy_data);
+
+    if (r == m)
+      {
+        // When there is no reference row can be selected, the current matrix
+        // block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+
+        error_code = cudaHostUnregister((void *)(vr.data()));
+        AssertCuda(error_code);
+        error_code = cudaHostUnregister((void *)(uc.data()));
+        AssertCuda(error_code);
+
+        return;
+      }
+
+    size_type c =
+      random_select_ref_column(sauter_task_buffer_for_col_vector,
+                               uc,
+                               kernel,
+                               kernel_factor,
+                               remaining_col_indices,
+                               n,
+                               n,
+                               row_dof_indices,
+                               col_dof_indices,
+                               kx_dof_to_cell_topo.topology,
+                               ky_dof_to_cell_topo.topology,
+                               bem_values,
+                               bem_values_gpu,
+                               kx_dof_handler,
+                               ky_dof_handler,
+                               kx_map_from_local_to_full_dof_indices,
+                               ky_map_from_local_to_full_dof_indices,
+                               kx_dof_i2e_numbering,
+                               ky_dof_i2e_numbering,
+                               kx_mapping,
+                               ky_mapping,
+                               scratch_data,
+                               scratch_data_gpu,
+                               copy_data);
+
+    if (c == n)
+      {
+        // When there is no reference column can be selected, the current
+        // matrix block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+
+        error_code = cudaHostUnregister((void *)(vr.data()));
+        AssertCuda(error_code);
+        error_code = cudaHostUnregister((void *)(uc.data()));
+        AssertCuda(error_code);
+
+        return;
+      }
+
+    /**
+     * The absolute values for the reference row and column vectors.
+     */
+    Vector<RangeNumberType> vr_abs(n);
+    Vector<RangeNumberType> uc_abs(m);
+
+    /**
+     * Calculate the absolute values for the reference row and column
+     * vectors.
+     *
+     * \mynote{In the following, we use @p static_cast to explicitly
+     * specify which version of @p std::fabs to call.}
+     */
+    std::transform(vr.begin(),
+                   vr.end(),
+                   vr_abs.begin(),
+                   static_cast<RangeNumberType (*)(RangeNumberType)>(
+                     std::fabs));
+    std::transform(uc.begin(),
+                   uc.end(),
+                   uc_abs.begin(),
+                   static_cast<RangeNumberType (*)(RangeNumberType)>(
+                     std::fabs));
+
+    /**
+     * Row and column indices for the \f$k\f$'th step. The corresponding row
+     * and column vectors comprise the cross.
+     */
+    size_type ik, jk;
+
+    /**
+     * Temporary row and column vectors for the current step \f$k\f$.
+     */
+    Vector<RangeNumberType> vk(n);
+    Vector<RangeNumberType> uk(m);
+
+    error_code =
+      cudaHostRegister((void *)(vk.data()), sizeof(RangeNumberType) * n, 0);
+    AssertCuda(error_code);
+    error_code =
+      cudaHostRegister((void *)(uk.data()), sizeof(RangeNumberType) * m, 0);
+    AssertCuda(error_code);
+
+    /**
+     * The absolute values for the temporary row and column vectors for the
+     * current step \f$k\f$.
+     */
+    Vector<RangeNumberType> vk_abs(n);
+    Vector<RangeNumberType> uk_abs(m);
+
+    /**
+     * Temporary row and column vectors for the previous step \f$l\f$.
+     */
+    Vector<RangeNumberType> vl(n);
+    Vector<RangeNumberType> ul(m);
+
+    /**
+     * The error threshold as the stopping condition.
+     */
+    RangeNumberType error_threshold = 0.0;
+
+    /**
+     * Start the ACA+ iteration from \f$k=1\f$.
+     */
+    for (unsigned int k = 1; k <= effective_max_iter; k++)
+      {
+        /**
+         * Select the row index from the maximizer of the reference column.
+         */
+        // N.B. The function @p std::max_element return the iterator pointing
+        // to the maximum element in the list.
+        size_type i_star =
+          std::distance(uc_abs.begin(),
+                        std::max_element(uc_abs.begin(), uc_abs.end()));
+
+        /**
+         * Select the column index from the maximizer of the reference row.
+         */
+        size_type j_star =
+          std::distance(vr_abs.begin(),
+                        std::max_element(vr_abs.begin(), vr_abs.end()));
+
+        if (uc_abs(i_star) > vr_abs(j_star))
+          {
+            /**
+             * Select \f$i^*\f$ as the current row index \f$i_k\f$.
+             */
+            ik = i_star;
+
+            /**
+             * Extract the \f$i_k\f$'th row of \f$A\f$.
+             */
+            assemble_kernel_row(sauter_task_buffer_for_row_vector,
+                                vk,
+                                kernel,
+                                kernel_factor,
+                                row_dof_indices[ik],
+                                col_dof_indices,
+                                kx_dof_to_cell_topo.topology,
+                                ky_dof_to_cell_topo.topology,
+                                bem_values,
+                                bem_values_gpu,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_map_from_local_to_full_dof_indices,
+                                ky_map_from_local_to_full_dof_indices,
+                                kx_dof_i2e_numbering,
+                                ky_dof_i2e_numbering,
+                                kx_mapping,
+                                ky_mapping,
+                                scratch_data,
+                                scratch_data_gpu,
+                                copy_data);
+
+            /**
+             * \mynote{Here the counter \f$l\f$ iterates over all the previous
+             * steps before \f$k\f$. For each step, the row and column vectors
+             * comprising the cross have been stored as column vectors into
+             * @p v_mat and @p u_mat respectively. Hence, the index for
+             * extracting vectors from @p v_mat or @p u_mat should be
+             * \f$l-1\f$.}
+             */
+            for (size_type l = 1; l < k; l++)
+              {
+                /**
+                 * Extract the previous cross.
+                 */
+                u_mat.get_column(l - 1, ul);
+                v_mat.get_column(l - 1, vl);
+
+                vk.add(-ul(ik), vl);
+              }
+
+            /**
+             * Select the column index from the maximizer of the absolute
+             * values of \f$\widetilde{v}_k\f$.
+             */
+            std::transform(vk.begin(),
+                           vk.end(),
+                           vk_abs.begin(),
+                           static_cast<RangeNumberType (*)(RangeNumberType)>(
+                             std::fabs));
+            jk = std::distance(vk_abs.begin(),
+                               std::max_element(vk_abs.begin(), vk_abs.end()));
+
+            /**
+             * Scale the vector \f$\widetilde{v}_k\f$.
+             */
+            RangeNumberType value_at_cross = vk(jk);
+            vk /= value_at_cross;
+
+            /**
+             * Extract the \f$j_k\f$'th column from \f$A\f$.
+             */
+            assemble_kernel_column(sauter_task_buffer_for_col_vector,
+                                   uk,
+                                   kernel,
+                                   kernel_factor,
+                                   row_dof_indices,
+                                   col_dof_indices[jk],
+                                   kx_dof_to_cell_topo.topology,
+                                   ky_dof_to_cell_topo.topology,
+                                   bem_values,
+                                   bem_values_gpu,
+                                   kx_dof_handler,
+                                   ky_dof_handler,
+                                   kx_map_from_local_to_full_dof_indices,
+                                   ky_map_from_local_to_full_dof_indices,
+                                   kx_dof_i2e_numbering,
+                                   ky_dof_i2e_numbering,
+                                   kx_mapping,
+                                   ky_mapping,
+                                   scratch_data,
+                                   scratch_data_gpu,
+                                   copy_data);
+
+            for (size_type l = 1; l < k; l++)
+              {
+                /**
+                 * Extract the previous cross.
+                 */
+                u_mat.get_column(l - 1, ul);
+                v_mat.get_column(l - 1, vl);
+
+                uk.add(-vl(jk), ul);
+              }
+          }
+        else
+          {
+            /**
+             * Select \f$j^*\f$ as the current column index \f$j_k\f$.
+             */
+            jk = j_star;
+
+            /**
+             * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
+             */
+            assemble_kernel_column(sauter_task_buffer_for_col_vector,
+                                   uk,
+                                   kernel,
+                                   kernel_factor,
+                                   row_dof_indices,
+                                   col_dof_indices[jk],
+                                   kx_dof_to_cell_topo.topology,
+                                   ky_dof_to_cell_topo.topology,
+                                   bem_values,
+                                   bem_values_gpu,
+                                   kx_dof_handler,
+                                   ky_dof_handler,
+                                   kx_map_from_local_to_full_dof_indices,
+                                   ky_map_from_local_to_full_dof_indices,
+                                   kx_dof_i2e_numbering,
+                                   ky_dof_i2e_numbering,
+                                   kx_mapping,
+                                   ky_mapping,
+                                   scratch_data,
+                                   scratch_data_gpu,
+                                   copy_data);
+
+            for (size_type l = 1; l < k; l++)
+              {
+                /**
+                 * Extract the previous cross.
+                 */
+                u_mat.get_column(l - 1, ul);
+                v_mat.get_column(l - 1, vl);
+
+                uk.add(-vl(jk), ul);
+              }
+
+            /**
+             * Select the row index as the maximizer of the absolute values of
+             * \f$u_k\f$.
+             */
+            std::transform(uk.begin(),
+                           uk.end(),
+                           uk_abs.begin(),
+                           static_cast<RangeNumberType (*)(RangeNumberType)>(
+                             std::fabs));
+            ik = std::distance(uk_abs.begin(),
+                               std::max_element(uk_abs.begin(), uk_abs.end()));
+
+            /**
+             * Extract the \f$i_k\f$'th row from \f$A\f$.
+             */
+            assemble_kernel_row(sauter_task_buffer_for_row_vector,
+                                vk,
+                                kernel,
+                                kernel_factor,
+                                row_dof_indices[ik],
+                                col_dof_indices,
+                                kx_dof_to_cell_topo.topology,
+                                ky_dof_to_cell_topo.topology,
+                                bem_values,
+                                bem_values_gpu,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_map_from_local_to_full_dof_indices,
+                                ky_map_from_local_to_full_dof_indices,
+                                kx_dof_i2e_numbering,
+                                ky_dof_i2e_numbering,
+                                kx_mapping,
+                                ky_mapping,
+                                scratch_data,
+                                scratch_data_gpu,
+                                copy_data);
+
+            for (size_type l = 1; l < k; l++)
+              {
+                /**
+                 * Extract the previous cross.
+                 */
+                u_mat.get_column(l - 1, ul);
+                v_mat.get_column(l - 1, vl);
+
+                vk.add(-ul(ik), vl);
+              }
+
+            /**
+             * Scale the vector \f$\widetilde{v}_k\f$.
+             */
+            RangeNumberType value_at_cross = vk(jk);
+            vk /= value_at_cross;
+          }
+
+        /**
+         * Update the matrices storing row and column vectors comprising the
+         * cross.
+         */
+        u_mat.fill_col(k - 1, uk, false);
+        v_mat.fill_col(k - 1, vk, false);
+
+        if (k == 1)
+          {
+            /**
+             * Calculate the error threshold only in the first step.
+             */
+            error_threshold = aca_config.epsilon * rkmat.frobenius_norm(1);
+          }
+
+        remaining_row_indices.remove(ik);
+        remaining_col_indices.remove(jk);
+
+        if (ik == r)
+          {
+            /**
+             * When the index of the selected row is the same as that of the
+             * reference row, reselect a reference row.
+             */
+            r = random_select_ref_row(sauter_task_buffer_for_row_vector,
+                                      vr,
+                                      kernel,
+                                      kernel_factor,
+                                      remaining_row_indices,
+                                      r,
+                                      m,
+                                      row_dof_indices,
+                                      col_dof_indices,
+                                      kx_dof_to_cell_topo.topology,
+                                      ky_dof_to_cell_topo.topology,
+                                      bem_values,
+                                      bem_values_gpu,
+                                      kx_dof_handler,
+                                      ky_dof_handler,
+                                      kx_map_from_local_to_full_dof_indices,
+                                      ky_map_from_local_to_full_dof_indices,
+                                      kx_dof_i2e_numbering,
+                                      ky_dof_i2e_numbering,
+                                      kx_mapping,
+                                      ky_mapping,
+                                      scratch_data,
+                                      scratch_data_gpu,
+                                      copy_data);
+
+            if (r == m)
+              {
+                // When there is no reference row can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
+
+                error_code = cudaHostUnregister((void *)(vr.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uc.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(vk.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uk.data()));
+                AssertCuda(error_code);
+
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    vr.add(-ul(r), vl);
+                  }
+              }
+          }
+        else
+          {
+            /**
+             * Otherwise, update the values of the reference row vector.
+             */
+            vr.add(-uk(r), vk);
+          }
+
+        /**
+         * Update the vector of absolute values for @p vr.
+         */
+        std::transform(vr.begin(),
+                       vr.end(),
+                       vr_abs.begin(),
+                       static_cast<RangeNumberType (*)(RangeNumberType)>(
+                         std::fabs));
+
+        if (jk == c)
+          {
+            /**
+             * When the index of the selected column is the same as that of
+             * the reference column, reselect a reference column.
+             */
+            c = random_select_ref_column(sauter_task_buffer_for_col_vector,
+                                         uc,
+                                         kernel,
+                                         kernel_factor,
+                                         remaining_col_indices,
+                                         c,
+                                         n,
+                                         row_dof_indices,
+                                         col_dof_indices,
+                                         kx_dof_to_cell_topo.topology,
+                                         ky_dof_to_cell_topo.topology,
+                                         bem_values,
+                                         bem_values_gpu,
+                                         kx_dof_handler,
+                                         ky_dof_handler,
+                                         kx_map_from_local_to_full_dof_indices,
+                                         ky_map_from_local_to_full_dof_indices,
+                                         kx_dof_i2e_numbering,
+                                         ky_dof_i2e_numbering,
+                                         kx_mapping,
+                                         ky_mapping,
+                                         scratch_data,
+                                         scratch_data_gpu,
+                                         copy_data);
+
+            if (c == n)
+              {
+                // When there is no reference column can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
+
+                error_code = cudaHostUnregister((void *)(vr.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uc.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(vk.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uk.data()));
+                AssertCuda(error_code);
+
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    uc.add(-vl(c), ul);
+                  }
+              }
+          }
+        else
+          {
+            /**
+             * Otherwise, update the values of the reference column vector.
+             */
+            uc.add(-vk(c), uk);
+          }
+
+        /**
+         * Update the vector of absolute values for @p uc.
+         */
+        std::transform(uc.begin(),
+                       uc.end(),
+                       uc_abs.begin(),
+                       static_cast<RangeNumberType (*)(RangeNumberType)>(
+                         std::fabs));
+
+        /**
+         * Check the convergence condition.
+         */
+        if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
+          {
+            if (k < aca_config.max_iter)
+              {
+                /**
+                 * If the number of ACA+ iterations is less than the allowed
+                 * maximum value, the @p rkmat should be truncated to its
+                 * actual rank.
+                 */
+                rkmat.truncate_to_rank(k);
+              }
+
+            error_code = cudaHostUnregister((void *)(vr.data()));
+            AssertCuda(error_code);
+            error_code = cudaHostUnregister((void *)(uc.data()));
+            AssertCuda(error_code);
+            error_code = cudaHostUnregister((void *)(vk.data()));
+            AssertCuda(error_code);
+            error_code = cudaHostUnregister((void *)(uk.data()));
+            AssertCuda(error_code);
+
+            return;
+          }
+        else
+          {
+            if (size(remaining_row_indices) == 0)
+              {
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
+
+                error_code = cudaHostUnregister((void *)(vr.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uc.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(vk.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uk.data()));
+                AssertCuda(error_code);
+
+                return;
+              }
+          }
+      }
+
+    error_code = cudaHostUnregister((void *)(vr.data()));
+    AssertCuda(error_code);
+    error_code = cudaHostUnregister((void *)(uc.data()));
+    AssertCuda(error_code);
+    error_code = cudaHostUnregister((void *)(vk.data()));
+    AssertCuda(error_code);
+    error_code = cudaHostUnregister((void *)(uk.data()));
+    AssertCuda(error_code);
+  }
+
+
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  aca_plus(
+    RkMatrix<RangeNumberType>                           &rkmat,
+    const ACAConfig                                     &aca_config,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const Vector<RangeNumberType>                       &mass_vmult_weq,
+    const RangeNumberType                                stabilization_factor,
+    const std::array<types::global_dof_index, 2>        &row_dof_index_range,
+    const std::array<types::global_dof_index, 2>        &col_dof_index_range,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    /**
+     * Get the size of each dimension of the matrix block to be built.
+     */
+    const size_type m = row_dof_index_range[1] - row_dof_index_range[0];
+    const size_type n = col_dof_index_range[1] - col_dof_index_range[0];
+
+    AssertDimension(rkmat.get_m(), m);
+    AssertDimension(rkmat.get_n(), n);
+
+    /**
+     * @internal Create Sauter task buffers for assembling row vectors and
+     * column vectors.
+     */
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+        sauter_task_buffer_for_row_vector(n,
+                                          kx_dof_to_cell_topo.max_cells_per_dof,
+                                          ky_dof_to_cell_topo.max_cells_per_dof,
+                                          bem_values,
+                                          scratch_data.cuda_stream_handle);
+    IdeoBEM::CUDAWrappers::
+      SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
+        sauter_task_buffer_for_col_vector(m,
+                                          kx_dof_to_cell_topo.max_cells_per_dof,
+                                          ky_dof_to_cell_topo.max_cells_per_dof,
+                                          bem_values,
+                                          scratch_data.cuda_stream_handle);
+
+    /**
+     * Adjust the maximum ACA+ iteration if is larger than the matrix
+     * dimension.
+     */
+    unsigned int effective_max_iter = (aca_config.max_iter > std::min(m, n)) ?
+                                        std::min(m, n) :
+                                        aca_config.max_iter;
+
+    /**
+     * Generate lists of internal DoF indices (internal DoF numbering) from
+     * corresponding index ranges.
+     */
+    std::vector<types::global_dof_index> row_dof_indices(m);
+    std::vector<types::global_dof_index> col_dof_indices(n);
+    gen_linear_indices<vector_uta, types::global_dof_index>(
+      row_dof_indices, row_dof_index_range[0]);
+    gen_linear_indices<vector_uta, types::global_dof_index>(
+      col_dof_indices, col_dof_index_range[0]);
+
+    /**
+     * Create matrix references associated with the component matrices in the
+     * rank-k matrix to be returned, which hold the row and column vectors in
+     * the selected crosses during the ACA iteration. The number of columns
+     * should be the same as the maximum iteration number in @p aca_config.
+     */
+    AssertDimension(rkmat.get_formal_rank(), aca_config.max_iter);
+    LAPACKFullMatrixExt<RangeNumberType> &u_mat = rkmat.get_A();
+    LAPACKFullMatrixExt<RangeNumberType> &v_mat = rkmat.get_B();
+    u_mat                                       = 0;
+    v_mat                                       = 0;
+
+    /**
+     * Generate two lists for storing remaining row indices and column indices
+     * of the matrix block.
+     */
+    std::forward_list<size_type> remaining_row_indices(m);
+    std::forward_list<size_type> remaining_col_indices(n);
+
+    gen_linear_indices<forward_list_uta, size_type>(remaining_row_indices);
+    gen_linear_indices<forward_list_uta, size_type>(remaining_col_indices);
+
+    /**
+     * Select the initial reference row and column vectors and return their
+     * matrix indices.
+     */
+    Vector<RangeNumberType> vr(n);
+    Vector<RangeNumberType> uc(m);
+
+    cudaError_t error_code;
+
+    error_code =
+      cudaHostRegister((void *)(vr.data()), sizeof(RangeNumberType) * n, 0);
+    AssertCuda(error_code);
+    error_code =
+      cudaHostRegister((void *)(uc.data()), sizeof(RangeNumberType) * m, 0);
+    AssertCuda(error_code);
+
+    size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
+                                        vr,
+                                        kernel,
+                                        kernel_factor,
+                                        mass_vmult_weq,
+                                        stabilization_factor,
+                                        remaining_row_indices,
+                                        m,
+                                        m,
+                                        row_dof_indices,
+                                        col_dof_indices,
+                                        kx_dof_to_cell_topo.topology,
+                                        ky_dof_to_cell_topo.topology,
+                                        bem_values,
+                                        bem_values_gpu,
+                                        kx_dof_handler,
+                                        ky_dof_handler,
+                                        kx_map_from_local_to_full_dof_indices,
+                                        ky_map_from_local_to_full_dof_indices,
+                                        kx_dof_i2e_numbering,
+                                        ky_dof_i2e_numbering,
+                                        kx_mapping,
+                                        ky_mapping,
+                                        scratch_data,
+                                        scratch_data_gpu,
+                                        copy_data);
+
+    if (r == m)
+      {
+        // When there is no reference row can be selected, the current matrix
+        // block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+
+        error_code = cudaHostUnregister((void *)(vr.data()));
+        AssertCuda(error_code);
+        error_code = cudaHostUnregister((void *)(uc.data()));
+        AssertCuda(error_code);
+
+        return;
+      }
+
+    size_type c =
+      random_select_ref_column(sauter_task_buffer_for_col_vector,
+                               uc,
+                               kernel,
+                               kernel_factor,
+                               mass_vmult_weq,
+                               stabilization_factor,
+                               remaining_col_indices,
+                               n,
+                               n,
+                               row_dof_indices,
+                               col_dof_indices,
+                               kx_dof_to_cell_topo.topology,
+                               ky_dof_to_cell_topo.topology,
+                               bem_values,
+                               bem_values_gpu,
+                               kx_dof_handler,
+                               ky_dof_handler,
+                               kx_map_from_local_to_full_dof_indices,
+                               ky_map_from_local_to_full_dof_indices,
+                               kx_dof_i2e_numbering,
+                               ky_dof_i2e_numbering,
+                               kx_mapping,
+                               ky_mapping,
+                               scratch_data,
+                               scratch_data_gpu,
+                               copy_data);
+
+    if (c == n)
+      {
+        // When there is no reference column can be selected, the current
+        // matrix block is purely zero. Then return a zero rank-k matrix.
+        rkmat.reinit(m, n, 0);
+
+        error_code = cudaHostUnregister((void *)(vr.data()));
+        AssertCuda(error_code);
+        error_code = cudaHostUnregister((void *)(uc.data()));
+        AssertCuda(error_code);
+
+        return;
+      }
+
+    /**
+     * The absolute values for the reference row and column vectors.
+     */
+    Vector<RangeNumberType> vr_abs(n);
+    Vector<RangeNumberType> uc_abs(m);
+
+    /**
+     * Calculate the absolute values for the reference row and column
+     * vectors.
+     *
+     * \mynote{In the following, we use @p static_cast to explicitly
+     * specify which version of @p std::fabs to call.}
+     */
+    std::transform(vr.begin(),
+                   vr.end(),
+                   vr_abs.begin(),
+                   static_cast<RangeNumberType (*)(RangeNumberType)>(
+                     std::fabs));
+    std::transform(uc.begin(),
+                   uc.end(),
+                   uc_abs.begin(),
+                   static_cast<RangeNumberType (*)(RangeNumberType)>(
+                     std::fabs));
+
+    /**
+     * Row and column indices for the \f$k\f$'th step. The corresponding row
+     * and column vectors comprise the cross.
+     */
+    size_type ik, jk;
+
+    /**
+     * Temporary row and column vectors for the current step \f$k\f$.
+     */
+    Vector<RangeNumberType> vk(n);
+    Vector<RangeNumberType> uk(m);
+
+    error_code =
+      cudaHostRegister((void *)(vk.data()), sizeof(RangeNumberType) * n, 0);
+    AssertCuda(error_code);
+    error_code =
+      cudaHostRegister((void *)(uk.data()), sizeof(RangeNumberType) * m, 0);
+    AssertCuda(error_code);
+
+    /**
+     * The absolute values for the temporary row and column vectors for the
+     * current step \f$k\f$.
+     */
+    Vector<RangeNumberType> vk_abs(n);
+    Vector<RangeNumberType> uk_abs(m);
+
+    /**
+     * Temporary row and column vectors for the previous step \f$l\f$.
+     */
+    Vector<RangeNumberType> vl(n);
+    Vector<RangeNumberType> ul(m);
+
+    /**
+     * The error threshold as the stopping condition.
+     */
+    RangeNumberType error_threshold = 0.0;
+
+    /**
+     * Start the ACA+ iteration from \f$k=1\f$.
+     */
+    for (unsigned int k = 1; k <= effective_max_iter; k++)
+      {
+        /**
+         * Select the row index from the maximizer of the reference column.
+         */
+        // N.B. The function @p std::max_element return the iterator pointing
+        // to the maximum element in the list.
+        size_type i_star =
+          std::distance(uc_abs.begin(),
+                        std::max_element(uc_abs.begin(), uc_abs.end()));
+
+        /**
+         * Select the column index from the maximizer of the reference row.
+         */
+        size_type j_star =
+          std::distance(vr_abs.begin(),
+                        std::max_element(vr_abs.begin(), vr_abs.end()));
+
+        if (uc_abs(i_star) > vr_abs(j_star))
+          {
+            /**
+             * Select \f$i^*\f$ as the current row index \f$i_k\f$.
+             */
+            ik = i_star;
+
+            /**
+             * Extract the \f$i_k\f$'th row of \f$A\f$.
+             */
+            assemble_kernel_row(sauter_task_buffer_for_row_vector,
+                                vk,
+                                kernel,
+                                kernel_factor,
+                                mass_vmult_weq,
+                                stabilization_factor,
+                                row_dof_indices[ik],
+                                col_dof_indices,
+                                kx_dof_to_cell_topo.topology,
+                                ky_dof_to_cell_topo.topology,
+                                bem_values,
+                                bem_values_gpu,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_map_from_local_to_full_dof_indices,
+                                ky_map_from_local_to_full_dof_indices,
+                                kx_dof_i2e_numbering,
+                                ky_dof_i2e_numbering,
+                                kx_mapping,
+                                ky_mapping,
+                                scratch_data,
+                                scratch_data_gpu,
+                                copy_data);
+
+            /**
+             * \mynote{Here the counter \f$l\f$ iterates over all the previous
+             * steps before \f$k\f$. For each step, the row and column vectors
+             * comprising the cross have been stored as column vectors into
+             * @p v_mat and @p u_mat respectively. Hence, the index for
+             * extracting vectors from @p v_mat or @p u_mat should be
+             * \f$l-1\f$.}
+             */
+            for (size_type l = 1; l < k; l++)
+              {
+                /**
+                 * Extract the previous cross.
+                 */
+                u_mat.get_column(l - 1, ul);
+                v_mat.get_column(l - 1, vl);
+
+                vk.add(-ul(ik), vl);
+              }
+
+            /**
+             * Select the column index from the maximizer of the absolute
+             * values of \f$\widetilde{v}_k\f$.
+             */
+            std::transform(vk.begin(),
+                           vk.end(),
+                           vk_abs.begin(),
+                           static_cast<RangeNumberType (*)(RangeNumberType)>(
+                             std::fabs));
+            jk = std::distance(vk_abs.begin(),
+                               std::max_element(vk_abs.begin(), vk_abs.end()));
+
+            /**
+             * Scale the vector \f$\widetilde{v}_k\f$.
+             */
+            RangeNumberType value_at_cross = vk(jk);
+            vk /= value_at_cross;
+
+            /**
+             * Extract the \f$j_k\f$'th column from \f$A\f$.
+             */
+            assemble_kernel_column(sauter_task_buffer_for_col_vector,
+                                   uk,
+                                   kernel,
+                                   kernel_factor,
+                                   mass_vmult_weq,
+                                   stabilization_factor,
+                                   row_dof_indices,
+                                   col_dof_indices[jk],
+                                   kx_dof_to_cell_topo.topology,
+                                   ky_dof_to_cell_topo.topology,
+                                   bem_values,
+                                   bem_values_gpu,
+                                   kx_dof_handler,
+                                   ky_dof_handler,
+                                   kx_map_from_local_to_full_dof_indices,
+                                   ky_map_from_local_to_full_dof_indices,
+                                   kx_dof_i2e_numbering,
+                                   ky_dof_i2e_numbering,
+                                   kx_mapping,
+                                   ky_mapping,
+                                   scratch_data,
+                                   scratch_data_gpu,
+                                   copy_data);
+
+            for (size_type l = 1; l < k; l++)
+              {
+                /**
+                 * Extract the previous cross.
+                 */
+                u_mat.get_column(l - 1, ul);
+                v_mat.get_column(l - 1, vl);
+
+                uk.add(-vl(jk), ul);
+              }
+          }
+        else
+          {
+            /**
+             * Select \f$j^*\f$ as the current column index \f$j_k\f$.
+             */
+            jk = j_star;
+
+            /**
+             * Extract the \f$j_k\f$'th column from the matrix \f$A\f$.
+             */
+            assemble_kernel_column(sauter_task_buffer_for_col_vector,
+                                   uk,
+                                   kernel,
+                                   kernel_factor,
+                                   mass_vmult_weq,
+                                   stabilization_factor,
+                                   row_dof_indices,
+                                   col_dof_indices[jk],
+                                   kx_dof_to_cell_topo.topology,
+                                   ky_dof_to_cell_topo.topology,
+                                   bem_values,
+                                   bem_values_gpu,
+                                   kx_dof_handler,
+                                   ky_dof_handler,
+                                   kx_map_from_local_to_full_dof_indices,
+                                   ky_map_from_local_to_full_dof_indices,
+                                   kx_dof_i2e_numbering,
+                                   ky_dof_i2e_numbering,
+                                   kx_mapping,
+                                   ky_mapping,
+                                   scratch_data,
+                                   scratch_data_gpu,
+                                   copy_data);
+
+            for (size_type l = 1; l < k; l++)
+              {
+                /**
+                 * Extract the previous cross.
+                 */
+                u_mat.get_column(l - 1, ul);
+                v_mat.get_column(l - 1, vl);
+
+                uk.add(-vl(jk), ul);
+              }
+
+            /**
+             * Select the row index as the maximizer of the absolute values of
+             * \f$u_k\f$.
+             */
+            std::transform(uk.begin(),
+                           uk.end(),
+                           uk_abs.begin(),
+                           static_cast<RangeNumberType (*)(RangeNumberType)>(
+                             std::fabs));
+            ik = std::distance(uk_abs.begin(),
+                               std::max_element(uk_abs.begin(), uk_abs.end()));
+
+            /**
+             * Extract the \f$i_k\f$'th row from \f$A\f$.
+             */
+            assemble_kernel_row(sauter_task_buffer_for_row_vector,
+                                vk,
+                                kernel,
+                                kernel_factor,
+                                mass_vmult_weq,
+                                stabilization_factor,
+                                row_dof_indices[ik],
+                                col_dof_indices,
+                                kx_dof_to_cell_topo.topology,
+                                ky_dof_to_cell_topo.topology,
+                                bem_values,
+                                bem_values_gpu,
+                                kx_dof_handler,
+                                ky_dof_handler,
+                                kx_map_from_local_to_full_dof_indices,
+                                ky_map_from_local_to_full_dof_indices,
+                                kx_dof_i2e_numbering,
+                                ky_dof_i2e_numbering,
+                                kx_mapping,
+                                ky_mapping,
+                                scratch_data,
+                                scratch_data_gpu,
+                                copy_data);
+
+            for (size_type l = 1; l < k; l++)
+              {
+                /**
+                 * Extract the previous cross.
+                 */
+                u_mat.get_column(l - 1, ul);
+                v_mat.get_column(l - 1, vl);
+
+                vk.add(-ul(ik), vl);
+              }
+
+            /**
+             * Scale the vector \f$\widetilde{v}_k\f$.
+             */
+            RangeNumberType value_at_cross = vk(jk);
+            vk /= value_at_cross;
+          }
+
+        /**
+         * Update the matrices storing row and column vectors comprising the
+         * cross.
+         */
+        u_mat.fill_col(k - 1, uk, false);
+        v_mat.fill_col(k - 1, vk, false);
+
+        if (k == 1)
+          {
+            /**
+             * Calculate the error threshold only in the first step.
+             */
+            error_threshold = aca_config.epsilon * rkmat.frobenius_norm(1);
+          }
+
+        remaining_row_indices.remove(ik);
+        remaining_col_indices.remove(jk);
+
+        if (ik == r)
+          {
+            /**
+             * When the index of the selected row is the same as that of the
+             * reference row, reselect a reference row.
+             */
+            r = random_select_ref_row(sauter_task_buffer_for_row_vector,
+                                      vr,
+                                      kernel,
+                                      kernel_factor,
+                                      mass_vmult_weq,
+                                      stabilization_factor,
+                                      remaining_row_indices,
+                                      r,
+                                      m,
+                                      row_dof_indices,
+                                      col_dof_indices,
+                                      kx_dof_to_cell_topo.topology,
+                                      ky_dof_to_cell_topo.topology,
+                                      bem_values,
+                                      bem_values_gpu,
+                                      kx_dof_handler,
+                                      ky_dof_handler,
+                                      kx_map_from_local_to_full_dof_indices,
+                                      ky_map_from_local_to_full_dof_indices,
+                                      kx_dof_i2e_numbering,
+                                      ky_dof_i2e_numbering,
+                                      kx_mapping,
+                                      ky_mapping,
+                                      scratch_data,
+                                      scratch_data_gpu,
+                                      copy_data);
+
+            if (r == m)
+              {
+                // When there is no reference row can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
+
+                error_code = cudaHostUnregister((void *)(vr.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uc.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(vk.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uk.data()));
+                AssertCuda(error_code);
+
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    vr.add(-ul(r), vl);
+                  }
+              }
+          }
+        else
+          {
+            /**
+             * Otherwise, update the values of the reference row vector.
+             */
+            vr.add(-uk(r), vk);
+          }
+
+        /**
+         * Update the vector of absolute values for @p vr.
+         */
+        std::transform(vr.begin(),
+                       vr.end(),
+                       vr_abs.begin(),
+                       static_cast<RangeNumberType (*)(RangeNumberType)>(
+                         std::fabs));
+
+        if (jk == c)
+          {
+            /**
+             * When the index of the selected column is the same as that of
+             * the reference column, reselect a reference column.
+             */
+            c = random_select_ref_column(sauter_task_buffer_for_col_vector,
+                                         uc,
+                                         kernel,
+                                         kernel_factor,
+                                         mass_vmult_weq,
+                                         stabilization_factor,
+                                         remaining_col_indices,
+                                         c,
+                                         n,
+                                         row_dof_indices,
+                                         col_dof_indices,
+                                         kx_dof_to_cell_topo.topology,
+                                         ky_dof_to_cell_topo.topology,
+                                         bem_values,
+                                         bem_values_gpu,
+                                         kx_dof_handler,
+                                         ky_dof_handler,
+                                         kx_map_from_local_to_full_dof_indices,
+                                         ky_map_from_local_to_full_dof_indices,
+                                         kx_dof_i2e_numbering,
+                                         ky_dof_i2e_numbering,
+                                         kx_mapping,
+                                         ky_mapping,
+                                         scratch_data,
+                                         scratch_data_gpu,
+                                         copy_data);
+
+            if (c == n)
+              {
+                // When there is no reference column can be selected, the ACA+
+                // iteration should stop here.
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
+
+                error_code = cudaHostUnregister((void *)(vr.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uc.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(vk.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uk.data()));
+                AssertCuda(error_code);
+
+                return;
+              }
+            else
+              {
+                for (unsigned int l = 1; l <= k; l++)
+                  {
+                    /**
+                     * Extract the previous cross.
+                     */
+                    u_mat.get_column(l - 1, ul);
+                    v_mat.get_column(l - 1, vl);
+
+                    uc.add(-vl(c), ul);
+                  }
+              }
+          }
+        else
+          {
+            /**
+             * Otherwise, update the values of the reference column vector.
+             */
+            uc.add(-vk(c), uk);
+          }
+
+        /**
+         * Update the vector of absolute values for @p uc.
+         */
+        std::transform(uc.begin(),
+                       uc.end(),
+                       uc_abs.begin(),
+                       static_cast<RangeNumberType (*)(RangeNumberType)>(
+                         std::fabs));
+
+        /**
+         * Check the convergence condition.
+         */
+        if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
+          {
+            if (k < aca_config.max_iter)
+              {
+                /**
+                 * If the number of ACA+ iterations is less than the allowed
+                 * maximum value, the @p rkmat should be truncated to its
+                 * actual rank.
+                 */
+                rkmat.truncate_to_rank(k);
+              }
+
+            error_code = cudaHostUnregister((void *)(vr.data()));
+            AssertCuda(error_code);
+            error_code = cudaHostUnregister((void *)(uc.data()));
+            AssertCuda(error_code);
+            error_code = cudaHostUnregister((void *)(vk.data()));
+            AssertCuda(error_code);
+            error_code = cudaHostUnregister((void *)(uk.data()));
+            AssertCuda(error_code);
+
+            return;
+          }
+        else
+          {
+            if (size(remaining_row_indices) == 0)
+              {
+                if (k < aca_config.max_iter)
+                  {
+                    /**
+                     * If the number of ACA+ iterations is less than the
+                     * allowed
+                     * maximum value, the @p rkmat should be truncated to its
+                     * actual rank.
+                     */
+                    rkmat.truncate_to_rank(k);
+                  }
+
+                error_code = cudaHostUnregister((void *)(vr.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uc.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(vk.data()));
+                AssertCuda(error_code);
+                error_code = cudaHostUnregister((void *)(uk.data()));
+                AssertCuda(error_code);
+
+                return;
+              }
+          }
+      }
+
+    error_code = cudaHostUnregister((void *)(vr.data()));
+    AssertCuda(error_code);
+    error_code = cudaHostUnregister((void *)(uc.data()));
+    AssertCuda(error_code);
+    error_code = cudaHostUnregister((void *)(vk.data()));
+    AssertCuda(error_code);
+    error_code = cudaHostUnregister((void *)(uk.data()));
+    AssertCuda(error_code);
   }
 
 
@@ -3585,10 +6014,16 @@ namespace IdeoBEM
 
                         break;
                       }
-                    case HMatrixSupport::diagonal_block:
-                      /**
-                       * An rank-k matrix cannot belong to the diagonal part.
-                       */
+                      case HMatrixSupport::diagonal_block: {
+                        /**
+                         * An rank-k matrix cannot belong to the diagonal part.
+                         */
+                        Assert(false,
+                               ExcInvalidHMatrixBlockType(
+                                 leaf_mat->get_block_type()));
+
+                        break;
+                      }
                       case HMatrixSupport::undefined_block: {
                         Assert(false,
                                ExcInvalidHMatrixBlockType(
@@ -4443,6 +6878,329 @@ namespace IdeoBEM
   }
 
 
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  fill_far_field_hmatrix_leaf_node_with_aca_plus(
+    HMatrix<spacedim, RangeNumberType>                  *leaf_mat,
+    const ACAConfig                                     &aca_config,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    const bool enable_build_symmetric_hmat = false)
+  {
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      "fill_far_field_hmatrix_leaf_node_with_aca_plus");
+#endif
+
+    /**
+     * @internal Row and column index ranges in the internal DoF numbering.
+     */
+    const std::array<types::global_dof_index, 2> *row_index_range =
+      leaf_mat->get_row_index_range();
+    const std::array<types::global_dof_index, 2> *col_index_range =
+      leaf_mat->get_col_index_range();
+
+    /**
+     * @internal Global DoF indices in the external numbering for the current
+     * matrix entry.
+     */
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index;
+
+    switch (leaf_mat->get_type())
+      {
+          case FullMatrixType: {
+            Assert(false, ExcInvalidHMatrixType(FullMatrixType));
+
+            break;
+          }
+          case RkMatrixType: {
+            /**
+             * When the \hmatrix block type is rank-k matrix, when the top
+             * level \hmatrix is symmetric and the flag
+             * @p enable_build_symmetric_hmat is true, only those matrix blocks
+             * belong to the lower triangular part will be computed.
+             * Otherwise, the rank-k matrix block will always be computed.
+             * ACA+ will be used for building the rank-k matrix.
+             */
+            RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
+
+            if (enable_build_symmetric_hmat && kernel.is_symmetric())
+              {
+                switch (leaf_mat->get_block_type())
+                  {
+                      case HMatrixSupport::lower_triangular_block: {
+                        /**
+                         * Build the \hmatrix block when it belongs to the
+                         * lower triangular part using ACA+.
+                         */
+                        aca_plus((*rkmat),
+                                 aca_config,
+                                 kernel,
+                                 kernel_factor,
+                                 *row_index_range,
+                                 *col_index_range,
+                                 kx_dof_to_cell_topo,
+                                 ky_dof_to_cell_topo,
+                                 bem_values,
+                                 bem_values_gpu,
+                                 kx_dof_handler,
+                                 ky_dof_handler,
+                                 kx_map_from_local_to_full_dof_indices,
+                                 ky_map_from_local_to_full_dof_indices,
+                                 kx_dof_i2e_numbering,
+                                 ky_dof_i2e_numbering,
+                                 kx_mapping,
+                                 ky_mapping,
+                                 scratch_data,
+                                 scratch_data_gpu,
+                                 copy_data);
+
+                        break;
+                      }
+                      case HMatrixSupport::upper_triangular_block: {
+                        /**
+                         * Do not build \hmatrix block belonging to the upper
+                         * triangular part.
+                         */
+
+                        break;
+                      }
+                      case HMatrixSupport::diagonal_block: {
+                        /**
+                         * An rank-k matrix cannot belong to the diagonal part.
+                         */
+                        Assert(false,
+                               ExcInvalidHMatrixBlockType(
+                                 leaf_mat->get_block_type()));
+
+                        break;
+                      }
+                      case HMatrixSupport::undefined_block: {
+                        Assert(false,
+                               ExcInvalidHMatrixBlockType(
+                                 leaf_mat->get_block_type()));
+
+                        break;
+                      }
+                  }
+              }
+            else
+              {
+                aca_plus((*rkmat),
+                         aca_config,
+                         kernel,
+                         kernel_factor,
+                         (*row_index_range),
+                         (*col_index_range),
+                         kx_dof_to_cell_topo,
+                         ky_dof_to_cell_topo,
+                         bem_values,
+                         bem_values_gpu,
+                         kx_dof_handler,
+                         ky_dof_handler,
+                         kx_map_from_local_to_full_dof_indices,
+                         ky_map_from_local_to_full_dof_indices,
+                         kx_dof_i2e_numbering,
+                         ky_dof_i2e_numbering,
+                         kx_mapping,
+                         ky_mapping,
+                         scratch_data,
+                         scratch_data_gpu,
+                         copy_data);
+              }
+
+            break;
+          }
+          default: {
+            Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
+          }
+      }
+  }
+
+
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  fill_far_field_hmatrix_leaf_node_with_aca_plus(
+    HMatrix<spacedim, RangeNumberType>                  *leaf_mat,
+    const ACAConfig                                     &aca_config,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const Vector<RangeNumberType>                       &mass_vmult_weq,
+    const RangeNumberType                                stabilization_factor,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
+    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+                                    &bem_values_gpu,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    IdeoBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+                                                            &scratch_data_gpu,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    const bool enable_build_symmetric_hmat = false)
+  {
+#if ENABLE_NVTX == 1
+    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      "fill_far_field_hmatrix_leaf_node_with_aca_plus for hypersingular");
+#endif
+
+    const std::array<types::global_dof_index, 2> *row_index_range =
+      leaf_mat->get_row_index_range();
+    const std::array<types::global_dof_index, 2> *col_index_range =
+      leaf_mat->get_col_index_range();
+
+    types::global_dof_index i_global_dof_index;
+    types::global_dof_index j_global_dof_index;
+
+    switch (leaf_mat->get_type())
+      {
+          case FullMatrixType: {
+            Assert(false, ExcInvalidHMatrixType(FullMatrixType));
+
+            break;
+          }
+          case RkMatrixType: {
+            /**
+             * When the \hmatrix block type is rank-k matrix, when the top
+             * level \hmatrix is symmetric and the flag
+             * @p enable_build_symmetric_hmat is true, only those matrix blocks
+             * belong to the lower triangular part will be computed.
+             * Otherwise, the rank-k matrix block will always be computed.
+             * ACA+ will be used for building the rank-k matrix.
+             */
+            RkMatrix<RangeNumberType> *rkmat = leaf_mat->get_rkmatrix();
+
+            if (enable_build_symmetric_hmat && kernel.is_symmetric())
+              {
+                switch (leaf_mat->get_block_type())
+                  {
+                      case HMatrixSupport::lower_triangular_block: {
+                        /**
+                         * Build the \hmatrix block when it belongs to the
+                         * lower triangular part using ACA+.
+                         */
+                        aca_plus((*rkmat),
+                                 aca_config,
+                                 kernel,
+                                 kernel_factor,
+                                 mass_vmult_weq,
+                                 stabilization_factor,
+                                 *row_index_range,
+                                 *col_index_range,
+                                 kx_dof_to_cell_topo,
+                                 ky_dof_to_cell_topo,
+                                 bem_values,
+                                 bem_values_gpu,
+                                 kx_dof_handler,
+                                 ky_dof_handler,
+                                 kx_map_from_local_to_full_dof_indices,
+                                 ky_map_from_local_to_full_dof_indices,
+                                 kx_dof_i2e_numbering,
+                                 ky_dof_i2e_numbering,
+                                 kx_mapping,
+                                 ky_mapping,
+                                 scratch_data,
+                                 scratch_data_gpu,
+                                 copy_data);
+
+                        break;
+                      }
+                      case HMatrixSupport::upper_triangular_block: {
+                        /**
+                         * Do not build \hmatrix block belonging to the upper
+                         * triangular part.
+                         */
+
+                        break;
+                      }
+                    case HMatrixSupport::diagonal_block:
+                      /**
+                       * An rank-k matrix cannot belong to the diagonal part.
+                       */
+                      case HMatrixSupport::undefined_block: {
+                        Assert(false,
+                               ExcInvalidHMatrixBlockType(
+                                 leaf_mat->get_block_type()));
+
+                        break;
+                      }
+                  }
+              }
+            else
+              {
+                aca_plus((*rkmat),
+                         aca_config,
+                         kernel,
+                         kernel_factor,
+                         mass_vmult_weq,
+                         stabilization_factor,
+                         (*row_index_range),
+                         (*col_index_range),
+                         kx_dof_to_cell_topo,
+                         ky_dof_to_cell_topo,
+                         bem_values,
+                         bem_values_gpu,
+                         kx_dof_handler,
+                         ky_dof_handler,
+                         kx_map_from_local_to_full_dof_indices,
+                         ky_map_from_local_to_full_dof_indices,
+                         kx_dof_i2e_numbering,
+                         ky_dof_i2e_numbering,
+                         kx_mapping,
+                         ky_mapping,
+                         scratch_data,
+                         scratch_data_gpu,
+                         copy_data);
+              }
+
+            break;
+          }
+          default: {
+            Assert(false, ExcInvalidHMatrixType(leaf_mat->get_type()));
+          }
+      }
+  }
+
+
   /**
    * Fill the leaf nodes in a subrange of an \hmatrix using ACA+.
    *
@@ -4471,20 +7229,16 @@ namespace IdeoBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   void
-  fill_hmatrix_leaf_node_subrange_with_aca_plus(
+  fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<
       typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
                                                         &range,
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-      &kx_dof_to_cell_topo,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                                    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -4497,14 +7251,7 @@ namespace IdeoBEM
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
+    const bool enable_build_symmetric_hmat = false)
   {
     const std::thread::id current_thread_id = std::this_thread::get_id();
     std::cerr << "WorkStream " << current_thread_id << " starts..."
@@ -4526,7 +7273,7 @@ namespace IdeoBEM
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
     /**
-     * Create pair cell wise scratch data and task data on GPU device.
+     * Create pair cell wise scratch data on GPU device.
      */
     IdeoBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -4538,7 +7285,7 @@ namespace IdeoBEM
          iter != range.end();
          iter++)
       {
-        fill_hmatrix_leaf_node_with_aca_plus(
+        fill_far_field_hmatrix_leaf_node_with_aca_plus(
           (*iter),
           aca_config,
           kernel,
@@ -4555,9 +7302,6 @@ namespace IdeoBEM
           ky_dof_i2e_numbering,
           kx_mapping,
           ky_mapping,
-          map_from_kx_boundary_mesh_to_volume_mesh,
-          map_from_ky_boundary_mesh_to_volume_mesh,
-          method_for_cell_neighboring_type,
           scratch_data,
           scratch_data_gpu,
           copy_data,
@@ -4608,7 +7352,7 @@ namespace IdeoBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   void
-  fill_hmatrix_leaf_node_subrange_with_aca_plus(
+  fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus(
     const tbb::blocked_range<
       typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
                                                         &range,
@@ -4617,13 +7361,9 @@ namespace IdeoBEM
     const RangeNumberType                                kernel_factor,
     const Vector<RangeNumberType>                       &mass_vmult_weq,
     const RangeNumberType                                stabilization_factor,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-      &kx_dof_to_cell_topo,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                                    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
     const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -4636,14 +7376,7 @@ namespace IdeoBEM
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
+    const bool enable_build_symmetric_hmat = false)
   {
     const std::thread::id current_thread_id = std::this_thread::get_id();
     std::cerr << "WorkStream " << current_thread_id << " starts..."
@@ -4677,7 +7410,7 @@ namespace IdeoBEM
          iter != range.end();
          iter++)
       {
-        fill_hmatrix_leaf_node_with_aca_plus(
+        fill_far_field_hmatrix_leaf_node_with_aca_plus(
           (*iter),
           aca_config,
           kernel,
@@ -4696,9 +7429,6 @@ namespace IdeoBEM
           ky_dof_i2e_numbering,
           kx_mapping,
           ky_mapping,
-          map_from_kx_boundary_mesh_to_volume_mesh,
-          map_from_ky_boundary_mesh_to_volume_mesh,
-          method_for_cell_neighboring_type,
           scratch_data,
           scratch_data_gpu,
           copy_data,
@@ -5168,6 +7898,19 @@ namespace IdeoBEM
   }
 
 
+  /**
+   * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
+   * structure of the \hmatrix has been built with respect to a block cluster
+   * tree and the memory for the matrices in the leaf set has been allocated.
+   *
+   * For the near field matrices in the leaf set, full matrices will be built
+   * whose elements will be obtained from the evaluation of the double
+   * integral in Galerkin-BEM. For the far field admissible matrices in the
+   * leaf set, rank-k matrices will be built using ACA+.
+   *
+   * This version also computes scaled mass matrix entries and serially
+   * processes each \hmatnode in the leaf set one-by-one.
+   */
   template <int dim,
             int spacedim,
             template <int, typename>
@@ -5367,15 +8110,11 @@ namespace IdeoBEM
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-      &kx_dof_to_cell_topo,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                    &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &kx_dof_handler,
-    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>                     &sauter_quad_rule,
+    const DoFHandler<dim, spacedim>                     &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                     &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
@@ -5395,7 +8134,7 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     const bool                            enable_build_symmetric_hmat = false)
   {
-    LogStream::Prefix                prefix_string("build_hmatrix_aca");
+    LogStream::Prefix prefix_string("build_hmatrix_aca");
 #if ENABLE_NVTX == 1
     IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmatrix_aca");
 #endif
@@ -5562,8 +8301,8 @@ namespace IdeoBEM
           std::ref(ring_buffer_for_common_edge),
           std::ref(ring_buffer_for_common_vertex),
           std::ref(ring_buffer_for_regular),
-          std::cref(kx_dof_to_cell_topo),
-          std::cref(ky_dof_to_cell_topo),
+          std::cref(kx_dof_to_cell_topo.topology),
+          std::cref(ky_dof_to_cell_topo.topology),
           std::cref(bem_values),
           std::cref(bem_values_gpu),
           std::cref(kx_dof_handler),
@@ -5782,56 +8521,44 @@ namespace IdeoBEM
         parallel::internal::parallel_for(
           far_field_leaf_set.begin(),
           far_field_leaf_set.end(),
-          std::bind(
-            static_cast<void (*)(
-              const tbb::blocked_range<typename std::vector<
-                HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-              const ACAConfig &,
-              const KernelFunctionType<spacedim, RangeNumberType> &,
-              const RangeNumberType,
-              const std::vector<std::vector<
-                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
-              const std::vector<std::vector<
-                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
-              const BEMValues<dim, spacedim, RangeNumberType> &,
-              const IdeoBEM::CUDAWrappers::
-                CUDABEMValues<dim, spacedim, RangeNumberType> &,
-              const DoFHandler<dim, spacedim> &,
-              const DoFHandler<dim, spacedim> &,
-              const std::vector<types::global_dof_index> *,
-              const std::vector<types::global_dof_index> *,
-              const std::vector<types::global_dof_index> &,
-              const std::vector<types::global_dof_index> &,
-              const MappingQGenericExt<dim, spacedim> &,
-              const MappingQGenericExt<dim, spacedim> &,
-              const std::map<
-                typename Triangulation<dim, spacedim>::cell_iterator,
-                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-              const std::map<
-                typename Triangulation<dim, spacedim>::cell_iterator,
-                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-              const DetectCellNeighboringTypeMethod,
-              const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
-            std::placeholders::_1,
-            std::cref(aca_config),
-            std::cref(kernel),
-            kernel_factor,
-            std::cref(kx_dof_to_cell_topo),
-            std::cref(ky_dof_to_cell_topo),
-            std::cref(bem_values),
-            std::cref(bem_values_gpu),
-            std::cref(kx_dof_handler),
-            std::cref(ky_dof_handler),
-            kx_map_from_local_to_full_dof_indices,
-            ky_map_from_local_to_full_dof_indices,
-            std::cref(kx_dof_i2e_numbering),
-            std::cref(ky_dof_i2e_numbering),
-            std::cref(kx_mapping),
-            std::cref(ky_mapping),
-            std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-            std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-            method_for_cell_neighboring_type,
-            enable_build_symmetric_hmat),
+          std::bind(static_cast<void (*)(
+                      const tbb::blocked_range<typename std::vector<
+                        HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+                      const ACAConfig &,
+                      const KernelFunctionType<spacedim, RangeNumberType> &,
+                      const RangeNumberType,
+                      const DofToCellTopology<dim, spacedim> &,
+                      const DofToCellTopology<dim, spacedim> &,
+                      const BEMValues<dim, spacedim, RangeNumberType> &,
+                      const IdeoBEM::CUDAWrappers::
+                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
+                      const DoFHandler<dim, spacedim> &,
+                      const DoFHandler<dim, spacedim> &,
+                      const std::vector<types::global_dof_index> *,
+                      const std::vector<types::global_dof_index> *,
+                      const std::vector<types::global_dof_index> &,
+                      const std::vector<types::global_dof_index> &,
+                      const MappingQGenericExt<dim, spacedim> &,
+                      const MappingQGenericExt<dim, spacedim> &,
+                      const bool)>(
+                      fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus),
+                    std::placeholders::_1,
+                    std::cref(aca_config),
+                    std::cref(kernel),
+                    kernel_factor,
+                    std::cref(kx_dof_to_cell_topo),
+                    std::cref(ky_dof_to_cell_topo),
+                    std::cref(bem_values),
+                    std::cref(bem_values_gpu),
+                    std::cref(kx_dof_handler),
+                    std::cref(ky_dof_handler),
+                    kx_map_from_local_to_full_dof_indices,
+                    ky_map_from_local_to_full_dof_indices,
+                    std::cref(kx_dof_i2e_numbering),
+                    std::cref(ky_dof_i2e_numbering),
+                    std::cref(kx_mapping),
+                    std::cref(ky_mapping),
+                    enable_build_symmetric_hmat),
           grain_size);
       }
 
@@ -5903,15 +8630,11 @@ namespace IdeoBEM
     const RangeNumberType                                kernel_factor,
     const Vector<RangeNumberType>                       &mass_vmult_weq,
     const RangeNumberType                                stabilization_factor,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-      &kx_dof_to_cell_topo,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                    &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &sauter_quad_rule,
-    const DoFHandler<dim, spacedim> &kx_dof_handler,
-    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>                     &sauter_quad_rule,
+    const DoFHandler<dim, spacedim>                     &kx_dof_handler,
+    const DoFHandler<dim, spacedim>                     &ky_dof_handler,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
@@ -6100,8 +8823,8 @@ namespace IdeoBEM
           std::ref(ring_buffer_for_common_edge),
           std::ref(ring_buffer_for_common_vertex),
           std::ref(ring_buffer_for_regular),
-          std::cref(kx_dof_to_cell_topo),
-          std::cref(ky_dof_to_cell_topo),
+          std::cref(kx_dof_to_cell_topo.topology),
+          std::cref(ky_dof_to_cell_topo.topology),
           std::cref(bem_values),
           std::cref(bem_values_gpu),
           std::cref(kx_dof_handler),
@@ -6351,60 +9074,48 @@ namespace IdeoBEM
         parallel::internal::parallel_for(
           far_field_leaf_set.begin(),
           far_field_leaf_set.end(),
-          std::bind(
-            static_cast<void (*)(
-              const tbb::blocked_range<typename std::vector<
-                HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-              const ACAConfig &,
-              const KernelFunctionType<spacedim, RangeNumberType> &,
-              const RangeNumberType,
-              const Vector<RangeNumberType> &,
-              const RangeNumberType,
-              const std::vector<std::vector<
-                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
-              const std::vector<std::vector<
-                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
-              const BEMValues<dim, spacedim, RangeNumberType> &,
-              const IdeoBEM::CUDAWrappers::
-                CUDABEMValues<dim, spacedim, RangeNumberType> &,
-              const DoFHandler<dim, spacedim> &,
-              const DoFHandler<dim, spacedim> &,
-              const std::vector<types::global_dof_index> *,
-              const std::vector<types::global_dof_index> *,
-              const std::vector<types::global_dof_index> &,
-              const std::vector<types::global_dof_index> &,
-              const MappingQGenericExt<dim, spacedim> &,
-              const MappingQGenericExt<dim, spacedim> &,
-              const std::map<
-                typename Triangulation<dim, spacedim>::cell_iterator,
-                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-              const std::map<
-                typename Triangulation<dim, spacedim>::cell_iterator,
-                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-              const DetectCellNeighboringTypeMethod,
-              const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
-            std::placeholders::_1,
-            std::cref(aca_config),
-            std::cref(kernel),
-            kernel_factor,
-            std::cref(mass_vmult_weq),
-            stabilization_factor,
-            std::cref(kx_dof_to_cell_topo),
-            std::cref(ky_dof_to_cell_topo),
-            std::cref(bem_values),
-            std::cref(bem_values_gpu),
-            std::cref(kx_dof_handler),
-            std::cref(ky_dof_handler),
-            kx_map_from_local_to_full_dof_indices,
-            ky_map_from_local_to_full_dof_indices,
-            std::cref(kx_dof_i2e_numbering),
-            std::cref(ky_dof_i2e_numbering),
-            std::cref(kx_mapping),
-            std::cref(ky_mapping),
-            std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-            std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-            method_for_cell_neighboring_type,
-            enable_build_symmetric_hmat),
+          std::bind(static_cast<void (*)(
+                      const tbb::blocked_range<typename std::vector<
+                        HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+                      const ACAConfig &,
+                      const KernelFunctionType<spacedim, RangeNumberType> &,
+                      const RangeNumberType,
+                      const Vector<RangeNumberType> &,
+                      const RangeNumberType,
+                      const DofToCellTopology<dim, spacedim> &,
+                      const DofToCellTopology<dim, spacedim> &,
+                      const BEMValues<dim, spacedim, RangeNumberType> &,
+                      const IdeoBEM::CUDAWrappers::
+                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
+                      const DoFHandler<dim, spacedim> &,
+                      const DoFHandler<dim, spacedim> &,
+                      const std::vector<types::global_dof_index> *,
+                      const std::vector<types::global_dof_index> *,
+                      const std::vector<types::global_dof_index> &,
+                      const std::vector<types::global_dof_index> &,
+                      const MappingQGenericExt<dim, spacedim> &,
+                      const MappingQGenericExt<dim, spacedim> &,
+                      const bool)>(
+                      fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus),
+                    std::placeholders::_1,
+                    std::cref(aca_config),
+                    std::cref(kernel),
+                    kernel_factor,
+                    std::cref(mass_vmult_weq),
+                    stabilization_factor,
+                    std::cref(kx_dof_to_cell_topo),
+                    std::cref(ky_dof_to_cell_topo),
+                    std::cref(bem_values),
+                    std::cref(bem_values_gpu),
+                    std::cref(kx_dof_handler),
+                    std::cref(ky_dof_handler),
+                    kx_map_from_local_to_full_dof_indices,
+                    ky_map_from_local_to_full_dof_indices,
+                    std::cref(kx_dof_i2e_numbering),
+                    std::cref(ky_dof_i2e_numbering),
+                    std::cref(kx_mapping),
+                    std::cref(ky_mapping),
+                    enable_build_symmetric_hmat),
           grain_size);
       }
 
@@ -6471,13 +9182,9 @@ namespace IdeoBEM
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const RangeNumberType                                mass_matrix_factor,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-      &kx_dof_to_cell_topo,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                    &ky_dof_to_cell_topo,
-    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
+    const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim>                     &sauter_quad_rule,
     const QGauss<dim>               &mass_matrix_quadrature_formula,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -6672,8 +9379,8 @@ namespace IdeoBEM
           std::ref(ring_buffer_for_common_vertex),
           std::ref(ring_buffer_for_regular),
           mass_matrix_factor,
-          std::cref(kx_dof_to_cell_topo),
-          std::cref(ky_dof_to_cell_topo),
+          std::cref(kx_dof_to_cell_topo.topology),
+          std::cref(ky_dof_to_cell_topo.topology),
           std::cref(bem_values),
           std::cref(bem_values_gpu),
           std::cref(mass_matrix_quadrature_formula),
@@ -6893,60 +9600,44 @@ namespace IdeoBEM
         parallel::internal::parallel_for(
           far_field_leaf_set.begin(),
           far_field_leaf_set.end(),
-          std::bind(
-            static_cast<void (*)(
-              const tbb::blocked_range<typename std::vector<
-                HMatrix<spacedim, RangeNumberType> *>::iterator> &,
-              const ACAConfig &,
-              const KernelFunctionType<spacedim, RangeNumberType> &,
-              const RangeNumberType,
-              const RangeNumberType,
-              const std::vector<std::vector<
-                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
-              const std::vector<std::vector<
-                const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
-              const BEMValues<dim, spacedim, RangeNumberType> &,
-              const IdeoBEM::CUDAWrappers::
-                CUDABEMValues<dim, spacedim, RangeNumberType> &,
-              const QGauss<dim> &,
-              const DoFHandler<dim, spacedim> &,
-              const DoFHandler<dim, spacedim> &,
-              const std::vector<types::global_dof_index> *,
-              const std::vector<types::global_dof_index> *,
-              const std::vector<types::global_dof_index> &,
-              const std::vector<types::global_dof_index> &,
-              const MappingQGenericExt<dim, spacedim> &,
-              const MappingQGenericExt<dim, spacedim> &,
-              const std::map<
-                typename Triangulation<dim, spacedim>::cell_iterator,
-                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-              const std::map<
-                typename Triangulation<dim, spacedim>::cell_iterator,
-                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-              const DetectCellNeighboringTypeMethod,
-              const bool)>(fill_hmatrix_leaf_node_subrange_with_aca_plus),
-            std::placeholders::_1,
-            std::cref(aca_config),
-            std::cref(kernel),
-            kernel_factor,
-            mass_matrix_factor,
-            std::cref(kx_dof_to_cell_topo),
-            std::cref(ky_dof_to_cell_topo),
-            std::cref(bem_values),
-            std::cref(bem_values_gpu),
-            std::cref(mass_matrix_quadrature_formula),
-            std::cref(kx_dof_handler),
-            std::cref(ky_dof_handler),
-            kx_map_from_local_to_full_dof_indices,
-            ky_map_from_local_to_full_dof_indices,
-            std::cref(kx_dof_i2e_numbering),
-            std::cref(ky_dof_i2e_numbering),
-            std::cref(kx_mapping),
-            std::cref(ky_mapping),
-            std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-            std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-            method_for_cell_neighboring_type,
-            enable_build_symmetric_hmat),
+          std::bind(static_cast<void (*)(
+                      const tbb::blocked_range<typename std::vector<
+                        HMatrix<spacedim, RangeNumberType> *>::iterator> &,
+                      const ACAConfig &,
+                      const KernelFunctionType<spacedim, RangeNumberType> &,
+                      const RangeNumberType,
+                      const DofToCellTopology<dim, spacedim> &,
+                      const DofToCellTopology<dim, spacedim> &,
+                      const BEMValues<dim, spacedim, RangeNumberType> &,
+                      const IdeoBEM::CUDAWrappers::
+                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
+                      const DoFHandler<dim, spacedim> &,
+                      const DoFHandler<dim, spacedim> &,
+                      const std::vector<types::global_dof_index> *,
+                      const std::vector<types::global_dof_index> *,
+                      const std::vector<types::global_dof_index> &,
+                      const std::vector<types::global_dof_index> &,
+                      const MappingQGenericExt<dim, spacedim> &,
+                      const MappingQGenericExt<dim, spacedim> &,
+                      const bool)>(
+                      fill_far_field_hmatrix_leaf_node_subrange_with_aca_plus),
+                    std::placeholders::_1,
+                    std::cref(aca_config),
+                    std::cref(kernel),
+                    kernel_factor,
+                    std::cref(kx_dof_to_cell_topo),
+                    std::cref(ky_dof_to_cell_topo),
+                    std::cref(bem_values),
+                    std::cref(bem_values_gpu),
+                    std::cref(kx_dof_handler),
+                    std::cref(ky_dof_handler),
+                    kx_map_from_local_to_full_dof_indices,
+                    ky_map_from_local_to_full_dof_indices,
+                    std::cref(kx_dof_i2e_numbering),
+                    std::cref(ky_dof_i2e_numbering),
+                    std::cref(kx_mapping),
+                    std::cref(ky_mapping),
+                    enable_build_symmetric_hmat),
           grain_size);
       }
 

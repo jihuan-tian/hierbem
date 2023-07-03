@@ -10,6 +10,16 @@
 
 namespace IdeoBEM
 {
+  namespace CUDAWrappers
+  {
+    /**
+     * Global variable storing the properties of the GPU device. The information
+     * will be use for automatically determining the thread block size and block
+     * rectangle for parallelization on the GPU device.
+     */
+    cudaDeviceProp device_properties;
+  } // namespace CUDAWrappers
+
   void
   print_dof_to_cell_topology(
     const std::vector<std::vector<unsigned int>> &dof_to_cell_topo)
