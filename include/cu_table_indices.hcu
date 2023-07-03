@@ -185,6 +185,7 @@ namespace IdeoBEM
     CUDATableIndices<N>::CUDATableIndices(
       const CUDATableIndices<N> &table_indices)
     {
+#pragma unroll
       for (size_type i = 0; i < N; i++)
         {
           indices[i] = table_indices[i];
@@ -225,6 +226,7 @@ namespace IdeoBEM
     __host__ __device__ CUDATableIndices<N> &
     CUDATableIndices<N>::operator=(const CUDATableIndices<N> &table_indices)
     {
+#pragma unroll
       for (size_type i = 0; i < N; i++)
         {
           indices[i] = table_indices[i];
@@ -238,6 +240,7 @@ namespace IdeoBEM
     __host__ __device__ bool
     CUDATableIndices<N>::operator==(const CUDATableIndices<N> &T2) const
     {
+#pragma unroll
       for (size_type i = 0; i < N; i++)
         {
           if (indices[i] != T2.indices[i])
@@ -372,6 +375,7 @@ namespace IdeoBEM
         {
           std::size_t index = indices[0];
 
+#pragma unroll
           for (int i = 1; i < N; i++)
             {
               index = index * sizes[i] + indices[i];
@@ -383,6 +387,10 @@ namespace IdeoBEM
         {
           std::size_t index = indices[N - 1];
 
+          /**
+           * @internal TODO Can this decreasing loop be unrolled?
+           */
+#pragma unroll
           for (int i = N - 2; i >= 0; i--)
             {
               index = index * sizes[i] + indices[i];
@@ -401,6 +409,10 @@ namespace IdeoBEM
     {
       if (C_style_index)
         {
+          /**
+           * @internal TODO Can this decreasing loop be unrolled?
+           */
+#pragma unroll
           for (int i = N - 1; i >= 1; i--)
             {
               indices[i] = index % sizes[i];
@@ -411,6 +423,7 @@ namespace IdeoBEM
         }
       else
         {
+#pragma unroll
           for (int i = 0; i < N - 1; i++)
             {
               indices[i] = index % sizes[i];

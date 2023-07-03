@@ -6924,13 +6924,6 @@ namespace IdeoBEM
     const std::array<types::global_dof_index, 2> *col_index_range =
       leaf_mat->get_col_index_range();
 
-    /**
-     * @internal Global DoF indices in the external numbering for the current
-     * matrix entry.
-     */
-    types::global_dof_index i_global_dof_index;
-    types::global_dof_index j_global_dof_index;
-
     switch (leaf_mat->get_type())
       {
           case FullMatrixType: {
@@ -7087,9 +7080,6 @@ namespace IdeoBEM
       leaf_mat->get_row_index_range();
     const std::array<types::global_dof_index, 2> *col_index_range =
       leaf_mat->get_col_index_range();
-
-    types::global_dof_index i_global_dof_index;
-    types::global_dof_index j_global_dof_index;
 
     switch (leaf_mat->get_type())
       {

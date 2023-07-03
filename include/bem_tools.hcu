@@ -3323,6 +3323,7 @@ namespace IdeoBEM
       {
         for (unsigned int i = 0; i < points.size(0); i++)
           {
+#pragma unroll
             for (unsigned int j = 0; j < spacedim; j++)
               {
                 point_coords(j, i) = points(i)(j);

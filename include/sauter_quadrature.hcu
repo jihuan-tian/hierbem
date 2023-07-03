@@ -2895,6 +2895,7 @@ namespace IdeoBEM
               /**
                * @internal Iterate over each k3 term.
                */
+#pragma unroll
               for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
                 {
                   /**
@@ -2967,6 +2968,7 @@ namespace IdeoBEM
                         ky_shape_grad_in_unit_cell_vector(
                           ky_shape_grad_in_unit_cell, dim);
 
+#pragma unroll
                       for (unsigned int d = 0; d < dim; d++)
                         {
                           kx_shape_grad_in_unit_cell[d] =
@@ -3166,6 +3168,7 @@ namespace IdeoBEM
               /**
                * @internal Iterate over each k3 term.
                */
+#pragma unroll
               for (unsigned int k3_index = 0; k3_index < 6; k3_index++)
                 {
                   /**
@@ -3238,6 +3241,7 @@ namespace IdeoBEM
                         ky_shape_grad_in_unit_cell_vector(
                           ky_shape_grad_in_unit_cell, dim);
 
+#pragma unroll
                       for (unsigned int d = 0; d < dim; d++)
                         {
                           kx_shape_grad_in_unit_cell[d] =
@@ -3434,6 +3438,7 @@ namespace IdeoBEM
               /**
                * @internal Iterate over each k3 term.
                */
+#pragma unroll
               for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
                 {
                   /**
@@ -3506,6 +3511,7 @@ namespace IdeoBEM
                         ky_shape_grad_in_unit_cell_vector(
                           ky_shape_grad_in_unit_cell, dim);
 
+#pragma unroll
                       for (unsigned int d = 0; d < dim; d++)
                         {
                           kx_shape_grad_in_unit_cell[d] =
@@ -3742,6 +3748,7 @@ namespace IdeoBEM
                   CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
                     ky_shape_grad_in_unit_cell, dim);
 
+#pragma unroll
                   for (unsigned int d = 0; d < dim; d++)
                     {
                       kx_shape_grad_in_unit_cell[d] =
@@ -3936,6 +3943,7 @@ namespace IdeoBEM
               CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
                 ky_shape_grad_in_unit_cell, dim);
 
+#pragma unroll
               for (unsigned int d = 0; d < dim; d++)
                 {
                   kx_shape_grad_in_unit_cell[d] =

@@ -78,6 +78,7 @@ namespace IdeoBEM
     {
       typename ProductType<Number1, Number2>::type result = 0.;
 
+#pragma unroll
       for (unsigned int i = 0; i < dim; i++)
         {
           result += t1[i] * t2[i];

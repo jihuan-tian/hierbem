@@ -776,6 +776,7 @@ namespace IdeoBEM
           CUDAVector<RangeNumberType> ky_shape_grad_in_unit_cell_vector(
             ky_shape_grad_in_unit_cell, dim);
 
+#pragma unroll
           for (unsigned int i = 0; i < dim; i++)
             {
               kx_shape_grad_in_unit_cell[i] = (*kx_shape_grad_matrix_table)(
@@ -1120,6 +1121,7 @@ namespace IdeoBEM
                 quad_points(quad_no, 0) * (1 - quad_points(quad_no, 0)) *
                 (1 - quad_points(quad_no, 0) * quad_points(quad_no, 1));
 
+#pragma unroll
               for (unsigned int k3_index = 0; k3_index < 8; k3_index++)
                 {
                   kernel_value += kernel_on_unit_cell.value(
@@ -1177,6 +1179,7 @@ namespace IdeoBEM
                 IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
                   quad_points(quad_no, 0));
 
+#pragma unroll
               for (unsigned int k3_index = 0; k3_index < 4; k3_index++)
                 {
                   kernel_value += kernel_on_unit_cell.value(
