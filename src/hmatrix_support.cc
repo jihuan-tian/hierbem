@@ -8,7 +8,7 @@
 
 #include "hmatrix_support.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace HMatrixSupport
   {
@@ -61,4 +61,4 @@ namespace IdeoBEM
         }
     }
   } // namespace HMatrixSupport
-} // namespace IdeoBEM
+} // namespace HierBEM

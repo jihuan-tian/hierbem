@@ -14,7 +14,7 @@
 
 #include "hmatrix.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   template <int spacedim, typename Number = double>
   class HMatrixSymm : public HMatrix<spacedim, Number>
@@ -289,6 +289,6 @@ namespace IdeoBEM
                                            x,
                                            HMatrixSupport::Property::symmetric);
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_HMATRIX_SYMM_H_ */

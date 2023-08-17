@@ -11,7 +11,7 @@
 #include "hmatrix.h"
 #include "linalg.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   /**
    * Class for the skew symmetric block \hmat.
@@ -150,6 +150,6 @@ namespace IdeoBEM
     copy_vector(y, 0, y1, 0, n1);
     copy_vector(y, n1, y2, 0, n2);
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_HBLOCKMATRIX_SKEW_SYMM_H_ */

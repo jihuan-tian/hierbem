@@ -36,7 +36,7 @@ int main()
     for (const auto second_cell : triangulation.active_cell_iterators())
     {
       cell_distance_matrix(i, j) =
-          IdeoBEM::cell_distance<dim, spacedim, double>(first_cell, second_cell);
+          HierBEM::cell_distance<dim, spacedim, double>(first_cell, second_cell);
 
       j++;
     }

@@ -13,7 +13,7 @@
 #include "cu_vector.hcu"
 
 using namespace std;
-using namespace IdeoBEM::CUDAWrappers;
+using namespace HierBEM::CUDAWrappers;
 
 int
 main()

@@ -10,7 +10,7 @@
 
 #include <deal.II/base/exceptions.h>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -41,6 +41,6 @@ namespace IdeoBEM
                  double,
                  << arg1 << " is not in the range [" << arg2 << ", " << arg3
                  << "].");
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_GENERAL_EXCEPTIONS_H_ */

@@ -66,7 +66,7 @@
 #include "read_octave_data.h"
 #include "triangulation_tools.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -477,22 +477,22 @@ namespace IdeoBEM
     /**
      * Kernel function for the single layer potential.
      */
-    IdeoBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<3>
+    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<3>
       single_layer_kernel;
     /**
      * Kernel function for the double layer potential.
      */
-    IdeoBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<3>
+    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<3>
       double_layer_kernel;
     /**
      * Kernel function for the adjoint double layer potential.
      */
-    IdeoBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<3>
+    HierBEM::CUDAWrappers::LaplaceKernel::AdjointDoubleLayerKernel<3>
       adjoint_double_layer_kernel;
     /**
      * Kernel function for the hyper-singular potential.
      */
-    IdeoBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernelRegular<3>
+    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernelRegular<3>
       hyper_singular_kernel;
 
     /**
@@ -1033,7 +1033,7 @@ namespace IdeoBEM
   {
     LogStream::Prefix prefix_string("setup_system");
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("setup_system");
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range("setup_system");
 #endif
 
     Timer timer;
@@ -2208,7 +2208,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_dirichlet_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
               K2_matrix_with_mass_matrix);
@@ -2228,7 +2228,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_dirichlet_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
               V1_matrix);
@@ -2285,7 +2285,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_neumann_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
               K_prime2_matrix_with_mass_matrix);
@@ -2307,7 +2307,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_neumann_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               SauterQuadratureRule<dim>(5, 4, 4, 3),
               D1_matrix);
@@ -2366,7 +2366,7 @@ namespace IdeoBEM
   {
     LogStream::Prefix prefix_string("assemble_hmatrix_system");
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_hmatrix_system");
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range("assemble_hmatrix_system");
 #endif
 
     Timer timer;
@@ -2391,7 +2391,7 @@ namespace IdeoBEM
             if (is_interior_problem)
               {
 #if ENABLE_NVTX == 1
-                IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                   "assemble sigma*I+K");
 #endif
 
@@ -2420,7 +2420,7 @@ namespace IdeoBEM
                   *ky_mapping_data_for_dirichlet_domain,
                   map_from_surface_mesh_to_volume_mesh,
                   map_from_surface_mesh_to_volume_mesh,
-                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
 
@@ -2430,7 +2430,7 @@ namespace IdeoBEM
             else
               {
 #if ENABLE_NVTX == 1
-                IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                   "assemble (sigma-1)*I+K");
 #endif
 
@@ -2459,7 +2459,7 @@ namespace IdeoBEM
                   *ky_mapping_data_for_dirichlet_domain,
                   map_from_surface_mesh_to_volume_mesh,
                   map_from_surface_mesh_to_volume_mesh,
-                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
 
@@ -2507,7 +2507,7 @@ namespace IdeoBEM
 
             {
 #if ENABLE_NVTX == 1
-              IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("assemble V");
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range("assemble V");
 #endif
 
               std::cout << "=== Assemble V ===" << std::endl;
@@ -2535,7 +2535,7 @@ namespace IdeoBEM
                 *ky_mapping_data_for_dirichlet_domain,
                 map_from_surface_mesh_to_volume_mesh,
                 map_from_surface_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   SameTriangulations,
                 true);
 
@@ -2590,7 +2590,7 @@ namespace IdeoBEM
                   *ky_mapping_data_for_neumann_domain,
                   map_from_surface_mesh_to_volume_mesh,
                   map_from_surface_mesh_to_volume_mesh,
-                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
 
@@ -2624,7 +2624,7 @@ namespace IdeoBEM
                   *ky_mapping_data_for_neumann_domain,
                   map_from_surface_mesh_to_volume_mesh,
                   map_from_surface_mesh_to_volume_mesh,
-                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
 
@@ -2737,7 +2737,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_neumann_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
 
@@ -2797,7 +2797,7 @@ namespace IdeoBEM
                   *ky_mapping_data_for_dirichlet_domain,
                   map_from_surface_mesh_to_volume_mesh,
                   map_from_surface_mesh_to_volume_mesh,
-                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
 
@@ -2831,7 +2831,7 @@ namespace IdeoBEM
                   *ky_mapping_data_for_neumann_domain,
                   map_from_surface_mesh_to_volume_mesh,
                   map_from_surface_mesh_to_volume_mesh,
-                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
 
@@ -2865,7 +2865,7 @@ namespace IdeoBEM
                   *ky_mapping_data_for_dirichlet_domain,
                   map_from_surface_mesh_to_volume_mesh,
                   map_from_surface_mesh_to_volume_mesh,
-                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
 
@@ -2899,7 +2899,7 @@ namespace IdeoBEM
                   *ky_mapping_data_for_neumann_domain,
                   map_from_surface_mesh_to_volume_mesh,
                   map_from_surface_mesh_to_volume_mesh,
-                  IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                     SameTriangulations,
                   false);
 
@@ -2932,7 +2932,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_neumann_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
 
@@ -2964,7 +2964,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_dirichlet_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
 
@@ -3102,7 +3102,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_dirichlet_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
 
@@ -3134,7 +3134,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_neumann_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               false);
 
@@ -3166,7 +3166,7 @@ namespace IdeoBEM
               *ky_mapping_data_for_neumann_domain,
               map_from_surface_mesh_to_volume_mesh,
               map_from_surface_mesh_to_volume_mesh,
-              IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                 SameTriangulations,
               true);
 
@@ -3346,7 +3346,7 @@ namespace IdeoBEM
   LaplaceBEM<dim, spacedim>::solve()
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("solve");
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range("solve");
 #endif
 
     std::cout << "=== Solve problem ===" << std::endl;
@@ -3889,7 +3889,7 @@ namespace IdeoBEM
   {
     LogStream::Prefix prefix_string("run");
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("run");
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range("run");
 #endif
 
     Timer timer;
@@ -4052,7 +4052,7 @@ namespace IdeoBEM
           *ky_mapping_data_for_neumann_domain,
           map_from_surface_mesh_to_volume_mesh,
           map_from_surface_mesh_to_volume_mesh,
-          IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+          HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
             SameTriangulations,
           SauterQuadratureRule<dim>(5, 4, 4, 3),
           V1_matrix);
@@ -4088,7 +4088,7 @@ namespace IdeoBEM
           *ky_mapping_data_for_neumann_domain,
           map_from_surface_mesh_to_volume_mesh,
           map_from_surface_mesh_to_volume_mesh,
-          IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+          HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
             SameTriangulations,
           true);
       }
@@ -4158,6 +4158,6 @@ namespace IdeoBEM
               << std::endl;
     system_rhs_for_natural_density.reinit(0);
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_LAPLACE_BEM_H_ */

@@ -98,7 +98,7 @@ main()
        cell_iter_for_fe_q++, cell_iter_for_fe_dgq++, row_counter++)
     {
       vertex_indices_in_cell =
-        IdeoBEM::BEMTools::get_vertex_indices<dim, spacedim>(
+        HierBEM::BEMTools::get_vertex_indices<dim, spacedim>(
           cell_iter_for_fe_q);
 
       for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_cell; v++)
@@ -108,7 +108,7 @@ main()
         }
 
       vertex_indices_in_cell =
-        IdeoBEM::BEMTools::get_vertex_indices<dim, spacedim>(
+        HierBEM::BEMTools::get_vertex_indices<dim, spacedim>(
           cell_iter_for_fe_dgq);
 
       for (unsigned int v = 0; v < GeometryInfo<dim>::vertices_per_cell; v++)

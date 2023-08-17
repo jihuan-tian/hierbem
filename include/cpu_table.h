@@ -11,7 +11,7 @@
 #include <deal.II/base/table.h>
 #include <deal.II/base/table_indices.h>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -98,7 +98,7 @@ namespace IdeoBEM
   {
     return TableBase<N, T>::values.data();
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_CPU_TABLE_H_ */

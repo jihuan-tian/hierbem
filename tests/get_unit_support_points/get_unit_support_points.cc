@@ -30,13 +30,13 @@ main()
 
     print_vector_values<std::vector<Point<2>>>(
       std::cout,
-      IdeoBEM::BEMTools::get_lexicographic_unit_support_points(fe),
+      HierBEM::BEMTools::get_lexicographic_unit_support_points(fe),
       "\n",
       true);
 
     std::vector<Point<2>> unit_support_points;
     unit_support_points =
-      IdeoBEM::BEMTools::get_lexicographic_unit_support_points(fe);
+      HierBEM::BEMTools::get_lexicographic_unit_support_points(fe);
     print_vector_values(std::cout, unit_support_points, "\n", true);
   }
 
@@ -48,12 +48,12 @@ main()
 
     print_vector_values<std::vector<Point<2>>>(
       std::cout,
-      IdeoBEM::BEMTools::get_lexicographic_unit_support_points(fe),
+      HierBEM::BEMTools::get_lexicographic_unit_support_points(fe),
       "\n",
       true);
 
     std::vector<Point<2>> unit_support_points(fe.dofs_per_cell);
-    IdeoBEM::BEMTools::get_lexicographic_unit_support_points(
+    HierBEM::BEMTools::get_lexicographic_unit_support_points(
       fe, unit_support_points);
     print_vector_values(std::cout, unit_support_points, "\n", true);
   }

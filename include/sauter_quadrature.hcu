@@ -44,7 +44,7 @@
 #include "mapping_q_generic_ext.h"
 #include "sauter_quadrature_tools.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -1995,7 +1995,7 @@ namespace IdeoBEM
            */
           quad_values_in_thread_block[tid] =
             kernel_value *
-            IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+            HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
               quad_points(quad_no, 0)) *
             bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
         }
@@ -3597,7 +3597,7 @@ namespace IdeoBEM
 
               quad_value +=
                 kernel_value *
-                IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
                   quad_points(quad_no, 0)) *
                 bem_values.quad_rule_for_common_vertex.get_weights()[quad_no];
             }
@@ -4097,27 +4097,24 @@ namespace IdeoBEM
        * counterpart in the ring buffer should have one more dimension which
        * corresponds to the task index.
        */
-      cudaError_t error_code;
-
       kx_mapping_support_points_permuted_ring_buffer_cpu.reinit(
         TableIndices<2>(capacity,
                         bem_values.kx_mapping_data.n_shape_functions));
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
         kx_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
           sizeof(Point<spacedim, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
 
       ky_mapping_support_points_permuted_ring_buffer_cpu.reinit(
         TableIndices<2>(capacity,
                         bem_values.ky_mapping_data.n_shape_functions));
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)),
         ky_mapping_support_points_permuted_ring_buffer_cpu.n_elements() *
           sizeof(Point<spacedim, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
+
 
       kx_mapping_support_points_permuted_ring_buffer_gpu.allocate(
         TableIndices<2>(capacity,
@@ -4126,30 +4123,30 @@ namespace IdeoBEM
         TableIndices<2>(capacity,
                         bem_values.ky_mapping_data.n_shape_functions));
 
-      error_code = cudaMallocHost((void **)&i_local_index_ring_buffer_cpu,
-                                  capacity * sizeof(unsigned int));
-      AssertCuda(error_code);
-      error_code = cudaMallocHost((void **)&j_local_index_ring_buffer_cpu,
-                                  capacity * sizeof(unsigned int));
-      AssertCuda(error_code);
+      AssertCuda(cudaMallocHost((void **)&i_local_index_ring_buffer_cpu,
+                                capacity * sizeof(unsigned int)));
 
-      error_code = cudaMalloc((void **)&i_local_index_ring_buffer_gpu,
-                              capacity * sizeof(unsigned int));
-      AssertCuda(error_code);
-      error_code = cudaMalloc((void **)&j_local_index_ring_buffer_gpu,
-                              capacity * sizeof(unsigned int));
-      AssertCuda(error_code);
+      AssertCuda(cudaMallocHost((void **)&j_local_index_ring_buffer_cpu,
+                                capacity * sizeof(unsigned int)));
+
+
+      AssertCuda(cudaMalloc((void **)&i_local_index_ring_buffer_gpu,
+                            capacity * sizeof(unsigned int)));
+
+      AssertCuda(cudaMalloc((void **)&j_local_index_ring_buffer_gpu,
+                            capacity * sizeof(unsigned int)));
+
 
       /**
        * @internal Allocate pinned memory on the host for the quadrature values.
        */
-      error_code = cudaMallocHost((void **)&quadrature_value_ring_buffer_cpu,
-                                  capacity * sizeof(RangeNumberType));
-      AssertCuda(error_code);
+      AssertCuda(cudaMallocHost((void **)&quadrature_value_ring_buffer_cpu,
+                                capacity * sizeof(RangeNumberType)));
 
-      error_code = cudaMalloc((void **)&quadrature_value_ring_buffer_gpu,
-                              capacity * sizeof(RangeNumberType));
-      AssertCuda(error_code);
+
+      AssertCuda(cudaMalloc((void **)&quadrature_value_ring_buffer_gpu,
+                            capacity * sizeof(RangeNumberType)));
+
 
       /**
        * @internal Initialize task status array.
@@ -4167,53 +4164,45 @@ namespace IdeoBEM
     SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>::
       release()
     {
-      cudaError_t error_code;
+      AssertCuda(cudaHostUnregister(
+        (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
 
-      error_code = cudaHostUnregister(
-        (void *)&(kx_mapping_support_points_permuted_ring_buffer_cpu(0, 0)));
-      AssertCuda(error_code);
 
-      error_code = cudaHostUnregister(
-        (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister(
+        (void *)&(ky_mapping_support_points_permuted_ring_buffer_cpu(0, 0))));
+
 
       kx_mapping_support_points_permuted_ring_buffer_gpu.release();
       ky_mapping_support_points_permuted_ring_buffer_gpu.release();
 
       if (i_local_index_ring_buffer_cpu != nullptr)
         {
-          error_code = cudaFreeHost(i_local_index_ring_buffer_cpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeHost(i_local_index_ring_buffer_cpu));
         }
 
       if (j_local_index_ring_buffer_cpu != nullptr)
         {
-          error_code = cudaFreeHost(j_local_index_ring_buffer_cpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeHost(j_local_index_ring_buffer_cpu));
         }
 
       if (i_local_index_ring_buffer_gpu != nullptr)
         {
-          error_code = cudaFree(i_local_index_ring_buffer_gpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFree(i_local_index_ring_buffer_gpu));
         }
 
       if (j_local_index_ring_buffer_gpu != nullptr)
         {
-          error_code = cudaFree(j_local_index_ring_buffer_gpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFree(j_local_index_ring_buffer_gpu));
         }
 
       if (quadrature_value_ring_buffer_cpu != nullptr)
         {
-          error_code = cudaFreeHost(quadrature_value_ring_buffer_cpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeHost(quadrature_value_ring_buffer_cpu));
         }
 
       if (quadrature_value_ring_buffer_gpu != nullptr)
         {
-          error_code = cudaFree(quadrature_value_ring_buffer_gpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFree(quadrature_value_ring_buffer_gpu));
         }
     }
 
@@ -4314,7 +4303,7 @@ namespace IdeoBEM
         std::string(cell_neighboring_type_name(cell_neighboring_type)));
 #endif
 #if ENABLE_NVTX == 1
-      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
         std::string("add_task for ") +
         std::string(cell_neighboring_type_name(cell_neighboring_type)));
 #endif
@@ -4326,7 +4315,7 @@ namespace IdeoBEM
 
       {
 #if ENABLE_NVTX == 1
-        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("wait for buffer_not_full");
+        HierBEM::CUDAWrappers::NVTXRange nvtx_range("wait for buffer_not_full");
 #endif
 
         std::unique_lock<std::mutex> ul(buffer_lock);
@@ -4349,7 +4338,7 @@ namespace IdeoBEM
 
       {
 #if ENABLE_NVTX == 1
-        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("creating task");
+        HierBEM::CUDAWrappers::NVTXRange nvtx_range("creating task");
 #endif
 
         /**
@@ -4419,7 +4408,7 @@ namespace IdeoBEM
 
       {
 #if ENABLE_NVTX == 1
-        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("move tail_committed");
+        HierBEM::CUDAWrappers::NVTXRange nvtx_range("move tail_committed");
 #endif
 
         std::lock_guard<std::mutex> lg(buffer_lock);
@@ -4491,7 +4480,7 @@ namespace IdeoBEM
         std::string(cell_neighboring_type_name(cell_neighboring_type)));
 #endif
 #if ENABLE_NVTX == 1
-      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
         std::string("process_task for ") +
         std::string(cell_neighboring_type_name(cell_neighboring_type)));
 #endif
@@ -4502,7 +4491,7 @@ namespace IdeoBEM
 
       {
 #if ENABLE_NVTX == 1
-        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
           "wait for batch_task_ready");
 #endif
 
@@ -4567,7 +4556,7 @@ namespace IdeoBEM
       else
         {
 #if ENABLE_NVTX == 1
-          IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("processing task");
+          HierBEM::CUDAWrappers::NVTXRange nvtx_range("processing task");
 #endif
 
           /**
@@ -4626,8 +4615,6 @@ namespace IdeoBEM
                 }
             }
 
-          cudaError_t error_code;
-
           /**
            * @internal Copy task data in batch from host to device.
            */
@@ -4653,25 +4640,24 @@ namespace IdeoBEM
                     ky_mapping_support_points_permuted_ring_buffer_cpu.size(1),
                   cuda_stream_handle);
 
-              error_code =
+              AssertCuda(
                 cudaMemcpyAsync((void *)(i_local_index_ring_buffer_gpu +
                                          task_start_index_to_fetch),
                                 (void *)(i_local_index_ring_buffer_cpu +
                                          task_start_index_to_fetch),
                                 sizeof(unsigned int) * task_num_to_fetch,
                                 cudaMemcpyHostToDevice,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
 
-              error_code =
+
+              AssertCuda(
                 cudaMemcpyAsync((void *)(j_local_index_ring_buffer_gpu +
                                          task_start_index_to_fetch),
                                 (void *)(j_local_index_ring_buffer_cpu +
                                          task_start_index_to_fetch),
                                 sizeof(unsigned int) * task_num_to_fetch,
                                 cudaMemcpyHostToDevice,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
             }
           else
             {
@@ -4695,7 +4681,7 @@ namespace IdeoBEM
                     ky_mapping_support_points_permuted_ring_buffer_cpu.size(1),
                   cuda_stream_handle);
 
-              error_code =
+              AssertCuda(
                 cudaMemcpyAsync((void *)(i_local_index_ring_buffer_gpu +
                                          task_start_index_to_fetch),
                                 (void *)(i_local_index_ring_buffer_cpu +
@@ -4703,10 +4689,10 @@ namespace IdeoBEM
                                 sizeof(unsigned int) *
                                   number_of_data_until_buffer_end,
                                 cudaMemcpyHostToDevice,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
 
-              error_code =
+
+              AssertCuda(
                 cudaMemcpyAsync((void *)(j_local_index_ring_buffer_gpu +
                                          task_start_index_to_fetch),
                                 (void *)(j_local_index_ring_buffer_cpu +
@@ -4714,8 +4700,8 @@ namespace IdeoBEM
                                 sizeof(unsigned int) *
                                   number_of_data_until_buffer_end,
                                 cudaMemcpyHostToDevice,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
+
 
               kx_mapping_support_points_permuted_ring_buffer_gpu
                 .assign_from_host(
@@ -4735,23 +4721,22 @@ namespace IdeoBEM
                     ky_mapping_support_points_permuted_ring_buffer_cpu.size(1),
                   cuda_stream_handle);
 
-              error_code =
+              AssertCuda(
                 cudaMemcpyAsync((void *)(i_local_index_ring_buffer_gpu),
                                 (void *)i_local_index_ring_buffer_cpu,
                                 sizeof(unsigned int) *
                                   number_of_data_from_buffer_start,
                                 cudaMemcpyHostToDevice,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
 
-              error_code =
+
+              AssertCuda(
                 cudaMemcpyAsync((void *)(j_local_index_ring_buffer_gpu),
                                 (void *)(j_local_index_ring_buffer_cpu),
                                 sizeof(unsigned int) *
                                   number_of_data_from_buffer_start,
                                 cudaMemcpyHostToDevice,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
             }
 
           /**
@@ -4774,7 +4759,7 @@ namespace IdeoBEM
             {
                 case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                  IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                     "process sauter task: same panel");
 #endif
 
@@ -4799,7 +4784,7 @@ namespace IdeoBEM
                 }
                 case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                  IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                     "process sauter task: common edge");
 #endif
 
@@ -4824,7 +4809,7 @@ namespace IdeoBEM
                 }
                 case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                  IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                     "process sauter task: common vertex");
 #endif
 
@@ -4849,7 +4834,7 @@ namespace IdeoBEM
                 }
                 case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                  IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                     "process sauter task: regular");
 #endif
 
@@ -4885,7 +4870,7 @@ namespace IdeoBEM
           if (is_task_batch_before_buffer_end)
             {
 #if ENABLE_NVTX == 1
-              IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                 "assemble quadrature result");
 #endif
 
@@ -4893,22 +4878,22 @@ namespace IdeoBEM
                * @internal When the data in the ring buffer are in a
                * contiguous block, perform one time of memory copy.
                */
-              error_code =
+              AssertCuda(
                 cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu +
                                          task_start_index_to_fetch),
                                 (void *)(quadrature_value_ring_buffer_gpu +
                                          task_start_index_to_fetch),
                                 task_num_to_fetch * sizeof(RangeNumberType),
                                 cudaMemcpyDeviceToHost,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
+
 
               /**
                * @internal This synchronize ensures the completion of all memory
                * operations and kernel executions in the current CUDA stream.
                */
-              error_code = cudaStreamSynchronize(cuda_stream_handle);
-              AssertCuda(error_code);
+              AssertCuda(cudaStreamSynchronize(cuda_stream_handle));
+
 
               /**
                * Assemble the result to full matrix in \hmatrix node in serial.
@@ -4937,11 +4922,11 @@ namespace IdeoBEM
           else
             {
 #if ENABLE_NVTX == 1
-              IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                 "assemble quadrature result");
 #endif
 
-              error_code =
+              AssertCuda(
                 cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu +
                                          task_start_index_to_fetch),
                                 (void *)(quadrature_value_ring_buffer_gpu +
@@ -4949,24 +4934,24 @@ namespace IdeoBEM
                                 number_of_data_until_buffer_end *
                                   sizeof(RangeNumberType),
                                 cudaMemcpyDeviceToHost,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
 
-              error_code =
+
+              AssertCuda(
                 cudaMemcpyAsync((void *)(quadrature_value_ring_buffer_cpu),
                                 (void *)(quadrature_value_ring_buffer_gpu),
                                 number_of_data_from_buffer_start *
                                   sizeof(RangeNumberType),
                                 cudaMemcpyDeviceToHost,
-                                cuda_stream_handle);
-              AssertCuda(error_code);
+                                cuda_stream_handle));
+
 
               /**
                * @internal This synchronize ensures the completion of all memory
                * operations and kernel executions in the current CUDA stream.
                */
-              error_code = cudaStreamSynchronize(cuda_stream_handle);
-              AssertCuda(error_code);
+              AssertCuda(cudaStreamSynchronize(cuda_stream_handle));
+
 
               /**
                * Assemble the result to full matrix in \hmatrix node in serial.
@@ -5010,7 +4995,7 @@ namespace IdeoBEM
 
           {
 #if ENABLE_NVTX == 1
-            IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("move head_committed");
+            HierBEM::CUDAWrappers::NVTXRange nvtx_range("move head_committed");
 #endif
 
             std::lock_guard<std::mutex> lg(buffer_lock);
@@ -5095,17 +5080,14 @@ namespace IdeoBEM
       /**
        * @internal Allocate memory asynchronously on the device.
        */
-      cudaError_t error_code;
-
-      error_code =
+      AssertCuda(
         cudaMallocHost((void **)&starting_task_indices_for_dof_pairs_cpu,
-                       sizeof(unsigned int) * (vector_size + 1));
-      AssertCuda(error_code);
-      error_code =
+                       sizeof(unsigned int) * (vector_size + 1)));
+
+      AssertCuda(
         cudaMallocAsync((void **)&starting_task_indices_for_dof_pairs_gpu,
                         sizeof(unsigned int) * (vector_size + 1),
-                        cuda_stream_handle);
-      AssertCuda(error_code);
+                        cuda_stream_handle));
 
       kx_mapping_support_points_permuted_buffer_gpu.allocate(
         TableIndices<2>(capacity, bem_values.kx_mapping_data.n_shape_functions),
@@ -5114,25 +5096,25 @@ namespace IdeoBEM
         TableIndices<2>(capacity, bem_values.ky_mapping_data.n_shape_functions),
         cuda_stream_handle);
 
-      error_code = cudaMallocAsync((void **)&i_local_index_buffer_gpu,
-                                   capacity * sizeof(unsigned int),
-                                   cuda_stream_handle);
-      AssertCuda(error_code);
-      error_code = cudaMallocAsync((void **)&j_local_index_buffer_gpu,
-                                   capacity * sizeof(unsigned int),
-                                   cuda_stream_handle);
-      AssertCuda(error_code);
+      AssertCuda(cudaMallocAsync((void **)&i_local_index_buffer_gpu,
+                                 capacity * sizeof(unsigned int),
+                                 cuda_stream_handle));
 
-      error_code =
+      AssertCuda(cudaMallocAsync((void **)&j_local_index_buffer_gpu,
+                                 capacity * sizeof(unsigned int),
+                                 cuda_stream_handle));
+
+
+      AssertCuda(
         cudaMallocAsync((void **)&values_at_all_quad_points_gpu,
                         capacity * quad_point_num * sizeof(RangeNumberType),
-                        cuda_stream_handle);
-      AssertCuda(error_code);
+                        cuda_stream_handle));
 
-      error_code = cudaMallocAsync((void **)&vector_element_values_gpu,
-                                   vector_size * sizeof(RangeNumberType),
-                                   cuda_stream_handle);
-      AssertCuda(error_code);
+
+      AssertCuda(cudaMallocAsync((void **)&vector_element_values_gpu,
+                                 vector_size * sizeof(RangeNumberType),
+                                 cuda_stream_handle));
+
 
       /**
        * @internal Allocate memory on the host.
@@ -5143,29 +5125,28 @@ namespace IdeoBEM
       kx_mapping_support_points_permuted_buffer_cpu.reinit(
         TableIndices<2>(capacity,
                         bem_values.kx_mapping_data.n_shape_functions));
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0)),
         kx_mapping_support_points_permuted_buffer_cpu.n_elements() *
           sizeof(Point<spacedim, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
+
 
       ky_mapping_support_points_permuted_buffer_cpu.reinit(
         TableIndices<2>(capacity,
                         bem_values.ky_mapping_data.n_shape_functions));
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0)),
         ky_mapping_support_points_permuted_buffer_cpu.n_elements() *
           sizeof(Point<spacedim, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
 
-      error_code = cudaMallocHost((void **)&i_local_index_buffer_cpu,
-                                  capacity * sizeof(unsigned int));
-      AssertCuda(error_code);
-      error_code = cudaMallocHost((void **)&j_local_index_buffer_cpu,
-                                  capacity * sizeof(unsigned int));
-      AssertCuda(error_code);
+
+      AssertCuda(cudaMallocHost((void **)&i_local_index_buffer_cpu,
+                                capacity * sizeof(unsigned int)));
+
+      AssertCuda(cudaMallocHost((void **)&j_local_index_buffer_cpu,
+                                capacity * sizeof(unsigned int)));
     }
 
 
@@ -5173,19 +5154,15 @@ namespace IdeoBEM
     SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>::
       ~SauterQuadratureTaskBufferForVector()
     {
-      cudaError_t error_code;
-
       if (starting_task_indices_for_dof_pairs_cpu != nullptr)
         {
-          error_code = cudaFreeHost(starting_task_indices_for_dof_pairs_cpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeHost(starting_task_indices_for_dof_pairs_cpu));
         }
 
       if (starting_task_indices_for_dof_pairs_gpu != nullptr)
         {
-          error_code = cudaFreeAsync(starting_task_indices_for_dof_pairs_gpu,
-                                     cuda_stream_handle);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeAsync(starting_task_indices_for_dof_pairs_gpu,
+                                   cuda_stream_handle));
         }
 
       kx_mapping_support_points_permuted_buffer_gpu.release(cuda_stream_handle);
@@ -5193,50 +5170,44 @@ namespace IdeoBEM
 
       if (i_local_index_buffer_gpu != nullptr)
         {
-          error_code =
-            cudaFreeAsync(i_local_index_buffer_gpu, cuda_stream_handle);
-          AssertCuda(error_code);
+          AssertCuda(
+            cudaFreeAsync(i_local_index_buffer_gpu, cuda_stream_handle));
         }
 
       if (j_local_index_buffer_gpu != nullptr)
         {
-          error_code =
-            cudaFreeAsync(j_local_index_buffer_gpu, cuda_stream_handle);
-          AssertCuda(error_code);
+          AssertCuda(
+            cudaFreeAsync(j_local_index_buffer_gpu, cuda_stream_handle));
         }
 
       if (values_at_all_quad_points_gpu != nullptr)
         {
-          error_code =
-            cudaFreeAsync(values_at_all_quad_points_gpu, cuda_stream_handle);
-          AssertCuda(error_code);
+          AssertCuda(
+            cudaFreeAsync(values_at_all_quad_points_gpu, cuda_stream_handle));
         }
 
       if (vector_element_values_gpu != nullptr)
         {
-          error_code =
-            cudaFreeAsync(vector_element_values_gpu, cuda_stream_handle);
-          AssertCuda(error_code);
+          AssertCuda(
+            cudaFreeAsync(vector_element_values_gpu, cuda_stream_handle));
         }
 
-      error_code = cudaHostUnregister(
-        (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister(
+        (void *)&(kx_mapping_support_points_permuted_buffer_cpu(0, 0))));
 
-      error_code = cudaHostUnregister(
-        (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0)));
-      AssertCuda(error_code);
+
+      AssertCuda(cudaHostUnregister(
+        (void *)&(ky_mapping_support_points_permuted_buffer_cpu(0, 0))));
+
 
       if (i_local_index_buffer_cpu != nullptr)
         {
-          error_code = cudaFreeHost(i_local_index_buffer_cpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeHost(i_local_index_buffer_cpu));
         }
 
       if (j_local_index_buffer_cpu != nullptr)
         {
-          error_code = cudaFreeHost(j_local_index_buffer_cpu);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeHost(j_local_index_buffer_cpu));
         }
 
       vector_size    = 0;
@@ -5310,8 +5281,6 @@ namespace IdeoBEM
         const unsigned int block_size_for_quad_result_accumulation,
         const cudaStream_t cuda_stream_handle)
     {
-      cudaError_t error_code;
-
       /**
        * @internal Copy task data from host to device.
        */
@@ -5326,27 +5295,27 @@ namespace IdeoBEM
         task_num * ky_mapping_support_points_permuted_buffer_cpu.size(1),
         cuda_stream_handle);
 
-      error_code = cudaMemcpyAsync((void *)i_local_index_buffer_gpu,
-                                   (void *)i_local_index_buffer_cpu,
-                                   sizeof(unsigned int) * task_num,
-                                   cudaMemcpyHostToDevice,
-                                   cuda_stream_handle);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpyAsync((void *)i_local_index_buffer_gpu,
+                                 (void *)i_local_index_buffer_cpu,
+                                 sizeof(unsigned int) * task_num,
+                                 cudaMemcpyHostToDevice,
+                                 cuda_stream_handle));
 
-      error_code = cudaMemcpyAsync((void *)j_local_index_buffer_gpu,
-                                   (void *)j_local_index_buffer_cpu,
-                                   sizeof(unsigned int) * task_num,
-                                   cudaMemcpyHostToDevice,
-                                   cuda_stream_handle);
-      AssertCuda(error_code);
 
-      error_code =
+      AssertCuda(cudaMemcpyAsync((void *)j_local_index_buffer_gpu,
+                                 (void *)j_local_index_buffer_cpu,
+                                 sizeof(unsigned int) * task_num,
+                                 cudaMemcpyHostToDevice,
+                                 cuda_stream_handle));
+
+
+      AssertCuda(
         cudaMemcpyAsync((void *)starting_task_indices_for_dof_pairs_gpu,
                         (void *)starting_task_indices_for_dof_pairs_cpu,
                         sizeof(unsigned int) * (vector_size + 1),
                         cudaMemcpyHostToDevice,
-                        cuda_stream_handle);
-      AssertCuda(error_code);
+                        cuda_stream_handle));
+
 
       /**
        * @internal Process all Sauter quadrature tasks to the
@@ -5397,15 +5366,14 @@ namespace IdeoBEM
       /**
        * Copy vector element values from device to host.
        */
-      error_code = cudaMemcpyAsync((void *)hmat_vector.data(),
-                                   (void *)vector_element_values_gpu,
-                                   sizeof(RangeNumberType) * vector_size,
-                                   cudaMemcpyDeviceToHost,
-                                   cuda_stream_handle);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpyAsync((void *)hmat_vector.data(),
+                                 (void *)vector_element_values_gpu,
+                                 sizeof(RangeNumberType) * vector_size,
+                                 cudaMemcpyDeviceToHost,
+                                 cuda_stream_handle));
 
-      error_code = cudaStreamSynchronize(cuda_stream_handle);
-      AssertCuda(error_code);
+
+      AssertCuda(cudaStreamSynchronize(cuda_stream_handle));
     }
 
 
@@ -5468,7 +5436,7 @@ namespace IdeoBEM
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                       &ky_dof_to_cell_topo,
       const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                       &bem_values_gpu,
       const DoFHandler<dim, spacedim> &kx_dof_handler,
       const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -5521,7 +5489,7 @@ namespace IdeoBEM
       for (unsigned int l = start_leaf_set_index; l < end_leaf_set_index; l++)
         {
 #if ENABLE_NVTX == 1
-          IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+          HierBEM::CUDAWrappers::NVTXRange nvtx_range(
             std::string("create sauter tasks for near field hmatrix ") +
             std::to_string(l));
 #endif
@@ -5792,7 +5760,7 @@ namespace IdeoBEM
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                       &ky_dof_to_cell_topo,
       const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                       &bem_values_gpu,
       const QGauss<dim>               &mass_matrix_quadrature_formula,
       const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -5855,7 +5823,7 @@ namespace IdeoBEM
       for (unsigned int l = start_leaf_set_index; l < end_leaf_set_index; l++)
         {
 #if ENABLE_NVTX == 1
-          IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+          HierBEM::CUDAWrappers::NVTXRange nvtx_range(
             std::string("create sauter tasks for near field hmatrix ") +
             std::to_string(l));
 #endif
@@ -6136,8 +6104,8 @@ namespace IdeoBEM
       const unsigned int consumer_wait_time_us = 1;
 
       cudaStream_t cuda_stream_handle;
-      cudaError_t  error_code = cudaStreamCreate(&cuda_stream_handle);
-      AssertCuda(error_code);
+      AssertCuda(cudaStreamCreate(&cuda_stream_handle));
+
 
       /**
        * Continuously process the Sauter quadrature tasks in the ring buffer
@@ -6154,8 +6122,8 @@ namespace IdeoBEM
             std::chrono::microseconds(consumer_wait_time_us));
         }
 
-      error_code = cudaStreamDestroy(cuda_stream_handle);
-      AssertCuda(error_code);
+      AssertCuda(cudaStreamDestroy(cuda_stream_handle));
+
 
       std::cerr << "Consumer thread " << current_thread_id << " for "
                 << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
@@ -6242,7 +6210,7 @@ namespace IdeoBEM
       //      LogStream::Prefix prefix_string("create_sauter_task");
       //#endif
 #if ENABLE_NVTX == 1
-      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
         std::string("create sauter tasks for dof pair (") +
         std::to_string(i_global_dof_index) + std::string(",") +
         std::to_string(j_global_dof_index) + std::string(")"));
@@ -6374,7 +6342,7 @@ namespace IdeoBEM
                 {
                     case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                         "add sauter task: same panel");
 #endif
 
@@ -6390,7 +6358,7 @@ namespace IdeoBEM
                     }
                     case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                         "add sauter task: common edge");
 #endif
 
@@ -6406,7 +6374,7 @@ namespace IdeoBEM
                     }
                     case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                         "add sauter task: common vertex");
 #endif
 
@@ -6422,7 +6390,7 @@ namespace IdeoBEM
                     }
                     case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                         "add sauter task: regular");
 #endif
 
@@ -6534,7 +6502,7 @@ namespace IdeoBEM
       LogStream::Prefix prefix_string("create_sauter_task");
 #endif
 #if ENABLE_NVTX == 1
-      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
         std::string("create sauter tasks for dof pair (") +
         std::to_string(i_global_dof_index) + std::string(",") +
         std::to_string(j_global_dof_index) + std::string(")"));
@@ -6634,7 +6602,7 @@ namespace IdeoBEM
               if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
                 {
 #if ENABLE_NVTX == 1
-                  IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                  HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                     "compute mass matrix entry");
 #endif
 
@@ -6806,7 +6774,7 @@ namespace IdeoBEM
                 {
                     case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                         "add sauter task: same panel");
 #endif
 
@@ -6822,7 +6790,7 @@ namespace IdeoBEM
                     }
                     case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                         "add sauter task: common edge");
 #endif
 
@@ -6838,7 +6806,7 @@ namespace IdeoBEM
                     }
                     case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                         "add sauter task: common vertex");
 #endif
 
@@ -6854,7 +6822,7 @@ namespace IdeoBEM
                     }
                     case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                         "add sauter task: regular");
 #endif
 
@@ -7403,7 +7371,7 @@ namespace IdeoBEM
   __host__ RangeNumberType
   ApplyQuadratureUsingBEMValues(
     const Quadrature<dim * 2> &quad_rule,
-    const IdeoBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
+    const HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
       dim,
       spacedim,
       KernelFunctionType,
@@ -7612,7 +7580,7 @@ namespace IdeoBEM
         for (unsigned int j = 0; j < ky_n_dofs; j++)
           {
             // Pullback the kernel function to unit cell.
-            IdeoBEM::CUDAWrappers::KernelPulledbackToUnitCell<
+            HierBEM::CUDAWrappers::KernelPulledbackToUnitCell<
               dim,
               spacedim,
               KernelFunctionType,
@@ -7620,7 +7588,7 @@ namespace IdeoBEM
               kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
 
             // Pullback the kernel function to Sauter parameter space.
-            IdeoBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
+            HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
               dim,
               spacedim,
               KernelFunctionType,
@@ -7698,7 +7666,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                             &bem_values_gpu,
     const DoFHandler<dim, spacedim>         &kx_dof_handler,
     const DoFHandler<dim, spacedim>         &ky_dof_handler,
@@ -7712,13 +7680,13 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "sauter_assemble_on_one_pair_of_dofs");
 #endif
 
@@ -7826,7 +7794,7 @@ namespace IdeoBEM
              */
             dim3 blocks_rect;
             dim3 threads_rect;
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               configure_thread_blocks_for_sauter_quadrature_points(
                 cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
@@ -7837,11 +7805,11 @@ namespace IdeoBEM
               {
                   case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "calc jacobian: same panel");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_same_panel<<<
                         blocks_rect,
                         threads_rect,
@@ -7853,11 +7821,11 @@ namespace IdeoBEM
                   }
                   case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "calc jacobian: common edge");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_common_edge<<<
                         blocks_rect,
                         threads_rect,
@@ -7869,11 +7837,11 @@ namespace IdeoBEM
                   }
                   case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "calc jacobian: common vertex");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_common_vertex<<<
                         blocks_rect,
                         threads_rect,
@@ -7885,11 +7853,11 @@ namespace IdeoBEM
                   }
                   case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "calc jacobian: regular");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_regular<<<
                         blocks_rect,
                         threads_rect,
@@ -7926,11 +7894,11 @@ namespace IdeoBEM
                   {
                       case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                           "calc covariant: same panel");
 #endif
 
-                        IdeoBEM::CUDAWrappers::
+                        HierBEM::CUDAWrappers::
                           calc_covariant_transformations_same_panel<<<
                             blocks_rect,
                             threads_rect,
@@ -7942,11 +7910,11 @@ namespace IdeoBEM
                       }
                       case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                           "calc covariant: common edge");
 #endif
 
-                        IdeoBEM::CUDAWrappers::
+                        HierBEM::CUDAWrappers::
                           calc_covariant_transformations_common_edge<<<
                             blocks_rect,
                             threads_rect,
@@ -7958,11 +7926,11 @@ namespace IdeoBEM
                       }
                       case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                           "calc covariant: common vertex");
 #endif
 
-                        IdeoBEM::CUDAWrappers::
+                        HierBEM::CUDAWrappers::
                           calc_covariant_transformations_common_vertex<<<
                             blocks_rect,
                             threads_rect,
@@ -7974,11 +7942,11 @@ namespace IdeoBEM
                       }
                       case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                           "calc covariant: regular");
 #endif
 
-                        IdeoBEM::CUDAWrappers::
+                        HierBEM::CUDAWrappers::
                           calc_covariant_transformations_regular<<<
                             blocks_rect,
                             threads_rect,
@@ -8039,11 +8007,11 @@ namespace IdeoBEM
               {
                   case BEMTools::CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "apply quadrature: same panel");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesSamePanel<<<
                         blocks_rect.x,
                         threads_rect.x,
@@ -8059,11 +8027,11 @@ namespace IdeoBEM
                   }
                   case BEMTools::CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "apply quadrature: common edge");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesCommonEdge<<<
                         blocks_rect.x,
                         threads_rect.x,
@@ -8079,11 +8047,11 @@ namespace IdeoBEM
                   }
                   case BEMTools::CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "apply quadrature: common vertex");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesCommonVertex<<<
                         blocks_rect.x,
                         threads_rect.x,
@@ -8099,11 +8067,11 @@ namespace IdeoBEM
                   }
                   case BEMTools::CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "apply quadrature: regular");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesRegular<<<
                         blocks_rect.x,
                         threads_rect.x,
@@ -8127,16 +8095,16 @@ namespace IdeoBEM
              * @internal Extract quadrature results accumulated from all
              * thread blocks.
              */
-            cudaError_t error_code = cudaMemcpyAsync(
+            AssertCuda(cudaMemcpyAsync(
               (void *)(scratch_data.quad_values_in_thread_blocks),
               (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
               sizeof(RangeNumberType) * blocks_rect.x,
               cudaMemcpyDeviceToHost,
-              scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
+              scratch_data.cuda_stream_handle));
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
+
+            AssertCuda(cudaStreamSynchronize(scratch_data.cuda_stream_handle));
+
 
             for (unsigned int t = 0; t < blocks_rect.x; t++)
               {
@@ -8222,7 +8190,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                             &bem_values_gpu,
     const DoFHandler<dim, spacedim>         &kx_dof_handler,
     const DoFHandler<dim, spacedim>         &ky_dof_handler,
@@ -8237,13 +8205,13 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "sauter_assemble_on_one_pair_of_dofs with mass matrix");
 #endif
 
@@ -8356,7 +8324,7 @@ namespace IdeoBEM
             // Determine thread block dimensions.
             dim3 blocks_rect;
             dim3 threads_rect;
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               configure_thread_blocks_for_sauter_quadrature_points(
                 cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
@@ -8367,11 +8335,11 @@ namespace IdeoBEM
               {
                   case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "calc jacobian: same panel");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_same_panel<<<
                         blocks_rect,
                         threads_rect,
@@ -8383,11 +8351,11 @@ namespace IdeoBEM
                   }
                   case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "calc jacobian: common edge");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_common_edge<<<
                         blocks_rect,
                         threads_rect,
@@ -8399,11 +8367,11 @@ namespace IdeoBEM
                   }
                   case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "calc jacobian: common vertex");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_common_vertex<<<
                         blocks_rect,
                         threads_rect,
@@ -8415,11 +8383,11 @@ namespace IdeoBEM
                   }
                   case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "calc jacobian: regular");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       calc_jacobian_normals_for_sauter_quad_regular<<<
                         blocks_rect,
                         threads_rect,
@@ -8456,11 +8424,11 @@ namespace IdeoBEM
                   {
                       case CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                           "calc covariant: same panel");
 #endif
 
-                        IdeoBEM::CUDAWrappers::
+                        HierBEM::CUDAWrappers::
                           calc_covariant_transformations_same_panel<<<
                             blocks_rect,
                             threads_rect,
@@ -8472,11 +8440,11 @@ namespace IdeoBEM
                       }
                       case CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                           "calc covariant: common edge");
 #endif
 
-                        IdeoBEM::CUDAWrappers::
+                        HierBEM::CUDAWrappers::
                           calc_covariant_transformations_common_edge<<<
                             blocks_rect,
                             threads_rect,
@@ -8488,11 +8456,11 @@ namespace IdeoBEM
                       }
                       case CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                           "calc covariant: common vertex");
 #endif
 
-                        IdeoBEM::CUDAWrappers::
+                        HierBEM::CUDAWrappers::
                           calc_covariant_transformations_common_vertex<<<
                             blocks_rect,
                             threads_rect,
@@ -8504,11 +8472,11 @@ namespace IdeoBEM
                       }
                       case CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                           "calc covariant: regular");
 #endif
 
-                        IdeoBEM::CUDAWrappers::
+                        HierBEM::CUDAWrappers::
                           calc_covariant_transformations_regular<<<
                             blocks_rect,
                             threads_rect,
@@ -8569,11 +8537,11 @@ namespace IdeoBEM
               {
                   case BEMTools::CellNeighboringType::SamePanel: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "apply quadrature: same panel");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesSamePanel<<<
                         blocks_rect.x,
                         threads_rect.x,
@@ -8589,11 +8557,11 @@ namespace IdeoBEM
                   }
                   case BEMTools::CellNeighboringType::CommonEdge: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "apply quadrature: common edge");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesCommonEdge<<<
                         blocks_rect.x,
                         threads_rect.x,
@@ -8609,11 +8577,11 @@ namespace IdeoBEM
                   }
                   case BEMTools::CellNeighboringType::CommonVertex: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "apply quadrature: common vertex");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesCommonVertex<<<
                         blocks_rect.x,
                         threads_rect.x,
@@ -8629,11 +8597,11 @@ namespace IdeoBEM
                   }
                   case BEMTools::CellNeighboringType::Regular: {
 #if ENABLE_NVTX == 1
-                    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                       "apply quadrature: regular");
 #endif
 
-                    IdeoBEM::CUDAWrappers::
+                    HierBEM::CUDAWrappers::
                       ApplyQuadratureUsingBEMValuesRegular<<<
                         blocks_rect.x,
                         threads_rect.x,
@@ -8657,16 +8625,16 @@ namespace IdeoBEM
              * @internal Extract quadrature results accumulated from all
              * thread blocks.
              */
-            cudaError_t error_code = cudaMemcpyAsync(
+            AssertCuda(cudaMemcpyAsync(
               (void *)(scratch_data.quad_values_in_thread_blocks),
               (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
               sizeof(RangeNumberType) * blocks_rect.x,
               cudaMemcpyDeviceToHost,
-              scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
+              scratch_data.cuda_stream_handle));
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
+
+            AssertCuda(cudaStreamSynchronize(scratch_data.cuda_stream_handle));
+
 
             for (unsigned int t = 0; t < blocks_rect.x; t++)
               {
@@ -8690,7 +8658,7 @@ namespace IdeoBEM
             if ((kx_cell_index == ky_cell_index) && (mass_matrix_factor != 0))
               {
 #if ENABLE_NVTX == 1
-                IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                   "compute mass matrix");
 #endif
 
@@ -8818,20 +8786,20 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                                             &bem_values_gpu,
     const DoFHandler<dim, spacedim>                         &kx_dof_handler,
     const DoFHandler<dim, spacedim>                         &ky_dof_handler,
     const MappingQGenericExt<dim, spacedim>                 &kx_mapping,
     const MappingQGenericExt<dim, spacedim>                 &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "sauter_assemble_on_one_pair_of_dofs for far field");
 #endif
 
@@ -8927,7 +8895,7 @@ namespace IdeoBEM
              */
             dim3 blocks_rect;
             dim3 threads_rect;
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               configure_thread_blocks_for_sauter_quadrature_points(
                 CellNeighboringType::Regular,
                 bem_values,
@@ -8939,11 +8907,11 @@ namespace IdeoBEM
 #endif
             {
 #if ENABLE_NVTX == 1
-              IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                 "calc jacobian: regular");
 #endif
 
-              IdeoBEM::CUDAWrappers::
+              HierBEM::CUDAWrappers::
                 calc_jacobian_normals_for_sauter_quad_regular<<<
                   blocks_rect,
                   threads_rect,
@@ -8969,11 +8937,11 @@ namespace IdeoBEM
                 scratch_data.timer.start();
 #endif
 #if ENABLE_NVTX == 1
-                IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+                HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                   "calc covariant: regular");
 #endif
 
-                IdeoBEM::CUDAWrappers::calc_covariant_transformations_regular<<<
+                HierBEM::CUDAWrappers::calc_covariant_transformations_regular<<<
                   blocks_rect,
                   threads_rect,
                   0,
@@ -9022,11 +8990,11 @@ namespace IdeoBEM
 #endif
             {
 #if ENABLE_NVTX == 1
-              IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+              HierBEM::CUDAWrappers::NVTXRange nvtx_range(
                 "apply quadrature: regular");
 #endif
 
-              IdeoBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
+              HierBEM::CUDAWrappers::ApplyQuadratureUsingBEMValuesRegular<<<
                 blocks_rect.x,
                 threads_rect.x,
                 threads_rect.x * sizeof(RangeNumberType),
@@ -9042,16 +9010,14 @@ namespace IdeoBEM
              * @internal Extract quadrature results accumulated from all
              * thread blocks.
              */
-            cudaError_t error_code = cudaMemcpyAsync(
+            AssertCuda(cudaMemcpyAsync(
               (void *)(scratch_data.quad_values_in_thread_blocks),
               (void *)(scratch_data_gpu.quad_values_in_thread_blocks),
               sizeof(RangeNumberType) * blocks_rect.x,
               cudaMemcpyDeviceToHost,
-              scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
+              scratch_data.cuda_stream_handle));
 
-            error_code = cudaStreamSynchronize(scratch_data.cuda_stream_handle);
-            AssertCuda(error_code);
+            AssertCuda(cudaStreamSynchronize(scratch_data.cuda_stream_handle));
 
             for (unsigned int t = 0; t < blocks_rect.x; t++)
               {
@@ -9068,6 +9034,6 @@ namespace IdeoBEM
 
     return double_integral;
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_SAUTER_QUADRATURE_HCU_ */

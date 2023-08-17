@@ -28,7 +28,7 @@
 #include "lapack_full_matrix_ext.h"
 #include "rkmatrix.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -25662,6 +25662,6 @@ namespace IdeoBEM
 
     return total_memory;
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_HMATRIX_H_ */

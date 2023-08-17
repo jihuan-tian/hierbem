@@ -15,7 +15,7 @@
 
 #include "lapack_full_matrix_ext.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace LinAlg
   {
@@ -143,6 +143,6 @@ namespace IdeoBEM
                   number_of_data * sizeof(number));
     }
   } // namespace LinAlg
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_LINALG_H_ */

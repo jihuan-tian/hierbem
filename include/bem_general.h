@@ -24,7 +24,7 @@
 #include "bem_values.h"
 #include "sauter_quadrature.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
   using namespace BEMTools;
@@ -1173,7 +1173,7 @@ namespace IdeoBEM
         ++pd;
       }
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_BEM_GENERAL_H_ */

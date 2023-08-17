@@ -73,7 +73,7 @@ main()
    */
   std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
                                          common_vertex_dof_indices;
-  IdeoBEM::BEMTools::CellNeighboringType cell_neighboring_type;
+  HierBEM::BEMTools::CellNeighboringType cell_neighboring_type;
 
   {
     std::cout << "=== FE_Q ===" << std::endl;
@@ -92,13 +92,13 @@ main()
         for (const typename DoFHandler<dim, spacedim>::active_cell_iterator
                &e2 : dof_handler.active_cell_iterators())
           {
-            cell_neighboring_type = IdeoBEM::BEMTools::
+            cell_neighboring_type = HierBEM::BEMTools::
               detect_cell_neighboring_type_for_same_dofhandlers(
                 e1, e2, mapping, mapping, common_vertex_dof_indices);
 
             std::cout << "Cell neighboring type for cells (" << e1_index << ","
                       << e2_index << ") is: "
-                      << IdeoBEM::BEMTools::cell_neighboring_type_name(
+                      << HierBEM::BEMTools::cell_neighboring_type_name(
                            cell_neighboring_type)
                       << "\n";
 
@@ -141,13 +141,13 @@ main()
         for (const typename DoFHandler<dim, spacedim>::active_cell_iterator
                &e2 : dof_handler.active_cell_iterators())
           {
-            cell_neighboring_type = IdeoBEM::BEMTools::
+            cell_neighboring_type = HierBEM::BEMTools::
               detect_cell_neighboring_type_for_same_dofhandlers<dim, spacedim>(
                 e1, e2, mapping, mapping, common_vertex_dof_indices);
 
             std::cout << "Cell neighboring type for cells (" << e1_index << ","
                       << e2_index << ") is: "
-                      << IdeoBEM::BEMTools::cell_neighboring_type_name(
+                      << HierBEM::BEMTools::cell_neighboring_type_name(
                            cell_neighboring_type)
                       << "\n";
 

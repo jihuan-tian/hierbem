@@ -44,7 +44,7 @@
 #include "lapack_full_matrix_ext.h"
 #include "mapping_q_generic_ext.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -3265,12 +3265,12 @@ namespace IdeoBEM
       template <int spacedim, typename RangeNumberType = double>
       __device__ void
       collect_two_components_from_point3(
-        const IdeoBEM::CUDAWrappers::CUDATable<1,
+        const HierBEM::CUDAWrappers::CUDATable<1,
                                                Point<spacedim, RangeNumberType>>
                           &points,
         const unsigned int first_component,
         const unsigned int second_component,
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           &two_component_coords)
       {
         assert(first_component < spacedim);
@@ -3316,10 +3316,10 @@ namespace IdeoBEM
       template <int spacedim, typename RangeNumberType = double>
       __device__ void
       collect_components_from_points(
-        const IdeoBEM::CUDAWrappers::CUDATable<1,
+        const HierBEM::CUDAWrappers::CUDATable<1,
                                                Point<spacedim, RangeNumberType>>
                                                                &points,
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &point_coords)
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &point_coords)
       {
         for (unsigned int i = 0; i < points.size(0); i++)
           {
@@ -3358,16 +3358,16 @@ namespace IdeoBEM
       surface_jacobian_det_and_normal_vector(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const IdeoBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+        const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
           &shape_grad_matrix_table,
-        const IdeoBEM::CUDAWrappers::CUDATable<1,
+        const HierBEM::CUDAWrappers::CUDATable<1,
                                                Point<spacedim, RangeNumberType>>
           &support_points_in_real_cell,
-        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+        const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
           &support_points_in_real_cell_xy_components,
-        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+        const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
           &support_points_in_real_cell_yz_components,
-        const IdeoBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
+        const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
           &support_points_in_real_cell_zx_components,
         Tensor<1, spacedim, RangeNumberType> &normal_vector,
         const bool                            is_normal_vector_negated = false)
@@ -3384,7 +3384,7 @@ namespace IdeoBEM
          * first dimension is the shape function index and its second dimension
          * is coordinate component index in the unit cell.
          */
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           shape_grad_matrix_at_quad_point(
             const_cast<RangeNumberType *>(
               &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
@@ -3403,13 +3403,13 @@ namespace IdeoBEM
         assert(shape_grad_matrix_at_quad_point.n() == 2);
 
         RangeNumberType jacobian_matrix_2x2_data[4];
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           jacobian_matrix_2x2(jacobian_matrix_2x2_data, 2, 2);
 
         RangeNumberType surface_jacobian_det = 0.0;
         RangeNumberType surface_jacobian_det_components[spacedim];
 
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           two_component_coords(
             (RangeNumberType *)(support_points_in_real_cell_xy_components
                                   .data()),
@@ -3494,11 +3494,11 @@ namespace IdeoBEM
       surface_jacobian_det_normal_vector_and_covariant(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const IdeoBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+        const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
                                              &shape_grad_matrix_table,
         Point<spacedim, RangeNumberType>     *support_points_in_real_cell,
         Tensor<1, spacedim, RangeNumberType> &normal_vector,
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
                   &covariant_matrix,
         const bool is_normal_vector_negated,
         const bool if_calculate_covariant)
@@ -3515,7 +3515,7 @@ namespace IdeoBEM
          * first dimension is the shape function index and its second dimension
          * is coordinate component index in the unit cell.
          */
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           shape_grad_matrix_at_quad_point(
             const_cast<RangeNumberType *>(
               &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
@@ -3526,14 +3526,14 @@ namespace IdeoBEM
          */
         assert(shape_grad_matrix_at_quad_point.n() == 2);
 
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           support_point_coordinate_matrix(
             (RangeNumberType *)(support_points_in_real_cell),
             spacedim,
             shape_grad_matrix_at_quad_point.m());
 
         RangeNumberType jacobian_matrix_data[spacedim * 2];
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
           jacobian_matrix_data, spacedim, 2);
 
         support_point_coordinate_matrix.mmult(jacobian_matrix,
@@ -3542,7 +3542,7 @@ namespace IdeoBEM
          * @internal Compute the Gramian matrix.
          */
         RangeNumberType                                        G_data[4];
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(G_data, 2, 2);
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(G_data, 2, 2);
         jacobian_matrix.Tmmult(G, jacobian_matrix);
 
         if (if_calculate_covariant)
@@ -3551,7 +3551,7 @@ namespace IdeoBEM
              * @internal Compute the inverse of the Gramian matrix.
              */
             RangeNumberType G_inv_data[4];
-            IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(
+            HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(
               G_inv_data, 2, 2);
             G_inv.invert2x2(G);
             /**
@@ -3627,12 +3627,12 @@ namespace IdeoBEM
       surface_covariant_transformation(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const IdeoBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+        const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
           &shape_grad_matrix_table,
-        const IdeoBEM::CUDAWrappers::CUDATable<1,
+        const HierBEM::CUDAWrappers::CUDATable<1,
                                                Point<spacedim, RangeNumberType>>
           &support_points_in_real_cell,
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &covariant)
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &covariant)
       {
         /**
          * @internal Currently, only @p spacedim=3 is supported.
@@ -3644,7 +3644,7 @@ namespace IdeoBEM
          * specified \f$k_3\f$ index and quadrature point, which will then be
          * used for calculating the Jacobian matrix.
          */
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           shape_grad_matrix_at_quad_point(
             const_cast<RangeNumberType *>(
               &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
@@ -3662,24 +3662,24 @@ namespace IdeoBEM
          */
         assert(shape_grad_matrix_at_quad_point.n() == 2);
 
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           all_component_coords(
             (RangeNumberType *)(support_points_in_real_cell.data()),
             spacedim,
             support_points_in_real_cell.size(0));
 
         RangeNumberType jacobian_matrix_data[6];
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
           jacobian_matrix_data, spacedim, 2);
         all_component_coords.mmult(jacobian_matrix,
                                    shape_grad_matrix_at_quad_point);
 
         // Gramian tensor
         RangeNumberType                                        G_data[4];
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(G_data, 2, 2);
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G(G_data, 2, 2);
         // Inverse of the metric tensor
         RangeNumberType                                        G_inv_data[4];
-        IdeoBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(G_inv_data,
+        HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> G_inv(G_inv_data,
                                                                      2,
                                                                      2);
 
@@ -3710,9 +3710,9 @@ namespace IdeoBEM
       transform_unit_to_permuted_real_cell(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const IdeoBEM::CUDAWrappers::CUDATable<3, RangeNumberType>
+        const HierBEM::CUDAWrappers::CUDATable<3, RangeNumberType>
           &shape_value_table,
-        const IdeoBEM::CUDAWrappers::CUDATable<1,
+        const HierBEM::CUDAWrappers::CUDATable<1,
                                                Point<spacedim, RangeNumberType>>
                                          &support_points_in_real_cell,
         Point<spacedim, RangeNumberType> &real_coords)
@@ -3748,7 +3748,7 @@ namespace IdeoBEM
       transform_quad_point_from_unit_to_permuted_real_cell(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const IdeoBEM::CUDAWrappers::CUDATable<3, RangeNumberType>
+        const HierBEM::CUDAWrappers::CUDATable<3, RangeNumberType>
           &mapping_shape_value_table,
         const Point<spacedim, RangeNumberType>
                                          *mapping_support_points_in_real_cell,
@@ -4622,7 +4622,7 @@ namespace IdeoBEM
         }
     }
   } // namespace BEMTools
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_BEM_TOOLS_HCU_ */

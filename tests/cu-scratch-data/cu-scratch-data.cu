@@ -27,7 +27,7 @@
 #include "sauter_quadrature_tools.h"
 
 using namespace dealii;
-using namespace IdeoBEM;
+using namespace HierBEM;
 
 int
 main()
@@ -83,9 +83,9 @@ main()
     fe_test, fe_trial, mapping_test, mapping_trial, bem_values);
   PairCellWisePerTaskData<dim, spacedim, double> copy_data(fe_test, fe_trial);
 
-  IdeoBEM::CUDAWrappers::CUDAPairCellWiseScratchData<dim, spacedim, double>
+  HierBEM::CUDAWrappers::CUDAPairCellWiseScratchData<dim, spacedim, double>
                                                      scratch_data_gpu;
-  IdeoBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
+  HierBEM::CUDAWrappers::CUDAPairCellWisePerTaskData copy_data_gpu;
 
   scratch_data_gpu.allocate(scratch_data);
   copy_data_gpu.allocate(copy_data, scratch_data.cuda_stream_handle);

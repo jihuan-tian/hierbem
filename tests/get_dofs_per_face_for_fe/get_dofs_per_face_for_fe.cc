@@ -21,19 +21,19 @@ main()
   {
     FE_Q<2, 3> fe(2);
     std::cout << fe.get_name() << ":"
-              << IdeoBEM::BEMTools::get_dofs_per_face_for_fe(fe) << std::endl;
+              << HierBEM::BEMTools::get_dofs_per_face_for_fe(fe) << std::endl;
   }
 
   {
     FE_DGQ<2, 3> fe(2);
     std::cout << fe.get_name() << ":"
-              << IdeoBEM::BEMTools::get_dofs_per_face_for_fe(fe) << std::endl;
+              << HierBEM::BEMTools::get_dofs_per_face_for_fe(fe) << std::endl;
   }
 
   {
     FE_DGQ<3, 3> fe(2);
     std::cout << fe.get_name() << ":"
-              << IdeoBEM::BEMTools::get_dofs_per_face_for_fe(fe) << std::endl;
+              << HierBEM::BEMTools::get_dofs_per_face_for_fe(fe) << std::endl;
   }
 
   return 0;

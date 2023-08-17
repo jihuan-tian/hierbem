@@ -13,7 +13,7 @@
 
 #include "cu_vector.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -78,7 +78,9 @@ namespace IdeoBEM
     {
       typename ProductType<Number1, Number2>::type result = 0.;
 
-#pragma unroll
+#ifdef __CUDA_ARCH__
+#  pragma unroll
+#endif
       for (unsigned int i = 0; i < dim; i++)
         {
           result += t1[i] * t2[i];
@@ -87,7 +89,7 @@ namespace IdeoBEM
       return result;
     }
   } // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_CU_TENSOR_HCU_ */

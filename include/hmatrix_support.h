@@ -16,7 +16,7 @@
 #include <array>
 #include <string>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -208,6 +208,6 @@ namespace IdeoBEM
       const BlockType                           parent_hmat_block_type,
       std::array<HMatrixSupport::BlockType, 4> &submatrix_block_types);
   } // namespace HMatrixSupport
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_HMATRIX_SUPPORT_H_ */

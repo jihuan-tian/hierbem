@@ -13,7 +13,7 @@
 #include "laplace_bem.h"
 
 using namespace dealii;
-using namespace IdeoBEM;
+using namespace HierBEM;
 
 /**
  * Function object for the Dirichlet boundary condition data, which is

@@ -13,7 +13,7 @@
 #include "laplace_bem.h"
 
 using namespace dealii;
-using namespace IdeoBEM;
+using namespace HierBEM;
 
 #include "debug_tools.hcu"
 
@@ -69,7 +69,7 @@ main()
 
   bem_values_cpu.fill_shape_function_value_tables();
 
-  IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim> bem_values_gpu;
+  HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim> bem_values_gpu;
   bem_values_gpu.allocate_and_assign_from_host(bem_values_cpu);
 
   Assert(is_equal(bem_values_cpu, bem_values_gpu), ExcInternalError());

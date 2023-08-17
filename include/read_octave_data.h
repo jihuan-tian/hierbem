@@ -16,7 +16,7 @@
 
 #include "lapack_full_matrix_ext.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   template <typename MatrixType>
   void
@@ -194,6 +194,6 @@ namespace IdeoBEM
           }
       }
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_READ_OCTAVE_DATA_H_ */

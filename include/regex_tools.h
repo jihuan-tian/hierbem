@@ -10,7 +10,7 @@
 
 #include <regex>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace RegexTools
   {
@@ -25,7 +25,7 @@ namespace IdeoBEM
     string
     file_ext(const string &filename);
   } // namespace RegexTools
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_REGEX_TOOLS_H_ */

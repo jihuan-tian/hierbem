@@ -13,7 +13,7 @@
 #include <vector>
 
 
-using namespace IdeoBEM;
+using namespace HierBEM;
 using namespace dealii;
 
 int

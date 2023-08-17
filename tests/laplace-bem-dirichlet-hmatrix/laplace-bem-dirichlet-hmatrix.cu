@@ -17,7 +17,7 @@
 #include "laplace_bem.h"
 
 using namespace dealii;
-using namespace IdeoBEM;
+using namespace HierBEM;
 
 /**
  * Function object for the Dirichlet boundary condition data, which is
@@ -102,13 +102,13 @@ private:
   double   model_sphere_radius;
 };
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace CUDAWrappers
   {
     extern cudaDeviceProp device_properties;
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 int
 main(int argc, char *argv[])
@@ -120,7 +120,7 @@ main(int argc, char *argv[])
   deallog.depth_console(5);
   LogStream::Prefix prefix_string("HierBEM");
 #if ENABLE_NVTX == 1
-  IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
 #endif
 
   /**
@@ -131,29 +131,24 @@ main(int argc, char *argv[])
   /**
    * @internal Initialize the CUDA device parameters.
    */
-  //  cudaError_t error_code = cudaSetDevice(0);
-  //  error_code =
-  //    cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceScheduleBlockingSync);
-  //  AssertCuda(error_code);
+  //  AssertCuda(cudaSetDevice(0));
+  //  AssertCuda(cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceScheduleBlockingSync));
 
   const size_t stack_size = 1024 * 10;
-  cudaError_t  error_code = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
-  AssertCuda(error_code);
+  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;
 
   /**
    * @internal Get GPU device properties.
    */
-  error_code =
-    cudaGetDeviceProperties(&IdeoBEM::CUDAWrappers::device_properties, 0);
-  AssertCuda(error_code);
+  AssertCuda(
+    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
   /**
    * @internal Use 8-byte bank size in shared memory, since double value type is
    * used.
    */
-  //  error_code = cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte);
-  //  AssertCuda(error_code);
+  // AssertCuda(cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte));
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;

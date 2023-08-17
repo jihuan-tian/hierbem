@@ -20,7 +20,7 @@
 #include "lapack_full_matrix_ext.h"
 #include "tree.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   /**
    * \brief Class for block cluster tree.
@@ -863,6 +863,10 @@ namespace IdeoBEM
 
     /**
      * Depth of the tree, which is the maximum level plus one.
+     *
+     * \mynote{The level number starts from 0, which is assigned to the root
+     * node. This definition of the block cluster tree depth is one more than
+     * the definition in \cite{KriemannParallel2005a}.}
      */
     unsigned int depth;
 
@@ -4014,7 +4018,7 @@ namespace IdeoBEM
   {
     return eta;
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 /**
  * @}

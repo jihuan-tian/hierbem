@@ -14,7 +14,7 @@
 
 #include "read_octave_data.h"
 
-using namespace IdeoBEM;
+using namespace HierBEM;
 using namespace boost::program_options;
 
 int

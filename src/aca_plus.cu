@@ -10,7 +10,7 @@
 
 #include "aca_plus.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   // Global definition of the random number device and generator.
   std::random_device rd;
@@ -41,4 +41,4 @@ namespace IdeoBEM
     , epsilon(v_epsilon)
     , eta(v_eta)
   {}
-} // namespace IdeoBEM
+} // namespace HierBEM

@@ -24,7 +24,7 @@
 #include "generic_functors.h"
 #include "simple_bounding_box.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   /**
    * \brief Class for an index cluster.
@@ -1669,7 +1669,7 @@ namespace IdeoBEM
       }
     else
       {
-        return IdeoBEM::is_subset(this->index_range, cluster.index_range);
+        return HierBEM::is_subset(this->index_range, cluster.index_range);
       }
   }
 
@@ -1751,7 +1751,7 @@ namespace IdeoBEM
       }
     else
       {
-        return IdeoBEM::is_proper_superset(this->index_range,
+        return HierBEM::is_proper_superset(this->index_range,
                                            cluster.index_range);
       }
   }
@@ -1783,7 +1783,7 @@ namespace IdeoBEM
     const Cluster                          &cluster,
     std::array<types::global_dof_index, 2> &index_range_intersection) const
   {
-    IdeoBEM::intersect(this->index_range,
+    HierBEM::intersect(this->index_range,
                        cluster.index_range,
                        index_range_intersection);
   }
@@ -1874,7 +1874,7 @@ namespace IdeoBEM
         return (cluster1.index_range == cluster2.index_range);
       }
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 /**
  * @}

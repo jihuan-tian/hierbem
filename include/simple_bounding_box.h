@@ -11,7 +11,7 @@
 #include <utility> // in which std::pair is defined.
 #include <vector>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -397,6 +397,6 @@ namespace IdeoBEM
 
     return is_inside;
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif

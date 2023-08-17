@@ -44,7 +44,7 @@ main()
   {
     FE_Q<2, 3>            fe(2);
     std::vector<Point<3>> support_points(
-      IdeoBEM::BEMTools::get_lexicographic_support_points_in_real_cell(
+      HierBEM::BEMTools::get_lexicographic_support_points_in_real_cell(
         tria.begin_active(), fe, mapping));
     print_vector_values(std::cout, support_points, "\n", true);
   }
@@ -53,7 +53,7 @@ main()
   {
     FE_DGQ<2, 3>          fe(2);
     std::vector<Point<3>> support_points(fe.dofs_per_cell);
-    IdeoBEM::BEMTools::get_lexicographic_support_points_in_real_cell(
+    HierBEM::BEMTools::get_lexicographic_support_points_in_real_cell(
       tria.begin_active(), fe, mapping, support_points);
     print_vector_values(std::cout, support_points, "\n", true);
   }

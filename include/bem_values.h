@@ -30,7 +30,7 @@
 #include "lapack_full_matrix_ext.h"
 #include "sauter_quadrature_tools.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
   using namespace BEMTools;
@@ -2314,9 +2314,7 @@ namespace IdeoBEM
                       std::ios_base::app);
 #endif
 
-      cudaError_t error_code;
-      error_code = cudaStreamCreate(&cuda_stream_handle);
-      AssertCuda(error_code);
+      AssertCuda(cudaStreamCreate(&cuda_stream_handle));
 
       common_vertex_pair_local_indices.reserve(
         GeometryInfo<dim>::vertices_per_cell);
@@ -2345,115 +2343,96 @@ namespace IdeoBEM
       /**
        * @internal Register host memory for asynchronous transfer to the device.
        */
-      error_code =
+      AssertCuda(
         cudaHostRegister((void *)kx_mapping_support_points_permuted.data(),
                          kx_mapping_support_points_permuted.size() *
                            sizeof(Point<spacedim, RangeNumberType>),
-                         0);
-      AssertCuda(error_code);
+                         0));
 
-      error_code =
+      AssertCuda(
         cudaHostRegister((void *)ky_mapping_support_points_permuted.data(),
                          ky_mapping_support_points_permuted.size() *
                            sizeof(Point<spacedim, RangeNumberType>),
-                         0);
-      AssertCuda(error_code);
+                         0));
 
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)kx_mapping_support_points_permuted_xy_components.data(),
         kx_mapping_support_points_permuted_xy_components.size() *
           sizeof(Point<2, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
 
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)kx_mapping_support_points_permuted_yz_components.data(),
         kx_mapping_support_points_permuted_yz_components.size() *
           sizeof(Point<2, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
 
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)kx_mapping_support_points_permuted_zx_components.data(),
         kx_mapping_support_points_permuted_zx_components.size() *
           sizeof(Point<2, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
 
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)ky_mapping_support_points_permuted_xy_components.data(),
         ky_mapping_support_points_permuted_xy_components.size() *
           sizeof(Point<2, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
 
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)ky_mapping_support_points_permuted_yz_components.data(),
         ky_mapping_support_points_permuted_yz_components.size() *
           sizeof(Point<2, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
 
-      error_code = cudaHostRegister(
+      AssertCuda(cudaHostRegister(
         (void *)ky_mapping_support_points_permuted_zx_components.data(),
         ky_mapping_support_points_permuted_zx_components.size() *
           sizeof(Point<2, RangeNumberType>),
-        0);
-      AssertCuda(error_code);
+        0));
 
-      error_code = cudaHostRegister((void *)&(kx_quad_points_same_panel(0, 0)),
-                                    kx_quad_points_same_panel.n_elements() *
-                                      sizeof(Point<spacedim, RangeNumberType>),
-                                    0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)&(kx_quad_points_same_panel(0, 0)),
+                                  kx_quad_points_same_panel.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
 
-      error_code = cudaHostRegister((void *)&(kx_quad_points_common_edge(0, 0)),
-                                    kx_quad_points_common_edge.n_elements() *
-                                      sizeof(Point<spacedim, RangeNumberType>),
-                                    0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_edge(0, 0)),
+                                  kx_quad_points_common_edge.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
 
-      error_code =
-        cudaHostRegister((void *)&(kx_quad_points_common_vertex(0, 0)),
-                         kx_quad_points_common_vertex.n_elements() *
-                           sizeof(Point<spacedim, RangeNumberType>),
-                         0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_vertex(0, 0)),
+                                  kx_quad_points_common_vertex.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
 
-      error_code = cudaHostRegister((void *)&(kx_quad_points_regular(0, 0)),
-                                    kx_quad_points_regular.n_elements() *
-                                      sizeof(Point<spacedim, RangeNumberType>),
-                                    0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)&(kx_quad_points_regular(0, 0)),
+                                  kx_quad_points_regular.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
 
-      error_code = cudaHostRegister((void *)&(ky_quad_points_same_panel(0, 0)),
-                                    ky_quad_points_same_panel.n_elements() *
-                                      sizeof(Point<spacedim, RangeNumberType>),
-                                    0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)&(ky_quad_points_same_panel(0, 0)),
+                                  ky_quad_points_same_panel.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
 
-      error_code = cudaHostRegister((void *)&(ky_quad_points_common_edge(0, 0)),
-                                    ky_quad_points_common_edge.n_elements() *
-                                      sizeof(Point<spacedim, RangeNumberType>),
-                                    0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_edge(0, 0)),
+                                  ky_quad_points_common_edge.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
 
-      error_code =
-        cudaHostRegister((void *)&(ky_quad_points_common_vertex(0, 0)),
-                         ky_quad_points_common_vertex.n_elements() *
-                           sizeof(Point<spacedim, RangeNumberType>),
-                         0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_vertex(0, 0)),
+                                  ky_quad_points_common_vertex.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
 
-      error_code = cudaHostRegister((void *)&(ky_quad_points_regular(0, 0)),
-                                    ky_quad_points_regular.n_elements() *
-                                      sizeof(Point<spacedim, RangeNumberType>),
-                                    0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)&(ky_quad_points_regular(0, 0)),
+                                  ky_quad_points_regular.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
 
-      error_code = cudaMallocHost((void **)&quad_values_in_thread_blocks,
-                                  100 * sizeof(RangeNumberType));
-      AssertCuda(error_code);
+      AssertCuda(cudaMallocHost((void **)&quad_values_in_thread_blocks,
+                                100 * sizeof(RangeNumberType)));
     }
 
 
@@ -2550,75 +2529,57 @@ namespace IdeoBEM
       log_stream.close();
 #endif
 
-      cudaError_t error_code = cudaStreamDestroy(cuda_stream_handle);
-      AssertCuda(error_code);
+      AssertCuda(cudaStreamDestroy(cuda_stream_handle));
 
-      error_code =
-        cudaHostUnregister((void *)kx_mapping_support_points_permuted.data());
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)kx_mapping_support_points_permuted.data()));
 
-      error_code =
-        cudaHostUnregister((void *)ky_mapping_support_points_permuted.data());
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)ky_mapping_support_points_permuted.data()));
 
-      error_code = cudaHostUnregister(
-        (void *)kx_mapping_support_points_permuted_xy_components.data());
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister(
+        (void *)kx_mapping_support_points_permuted_xy_components.data()));
 
-      error_code = cudaHostUnregister(
-        (void *)kx_mapping_support_points_permuted_yz_components.data());
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister(
+        (void *)kx_mapping_support_points_permuted_yz_components.data()));
 
-      error_code = cudaHostUnregister(
-        (void *)kx_mapping_support_points_permuted_zx_components.data());
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister(
+        (void *)kx_mapping_support_points_permuted_zx_components.data()));
 
-      error_code = cudaHostUnregister(
-        (void *)ky_mapping_support_points_permuted_xy_components.data());
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister(
+        (void *)ky_mapping_support_points_permuted_xy_components.data()));
 
-      error_code = cudaHostUnregister(
-        (void *)ky_mapping_support_points_permuted_yz_components.data());
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister(
+        (void *)ky_mapping_support_points_permuted_yz_components.data()));
 
-      error_code = cudaHostUnregister(
-        (void *)ky_mapping_support_points_permuted_zx_components.data());
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister(
+        (void *)ky_mapping_support_points_permuted_zx_components.data()));
 
-      error_code =
-        cudaHostUnregister((void *)&(kx_quad_points_same_panel(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)&(kx_quad_points_same_panel(0, 0))));
 
-      error_code =
-        cudaHostUnregister((void *)&(kx_quad_points_common_edge(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)&(kx_quad_points_common_edge(0, 0))));
 
-      error_code =
-        cudaHostUnregister((void *)&(kx_quad_points_common_vertex(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)&(kx_quad_points_common_vertex(0, 0))));
 
-      error_code = cudaHostUnregister((void *)&(kx_quad_points_regular(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister((void *)&(kx_quad_points_regular(0, 0))));
 
-      error_code =
-        cudaHostUnregister((void *)&(ky_quad_points_same_panel(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)&(ky_quad_points_same_panel(0, 0))));
 
-      error_code =
-        cudaHostUnregister((void *)&(ky_quad_points_common_edge(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)&(ky_quad_points_common_edge(0, 0))));
 
-      error_code =
-        cudaHostUnregister((void *)&(ky_quad_points_common_vertex(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)&(ky_quad_points_common_vertex(0, 0))));
 
-      error_code = cudaHostUnregister((void *)&(ky_quad_points_regular(0, 0)));
-      AssertCuda(error_code);
+      AssertCuda(cudaHostUnregister((void *)&(ky_quad_points_regular(0, 0))));
 
       if (quad_values_in_thread_blocks != nullptr)
         {
-          error_code = cudaFreeHost(quad_values_in_thread_blocks);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeHost(quad_values_in_thread_blocks));
         }
     }
   };
@@ -2661,19 +2622,15 @@ namespace IdeoBEM
       , kx_local_dof_indices_permuted(kx_fe.dofs_per_cell)
       , ky_local_dof_indices_permuted(ky_fe.dofs_per_cell)
     {
-      cudaError_t error_code =
-        cudaHostRegister((void *)kx_local_dof_indices_permuted.data(),
-                         kx_local_dof_indices_permuted.size() *
-                           sizeof(types::global_dof_index),
-                         0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)kx_local_dof_indices_permuted.data(),
+                                  kx_local_dof_indices_permuted.size() *
+                                    sizeof(types::global_dof_index),
+                                  0));
 
-      error_code =
-        cudaHostRegister((void *)ky_local_dof_indices_permuted.data(),
-                         ky_local_dof_indices_permuted.size() *
-                           sizeof(types::global_dof_index),
-                         0);
-      AssertCuda(error_code);
+      AssertCuda(cudaHostRegister((void *)ky_local_dof_indices_permuted.data(),
+                                  ky_local_dof_indices_permuted.size() *
+                                    sizeof(types::global_dof_index),
+                                  0));
     }
 
 
@@ -2692,15 +2649,13 @@ namespace IdeoBEM
     void
     release()
     {
-      cudaError_t error_code =
-        cudaHostUnregister((void *)kx_local_dof_indices_permuted.data());
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)kx_local_dof_indices_permuted.data()));
 
-      error_code =
-        cudaHostUnregister((void *)ky_local_dof_indices_permuted.data());
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaHostUnregister((void *)ky_local_dof_indices_permuted.data()));
     }
   };
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_BEM_VALUES_H_ */

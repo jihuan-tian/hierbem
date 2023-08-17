@@ -8,7 +8,7 @@
 
 #include "sauter_quadrature.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace CUDAWrappers
   {
@@ -36,4 +36,4 @@ namespace IdeoBEM
         counter++;
       }
   }
-} // namespace IdeoBEM
+} // namespace HierBEM

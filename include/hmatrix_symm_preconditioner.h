@@ -14,7 +14,7 @@
 
 #include "hmatrix.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   template <int spacedim, typename Number = double>
   class HMatrixSymmPreconditioner : public HMatrix<spacedim, Number>
@@ -419,6 +419,6 @@ namespace IdeoBEM
   {
     this->solve_cholesky(y, x);
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_HMATRIX_SYMM_PRECONDITIONER_H_ */

@@ -5,7 +5,7 @@
 #include "debug_tools.hcu"
 #include "tree.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   /**
    * \brief Class for cluster tree.
@@ -474,7 +474,8 @@ namespace IdeoBEM
      * Depth of the tree, which is the maximum level plus one.
      *
      * \mynote{The level number starts from 0, which is assigned to the root
-     * node.}
+     * node. This definition of the cluster tree depth is one more than the
+     * definition in \cite{KriemannParallel2005a}.}
      */
     unsigned int depth;
 
@@ -1500,6 +1501,6 @@ namespace IdeoBEM
         _print_tree_info_as_dot_node(out, cluster_node->get_child_pointer(i));
       }
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_CLUSTER_TREE_H_ */

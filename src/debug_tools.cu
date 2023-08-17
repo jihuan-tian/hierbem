@@ -8,7 +8,7 @@
 
 #include "debug_tools.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   void
   print_wall_time(LogStream         &log,
@@ -52,4 +52,4 @@ namespace IdeoBEM
         << timer.last_cpu_time() << "s, total elapsed cpu time is "
         << timer.cpu_time() << "s" << std::endl;
   }
-} // namespace IdeoBEM
+} // namespace HierBEM

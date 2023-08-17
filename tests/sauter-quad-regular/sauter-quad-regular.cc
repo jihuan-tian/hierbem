@@ -44,13 +44,13 @@ main()
   dof_handler.distribute_dofs(fe);
 
   // Generate the single layer kernel function object.
-  IdeoBEM::LaplaceKernel::SingleLayerKernel<spacedim> slp;
+  HierBEM::LaplaceKernel::SingleLayerKernel<spacedim> slp;
   // Generate the double layer kernel function object.
-  IdeoBEM::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
+  HierBEM::LaplaceKernel::DoubleLayerKernel<spacedim> dlp;
   // Generate the adjoint double layer kernel function object.
-  IdeoBEM::LaplaceKernel::AdjointDoubleLayerKernel<spacedim> adlp;
+  HierBEM::LaplaceKernel::AdjointDoubleLayerKernel<spacedim> adlp;
   // Generate the hyper-singular kernel function object.
-  IdeoBEM::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
+  HierBEM::LaplaceKernel::HyperSingularKernel<spacedim> hyper;
 
   // Generate 4D Gauss-Legendre quadrature rules for various cell
   // neighboring types.
@@ -65,7 +65,7 @@ main()
   QGauss<4> quad_rule_for_regular(quad_order_for_regular);
 
   // Precalculate data tables for shape values at quadrature points.
-  IdeoBEM::BEMValues<2, 3> bem_values(fe,
+  HierBEM::BEMValues<2, 3> bem_values(fe,
                                          fe,
                                          quad_rule_for_same_panel,
                                          quad_rule_for_common_edge,
@@ -83,10 +83,10 @@ main()
   FullMatrix<double> slp_cell_matrix;
 
 #ifndef WITH_BEM_VALUES
-  slp_cell_matrix = IdeoBEM::SauterQuadRule(
+  slp_cell_matrix = HierBEM::SauterQuadRule(
     slp, cell_iterators[0], cell_iterators[5], mapping, mapping);
 #else
-  slp_cell_matrix = IdeoBEM::SauterQuadRule(
+  slp_cell_matrix = HierBEM::SauterQuadRule(
     slp, bem_values, cell_iterators[0], cell_iterators[5], mapping, mapping);
 #endif
 
@@ -96,10 +96,10 @@ main()
   FullMatrix<double> dlp_cell_matrix;
 
 #ifndef WITH_BEM_VALUES
-  dlp_cell_matrix = IdeoBEM::SauterQuadRule(
+  dlp_cell_matrix = HierBEM::SauterQuadRule(
     dlp, cell_iterators[0], cell_iterators[5], mapping, mapping);
 #else
-  dlp_cell_matrix = IdeoBEM::SauterQuadRule(
+  dlp_cell_matrix = HierBEM::SauterQuadRule(
     dlp, bem_values, cell_iterators[0], cell_iterators[5], mapping, mapping);
 #endif
 
@@ -109,10 +109,10 @@ main()
   FullMatrix<double> adlp_cell_matrix;
 
 #ifndef WITH_BEM_VALUES
-  adlp_cell_matrix = IdeoBEM::SauterQuadRule(
+  adlp_cell_matrix = HierBEM::SauterQuadRule(
     adlp, cell_iterators[0], cell_iterators[5], mapping, mapping);
 #else
-  adlp_cell_matrix = IdeoBEM::SauterQuadRule(
+  adlp_cell_matrix = HierBEM::SauterQuadRule(
     adlp, bem_values, cell_iterators[0], cell_iterators[5], mapping, mapping);
 #endif
 
@@ -122,10 +122,10 @@ main()
   FullMatrix<double> hyper_cell_matrix;
 
 #ifndef WITH_BEM_VALUES
-  hyper_cell_matrix = IdeoBEM::SauterQuadRule(
+  hyper_cell_matrix = HierBEM::SauterQuadRule(
     hyper, cell_iterators[0], cell_iterators[5], mapping, mapping);
 #else
-  hyper_cell_matrix = IdeoBEM::SauterQuadRule(
+  hyper_cell_matrix = HierBEM::SauterQuadRule(
     hyper, bem_values, cell_iterators[0], cell_iterators[5], mapping, mapping);
 #endif
 

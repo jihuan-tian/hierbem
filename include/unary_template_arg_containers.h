@@ -12,7 +12,7 @@
 #include <list>
 #include <vector>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   template <typename T>
   using vector_uta = std::vector<T, std::allocator<T>>;
@@ -22,6 +22,6 @@ namespace IdeoBEM
 
   template <typename T>
   using forward_list_uta = std::forward_list<T, std::allocator<T>>;
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_UNARY_TEMPLATE_ARG_CONTAINERS_H_ */

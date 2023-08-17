@@ -1,5 +1,5 @@
 /**
- * @file aca_plus.h
+ * @file aca_plus.hcu
  * @brief Implement the ACA+ method proposed in Grasedyck, L. 2005. “Adaptive
  * Recompression of \f$\mathscr{H}\f$-Matrices for BEM.” Computing 74 (3):
  * 205–23.
@@ -43,7 +43,7 @@
 #include "sauter_quadrature.hcu"
 #include "unary_template_arg_containers.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -133,7 +133,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -146,7 +146,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -242,7 +242,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -255,7 +255,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -313,7 +313,7 @@ namespace IdeoBEM
             typename RangeNumberType = double>
   void
   assemble_kernel_row(
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
                                                         &task_buffer,
     Vector<RangeNumberType>                             &row_vector,
@@ -328,7 +328,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -341,7 +341,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -375,7 +375,7 @@ namespace IdeoBEM
 
         task_buffer.starting_task_indices_for_dof_pairs_cpu[j + 1] =
           task_buffer.starting_task_indices_for_dof_pairs_cpu[j] +
-          IdeoBEM::CUDAWrappers::
+          HierBEM::CUDAWrappers::
             create_sauter_quadrature_tasks_on_one_pair_of_dofs(
               task_buffer,
               i_global_dof_index,
@@ -415,7 +415,7 @@ namespace IdeoBEM
             typename RangeNumberType = double>
   void
   assemble_kernel_row(
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
                                                         &task_buffer,
     Vector<RangeNumberType>                             &row_vector,
@@ -432,7 +432,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -445,7 +445,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -528,7 +528,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -541,7 +541,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -636,7 +636,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -649,7 +649,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -709,7 +709,7 @@ namespace IdeoBEM
             typename RangeNumberType = double>
   void
   assemble_kernel_column(
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
                                                         &task_buffer,
     Vector<RangeNumberType>                             &col_vector,
@@ -724,7 +724,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -737,7 +737,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -767,7 +767,7 @@ namespace IdeoBEM
 
         task_buffer.starting_task_indices_for_dof_pairs_cpu[i + 1] =
           task_buffer.starting_task_indices_for_dof_pairs_cpu[i] +
-          IdeoBEM::CUDAWrappers::
+          HierBEM::CUDAWrappers::
             create_sauter_quadrature_tasks_on_one_pair_of_dofs(
               task_buffer,
               i_global_dof_index,
@@ -807,7 +807,7 @@ namespace IdeoBEM
             typename RangeNumberType = double>
   void
   assemble_kernel_column(
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
                                                         &task_buffer,
     Vector<RangeNumberType>                             &col_vector,
@@ -824,7 +824,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -837,7 +837,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -926,7 +926,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -939,7 +939,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -1102,7 +1102,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -1115,7 +1115,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -1226,7 +1226,7 @@ namespace IdeoBEM
             typename RangeNumberType = double>
   size_type
   random_select_ref_row(
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
                                                         &task_buffer,
     Vector<RangeNumberType>                             &row_vector,
@@ -1244,7 +1244,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -1257,7 +1257,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -1367,7 +1367,7 @@ namespace IdeoBEM
             typename RangeNumberType = double>
   size_type
   random_select_ref_row(
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
                                                         &task_buffer,
     Vector<RangeNumberType>                             &row_vector,
@@ -1387,7 +1387,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -1400,7 +1400,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -1649,7 +1649,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -1662,7 +1662,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -1826,7 +1826,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -1839,7 +1839,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -1951,7 +1951,7 @@ namespace IdeoBEM
             typename RangeNumberType = double>
   size_type
   random_select_ref_column(
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
                                                         &task_buffer,
     Vector<RangeNumberType>                             &col_vector,
@@ -1969,7 +1969,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -1982,7 +1982,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -2093,7 +2093,7 @@ namespace IdeoBEM
             typename RangeNumberType = double>
   size_type
   random_select_ref_column(
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
                                                         &task_buffer,
     Vector<RangeNumberType>                             &col_vector,
@@ -2113,7 +2113,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -2126,7 +2126,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -2373,7 +2373,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -2386,7 +2386,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -3056,7 +3056,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -3069,7 +3069,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -3715,7 +3715,7 @@ namespace IdeoBEM
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -3728,7 +3728,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -3746,14 +3746,14 @@ namespace IdeoBEM
      * @internal Create Sauter task buffers for assembling row vectors and
      * column vectors.
      */
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
         sauter_task_buffer_for_row_vector(n,
                                           kx_dof_to_cell_topo.max_cells_per_dof,
                                           ky_dof_to_cell_topo.max_cells_per_dof,
                                           bem_values,
                                           scratch_data.cuda_stream_handle);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
         sauter_task_buffer_for_col_vector(m,
                                           kx_dof_to_cell_topo.max_cells_per_dof,
@@ -3809,14 +3809,10 @@ namespace IdeoBEM
     Vector<RangeNumberType> vr(n);
     Vector<RangeNumberType> uc(m);
 
-    cudaError_t error_code;
-
-    error_code =
-      cudaHostRegister((void *)(vr.data()), sizeof(RangeNumberType) * n, 0);
-    AssertCuda(error_code);
-    error_code =
-      cudaHostRegister((void *)(uc.data()), sizeof(RangeNumberType) * m, 0);
-    AssertCuda(error_code);
+    AssertCuda(
+      cudaHostRegister((void *)(vr.data()), sizeof(RangeNumberType) * n, 0));
+    AssertCuda(
+      cudaHostRegister((void *)(uc.data()), sizeof(RangeNumberType) * m, 0));
 
     size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
                                         vr,
@@ -3849,10 +3845,8 @@ namespace IdeoBEM
         // block is purely zero. Then return a zero rank-k matrix.
         rkmat.reinit(m, n, 0);
 
-        error_code = cudaHostUnregister((void *)(vr.data()));
-        AssertCuda(error_code);
-        error_code = cudaHostUnregister((void *)(uc.data()));
-        AssertCuda(error_code);
+        AssertCuda(cudaHostUnregister((void *)(vr.data())));
+        AssertCuda(cudaHostUnregister((void *)(uc.data())));
 
         return;
       }
@@ -3889,10 +3883,8 @@ namespace IdeoBEM
         // matrix block is purely zero. Then return a zero rank-k matrix.
         rkmat.reinit(m, n, 0);
 
-        error_code = cudaHostUnregister((void *)(vr.data()));
-        AssertCuda(error_code);
-        error_code = cudaHostUnregister((void *)(uc.data()));
-        AssertCuda(error_code);
+        AssertCuda(cudaHostUnregister((void *)(vr.data())));
+        AssertCuda(cudaHostUnregister((void *)(uc.data())));
 
         return;
       }
@@ -3933,12 +3925,10 @@ namespace IdeoBEM
     Vector<RangeNumberType> vk(n);
     Vector<RangeNumberType> uk(m);
 
-    error_code =
-      cudaHostRegister((void *)(vk.data()), sizeof(RangeNumberType) * n, 0);
-    AssertCuda(error_code);
-    error_code =
-      cudaHostRegister((void *)(uk.data()), sizeof(RangeNumberType) * m, 0);
-    AssertCuda(error_code);
+    AssertCuda(
+      cudaHostRegister((void *)(vk.data()), sizeof(RangeNumberType) * n, 0));
+    AssertCuda(
+      cudaHostRegister((void *)(uk.data()), sizeof(RangeNumberType) * m, 0));
 
     /**
      * The absolute values for the temporary row and column vectors for the
@@ -4246,14 +4236,10 @@ namespace IdeoBEM
                     rkmat.truncate_to_rank(k);
                   }
 
-                error_code = cudaHostUnregister((void *)(vr.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uc.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(vk.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uk.data()));
-                AssertCuda(error_code);
+                AssertCuda(cudaHostUnregister((void *)(vr.data())));
+                AssertCuda(cudaHostUnregister((void *)(uc.data())));
+                AssertCuda(cudaHostUnregister((void *)(vk.data())));
+                AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
                 return;
               }
@@ -4334,14 +4320,10 @@ namespace IdeoBEM
                     rkmat.truncate_to_rank(k);
                   }
 
-                error_code = cudaHostUnregister((void *)(vr.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uc.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(vk.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uk.data()));
-                AssertCuda(error_code);
+                AssertCuda(cudaHostUnregister((void *)(vr.data())));
+                AssertCuda(cudaHostUnregister((void *)(uc.data())));
+                AssertCuda(cudaHostUnregister((void *)(vk.data())));
+                AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
                 return;
               }
@@ -4391,14 +4373,10 @@ namespace IdeoBEM
                 rkmat.truncate_to_rank(k);
               }
 
-            error_code = cudaHostUnregister((void *)(vr.data()));
-            AssertCuda(error_code);
-            error_code = cudaHostUnregister((void *)(uc.data()));
-            AssertCuda(error_code);
-            error_code = cudaHostUnregister((void *)(vk.data()));
-            AssertCuda(error_code);
-            error_code = cudaHostUnregister((void *)(uk.data()));
-            AssertCuda(error_code);
+            AssertCuda(cudaHostUnregister((void *)(vr.data())));
+            AssertCuda(cudaHostUnregister((void *)(uc.data())));
+            AssertCuda(cudaHostUnregister((void *)(vk.data())));
+            AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
             return;
           }
@@ -4417,28 +4395,20 @@ namespace IdeoBEM
                     rkmat.truncate_to_rank(k);
                   }
 
-                error_code = cudaHostUnregister((void *)(vr.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uc.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(vk.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uk.data()));
-                AssertCuda(error_code);
+                AssertCuda(cudaHostUnregister((void *)(vr.data())));
+                AssertCuda(cudaHostUnregister((void *)(uc.data())));
+                AssertCuda(cudaHostUnregister((void *)(vk.data())));
+                AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
                 return;
               }
           }
       }
 
-    error_code = cudaHostUnregister((void *)(vr.data()));
-    AssertCuda(error_code);
-    error_code = cudaHostUnregister((void *)(uc.data()));
-    AssertCuda(error_code);
-    error_code = cudaHostUnregister((void *)(vk.data()));
-    AssertCuda(error_code);
-    error_code = cudaHostUnregister((void *)(uk.data()));
-    AssertCuda(error_code);
+    AssertCuda(cudaHostUnregister((void *)(vr.data())));
+    AssertCuda(cudaHostUnregister((void *)(uc.data())));
+    AssertCuda(cudaHostUnregister((void *)(vk.data())));
+    AssertCuda(cudaHostUnregister((void *)(uk.data())));
   }
 
 
@@ -4460,7 +4430,7 @@ namespace IdeoBEM
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -4473,7 +4443,7 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -4491,14 +4461,14 @@ namespace IdeoBEM
      * @internal Create Sauter task buffers for assembling row vectors and
      * column vectors.
      */
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
         sauter_task_buffer_for_row_vector(n,
                                           kx_dof_to_cell_topo.max_cells_per_dof,
                                           ky_dof_to_cell_topo.max_cells_per_dof,
                                           bem_values,
                                           scratch_data.cuda_stream_handle);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskBufferForVector<dim, spacedim, RangeNumberType>
         sauter_task_buffer_for_col_vector(m,
                                           kx_dof_to_cell_topo.max_cells_per_dof,
@@ -4554,14 +4524,11 @@ namespace IdeoBEM
     Vector<RangeNumberType> vr(n);
     Vector<RangeNumberType> uc(m);
 
-    cudaError_t error_code;
 
-    error_code =
-      cudaHostRegister((void *)(vr.data()), sizeof(RangeNumberType) * n, 0);
-    AssertCuda(error_code);
-    error_code =
-      cudaHostRegister((void *)(uc.data()), sizeof(RangeNumberType) * m, 0);
-    AssertCuda(error_code);
+    AssertCuda(
+      cudaHostRegister((void *)(vr.data()), sizeof(RangeNumberType) * n, 0));
+    AssertCuda(
+      cudaHostRegister((void *)(uc.data()), sizeof(RangeNumberType) * m, 0));
 
     size_type r = random_select_ref_row(sauter_task_buffer_for_row_vector,
                                         vr,
@@ -4596,10 +4563,8 @@ namespace IdeoBEM
         // block is purely zero. Then return a zero rank-k matrix.
         rkmat.reinit(m, n, 0);
 
-        error_code = cudaHostUnregister((void *)(vr.data()));
-        AssertCuda(error_code);
-        error_code = cudaHostUnregister((void *)(uc.data()));
-        AssertCuda(error_code);
+        AssertCuda(cudaHostUnregister((void *)(vr.data())));
+        AssertCuda(cudaHostUnregister((void *)(uc.data())));
 
         return;
       }
@@ -4638,10 +4603,8 @@ namespace IdeoBEM
         // matrix block is purely zero. Then return a zero rank-k matrix.
         rkmat.reinit(m, n, 0);
 
-        error_code = cudaHostUnregister((void *)(vr.data()));
-        AssertCuda(error_code);
-        error_code = cudaHostUnregister((void *)(uc.data()));
-        AssertCuda(error_code);
+        AssertCuda(cudaHostUnregister((void *)(vr.data())));
+        AssertCuda(cudaHostUnregister((void *)(uc.data())));
 
         return;
       }
@@ -4682,12 +4645,10 @@ namespace IdeoBEM
     Vector<RangeNumberType> vk(n);
     Vector<RangeNumberType> uk(m);
 
-    error_code =
-      cudaHostRegister((void *)(vk.data()), sizeof(RangeNumberType) * n, 0);
-    AssertCuda(error_code);
-    error_code =
-      cudaHostRegister((void *)(uk.data()), sizeof(RangeNumberType) * m, 0);
-    AssertCuda(error_code);
+    AssertCuda(
+      cudaHostRegister((void *)(vk.data()), sizeof(RangeNumberType) * n, 0));
+    AssertCuda(
+      cudaHostRegister((void *)(uk.data()), sizeof(RangeNumberType) * m, 0));
 
     /**
      * The absolute values for the temporary row and column vectors for the
@@ -5005,14 +4966,10 @@ namespace IdeoBEM
                     rkmat.truncate_to_rank(k);
                   }
 
-                error_code = cudaHostUnregister((void *)(vr.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uc.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(vk.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uk.data()));
-                AssertCuda(error_code);
+                AssertCuda(cudaHostUnregister((void *)(vr.data())));
+                AssertCuda(cudaHostUnregister((void *)(uc.data())));
+                AssertCuda(cudaHostUnregister((void *)(vk.data())));
+                AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
                 return;
               }
@@ -5095,14 +5052,10 @@ namespace IdeoBEM
                     rkmat.truncate_to_rank(k);
                   }
 
-                error_code = cudaHostUnregister((void *)(vr.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uc.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(vk.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uk.data()));
-                AssertCuda(error_code);
+                AssertCuda(cudaHostUnregister((void *)(vr.data())));
+                AssertCuda(cudaHostUnregister((void *)(uc.data())));
+                AssertCuda(cudaHostUnregister((void *)(vk.data())));
+                AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
                 return;
               }
@@ -5152,14 +5105,10 @@ namespace IdeoBEM
                 rkmat.truncate_to_rank(k);
               }
 
-            error_code = cudaHostUnregister((void *)(vr.data()));
-            AssertCuda(error_code);
-            error_code = cudaHostUnregister((void *)(uc.data()));
-            AssertCuda(error_code);
-            error_code = cudaHostUnregister((void *)(vk.data()));
-            AssertCuda(error_code);
-            error_code = cudaHostUnregister((void *)(uk.data()));
-            AssertCuda(error_code);
+            AssertCuda(cudaHostUnregister((void *)(vr.data())));
+            AssertCuda(cudaHostUnregister((void *)(uc.data())));
+            AssertCuda(cudaHostUnregister((void *)(vk.data())));
+            AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
             return;
           }
@@ -5178,28 +5127,20 @@ namespace IdeoBEM
                     rkmat.truncate_to_rank(k);
                   }
 
-                error_code = cudaHostUnregister((void *)(vr.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uc.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(vk.data()));
-                AssertCuda(error_code);
-                error_code = cudaHostUnregister((void *)(uk.data()));
-                AssertCuda(error_code);
+                AssertCuda(cudaHostUnregister((void *)(vr.data())));
+                AssertCuda(cudaHostUnregister((void *)(uc.data())));
+                AssertCuda(cudaHostUnregister((void *)(vk.data())));
+                AssertCuda(cudaHostUnregister((void *)(uk.data())));
 
                 return;
               }
           }
       }
 
-    error_code = cudaHostUnregister((void *)(vr.data()));
-    AssertCuda(error_code);
-    error_code = cudaHostUnregister((void *)(uc.data()));
-    AssertCuda(error_code);
-    error_code = cudaHostUnregister((void *)(vk.data()));
-    AssertCuda(error_code);
-    error_code = cudaHostUnregister((void *)(uk.data()));
-    AssertCuda(error_code);
+    AssertCuda(cudaHostUnregister((void *)(vr.data())));
+    AssertCuda(cudaHostUnregister((void *)(uc.data())));
+    AssertCuda(cudaHostUnregister((void *)(vk.data())));
+    AssertCuda(cudaHostUnregister((void *)(uk.data())));
   }
 
 
@@ -5680,8 +5621,11 @@ namespace IdeoBEM
    * Galerkin-BEM. For the far field admissible matrix, rank-k matrices will
    * be built using ACA+.
    *
-   * \mynote{This is used as the work function for parallel \hmatrix
-   * construction using ACA+.}
+   * \mynote{1. This is used as the work function for parallel \hmatrix
+   * construction using ACA+.
+   * 2. For near field matrix assembly, the producer-consumer model is not
+   * adopted. GPU parallelization with 2D thread grid is distributed over each
+   * quadrature point in the X direction and each k3 term in the Y direction.}
    *
    * @param leaf_mat
    * @param aca_config
@@ -5721,7 +5665,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -5741,14 +5685,14 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "fill_hmatrix_leaf_node_with_aca_plus");
 #endif
 
@@ -6077,10 +6021,26 @@ namespace IdeoBEM
    * Galerkin-BEM. For the far field admissible matrix, rank-k matrices will
    * be built using ACA+.
    *
-   * \mynote{1. This is used as the work function for parallel \hmatrix
+   * \mynote{
+   * 1. This is used as the work function for parallel \hmatrix
    * construction using ACA+.
-   * 2. This version is especially for assembling the regularized
-   * hyper-singular matrix with the stabilization term.}
+   * 2. For near field matrix assembly, the producer-consumer model is not
+   * adopted. GPU parallelization with 2D thread grid is distributed over each
+   * quadrature point in the X direction and each k3 term in the Y direction.
+   * 3. This version is especially for assembling the regularized
+   * hyper-singular matrix appended with the stabilization term. The
+   * stabilization term in the variational equation is
+   *   \f[
+   *   \alpha\langle \gamma_0^{\rm ext}u, \omega_{\rm eq} \rangle \cdot \langle
+   * v, \omega_{\rm eq} \rangle_{\Gamma}. \f]
+   *
+   *   The stabilization term in the discretized form is
+   *   \f[
+   *   \alpha M [\omega_{\rm eq}] \cdot \left[ M [\omega_{\rm eq}] \right]^{\rm
+   * T} \cdot [\gamma_0^{\rm ext}u], \f] which is actually an outer-product
+   * representation. The argument
+   *   @p mass_vmult_weq passed to this function is just the vector
+   *   \f$M [\omega_{\rm eq}]\f$.}
    *
    * @param leaf_mat
    * @param aca_config
@@ -6131,7 +6091,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -6151,14 +6111,14 @@ namespace IdeoBEM
       &map_from_ky_boundary_mesh_to_volume_mesh,
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "fill_hmatrix_leaf_node_with_aca_plus for hypersingular");
 #endif
 
@@ -6506,8 +6466,11 @@ namespace IdeoBEM
    * Galerkin-BEM. For the far field admissible matrix, rank-k matrices will
    * be built using ACA+.
    *
-   * \mynote{This is used as the work function for parallel \hmatrix
-   * construction using ACA+.}
+   * \mynote{1. This is used as the work function for parallel \hmatrix
+   * construction using ACA+.
+   * 2. For near field matrix assembly, the producer-consumer model is not
+   * adopted. GPU parallelization with 2D thread grid is distributed over each
+   * quadrature point in the X direction and each k3 term in the Y direction.}
    *
    * @param leaf_mat
    * @param aca_config
@@ -6549,7 +6512,7 @@ namespace IdeoBEM
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -6570,14 +6533,14 @@ namespace IdeoBEM
     const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "fill_hmatrix_leaf_node_with_aca_plus with mass matrix");
 #endif
 
@@ -6892,7 +6855,7 @@ namespace IdeoBEM
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -6905,14 +6868,14 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "fill_far_field_hmatrix_leaf_node_with_aca_plus");
 #endif
 
@@ -7052,7 +7015,7 @@ namespace IdeoBEM
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -7065,14 +7028,14 @@ namespace IdeoBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
     const bool enable_build_symmetric_hmat = false)
   {
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "fill_far_field_hmatrix_leaf_node_with_aca_plus for hypersingular");
 #endif
 
@@ -7229,7 +7192,7 @@ namespace IdeoBEM
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -7265,7 +7228,7 @@ namespace IdeoBEM
     /**
      * Create pair cell wise scratch data on GPU device.
      */
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
         scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
@@ -7354,7 +7317,7 @@ namespace IdeoBEM
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
     const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
     const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -7390,7 +7353,7 @@ namespace IdeoBEM
     /**
      * Create pair cell wise scratch data and task data on GPU device.
      */
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
         scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
@@ -7419,155 +7382,6 @@ namespace IdeoBEM
           ky_dof_i2e_numbering,
           kx_mapping,
           ky_mapping,
-          scratch_data,
-          scratch_data_gpu,
-          copy_data,
-          enable_build_symmetric_hmat);
-      }
-
-    /**
-     * Release pair cell wise scratch and copy data.
-     */
-    scratch_data_gpu.release(scratch_data.cuda_stream_handle);
-    scratch_data.release();
-    copy_data.release();
-
-    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
-  }
-
-
-  /**
-   * Fill the leaf nodes in a subrange of an \hmatrix using ACA+.
-   *
-   * In the mean time, the FEM mass matrix multiplied by a factor will be
-   * added to the near field matrix block.
-   *
-   * \mynote{This function is to be used for TBB parallelization.}
-   *
-   * @param range
-   * @param aca_config
-   * @param kernel
-   * @param kernel_factor
-   * @param mass_matrix_factor
-   * @param kx_dof_to_cell_topo
-   * @param ky_dof_to_cell_topo
-   * @param bem_values
-   * @param mass_matrix_quadrature_formula
-   * @param kx_dof_handler
-   * @param ky_dof_handler
-   * @param kx_mapping
-   * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
-   * @param enable_build_symmetric_hmat
-   */
-  template <int dim,
-            int spacedim,
-            template <int, typename>
-            typename KernelFunctionType,
-            typename RangeNumberType = double>
-  void
-  fill_hmatrix_leaf_node_subrange_with_aca_plus(
-    const tbb::blocked_range<
-      typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator>
-                                                        &range,
-    const ACAConfig                                     &aca_config,
-    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-    const RangeNumberType                                kernel_factor,
-    const RangeNumberType                                mass_matrix_factor,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-      &kx_dof_to_cell_topo,
-    const std::vector<
-      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                                    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-    const IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
-                                    &bem_values_gpu,
-    const QGauss<dim>               &mass_matrix_quadrature_formula,
-    const DoFHandler<dim, spacedim> &kx_dof_handler,
-    const DoFHandler<dim, spacedim> &ky_dof_handler,
-    const std::vector<types::global_dof_index>
-      *kx_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index>
-      *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
-  {
-    const std::thread::id current_thread_id = std::this_thread::get_id();
-    std::cerr << "WorkStream " << current_thread_id << " starts..."
-              << std::endl;
-
-    /**
-     * Define @p CellWiseScratchData which is local to the current working thread.
-     */
-    CellWiseScratchDataForMassMatrix<dim, spacedim> mass_matrix_scratch_data(
-      kx_dof_handler.get_fe(),
-      ky_dof_handler.get_fe(),
-      mass_matrix_quadrature_formula,
-      update_values | update_JxW_values);
-
-    /**
-     * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
-     * are local to the current working thread. This is mandatory because
-     * each current working thread should have its own copy of these data.
-     */
-    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
-      current_thread_id,
-      kx_dof_handler.get_fe(),
-      ky_dof_handler.get_fe(),
-      kx_mapping,
-      ky_mapping,
-      bem_values);
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
-      kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
-
-    /**
-     * Create pair cell wise scratch data and task data on GPU device.
-     */
-    IdeoBEM::CUDAWrappers::
-      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
-        scratch_data_gpu;
-    scratch_data_gpu.allocate(scratch_data);
-
-    for (typename std::vector<HMatrix<spacedim, RangeNumberType> *>::iterator
-           iter = range.begin();
-         iter != range.end();
-         iter++)
-      {
-        fill_hmatrix_leaf_node_with_aca_plus(
-          (*iter),
-          aca_config,
-          kernel,
-          kernel_factor,
-          mass_matrix_factor,
-          kx_dof_to_cell_topo,
-          ky_dof_to_cell_topo,
-          bem_values,
-          bem_values_gpu,
-          kx_dof_handler,
-          ky_dof_handler,
-          kx_map_from_local_to_full_dof_indices,
-          ky_map_from_local_to_full_dof_indices,
-          kx_dof_i2e_numbering,
-          ky_dof_i2e_numbering,
-          kx_mapping,
-          ky_mapping,
-          map_from_kx_boundary_mesh_to_volume_mesh,
-          map_from_ky_boundary_mesh_to_volume_mesh,
-          method_for_cell_neighboring_type,
-          mass_matrix_scratch_data,
           scratch_data,
           scratch_data_gpu,
           copy_data,
@@ -7730,8 +7544,8 @@ namespace IdeoBEM
    * integral in Galerkin-BEM. For the far field admissible matrices in the
    * leaf set, rank-k matrices will be built using ACA+.
    *
-   * This version serially processes each \hmatnode in the leaf set
-   * one-by-one.
+   * \mynote{This version processes each \hmatnode in the leaf set
+   * one-by-one without partitioning the leaf set using TBB.}
    *
    * @param hmat
    * @param aca_config
@@ -7756,7 +7570,7 @@ namespace IdeoBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   void
-  fill_hmatrix_with_aca_plus(
+  fill_hmatrix_with_aca_plus_serial(
     HMatrix<spacedim, RangeNumberType>                  &hmat,
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
@@ -7821,7 +7635,7 @@ namespace IdeoBEM
     /**
      * Copy the precalculated BEM values to the GPU device.
      */
-    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
@@ -7842,7 +7656,7 @@ namespace IdeoBEM
     /**
      * Create pair cell wise scratch data and task data on GPU device.
      */
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
         scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
@@ -7898,8 +7712,23 @@ namespace IdeoBEM
    * integral in Galerkin-BEM. For the far field admissible matrices in the
    * leaf set, rank-k matrices will be built using ACA+.
    *
-   * This version also computes scaled mass matrix entries and serially
-   * processes each \hmatnode in the leaf set one-by-one.
+   * \mynote{
+   * 1. This version processes each \hmatnode in the leaf set
+   * one-by-one without partitioning the leaf set using TBB.
+   * 2. This version is especially for assembling the regularized
+   * hyper-singular matrix appended with the stabilization term. The
+   * stabilization term in the variational equation is
+   *   \f[
+   *   \alpha\langle \gamma_0^{\rm ext}u, \omega_{\rm eq} \rangle \cdot \langle
+   * v, \omega_{\rm eq} \rangle_{\Gamma}. \f]
+   *
+   *   The stabilization term in the discretized form is
+   *   \f[
+   *   \alpha M [\omega_{\rm eq}] \cdot \left[ M [\omega_{\rm eq}] \right]^{\rm
+   * T} \cdot [\gamma_0^{\rm ext}u], \f] which is actually an outer-product
+   * representation. The argument
+   *   @p mass_vmult_weq passed to this function is just the vector
+   *   \f$M [\omega_{\rm eq}]\f$.}
    */
   template <int dim,
             int spacedim,
@@ -7907,7 +7736,164 @@ namespace IdeoBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   void
-  fill_hmatrix_with_aca_plus(
+  fill_hmatrix_with_aca_plus_serial(
+    HMatrix<spacedim, RangeNumberType>                  &hmat,
+    const ACAConfig                                     &aca_config,
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const Vector<RangeNumberType>                       &mass_vmult_weq,
+    const RangeNumberType                                stabilization_factor,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+      &kx_dof_to_cell_topo,
+    const std::vector<
+      std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
+                                    &ky_dof_to_cell_topo,
+    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    const DoFHandler<dim, spacedim> &kx_dof_handler,
+    const DoFHandler<dim, spacedim> &ky_dof_handler,
+    const std::vector<types::global_dof_index>
+      *kx_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>
+      *ky_map_from_local_to_full_dof_indices,
+    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_kx_boundary_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_ky_boundary_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const bool                            enable_build_symmetric_hmat = false)
+  {
+    /**
+     * Precalculate data tables for shape values at quadrature points.
+     *
+     * \mynote{Precalculate shape function values and their gradient values
+     * at each quadrature point. N.B.
+     * 1. The data tables for shape function values and their gradient
+     * values should be calculated for both function space on \f$K_x\f$ and
+     * function space on \f$K_y\f$.
+     * 2. Being different from the integral in FEM, the integral in BEM
+     * handled by Sauter's quadrature rule has multiple parts of \f$k_3\f$
+     * (except the regular cell neighboring type), each of which should be
+     * evaluated at a different set of quadrature points in the unit cell
+     * after coordinate transformation from the parametric space. Therefore,
+     * a dimension with respect to \f$k_3\f$ term index should be added to
+     * the data table compared to the usual FEValues and this brings about
+     * the class @p BEMValues.}
+     */
+    BEMValues<dim, spacedim, RangeNumberType> bem_values(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
+      sauter_quad_rule.quad_rule_for_same_panel,
+      sauter_quad_rule.quad_rule_for_common_edge,
+      sauter_quad_rule.quad_rule_for_common_vertex,
+      sauter_quad_rule.quad_rule_for_regular);
+
+    bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Copy the precalculated BEM values to the GPU device.
+     */
+    HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+      bem_values_gpu;
+    bem_values_gpu.allocate_and_assign_from_host(bem_values);
+
+    /**
+     * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
+     * are local to the current working thread. This is mandatory because
+     * each current working thread should have its own copy of these data.
+     */
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      kx_dof_handler.get_fe(),
+      ky_dof_handler.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
+
+    /**
+     * Create pair cell wise scratch data and task data on GPU device.
+     */
+    HierBEM::CUDAWrappers::
+      CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
+        scratch_data_gpu;
+    scratch_data_gpu.allocate(scratch_data);
+
+    for (HMatrix<spacedim, RangeNumberType> *leaf_mat : hmat.get_leaf_set())
+      {
+        fill_hmatrix_leaf_node_with_aca_plus(
+          leaf_mat,
+          aca_config,
+          kernel,
+          kernel_factor,
+          mass_vmult_weq,
+          stabilization_factor,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values,
+          bem_values_gpu,
+          kx_dof_handler,
+          ky_dof_handler,
+          kx_map_from_local_to_full_dof_indices,
+          ky_map_from_local_to_full_dof_indices,
+          kx_dof_i2e_numbering,
+          ky_dof_i2e_numbering,
+          kx_mapping,
+          ky_mapping,
+          map_from_kx_boundary_mesh_to_volume_mesh,
+          map_from_ky_boundary_mesh_to_volume_mesh,
+          method_for_cell_neighboring_type,
+          scratch_data,
+          scratch_data_gpu,
+          copy_data,
+          enable_build_symmetric_hmat);
+      }
+
+    /**
+     * Release BEM values on the GPU device.
+     */
+    bem_values_gpu.release();
+
+    /**
+     * Release pair cell wise scratch and copy data.
+     */
+    scratch_data.release();
+    scratch_data_gpu.release(scratch_data.cuda_stream_handle);
+  }
+
+
+  /**
+   * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
+   * structure of the \hmatrix has been built with respect to a block cluster
+   * tree and the memory for the matrices in the leaf set has been allocated.
+   *
+   * For the near field matrices in the leaf set, full matrices will be built
+   * whose elements will be obtained from the evaluation of the double
+   * integral in Galerkin-BEM. For the far field admissible matrices in the
+   * leaf set, rank-k matrices will be built using ACA+.
+   *
+   * \mynote{1. This version processes each \hmatnode in the leaf set
+   * one-by-one without partitioning the leaf set using TBB.
+   * 2. The mass matrix scaled with a factor is appended to the near field leaf
+   * node.}
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  fill_hmatrix_with_aca_plus_serial(
     HMatrix<spacedim, RangeNumberType>                  &hmat,
     const ACAConfig                                     &aca_config,
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
@@ -7974,7 +7960,7 @@ namespace IdeoBEM
     /**
      * Copy the precalculated BEM values to the GPU device.
      */
-    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
@@ -8005,7 +7991,7 @@ namespace IdeoBEM
     /**
      * Create pair cell wise scratch data and task data on GPU device.
      */
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
         scratch_data_gpu;
     scratch_data_gpu.allocate(scratch_data);
@@ -8063,13 +8049,14 @@ namespace IdeoBEM
    * integral in Galerkin-BEM. For the far field admissible matrices in the
    * leaf set, rank-k matrices will be built using ACA+.
    *
-   * \mynote{For the near field leaf set, CUDA parallelization is distributed
-   * over each pair of cells associated with a full matrix entry. The
-   * parallelization is realized in a producer-consumer model.
-   *
-   * For the far field leaf set, the first level GPU parallelization is
-   * distributed over each \hmat node in the set and the second level GPU
-   * parallelization is distributed over each quadrature point.}
+   * \mynote{
+   * 1. For the near field leaf set, GPU parallelization is realized in a
+   * producer-consumer model. GPU 1D thread grid is distributed over each Sauter
+   * quadrature task in the ring buffer.
+   * 2. For the far field leaf set, GPU 2D thread grid is distributed over each
+   * Sauter quadrature task in the X direction and each quadrature point in the
+   * Y direction. The quadrature tasks collected in the buffer are used to build
+   * a row or column vector.}
    *
    * @param thread_num
    * @param hmat
@@ -8126,7 +8113,7 @@ namespace IdeoBEM
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca");
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmatrix_aca");
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range("build_hmatrix_aca");
 #endif
 
     Timer timer;
@@ -8162,7 +8149,7 @@ namespace IdeoBEM
     /**
      * Copy the precalculated BEM values to the GPU device.
      */
-    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
@@ -8181,25 +8168,25 @@ namespace IdeoBEM
     const unsigned int capacity            = batch_size * 8 + 1;
     unsigned int       producer_thread_num = 4;
 
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
     ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
                                         batch_size,
                                         bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
     ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
                                          batch_size,
                                          bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
     ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
                                            batch_size,
                                            bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
     ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
@@ -8236,22 +8223,22 @@ namespace IdeoBEM
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
@@ -8261,7 +8248,7 @@ namespace IdeoBEM
             const std::vector<std::vector<
               const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
             const BEMValues<dim, spacedim, RangeNumberType> &,
-            const IdeoBEM::CUDAWrappers::
+            const HierBEM::CUDAWrappers::
               CUDABEMValues<dim, spacedim, RangeNumberType> &,
             const DoFHandler<dim, spacedim> &,
             const DoFHandler<dim, spacedim> &,
@@ -8280,7 +8267,7 @@ namespace IdeoBEM
             const DetectCellNeighboringTypeMethod,
             const bool,
             const bool)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
           std::cref(hmat.get_near_field_leaf_set()),
           i * number_of_hmat_nodes_per_thread,
@@ -8323,16 +8310,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -8345,16 +8332,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -8367,16 +8354,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -8389,16 +8376,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -8468,7 +8455,7 @@ namespace IdeoBEM
     if (far_field_leaf_set.size() > 0)
       {
 #if ENABLE_NVTX == 1
-        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
           "build far field hmatrix nodes");
 #endif
 
@@ -8520,7 +8507,7 @@ namespace IdeoBEM
                       const DofToCellTopology<dim, spacedim> &,
                       const DofToCellTopology<dim, spacedim> &,
                       const BEMValues<dim, spacedim, RangeNumberType> &,
-                      const IdeoBEM::CUDAWrappers::
+                      const HierBEM::CUDAWrappers::
                         CUDABEMValues<dim, spacedim, RangeNumberType> &,
                       const DoFHandler<dim, spacedim> &,
                       const DoFHandler<dim, spacedim> &,
@@ -8575,13 +8562,14 @@ namespace IdeoBEM
    * This version is used for assembling the regularized hyper-singular matrix
    * with the stabilization term.
    *
-   * \mynote{For the near field leaf set, CUDA parallelization is distributed
-   * over each pair of cells associated with a full matrix entry. The
-   * parallelization is realized in a producer-consumer model.
-   *
-   * For the far field leaf set, the first level GPU parallelization is
-   * distributed over each \hmat node in the set and the second level GPU
-   * parallelization is distributed over each quadrature point.}
+   * \mynote{
+   * 1. For the near field leaf set, GPU parallelization is realized in a
+   * producer-consumer model. GPU 1D thread grid is distributed over each Sauter
+   * quadrature task in the ring buffer.
+   * 2. For the far field leaf set, GPU 2D thread grid is distributed over each
+   * Sauter quadrature task in the X direction and each quadrature point in the
+   * Y direction. The quadrature tasks collected in the buffer are used to build
+   * a row or column vector.}
    *
    * @param thread_num
    * @param hmat
@@ -8646,7 +8634,7 @@ namespace IdeoBEM
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca with regularization");
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "build_hmatrix_aca with regularization");
 #endif
 
@@ -8684,7 +8672,7 @@ namespace IdeoBEM
     /**
      * Copy the precalculated BEM values to the GPU device.
      */
-    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
@@ -8703,25 +8691,25 @@ namespace IdeoBEM
     const unsigned int capacity            = batch_size * 8 + 1;
     unsigned int       producer_thread_num = 4;
 
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
     ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
                                         batch_size,
                                         bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
     ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
                                          batch_size,
                                          bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
     ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
                                            batch_size,
                                            bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
     ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
@@ -8758,22 +8746,22 @@ namespace IdeoBEM
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
@@ -8783,7 +8771,7 @@ namespace IdeoBEM
             const std::vector<std::vector<
               const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
             const BEMValues<dim, spacedim, RangeNumberType> &,
-            const IdeoBEM::CUDAWrappers::
+            const HierBEM::CUDAWrappers::
               CUDABEMValues<dim, spacedim, RangeNumberType> &,
             const DoFHandler<dim, spacedim> &,
             const DoFHandler<dim, spacedim> &,
@@ -8802,7 +8790,7 @@ namespace IdeoBEM
             const DetectCellNeighboringTypeMethod,
             const bool,
             const bool)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
           std::cref(hmat.get_near_field_leaf_set()),
           i * number_of_hmat_nodes_per_thread,
@@ -8845,16 +8833,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -8867,16 +8855,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -8889,16 +8877,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -8911,16 +8899,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -8986,7 +8974,7 @@ namespace IdeoBEM
 
     {
 #if ENABLE_NVTX == 1
-      IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+      HierBEM::CUDAWrappers::NVTXRange nvtx_range(
         "regularize hypersingular kernel");
 #endif
 
@@ -9024,7 +9012,7 @@ namespace IdeoBEM
     if (far_field_leaf_set.size() > 0)
       {
 #if ENABLE_NVTX == 1
-        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
           "build far field hmatrix nodes");
 #endif
 
@@ -9075,7 +9063,7 @@ namespace IdeoBEM
                       const DofToCellTopology<dim, spacedim> &,
                       const DofToCellTopology<dim, spacedim> &,
                       const BEMValues<dim, spacedim, RangeNumberType> &,
-                      const IdeoBEM::CUDAWrappers::
+                      const HierBEM::CUDAWrappers::
                         CUDABEMValues<dim, spacedim, RangeNumberType> &,
                       const DoFHandler<dim, spacedim> &,
                       const DoFHandler<dim, spacedim> &,
@@ -9132,13 +9120,14 @@ namespace IdeoBEM
    * integral in Galerkin-BEM. For the far field admissible matrices in the
    * leaf set, rank-k matrices will be built using ACA+.
    *
-   * \mynote{For the near field leaf set, CUDA parallelization is distributed
-   * over each pair of cells associated with a full matrix entry. The
-   * parallelization is realized in a producer-consumer model.
-   *
-   * For the far field leaf set, the first level GPU parallelization is
-   * distributed over each \hmat node in the set and the second level GPU
-   * parallelization is distributed over each quadrature point.}
+   * \mynote{
+   * 1. For the near field leaf set, GPU parallelization is realized in a
+   * producer-consumer model. GPU 1D thread grid is distributed over each Sauter
+   * quadrature task in the ring buffer.
+   * 2. For the far field leaf set, GPU 2D thread grid is distributed over each
+   * Sauter quadrature task in the X direction and each quadrature point in the
+   * Y direction. The quadrature tasks collected in the buffer are used to build
+   * a row or column vector.}
    *
    * @param thread_num
    * @param hmat
@@ -9199,7 +9188,7 @@ namespace IdeoBEM
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca with mass matrix");
 #if ENABLE_NVTX == 1
-    IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+    HierBEM::CUDAWrappers::NVTXRange nvtx_range(
       "build_hmatrix_aca with mass matrix");
 #endif
 
@@ -9237,7 +9226,7 @@ namespace IdeoBEM
     /**
      * Copy the precalculated BEM values to the GPU device.
      */
-    IdeoBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
+    HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
       bem_values_gpu;
     bem_values_gpu.allocate_and_assign_from_host(bem_values);
 
@@ -9256,25 +9245,25 @@ namespace IdeoBEM
     const unsigned int capacity            = batch_size * 8 + 1;
     unsigned int       producer_thread_num = 4;
 
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_same_panel;
     ring_buffer_for_same_panel.allocate(CellNeighboringType::SamePanel,
                                         batch_size,
                                         bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_edge;
     ring_buffer_for_common_edge.allocate(CellNeighboringType::CommonEdge,
                                          batch_size,
                                          bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_common_vertex;
     ring_buffer_for_common_vertex.allocate(CellNeighboringType::CommonVertex,
                                            batch_size,
                                            bem_values);
-    IdeoBEM::CUDAWrappers::
+    HierBEM::CUDAWrappers::
       SauterQuadratureTaskRingBuffer<capacity, dim, spacedim, RangeNumberType>
         ring_buffer_for_regular;
     ring_buffer_for_regular.allocate(CellNeighboringType::Regular,
@@ -9311,22 +9300,22 @@ namespace IdeoBEM
             const std::vector<HMatrix<spacedim, RangeNumberType> *> &,
             const unsigned int,
             const unsigned int,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
               RangeNumberType> &,
-            IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+            HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
               capacity,
               dim,
               spacedim,
@@ -9337,7 +9326,7 @@ namespace IdeoBEM
             const std::vector<std::vector<
               const typename DoFHandler<dim, spacedim>::cell_iterator *>> &,
             const BEMValues<dim, spacedim, RangeNumberType> &,
-            const IdeoBEM::CUDAWrappers::
+            const HierBEM::CUDAWrappers::
               CUDABEMValues<dim, spacedim, RangeNumberType> &,
             const QGauss<dim> &,
             const DoFHandler<dim, spacedim> &,
@@ -9357,7 +9346,7 @@ namespace IdeoBEM
             const DetectCellNeighboringTypeMethod,
             const bool,
             const bool)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
           std::cref(near_field_leaf_set),
           i * number_of_hmat_nodes_per_thread,
@@ -9402,16 +9391,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -9424,16 +9413,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -9446,16 +9435,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -9468,16 +9457,16 @@ namespace IdeoBEM
           static_cast<
             void (*)(const KernelFunctionType<spacedim, RangeNumberType> &,
                      const RangeNumberType,
-                     IdeoBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
+                     HierBEM::CUDAWrappers::SauterQuadratureTaskRingBuffer<
                        capacity,
                        dim,
                        spacedim,
                        RangeNumberType> &,
-                     const IdeoBEM::CUDAWrappers::
+                     const HierBEM::CUDAWrappers::
                        CUDABEMValues<dim, spacedim, RangeNumberType> &,
                      std::mutex &,
                      const unsigned int)>(
-            IdeoBEM::CUDAWrappers::
+            HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_consumer),
           std::cref(kernel),
           kernel_factor,
@@ -9547,7 +9536,7 @@ namespace IdeoBEM
     if (far_field_leaf_set.size() > 0)
       {
 #if ENABLE_NVTX == 1
-        IdeoBEM::CUDAWrappers::NVTXRange nvtx_range(
+        HierBEM::CUDAWrappers::NVTXRange nvtx_range(
           "build far field hmatrix nodes");
 #endif
 
@@ -9599,7 +9588,7 @@ namespace IdeoBEM
                       const DofToCellTopology<dim, spacedim> &,
                       const DofToCellTopology<dim, spacedim> &,
                       const BEMValues<dim, spacedim, RangeNumberType> &,
-                      const IdeoBEM::CUDAWrappers::
+                      const HierBEM::CUDAWrappers::
                         CUDABEMValues<dim, spacedim, RangeNumberType> &,
                       const DoFHandler<dim, spacedim> &,
                       const DoFHandler<dim, spacedim> &,
@@ -9639,6 +9628,6 @@ namespace IdeoBEM
      */
     bem_values_gpu.release();
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_ACA_PLUS_HCU_ */

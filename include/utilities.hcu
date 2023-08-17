@@ -9,7 +9,7 @@
 #define INCLUDE_UTILITIES_HCU_
 
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace Utilities
   {
@@ -30,7 +30,7 @@ namespace IdeoBEM
       }
     } // namespace CUDAWrappers
   }   // namespace Utilities
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_UTILITIES_HCU_ */

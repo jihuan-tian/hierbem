@@ -11,44 +11,44 @@ int main()
   FE_Q<2, 3> fe(3);
 
   std::vector<unsigned int>
-  forward_dof_numbering_from_0(IdeoBEM::generate_forward_dof_permutation(fe, 0));
+  forward_dof_numbering_from_0(HierBEM::generate_forward_dof_permutation(fe, 0));
   deallog << "Forward dof numbering starting from corner #0..." << std::endl;
-  IdeoBEM::print_vector(deallog.get_console(), forward_dof_numbering_from_0, std::string(", "));
+  HierBEM::print_vector(deallog.get_console(), forward_dof_numbering_from_0, std::string(", "));
 
   std::vector<unsigned int>
-  forward_dof_numbering_from_1(IdeoBEM::generate_forward_dof_permutation(fe, 1));
+  forward_dof_numbering_from_1(HierBEM::generate_forward_dof_permutation(fe, 1));
   deallog << "Forward dof numbering starting from corner #1..." << std::endl;
-  IdeoBEM::print_vector(deallog.get_console(), forward_dof_numbering_from_1, std::string(", "));
+  HierBEM::print_vector(deallog.get_console(), forward_dof_numbering_from_1, std::string(", "));
 
   std::vector<unsigned int>
-  forward_dof_numbering_from_2(IdeoBEM::generate_forward_dof_permutation(fe, 2));
+  forward_dof_numbering_from_2(HierBEM::generate_forward_dof_permutation(fe, 2));
   deallog << "Forward dof numbering starting from corner #2..." << std::endl;
-  IdeoBEM::print_vector(deallog.get_console(), forward_dof_numbering_from_2, std::string(", "));
+  HierBEM::print_vector(deallog.get_console(), forward_dof_numbering_from_2, std::string(", "));
 
   std::vector<unsigned int>
-  forward_dof_numbering_from_3(IdeoBEM::generate_forward_dof_permutation(fe, 3));
+  forward_dof_numbering_from_3(HierBEM::generate_forward_dof_permutation(fe, 3));
   deallog << "Forward dof numbering starting from corner #3..." << std::endl;
-  IdeoBEM::print_vector(deallog.get_console(), forward_dof_numbering_from_3, std::string(", "));
+  HierBEM::print_vector(deallog.get_console(), forward_dof_numbering_from_3, std::string(", "));
 
   std::vector<unsigned int>
-  backward_dof_numbering_from_0(IdeoBEM::generate_backward_dof_permutation(fe, 0));
+  backward_dof_numbering_from_0(HierBEM::generate_backward_dof_permutation(fe, 0));
   deallog << "Backward dof numbering starting from corner #0..." << std::endl;
-  IdeoBEM::print_vector(deallog.get_console(), backward_dof_numbering_from_0, std::string(", "));
+  HierBEM::print_vector(deallog.get_console(), backward_dof_numbering_from_0, std::string(", "));
 
   std::vector<unsigned int>
-  backward_dof_numbering_from_1(IdeoBEM::generate_backward_dof_permutation(fe, 1));
+  backward_dof_numbering_from_1(HierBEM::generate_backward_dof_permutation(fe, 1));
   deallog << "Backward dof numbering starting from corner #1..." << std::endl;
-  IdeoBEM::print_vector(deallog.get_console(), backward_dof_numbering_from_1, std::string(", "));
+  HierBEM::print_vector(deallog.get_console(), backward_dof_numbering_from_1, std::string(", "));
 
   std::vector<unsigned int>
-  backward_dof_numbering_from_2(IdeoBEM::generate_backward_dof_permutation(fe, 2));
+  backward_dof_numbering_from_2(HierBEM::generate_backward_dof_permutation(fe, 2));
   deallog << "Backward dof numbering starting from corner #2..." << std::endl;
-  IdeoBEM::print_vector(deallog.get_console(), backward_dof_numbering_from_2, std::string(", "));
+  HierBEM::print_vector(deallog.get_console(), backward_dof_numbering_from_2, std::string(", "));
 
   std::vector<unsigned int>
-  backward_dof_numbering_from_3(IdeoBEM::generate_backward_dof_permutation(fe, 3));
+  backward_dof_numbering_from_3(HierBEM::generate_backward_dof_permutation(fe, 3));
   deallog << "Backward dof numbering starting from corner #3..." << std::endl;
-  IdeoBEM::print_vector(deallog.get_console(), backward_dof_numbering_from_3, std::string(", "));
+  HierBEM::print_vector(deallog.get_console(), backward_dof_numbering_from_3, std::string(", "));
 
   return 0;
 }

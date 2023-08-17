@@ -10,7 +10,7 @@
 
 #include <assert.h>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace CUDAWrappers
   {
@@ -324,7 +324,7 @@ namespace IdeoBEM
         }
     }
   } // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 

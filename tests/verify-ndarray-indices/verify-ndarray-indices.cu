@@ -14,7 +14,7 @@
 
 using namespace dealii;
 using namespace std;
-using namespace IdeoBEM::CUDAWrappers;
+using namespace HierBEM::CUDAWrappers;
 
 using size_type = std::size_t;
 

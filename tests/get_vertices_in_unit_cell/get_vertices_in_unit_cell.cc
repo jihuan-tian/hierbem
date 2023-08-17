@@ -24,22 +24,22 @@ main()
 
   print_vector_values(
     std::cout,
-    IdeoBEM::BEMTools::get_vertices_from_lexicographic_unit_support_points(
+    HierBEM::BEMTools::get_vertices_from_lexicographic_unit_support_points(
       fe, false),
     "\n",
     true);
   print_vector_values(
     std::cout,
-    IdeoBEM::BEMTools::get_vertices_from_lexicographic_unit_support_points(
+    HierBEM::BEMTools::get_vertices_from_lexicographic_unit_support_points(
       fe, true),
     "\n",
     true);
 
   std::array<Point<2>, GeometryInfo<2>::vertices_per_cell> vertices;
-  IdeoBEM::BEMTools::get_vertices_from_lexicographic_unit_support_points(
+  HierBEM::BEMTools::get_vertices_from_lexicographic_unit_support_points(
     fe, vertices, false);
   print_vector_values(std::cout, vertices, "\n", true);
-  IdeoBEM::BEMTools::get_vertices_from_lexicographic_unit_support_points(
+  HierBEM::BEMTools::get_vertices_from_lexicographic_unit_support_points(
     fe, vertices, true);
   print_vector_values(std::cout, vertices, "\n", true);
 

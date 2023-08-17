@@ -13,7 +13,7 @@
 #include "bem_kernels.hcu"
 #include "utilities.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -159,7 +159,7 @@ namespace IdeoBEM
 
             case 3:
               return scalar_product((x - y), ny) / 4.0 / numbers::PI /
-                     IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                     HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
                        (x - y).norm());
 
             default:
@@ -229,7 +229,7 @@ namespace IdeoBEM
 
             case 3:
               return scalar_product((y - x), nx) / 4.0 / numbers::PI /
-                     IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                     HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
                        (x - y).norm());
 
             default:
@@ -427,6 +427,6 @@ namespace IdeoBEM
       }
     } // namespace LaplaceKernel
   }   // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_LAPLACE_KERNELS_HCU_ */

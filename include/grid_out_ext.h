@@ -18,7 +18,7 @@
 #include <iostream>
 #include <map>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -155,6 +155,6 @@ namespace IdeoBEM
 
     AssertThrow(out, ExcIO());
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_GRID_OUT_EXT_H_ */

@@ -12,7 +12,7 @@
 
 #include "cu_fullmatrix.hcu"
 
-using namespace IdeoBEM::CUDAWrappers;
+using namespace HierBEM::CUDAWrappers;
 using namespace std;
 
 int

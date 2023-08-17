@@ -19,7 +19,7 @@
 #include "cu_table.hcu"
 #include "quadrature.templates.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -111,13 +111,10 @@ namespace IdeoBEM
 
       if (weights != nullptr)
         {
-          cudaError_t error_code = cudaFree(weights);
-          AssertCuda(error_code);
+          AssertCuda(cudaFree(weights));
         }
 
-      cudaError_t error_code =
-        cudaMalloc((void **)&weights, sizeof(double) * quad_num);
-      AssertCuda(error_code);
+      AssertCuda(cudaMalloc((void **)&weights, sizeof(double) * quad_num));
     }
 
 
@@ -134,11 +131,10 @@ namespace IdeoBEM
       // first quadrature point.
       points.assign_from_host((const double *)(quad_cpu.get_points().data()),
                               dim * quad_num);
-      cudaError_t error_code = cudaMemcpy((void *)weights,
-                                          (void *)(quad_cpu.get_weights().data()),
-                                          quad_num * sizeof(double),
-                                          cudaMemcpyHostToDevice);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpy((void *)weights,
+                            (void *)(quad_cpu.get_weights().data()),
+                            quad_num * sizeof(double),
+                            cudaMemcpyHostToDevice));
     }
 
 
@@ -151,8 +147,7 @@ namespace IdeoBEM
       points.release();
       if (weights != nullptr)
         {
-          cudaError_t error_code = cudaFree(weights);
-          AssertCuda(error_code);
+          AssertCuda(cudaFree(weights));
 
           weights = nullptr;
         }
@@ -214,7 +209,7 @@ namespace IdeoBEM
         }
     }
   } // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_CU_QGAUSS_HCU_ */

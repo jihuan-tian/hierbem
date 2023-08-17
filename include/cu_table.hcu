@@ -20,7 +20,7 @@
 
 #include "cu_table_indices.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -587,13 +587,10 @@ namespace IdeoBEM
       // allocation.
       if (values != nullptr)
         {
-          cudaError_t error_code = cudaFree(values);
-          AssertCuda(error_code);
+          AssertCuda(cudaFree(values));
         }
 
-      cudaError_t error_code =
-        cudaMalloc((void **)&values, element_num * sizeof(T));
-      AssertCuda(error_code);
+      AssertCuda(cudaMalloc((void **)&values, element_num * sizeof(T)));
     }
 
 
@@ -613,13 +610,11 @@ namespace IdeoBEM
       // allocation.
       if (values != nullptr)
         {
-          cudaError_t error_code = cudaFreeAsync(values, stream);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeAsync(values, stream));
         }
 
-      cudaError_t error_code =
-        cudaMallocAsync((void **)&values, element_num * sizeof(T), stream);
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaMallocAsync((void **)&values, element_num * sizeof(T), stream));
     }
 
 
@@ -638,13 +633,10 @@ namespace IdeoBEM
       // allocation.
       if (values != nullptr)
         {
-          cudaError_t error_code = cudaFree(values);
-          AssertCuda(error_code);
+          AssertCuda(cudaFree(values));
         }
 
-      cudaError_t error_code =
-        cudaMalloc((void **)&values, element_num * sizeof(T));
-      AssertCuda(error_code);
+      AssertCuda(cudaMalloc((void **)&values, element_num * sizeof(T)));
     }
 
 
@@ -664,13 +656,11 @@ namespace IdeoBEM
       // allocation.
       if (values != nullptr)
         {
-          cudaError_t error_code = cudaFreeAsync(values, stream);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeAsync(values, stream));
         }
 
-      cudaError_t error_code =
-        cudaMallocAsync((void **)&values, element_num * sizeof(T), stream);
-      AssertCuda(error_code);
+      AssertCuda(
+        cudaMallocAsync((void **)&values, element_num * sizeof(T), stream));
     }
 
 
@@ -685,12 +675,10 @@ namespace IdeoBEM
 
       // &(table_cpu(TableIndices<N>())): get the first element in the table,
       // then take its address.
-      cudaError_t error_code =
-        cudaMemcpy((void *)values,
-                   (void *)(&(table_cpu(TableIndices<N>()))),
-                   element_num * sizeof(T),
-                   cudaMemcpyHostToDevice);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpy((void *)values,
+                            (void *)(&(table_cpu(TableIndices<N>()))),
+                            element_num * sizeof(T),
+                            cudaMemcpyHostToDevice));
     }
 
 
@@ -706,13 +694,11 @@ namespace IdeoBEM
 
       // &(table_cpu(TableIndices<N>())): get the first element in the table,
       // then take its address.
-      cudaError_t error_code =
-        cudaMemcpyAsync((void *)values,
-                        (void *)(&(table_cpu(TableIndices<N>()))),
-                        element_num * sizeof(T),
-                        cudaMemcpyHostToDevice,
-                        stream);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpyAsync((void *)values,
+                                 (void *)(&(table_cpu(TableIndices<N>()))),
+                                 element_num * sizeof(T),
+                                 cudaMemcpyHostToDevice,
+                                 stream));
     }
 
 
@@ -724,11 +710,10 @@ namespace IdeoBEM
       Assert(values != nullptr,
              ExcMessage("Memory for this table has not be allocated!"));
 
-      cudaError_t error_code = cudaMemcpy((void *)values,
-                                          (void *)(data.data()),
-                                          data.size() * sizeof(T),
-                                          cudaMemcpyHostToDevice);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpy((void *)values,
+                            (void *)(data.data()),
+                            data.size() * sizeof(T),
+                            cudaMemcpyHostToDevice));
     }
 
 
@@ -741,12 +726,11 @@ namespace IdeoBEM
       Assert(values != nullptr,
              ExcMessage("Memory for this table has not be allocated!"));
 
-      cudaError_t error_code = cudaMemcpyAsync((void *)values,
-                                               (void *)(data.data()),
-                                               data.size() * sizeof(T),
-                                               cudaMemcpyHostToDevice,
-                                               stream);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpyAsync((void *)values,
+                                 (void *)(data.data()),
+                                 data.size() * sizeof(T),
+                                 cudaMemcpyHostToDevice,
+                                 stream));
     }
 
 
@@ -759,11 +743,10 @@ namespace IdeoBEM
       Assert(values != nullptr,
              ExcMessage("Memory for this table has not be allocated!"));
 
-      cudaError_t error_code = cudaMemcpy((void *)values,
-                                          (void *)data,
-                                          size * sizeof(T),
-                                          cudaMemcpyHostToDevice);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpy((void *)values,
+                            (void *)data,
+                            size * sizeof(T),
+                            cudaMemcpyHostToDevice));
     }
 
 
@@ -778,12 +761,11 @@ namespace IdeoBEM
       Assert(values != nullptr,
              ExcMessage("Memory for this table has not be allocated!"));
 
-      cudaError_t error_code = cudaMemcpyAsync((void *)values,
-                                               (void *)data,
-                                               size * sizeof(T),
-                                               cudaMemcpyHostToDevice,
-                                               stream);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpyAsync((void *)values,
+                                 (void *)data,
+                                 size * sizeof(T),
+                                 cudaMemcpyHostToDevice,
+                                 stream));
     }
 
 
@@ -798,12 +780,10 @@ namespace IdeoBEM
              ExcMessage("Memory for this table has not be allocated!"));
       AssertIndexRange(offset_in_device_table + size - 1, element_num);
 
-      cudaError_t error_code =
-        cudaMemcpy((void *)(values + offset_in_device_table),
-                   (void *)data,
-                   size * sizeof(T),
-                   cudaMemcpyHostToDevice);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpy((void *)(values + offset_in_device_table),
+                            (void *)data,
+                            size * sizeof(T),
+                            cudaMemcpyHostToDevice));
     }
 
 
@@ -819,13 +799,11 @@ namespace IdeoBEM
              ExcMessage("Memory for this table has not be allocated!"));
       AssertIndexRange(offset_in_device_table + size - 1, element_num);
 
-      cudaError_t error_code =
-        cudaMemcpyAsync((void *)(values + offset_in_device_table),
-                        (void *)data,
-                        size * sizeof(T),
-                        cudaMemcpyHostToDevice,
-                        stream);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpyAsync((void *)(values + offset_in_device_table),
+                                 (void *)data,
+                                 size * sizeof(T),
+                                 cudaMemcpyHostToDevice,
+                                 stream));
     }
 
 
@@ -836,12 +814,10 @@ namespace IdeoBEM
       Assert(this->table_size == table_cpu.size(),
              ExcMessage("Table size mismatch!"));
 
-      cudaError_t error_code =
-        cudaMemcpy((void *)(&(table_cpu(TableIndices<N>()))),
-                   (void *)values,
-                   element_num * sizeof(T),
-                   cudaMemcpyDeviceToHost);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpy((void *)(&(table_cpu(TableIndices<N>()))),
+                            (void *)values,
+                            element_num * sizeof(T),
+                            cudaMemcpyDeviceToHost));
     }
 
 
@@ -853,13 +829,11 @@ namespace IdeoBEM
       Assert(this->table_size == table_cpu.size(),
              ExcMessage("Table size mismatch!"));
 
-      cudaError_t error_code =
-        cudaMemcpyAsync((void *)(&(table_cpu(TableIndices<N>()))),
-                        (void *)values,
-                        element_num * sizeof(T),
-                        cudaMemcpyDeviceToHost,
-                        stream);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpyAsync((void *)(&(table_cpu(TableIndices<N>()))),
+                                 (void *)values,
+                                 element_num * sizeof(T),
+                                 cudaMemcpyDeviceToHost,
+                                 stream));
     }
 
 
@@ -877,8 +851,7 @@ namespace IdeoBEM
 
       if (values != nullptr)
         {
-          cudaError_t error_code = cudaFree(values);
-          AssertCuda(error_code);
+          AssertCuda(cudaFree(values));
 
           // Reset the pointer.
           values = nullptr;
@@ -900,8 +873,7 @@ namespace IdeoBEM
 
       if (values != nullptr)
         {
-          cudaError_t error_code = cudaFreeAsync(values, stream);
-          AssertCuda(error_code);
+          AssertCuda(cudaFreeAsync(values, stream));
 
           // Reset the pointer.
           values = nullptr;
@@ -930,16 +902,13 @@ namespace IdeoBEM
           element_num = src.element_num;
           table_size  = src.table_size;
 
-          cudaError_t error_code =
-            cudaMalloc((void **)&values, element_num * sizeof(T));
-          AssertCuda(error_code);
+          AssertCuda(cudaMalloc((void **)&values, element_num * sizeof(T)));
         }
 
-      cudaError_t error_code = cudaMemcpy((void *)values,
-                                          (void *)(src.values),
-                                          element_num * sizeof(T),
-                                          cudaMemcpyDeviceToDevice);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpy((void *)values,
+                            (void *)(src.values),
+                            element_num * sizeof(T),
+                            cudaMemcpyDeviceToDevice));
 
       return *this;
     }
@@ -959,17 +928,15 @@ namespace IdeoBEM
           element_num = src.element_num;
           table_size  = src.table_size;
 
-          cudaError_t error_code =
-            cudaMallocAsync((void **)&values, element_num * sizeof(T), stream);
-          AssertCuda(error_code);
+          AssertCuda(
+            cudaMallocAsync((void **)&values, element_num * sizeof(T), stream));
         }
 
-      cudaError_t error_code = cudaMemcpyAsync((void *)values,
-                                               (void *)(src.values),
-                                               element_num * sizeof(T),
-                                               cudaMemcpyDeviceToDevice,
-                                               stream);
-      AssertCuda(error_code);
+      AssertCuda(cudaMemcpyAsync((void *)values,
+                                 (void *)(src.values),
+                                 element_num * sizeof(T),
+                                 cudaMemcpyDeviceToDevice,
+                                 stream));
     }
 
 
@@ -1347,6 +1314,6 @@ namespace IdeoBEM
         }
     }
   } // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_CU_TABLE_HCU_ */

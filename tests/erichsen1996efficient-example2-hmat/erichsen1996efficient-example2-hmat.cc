@@ -179,21 +179,21 @@ main(int argc, char *argv[])
         << std::endl;
     }
 
-  IdeoBEM::Erichsen1996Efficient::Example2::ProblemType problem_type;
+  HierBEM::Erichsen1996Efficient::Example2::ProblemType problem_type;
 
   switch (problem_type_string)
     {
       case 'n':
         {
           problem_type =
-            IdeoBEM::Erichsen1996Efficient::Example2::NeumannBCProblem;
+            HierBEM::Erichsen1996Efficient::Example2::NeumannBCProblem;
 
           break;
         }
       case 'd':
         {
           problem_type =
-            IdeoBEM::Erichsen1996Efficient::Example2::DirichletBCProblem;
+            HierBEM::Erichsen1996Efficient::Example2::DirichletBCProblem;
 
           break;
         }
@@ -202,12 +202,12 @@ main(int argc, char *argv[])
           Assert(false, ExcInternalError());
 
           problem_type =
-            IdeoBEM::Erichsen1996Efficient::Example2::NeumannBCProblem;
+            HierBEM::Erichsen1996Efficient::Example2::NeumannBCProblem;
           ;
         }
     }
 
-  IdeoBEM::Erichsen1996Efficient::Example2 testcase(mesh_file_name,
+  HierBEM::Erichsen1996Efficient::Example2 testcase(mesh_file_name,
                                                     fe_order,
                                                     problem_type,
                                                     thread_num,

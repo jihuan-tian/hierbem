@@ -77,7 +77,7 @@
 
 using namespace dealii;
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace Erichsen1996Efficient
   {
@@ -822,7 +822,7 @@ namespace IdeoBEM
               vertex_index_intersection.reserve(
                 GeometryInfo<2>::vertices_per_cell);
               cell_neighboring_type_matrix(i, j) =
-                IdeoBEM::detect_cell_neighboring_type<2>(
+                HierBEM::detect_cell_neighboring_type<2>(
                   first_cell_vertex_indices,
                   second_cell_vertex_indices,
                   vertex_index_intersection);
@@ -1105,7 +1105,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   SameTriangulations,
                 SauterQuadratureRule(5, 4, 4, 3),
                 K2_matrix_with_mass_matrix);
@@ -1122,7 +1122,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   SameDoFHandlers,
                 SauterQuadratureRule(5, 4, 4, 3),
                 V1_matrix);
@@ -1167,7 +1167,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   SameTriangulations,
                 SauterQuadratureRule(5, 4, 4, 3),
                 K2_matrix_with_mass_matrix);
@@ -1196,7 +1196,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_neumann_boundary_mesh_to_volume_mesh,
                 map_from_neumann_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   SameTriangulations,
                 SauterQuadratureRule(5, 4, 4, 3),
                 K_prime2_matrix_with_mass_matrix);
@@ -1213,7 +1213,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   SameDoFHandlers,
                 SauterQuadratureRule(5, 4, 4, 3),
                 V1_matrix);
@@ -1230,7 +1230,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_neumann_boundary_mesh_to_volume_mesh,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   DifferentTriangulations,
                 SauterQuadratureRule(5, 4, 4, 3),
                 K1_matrix);
@@ -1247,7 +1247,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
                 map_from_neumann_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   DifferentTriangulations,
                 SauterQuadratureRule(5, 4, 4, 3),
                 K_prime1_matrix);
@@ -1264,7 +1264,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_neumann_boundary_mesh_to_volume_mesh,
                 map_from_neumann_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   SameDoFHandlers,
                 SauterQuadratureRule(5, 4, 4, 3),
                 D1_matrix);
@@ -1281,7 +1281,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_neumann_boundary_mesh_to_volume_mesh,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   DifferentTriangulations,
                 SauterQuadratureRule(5, 4, 4, 3),
                 V2_matrix);
@@ -1298,7 +1298,7 @@ namespace IdeoBEM
                 mapping,
                 map_from_dirichlet_boundary_mesh_to_volume_mesh,
                 map_from_neumann_boundary_mesh_to_volume_mesh,
-                IdeoBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
                   DifferentTriangulations,
                 SauterQuadratureRule(5, 4, 4, 3),
                 D2_matrix);
@@ -2616,6 +2616,6 @@ namespace IdeoBEM
         }
     }
   } // namespace Erichsen1996Efficient
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_ERICHSEN1996EFFICIENT_EXAMPLE2_H_ */

@@ -22,7 +22,7 @@
 
 #include "lapack_full_matrix_ext.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -3292,6 +3292,6 @@ namespace IdeoBEM
 
     out << "\n\n";
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_RKMATRIX_H_ */

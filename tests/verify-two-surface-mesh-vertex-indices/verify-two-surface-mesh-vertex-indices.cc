@@ -60,7 +60,7 @@ main()
   for (const auto &e : surface_triangulation1.active_cell_iterators())
     {
       auto vertices_in_cell =
-        IdeoBEM::BEMTools::get_vertex_indices_in_cell<dim, spacedim>(e);
+        HierBEM::BEMTools::get_vertex_indices_in_cell<dim, spacedim>(e);
 
       print_vector_values(std::cout, vertices_in_cell, ",", false);
       std::cout << std::endl;
@@ -70,7 +70,7 @@ main()
   for (const auto &e : surface_triangulation2.active_cell_iterators())
     {
       auto vertices_in_cell =
-        IdeoBEM::BEMTools::get_vertex_indices_in_cell<dim, spacedim>(e);
+        HierBEM::BEMTools::get_vertex_indices_in_cell<dim, spacedim>(e);
 
       print_vector_values(std::cout, vertices_in_cell, ",", false);
       std::cout << std::endl;

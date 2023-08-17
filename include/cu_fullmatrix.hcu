@@ -14,7 +14,7 @@
 
 #include "cu_vector.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace CUDAWrappers
   {
@@ -439,6 +439,7 @@ namespace IdeoBEM
             }
             default: {
               assert(false);
+              return 0;
             }
         }
     }
@@ -838,7 +839,7 @@ namespace IdeoBEM
         }
     }
   } // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 

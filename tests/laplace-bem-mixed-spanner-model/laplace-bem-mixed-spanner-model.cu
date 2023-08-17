@@ -17,7 +17,7 @@
 #include "laplace_bem.h"
 
 using namespace dealii;
-using namespace IdeoBEM;
+using namespace HierBEM;
 
 /**
  * Function object for the Dirichlet boundary condition data.
@@ -57,13 +57,13 @@ public:
   }
 };
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace CUDAWrappers
   {
     extern cudaDeviceProp device_properties;
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 int
 main(int argc, char *argv[])
@@ -97,7 +97,7 @@ main(int argc, char *argv[])
    * @internal Get GPU device properties.
    */
   error_code =
-    cudaGetDeviceProperties(&IdeoBEM::CUDAWrappers::device_properties, 0);
+    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0);
   AssertCuda(error_code);
 
   /**

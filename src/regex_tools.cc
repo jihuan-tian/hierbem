@@ -10,7 +10,7 @@
 
 #include <exception>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace RegexTools
   {
@@ -55,4 +55,4 @@ namespace IdeoBEM
         }
     }
   } // namespace RegexTools
-} // namespace IdeoBEM
+} // namespace HierBEM

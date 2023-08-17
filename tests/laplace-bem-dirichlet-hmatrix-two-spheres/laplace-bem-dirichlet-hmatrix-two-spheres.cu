@@ -17,7 +17,7 @@
 #include "laplace_bem.h"
 
 using namespace dealii;
-using namespace IdeoBEM;
+using namespace HierBEM;
 
 int
 main(int argc, char *argv[])
@@ -28,7 +28,7 @@ main(int argc, char *argv[])
   deallog.pop();
   deallog.depth_console(5);
   LogStream::Prefix                prefix_string("HierBEM");
-  IdeoBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
 
   /**
    * @internal Create and start the timer.

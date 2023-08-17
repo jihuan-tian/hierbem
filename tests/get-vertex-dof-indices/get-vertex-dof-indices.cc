@@ -60,7 +60,7 @@ main()
         print_vector_values<std::array<types::global_dof_index,
                                        GeometryInfo<dim>::vertices_per_cell>>(
           std::cout,
-          IdeoBEM::BEMTools::get_vertex_dof_indices_in_cell(e, mapping),
+          HierBEM::BEMTools::get_vertex_dof_indices_in_cell(e, mapping),
           ",",
           true);
       }
@@ -82,7 +82,7 @@ main()
         print_vector_values<std::array<types::global_dof_index,
                                        GeometryInfo<dim>::vertices_per_cell>>(
           std::cout,
-          IdeoBEM::BEMTools::get_vertex_dof_indices_in_cell(e, mapping),
+          HierBEM::BEMTools::get_vertex_dof_indices_in_cell(e, mapping),
           ",",
           true);
       }

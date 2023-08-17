@@ -17,7 +17,7 @@
 #include "cluster.h"
 #include "cluster_tree.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -1424,7 +1424,7 @@ namespace IdeoBEM
         return false;
       }
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 /**
  * @}

@@ -59,9 +59,9 @@ main()
        * explicitly.}
        */
       auto vertex_indices_in_surface_mesh =
-        IdeoBEM::BEMTools::get_vertex_indices<dim, spacedim>(e.first);
+        HierBEM::BEMTools::get_vertex_indices<dim, spacedim>(e.first);
       auto vertex_indices_in_face_of_volume_mesh =
-        IdeoBEM::BEMTools::get_face_vertex_indices<spacedim, spacedim>(
+        HierBEM::BEMTools::get_face_vertex_indices<spacedim, spacedim>(
           e.second);
 
       print_vector_values(std::cout,

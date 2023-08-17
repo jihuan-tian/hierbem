@@ -12,7 +12,7 @@
 
 #include <string>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace CUDAWrappers
   {
@@ -30,7 +30,7 @@ namespace IdeoBEM
       }
     };
   } // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_CU_PROFILE_HCU_ */

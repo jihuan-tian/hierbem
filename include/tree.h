@@ -25,7 +25,7 @@
 #include <new>
 #include <vector>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   /**
    * \brief Class for binary tree node.
@@ -1609,7 +1609,7 @@ namespace IdeoBEM
   {
     Postorder<T>(p, DeleteTreeNode<T, N>);
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 /**
  * @}

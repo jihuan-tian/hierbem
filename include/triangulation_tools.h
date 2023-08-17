@@ -16,7 +16,7 @@
 #include <set>
 #include <vector>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -205,7 +205,7 @@ namespace IdeoBEM
           }
       }
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_TRIANGULATION_TOOLS_H_ */

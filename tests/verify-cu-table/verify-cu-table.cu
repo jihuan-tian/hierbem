@@ -14,7 +14,7 @@
 #include "cu_table.hcu"
 
 
-using namespace IdeoBEM;
+using namespace HierBEM;
 using namespace dealii;
 
 int

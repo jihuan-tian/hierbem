@@ -13,7 +13,7 @@
 #include "cu_qgauss.hcu"
 
 using namespace dealii;
-using namespace IdeoBEM;
+using namespace HierBEM;
 
 int
 main()

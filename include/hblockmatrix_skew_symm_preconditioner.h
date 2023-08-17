@@ -11,7 +11,7 @@
 #include "hmatrix.h"
 #include "linalg.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   /**
    * Class for the preconditioner of the skew symmetric block \hmat. LU
@@ -189,6 +189,6 @@ namespace IdeoBEM
     copy_vector(x, 0, x1, 0, n1);
     copy_vector(x, n1, x2, 0, n2);
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_HBLOCKMATRIX_SKEW_SYMM_PRECONDITIONER_H_ */

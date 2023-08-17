@@ -12,7 +12,7 @@
 
 #include "quadrature.templates.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -336,7 +336,7 @@ namespace IdeoBEM
     ky_unit_cell_coords(0) = parametric_coords(2);
     ky_unit_cell_coords(1) = parametric_coords(3);
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 
 #endif /* INCLUDE_SAUTER_QUADRATURE_TOOLS_H_ */

@@ -45,7 +45,7 @@
 #include "lapack_full_matrix_ext.h"
 #include "utilities.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
   using namespace BEMTools;
@@ -1176,7 +1176,7 @@ namespace IdeoBEM
               const CUDATable<2, double> &quad_points =
                 bem_values.quad_rule_for_common_vertex.get_points();
               double jacobian_det =
-                IdeoBEM::Utilities::CUDAWrappers::fixed_power<3>(
+                HierBEM::Utilities::CUDAWrappers::fixed_power<3>(
                   quad_points(quad_no, 0));
 
 #pragma unroll
@@ -1206,6 +1206,6 @@ namespace IdeoBEM
       return kernel_value;
     }
   } // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_BEM_KERNELS_HCU_ */

@@ -18,7 +18,7 @@
 #include "cu_table_indices.hcu"
 #include "cu_vector.hcu"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
   using namespace BEMTools;
@@ -1089,8 +1089,6 @@ namespace IdeoBEM
       const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
         &scratch_cpu)
     {
-      cudaError_t error_code;
-
       kx_mapping_support_points_permuted.allocate(
         TableIndices<1>(scratch_cpu.kx_mapping_support_points_permuted.size()),
         scratch_cpu.cuda_stream_handle);
@@ -1257,10 +1255,9 @@ namespace IdeoBEM
       ky_quad_points_regular.allocate(scratch_cpu.ky_quad_points_regular.size(),
                                       scratch_cpu.cuda_stream_handle);
 
-      error_code = cudaMallocAsync((void **)&quad_values_in_thread_blocks,
-                                   sizeof(RangeNumberType) * 100,
-                                   scratch_cpu.cuda_stream_handle);
-      AssertCuda(error_code);
+      AssertCuda(cudaMallocAsync((void **)&quad_values_in_thread_blocks,
+                                 sizeof(RangeNumberType) * 100,
+                                 scratch_cpu.cuda_stream_handle));
     }
 
 
@@ -1306,8 +1303,6 @@ namespace IdeoBEM
     CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>::release(
       const cudaStream_t stream)
     {
-      cudaError_t error_code;
-
       kx_mapping_support_points_permuted.release(stream);
 
       kx_mapping_support_points_permuted_xy_components.release(stream);
@@ -1360,8 +1355,7 @@ namespace IdeoBEM
       ky_quad_points_common_vertex.release(stream);
       ky_quad_points_regular.release(stream);
 
-      error_code = cudaFreeAsync(quad_values_in_thread_blocks, stream);
-      AssertCuda(error_code);
+      AssertCuda(cudaFreeAsync(quad_values_in_thread_blocks, stream));
     }
 
 
@@ -1431,6 +1425,6 @@ namespace IdeoBEM
       CUDATable<1, types::global_dof_index> ky_local_dof_indices_permuted;
     };
   } // namespace CUDAWrappers
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_CU_BEM_VALUES_HCU_ */

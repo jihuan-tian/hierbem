@@ -20,7 +20,7 @@
 
 using namespace dealii;
 
-namespace IdeoBEM
+namespace HierBEM
 {
   namespace DoFToolsExt
   {
@@ -462,5 +462,5 @@ namespace IdeoBEM
         }
     }
   } // namespace DoFToolsExt
-} // namespace IdeoBEM
+} // namespace HierBEM
 #endif /* INCLUDE_DOF_TOOLS_EXT_H_ */

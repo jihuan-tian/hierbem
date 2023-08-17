@@ -92,7 +92,7 @@ main()
       if (pos != map_from_surface_mesh_to_volume_mesh.end())
         {
           auto vertex_indices_in_face =
-            IdeoBEM::BEMTools::get_vertex_indices<spacedim>(pos->second);
+            HierBEM::BEMTools::get_vertex_indices<spacedim>(pos->second);
           print_vector_values(std::cout, vertex_indices_in_face, ",", false);
           std::cout << std::endl;
         }
@@ -106,7 +106,7 @@ main()
       if (pos != map_from_surface_mesh_to_volume_mesh.end())
         {
           auto vertex_indices_in_face =
-            IdeoBEM::BEMTools::get_vertex_indices<spacedim>(pos->second);
+            HierBEM::BEMTools::get_vertex_indices<spacedim>(pos->second);
           print_vector_values(std::cout, vertex_indices_in_face, ",", false);
           std::cout << std::endl;
         }

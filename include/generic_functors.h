@@ -23,7 +23,7 @@
 #include <map>
 #include <vector>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -418,6 +418,6 @@ namespace IdeoBEM
         range_intersection[1] = smaller_upper_bound;
       }
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_GENERIC_FUNCTORS_H_ */

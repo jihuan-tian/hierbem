@@ -1,0 +1,7 @@
+A C++ library of 3D Galerkin boundary element method (BEM) is implemented based on pure algebraic methods. It includes singular numerical quadrature, matrix compression and manipulation, preconditioner for iterative linear solvers. At the moment, this library has been verified for solving the Laplace problem with Dirichlet, Neumann and mixed boundary conditions.
+
+Its main features and potentials are as follows.
+
+1.  Compared to traditional methods, such as the collocation and Nyström methods, Galerkin-BEM has a better numerical stability and does not need special treatment of sharp edges and corners in a model.
+2.  Unlike the traditional fast multipole method (FMM), this library is not limited to a specific physical problem and its governing equations, due to the adoption of pure algebraic methods. Hence, it can be used as a general framework to efficiently build pure BEM or BEM-FEM (finite element method) coupled solvers for a variety of physical problems and engineering applications, such as electromagnetics, acoustics, elasticity, thermal and flow field.
+3.  Under the unified theoretical foundation of Galerkin variation, direct coupling of the Galerkin BEM and Galerkin FEM is much easier in the senses of both numerical analysis and algorithm implementation. Such coupling endows BEM with the capability of handling field domains having multi-media, complex geometry and nonlinear parameters, which greatly enhances the applicability of BEM and outperforms FEM when solving infinite open domain problems.

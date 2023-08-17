@@ -44,7 +44,7 @@ main()
     std::cout << fe.get_name() << "\n";
     print_vector_values(
       std::cout,
-      IdeoBEM::BEMTools::
+      HierBEM::BEMTools::
         get_vertices_from_lexicographic_support_points_in_real_cell(
           tria.begin_active(), fe, mapping, false),
       "\n",
@@ -55,7 +55,7 @@ main()
     FE_DGQ<2, 3> fe(2);
     std::cout << fe.get_name() << "\n";
     std::array<Point<3>, GeometryInfo<2>::vertices_per_cell> vertices;
-    IdeoBEM::BEMTools::
+    HierBEM::BEMTools::
       get_vertices_from_lexicographic_support_points_in_real_cell(
         tria.begin_active(), fe, mapping, vertices, true);
     print_vector_values(std::cout, vertices, "\n", true);

@@ -208,7 +208,7 @@ main(int argc, char *argv[])
   std::cout << "Is symmetric H-matrix enabled: "
             << (enable_build_symmetric_hmat ? "true" : "false") << std::endl;
 
-  IdeoBEM::Erichsen1996Efficient::Example2 testcase(mesh_file_name,
+  HierBEM::Erichsen1996Efficient::Example2 testcase(mesh_file_name,
                                                     fe_order,
                                                     thread_num,
                                                     n_min_for_ct,

@@ -15,7 +15,7 @@
 
 using namespace std;
 using namespace dealii;
-using namespace IdeoBEM;
+using namespace HierBEM;
 
 int
 main()

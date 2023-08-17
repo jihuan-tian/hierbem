@@ -11,7 +11,7 @@
 #include <string>
 #include <iostream>
 
-namespace IdeoBEM
+namespace HierBEM
 {
   template<typename T>
   void print_vector(std::ostream &out, const std::vector<T> &input_vector, std::string separator)

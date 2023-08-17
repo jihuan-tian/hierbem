@@ -19,7 +19,7 @@
 #include "generic_functors.h"
 #include "lapack_helpers.h"
 
-namespace IdeoBEM
+namespace HierBEM
 {
   using namespace dealii;
 
@@ -5021,6 +5021,6 @@ namespace IdeoBEM
   {
     return this->m() * this->n() * sizeof(Number);
   }
-} // namespace IdeoBEM
+} // namespace HierBEM
 
 #endif /* INCLUDE_LAPACK_FULL_MATRIX_EXT_H_ */

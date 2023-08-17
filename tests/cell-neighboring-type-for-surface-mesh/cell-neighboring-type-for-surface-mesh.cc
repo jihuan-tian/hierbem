@@ -72,7 +72,7 @@ main()
       std::array<types::global_vertex_index,
                  GeometryInfo<dim>::vertices_per_cell>
         first_cell_vertex_indices(
-          IdeoBEM::BEMTools::get_vertex_indices<dim, spacedim>(first_cell));
+          HierBEM::BEMTools::get_vertex_indices<dim, spacedim>(first_cell));
 
       types::global_vertex_index j = 0;
       for (const auto second_cell : triangulation.active_cell_iterators())
@@ -80,14 +80,14 @@ main()
           std::array<types::global_vertex_index,
                      GeometryInfo<dim>::vertices_per_cell>
             second_cell_vertex_indices(
-              IdeoBEM::BEMTools::get_vertex_indices<dim, spacedim>(
+              HierBEM::BEMTools::get_vertex_indices<dim, spacedim>(
                 second_cell));
 
           std::vector<types::global_vertex_index> vertex_index_intersection;
           vertex_index_intersection.reserve(
             GeometryInfo<dim>::vertices_per_cell);
           cell_neighboring_type_matrix(i, j) =
-            IdeoBEM::BEMTools::detect_cell_neighboring_type<dim>(
+            HierBEM::BEMTools::detect_cell_neighboring_type<dim>(
               first_cell_vertex_indices,
               second_cell_vertex_indices,
               vertex_index_intersection);
@@ -113,7 +113,7 @@ main()
     {
       std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
         first_cell_vertex_dof_indices(
-          IdeoBEM::BEMTools::get_vertex_dof_indices<dim, spacedim>(first_cell));
+          HierBEM::BEMTools::get_vertex_dof_indices<dim, spacedim>(first_cell));
 
       types::global_vertex_index j = 0;
       for (const auto second_cell : dof_handler.active_cell_iterators())
@@ -121,14 +121,14 @@ main()
           std::array<types::global_dof_index,
                      GeometryInfo<dim>::vertices_per_cell>
             second_cell_vertex_dof_indices(
-              IdeoBEM::BEMTools::get_vertex_dof_indices<dim, spacedim>(
+              HierBEM::BEMTools::get_vertex_dof_indices<dim, spacedim>(
                 second_cell));
 
           std::vector<types::global_dof_index> vertex_dof_index_intersection;
           vertex_dof_index_intersection.reserve(
             GeometryInfo<dim>::vertices_per_cell);
           cell_neighboring_type_matrix(i, j) =
-            IdeoBEM::BEMTools::detect_cell_neighboring_type<dim>(
+            HierBEM::BEMTools::detect_cell_neighboring_type<dim>(
               first_cell_vertex_dof_indices,
               second_cell_vertex_dof_indices,
               vertex_dof_index_intersection);
