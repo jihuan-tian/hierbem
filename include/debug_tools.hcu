@@ -242,8 +242,8 @@ namespace HierBEM
                       const std::string &name,
                       const VectorType  &values,
                       bool               is_row_vector = false,
-                      const unsigned int precision     = 6,
-                      const unsigned int width         = 10)
+                      const unsigned int precision     = 15,
+                      const unsigned int width         = 25)
   {
     out << "# name: " << name << "\n";
     out << "# type: matrix\n";

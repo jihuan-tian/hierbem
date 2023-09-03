@@ -1508,6 +1508,99 @@ namespace HierBEM
 
 
   /**
+   * Construct the set of nodes at the specified level of a binary tree.
+   *
+   * @level starts from zero.
+   *
+   * @tparam T
+   * @param p
+   * @param level
+   * @param node_set
+   */
+  template <typename T>
+  void
+  GetTreeNodesAtLevel(const BinaryTreeNode<T>          *p,
+                      const unsigned int                level,
+                      std::vector<BinaryTreeNode<T> *> &node_set)
+  {
+    if (p->get_level() == level)
+      {
+        if (p != nullptr)
+          {
+            node_set.push_back(const_cast<BinaryTreeNode<T> *>(p));
+          }
+        else
+          {
+            Assert(false, dealii::ExcInternalError());
+          }
+      }
+    else
+      {
+        Assert(p->get_level() < level, dealii::ExcInternalError());
+
+        /**
+         * If the current node has children, recursively collect nodes at the
+         * specified level from its left and right children.
+         */
+        if (p->Left() != nullptr)
+          {
+            GetTreeNodesAtLevel(p->Left(), level, node_set);
+          }
+
+        if (p->Right() != nullptr)
+          {
+            GetTreeNodesAtLevel(p->Right(), level, node_set);
+          }
+      }
+  }
+
+
+  /**
+   * Construct the set of nodes at the specified level of a general tree.
+   *
+   * @level starts from zero.
+   *
+   * @tparam T
+   * @tparam N
+   * @param p
+   * @param level
+   * @param node_set
+   */
+  template <typename T, std::size_t N>
+  void
+  GetTreeNodesAtLevel(const TreeNode<T, N>          *p,
+                      const unsigned int             level,
+                      std::vector<TreeNode<T, N> *> &node_set)
+  {
+    if (p->get_level() == level)
+      {
+        if (p != nullptr)
+          {
+            node_set.push_back(const_cast<TreeNode<T, N> *>(p));
+          }
+        else
+          {
+            Assert(false, dealii::ExcInternalError());
+          }
+      }
+    else
+      {
+        /**
+         * If the current node has children, recursively collect nodes at the
+         * specified level from each of its children.
+         */
+        for (std::size_t i = 0; i < N; i++)
+          {
+            if (p->get_child_pointer(i) != nullptr)
+              {
+                GetTreeNodesAtLevel(p->get_child_pointer(i), level, node_set);
+              }
+          }
+      }
+  }
+
+
+  /**
    * Print a binary tree recursively by starting from a node.
    */
   template <typename T>

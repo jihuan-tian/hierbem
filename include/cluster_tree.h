@@ -256,6 +256,16 @@ namespace HierBEM
     build_leaf_set();
 
     /**
+     * Build the set of clusters at the specified tree level.
+     *
+     * @param level
+     * @param cluster_set
+     */
+    void
+    build_cluster_set_at_level(const unsigned int              level,
+                               std::vector<node_pointer_type> &cluster_set);
+
+    /**
      * Get the reference to the internal-to-external DoF numbering.
      *
      * @return
@@ -1339,6 +1349,19 @@ namespace HierBEM
     leaf_set.clear();
 
     GetTreeLeaves(root_node, leaf_set);
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  ClusterTree<spacedim, Number>::build_cluster_set_at_level(
+    const unsigned int level,
+    std::vector<typename ClusterTree<spacedim, Number>::node_pointer_type>
+      &cluster_set)
+  {
+    cluster_set.clear();
+
+    GetTreeNodesAtLevel(root_node, level, cluster_set);
   }
 
 

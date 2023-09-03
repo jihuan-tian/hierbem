@@ -984,6 +984,15 @@ namespace HierBEM
 
     std::cout << "=== Surface mesh information ===" << std::endl;
     print_mesh_info(std::cout, surface_triangulation);
+
+#if ENABLE_DEBUG
+    /**
+     * @internal Save the surface mesh file for checking.
+     */
+    std::ofstream surface_mesh_file(
+      mesh_file.substr(0, mesh_file.find_last_of('.')) + "_surface.msh");
+    GridOut().write_msh(surface_triangulation, surface_mesh_file);
+#endif
   }
 
 
@@ -1158,6 +1167,129 @@ namespace HierBEM
                 ct_for_neumann_space_on_dirichlet_domain.partition(
                   support_points_for_neumann_space_on_dirichlet_domain,
                   dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
+
+#if ENABLE_DEBUG == 1
+                /**
+                 * @internal Visualize partitioned mesh on different levels
+                 * (from level #1 to the maximum level) in the cluster trees.
+                 */
+                std::vector<typename ClusterTree<spacedim>::node_pointer_type>
+                  cluster_set;
+                Vector<float>
+                  dof_cluster_indices_for_dirichlet_space_on_dirichlet_domain(
+                    n_dofs_for_dirichlet_space);
+                Vector<float>
+                  dof_cluster_indices_for_neumann_space_on_dirichlet_domain(
+                    n_dofs_for_neumann_space);
+
+                std::ofstream
+                  cluster_level_vtk_for_dirichlet_space_on_dirichlet_domain;
+                std::ofstream
+                  cluster_level_vtk_for_neumann_space_on_dirichlet_domain;
+
+                DataOut<dim, spacedim>
+                  cluster_level_data_out_for_dirichlet_space_on_dirichlet_domain;
+                DataOut<dim, spacedim>
+                  cluster_level_data_out_for_neumann_space_on_dirichlet_domain;
+
+                cluster_level_vtk_for_dirichlet_space_on_dirichlet_domain.open(
+                  "cluster_levels_for_dirichlet_space_on_dirichlet_domain.vtk",
+                  std::ofstream::out);
+                cluster_level_vtk_for_neumann_space_on_dirichlet_domain.open(
+                  "cluster_levels_for_neumann_space_on_dirichlet_domain.vtk",
+                  std::ofstream::out);
+
+                for (unsigned int l = 1;
+                     l <=
+                     ct_for_dirichlet_space_on_dirichlet_domain.get_max_level();
+                     l++)
+                  {
+                    ct_for_dirichlet_space_on_dirichlet_domain
+                      .build_cluster_set_at_level(l, cluster_set);
+                    /**
+                     * @internal Assign the index for each cluster in the
+                     * cluster set to its contained DoFs.
+                     */
+                    for (unsigned int c = 0; c < cluster_set.size(); c++)
+                      {
+                        const std::array<types::global_dof_index,
+                                         2> &cluster_index_range =
+                          cluster_set[c]->get_data_pointer()->get_index_range();
+
+                        for (types::global_dof_index dof_index =
+                               cluster_index_range[0];
+                             dof_index < cluster_index_range[1];
+                             dof_index++)
+                          {
+                            dof_cluster_indices_for_dirichlet_space_on_dirichlet_domain(
+                              ct_for_dirichlet_space_on_dirichlet_domain
+                                .get_internal_to_external_dof_numbering()
+                                  [dof_index]) = c;
+                          }
+                      }
+
+                    cluster_level_data_out_for_dirichlet_space_on_dirichlet_domain
+                      .add_data_vector(
+                        dof_handler_for_dirichlet_space,
+                        dof_cluster_indices_for_dirichlet_space_on_dirichlet_domain,
+                        std::string(
+                          "cluster_for_dirichlet_space_on_dirichlet_domain_on_level_#") +
+                          std::to_string(l));
+                  }
+
+                for (unsigned int l = 1;
+                     l <=
+                     ct_for_neumann_space_on_dirichlet_domain.get_max_level();
+                     l++)
+                  {
+                    ct_for_neumann_space_on_dirichlet_domain
+                      .build_cluster_set_at_level(l, cluster_set);
+                    /**
+                     * @internal Assign the index for each cluster in the
+                     * cluster set to its contained DoFs.
+                     */
+                    for (unsigned int c = 0; c < cluster_set.size(); c++)
+                      {
+                        const std::array<types::global_dof_index,
+                                         2> &cluster_index_range =
+                          cluster_set[c]->get_data_pointer()->get_index_range();
+
+                        for (types::global_dof_index dof_index =
+                               cluster_index_range[0];
+                             dof_index < cluster_index_range[1];
+                             dof_index++)
+                          {
+                            dof_cluster_indices_for_neumann_space_on_dirichlet_domain(
+                              ct_for_neumann_space_on_dirichlet_domain
+                                .get_internal_to_external_dof_numbering()
+                                  [dof_index]) = c;
+                          }
+                      }
+
+                    cluster_level_data_out_for_neumann_space_on_dirichlet_domain
+                      .add_data_vector(
+                        dof_handler_for_neumann_space,
+                        dof_cluster_indices_for_neumann_space_on_dirichlet_domain,
+                        std::string(
+                          "cluster_for_neumann_space_on_dirichlet_domain_on_level_#") +
+                          std::to_string(l));
+                  }
+
+                cluster_level_data_out_for_dirichlet_space_on_dirichlet_domain
+                  .build_patches();
+                cluster_level_data_out_for_neumann_space_on_dirichlet_domain
+                  .build_patches();
+                cluster_level_data_out_for_dirichlet_space_on_dirichlet_domain
+                  .write_vtk(
+                    cluster_level_vtk_for_dirichlet_space_on_dirichlet_domain);
+                cluster_level_data_out_for_neumann_space_on_dirichlet_domain
+                  .write_vtk(
+                    cluster_level_vtk_for_neumann_space_on_dirichlet_domain);
+
+                cluster_level_vtk_for_dirichlet_space_on_dirichlet_domain
+                  .close();
+                cluster_level_vtk_for_neumann_space_on_dirichlet_domain.close();
+#endif
 
                 /**
                  * Get the external-to-internal and internal-to-external DoF
@@ -3356,7 +3488,7 @@ namespace HierBEM
         switch (problem_type)
           {
               case DirichletBCProblem: {
-                SolverControl solver_control(1000, 1e-12);
+                SolverControl solver_control(1000, 1e-12, true, true);
                 SolverCG<>    solver(solver_control);
 
                 solver.solve(V1_matrix,
@@ -3367,7 +3499,7 @@ namespace HierBEM
                 break;
               }
               case NeumannBCProblem: {
-                SolverControl solver_control(1000, 1e-12);
+                SolverControl solver_control(1000, 1e-12, true, true);
                 SolverCG<>    solver(solver_control);
 
                 solver.solve(D1_matrix,
@@ -3506,12 +3638,12 @@ namespace HierBEM
   {
     std::cout << "=== Output results ===" << std::endl;
 
+    std::ofstream          vtk_output;
+    DataOut<dim, spacedim> data_out;
+
     switch (problem_type)
       {
           case DirichletBCProblem: {
-            std::ofstream          vtk_output;
-            DataOut<dim, spacedim> data_out;
-
             vtk_output.open("solution_for_dirichlet_bc.vtk",
                             std::ofstream::out);
 
@@ -3530,9 +3662,6 @@ namespace HierBEM
             break;
           }
           case NeumannBCProblem: {
-            std::ofstream          vtk_output;
-            DataOut<dim, spacedim> data_out;
-
             vtk_output.open("solution_for_neumann_bc.vtk", std::ofstream::out);
 
             data_out.add_data_vector(dof_handler_for_dirichlet_space,
@@ -3550,10 +3679,7 @@ namespace HierBEM
             break;
           }
           case MixedBCProblem: {
-            std::ofstream vtk_output;
-
             vtk_output.open("solution_for_mixed_bc.vtk", std::ofstream::out);
-            DataOut<dim, spacedim> data_out;
 
             data_out.add_data_vector(dof_handler_for_neumann_space,
                                      neumann_data,
@@ -3563,7 +3689,6 @@ namespace HierBEM
                                      "dirichlet_data");
             data_out.build_patches();
             data_out.write_vtk(vtk_output);
-            vtk_output.close();
 
             print_vector_to_mat(
               std::cout,
@@ -3593,6 +3718,8 @@ namespace HierBEM
             Assert(false, ExcInternalError());
           }
       }
+
+    vtk_output.close();
   }
 
 

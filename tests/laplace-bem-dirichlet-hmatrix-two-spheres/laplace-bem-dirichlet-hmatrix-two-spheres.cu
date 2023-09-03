@@ -19,6 +19,25 @@
 using namespace dealii;
 using namespace HierBEM;
 
+class DirichletBC : public Function<3>
+{
+public:
+  double
+  value(const Point<3> &p, const unsigned int component = 0) const
+  {
+    (void)component;
+
+    if (p(0) < 0)
+      {
+        return 10;
+      }
+    else
+      {
+        return -10;
+      }
+  }
+};
+
 int
 main(int argc, char *argv[])
 {
@@ -27,8 +46,10 @@ main(int argc, char *argv[])
    */
   deallog.pop();
   deallog.depth_console(5);
-  LogStream::Prefix                prefix_string("HierBEM");
+  LogStream::Prefix prefix_string("HierBEM");
+#if ENABLE_NVTX == 1
   HierBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
+#endif
 
   /**
    * @internal Create and start the timer.
@@ -44,16 +65,20 @@ main(int argc, char *argv[])
   //  AssertCuda(error_code);
 
   const size_t stack_size = 1024 * 10;
-  cudaError_t  error_code = cudaDeviceSetLimit(cudaLimitStackSize, stack_size);
-  AssertCuda(error_code);
+  AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;
+
+  /**
+   * @internal Get GPU device properties.
+   */
+  AssertCuda(
+    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
   /**
    * @internal Use 8-byte bank size in shared memory, since double value type is
    * used.
    */
-  //  error_code = cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte);
-  //  AssertCuda(error_code);
+  // AssertCuda(cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte));
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
@@ -67,7 +92,7 @@ main(int argc, char *argv[])
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem, // is interior problem
     4,                   // n_min for cluster tree
-    8,                   // n_min for block cluster tree
+    4,                   // n_min for block cluster tree
     0.8,                 // eta for H-matrix
     5,                   // max rank for H-matrix
     0.01,                // aca epsilon for H-matrix
@@ -87,7 +112,7 @@ main(int argc, char *argv[])
     }
   else
     {
-      bem.read_volume_mesh(std::string("sphere-from-gmsh_hex.msh"));
+      bem.read_volume_mesh(std::string("two-spheres_hex.msh"));
     }
 
   timer.stop();
@@ -96,7 +121,7 @@ main(int argc, char *argv[])
   timer.start();
 
   // Assign constant Dirichlet boundary conditions.
-  Functions::ConstantFunction<3, double> dirichlet_bc(10);
+  DirichletBC dirichlet_bc;
 
   bem.assign_dirichlet_bc(dirichlet_bc);
 
