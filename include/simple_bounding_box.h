@@ -32,6 +32,8 @@ namespace HierBEM
     operator<<(std::ostream                                &out,
                const SimpleBoundingBox<spacedim1, Number1> &bbox);
 
+    static Number zero_volume_threshold;
+
     /**
      * Default constructor with two boundary points being both zeros.
      */
@@ -163,6 +165,10 @@ namespace HierBEM
 
     return out;
   }
+
+
+  template <int spacedim, typename Number>
+  Number SimpleBoundingBox<spacedim, Number>::zero_volume_threshold = 1e-12;
 
   template <int spacedim, typename Number>
   SimpleBoundingBox<spacedim, Number>::SimpleBoundingBox()

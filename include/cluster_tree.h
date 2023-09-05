@@ -779,8 +779,8 @@ namespace HierBEM
     leaf_set_wrt_current_node.clear();
 
     /**
-     * When the cardinality of the current cluster is large enough, continue
-     * the partition.
+     * When the size/cardinality of the current cluster is large enough,
+     * continue the partition.
      */
     if (current_cluster_node->get_data_pointer()->get_index_set().size() >
         n_min)
@@ -912,48 +912,104 @@ namespace HierBEM
     /**
      * When the size/cardinality of the current cluster is large enough,
      * continue the partition.
+     *
+     * If the bounding box of the current cluster has zero volume, we use the
+     * cardinality based partition instead. The reason why such case appears is
+     * because when the finite element is of a discontinuous type, such as that
+     * used for the Neumann space, there will be multiple support points having
+     * the same coordinates, for example, all the support points associated with
+     * a common vertex which is shared by several cells. The number of such
+     * support points may be larger than \f$n_{\min}\f$.
      */
     if (current_cluster_node->get_data_pointer()->get_index_set().size() >
         n_min)
       {
-        /**
-         * Divide the bounding box of the current cluster into halves.
-         */
-        std::pair<SimpleBoundingBox<spacedim, Number>,
-                  SimpleBoundingBox<spacedim, Number>>
-          bbox_children = current_cluster_node->get_data_pointer()
-                            ->get_bounding_box()
-                            .divide_geometrically();
-
         /**
          * Declare the two child index sets.
          */
         std::vector<types::global_dof_index> left_child_index_set;
         std::vector<types::global_dof_index> right_child_index_set;
 
-        /**
-         * Determine to which child index set each support point in the original
-         * bounding box belongs to.
-         */
-        for (auto dof_index :
-             current_cluster_node->get_data_pointer()->get_index_set())
+        if (current_cluster_node->get_data_pointer()
+              ->get_bounding_box()
+              .volume() <=
+            SimpleBoundingBox<spacedim, Number>::zero_volume_threshold)
           {
-            if (bbox_children.first.point_inside(
-                  all_support_points.at(dof_index)))
+            /**
+             * @internal Perform cardinality based partition.
+             */
+            /**
+             * Split the index set of the current node into halves.
+             */
+            const std::vector<types::global_dof_index> &current_index_set =
+              current_cluster_node->get_data_pointer()->get_index_set();
+
+            /**
+             * Calculate the splitting index in the middle of the index set,
+             * which is to be used for constructing half-closed and half-open
+             * subintervals.
+             */
+            const unsigned int splitting_index =
+              (current_index_set.size() - 1) / 2 + 1;
+
+            /**
+             * Construct the left child index set.
+             */
+            for (unsigned int i = 0; i < splitting_index; i++)
               {
-                /**
-                 * If the support point associated with the current DoF index
-                 * belongs to the left child box, add this DoF index to the left
-                 * child index set.
-                 */
-                left_child_index_set.push_back(dof_index);
+                left_child_index_set.push_back(current_index_set.at(i));
               }
-            else
+
+            /**
+             * Construct the right child index set.
+             */
+            for (unsigned int i = splitting_index; i < current_index_set.size();
+                 i++)
               {
-                /**
-                 * Otherwise, add this DoF index to the right child index set.
-                 */
-                right_child_index_set.push_back(dof_index);
+                right_child_index_set.push_back(current_index_set.at(i));
+              }
+
+            Assert(left_child_index_set.size() > 0,
+                   ExcLowerRange(left_child_index_set.size(), 1));
+            Assert(right_child_index_set.size() > 0,
+                   ExcLowerRange(right_child_index_set.size(), 1));
+          }
+        else
+          {
+            /**
+             * Divide the bounding box of the current cluster into halves.
+             */
+            std::pair<SimpleBoundingBox<spacedim, Number>,
+                      SimpleBoundingBox<spacedim, Number>>
+              bbox_children = current_cluster_node->get_data_pointer()
+                                ->get_bounding_box()
+                                .divide_geometrically();
+
+            /**
+             * Determine to which child index set each support point in the
+             * original bounding box belongs to.
+             */
+            for (auto dof_index :
+                 current_cluster_node->get_data_pointer()->get_index_set())
+              {
+                if (bbox_children.first.point_inside(
+                      all_support_points.at(dof_index)))
+                  {
+                    /**
+                     * If the support point associated with the current DoF
+                     * index belongs to the left child box, add this DoF index
+                     * to the left child index set.
+                     */
+                    left_child_index_set.push_back(dof_index);
+                  }
+                else
+                  {
+                    /**
+                     * Otherwise, add this DoF index to the right child index
+                     * set.
+                     */
+                    right_child_index_set.push_back(dof_index);
+                  }
               }
           }
 
@@ -1061,48 +1117,104 @@ namespace HierBEM
     /**
      * When the size/cardinality of the current cluster is large enough,
      * continue the partition.
+     *
+     * If the bounding box of the current cluster has zero volume, we use the
+     * cardinality based partition instead. The reason why such case appears is
+     * because when the finite element is of a discontinuous type, such as that
+     * used for the Neumann space, there will be multiple support points having
+     * the same coordinates, for example, all the support points associated with
+     * a common vertex which is shared by several cells. The number of such
+     * support points may be larger than \f$n_{\min}\f$.
      */
     if (current_cluster_node->get_data_pointer()->get_index_set().size() >
         n_min)
       {
-        /**
-         * Divide the bounding box of the current cluster into halves.
-         */
-        std::pair<SimpleBoundingBox<spacedim, Number>,
-                  SimpleBoundingBox<spacedim, Number>>
-          bbox_children = current_cluster_node->get_data_pointer()
-                            ->get_bounding_box()
-                            .divide_geometrically();
-
         /**
          * Declare the two child index sets.
          */
         std::vector<types::global_dof_index> left_child_index_set;
         std::vector<types::global_dof_index> right_child_index_set;
 
-        /**
-         * Determine to which child index set each support point in the original
-         * bounding box belongs to.
-         */
-        for (auto dof_index :
-             current_cluster_node->get_data_pointer()->get_index_set())
+        if (current_cluster_node->get_data_pointer()
+              ->get_bounding_box()
+              .volume() <=
+            SimpleBoundingBox<spacedim, Number>::zero_volume_threshold)
           {
-            if (bbox_children.first.point_inside(
-                  all_support_points.at(dof_index)))
+            /**
+             * @internal Perform cardinality based partition.
+             */
+            /**
+             * Split the index set of the current node into halves.
+             */
+            const std::vector<types::global_dof_index> &current_index_set =
+              current_cluster_node->get_data_pointer()->get_index_set();
+
+            /**
+             * Calculate the splitting index in the middle of the index set,
+             * which is to be used for constructing half-closed and half-open
+             * subintervals.
+             */
+            const unsigned int splitting_index =
+              (current_index_set.size() - 1) / 2 + 1;
+
+            /**
+             * Construct the left child index set.
+             */
+            for (unsigned int i = 0; i < splitting_index; i++)
               {
-                /**
-                 * If the support point associated with the current DoF index
-                 * belongs to the left child box, add this DoF index to the left
-                 * child index set.
-                 */
-                left_child_index_set.push_back(dof_index);
+                left_child_index_set.push_back(current_index_set.at(i));
               }
-            else
+
+            /**
+             * Construct the right child index set.
+             */
+            for (unsigned int i = splitting_index; i < current_index_set.size();
+                 i++)
               {
-                /**
-                 * Otherwise, add this DoF index to the right child index set.
-                 */
-                right_child_index_set.push_back(dof_index);
+                right_child_index_set.push_back(current_index_set.at(i));
+              }
+
+            Assert(left_child_index_set.size() > 0,
+                   ExcLowerRange(left_child_index_set.size(), 1));
+            Assert(right_child_index_set.size() > 0,
+                   ExcLowerRange(right_child_index_set.size(), 1));
+          }
+        else
+          {
+            /**
+             * Divide the bounding box of the current cluster into halves.
+             */
+            std::pair<SimpleBoundingBox<spacedim, Number>,
+                      SimpleBoundingBox<spacedim, Number>>
+              bbox_children = current_cluster_node->get_data_pointer()
+                                ->get_bounding_box()
+                                .divide_geometrically();
+
+            /**
+             * Determine to which child index set each support point in the
+             * original bounding box belongs to.
+             */
+            for (auto dof_index :
+                 current_cluster_node->get_data_pointer()->get_index_set())
+              {
+                if (bbox_children.first.point_inside(
+                      all_support_points.at(dof_index)))
+                  {
+                    /**
+                     * If the support point associated with the current DoF
+                     * index belongs to the left child box, add this DoF index
+                     * to the left child index set.
+                     */
+                    left_child_index_set.push_back(dof_index);
+                  }
+                else
+                  {
+                    /**
+                     * Otherwise, add this DoF index to the right child index
+                     * set.
+                     */
+                    right_child_index_set.push_back(dof_index);
+                  }
               }
           }
 
