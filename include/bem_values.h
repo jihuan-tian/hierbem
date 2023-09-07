@@ -26,6 +26,7 @@
 #include <thread>
 
 #include "bem_tools.hcu"
+#include "config.h"
 #include "cpu_table.h"
 #include "lapack_full_matrix_ext.h"
 #include "sauter_quadrature_tools.h"
@@ -2162,7 +2163,10 @@ namespace HierBEM
        * afterwards when needed.
        */
       timer.stop();
+      log_stream.open("main-thread.log", std::ios_base::app);
 #endif
+
+      AssertCuda(cudaStreamCreate(&cuda_stream_handle));
 
       common_vertex_pair_local_indices.reserve(
         GeometryInfo<dim>::vertices_per_cell);
@@ -2187,6 +2191,100 @@ namespace HierBEM
           ky_mapping.get_degree());
       generate_backward_mapping_support_point_permutation(
         ky_mapping, 0, ky_mapping_reversed_poly_space_numbering_inverse);
+
+      /**
+       * @internal Register host memory for asynchronous transfer to the device.
+       */
+      AssertCuda(
+        cudaHostRegister((void *)kx_mapping_support_points_permuted.data(),
+                         kx_mapping_support_points_permuted.size() *
+                           sizeof(Point<spacedim, RangeNumberType>),
+                         0));
+
+      AssertCuda(
+        cudaHostRegister((void *)ky_mapping_support_points_permuted.data(),
+                         ky_mapping_support_points_permuted.size() *
+                           sizeof(Point<spacedim, RangeNumberType>),
+                         0));
+
+      AssertCuda(cudaHostRegister(
+        (void *)kx_mapping_support_points_permuted_xy_components.data(),
+        kx_mapping_support_points_permuted_xy_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0));
+
+      AssertCuda(cudaHostRegister(
+        (void *)kx_mapping_support_points_permuted_yz_components.data(),
+        kx_mapping_support_points_permuted_yz_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0));
+
+      AssertCuda(cudaHostRegister(
+        (void *)kx_mapping_support_points_permuted_zx_components.data(),
+        kx_mapping_support_points_permuted_zx_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0));
+
+      AssertCuda(cudaHostRegister(
+        (void *)ky_mapping_support_points_permuted_xy_components.data(),
+        ky_mapping_support_points_permuted_xy_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0));
+
+      AssertCuda(cudaHostRegister(
+        (void *)ky_mapping_support_points_permuted_yz_components.data(),
+        ky_mapping_support_points_permuted_yz_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0));
+
+      AssertCuda(cudaHostRegister(
+        (void *)ky_mapping_support_points_permuted_zx_components.data(),
+        ky_mapping_support_points_permuted_zx_components.size() *
+          sizeof(Point<2, RangeNumberType>),
+        0));
+
+      AssertCuda(cudaHostRegister((void *)&(kx_quad_points_same_panel(0, 0)),
+                                  kx_quad_points_same_panel.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
+
+      AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_edge(0, 0)),
+                                  kx_quad_points_common_edge.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
+
+      AssertCuda(cudaHostRegister((void *)&(kx_quad_points_common_vertex(0, 0)),
+                                  kx_quad_points_common_vertex.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
+
+      AssertCuda(cudaHostRegister((void *)&(kx_quad_points_regular(0, 0)),
+                                  kx_quad_points_regular.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
+
+      AssertCuda(cudaHostRegister((void *)&(ky_quad_points_same_panel(0, 0)),
+                                  ky_quad_points_same_panel.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
+
+      AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_edge(0, 0)),
+                                  ky_quad_points_common_edge.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
+
+      AssertCuda(cudaHostRegister((void *)&(ky_quad_points_common_vertex(0, 0)),
+                                  ky_quad_points_common_vertex.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
+
+      AssertCuda(cudaHostRegister((void *)&(ky_quad_points_regular(0, 0)),
+                                  ky_quad_points_regular.n_elements() *
+                                    sizeof(Point<spacedim, RangeNumberType>),
+                                  0));
+
+      AssertCuda(cudaMallocHost((void **)&quad_values_in_thread_blocks,
+                                100 * sizeof(RangeNumberType)));
     }
 
     /**

@@ -35,6 +35,8 @@ fontconfig/
 *.gpl
 octave-workspace
 *.pvsm
+*.tex
+compile_commands.json
 \#*#
 
 # Ignore temporary output files from the testers.
