@@ -85,8 +85,8 @@ main(int argc, char *argv[])
 
   const bool                is_interior_problem = false;
   LaplaceBEM<dim, spacedim> bem(
-    2, // fe order for dirichlet space
-    1, // fe order for neumann space
+    1, // fe order for dirichlet space
+    0, // fe order for neumann space
     1, // mapping order for dirichlet domain
     1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
