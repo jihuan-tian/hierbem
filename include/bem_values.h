@@ -1724,7 +1724,7 @@ namespace HierBEM
      */
     std::thread::id thread_id;
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
     /**
      * Timer object associated with the scratch data, which is bound to a
      * working thread.
@@ -2157,7 +2157,7 @@ namespace HierBEM
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
       , quad_values_in_thread_blocks(nullptr)
     {
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
       /**
        * @internal Stop the timer at the moment, which will be started
        * afterwards when needed.
@@ -2395,7 +2395,7 @@ namespace HierBEM
       , ky_quad_points_regular(1, bem_values.quad_rule_for_regular.size())
       , quad_values_in_thread_blocks(nullptr)
     {
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
       /**
        * @internal Stop the timer at the moment, which will be started
        * afterwards when needed.
@@ -2623,7 +2623,7 @@ namespace HierBEM
     void
     release()
     {
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
       log_stream.close();
 #endif
 

@@ -91,15 +91,25 @@ main(int argc, char *argv[])
     1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem, // is interior problem
-    4,                   // n_min for cluster tree
-    4,                   // n_min for block cluster tree
+    64,                  // n_min for cluster tree
+    64,                  // n_min for block cluster tree
     0.8,                 // eta for H-matrix
-    5,                   // max rank for H-matrix
-    0.01,                // aca epsilon for H-matrix
+    20,                  // max rank for H-matrix
+    0.001,               // aca epsilon for H-matrix
     1.0,                 // eta for preconditioner
     2,                   // max rank for preconditioner
     0.1,                 // aca epsilon for preconditioner
     MultithreadInfo::n_cores());
+
+  //  // Use full matrix solver.
+  //  LaplaceBEM<dim, spacedim> bem(
+  //    1, // fe order for dirichlet space
+  //    0, // fe order for neumann space
+  //    1, // mapping order for dirichlet domain
+  //    1, // mapping order for neumann domain
+  //    LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
+  //    is_interior_problem,
+  //    MultithreadInfo::n_cores());
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
@@ -114,6 +124,13 @@ main(int argc, char *argv[])
     {
       bem.read_volume_mesh(std::string("two-spheres_hex.msh"));
     }
+
+  // // Generate the mesh for the two spheres using deal.ii.
+  // bem.generate_volume_mesh();
+
+  //  // Read independent Gmsh files for the two spheres then merge them in
+  //  deal.ii.
+  // bem.read_two_spheres();
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");

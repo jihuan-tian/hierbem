@@ -4297,7 +4297,7 @@ namespace HierBEM
                const PairCellWiseScratchData<dim, spacedim, RangeNumberType>
                  &scratch_data)
     {
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
       LogStream::Prefix prefix_string(
         std::string("add_task in ") +
         std::string(cell_neighboring_type_name(cell_neighboring_type)));
@@ -4331,7 +4331,7 @@ namespace HierBEM
                          (tail_pending + 1 - capacity) :
                          (tail_pending + 1);
 
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
         print_pointers(deallog);
 #endif
       } // Release lock on the ring buffer
@@ -4449,7 +4449,7 @@ namespace HierBEM
             if_notify_consumers = false;
           }
 
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
         deallog << "Task " << task_index << " created" << std::endl;
         print_pointers(deallog);
 #endif
@@ -4474,7 +4474,7 @@ namespace HierBEM
         std::mutex                                          &result_lock,
         const cudaStream_t                                   cuda_stream_handle)
     {
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
       LogStream::Prefix prefix_string(
         std::string("process_task in ") +
         std::string(cell_neighboring_type_name(cell_neighboring_type)));
@@ -4543,7 +4543,7 @@ namespace HierBEM
                              (head_pending + task_num_to_fetch);
           }
 
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
         print_pointers(deallog);
 #endif
       } // Release the buffer lock
@@ -5021,7 +5021,7 @@ namespace HierBEM
                   }
               }
 
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
             deallog << "Tasks [" << task_start_index_to_fetch << ", "
                     << task_start_index_to_fetch + task_num_to_fetch
                     << ") are processed" << std::endl;
@@ -6206,9 +6206,9 @@ namespace HierBEM
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
     {
-      //#if ENABLE_DEBUG == 1
-      //      LogStream::Prefix prefix_string("create_sauter_task");
-      //#endif
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+      LogStream::Prefix prefix_string("create_sauter_task");
+#endif
 #if ENABLE_NVTX == 1
       HierBEM::CUDAWrappers::NVTXRange nvtx_range(
         std::string("create sauter tasks for dof pair (") +
@@ -6327,16 +6327,12 @@ namespace HierBEM
               unsigned int j_index =
                 j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-              //#if ENABLE_DEBUG == 1
-              //              deallog << "Create Sauter task: " << fullmat <<
-              //              ","
-              //                      << i_global_dof_index << "," <<
-              //                      j_global_dof_index << ","
-              //                      << fullmat_row_index << "," <<
-              //                      fullmat_col_index << ","
-              //                      << i_index << "," << j_index <<
-              //                      std::endl;
-              //#endif
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+              deallog << "Create Sauter task: " << fullmat << ","
+                      << i_global_dof_index << "," << j_global_dof_index << ","
+                      << fullmat_row_index << "," << fullmat_col_index << ","
+                      << i_index << "," << j_index << std::endl;
+#endif
 
               switch (cell_neighboring_type)
                 {
@@ -6498,7 +6494,7 @@ namespace HierBEM
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
       PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
     {
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
       LogStream::Prefix prefix_string("create_sauter_task");
 #endif
 #if ENABLE_NVTX == 1
@@ -6713,7 +6709,7 @@ namespace HierBEM
 
                   mass_matrix_entry *= mass_matrix_factor;
 
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
                   deallog << "kx=" << kx_cell_index << ", ky=" << ky_cell_index
                           << ", i=" << i_global_dof_index
                           << ", j=" << j_global_dof_index
@@ -6758,17 +6754,13 @@ namespace HierBEM
               unsigned int j_index =
                 j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
-              //#if ENABLE_DEBUG == 1
-              //              deallog << "Create Sauter task: " << fullmat <<
-              //              ","
-              //                      << i_global_dof_index << "," <<
-              //                      j_global_dof_index << ","
-              //                      << fullmat_row_index << "," <<
-              //                      fullmat_col_index << ","
-              //                      << i_index << "," << j_index
-              //                      << ",mass=" << mass_matrix_entry <<
-              //                      std::endl;
-              //#endif
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+              deallog << "Create Sauter task: " << fullmat << ","
+                      << i_global_dof_index << "," << j_global_dof_index << ","
+                      << fullmat_row_index << "," << fullmat_col_index << ","
+                      << i_index << "," << j_index
+                      << ",mass=" << mass_matrix_entry << std::endl;
+#endif
 
               switch (cell_neighboring_type)
                 {
@@ -7777,12 +7769,12 @@ namespace HierBEM
             /**
              * @internal Copy the scratch data and copy data from CPU to GPU.
              */
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             scratch_data_gpu.assign_from_host(scratch_data);
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,
@@ -7798,7 +7790,7 @@ namespace HierBEM
               configure_thread_blocks_for_sauter_quadrature_points(
                 cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             switch (cell_neighboring_type)
@@ -7874,7 +7866,7 @@ namespace HierBEM
                   }
               }
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,
@@ -7887,7 +7879,7 @@ namespace HierBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
                 scratch_data.timer.start();
 #endif
                 switch (cell_neighboring_type)
@@ -7963,7 +7955,7 @@ namespace HierBEM
                       }
                   }
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
                 scratch_data.timer.stop();
                 print_wall_time(scratch_data.log_stream,
                                 scratch_data.timer,
@@ -8000,7 +7992,7 @@ namespace HierBEM
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
             // Apply 4d Sauter numerical quadrature on the GPU device.
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             switch (cell_neighboring_type)
@@ -8110,7 +8102,7 @@ namespace HierBEM
               {
                 double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,
@@ -8309,12 +8301,12 @@ namespace HierBEM
             /**
              * @internal Copy the scratch data and copy data from CPU to GPU.
              */
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             scratch_data_gpu.assign_from_host(scratch_data);
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,
@@ -8328,7 +8320,7 @@ namespace HierBEM
               configure_thread_blocks_for_sauter_quadrature_points(
                 cell_neighboring_type, bem_values, blocks_rect, threads_rect);
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             switch (cell_neighboring_type)
@@ -8404,7 +8396,7 @@ namespace HierBEM
                   }
               }
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,
@@ -8417,7 +8409,7 @@ namespace HierBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
                 scratch_data.timer.start();
 #endif
                 switch (cell_neighboring_type)
@@ -8493,7 +8485,7 @@ namespace HierBEM
                       }
                   }
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
                 scratch_data.timer.stop();
                 print_wall_time(scratch_data.log_stream,
                                 scratch_data.timer,
@@ -8530,7 +8522,7 @@ namespace HierBEM
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
             // Apply 4d Sauter numerical quadrature on the GPU device.
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             switch (cell_neighboring_type)
@@ -8640,7 +8632,7 @@ namespace HierBEM
               {
                 double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,
@@ -8878,12 +8870,12 @@ namespace HierBEM
             /**
              * @internal Copy the scratch data and copy data from CPU to GPU.
              */
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             scratch_data_gpu.assign_from_host(scratch_data);
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,
@@ -8902,7 +8894,7 @@ namespace HierBEM
                 blocks_rect,
                 threads_rect);
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             {
@@ -8920,7 +8912,7 @@ namespace HierBEM
                                                      scratch_data_gpu);
             }
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,
@@ -8933,7 +8925,7 @@ namespace HierBEM
              */
             if (kernel.kernel_type == HyperSingularRegular)
               {
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
                 scratch_data.timer.start();
 #endif
 #if ENABLE_NVTX == 1
@@ -8948,7 +8940,7 @@ namespace HierBEM
                   scratch_data.cuda_stream_handle>>>(bem_values_gpu,
                                                      scratch_data_gpu);
 
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
                 scratch_data.timer.stop();
                 print_wall_time(scratch_data.log_stream,
                                 scratch_data.timer,
@@ -8985,7 +8977,7 @@ namespace HierBEM
               j_iter - copy_data.ky_local_dof_indices_permuted.begin();
 
             // Apply 4d Sauter numerical quadrature on the GPU device.
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.start();
 #endif
             {
@@ -9023,7 +9015,7 @@ namespace HierBEM
               {
                 double_integral += scratch_data.quad_values_in_thread_blocks[t];
               }
-#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3 && ENABLE_TIMER == 1
             scratch_data.timer.stop();
             print_wall_time(scratch_data.log_stream,
                             scratch_data.timer,

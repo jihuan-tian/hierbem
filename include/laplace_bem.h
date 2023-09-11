@@ -29,6 +29,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
+#include <deal.II/grid/manifold_lib.h>
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/full_matrix.templates.h>
@@ -193,6 +194,18 @@ namespace HierBEM
     void
     read_volume_mesh(const std::string &mesh_file);
 
+    /**
+     * Read independent mesh files for two spheres then merge the triangulation.
+     */
+    void
+    read_two_spheres();
+
+    /**
+     * Generate volume mesh for the two spheres.
+     */
+    void
+    generate_volume_mesh();
+
     void
     set_dirichlet_boundary_ids(std::initializer_list<types::boundary_id> ilist);
 
@@ -245,10 +258,10 @@ namespace HierBEM
     solve();
 
     void
-    output_results();
+    output_results() const;
 
     void
-    output_potential_at_target_points();
+    output_potential_at_target_points() const;
 
     void
     run();
@@ -985,14 +998,228 @@ namespace HierBEM
     std::cout << "=== Surface mesh information ===" << std::endl;
     print_mesh_info(std::cout, surface_triangulation);
 
-#if ENABLE_DEBUG
     /**
-     * @internal Save the surface mesh file for checking.
+     * @internal Save the surface mesh file.
      */
     std::ofstream surface_mesh_file(
-      mesh_file.substr(0, mesh_file.find_last_of('.')) + "_surface.msh");
-    GridOut().write_msh(surface_triangulation, surface_mesh_file);
-#endif
+      mesh_file.substr(0, mesh_file.find_last_of('.')) + "-surface.msh");
+    write_msh_correct(surface_triangulation, surface_mesh_file);
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::read_two_spheres()
+  {
+    GridIn<spacedim>        grid_in;
+    Triangulation<spacedim> left_ball, right_ball;
+    grid_in.attach_triangulation(left_ball);
+    std::fstream in("left-sphere_hex.msh");
+    grid_in.read_msh(in);
+    in.close();
+
+    grid_in.attach_triangulation(right_ball);
+    in.open("right-sphere_hex.msh");
+    grid_in.read_msh(in);
+    in.close();
+
+    GridGenerator::merge_triangulations(
+      left_ball, right_ball, volume_triangulation, 1e-12, true);
+
+    std::cout << "=== Volume mesh information ===" << std::endl;
+    print_mesh_info(std::cout, volume_triangulation);
+
+    map_from_surface_mesh_to_volume_mesh =
+      GridGenerator::extract_boundary_mesh(volume_triangulation,
+                                           surface_triangulation);
+
+    std::cout << "=== Surface mesh information ===" << std::endl;
+    print_mesh_info(std::cout, surface_triangulation);
+
+    /**
+     * @internal Save the surface mesh file.
+     */
+    std::ofstream surface_mesh_file("two-spheres_hex-surface.msh");
+    write_msh_correct(surface_triangulation, surface_mesh_file);
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::generate_volume_mesh()
+  {
+    Triangulation<spacedim> left_ball, right_ball;
+    GridGenerator::hyper_ball(left_ball, Point<spacedim>(-1.5, 0, 0), 1);
+    GridGenerator::hyper_ball(right_ball, Point<spacedim>(1.5, 0, 0), 1);
+
+    /**
+     * @internal Set different manifold ids and material ids to all the cells in
+     * the two balls.
+     */
+    for (typename Triangulation<spacedim>::active_cell_iterator cell =
+           left_ball.begin_active();
+         cell != left_ball.end();
+         cell++)
+      {
+        cell->set_all_manifold_ids(0);
+        cell->set_material_id(0);
+      }
+
+    for (typename Triangulation<spacedim>::active_cell_iterator cell =
+           right_ball.begin_active();
+         cell != right_ball.end();
+         cell++)
+      {
+        cell->set_all_manifold_ids(1);
+        cell->set_material_id(1);
+      }
+
+    /**
+     * @internal @p merge_triangulation can only operate on coarse mesh, i.e.
+     * triangulations not refined. During the merging, the material ids are
+     * copied. When the last argument is true, the manifold ids are copied.
+     * Boundary ids will not be copied.
+     */
+    GridGenerator::merge_triangulations(
+      left_ball, right_ball, volume_triangulation, 1e-12, true);
+
+    /**
+     * @internal Assign manifold objects to the two balls in the merged mesh.
+     */
+    const SphericalManifold<spacedim> left_ball_manifold(
+      Point<spacedim>(-1.5, 0, 0));
+    const SphericalManifold<spacedim> right_ball_manifold(
+      Point<spacedim>(1.5, 0, 0));
+
+    volume_triangulation.set_manifold(0, left_ball_manifold);
+    volume_triangulation.set_manifold(1, right_ball_manifold);
+
+    /**
+     * Check the material id for each cell in the merged volume mesh. It is
+     * verified that the material ids are preserved during the merging of
+     * triangulations.
+     *
+     * Meanwhile, set the boundary id according to the material id. In the
+     * further surface mesh extraction, the boundary ids will be automatically
+     * converted to the material ids of the cells in the surface mesh.
+     */
+    for (typename Triangulation<spacedim>::active_cell_iterator cell =
+           volume_triangulation.begin_active();
+         cell != volume_triangulation.end();
+         cell++)
+      {
+        if (cell->at_boundary())
+          {
+            for (unsigned int f = 0; f < cell->n_faces(); f++)
+              {
+                if (cell->face(f)->at_boundary())
+                  {
+                    cell->face(f)->set_all_boundary_ids(cell->material_id());
+                  }
+              }
+          }
+      }
+
+    /**
+     * Extract the surface mesh from the volume mesh.
+     *
+     * N.B. Such extraction is only performed on the coarse volume mesh, no
+     * matter whether this volume mesh has been refined. During the extraction,
+     * the boundary ids instead of the cell material ids will be transferred
+     * from the volume mesh to the surface mesh.
+     */
+    std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+             typename Triangulation<spacedim, spacedim>::face_iterator>
+      map_from_surface_mesh_to_volume_mesh =
+        GridGenerator::extract_boundary_mesh(volume_triangulation,
+                                             surface_triangulation);
+
+    /**
+     * Check the material ids of the cells in the surface mesh.
+     */
+    for (typename Triangulation<dim, spacedim>::active_cell_iterator cell =
+           surface_triangulation.begin_active();
+         cell != surface_triangulation.end();
+         cell++)
+      {
+        std::cout << "Material id for cell in surface mesh: "
+                  << cell->material_id() << std::endl;
+      }
+
+    /**
+     * N.B. When the volume mesh is refined, the extracted surface mesh will not
+     * be refined.
+     *
+     * \alert{The MSH mesh file saved from deal.ii does not contain material id
+     * information.}
+     */
+    volume_triangulation.refine_global(4);
+
+    std::ofstream volume_mesh_file("volume-mesh-from-dealii.msh");
+    write_msh_correct(volume_triangulation, volume_mesh_file);
+
+    std::cout << "=== Volume mesh information ===" << std::endl;
+    print_mesh_info(std::cout, volume_triangulation);
+
+    for (typename Triangulation<spacedim>::active_cell_iterator cell =
+           volume_triangulation.begin_active();
+         cell != volume_triangulation.end();
+         cell++)
+      {
+        std::cout << "Material id in volume mesh: " << cell->material_id()
+                  << std::endl;
+      }
+
+    /**
+     * Because the surface mesh is not refined with the volume mesh, we have to
+     * define and associate manifold objects and perform surface mesh
+     * refinement.
+     *
+     * N.B. The manifold objects defined for the surface mesh have different
+     * dimensions than those for the volume mesh.
+     */
+    const SphericalManifold<dim, spacedim> left_ball_surface_manifold(
+      Point<spacedim>(-1.5, 0, 0));
+    const SphericalManifold<dim, spacedim> right_ball_surface_manifold(
+      Point<spacedim>(1.5, 0, 0));
+
+    for (typename Triangulation<dim, spacedim>::active_cell_iterator cell =
+           surface_triangulation.begin_active();
+         cell != surface_triangulation.end();
+         cell++)
+      {
+        switch (cell->material_id())
+          {
+              case 0: {
+                cell->set_all_manifold_ids(0);
+
+                break;
+              }
+              case 1: {
+                cell->set_all_manifold_ids(1);
+
+                break;
+              }
+              default: {
+                break;
+              }
+          }
+      }
+
+    surface_triangulation.set_manifold(0, left_ball_surface_manifold);
+    surface_triangulation.set_manifold(1, right_ball_surface_manifold);
+
+    surface_triangulation.refine_global(4);
+
+    /**
+     *  \alert{The MSH mesh file saved from deal.ii does not contain material id
+     * information.}
+     */
+    std::ofstream surface_mesh_file("surface-mesh-from-dealii.msh");
+    write_msh_correct(surface_triangulation, surface_mesh_file);
+
+    std::cout << "=== Surface mesh information ===" << std::endl;
+    print_mesh_info(std::cout, surface_triangulation);
   }
 
 
@@ -1061,6 +1288,12 @@ namespace HierBEM
               dof_handler_for_dirichlet_space.n_dofs();
             const unsigned int n_dofs_for_neumann_space =
               dof_handler_for_neumann_space.n_dofs();
+
+            std::cout << "=== DoF information ===" << std::endl;
+            std::cout << "Number of DoFs in Dirichlet space: "
+                      << n_dofs_for_dirichlet_space << "\n";
+            std::cout << "Number of DoFs in Neumann space: "
+                      << n_dofs_for_neumann_space << std::endl;
 
             if (!is_use_hmat)
               {
@@ -1168,7 +1401,7 @@ namespace HierBEM
                   support_points_for_neumann_space_on_dirichlet_domain,
                   dof_average_cell_size_for_neumann_space_on_dirichlet_domain);
 
-#if ENABLE_DEBUG == 1
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
                 /**
                  * @internal Visualize partitioned mesh on different levels
                  * (from level #1 to the maximum level) in the cluster trees.
@@ -1311,6 +1544,27 @@ namespace HierBEM
                 timer.stop();
                 print_wall_time(deallog, timer, "build cluster trees");
 
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+                {
+                  /**
+                   * @internal Generate the graph for the cluster tree in the
+                   * PlantUML format.
+                   */
+                  std::ofstream ct_dirichlet_space_out(
+                    "ct-dirichlet-after-dof-numbering-reorder.puml");
+                  std::ofstream ct_neumann_space_out(
+                    "ct-neumann-after-dof-numbering-reorder.puml");
+
+                  ct_for_dirichlet_space_on_dirichlet_domain
+                    .print_tree_info_as_dot(ct_dirichlet_space_out);
+                  ct_for_neumann_space_on_dirichlet_domain
+                    .print_tree_info_as_dot(ct_neumann_space_out);
+
+                  ct_dirichlet_space_out.close();
+                  ct_neumann_space_out.close();
+                }
+#endif
+
                 /**
                  * Create the block cluster trees.
                  */
@@ -1429,6 +1683,12 @@ namespace HierBEM
               dof_handler_for_dirichlet_space.n_dofs();
             const unsigned int n_dofs_for_neumann_space =
               dof_handler_for_neumann_space.n_dofs();
+
+            std::cout << "=== DoF information ===" << std::endl;
+            std::cout << "Number of DoFs in Dirichlet space: "
+                      << n_dofs_for_dirichlet_space << "\n";
+            std::cout << "Number of DoFs in Neumann space: "
+                      << n_dofs_for_neumann_space << std::endl;
 
             if (!is_use_hmat)
               {
@@ -1795,6 +2055,18 @@ namespace HierBEM
               local_to_full_neumann_dof_indices_on_dirichlet_domain.size();
             const unsigned int n_dofs_for_neumann_space_on_neumann_domain =
               local_to_full_neumann_dof_indices_on_neumann_domain.size();
+
+            std::cout << "=== DoF information ===" << std::endl;
+            std::cout
+              << "Number of DoFs in Dirichlet space on Dirichlet domain: "
+              << n_dofs_for_dirichlet_space_on_dirichlet_domain << "\n";
+            std::cout << "Number of DoFs in Dirichlet space on Neumann domain: "
+                      << n_dofs_for_dirichlet_space_on_neumann_domain << "\n";
+            std::cout << "Number of DoFs in Neumann space on Dirichlet domain: "
+                      << n_dofs_for_neumann_space_on_dirichlet_domain << "\n";
+            std::cout << "Number of DoFs in Neumann space on Neumann domain: "
+                      << n_dofs_for_neumann_space_on_neumann_domain
+                      << std::endl;
 
             /**
              * Build the DoF-to-cell topology.
@@ -3634,7 +3906,7 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::output_results()
+  LaplaceBEM<dim, spacedim>::output_results() const
   {
     std::cout << "=== Output results ===" << std::endl;
 
@@ -3725,7 +3997,7 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::output_potential_at_target_points()
+  LaplaceBEM<dim, spacedim>::output_potential_at_target_points() const
   {
     /**
      * Create a plane of regular grid for potential evaluation.

@@ -129,13 +129,17 @@ namespace HierBEM
 
     // write cells. Enumerate cells
     // consecutively, starting with 1
-    const unsigned int number_of_tags = 2;
+    const unsigned int number_of_tags = 3;
     for (cell = tria.begin_active(); cell != endc; ++cell)
       {
+        /**
+         * @internal At the moment, there is no elementary numbering for the
+         * entities, so I simply set it to zero.
+         */
         out << cell->active_cell_index() + 1 << ' ' << elm_type << ' '
             << number_of_tags << ' '
-            << static_cast<unsigned int>(cell->material_id()) << ' '
-            << static_cast<unsigned int>(cell->material_id()) << ' ';
+            << static_cast<unsigned int>(cell->material_id()) << ' ' << 0 << ' '
+            << static_cast<unsigned int>(cell->subdomain_id()) << ' ';
 
         // Vertex numbering follows UCD conventions.
 
