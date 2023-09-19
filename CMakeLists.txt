@@ -15,7 +15,7 @@ DEAL_II_INITIALIZE_CACHED_VARIABLES()
 # Project name
 PROJECT("hierbem" LANGUAGES CUDA CXX)
 
-# Include CMake macros provided by deal.i
+# Include CMake macros provided by deal.ii
 include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
 include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
 
