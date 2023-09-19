@@ -10,28 +10,44 @@ IF(NOT ${deal.II_FOUND})
     )
 ENDIF()
 
-DEAL_II_INITIALIZE_CACHED_VARIABLES()
+#
+# Check if we are using mixed build mode
+#
+SET(_mixed_build_mode FALSE)
+IF(NOT "${DEAL_II_BUILD_TYPE}" MATCHES "${CMAKE_BUILD_TYPE}")
+    SET(_mixed_build_mode TRUE)
+ENDIF()
+
+#
+# Enforce application using compiling/linking flags of deal.ii library
+# only if not in mixed build mode.
+# Useful for linking Debug mode application with Release mode deal.ii library
+# to speed up gdb loading.
+#
+IF(NOT _mixed_build_mode)
+    DEAL_II_INITIALIZE_CACHED_VARIABLES()
+ENDIF()
 
 # Project name
 PROJECT("hierbem" LANGUAGES CUDA CXX)
 
-# Include CMake macros provided by deal.ii
-include(${DEAL_II_DIR}/cmake/macros/macro_add_flags.cmake)
-include(${DEAL_II_DIR}/cmake/macros/macro_replace_flag.cmake)
+# Include CMake macros provided by deal.ii (bundled in project)
+INCLUDE(cmake/macros/macro_add_flags.cmake)
+INCLUDE(cmake/macros/macro_replace_flag.cmake)
 
-message("=== Default compiler and linker flags configured by deal.ii ===")
-message("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
-message("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
-message("DEAL_II_CXX_FLAGS_RELEASE: ${DEAL_II_CXX_FLAGS_RELEASE}")
+MESSAGE("=== Default compiler and linker flags configured by deal.ii ===")
+MESSAGE("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
+MESSAGE("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
+MESSAGE("DEAL_II_CXX_FLAGS_RELEASE: ${DEAL_II_CXX_FLAGS_RELEASE}")
 
-message("DEAL_II_CUDA_FLAGS: ${DEAL_II_CUDA_FLAGS}")
-message("DEAL_II_CUDA_FLAGS_DEBUG: ${DEAL_II_CUDA_FLAGS_DEBUG}")
-message("DEAL_II_CUDA_FLAGS_RELEASE: ${DEAL_II_CUDA_FLAGS_RELEASE}")
+MESSAGE("DEAL_II_CUDA_FLAGS: ${DEAL_II_CUDA_FLAGS}")
+MESSAGE("DEAL_II_CUDA_FLAGS_DEBUG: ${DEAL_II_CUDA_FLAGS_DEBUG}")
+MESSAGE("DEAL_II_CUDA_FLAGS_RELEASE: ${DEAL_II_CUDA_FLAGS_RELEASE}")
 
-message("DEAL_II_LINKER_FLAGS: ${DEAL_II_LINKER_FLAGS}")
-message("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
-message("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
-message("====================================================")
+MESSAGE("DEAL_II_LINKER_FLAGS: ${DEAL_II_LINKER_FLAGS}")
+MESSAGE("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
+MESSAGE("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
+MESSAGE("====================================================")
 
 # # Set CXX flags in debug mode oriented for performance profiling in Valgrind.
 # if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
@@ -56,29 +72,45 @@ SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
 # # Release model With line number information for performance profiling.
 # SET(DEAL_II_CUDA_FLAGS_RELEASE "-lineinfo --default-stream per-thread")
 
-message("=== Compiler and linker flags after customization ===")
-message("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
-message("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
-message("DEAL_II_CXX_FLAGS_RELEASE: ${DEAL_II_CXX_FLAGS_RELEASE}")
+MESSAGE("=== Compiler and linker flags after customization ===")
+MESSAGE("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
+MESSAGE("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
+MESSAGE("DEAL_II_CXX_FLAGS_RELEASE: ${DEAL_II_CXX_FLAGS_RELEASE}")
 
-message("DEAL_II_CUDA_FLAGS: ${DEAL_II_CUDA_FLAGS}")
-message("DEAL_II_CUDA_FLAGS_DEBUG: ${DEAL_II_CUDA_FLAGS_DEBUG}")
-message("DEAL_II_CUDA_FLAGS_RELEASE: ${DEAL_II_CUDA_FLAGS_RELEASE}")
+MESSAGE("DEAL_II_CUDA_FLAGS: ${DEAL_II_CUDA_FLAGS}")
+MESSAGE("DEAL_II_CUDA_FLAGS_DEBUG: ${DEAL_II_CUDA_FLAGS_DEBUG}")
+MESSAGE("DEAL_II_CUDA_FLAGS_RELEASE: ${DEAL_II_CUDA_FLAGS_RELEASE}")
 
-message("DEAL_II_LINKER_FLAGS: ${DEAL_II_LINKER_FLAGS}")
-message("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
-message("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
-message("====================================================")
+MESSAGE("DEAL_II_LINKER_FLAGS: ${DEAL_II_LINKER_FLAGS}")
+MESSAGE("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
+MESSAGE("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
+MESSAGE("====================================================")
 
 # Folder for header files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 # Folder for source code
 ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(include)
 
-# Enable unit testing for this deal.ii user project. 
+# Enable unit testing for this deal.ii user project.
 ENABLE_TESTING()
 
-# Add unit test project folders 
+#
+# DEAL_II_ADD_TEST() macro enforces application build mode to be the same as
+# the linked deal.ii library.
+# Workaround this constraint by temporarily overwrite DEAL_II_BUILD_TYPES
+# and restore its value later if mixed build mode is used.
+#
+IF(_mixed_build_mode)
+    SET(_real_deal_ii_build_types ${DEAL_II_BUILD_TYPES})
+    IF("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        SET(DEAL_II_BUILD_TYPES DEBUG)
+    ELSEIF("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+        SET(DEAL_II_BUILD_TYPES RELEASE)
+    ENDIF()
+ENDIF()
+
+# Add unit test project folders
 # ADD_SUBDIRECTORY(tests/erichsen1996efficient-example2)
 # ADD_SUBDIRECTORY(tests/erichsen1996efficient-example2-hmat)
 # ADD_SUBDIRECTORY(tests/cell-neighboring-type)
@@ -335,3 +367,11 @@ ADD_SUBDIRECTORY(tests/verify-sauter-quad-parametric-transform-common-edge)
 ADD_SUBDIRECTORY(tests/verify-sauter-quad-parametric-transform-common-vertex)
 ADD_SUBDIRECTORY(tests/laplace-bem-mixed-spanner-model)
 ADD_SUBDIRECTORY(tests/laplace-bem-dirichlet-hmatrix-two-spheres)
+
+#
+# ...restore original value of DEAL_II_BUILD_TYPES
+#
+IF(_mixed_build_mode)
+    SET(DEAL_II_BUILD_TYPES _real_deal_ii_build_types)
+ENDIF()
+
