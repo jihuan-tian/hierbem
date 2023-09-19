@@ -10,6 +10,7 @@ fontconfig/
 # Ignore binary directory
 *.debug
 *.release
+build
 
 # Ignore backup files
 *.bak
@@ -61,6 +62,9 @@ core
 # Ignore generated documentation
 latex/
 html/
+
+# Ignore generated include files
+include/config.h
 
 # Other manually added files to be ignored
 src/generate_block_cluster_tree
