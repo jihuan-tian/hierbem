@@ -24,9 +24,6 @@ build
 *.eps
 *.gif
 *.vtk
-*.geo
-*.msh
-*.msh.opt
 *.mat
 *.ods
 *.puml
