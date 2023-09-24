@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# In the folder of the test program, this script can be called as below
+#
+# $ ../../scripts/init-test.sh <test-target-name>
+#
+# If the argument <test-target-name> is not given, it is set to $(basename
+# $(pwd)), so that it will create the source code file and output file with
+# their base names being the folder name of the test case.
+
+test_folder_name=$(basename $(pwd))
+
+if [ "$#" -eq 0 ]; then
+    test_target_name="$test_folder_name"
+else
+    test_target_name="$1"
+fi
+
+cmakelist_template=$(cat <<EOF
+SET(TEST_TARGET $test_target_name)
+
+# Link TEST_TARGET to my generic_tools library as well as dl library for NVTX
+# instrumentation.
+SET(TEST_LIBRARIES generic_tools boost_program_options dl)
+
+DEAL_II_PICKUP_TESTS()
+EOF
+)
+
+echo "$cmakelist_template" > CMakeLists.txt
+touch $test_target_name.cu
+touch $test_target_name.output
+
+# Insert template code into the file $test_target_name.cu.
+date_string=$(date -I)
+template_code=$(cat <<EOF
+/**
+ * @file $test_target_name.cu
+ * @brief 
+ *
+ * @ingroup testers
+ * @author 
+ * @date $date_string
+ */
+EOF
+)
+
+echo "$template_code" > $test_target_name.cu
+
+# Append the test case to the list of unit tests, which is included by the top
+# level CMakeLists.txt.
+echo "ADD_SUBDIRECTORY(tests/$test_folder_name)" >> "@CMAKE_SOURCE_DIR@/UnitTests.txt"
+
+# Add the newly created files to Git.
+git add $test_target_name.cu
+git add $test_target_name.output
+git add CMakeLists.txt
+
+# Convert the compilation mode to lower case.
+compilation_mode=`echo @CMAKE_BUILD_TYPE@ | tr '[:upper:]' '[:lower:]'`
+# Rerun make debug or make release in the build directory.
+cd "@CMAKE_BINARY_DIR@"
+make $compilation_mode
+# Return to the test folder.
+cd "@CMAKE_SOURCE_DIR@/tests/$test_folder_name"
