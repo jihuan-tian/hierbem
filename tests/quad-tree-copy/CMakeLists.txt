@@ -1,2 +1,0 @@
-SET(TEST_TARGET quad-tree-copy)
-DEAL_II_PICKUP_TESTS()

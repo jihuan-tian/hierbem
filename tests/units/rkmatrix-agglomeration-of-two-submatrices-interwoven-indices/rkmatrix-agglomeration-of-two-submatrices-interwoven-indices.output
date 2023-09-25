@@ -1,0 +1,127 @@
+# name: M1
+# type: matrix
+# rows: 2
+# columns: 3
+   1.00000    3.00000    5.00000 
+   2.00000    4.00000    6.00000 
+
+
+# name: M2
+# type: matrix
+# rows: 2
+# columns: 2
+   7.00000    9.00000 
+   8.00000   10.00000 
+
+
+# name: M3
+# type: matrix
+# rows: 1
+# columns: 3
+  11.00000   12.00000   13.00000 
+
+
+# name: M_agglomerated1
+# type: matrix
+# rows: 2
+# columns: 5
+   2.00000    8.00000    4.00000   10.00000    6.00000 
+   1.00000    7.00000    3.00000    9.00000    5.00000 
+
+
+# name: M_agglomerated2
+# type: matrix
+# rows: 3
+# columns: 3
+   3.00000    5.00000    1.00000 
+  12.00000   13.00000   11.00000 
+   4.00000    6.00000    2.00000 
+
+
+# name: M_agglomerated1_rk
+# type: scalar struct
+# ndims: 2
+1 1
+# length: 6
+# name: A
+# type: matrix
+# rows: 2
+# columns: 2
+    -14.82488330      -0.47205407 
+    -12.83365309       0.54529653 
+
+
+# name: B
+# type: matrix
+# rows: 5
+# columns: 2
+     -0.11049584      -0.76667507 
+     -0.54212114       0.07813236 
+     -0.25437094      -0.48507260 
+     -0.68599625       0.35973483 
+     -0.39824604      -0.20347012 
+
+
+# name: rank
+# type: scalar
+2
+
+
+# name: formal_rank
+# type: scalar
+2
+
+
+# name: m
+# type: scalar
+2
+
+
+# name: n
+# type: scalar
+5
+
+
+# name: M_agglomerated2_rk
+# type: scalar struct
+# ndims: 2
+1 1
+# length: 6
+# name: A
+# type: matrix
+# rows: 3
+# columns: 2
+     -5.51342463       2.14526195 
+    -20.79583711      -1.23820800 
+     -7.23143652       1.92518205 
+
+
+# name: B
+# type: matrix
+# rows: 3
+# columns: 2
+     -0.57267063      -0.07335997 
+     -0.66251787       0.62801545 
+     -0.48282338      -0.77473538 
+
+
+# name: rank
+# type: scalar
+2
+
+
+# name: formal_rank
+# type: scalar
+2
+
+
+# name: m
+# type: scalar
+3
+
+
+# name: n
+# type: scalar
+3
+
+

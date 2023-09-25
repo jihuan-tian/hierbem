@@ -1,0 +1,2 @@
+SET(TEST_TARGET cell-distance)
+DEAL_II_PICKUP_TESTS()

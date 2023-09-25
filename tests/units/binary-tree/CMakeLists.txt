@@ -1,0 +1,2 @@
+SET(TEST_TARGET binary-tree)
+DEAL_II_PICKUP_TESTS()

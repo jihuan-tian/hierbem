@@ -1,2 +1,0 @@
-SET(TEST_TARGET normal-vector)
-DEAL_II_PICKUP_TESTS()

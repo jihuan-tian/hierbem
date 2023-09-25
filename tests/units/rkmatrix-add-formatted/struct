@@ -1,0 +1,43 @@
+# Created by Octave 4.4.1, Fri Jul 02 17:31:21 2021 CST <jihuan@QuantumHome>
+# name: B
+# type: scalar struct
+# ndims: 2
+ 1 1
+# length: 5
+# name: A
+# type: matrix
+# rows: 3
+# columns: 2
+ -13.13444 3.6025399999999999
+ -13.6768 -4.3726500000000001
+ -28.06719 0.44488
+
+
+# name: B
+# type: matrix
+# rows: 5
+# columns: 2
+ -0.37434000000000001 -0.61075000000000002
+ -0.31222 0.76941000000000004
+ -0.44520999999999999 0.13378000000000001
+ -0.30109999999999998 -0.12057
+ -0.68813000000000002 -0.050650000000000001
+
+
+# name: rank
+# type: scalar
+5
+
+
+# name: m
+# type: scalar
+1
+
+
+# name: n
+# type: scalar
+2
+
+
+
+

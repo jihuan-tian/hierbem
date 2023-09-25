@@ -1,2 +1,0 @@
-SET(TEST_TARGET cluster-diameter)
-DEAL_II_PICKUP_TESTS()

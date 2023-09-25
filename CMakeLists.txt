@@ -127,7 +127,8 @@ IF(_mixed_build_mode)
 ENDIF()
 
 # Add unit tests.
-INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/UnitTests.txt")
+#INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/UnitTests.txt")
+ADD_SUBDIRECTORY(tests)
 
 #
 # ...restore original value of DEAL_II_BUILD_TYPES

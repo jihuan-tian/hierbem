@@ -1,0 +1,232 @@
+=== Cluster tree ===
+* Tree depth: 3
+* Tree max level: 2
+* Total number of cluster tree nodes obtained during partition: 7
+* Total number of cluster tree nodes by recursive tree traversal: 7
+* Tree nodes:
+Level 0
+Index set size: 4
+Index set: [1 2 3 4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 1
+Index set size: 2
+Index set: [1 2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 1
+Index set: [1 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 1
+Index set: [2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 1
+Index set size: 2
+Index set: [3 4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 1
+Index set: [3 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 1
+Index set: [4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+* Leaf set: 4 clusters
+Index set size: 1
+Index set: [1 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 1
+Index set: [2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 1
+Index set: [3 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 1
+Index set: [4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+
+=== Cluster tree ===
+* Tree depth: 2
+* Tree max level: 1
+* Total number of cluster tree nodes obtained during partition: 3
+* Total number of cluster tree nodes by recursive tree traversal: 3
+* Tree nodes:
+Level 0
+Index set size: 4
+Index set: [1 2 3 4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 1
+Index set size: 2
+Index set: [1 2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 1
+Index set size: 2
+Index set: [3 4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+* Leaf set: 2 clusters
+Index set size: 2
+Index set: [1 2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 2
+Index set: [3 4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+
+=== Cluster tree ===
+* Tree depth: 4
+* Tree max level: 3
+* Total number of cluster tree nodes obtained during partition: 9
+* Total number of cluster tree nodes by recursive tree traversal: 9
+* Tree nodes:
+Level 0
+Index set size: 5
+Index set: [1 2 3 4 5 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 1
+Index set size: 3
+Index set: [1 2 3 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 2
+Index set: [1 2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 3
+Index set size: 1
+Index set: [1 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 3
+Index set size: 1
+Index set: [2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 1
+Index set: [3 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 1
+Index set size: 2
+Index set: [4 5 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 1
+Index set: [4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 1
+Index set: [5 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+* Leaf set: 5 clusters
+Index set size: 1
+Index set: [1 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 1
+Index set: [2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 1
+Index set: [3 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 1
+Index set: [4 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 1
+Index set: [5 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+
+=== Cluster tree ===
+* Tree depth: 3
+* Tree max level: 2
+* Total number of cluster tree nodes obtained during partition: 5
+* Total number of cluster tree nodes by recursive tree traversal: 5
+* Tree nodes:
+Level 0
+Index set size: 5
+Index set: [1 2 3 4 5 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 1
+Index set size: 3
+Index set: [1 2 3 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 2
+Index set: [1 2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 2
+Index set size: 1
+Index set: [3 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+Level 1
+Index set size: 2
+Index set: [4 5 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+------------------
+* Leaf set: 3 clusters
+Index set size: 2
+Index set: [1 2 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 1
+Index set: [3 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+Index set size: 2
+Index set: [4 5 ]
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+

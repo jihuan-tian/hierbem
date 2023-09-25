@@ -1,0 +1,67 @@
+/*
+ * quad-tree.cc
+ *
+ *  Created on: 2021年4月19日
+ *      Author: jihuan
+ */
+
+#include <iostream>
+
+#include "tree.h"
+
+/**
+ * Create an example tree containing integers as below. The tree will be
+ * constructed in a bottom-up approach.
+ *
+ *           10
+ *       /  |  |  \
+ *      3   4  5   6
+ *   / | |  \
+ *  2  8  7  9
+ *
+ * The function returns the pointer to the root node of the tree.
+ */
+TreeNode<int, 4> *
+MakeIntExampleTree()
+{
+  auto *parent = new TreeNode<int, 4>(10);
+  parent->set_split_mode(CrossSplitMode);
+  auto *node2 = new TreeNode<int, 4>(2);
+  auto *node3 = new TreeNode<int, 4>(3);
+  node3->set_split_mode(CrossSplitMode);
+  auto *node4 = new TreeNode<int, 4>(4);
+  auto *node5 = new TreeNode<int, 4>(5);
+  auto *node6 = new TreeNode<int, 4>(6);
+  auto *node7 = new TreeNode<int, 4>(7);
+  auto *node8 = new TreeNode<int, 4>(8);
+  auto *node9 = new TreeNode<int, 4>(9);
+
+  std::array<TreeNode<int, 4> *, 4> children_for_10{
+    {node3, node4, node5, node6}};
+
+  for (std::size_t i = 0; i < 4; i++)
+    {
+      parent->set_child_pointer(i, children_for_10.at(i));
+    }
+
+  std::array<TreeNode<int, 4> *, 4> children_for_3{
+    {node2, node8, node7, node9}};
+
+  for (std::size_t i = 0; i < 4; i++)
+    {
+      node3->set_child_pointer(i, children_for_3.at(i));
+    }
+
+  return parent;
+}
+
+int
+main()
+{
+  TreeNode<int, 4> *root = MakeIntExampleTree();
+
+  PrintTree(std::cout, root);
+  DeleteTree(root);
+
+  return 0;
+}

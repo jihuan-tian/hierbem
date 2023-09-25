@@ -1,0 +1,50 @@
+=== Volume triangulation info ===
+Number of cells: 7
+Number of faces: 24
+Number of lines: 32
+Number of vertices: 16
+=== Surface triangulation info ===
+Number of cells: 6
+Number of faces: 12
+Number of lines: 12
+Number of vertices: 8
+=== Volume triangulation info ===
+Number of cells: 56
+Number of faces: 180
+Number of lines: 202
+Number of vertices: 79
+=== Surface triangulation info ===
+Number of cells: 6
+Number of faces: 12
+Number of lines: 12
+Number of vertices: 8
+=== Volume triangulation info ===
+Number of cells: 448
+Number of faces: 1392
+Number of lines: 1460
+Number of vertices: 517
+=== Surface triangulation info ===
+Number of cells: 6
+Number of faces: 12
+Number of lines: 12
+Number of vertices: 8
+=== Volume triangulation info ===
+Number of cells: 3584
+Number of faces: 10944
+Number of lines: 11176
+Number of vertices: 3817
+=== Surface triangulation info ===
+Number of cells: 6
+Number of faces: 12
+Number of lines: 12
+Number of vertices: 8
+=== Volume triangulation info ===
+Number of cells: 28672
+Number of faces: 86784
+Number of lines: 87632
+Number of vertices: 29521
+=== Surface triangulation info ===
+Number of cells: 6
+Number of faces: 12
+Number of lines: 12
+Number of vertices: 8

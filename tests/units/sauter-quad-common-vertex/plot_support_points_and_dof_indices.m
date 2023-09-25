@@ -1,0 +1,83 @@
+## Support points and DoF indices in Kx:
+## DoF_index X Y Z
+## 3 1.00000 1.00000 0.00000
+## 5 1.00000 0.500000 0.00000
+## 1 1.00000 0.00000 0.00000
+## 13 1.50000 1.00000 0.00000
+## 14 1.50000 0.500000 0.00000
+## 12 1.50000 0.00000 0.00000
+## 10 2.00000 1.00000 0.00000
+## 11 2.00000 0.500000 0.00000
+## 9 2.00000 0.00000 0.00000
+## Support points and DoF indices in Ky:
+## DoF_index X Y Z
+## 3 1.00000 1.00000 0.00000
+## 18 1.00000 1.50000 0.00000
+## 16 1.00000 2.00000 0.00000
+## 7 0.500000 1.00000 0.00000
+## 20 0.500000 1.50000 0.00000
+## 19 0.500000 2.00000 0.00000
+## 2 0.00000 1.00000 0.00000
+## 17 0.00000 1.50000 0.00000
+## 15 0.00000 2.00000 0.00000
+
+clear all;
+ConfigGraphicsToolkit;
+
+kx_support_points_and_dof_indices = [3 1.00000 1.00000 0.00000
+				     5 1.00000 0.500000 0.00000
+				     1 1.00000 0.00000 0.00000
+				     13 1.50000 1.00000 0.00000
+				     14 1.50000 0.500000 0.00000
+				     12 1.50000 0.00000 0.00000
+				     10 2.00000 1.00000 0.00000
+				     11 2.00000 0.500000 0.00000
+				     9 2.00000 0.00000 0.00000];
+
+NewFigure;
+Plot3DPointList(kx_support_points_and_dof_indices(:,2:4), "ro-")
+hold on;
+
+## Add DoF index labels.
+for m = 1:size(kx_support_points_and_dof_indices, 1)
+  text(kx_support_points_and_dof_indices(m, 2),
+       kx_support_points_and_dof_indices(m, 3),
+       kx_support_points_and_dof_indices(m,4),
+       num2str(kx_support_points_and_dof_indices(m, 1)), "verticalalignment", "bottom", "horizontalalignment", "right");
+endfor
+
+axis on;
+axis equal;
+view(0, 90);
+xlabel("x");
+ylabel("y");
+title("Support points and DoF indices in Kx");
+
+ky_support_points_and_dof_indices = [3 1.00000 1.00000 0.00000
+				     18 1.00000 1.50000 0.00000
+				     16 1.00000 2.00000 0.00000
+				     7 0.500000 1.00000 0.00000
+				     20 0.500000 1.50000 0.00000
+				     19 0.500000 2.00000 0.00000
+				     2 0.00000 1.00000 0.00000
+				     17 0.00000 1.50000 0.00000
+				     15 0.00000 2.00000 0.00000];
+
+NewFigure;
+Plot3DPointList(ky_support_points_and_dof_indices(:,2:4), "ro-")
+hold on;
+
+## Add DoF index labels.
+for m = 1:size(ky_support_points_and_dof_indices, 1)
+  text(ky_support_points_and_dof_indices(m, 2),
+       ky_support_points_and_dof_indices(m, 3),
+       ky_support_points_and_dof_indices(m,4),
+       num2str(ky_support_points_and_dof_indices(m, 1)), "verticalalignment", "bottom", "horizontalalignment", "right");
+endfor
+
+axis on;
+axis equal;
+view(0, 90);
+xlabel("x");
+ylabel("y");
+title("Support points and DoF indices in Ky");

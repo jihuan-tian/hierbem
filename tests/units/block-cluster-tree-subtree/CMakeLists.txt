@@ -1,0 +1,2 @@
+SET(TEST_TARGET bct-subtree)
+DEAL_II_PICKUP_TESTS()

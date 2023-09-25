@@ -1,2 +1,0 @@
-SET(TEST_TARGET binary-tree-copy)
-DEAL_II_PICKUP_TESTS()

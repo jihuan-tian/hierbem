@@ -1,0 +1,2 @@
+SET(TEST_TARGET bct-hp-fine-ntp)
+DEAL_II_PICKUP_TESTS()

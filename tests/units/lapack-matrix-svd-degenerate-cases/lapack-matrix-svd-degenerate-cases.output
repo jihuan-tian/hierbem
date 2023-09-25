@@ -1,0 +1,90 @@
+# name: A1
+# type: matrix
+# rows: 1
+# columns: 1
+      5.00000000 
+
+
+# name: U1
+# type: matrix
+# rows: 1
+# columns: 1
+      1.00000000 
+
+
+# name: VT1
+# type: matrix
+# rows: 1
+# columns: 1
+      1.00000000 
+
+
+# name: Sigma_r1
+# type: matrix
+# rows: 1
+# columns: 1
+5
+
+
+# name: A2
+# type: matrix
+# rows: 1
+# columns: 3
+      5.00000000       6.00000000       3.00000000 
+
+
+# name: U2
+# type: matrix
+# rows: 1
+# columns: 1
+     -1.00000000 
+
+
+# name: VT2
+# type: matrix
+# rows: 3
+# columns: 3
+     -0.59761430      -0.71713717      -0.35856858 
+     -0.71713717       0.67809144      -0.16095428 
+     -0.35856858      -0.16095428       0.91952286 
+
+
+# name: Sigma_r2
+# type: matrix
+# rows: 1
+# columns: 1
+8.3666
+
+
+# name: A3
+# type: matrix
+# rows: 3
+# columns: 1
+      5.00000000 
+      6.00000000 
+      3.00000000 
+
+
+# name: U3
+# type: matrix
+# rows: 3
+# columns: 3
+      0.59761430      -0.71713717      -0.35856858 
+      0.71713717       0.67809144      -0.16095428 
+      0.35856858      -0.16095428       0.91952286 
+
+
+# name: VT3
+# type: matrix
+# rows: 1
+# columns: 1
+      1.00000000 
+
+
+# name: Sigma_r3
+# type: matrix
+# rows: 1
+# columns: 1
+8.3666
+
+

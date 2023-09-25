@@ -1,2 +1,0 @@
-SET(TEST_TARGET lapack-matrix-qr)
-DEAL_II_PICKUP_TESTS()

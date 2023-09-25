@@ -1,0 +1,92 @@
+Original tree:
+Level 0
+Number of children: 2
+Node data: 10
+Parent node data: none
+------------------
+Level 1
+Number of children: 2
+Node data: 3
+Parent node data: 10
+------------------
+Level 2
+Number of children: 0
+Node data: 2
+Parent node data: 3
+------------------
+Level 2
+Number of children: 2
+Node data: 4
+Parent node data: 3
+------------------
+Level 3
+Number of children: 0
+Node data: 8
+Parent node data: 4
+------------------
+Level 3
+Number of children: 0
+Node data: 6
+Parent node data: 4
+------------------
+Level 1
+Number of children: 2
+Node data: 5
+Parent node data: 10
+------------------
+Level 2
+Number of children: 0
+Node data: 7
+Parent node data: 5
+------------------
+Level 2
+Number of children: 0
+Node data: 9
+Parent node data: 5
+------------------
+Copied tree:
+Level 0
+Number of children: 2
+Node data: 10
+Parent node data: none
+------------------
+Level 1
+Number of children: 2
+Node data: 3
+Parent node data: 10
+------------------
+Level 2
+Number of children: 0
+Node data: 2
+Parent node data: 3
+------------------
+Level 2
+Number of children: 2
+Node data: 4
+Parent node data: 3
+------------------
+Level 3
+Number of children: 0
+Node data: 8
+Parent node data: 4
+------------------
+Level 3
+Number of children: 0
+Node data: 6
+Parent node data: 4
+------------------
+Level 1
+Number of children: 2
+Node data: 5
+Parent node data: 10
+------------------
+Level 2
+Number of children: 0
+Node data: 7
+Parent node data: 5
+------------------
+Level 2
+Number of children: 0
+Node data: 9
+Parent node data: 5
+------------------
