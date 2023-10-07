@@ -107,11 +107,34 @@ MESSAGE("DEAL_II_LINKER_FLAGS_DEBUG: ${DEAL_II_LINKER_FLAGS_DEBUG}")
 MESSAGE("DEAL_II_LINKER_FLAGS_RELEASE: ${DEAL_II_LINKER_FLAGS_RELEASE}")
 MESSAGE("====================================================")
 
+# Setup targets for fast switching between debug mode and release mode.
+ADD_CUSTOM_TARGET(debug
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} -E echo "***"
+  COMMAND ${CMAKE_COMMAND} -E echo "*** Switched to Debug mode."
+  COMMAND ${CMAKE_COMMAND} -E echo "***"
+  COMMENT "Switching CMAKE_BUILD_TYPE to Debug"
+  VERBATIM
+)
+
+ADD_CUSTOM_TARGET(release
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} -E echo "***"
+  COMMAND ${CMAKE_COMMAND} -E echo "*** Switched to Release mode."
+  COMMAND ${CMAKE_COMMAND} -E echo "***"
+  COMMENT "Switching CMAKE_BUILD_TYPE to Release"
+  VERBATIM
+)
+
 # Include directories
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
+
+# Directories for searching libraries to link
+LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/src /usr/lib/x86_64-linux-gnu)
+
 # Folder for header files and source code
-ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(include)
+ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(scripts)
 
 # Enable unit testing for this deal.ii user project.
