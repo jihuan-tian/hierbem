@@ -192,7 +192,7 @@ namespace HierBEM
      * Read the volume mesh from a file.
      */
     void
-    read_volume_mesh(const std::string &mesh_file);
+    read_volume_mesh(const std::string &mesh_file, const bool debug=false);
 
     /**
      * Read independent mesh files for two spheres then merge the triangulation.
@@ -974,7 +974,7 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::read_volume_mesh(const std::string &mesh_file)
+  LaplaceBEM<dim, spacedim>::read_volume_mesh(const std::string &mesh_file, const bool debug)
   {
     /**
      * The template parameters @p dim and @p spacedim of the @p LaplaceBEM
@@ -988,22 +988,26 @@ namespace HierBEM
     grid_in.read_msh(in);
     in.close();
 
-    std::cout << "=== Volume mesh information ===" << std::endl;
-    print_mesh_info(std::cout, volume_triangulation);
+    if(debug) {
+      std::cout << "=== Volume mesh information ===" << std::endl;
+      print_mesh_info(std::cout, volume_triangulation);
+    }
 
     map_from_surface_mesh_to_volume_mesh =
       GridGenerator::extract_boundary_mesh(volume_triangulation,
                                            surface_triangulation);
 
-    std::cout << "=== Surface mesh information ===" << std::endl;
-    print_mesh_info(std::cout, surface_triangulation);
+    if(debug) {
+      std::cout << "=== Surface mesh information ===" << std::endl;
+      print_mesh_info(std::cout, surface_triangulation);
 
-    /**
-     * @internal Save the surface mesh file.
-     */
-    std::ofstream surface_mesh_file(
-      mesh_file.substr(0, mesh_file.find_last_of('.')) + "-surface.msh");
-    write_msh_correct(surface_triangulation, surface_mesh_file);
+      /**
+       * @internal Save the surface mesh file.
+       */
+      std::ofstream surface_mesh_file(
+        mesh_file.substr(0, mesh_file.find_last_of('.')) + "-surface.msh");
+      write_msh_correct(surface_triangulation, surface_mesh_file);
+    }
   }
 
 

@@ -1,7 +1,12 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.18.0)
+IF(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
+    # Keep compatible with FindCUDA() macros used in dealii
+    CMAKE_POLICY(SET CMP0146 OLD)
+ENDIF()
+
 FIND_PACKAGE(deal.II 9.4.0 REQUIRED
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
-  )
+)
 IF(NOT ${deal.II_FOUND})
   MESSAGE(FATAL_ERROR "\n"
     "*** Could not locate a (sufficiently recent) version of deal.II. ***\n\n"
@@ -31,9 +36,10 @@ ENDIF()
 # Project name
 PROJECT("hierbem" LANGUAGES CUDA CXX)
 
-# Include CMake macros provided by deal.ii (bundled in project)
-INCLUDE(cmake/macros/macro_add_flags.cmake)
-INCLUDE(cmake/macros/macro_replace_flag.cmake)
+# Include CMake macros
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/macros)
+INCLUDE(macro_add_flags)
+INCLUDE(macro_replace_flag)
 
 MESSAGE("=== Default compiler and linker flags configured by deal.ii ===")
 MESSAGE("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
@@ -57,7 +63,7 @@ ENDIF()
 
 IF (HBEM_ENABLE_VALGRIND_PROFILE AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
   MESSAGE("*** Enable Valgrind profile in Debug mode")
-  
+
   # Disable function inlining for performance profiling in Valgrind.
   ADD_FLAGS(DEAL_II_CXX_FLAGS_DEBUG "-fno-inline")
   # Replace -O0 with -O1 for performance profiling in Valgrind.
@@ -79,7 +85,7 @@ ENDIF()
 # Therefore, we only run performance profiling in the release model.
 IF (HBEM_ENABLE_NSIGHT_PROFILE AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
   MESSAGE("*** Enable nsight-sys profile in Release mode")
-  
+
   # Add CXX compiler flag for OS runtime libraries trace in nsight-sys.
   ADD_FLAGS(DEAL_II_CXX_FLAGS_RELEASE "-funwind-tables")
   # Add CUDA compiler flag for generating line number information for
@@ -127,7 +133,6 @@ IF(_mixed_build_mode)
 ENDIF()
 
 # Add unit tests.
-#INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/UnitTests.txt")
 ADD_SUBDIRECTORY(tests)
 
 #

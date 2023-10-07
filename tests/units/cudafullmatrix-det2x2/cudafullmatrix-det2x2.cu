@@ -7,20 +7,23 @@
  * @date 2023-02-24
  */
 
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
+
 #include <iostream>
 
 #include "cu_fullmatrix.hcu"
 
 using namespace HierBEM::CUDAWrappers;
-using namespace std;
+using namespace Catch::Matchers;
 
-int
-main()
+TEST_CASE("Calculate determinant of 2x2 matrix by CUDA", "[cuda_full_matrix]")
 {
-  double data[4]{1, 2, 3, 4};
-
+  double                 data[4]{1, 2, 3, 4};
   CUDAFullMatrix<double> A(data, 2, 2);
-  cout << "det(A)=" << A.determinant2x2() << endl;
 
-  return 0;
+  auto   res      = A.determinant2x2();
+  double expected = -2.;
+
+  REQUIRE_THAT(res, WithinAbs(expected, 1e-6) || WithinRel(expected, 1e-8));
 }

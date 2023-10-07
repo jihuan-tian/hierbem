@@ -14,6 +14,7 @@
 
 #include "cu_profile.hcu"
 #include "debug_tools.hcu"
+#include "hbem_test_config.h"
 #include "laplace_bem.h"
 
 using namespace dealii;
@@ -178,11 +179,11 @@ main(int argc, char *argv[])
 
   if (argc > 1)
     {
-      bem.read_volume_mesh(std::string(argv[1]));
+      bem.read_volume_mesh(argv[1]);
     }
   else
     {
-      bem.read_volume_mesh(std::string("sphere-from-gmsh_hex.msh"));
+      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere.msh");
     }
 
   timer.stop();

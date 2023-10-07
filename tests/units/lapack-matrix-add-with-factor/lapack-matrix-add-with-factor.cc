@@ -11,6 +11,8 @@
 
 #include "lapack_full_matrix_ext.h"
 
+using namespace HierBEM;
+
 int
 main()
 {

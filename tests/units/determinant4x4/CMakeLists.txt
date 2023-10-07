@@ -1,2 +1,14 @@
-SET(TEST_TARGET determinant4x4)
-DEAL_II_PICKUP_TESTS()
+# Target should contains 'test' substring in any cases in order to be
+# found by Visual Studio Code's TestMate extension
+SET(_target determinant4x4-test)
+ADD_EXECUTABLE(${_target} determinant4x4.cc)
+# Allow target to include deal.ii header files
+DEAL_II_SETUP_TARGET(${_target})
+TARGET_LINK_LIBRARIES(
+    ${_target}
+    Catch2::Catch2WithMain
+)
+
+INCLUDE(CTest)
+INCLUDE(Catch)
+catch_discover_tests(${_target})

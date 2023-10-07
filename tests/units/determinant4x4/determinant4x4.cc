@@ -1,16 +1,13 @@
-#include <deal.II/base/logstream.h>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "linalg.h"
 
-using namespace LinAlg;
-using namespace dealii;
+using namespace HierBEM::LinAlg;
+using namespace Catch::Matchers;
 
-int
-main()
+TEST_CASE("Calculate determinant of 4x4 matrix", "[linalg]")
 {
-  deallog.depth_console(2);
-  deallog.pop();
-
   FullMatrix<double> matrix(4, 4);
   matrix(0, 0) = 3.;
   matrix(0, 1) = 10.;
@@ -29,7 +26,8 @@ main()
   matrix(3, 2) = 13.;
   matrix(3, 3) = 4.;
 
-  deallog << "Matrix determinant is " << determinant4x4(matrix) << std::endl;
+  auto   res      = determinant4x4(matrix);
+  double expected = 10160.0;
 
-  return 0;
+  REQUIRE_THAT(res, WithinAbs(expected, 1e-6) || WithinRel(expected, 1e-8));
 }

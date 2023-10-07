@@ -1,19 +1,26 @@
-SET(_test_suites units functions regressions)
+INCLUDE(macro_load_test_deps)
+INCLUDE(macro_sync_test_list)
 
-FOREACH(_test_suite ${_test_suites})
-    MESSAGE(STATUS "Scanning test suite tests/${_test_suite} ...")
+SET(_test_list_file ${CMAKE_CURRENT_LIST_DIR}/TestCases.cmake)
 
-    #
-    # Traverse test-suite subdirectory recursively and add all nested
-    # subdirectories containing CMakeLists.txt as test cases
-    #
-    FILE(GLOB_RECURSE _cmake_file_paths ${_test_suite}/CMakeLists.txt )
-    FOREACH(_cmake_file_path ${_cmake_file_paths})
-        GET_FILENAME_COMPONENT(_case_dir ${_cmake_file_path} DIRECTORY)
-        FILE(RELATIVE_PATH _rel_case_dir ${CMAKE_CURRENT_LIST_DIR} ${_case_dir})
-        ADD_SUBDIRECTORY(${_rel_case_dir})
-        MESSAGE(STATUS "  Discovered test case ${_rel_case_dir}")
-    ENDFOREACH()
+# Update testcase list
+SYNC_TEST_LIST(
+    ${_test_list_file}
+    units/
+    functions/
+    regressions/
+)
 
-ENDFOREACH()
+# Load testing dependencies
+LOAD_TEST_DEPS()
 
+# Generate testing config header files
+SET(HBEM_ROOT_DIR ${CMAKE_SOURCE_DIR}/) # HierBEM source root
+SET(HBEM_TEST_MODEL_DIR ${CMAKE_SOURCE_DIR}/tests/models/) # Testing models directory
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/include/hbem_test_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/hbem_test_config.h)
+
+# Add testing config header files to include path
+INCLUDE_DIRECTORIES(APPEND ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Add all testcase subdirectories
+INCLUDE(${_test_list_file})
