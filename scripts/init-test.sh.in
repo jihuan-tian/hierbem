@@ -2,63 +2,202 @@
 
 # In the folder of the test program, this script can be called as below
 #
-# $ ../../scripts/init-test.sh <test-target-name>
+# scripts/init-test.sh [-f {dealii|catch2}] [-t {cc|cuda}] [-d <test-dir>] [<test-target-name>]
 #
 # If the argument <test-target-name> is not given, it is set to $(basename
 # $(pwd)), so that it will create the source code file and output file with
 # their base names being the folder name of the test case.
 
-test_folder_name=$(basename $(pwd))
+usage_exit() {
+    cat <<EOF
+Usage: $0 [-f <FRAMEWORK>] [-t <CODETYPE>] [-d <TESTDIR>] [<TARGETNAME>]
+Generate testcase skeleton in a directory.
 
-if [ "$#" -eq 0 ]; then
-    test_target_name="$test_folder_name"
-else
+    -f <FRAMEWORK>  Testing framework to use. <FRAMEWORK> can be 'dealii' or 'catch2'.
+                    Default to 'dealii'.
+    -t <CODETYPE>   Specify testcase code type. Source file will have '.cc' suffix if
+                    <CODETYPE> is 'cc', '.cu' suffix if <CODETYPE> is 'cuda'.
+                    Default to 'cc'.
+    -d <TESTDIR>    Specify testcase directory. Create the directory if it does not
+                    exist yet.
+                    Default to the current directory.
+
+The <TARGETNAME> argument specifies CMake target name, default to the basename of the
+testcase directory if omitted.
+EOF
+    exit 0
+}
+
+# Stop script when any error occurs
+set -e
+
+test_framework='dealii'
+test_code_type='cc'
+test_dir=$(pwd)
+
+# Parse arguments
+while getopts ':f:t:d:' arg; do
+    case "$arg" in
+    f)
+        [ "$OPTARG" = "dealii" -o "$OPTARG" = "catch2" ] || usage_exit
+        test_framework="$OPTARG"
+        ;;
+    t)
+        [ "$OPTARG" = "cc" -o "$OPTARG" = "cuda" ] || usage_exit
+        test_code_type="$OPTARG"
+        ;;
+    d)
+        test_dir="$OPTARG"
+        # Create testcase directory if it does not exist yet
+        [ -d "$test_dir" ] || mkdir -p "$test_dir"
+        ;;
+    *)
+        usage_exit
+        ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+test_target_name=$(basename "${test_dir}")
+if [ "$#" -gt 0 ]; then
     test_target_name="$1"
 fi
 
-cmakelist_template=$(cat <<EOF
-SET(TEST_TARGET $test_target_name)
+cat <<EOF
+
+* Testing framework: ${test_framework}
+* Testcase code type: ${test_code_type}
+* Testcase directory: ${test_dir}
+* CMake target name: ${test_target_name}
+
+EOF
+
+# Change source file suffix according to code type
+src_suffix='cc'
+if [ "${test_code_type}" = "cuda" ]; then
+    src_suffix='cu'
+fi
+src_filename=${test_target_name}.${src_suffix}
+
+# Make sure target directory is empty
+if [ "$(ls -A $test_dir)" ]; then
+    echo "Error: Cannot generate testcase skeleton in $test_dir, for it is not empty!"
+    exit 1
+else
+    # Change working directory to target path
+    cd "$test_dir"
+fi
+
+# CMakeList.txt template using dealii testing framework
+cmakelist_dealii_template=$(
+    cat <<EOF
+SET(TEST_TARGET ${test_target_name})
 
 # Link TEST_TARGET to my generic_tools library.
-SET(TEST_LIBRARIES generic_tools boost_program_options)
+SET(TEST_LIBRARIES generic_tools boost_program_options dl)
 
 DEAL_II_PICKUP_TESTS()
 EOF
 )
+# CMakeList.txt template using Catch2 testing framework
+cmakelist_catch2_template=$(
+    cat <<EOF
+# Target should contains 'test' substring in any cases in order to be
+# found by Visual Studio Code's TestMate extension
+SET(_target test-${test_target_name})
+ADD_EXECUTABLE(\${_target} ${src_filename})
+# Allow target to include deal.ii header files
+DEAL_II_SETUP_TARGET(\${_target})
+TARGET_LINK_LIBRARIES(
+    \${_target}
+    generic_tools
+    boost_program_options
+    dl
+    Catch2::Catch2WithMain
+)
 
-echo "$cmakelist_template" > CMakeLists.txt
-touch $test_target_name.cc
-touch $test_target_name.output
+INCLUDE(CTest)
+INCLUDE(Catch)
+catch_discover_tests(\${_target})
+EOF
+)
 
-# Insert template code into the file $test_target_name.cc.
+cmakelist_template_name="cmakelist_${test_framework}_template"
+echo "${!cmakelist_template_name}" >CMakeLists.txt
+# Create output comparison file only when dealii testing framework
+# is used
+[ "$test_framework" = "dealii" ] && touch $test_target_name.output
+
+# Insert template code into the source file
 date_string=$(date -I)
-template_code=$(cat <<EOF
+code_dealii_template=$(
+    cat <<EOF
 /**
- * @file $test_target_name.cc
+ * @file ${src_filename}
  * @brief 
  *
  * @ingroup testers
  * @author 
  * @date $date_string
  */
+
+#include <iostream>
+
+using namespace std;
+
+int main(int argc, const char *argv[])
+{
+    return 0;
+}
 EOF
 )
+code_catch2_template=$(
+    cat <<EOF
+/**
+ * @file ${src_filename}
+ * @brief 
+ *
+ * @ingroup testers
+ * @author 
+ * @date $date_string
+ */
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-echo "$template_code" > $test_target_name.cc
+using namespace Catch::Matchers;
 
-# Append the test case to the list of unit tests, which is included by the top
-# level CMakeLists.txt.
-echo "ADD_SUBDIRECTORY(tests/$test_folder_name)" >> "@CMAKE_SOURCE_DIR@/UnitTests.txt"
+TEST_CASE("<your testcase desc here>", "[<your testcase tag here>]")
+{
+    INFO("*** test start");
+    CHECK(1 == 1);
+
+    double result = 0.5;
+    double expected = 0.5;
+    REQUIRE_THAT(result, WithinAbs(expected,1e-6) || WithinRel(expected,1e-8));
+    INFO("*** test end");
+}
+EOF
+)
+code_template_name="code_${test_framework}_template"
+echo "${!code_template_name}" >${src_filename}
 
 # Add the newly created files to Git.
-git add $test_target_name.cc
-git add $test_target_name.output
 git add CMakeLists.txt
+git add ${src_filename}
+[ "$test_framework" = "dealii" ] && git add $test_target_name.output
 
-# Convert the compilation mode to lower case.
-compilation_mode=`echo @CMAKE_BUILD_TYPE@ | tr '[:upper:]' '[:lower:]'`
-# Rerun make debug or make release in the build directory.
-cd "@CMAKE_BINARY_DIR@"
-make $compilation_mode
-# Return to the test folder.
-cd "@CMAKE_SOURCE_DIR@/tests/$test_folder_name"
+# Rerun make in the build directory silently
+echo -e "\n* Rerun make in the build directory ...\n"
+pushd "@CMAKE_BINARY_DIR@" > /dev/null
+make > /dev/null
+popd > /dev/null
+# NOTE Bash script were executed in a child process. Any changes to the
+# working directory won't affect parent session. So we can only prompt
+# user to go to testcase directory manually.
+cat <<EOF
+
+* Execute the command to go to testcase directory:
+
+    cd $(readlink -f ${test_dir})
+
+EOF
