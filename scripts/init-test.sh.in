@@ -2,7 +2,7 @@
 
 # In the folder of the test program, this script can be called as below
 #
-# scripts/init-test.sh [-f {dealii|catch2}] [-t {cc|cuda}] [-d <test-dir>] [<test-target-name>]
+# scripts/init-test.sh [-h] [-f {dealii|catch2}] [-t {cc|cuda}] [-d <test-dir>] [<test-target-name>]
 #
 # If the argument <test-target-name> is not given, it is set to $(basename
 # $(pwd)), so that it will create the source code file and output file with
@@ -10,9 +10,10 @@
 
 usage_exit() {
     cat <<EOF
-Usage: $0 [-f <FRAMEWORK>] [-t <CODETYPE>] [-d <TESTDIR>] [<TARGETNAME>]
+Usage: $0 [-h] [-f <FRAMEWORK>] [-t <CODETYPE>] [-d <TESTDIR>] [<TARGETNAME>]
 Generate testcase skeleton in a directory.
 
+    -h              Show this message.
     -f <FRAMEWORK>  Testing framework to use. <FRAMEWORK> can be 'dealii' or 'catch2'.
                     Default to 'dealii'.
     -t <CODETYPE>   Specify testcase code type. Source file will have '.cc' suffix if
