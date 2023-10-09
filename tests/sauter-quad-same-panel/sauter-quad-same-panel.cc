@@ -1,3 +1,5 @@
+
+
 #include <deal.II/base/logstream.h>
 
 #include <deal.II/grid/grid_generator.h>
@@ -6,10 +8,7 @@
 
 #include <fstream>
 
-
 using namespace dealii;
-
-#define WITH_BEM_VALUES
 
 int
 main()

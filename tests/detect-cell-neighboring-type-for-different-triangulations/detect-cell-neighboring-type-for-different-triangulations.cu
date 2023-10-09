@@ -26,10 +26,11 @@
 #include <set>
 #include <vector>
 
-#include "bem_tools.h"
-#include "debug_tools.h"
+#include "bem_tools.hcu"
+#include "debug_tools.hcu"
 
 using namespace dealii;
+using namespace HierBEM;
 
 int
 main()

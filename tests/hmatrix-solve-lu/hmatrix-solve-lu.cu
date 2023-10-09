@@ -11,10 +11,12 @@
 #include <fstream>
 #include <iostream>
 
-#include "debug_tools.h"
+#include "debug_tools.hcu"
 #include "hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "read_octave_data.h"
+
+using namespace HierBEM;
 
 int
 main()
