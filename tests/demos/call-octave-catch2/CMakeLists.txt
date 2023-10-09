@@ -2,9 +2,9 @@ FIND_PACKAGE(Octave REQUIRED)
 
 # Target should contains 'test' substring in any cases in order to be
 # found by Visual Studio Code's TestMate extension
-SET(_target test-call-octave)
+SET(_target test-call-octave-catch2)
 
-ADD_EXECUTABLE(${_target} call-octave.cc)
+ADD_EXECUTABLE(${_target} call-octave-catch2.cc)
 
 # Allow target to include Octave header files
 INCLUDE_DIRECTORIES(${OCTAVE_INCLUDE_DIRS})

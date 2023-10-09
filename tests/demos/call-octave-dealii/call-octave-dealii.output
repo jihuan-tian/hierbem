@@ -1,0 +1,11 @@
+Fnorm ret: 6.16228
+gcd ret: 5
+gcd ret: 5
+a matrix:
+ 11 12
+ 21 22
+
+cond ret: 119.000
+  1  2
+  3  4
+mat2str ret: [1 2;3 4]

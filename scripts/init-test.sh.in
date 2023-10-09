@@ -95,7 +95,11 @@ cmakelist_dealii_template=$(
 SET(TEST_TARGET ${test_target_name})
 
 # Link TEST_TARGET to my generic_tools library.
-SET(TEST_LIBRARIES generic_tools boost_program_options dl)
+SET(TEST_LIBRARIES
+    generic_tools
+    boost_program_options
+    dl  # Lazy way: always link with libdl no matter if CUDA is used or not
+)
 
 DEAL_II_PICKUP_TESTS()
 EOF
@@ -194,10 +198,11 @@ git add CMakeLists.txt
 git add ${src_filename}
 [ "$test_framework" = "dealii" ] && git add $test_target_name.output
 
-# Rerun make in the build directory silently
+# Rerun make debug or make release in the build directory silently
 echo -e "\n* Rerun make in the build directory ...\n"
+compilation_mode=`echo @CMAKE_BUILD_TYPE@ | tr '[:upper:]' '[:lower:]'`
 pushd "@CMAKE_BINARY_DIR@" > /dev/null
-make > /dev/null
+make $compilation_mode > /dev/null
 popd > /dev/null
 # NOTE Bash script were executed in a child process. Any changes to the
 # working directory won't affect parent session. So we can only prompt
