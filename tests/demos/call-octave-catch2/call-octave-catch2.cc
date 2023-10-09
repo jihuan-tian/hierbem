@@ -128,20 +128,19 @@ TEST_CASE("Source external M-file from C++", "[octave]")
   REQUIRE(status == 0);
 
   {
-    try
-      {
-        octave::source_file(std::string(SOURCE_DIR "/test.m"));
-      }
-    catch (...)
-      {
-        FAIL("Error occurred");
-      }
+    // REQUIRE_NOTHROW macro only accept expressions but not statements
+    // (void-type function, eg.). Statements must be wrapped in C++11
+    // lambda function instead.
+    REQUIRE_NOTHROW([&]() {
+      // This may throw out exceptions
+      octave::source_file(SOURCE_DIR "/test.m");
+    }());
 
     int               parse_status;
     octave_value_list out =
-      octave::eval_string("mat2str(a)", true, parse_status);
+      interpreter.eval_string("mat2str(a)", true, parse_status);
     REQUIRE(parse_status == 0);
     REQUIRE(out.length() > 0);
-    REQUIRE(out(0).string_value() == "[1 2;3 4]");
+    REQUIRE(out(0).string_value() == "[11 22;33 44]");
   }
 }
