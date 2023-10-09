@@ -112,14 +112,29 @@ source_file_by_interpreter()
         // output!
         octave::source_file(std::string(SOURCE_DIR "/test.m"));
       }
+    catch (const octave::execution_exception &e)
+      {
+        deallog << "Octave exception caught: " << e.info() << std::endl;
+        exit(-1);
+      }
+    catch (const std::runtime_error &e)
+      {
+        deallog << "Runtime-error caught: " << e.what() << std::endl;
+      }
+    catch (const std::exception &e)
+      {
+        deallog << "Exception caught: " << e.what() << std::endl;
+        exit(-1);
+      }
     catch (...)
       {
+        deallog << "Unknown exception caught";
         exit(-1);
       }
 
     int               parse_status;
     octave_value_list out =
-      octave::eval_string("mat2str(a)", true, parse_status);
+      interpreter.eval_string("mat2str(a)", true, parse_status);
     Assert(parse_status == 0, ExcInternalError());
     Assert(out.length() > 0, ExcInternalError());
     deallog << "mat2str ret: " << out(0).string_value() << std::endl;

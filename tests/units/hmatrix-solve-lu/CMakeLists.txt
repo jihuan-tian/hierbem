@@ -1,6 +1,31 @@
-SET(TEST_TARGET hmatrix-solve-lu)
+FIND_PACKAGE(Octave REQUIRED)
 
-# Link TEST_TARGET to my generic_tools library.
-SET(TEST_LIBRARIES generic_tools)
+# Target should contains 'test' substring in any cases in order to be
+# found by Visual Studio Code's TestMate extension
+SET(_target test-hmatrix-solve-lu)
 
-DEAL_II_PICKUP_TESTS()
+ADD_EXECUTABLE(${_target} hmatrix-solve-lu.cu)
+
+# Allow target to include Octave header files
+INCLUDE_DIRECTORIES(${OCTAVE_INCLUDE_DIRS})
+
+# Allow target to include Octave header files
+INCLUDE_DIRECTORIES(${OCTAVE_INCLUDE_DIRS})
+# Allow target to include deal.ii header files
+DEAL_II_SETUP_TARGET(${_target})
+
+# Define SOURCE_DIR macro to be used in the source files
+TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+TARGET_LINK_LIBRARIES(
+    ${_target}
+    generic_tools
+    boost_program_options
+    dl
+    ${OCTAVE_LIBRARIES}
+    Catch2::Catch2WithMain
+)
+
+INCLUDE(CTest)
+INCLUDE(Catch)
+CATCH_DISCOVER_TESTS(${_target})
