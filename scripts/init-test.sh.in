@@ -106,20 +106,27 @@ cmakelist_catch2_template=$(
 # Target should contains 'test' substring in any cases in order to be
 # found by Visual Studio Code's TestMate extension
 SET(_target test-${test_target_name})
+
 ADD_EXECUTABLE(\${_target} ${src_filename})
+
 # Allow target to include deal.ii header files
 DEAL_II_SETUP_TARGET(\${_target})
+
+# Define SOURCE_DIR macro to be used in the source files
+TARGET_COMPILE_DEFINITIONS(\${_target} PUBLIC SOURCE_DIR="\${CMAKE_CURRENT_SOURCE_DIR}")
+
 TARGET_LINK_LIBRARIES(
     \${_target}
     generic_tools
     boost_program_options
-    dl
+    dl  # Lazy way: always link with libdl no matter if CUDA is used or not
     Catch2::Catch2WithMain
 )
 
+# Discover Catch2 testcases
 INCLUDE(CTest)
 INCLUDE(Catch)
-catch_discover_tests(\${_target})
+CATCH_DISCOVER_TESTS(\${_target})
 EOF
 )
 
@@ -167,7 +174,7 @@ code_catch2_template=$(
 
 using namespace Catch::Matchers;
 
-TEST_CASE("<your testcase desc here>", "[<your testcase tag here>]")
+TEST_CASE("Your test case desc here", "[your_test_case_tag_here]")
 {
     INFO("*** test start");
     CHECK(1 == 1);
@@ -199,6 +206,6 @@ cat <<EOF
 
 * Execute the command to go to testcase directory:
 
-    cd $(readlink -f ${test_dir})
+    cd ${test_dir}
 
 EOF

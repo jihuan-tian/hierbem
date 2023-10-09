@@ -36,8 +36,12 @@ ENDIF()
 # Project name
 PROJECT("hierbem" LANGUAGES CUDA CXX)
 
-# Include CMake macros
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/macros)
+# Include additional CMake modules
+LIST(APPEND CMAKE_MODULE_PATH
+  ${CMAKE_SOURCE_DIR}/cmake/macros
+  ${CMAKE_SOURCE_DIR}/cmake/modules
+)
+
 INCLUDE(macro_add_flags)
 INCLUDE(macro_replace_flag)
 

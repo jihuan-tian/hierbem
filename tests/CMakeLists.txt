@@ -9,6 +9,7 @@ SYNC_TEST_LIST(
     units/
     functions/
     regressions/
+    demos/
 )
 
 # Load testing dependencies
