@@ -16,6 +16,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "debug_tools.hcu"
 #include "hbem_test_config.h"
@@ -23,14 +24,10 @@
 #include "lapack_full_matrix_ext.h"
 #include "read_octave_data.h"
 
-#define TOTAL_FUZZING 5
-#define STR(x) #x
-#define XSTR(x) STR(x)
-
 using namespace HierBEM;
 using namespace Catch::Matchers;
 
-int
+void
 run_hmatrix_solve_lu()
 {
   std::ofstream ofs("hmatrix-solve-lu.output");
@@ -39,11 +36,14 @@ run_hmatrix_solve_lu()
   std::ifstream               in("M.dat");
   M.read_from_mat(in, "M");
   in.close();
+  REQUIRE(M.size()[0] > 0);
+  REQUIRE(M.size()[0] == M.size()[1]);
 
   Vector<double> b;
   in.open("b.dat");
   read_vector_from_octave(in, "b", b);
   in.close();
+  REQUIRE(b.size() == M.size()[0]);
 
   /**
    * Generate index set.
@@ -76,6 +76,8 @@ run_hmatrix_solve_lu()
    */
   const unsigned int fixed_rank = 8;
   HMatrix<3, double> H(bct, M, fixed_rank);
+  REQUIRE(H.get_m() == M.size()[0]);
+  REQUIRE(H.get_n() == M.size()[1]);
 
   std::ofstream H_bct("H_bct.dat");
   H.write_leaf_set_by_iteration(H_bct);
@@ -83,6 +85,9 @@ run_hmatrix_solve_lu()
 
   LAPACKFullMatrixExt<double> H_full;
   H.convertToFullMatrix(H_full);
+  REQUIRE(H_full.size()[0] == M.size()[0]);
+  REQUIRE(H_full.size()[1] == M.size()[1]);
+
   H_full.print_formatted_to_mat(ofs, "H_full", 15, false, 25, "0");
 
   HMatrix<3, double> LU(bct, fixed_rank);
@@ -108,6 +113,9 @@ run_hmatrix_solve_lu()
    */
   LAPACKFullMatrixExt<double> LU_full;
   LU.convertToFullMatrix(LU_full);
+  REQUIRE(LU_full.size()[0] == M.size()[0]);
+  REQUIRE(LU_full.size()[1] == M.size()[1]);
+
   LU_full.print_formatted_to_mat(ofs, "LU_full", 15, false, 25, "0");
 
   /**
@@ -115,72 +123,84 @@ run_hmatrix_solve_lu()
    */
   Vector<double> x;
   LU.solve_lu(x, b);
+  REQUIRE(x.size() == b.size());
 
   /**
    * Print the result vector.
    */
   print_vector_to_mat(ofs, "x", x);
-
-  return 0;
 }
 
-TEST_CASE("H-matrix solve equations by LU decomposition (fuzz " XSTR(
-            TOTAL_FUZZING) " times)",
-          "[hmatrix]")
+static constexpr int FUZZING_TIMES = 5;
+TEST_CASE("H-matrix solve equations by LU decomposition", "[hmatrix]")
 {
-  // Create Octave interpreter
-  octave::interpreter interpreter;
+  // Catch2 generator will run the code multiple times in the same thread,
+  // so the Octave interpreter must be declared STATIC to ensure there is
+  // only one active instance per thread!
+  static octave::interpreter interpreter;
 
   // Initialize and start Octave interpreter instance
   int status = interpreter.execute();
   REQUIRE(status == 0);
 
-  // Add additional Octave search path
+  // Add additional Octave search path to include Octave utilities needed
   octave_value_list in;
   in(0) = HBEM_ROOT_DIR "/scripts";
   Faddpath(interpreter, in);
 
-  for (int fuzz_no = 0; fuzz_no < TOTAL_FUZZING; fuzz_no++)
-    {
-      std::cout << "Fuzz No. " << fuzz_no << std::endl;
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    int parse_status;
 
-      // Execute Octave script to generate M.dat and b.dat
-      REQUIRE_NOTHROW([&]() {
-        // This may throw exception
-        octave::source_file(SOURCE_DIR "/gen_matrix.m");
-      }());
+    // Predefine Octave and C++ random seed to make tests repeatable
+    int rng_seed = 1234567 + trial_no * 7;
+    // TODO `src/aca_plus.cu` and `include/aca_plus.hcu` use a
+    // std::random_device for hardware seeding, need a mechansim to
+    // set the seed.
 
-      REQUIRE_NOTHROW(run_hmatrix_solve_lu());
+    std::ostringstream oss;
+    oss << "rand('seed'," << rng_seed << ");\n";
+    oss << "randn('seed'," << rng_seed << ");";
+    interpreter.eval_string(oss.str(), true, parse_status);
+    REQUIRE(parse_status == 0);
 
-      // Execute Octave script to verify result and generate plots
-      int parse_status;
-      if (fuzz_no == TOTAL_FUZZING - 1)
-        {
-          // The last run, generate plots
-          interpreter.eval_string("enable_figure=1", true, parse_status);
-          REQUIRE(parse_status == 0);
-        }
-      else
-        {
-          // Middle runs, do not generate plots
-          interpreter.eval_string("enable_figure=0", true, parse_status);
-          REQUIRE(parse_status == 0);
-        }
+    // Execute script `gen_matrix.m` to generate M.dat and b.dat
+    REQUIRE_NOTHROW([&]() {
+      // This may throw exception
+      octave::source_file(SOURCE_DIR "/gen_matrix.m");
+    }());
 
-      REQUIRE_NOTHROW([&]() {
-        // This may throw exception
-        octave::source_file(SOURCE_DIR "/process.m");
-      }());
+    // Run solving based on generated data
+    run_hmatrix_solve_lu();
 
-      octave_value out;
-      out = interpreter.eval_string("hmat_rel_err", true, parse_status);
-      REQUIRE(parse_status == 0);
-      REQUIRE_THAT(out.double_value(),
-                   WithinAbs(0.0, 1e-6) || WithinRel(0.0, 1e-8));
+    // Execute Octave script to verify result and generate plots
+    int enable_figure =
+      (trial_no == FUZZING_TIMES - 1) ? 1 : 0; // Generate plots on the last run
 
-      out = interpreter.eval_string("x_rel_err", true, parse_status);
-      REQUIRE(parse_status == 0);
-      REQUIRE_THAT(out.double_value(),
-                   WithinAbs(0.0, 1e-6) || WithinRel(0.0, 1e-8));
-    }
+    // Set enable_figure Octave variable
+    interpreter.eval_string(std::string("enable_figure=") +
+                              std::to_string(enable_figure),
+                            true,
+                            parse_status);
+    REQUIRE(parse_status == 0);
+
+    // Calculate relative error and draw plots if enable_figure==1
+    REQUIRE_NOTHROW([&]() {
+      // This may throw exception
+      octave::source_file(SOURCE_DIR "/process.m");
+    }());
+
+    // Check relative error
+    octave_value out;
+    out = interpreter.eval_string("hmat_rel_err", true, parse_status);
+    REQUIRE(parse_status == 0);
+    REQUIRE_THAT(out.double_value(),
+                 WithinAbs(0.0, 1e-6) || WithinRel(0.0, 1e-8));
+
+    out = interpreter.eval_string("x_rel_err", true, parse_status);
+    REQUIRE(parse_status == 0);
+    REQUIRE_THAT(out.double_value(),
+                 WithinAbs(0.0, 1e-6) || WithinRel(0.0, 1e-8));
+  }
 }
