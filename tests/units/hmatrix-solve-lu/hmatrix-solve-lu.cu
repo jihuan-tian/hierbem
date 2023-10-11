@@ -9,6 +9,14 @@
  */
 #include <catch2/catch_all.hpp>
 #include <octave/builtin-defun-decls.h>
+// XXX UGLY TRICK: `octave/graphics.h` and `cuda_surface_types.h` both defined
+// global class `surface`, the former one will be included by
+// `octave/interpreter.h` and the latter one **WILL ALWAYS** be included when
+// using CUDA nvcc compiler. Therefor the naming confliction on `surface` seems
+// to be unavoidable. As a workaround, we have to define the protecting macro
+// `octave/graphics_h` before including `octave/interpreter.h` to prevent
+// the expansion of the former.
+#define octave_graphics_h 1
 #include <octave/interpreter.h>
 #include <octave/oct.h>
 #include <octave/octave.h>
