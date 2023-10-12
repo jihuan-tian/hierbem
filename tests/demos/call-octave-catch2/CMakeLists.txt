@@ -8,8 +8,6 @@ ADD_EXECUTABLE(${_target} call-octave-catch2.cc)
 
 # Allow target to include Octave header files
 INCLUDE_DIRECTORIES(${OCTAVE_INCLUDE_DIRS})
-# Allow target to include deal.ii header files
-DEAL_II_SETUP_TARGET(${_target})
 
 # Define SOURCE_DIR macro to be used in the source files
 TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
