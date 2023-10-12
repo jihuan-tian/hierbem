@@ -171,21 +171,22 @@ namespace HierBEM
             ky_map_from_local_to_full_dof_indices->at(
               ky_dof_i2e_numbering[column_dof_indices[j]]);
 
-        row_vector(j) = sauter_assemble_on_one_pair_of_dofs(kernel,
-                                                            kernel_factor,
-                                                            i_global_dof_index,
-                                                            j_global_dof_index,
-                                                            kx_dof_to_cell_topo,
-                                                            ky_dof_to_cell_topo,
-                                                            bem_values,
-                                                            bem_values_gpu,
-                                                            kx_dof_handler,
-                                                            ky_dof_handler,
-                                                            kx_mapping,
-                                                            ky_mapping,
-                                                            scratch_data,
-                                                            scratch_data_gpu,
-                                                            copy_data);
+        row_vector(j) =
+          sauter_quadrature_on_one_pair_of_dofs(kernel,
+                                                kernel_factor,
+                                                i_global_dof_index,
+                                                j_global_dof_index,
+                                                kx_dof_to_cell_topo,
+                                                ky_dof_to_cell_topo,
+                                                bem_values,
+                                                bem_values_gpu,
+                                                kx_dof_handler,
+                                                ky_dof_handler,
+                                                kx_mapping,
+                                                ky_mapping,
+                                                scratch_data,
+                                                scratch_data_gpu,
+                                                copy_data);
       }
   }
 
@@ -280,21 +281,22 @@ namespace HierBEM
             ky_map_from_local_to_full_dof_indices->at(
               ky_dof_i2e_numbering[column_dof_indices[j]]);
 
-        row_vector(j) = sauter_assemble_on_one_pair_of_dofs(kernel,
-                                                            kernel_factor,
-                                                            i_global_dof_index,
-                                                            j_global_dof_index,
-                                                            kx_dof_to_cell_topo,
-                                                            ky_dof_to_cell_topo,
-                                                            bem_values,
-                                                            bem_values_gpu,
-                                                            kx_dof_handler,
-                                                            ky_dof_handler,
-                                                            kx_mapping,
-                                                            ky_mapping,
-                                                            scratch_data,
-                                                            scratch_data_gpu,
-                                                            copy_data);
+        row_vector(j) =
+          sauter_quadrature_on_one_pair_of_dofs(kernel,
+                                                kernel_factor,
+                                                i_global_dof_index,
+                                                j_global_dof_index,
+                                                kx_dof_to_cell_topo,
+                                                ky_dof_to_cell_topo,
+                                                bem_values,
+                                                bem_values_gpu,
+                                                kx_dof_handler,
+                                                ky_dof_handler,
+                                                kx_mapping,
+                                                ky_mapping,
+                                                scratch_data,
+                                                scratch_data_gpu,
+                                                copy_data);
 
         row_vector(j) += stabilization_factor * mass_vmult_weq(row_dof_index) *
                          mass_vmult_weq(column_dof_indices[j]);
@@ -566,21 +568,22 @@ namespace HierBEM
             kx_map_from_local_to_full_dof_indices->at(
               kx_dof_i2e_numbering[row_dof_indices[i]]);
 
-        col_vector(i) = sauter_assemble_on_one_pair_of_dofs(kernel,
-                                                            kernel_factor,
-                                                            i_global_dof_index,
-                                                            j_global_dof_index,
-                                                            kx_dof_to_cell_topo,
-                                                            ky_dof_to_cell_topo,
-                                                            bem_values,
-                                                            bem_values_gpu,
-                                                            kx_dof_handler,
-                                                            ky_dof_handler,
-                                                            kx_mapping,
-                                                            ky_mapping,
-                                                            scratch_data,
-                                                            scratch_data_gpu,
-                                                            copy_data);
+        col_vector(i) =
+          sauter_quadrature_on_one_pair_of_dofs(kernel,
+                                                kernel_factor,
+                                                i_global_dof_index,
+                                                j_global_dof_index,
+                                                kx_dof_to_cell_topo,
+                                                ky_dof_to_cell_topo,
+                                                bem_values,
+                                                bem_values_gpu,
+                                                kx_dof_handler,
+                                                ky_dof_handler,
+                                                kx_mapping,
+                                                ky_mapping,
+                                                scratch_data,
+                                                scratch_data_gpu,
+                                                copy_data);
       }
   }
 
@@ -674,21 +677,22 @@ namespace HierBEM
             kx_map_from_local_to_full_dof_indices->at(
               kx_dof_i2e_numbering[row_dof_indices[i]]);
 
-        col_vector(i) = sauter_assemble_on_one_pair_of_dofs(kernel,
-                                                            kernel_factor,
-                                                            i_global_dof_index,
-                                                            j_global_dof_index,
-                                                            kx_dof_to_cell_topo,
-                                                            ky_dof_to_cell_topo,
-                                                            bem_values,
-                                                            bem_values_gpu,
-                                                            kx_dof_handler,
-                                                            ky_dof_handler,
-                                                            kx_mapping,
-                                                            ky_mapping,
-                                                            scratch_data,
-                                                            scratch_data_gpu,
-                                                            copy_data);
+        col_vector(i) =
+          sauter_quadrature_on_one_pair_of_dofs(kernel,
+                                                kernel_factor,
+                                                i_global_dof_index,
+                                                j_global_dof_index,
+                                                kx_dof_to_cell_topo,
+                                                ky_dof_to_cell_topo,
+                                                bem_values,
+                                                bem_values_gpu,
+                                                kx_dof_handler,
+                                                ky_dof_handler,
+                                                kx_mapping,
+                                                ky_mapping,
+                                                scratch_data,
+                                                scratch_data_gpu,
+                                                copy_data);
 
         col_vector(i) += stabilization_factor *
                          mass_vmult_weq(row_dof_indices[i]) *
@@ -5754,7 +5758,7 @@ namespace HierBEM
                                         [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
-                                  sauter_assemble_on_one_pair_of_dofs(
+                                  sauter_quadrature_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
                                     i_global_dof_index,
@@ -5815,7 +5819,7 @@ namespace HierBEM
                                         [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
-                                  sauter_assemble_on_one_pair_of_dofs(
+                                  sauter_quadrature_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
                                     i_global_dof_index,
@@ -5869,25 +5873,26 @@ namespace HierBEM
                             ky_map_from_local_to_full_dof_indices->at(
                               ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
-                        (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
-                          kernel,
-                          kernel_factor,
-                          i_global_dof_index,
-                          j_global_dof_index,
-                          kx_dof_to_cell_topo.topology,
-                          ky_dof_to_cell_topo.topology,
-                          bem_values,
-                          bem_values_gpu,
-                          kx_dof_handler,
-                          ky_dof_handler,
-                          kx_mapping,
-                          ky_mapping,
-                          map_from_kx_boundary_mesh_to_volume_mesh,
-                          map_from_ky_boundary_mesh_to_volume_mesh,
-                          method_for_cell_neighboring_type,
-                          scratch_data,
-                          scratch_data_gpu,
-                          copy_data);
+                        (*fullmat)(i, j) =
+                          sauter_quadrature_on_one_pair_of_dofs(
+                            kernel,
+                            kernel_factor,
+                            i_global_dof_index,
+                            j_global_dof_index,
+                            kx_dof_to_cell_topo.topology,
+                            ky_dof_to_cell_topo.topology,
+                            bem_values,
+                            bem_values_gpu,
+                            kx_dof_handler,
+                            ky_dof_handler,
+                            kx_mapping,
+                            ky_mapping,
+                            map_from_kx_boundary_mesh_to_volume_mesh,
+                            map_from_ky_boundary_mesh_to_volume_mesh,
+                            method_for_cell_neighboring_type,
+                            scratch_data,
+                            scratch_data_gpu,
+                            copy_data);
                       }
                   }
               }
@@ -6171,7 +6176,7 @@ namespace HierBEM
                                         [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
-                                  sauter_assemble_on_one_pair_of_dofs(
+                                  sauter_quadrature_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
                                     i_global_dof_index,
@@ -6240,7 +6245,7 @@ namespace HierBEM
                                         [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
-                                  sauter_assemble_on_one_pair_of_dofs(
+                                  sauter_quadrature_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
                                     i_global_dof_index,
@@ -6302,25 +6307,26 @@ namespace HierBEM
                             ky_map_from_local_to_full_dof_indices->at(
                               ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
-                        (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
-                          kernel,
-                          kernel_factor,
-                          i_global_dof_index,
-                          j_global_dof_index,
-                          kx_dof_to_cell_topo.topology,
-                          ky_dof_to_cell_topo.topology,
-                          bem_values,
-                          bem_values_gpu,
-                          kx_dof_handler,
-                          ky_dof_handler,
-                          kx_mapping,
-                          ky_mapping,
-                          map_from_kx_boundary_mesh_to_volume_mesh,
-                          map_from_ky_boundary_mesh_to_volume_mesh,
-                          method_for_cell_neighboring_type,
-                          scratch_data,
-                          scratch_data_gpu,
-                          copy_data);
+                        (*fullmat)(i, j) =
+                          sauter_quadrature_on_one_pair_of_dofs(
+                            kernel,
+                            kernel_factor,
+                            i_global_dof_index,
+                            j_global_dof_index,
+                            kx_dof_to_cell_topo.topology,
+                            ky_dof_to_cell_topo.topology,
+                            bem_values,
+                            bem_values_gpu,
+                            kx_dof_handler,
+                            ky_dof_handler,
+                            kx_mapping,
+                            ky_mapping,
+                            map_from_kx_boundary_mesh_to_volume_mesh,
+                            map_from_ky_boundary_mesh_to_volume_mesh,
+                            method_for_cell_neighboring_type,
+                            scratch_data,
+                            scratch_data_gpu,
+                            copy_data);
 
                         // N.B. The internal and local DoF indices are
                         // used directly to access the result vector of
@@ -6591,7 +6597,7 @@ namespace HierBEM
                                         [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
-                                  sauter_assemble_on_one_pair_of_dofs(
+                                  sauter_quadrature_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
                                     mass_matrix_factor,
@@ -6654,7 +6660,7 @@ namespace HierBEM
                                         [(*col_index_range)[0] + j]);
 
                                 (*fullmat)(i, j) =
-                                  sauter_assemble_on_one_pair_of_dofs(
+                                  sauter_quadrature_on_one_pair_of_dofs(
                                     kernel,
                                     kernel_factor,
                                     mass_matrix_factor,
@@ -6707,27 +6713,28 @@ namespace HierBEM
                             ky_map_from_local_to_full_dof_indices->at(
                               ky_dof_i2e_numbering[(*col_index_range)[0] + j]);
 
-                        (*fullmat)(i, j) = sauter_assemble_on_one_pair_of_dofs(
-                          kernel,
-                          kernel_factor,
-                          mass_matrix_factor,
-                          i_global_dof_index,
-                          j_global_dof_index,
-                          kx_dof_to_cell_topo.topology,
-                          ky_dof_to_cell_topo.topology,
-                          bem_values,
-                          bem_values_gpu,
-                          kx_dof_handler,
-                          ky_dof_handler,
-                          kx_mapping,
-                          ky_mapping,
-                          map_from_kx_boundary_mesh_to_volume_mesh,
-                          map_from_ky_boundary_mesh_to_volume_mesh,
-                          method_for_cell_neighboring_type,
-                          mass_matrix_scratch_data,
-                          scratch_data,
-                          scratch_data_gpu,
-                          copy_data);
+                        (*fullmat)(i, j) =
+                          sauter_quadrature_on_one_pair_of_dofs(
+                            kernel,
+                            kernel_factor,
+                            mass_matrix_factor,
+                            i_global_dof_index,
+                            j_global_dof_index,
+                            kx_dof_to_cell_topo.topology,
+                            ky_dof_to_cell_topo.topology,
+                            bem_values,
+                            bem_values_gpu,
+                            kx_dof_handler,
+                            ky_dof_handler,
+                            kx_mapping,
+                            ky_mapping,
+                            map_from_kx_boundary_mesh_to_volume_mesh,
+                            map_from_ky_boundary_mesh_to_volume_mesh,
+                            method_for_cell_neighboring_type,
+                            mass_matrix_scratch_data,
+                            scratch_data,
+                            scratch_data_gpu,
+                            copy_data);
                       }
                   }
               }

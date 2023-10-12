@@ -7475,7 +7475,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   void
-  sauter_assemble_on_one_pair_of_cells(
+  sauter_quadrature_on_one_pair_of_cells(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
@@ -7623,7 +7623,13 @@ namespace HierBEM
 
 
   /**
+   * Perform the Galerkin-BEM double integral with respect to a boundary
+   * integral operator (represented as the input kernel function) using
+   * Sauter's quadrature for the DoFs in a pair of cells \f$K_x\f$ and
+   * \f$K_y\f$.
    *
+   * This version does not need mapping from cells in the surface mesh to faces
+   * in the volume mesh.
    */
   template <int dim,
             int spacedim,
@@ -7631,7 +7637,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   void
-  sauter_assemble_on_one_pair_of_cells(
+  sauter_quadrature_on_one_pair_of_cells(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
@@ -7773,7 +7779,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   RangeNumberType
-  sauter_assemble_on_one_pair_of_local_dofs_in_cells(
+  sauter_quadrature_on_one_pair_of_shape_functions(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const unsigned int                                   i,
@@ -7843,7 +7849,7 @@ namespace HierBEM
       cell_neighboring_type,
       kx_cell_iter,
       ky_cell_iter,
-      kx_mapping,
+      kx_mapping_copy,
       ky_mapping_copy);
 
     calc_jacobian_normals_for_sauter_quad(cell_neighboring_type,
@@ -7862,15 +7868,6 @@ namespace HierBEM
                                        scratch_data,
                                        active_quad_rule);
       }
-
-    /**
-     *  Clear the local matrix in case that it is reused from another
-     *  finished task. N.B. Its memory has already been allocated in the
-     *  constructor of @p CellPairWisePerTaskData.
-     */
-    copy_data.local_pair_cell_matrix.reinit(
-      copy_data.kx_local_dof_indices_permuted.size(),
-      copy_data.ky_local_dof_indices_permuted.size());
 
     AssertIndexRange(i, kx_n_dofs);
     AssertIndexRange(j, ky_n_dofs);
@@ -7944,7 +7941,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   RangeNumberType
-  sauter_assemble_on_one_pair_of_dofs(
+  sauter_quadrature_on_one_pair_of_dofs(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const types::global_dof_index                        i,
@@ -7977,7 +7974,7 @@ namespace HierBEM
   {
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      "sauter_assemble_on_one_pair_of_dofs");
+      "sauter_quadrature_on_one_pair_of_dofs");
 #endif
 
     /**
@@ -8467,7 +8464,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   RangeNumberType
-  sauter_assemble_on_one_pair_of_dofs(
+  sauter_quadrature_on_one_pair_of_dofs(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const RangeNumberType                                mass_matrix_factor,
@@ -8502,7 +8499,7 @@ namespace HierBEM
   {
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      "sauter_assemble_on_one_pair_of_dofs with mass matrix");
+      "sauter_quadrature_on_one_pair_of_dofs with mass matrix");
 #endif
 
     /**
@@ -9064,7 +9061,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   RangeNumberType
-  sauter_assemble_on_one_pair_of_dofs(
+  sauter_quadrature_on_one_pair_of_dofs(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const types::global_dof_index                        i,
@@ -9090,7 +9087,7 @@ namespace HierBEM
   {
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      "sauter_assemble_on_one_pair_of_dofs for far field");
+      "sauter_quadrature_on_one_pair_of_dofs for far field");
 #endif
 
     /**
