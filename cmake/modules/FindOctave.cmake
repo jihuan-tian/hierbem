@@ -64,7 +64,7 @@
 
 find_program(OCTAVE_CONFIG_EXECUTABLE
               NAMES octave-config
-              HINTS "${OCTAVE_CONFIG_EXECUTABLE}"
+              HINTS ${OCTAVE_CONFIG_EXECUTABLE}
           )
 
 
