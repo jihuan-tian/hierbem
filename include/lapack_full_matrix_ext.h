@@ -19,6 +19,8 @@
 #include "generic_functors.h"
 #include "lapack_helpers.h"
 
+#define MAYBE_UNUSED(x) [&x] {}()
+
 namespace HierBEM
 {
   using namespace dealii;
@@ -2389,8 +2391,8 @@ namespace HierBEM
     const LAPACKFullMatrixExt<Number> &matrix)
   {
     LAPACKFullMatrix<Number>::operator=(matrix);
-    state                             = matrix.state;
-    property                          = matrix.property;
+    state    = matrix.state;
+    property = matrix.property;
     /**
      * Since \p ipiv contains the crucial permutation data if the matrix has been
      * factorized by LU, it needs to be copied.
@@ -2532,8 +2534,8 @@ namespace HierBEM
         for (size_type i = 0; i < nrows; i++)
           {
             // Ignore the row \p row_index during the copy.
-            const size_type ii = (i < row_index ? i : i + 1);
-            (*this)(i, j)      = copy(ii, j);
+            const size_type ii            = (i < row_index ? i : i + 1);
+                            (*this)(i, j) = copy(ii, j);
           }
       }
   }
@@ -4781,7 +4783,8 @@ namespace HierBEM
         potrs(
           &LAPACKSupport::L, &nn, &n_rhs, values, &nn, v.begin(), &nn, &info);
       }
-    else if (property == Property::upper_triangular || property == Property::lower_triangular)
+    else if (property == Property::upper_triangular ||
+             property == Property::lower_triangular)
       {
         const char uplo =
           (property == upper_triangular ? LAPACKSupport::U : LAPACKSupport::L);
@@ -4961,6 +4964,7 @@ namespace HierBEM
             bool        found =
               std::regex_match(line_buf, sm, std::regex("# rows: (\\d+)"));
             Assert(found, ExcMessage("Cannot get n_rows of the matrix!"));
+            MAYBE_UNUSED(found);
             const unsigned int n_rows = std::stoi(sm.str(1));
 
             /**
