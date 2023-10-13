@@ -4,13 +4,8 @@ FIND_PACKAGE(Octave REQUIRED)
 # found by Visual Studio Code's TestMate extension
 SET(_target test-hmatrix-solve-lu)
 
-ADD_EXECUTABLE(${_target} hmatrix-solve-lu.cu)
+ADD_EXECUTABLE(${_target} hmatrix-solve-lu.cc run-hmatrix-solve-lu.cu)
 
-# Allow target to include Octave header files
-INCLUDE_DIRECTORIES(${OCTAVE_INCLUDE_DIRS})
-
-# Allow target to include Octave header files
-INCLUDE_DIRECTORIES(${OCTAVE_INCLUDE_DIRS})
 # Allow target to include deal.ii header files
 DEAL_II_SETUP_TARGET(${_target})
 
@@ -19,6 +14,7 @@ TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_
 
 TARGET_LINK_LIBRARIES(
     ${_target}
+    hbem_octave_wrapper
     generic_tools
     boost_program_options
     dl
@@ -29,3 +25,11 @@ TARGET_LINK_LIBRARIES(
 INCLUDE(CTest)
 INCLUDE(Catch)
 CATCH_DISCOVER_TESTS(${_target})
+
+# Copy plotting util to build directory to ease manually post-processing
+ADD_CUSTOM_COMMAND(
+    TARGET ${_target} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_SOURCE_DIR}/draw.m
+            ${CMAKE_CURRENT_BINARY_DIR}/draw.m
+)

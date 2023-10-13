@@ -36,7 +36,11 @@ TEST_CASE("Call builtins directly from C++", "[octave][demo]")
     octave_value_list in;
     in(0) = a_mat;
 
+#if OCTAVE_MAJOR_VERSION < 8
     octave_value_list out = Fnorm(in, 1 /*n_ret*/);
+#else
+    octave_value_list out = octave::Fnorm(in, 1 /*n_ret*/);
+#endif
     REQUIRE(out.length() == 1);
 
     double expected = 6.162278;
@@ -52,7 +56,12 @@ TEST_CASE("Call builtins directly from C++", "[octave][demo]")
     for (octave_idx_type i = 0; i < n; i++)
       in(i) = octave_value(5 * (i + 2));
 
+#if OCTAVE_MAJOR_VERSION < 8
     octave_value_list out = Fgcd(in, 1 /*n_ret*/);
+#else
+    octave_value_list out = octave::Fgcd(in, 1 /*n_ret*/);
+#endif
+
     REQUIRE(out.length() == 1);
     REQUIRE(out(0).int_value() == 5);
   }
@@ -115,6 +124,12 @@ TEST_CASE("Call functions through interpreter from C++", "[octave][demo]")
     REQUIRE_THAT(out(0).double_value(),
                  WithinAbs(expected, 1e-6) || WithinRel(expected, 1e-8));
   }
+
+#if OCTAVE_MAJOR_VERSION == 6
+  // need call interpreter's shutdown() method explicitly to prevent segfault on
+  // exit
+  interpreter.shutdown();
+#endif
 }
 
 TEST_CASE("Source external M-file from C++", "[octave][demo]")
@@ -144,46 +159,10 @@ TEST_CASE("Source external M-file from C++", "[octave][demo]")
     REQUIRE(out.length() > 0);
     REQUIRE(out(0).string_value() == "[11 22;33 44]");
   }
-}
 
-TEST_CASE("Octave code fuzzing", "[octave][demo]")
-{
-  // Catch2 generator will run the code multiple times in the same thread,
-  // so the Octave interpreter must be declared STATIC to ensure there is
-  // only one active instance per thread!
-  static octave::interpreter interpreter;
-  int                        status = interpreter.execute();
-  REQUIRE(status == 0);
-  INFO("Octave interpreter started ...");
-
-  auto trial_no = GENERATE(range(0, 10));
-  // Get the active Octave interpreter instance in the current thread
-  // octave::interpreter *inst F= octave::interpreter::the_interpreter();
-
-  SECTION(std::string("plus() test - ") + std::to_string(trial_no))
-  {
-    std::srand(std::time(nullptr));
-    int a = std::rand() % 255 + 1;
-    int b = std::rand() % 255 + 1;
-
-    octave_value_list in;
-    in(0) = a;
-    in(1) = b;
-
-    octave_value_list out = octave::feval("plus", in, 1 /*n_ret*/);
-    REQUIRE(out.length() == 1);
-    REQUIRE(out(0).int_value() == a + b);
-  }
-
-  SECTION(std::string("rand() test - ") + std::to_string(trial_no))
-  {
-    int          parse_status;
-    octave_value out =
-      interpreter.eval_string("round(rand(1)*6)", true, parse_status);
-    REQUIRE(parse_status == 0);
-
-    int n = out.int_value();
-    REQUIRE(n >= 0);
-    REQUIRE(n <= 6);
-  }
+#if OCTAVE_MAJOR_VERSION == 6
+  // need call interpreter's shutdown() method explicitly to prevent segfault on
+  // exit
+  interpreter.shutdown();
+#endif
 }

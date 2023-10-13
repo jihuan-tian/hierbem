@@ -22,6 +22,7 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/include/hbem_test_config.h.in ${CMAKE
 
 # Add testing config header files to include path
 INCLUDE_DIRECTORIES(APPEND ${CMAKE_CURRENT_SOURCE_DIR}/include)
+ADD_SUBDIRECTORY(src)
 
 # Add all testcase subdirectories
 INCLUDE(${_test_list_file})

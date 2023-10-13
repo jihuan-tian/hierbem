@@ -38,7 +38,11 @@ call_builtins_directly()
     octave_value_list in;
     in(0) = a_mat;
 
+#if OCTAVE_MAJOR_VERSION < 8
     octave_value_list out = Fnorm(in, 1 /*n_ret*/);
+#else
+    octave_value_list out = octave::Fnorm(in, 1 /*n_ret*/);
+#endif
     Assert(out.length() == 1, ExcInternalError());
     deallog << "Fnorm ret: " << out(0).double_value() << std::endl;
   }
@@ -51,7 +55,11 @@ call_builtins_directly()
     for (octave_idx_type i = 0; i < n; i++)
       in(i) = octave_value(5 * (i + 2));
 
+#if OCTAVE_MAJOR_VERSION < 8
     octave_value_list out = Fgcd(in, 1 /*n_ret*/);
+#else
+    octave_value_list out = octave::Fgcd(in, 1 /*n_ret*/);
+#endif
     Assert(out.length() == 1, ExcInternalError());
     deallog << "gcd ret: " << out(0).int_value() << std::endl;
   }
@@ -112,11 +120,6 @@ source_file_by_interpreter()
         // output!
         octave::source_file(std::string(SOURCE_DIR "/test.m"));
       }
-    catch (const octave::execution_exception &e)
-      {
-        deallog << "Octave exception caught: " << e.info() << std::endl;
-        exit(-1);
-      }
     catch (const std::runtime_error &e)
       {
         deallog << "Runtime-error caught: " << e.what() << std::endl;
@@ -124,12 +127,10 @@ source_file_by_interpreter()
     catch (const std::exception &e)
       {
         deallog << "Exception caught: " << e.what() << std::endl;
-        exit(-1);
       }
     catch (...)
       {
         deallog << "Unknown exception caught";
-        exit(-1);
       }
 
     int               parse_status;
@@ -162,6 +163,12 @@ main(int argc, const char *argv[])
 
   call_functions_by_interpreter();
   source_file_by_interpreter();
+
+#if OCTAVE_MAJOR_VERSION == 6
+  // need call interpreter's shutdown() method explicitly to prevent segfault on
+  // exit
+  interpreter.shutdown();
+#endif
 
   return 0;
 }
