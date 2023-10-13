@@ -147,7 +147,7 @@ main()
     fe, fe, mapping_test_space, mapping_ansatz_space, bem_values);
   PairCellWisePerTaskData<dim, spacedim, double> copy_data(fe, fe);
 
-  DoFHandler<dim, spacedim>::active_cell_iterator cell_iter =
+  [[maybe_unused]] DoFHandler<dim, spacedim>::active_cell_iterator cell_iter =
     dof_handler.begin_active();
 
   std::vector<DoFHandler<dim, spacedim>::active_cell_iterator> cell_iterators;

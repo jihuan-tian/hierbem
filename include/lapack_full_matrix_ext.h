@@ -19,8 +19,6 @@
 #include "generic_functors.h"
 #include "lapack_helpers.h"
 
-#define MAYBE_UNUSED(x) [&x] {}()
-
 namespace HierBEM
 {
   using namespace dealii;
@@ -4961,10 +4959,9 @@ namespace HierBEM
              */
             std::getline(in, line_buf);
             std::smatch sm;
-            bool        found =
+            [[maybe_unused]] bool        found =
               std::regex_match(line_buf, sm, std::regex("# rows: (\\d+)"));
             Assert(found, ExcMessage("Cannot get n_rows of the matrix!"));
-            MAYBE_UNUSED(found);
             const unsigned int n_rows = std::stoi(sm.str(1));
 
             /**

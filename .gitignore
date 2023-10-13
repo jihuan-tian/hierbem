@@ -67,6 +67,7 @@ html/
 
 # Ignore generated include files
 include/config.h
+tests/include/hbem_test_config.h
 
 # Ignore generated scripts
 scripts/init-test*.sh
