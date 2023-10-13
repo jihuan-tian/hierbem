@@ -60,6 +60,11 @@ core
 latex/
 html/
 
+# Ignore mesh files
+*.msh
+*.geo
+*.opt
+
 # Ignore generated include files
 include/config.h
 

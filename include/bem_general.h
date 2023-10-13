@@ -633,7 +633,7 @@ namespace HierBEM
       {
         /**
          * Calculate Kx related data so that they won't be redundantly
-         * calculated within @p sauter_assemble_on_one_pair_of_cells.
+         * calculated within @p sauter_quadrature_on_one_pair_of_cells.
          */
         kx_mapping.compute_mapping_support_points(e);
         scratch_data.kx_mapping_support_points_in_default_order =
@@ -651,10 +651,10 @@ namespace HierBEM
         WorkStream::run(
           dof_handler_for_trial_space.begin_active(),
           dof_handler_for_trial_space.end(),
-          std::bind(&sauter_assemble_on_one_pair_of_cells<dim,
-                                                          spacedim,
-                                                          KernelFunctionType,
-                                                          RangeNumberType>,
+          std::bind(&sauter_quadrature_on_one_pair_of_cells<dim,
+                                                            spacedim,
+                                                            KernelFunctionType,
+                                                            RangeNumberType>,
                     std::cref(kernel),
                     factor,
                     std::cref(e),

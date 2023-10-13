@@ -1814,7 +1814,7 @@ namespace HierBEM
      * @param cell
      * @param mapping
      * @param local_vertex_index_in_cell
-     * @param threshold
+     * @param threshold Threshold for point equality checking
      * @return
      */
     template <int dim, int spacedim>
@@ -1853,7 +1853,7 @@ namespace HierBEM
         {
           /**
            * Handle the case when the finite element conforms to \f$L_2\f$,
-           * e.g. @p FE_DGQ, where there are no DoFs associated with vertices.
+           * e.g. @p FE_DGQ, where no DoFs are associated with vertices.
            */
 
           /**
@@ -1864,10 +1864,10 @@ namespace HierBEM
                    "There should be no DoFs associated with a vertex!"));
 
           /**
-           * Get the list of vertex DoF indices which are directly extracted
-           * from the list of all DoF indices. N.B. The ordering of this list of
-           * vertex DoF indices may not match the ordering of the vertices in
-           * the geometry information.
+           * Get the list of vertex DoF indices in lexicographic order, which
+           * are directly extracted from the list of all DoF indices. N.B. The
+           * ordering of this list of vertex DoF indices may not match the
+           * ordering of the vertices in the geometry information.
            */
           std::array<types::global_dof_index, vertices_per_cell>
             vertex_dof_indices_from_lexicographic_dof_indices;
@@ -1877,7 +1877,8 @@ namespace HierBEM
           /**
            * Calculate the list of vertex support point coordinates in the real
            * cell with the help of the mapping object. It will be compared with
-           * the vertex coordinates obtained from the cell geometry.
+           * the vertex coordinates obtained from the cell geometry using the
+           * given @p threshold.
            *
            * N.B. The ordering of this list of vertex support points corresponds
            * with the ordering of the list of the above vertex DoF indices.
@@ -1917,7 +1918,8 @@ namespace HierBEM
     /**
      * Detect the cell neighboring type by checking the
      * intersection of the given two lists of vertex indices. The intersection
-     * of the global vertex indices is returned via argument by reference.
+     * of the global vertex indices is returned in the argument
+     * @p common_vertex_indices by reference.
      *
      * \alert{Comparison of vertex indices implies that the two cells should
      * belong to a same triangulation. Otherwise, there will be two sets of
@@ -1933,7 +1935,7 @@ namespace HierBEM
      *
      * @param first_cell_vertex_indices
      * @param second_cell_vertex_indices
-     * @param vertex_index_intersection
+     * @param common_vertex_indices
      * @return
      */
     template <int dim>
@@ -2068,13 +2070,203 @@ namespace HierBEM
 
 
     /**
-     * Detect the cell neighboring type for two cells for different
-     * triangulation case.
+     * Detect the cell neighboring type for the two cells pointed by the input
+     * cell iterators. This function handles the case when the involved two DoF
+     * handlers are different where the finite elements are different but the
+     * triangulations are the same.
+     *
+     * In this case, the vertex indices for the two cells are numbered in a same
+     * index system. But the DoF indices for the two cells are independently
+     * indexed.
      *
      * @param first_cell_iter
      * @param second_cell_iter
-     * @param common_vertex_pair_indices
-     * @return
+     * @param first_cell_mapping
+     * @param second_cell_mapping
+     * @param common_vertex_pair_dof_indices A vector of pairs of DoF indices. Each
+     * pair corresponds to a common vertex. In each pair, the first DoF index
+     * is in the first cell with the first DoF handler, while the second DoF
+     * index is in the second cell with the second DoF handler.
+     * @pram threshold
+     * @return Cell neighboring type
+     */
+    template <int dim, int spacedim = dim>
+    CellNeighboringType
+    detect_cell_neighboring_type_for_same_triangulations(
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+        &first_cell_iter,
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+                                   &second_cell_iter,
+      const Mapping<dim, spacedim> &first_cell_mapping,
+      const Mapping<dim, spacedim> &second_cell_mapping,
+      std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
+                  &common_vertex_pair_dof_indices,
+      const double threshold = 1e-12)
+    {
+      const unsigned int vertices_per_cell =
+        GeometryInfo<dim>::vertices_per_cell;
+
+      const FiniteElement<dim, spacedim> &first_cell_fe =
+        first_cell_iter->get_fe();
+      const FiniteElement<dim, spacedim> &second_cell_fe =
+        second_cell_iter->get_fe();
+
+      /**
+       * Get the vertex indices in each cell.
+       */
+      std::array<types::global_vertex_index, vertices_per_cell>
+        first_cell_vertex_indices(
+          get_vertex_indices_in_cell<dim, spacedim>(first_cell_iter));
+
+      std::array<types::global_vertex_index, vertices_per_cell>
+        second_cell_vertex_indices(
+          get_vertex_indices_in_cell<dim, spacedim>(second_cell_iter));
+
+      /**
+       * Calculate the intersection of the two cells' vertex indices. This
+       * operation is meaningful because the triangulations for the two cells
+       * are the same.
+       */
+      std::vector<types::global_vertex_index> vertex_index_intersection;
+      detect_cell_neighboring_type_for_same_triangulations<dim>(
+        first_cell_vertex_indices,
+        second_cell_vertex_indices,
+        vertex_index_intersection);
+
+      /**
+       * Fill the vector of pairs for @p common_vertex_pair_dof_indices. For each
+       * vertex index in the intersection, find the corresponding DoF indices in
+       * the two cells respectively.
+       */
+      common_vertex_pair_dof_indices.clear();
+      types::global_dof_index common_vertex_dof_index_in_first_cell;
+      types::global_dof_index common_vertex_dof_index_in_second_cell;
+
+      for (auto vertex_index : vertex_index_intersection)
+        {
+          if (first_cell_fe.dofs_per_cell > 1)
+            {
+              /**
+               * Find the current common vertex in the list of vertex indices
+               * for the first cell.
+               */
+              auto first_cell_vertex_found_pos =
+                std::find(first_cell_vertex_indices.cbegin(),
+                          first_cell_vertex_indices.cend(),
+                          vertex_index);
+
+              Assert(
+                first_cell_vertex_found_pos != first_cell_vertex_indices.cend(),
+                ExcMessage("Cannot find the common vertex in the first cell!"));
+
+              common_vertex_dof_index_in_first_cell =
+                get_dof_index_for_vertex_in_cell(
+                  first_cell_iter,
+                  first_cell_mapping,
+                  first_cell_vertex_found_pos -
+                    first_cell_vertex_indices.cbegin(),
+                  threshold);
+            }
+          else
+            {
+              /**
+               * Handle the case when there is only one DoF in a cell, i.e.
+               * @p FE_DGQ with order 0. Set the common vertex DoF index to be
+               * the DoF in the cell's interior, even though it is not
+               * associated to the vertex.
+               */
+              common_vertex_dof_index_in_first_cell =
+                first_cell_iter->dof_index(0);
+            }
+
+          if (second_cell_fe.dofs_per_cell > 1)
+            {
+              /**
+               * Find the current common vertex in the list of vertex indices
+               * for the second cell.
+               */
+              auto second_cell_vertex_found_pos =
+                std::find(second_cell_vertex_indices.cbegin(),
+                          second_cell_vertex_indices.cend(),
+                          vertex_index);
+
+              Assert(second_cell_vertex_found_pos !=
+                       second_cell_vertex_indices.cend(),
+                     ExcMessage(
+                       "Cannot find the common vertex in the second cell!"));
+
+              common_vertex_dof_index_in_second_cell =
+                get_dof_index_for_vertex_in_cell(
+                  second_cell_iter,
+                  second_cell_mapping,
+                  second_cell_vertex_found_pos -
+                    second_cell_vertex_indices.cbegin(),
+                  threshold);
+            }
+          else
+            {
+              /**
+               * Handle the case when the finite element order is 0, i.e. for
+               * @p FE_DGQ. Set the common vertex DoF index to be the DoF in
+               * the cell's interior, even though it is not associated to the
+               * vertex.
+               */
+              common_vertex_dof_index_in_second_cell =
+                second_cell_iter->dof_index(0);
+            }
+
+          common_vertex_pair_dof_indices.push_back(
+            std::pair<types::global_dof_index, types::global_dof_index>(
+              common_vertex_dof_index_in_first_cell,
+              common_vertex_dof_index_in_second_cell));
+        }
+
+      CellNeighboringType cell_neighboring_type;
+      switch (vertex_index_intersection.size())
+        {
+          case (0):
+            cell_neighboring_type = Regular;
+            break;
+          case (1):
+            cell_neighboring_type = CommonVertex;
+            break;
+          case (2):
+            cell_neighboring_type = CommonEdge;
+            break;
+          case (4):
+            cell_neighboring_type = SamePanel;
+            break;
+          default:
+            cell_neighboring_type = None;
+            Assert(false, ExcInternalError());
+        }
+
+      return cell_neighboring_type;
+    }
+
+
+
+    /**
+     * Detect the cell neighboring type for two cells which belong to different
+     * surface/boundary triangulations.
+     *
+     * These two surface triangulations are constructed respectively from a
+     * common volume mesh by specifying a set of boundary ids. Therefore, the
+     * map from surface/boundary mesh to volume mesh is needed.
+     *
+     * \alert{The map from surface/boundary mesh to volume mesh is only for the
+     * coarse mesh, due to the behavior of @p GridGenerator::extract_boundary_mesh.}
+     *
+     * @param first_cell_iter
+     * @param second_cell_iter
+     * @param map_from_first_boundary_mesh_to_volume_mesh
+     * @param map_from_second_boundary_mesh_to_volume_mesh
+     * @param common_vertex_pair_indices A vector of pairs of vertex local
+     * indices in the two cells in the surface mesh. Each pair corresponds to a
+     * common vertex shared by the two cells, if any. The first element in each
+     * pair is the local index of the common vertex in the first cell, and the
+     * second element is that in the second cell.
+     * @return Cell neighboring type
      */
     template <int dim, int spacedim>
     CellNeighboringType
@@ -2124,7 +2316,7 @@ namespace HierBEM
 
       /**
        * Calculate the intersection of the two faces' vertex indices. This
-       * operation is meaningful because the two faces are both pulled back in
+       * operation is meaningful because the two faces are both pulled back into
        * the original volume triangulation.
        */
       CellNeighboringType cell_neighboring_type;
@@ -2146,11 +2338,11 @@ namespace HierBEM
        * domain cells and on the cells of the surface mesh, you may have to
        * translate between vertex locations or quadrature points.
        *
-       * Hence, the local location of the common vertex index in the list of
-       * vertex indices in the face is not the same as that in the list of
-       * vertices in the boundary cell. Therefore, the mapping between vertices
-       * of the cell in the boundary mesh and those of the face in the volume
-       * mesh should be constructed by checking their coordinates.
+       * Hence, the local index of each common vertex in its corresponding face
+       * in the volume mesh is not the same as its local index in the cell in
+       * the surface mesh. Therefore, the correlation mapping between cell
+       * vertices in the surface mesh and those in the face in the volume mesh
+       * should be constructed by matching vertex coordinates.
        */
 
       common_vertex_pair_local_indices.clear();
@@ -2159,11 +2351,6 @@ namespace HierBEM
 
       for (auto v : common_vertex_indices_in_volume_mesh)
         {
-          /**
-           * Get the coordinates of the current common vertex. \mynote{The
-           * point returned from the member function @p TriaAccessor::vertex is
-           * a reference.}
-           */
           auto first_face_vertex_found_pos =
             std::find(first_face_vertex_indices.cbegin(),
                       first_face_vertex_indices.cend(),
@@ -2172,12 +2359,17 @@ namespace HierBEM
             first_face_vertex_found_pos != first_face_vertex_indices.cend(),
             ExcMessage("Cannot find the common vertex in the first face!"));
 
+          /**
+           * Get the coordinates of the current common vertex. \mynote{The
+           * point returned from the member function @p TriaAccessor::vertex is
+           * a reference.}
+           */
           const Point<spacedim> &common_vertex_coords = first_face_iter->vertex(
             first_face_vertex_found_pos - first_face_vertex_indices.cbegin());
 
           /**
-           * Find the current common vertex in the first boundary cell by
-           * coordinate matching.
+           * Find the current common vertex in the first cell in the surface
+           * mesh by coordinate matching.
            */
           common_vertex_local_index_in_first_cell =
             get_vertex_local_index_in_cell<dim, spacedim>(common_vertex_coords,
@@ -2186,8 +2378,8 @@ namespace HierBEM
                            GeometryInfo<dim>::vertices_per_cell);
 
           /**
-           * Find the current common vertex in the second boundary cell by
-           * coordinate matching.
+           * Find the current common vertex in the second cell in the surface
+           * mesh by coordinate matching.
            */
           common_vertex_local_index_in_second_cell =
             get_vertex_local_index_in_cell<dim, spacedim>(common_vertex_coords,
@@ -2206,377 +2398,20 @@ namespace HierBEM
 
 
     /**
-     * Detect the cell neighboring type for two cells by checking the
-     * intersection of the DoF indices associated with their vertices. Because
-     * there are vertex DoFs, the finite elements contained in the DoF handlers
-     * should be @p H1. The intersection of the DoF indices is returned via
-     * argument by reference.
-     *
-     * \alert{Comparison of DoF indices implies that the two cells should belong
-     * to a same DoFHandler. Otherwise, there will be two sets of DoF indices,
-     * which cannot be compared.}
-     *
-     * \mynote{N.B. The template argument @p dim of this function cannot be
-     * automatically inducted by the compiler from its input arguments, since
-     * even though the template argument @p GeometryInfo<dim>::vertices_per_cell
-     * of the two input arguments @p first_cell_vertex_dof_indices and
-     * @p second_cell_vertex_dof_indices contains @p dim, the whole
-     * @p GeometryInfo<dim>::vertices_per_cell will be evaluated into an
-     * integer by the compiler, so that @p dim will be discarded.}
-     *
-     * @param first_cell_vertex_dof_indices
-     * @param second_cell_vertex_dof_indices
-     * @param vertex_dof_index_intersection Before calling this function, this
-     * variable should be cleared.
-     * @return
-     */
-    template <int dim>
-    CellNeighboringType
-    detect_cell_neighboring_type_for_same_h1_dofhandlers(
-      const std::array<types::global_dof_index,
-                       GeometryInfo<dim>::vertices_per_cell>
-        &first_cell_vertex_dof_indices,
-      const std::array<types::global_dof_index,
-                       GeometryInfo<dim>::vertices_per_cell>
-                                           &second_cell_vertex_dof_indices,
-      std::vector<types::global_dof_index> &vertex_dof_index_intersection)
-    {
-      std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
-        first_cell_vertex_dof_indices_sorted(first_cell_vertex_dof_indices);
-      std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
-        second_cell_vertex_dof_indices_sorted(second_cell_vertex_dof_indices);
-
-      std::sort(first_cell_vertex_dof_indices_sorted.begin(),
-                first_cell_vertex_dof_indices_sorted.end());
-      std::sort(second_cell_vertex_dof_indices_sorted.begin(),
-                second_cell_vertex_dof_indices_sorted.end());
-
-      /**
-       * Calculate the intersection of the two cells' vertex DoF indices.
-       */
-      std::set_intersection(first_cell_vertex_dof_indices_sorted.begin(),
-                            first_cell_vertex_dof_indices_sorted.end(),
-                            second_cell_vertex_dof_indices_sorted.begin(),
-                            second_cell_vertex_dof_indices_sorted.end(),
-                            std::back_inserter(vertex_dof_index_intersection));
-
-      CellNeighboringType cell_neighboring_type;
-      switch (vertex_dof_index_intersection.size())
-        {
-          case (0):
-            cell_neighboring_type = Regular;
-            break;
-          case (1):
-            cell_neighboring_type = CommonVertex;
-            break;
-          case (2):
-            cell_neighboring_type = CommonEdge;
-            break;
-          case (4):
-            cell_neighboring_type = SamePanel;
-            break;
-          default:
-            Assert(false, ExcInternalError());
-            cell_neighboring_type = None;
-        }
-
-      return cell_neighboring_type;
-    }
-
-
-    /**
-     * Detect the cell neighboring type for the two cells pointed by the input
-     * cell iterators. This function handles the case when the involved two DoF
-     * handlers are different where the finite elements are different but the
-     * triangulations are the same.
-     *
-     * In this case, the vertex indices for the two cells are numbered in a same
-     * index system. But the DoF indices for the two cells are independently
-     * indexed.
-     *
-     * @param first_cell_iter
-     * @param second_cell_iter
-     * @param common_vertex_dof_indices A vector of pairs of DoF indices. Each
-     * pair corresponds to a common vertex and in each pair, the first DoF index
-     * is in the first cell, while the second DoF index is in the second cell.
-     * @return
-     */
-    template <int dim, int spacedim = dim>
-    CellNeighboringType
-    detect_cell_neighboring_type_for_same_triangulations(
-      const typename DoFHandler<dim, spacedim>::active_cell_iterator
-        &first_cell_iter,
-      const typename DoFHandler<dim, spacedim>::active_cell_iterator
-                                   &second_cell_iter,
-      const Mapping<dim, spacedim> &first_cell_mapping,
-      const Mapping<dim, spacedim> &second_cell_mapping,
-      std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-                  &common_vertex_dof_indices,
-      const double threshold = 1e-12)
-    {
-      const unsigned int vertices_per_cell =
-        GeometryInfo<dim>::vertices_per_cell;
-
-      const FiniteElement<dim, spacedim> &first_cell_fe =
-        first_cell_iter->get_fe();
-      const FiniteElement<dim, spacedim> &second_cell_fe =
-        second_cell_iter->get_fe();
-
-      /**
-       * Get the vertex indices in each cell.
-       */
-      std::array<types::global_vertex_index, vertices_per_cell>
-        first_cell_vertex_indices(
-          get_vertex_indices_in_cell<dim, spacedim>(first_cell_iter));
-
-      std::array<types::global_vertex_index, vertices_per_cell>
-        second_cell_vertex_indices(
-          get_vertex_indices_in_cell<dim, spacedim>(second_cell_iter));
-
-      /**
-       * Calculate the intersection of the two cells' vertex indices. This
-       * operation is meaningful because the triangulations for the two cells
-       * are the same.
-       */
-      std::vector<types::global_vertex_index> vertex_index_intersection;
-      detect_cell_neighboring_type_for_same_triangulations<dim>(
-        first_cell_vertex_indices,
-        second_cell_vertex_indices,
-        vertex_index_intersection);
-
-      /**
-       * Fill the vector of pairs for @p common_vertex_dof_indices. For each
-       * vertex index in the intersection, find the corresponding DoF indices in
-       * the two cells respectively.
-       */
-      common_vertex_dof_indices.clear();
-      types::global_dof_index common_vertex_dof_index_in_first_cell;
-      types::global_dof_index common_vertex_dof_index_in_second_cell;
-
-      for (auto vertex_index : vertex_index_intersection)
-        {
-          if (first_cell_fe.dofs_per_cell > 1)
-            {
-              /**
-               * Find the current common vertex in the list of vertex indices
-               * for the first cell.
-               */
-              auto first_cell_vertex_found_pos =
-                std::find(first_cell_vertex_indices.cbegin(),
-                          first_cell_vertex_indices.cend(),
-                          vertex_index);
-
-              Assert(
-                first_cell_vertex_found_pos != first_cell_vertex_indices.cend(),
-                ExcMessage("Cannot find the common vertex in the first cell!"));
-
-              common_vertex_dof_index_in_first_cell =
-                get_dof_index_for_vertex_in_cell(
-                  first_cell_iter,
-                  first_cell_mapping,
-                  first_cell_vertex_found_pos -
-                    first_cell_vertex_indices.cbegin(),
-                  threshold);
-            }
-          else
-            {
-              /**
-               * Handle the case when the finite element order is 0, i.e. for
-               * @p FE_DGQ. Set the common vertex DoF index to be the DoF in
-               * the cell's interior, even though it is not associated to the
-               * vertex.
-               */
-              common_vertex_dof_index_in_first_cell =
-                first_cell_iter->dof_index(0);
-            }
-
-          if (second_cell_fe.dofs_per_cell > 1)
-            {
-              /**
-               * Find the current common vertex in the list of vertex indices
-               * for the second cell.
-               */
-              auto second_cell_vertex_found_pos =
-                std::find(second_cell_vertex_indices.cbegin(),
-                          second_cell_vertex_indices.cend(),
-                          vertex_index);
-
-              Assert(second_cell_vertex_found_pos !=
-                       second_cell_vertex_indices.cend(),
-                     ExcMessage(
-                       "Cannot find the common vertex in the second cell!"));
-
-              common_vertex_dof_index_in_second_cell =
-                get_dof_index_for_vertex_in_cell(
-                  second_cell_iter,
-                  second_cell_mapping,
-                  second_cell_vertex_found_pos -
-                    second_cell_vertex_indices.cbegin(),
-                  threshold);
-            }
-          else
-            {
-              /**
-               * Handle the case when the finite element order is 0, i.e. for
-               * @p FE_DGQ. Set the common vertex DoF index to be the DoF in
-               * the cell's interior, even though it is not associated to the
-               * vertex.
-               */
-              common_vertex_dof_index_in_second_cell =
-                second_cell_iter->dof_index(0);
-            }
-
-          common_vertex_dof_indices.push_back(
-            std::pair<types::global_dof_index, types::global_dof_index>(
-              common_vertex_dof_index_in_first_cell,
-              common_vertex_dof_index_in_second_cell));
-        }
-
-      CellNeighboringType cell_neighboring_type;
-      switch (vertex_index_intersection.size())
-        {
-          case (0):
-            cell_neighboring_type = Regular;
-            break;
-          case (1):
-            cell_neighboring_type = CommonVertex;
-            break;
-          case (2):
-            cell_neighboring_type = CommonEdge;
-            break;
-          case (4):
-            cell_neighboring_type = SamePanel;
-            break;
-          default:
-            cell_neighboring_type = None;
-            Assert(false, ExcInternalError());
-        }
-
-      return cell_neighboring_type;
-    }
-
-
-    /**
-     * Detect the cell neighboring type for the two cells pointed by the input
-     * cell iterators. This function handles the case when the involved two DoF
-     * handlers are the same, i.e. both the associated finite elements and
-     * triangulations are the same.
-     *
-     * In this case, the vertex indices for the two cells are numbered in a same
-     * index system. Same situation holds for DoF indices for the two cells.
-     * Hence, when the finite element is @p H1, such as @p FE_Q, in each pair
-     * of the returned vector @p common_vertex_dof_indices, the two elements
-     * are the same.
-     *
-     * @param first_cell_iter
-     * @param second_cell_iter
-     * @param common_vertex_dof_indices A vector of pairs of DoF indices. Each
-     * pair corresponds to a common vertex and in each pair, the first DoF index
-     * is in the first cell, while the second DoF index is in the second cell.
-     * @return
-     */
-    template <int dim, int spacedim = dim>
-    CellNeighboringType
-    detect_cell_neighboring_type_for_same_dofhandlers(
-      const typename DoFHandler<dim, spacedim>::active_cell_iterator
-        &first_cell_iter,
-      const typename DoFHandler<dim, spacedim>::active_cell_iterator
-                                   &second_cell_iter,
-      const Mapping<dim, spacedim> &first_cell_mapping,
-      const Mapping<dim, spacedim> &second_cell_mapping,
-      std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-                  &common_vertex_dof_indices,
-      const double threshold = 1e-12)
-    {
-      /**
-       * Get the finite element, which should be the same for the two cell
-       * iterators.
-       */
-      const FiniteElement<dim, spacedim> &fe = first_cell_iter->get_fe();
-
-      if (fe.conforms(FiniteElementData<dim>::H1))
-        {
-          const unsigned int vertices_per_cell =
-            GeometryInfo<dim>::vertices_per_cell;
-
-          /**
-           * Get the list of vertex DoF indices in the two cells
-           */
-          std::array<types::global_dof_index, vertices_per_cell>
-            first_cell_vertex_dof_indices(get_vertex_dof_indices_in_cell(
-              first_cell_iter, first_cell_mapping, threshold));
-
-          std::array<types::global_dof_index, vertices_per_cell>
-            second_cell_vertex_dof_indices(get_vertex_dof_indices_in_cell(
-              second_cell_iter, second_cell_mapping, threshold));
-
-          std::vector<types::global_dof_index> vertex_dof_index_intersection;
-          common_vertex_dof_indices.clear();
-
-          detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
-            first_cell_vertex_dof_indices,
-            second_cell_vertex_dof_indices,
-            vertex_dof_index_intersection);
-
-          /**
-           * Fill the vector of pairs for @p common_vertex_dof_indices.
-           */
-          for (auto dof_index : vertex_dof_index_intersection)
-            {
-              common_vertex_dof_indices.push_back(
-                std::pair<types::global_dof_index, types::global_dof_index>(
-                  dof_index, dof_index));
-            }
-
-          CellNeighboringType cell_neighboring_type;
-          switch (vertex_dof_index_intersection.size())
-            {
-              case (0):
-                cell_neighboring_type = Regular;
-                break;
-              case (1):
-                cell_neighboring_type = CommonVertex;
-                break;
-              case (2):
-                cell_neighboring_type = CommonEdge;
-                break;
-              case (4):
-                cell_neighboring_type = SamePanel;
-                break;
-              default:
-                cell_neighboring_type = None;
-                Assert(false, ExcInternalError());
-            }
-
-          return cell_neighboring_type;
-        }
-      else if (fe.conforms(FiniteElementData<dim>::L2))
-        {
-          return detect_cell_neighboring_type_for_same_triangulations(
-            first_cell_iter,
-            second_cell_iter,
-            first_cell_mapping,
-            second_cell_mapping,
-            common_vertex_dof_indices,
-            threshold);
-        }
-      else
-        {
-          Assert(false, ExcNotImplemented());
-
-          return CellNeighboringType::None;
-        }
-    }
-
-
-    /**
      * Detect the cell neighboring type for the two cells pointed by the input
      * cell iterators. This function handles the case when the involved two DoF
      * handlers are different where the finite elements can be either identical
-     * or different, but the triangulations are different.
+     * or different, but the triangulations are always different.
      *
      * In this case, neither vertex indices nor DoF indices for the two cells
      * are numbered in a same index system.
+     *
+     * These two surface triangulations are constructed respectively from a
+     * common volume mesh by specifying a set of boundary ids. Therefore, the
+     * map from surface/boundary mesh to volume mesh is needed.
+     *
+     * \alert{The map from surface/boundary mesh to volume mesh is only for the
+     * coarse mesh, due to the behavior of @p GridGenerator::extract_boundary_mesh.}
      *
      * \alert{The template parameters @p dim and @p spacedim are for the
      * boundary mesh. For the original volume mesh, the corresponding dimensions
@@ -2584,12 +2419,17 @@ namespace HierBEM
      *
      * @param first_cell_iter
      * @param second_cell_iter
+     * @param first_cell_mapping
+     * @param second_cell_mapping
      * @param map_from_first_boundary_mesh_to_volume_mesh
      * @param map_from_second_boundary_mesh_to_volume_mesh
-     * @param common_vertex_dof_indices A vector of pairs of DoF indices. Each
-     * pair corresponds to a common vertex and in each pair, the first DoF index
-     * is in the first cell, while the second DoF index is in the second cell.
-     * @return
+     * @param common_vertex_pair_dof_indices A vector of pairs of global DoF
+     * indices in the corresponding DoF handlers. Each pair corresponds to a
+     * common vertex shred by the two cells, if any. The first DoF index in the
+     * pair is in the first cell with the first DoF handler, while the second
+     * DoF index in the pair is in the second cell with the second DoF handler.
+     * @param threshold
+     * @return Cell neighboring type
      */
     template <int dim, int spacedim = dim>
     CellNeighboringType
@@ -2607,7 +2447,7 @@ namespace HierBEM
                      typename Triangulation<dim + 1, spacedim>::face_iterator>
         &map_from_second_boundary_mesh_to_volume_mesh,
       std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
-                  &common_vertex_dof_indices,
+                  &common_vertex_pair_dof_indices,
       const double threshold = 1e-12)
     {
       const FiniteElement<dim, spacedim> &first_cell_fe =
@@ -2646,30 +2486,18 @@ namespace HierBEM
         get_vertex_indices_in_face<dim + 1, spacedim>(second_face_iter);
 
       /**
-       * Sort the vertex indices in each face, which is a precondition for
-       * calling the function @p std::set_intersection.
-       */
-      decltype(first_face_vertex_indices) first_face_vertex_indices_sorted(
-        first_face_vertex_indices);
-      decltype(second_face_vertex_indices) second_face_vertex_indices_sorted(
-        second_face_vertex_indices);
-
-      std::sort(first_face_vertex_indices_sorted.begin(),
-                first_face_vertex_indices_sorted.end());
-      std::sort(second_face_vertex_indices_sorted.begin(),
-                second_face_vertex_indices_sorted.end());
-
-      /**
        * Calculate the intersection of the two faces' vertex indices. This
-       * operation is meaningful because the two faces are both pulled back in
+       * operation is meaningful because the two faces are both pulled back into
        * the original volume triangulation.
        */
-      std::vector<types::global_vertex_index> vertex_index_intersection;
-      std::set_intersection(first_face_vertex_indices_sorted.begin(),
-                            first_face_vertex_indices_sorted.end(),
-                            second_face_vertex_indices_sorted.begin(),
-                            second_face_vertex_indices_sorted.end(),
-                            std::back_inserter(vertex_index_intersection));
+      CellNeighboringType cell_neighboring_type;
+      std::vector<types::global_vertex_index>
+        common_vertex_indices_in_volume_mesh;
+      cell_neighboring_type =
+        detect_cell_neighboring_type_for_same_triangulations<dim>(
+          first_face_vertex_indices,
+          second_face_vertex_indices,
+          common_vertex_indices_in_volume_mesh);
 
       /**
        * According to deal.ii's documentation about @p extract_boundary_mesh,
@@ -2681,24 +2509,19 @@ namespace HierBEM
        * domain cells and on the cells of the surface mesh, you may have to
        * translate between vertex locations or quadrature points.
        *
-       * Hence, the local location of the common vertex index in the list of
-       * vertex indices in the face is not the same as that in the list of
-       * vertices in the boundary cell. Therefore, the mapping between vertices
-       * of the cell in the boundary mesh and those of the face in the volume
-       * mesh should be constructed by checking their coordinates.
+       * Hence, the local index of each common vertex in its corresponding face
+       * in the volume mesh is not the same as its local index in the cell in
+       * the surface mesh. Therefore, the correlation mapping between cell
+       * vertices in the surface mesh and those in the face in the volume mesh
+       * should be constructed by matching vertex coordinates.
        */
 
-      /**
-       * Fill the vector of pairs for @p common_vertex_dof_indices. For each
-       * vertex index in the intersection, find the corresponding DoF indices in
-       * the two cells respectively.
-       */
-      common_vertex_dof_indices.clear();
-
+      common_vertex_pair_dof_indices.clear();
       types::global_dof_index common_vertex_dof_index_in_first_cell;
       types::global_dof_index common_vertex_dof_index_in_second_cell;
 
-      for (auto vertex_index_in_volume_mesh : vertex_index_intersection)
+      for (auto vertex_index_in_volume_mesh :
+           common_vertex_indices_in_volume_mesh)
         {
           /**
            * Get the coordinates of the current common vertex.
@@ -2794,14 +2617,13 @@ namespace HierBEM
            * Add the pair of DoF indices associated with the common vertex in
            * the two boundary cells to the list.
            */
-          common_vertex_dof_indices.push_back(
+          common_vertex_pair_dof_indices.push_back(
             std::pair<types::global_dof_index, types::global_dof_index>(
               common_vertex_dof_index_in_first_cell,
               common_vertex_dof_index_in_second_cell));
         }
 
-      CellNeighboringType cell_neighboring_type;
-      switch (vertex_index_intersection.size())
+      switch (common_vertex_indices_in_volume_mesh.size())
         {
           case (0):
             cell_neighboring_type = Regular;
@@ -2825,9 +2647,211 @@ namespace HierBEM
 
 
     /**
-     * Detect the neighboring type of two cells based on their vertex indices.
+     * Detect the cell neighboring type for two cells by checking the
+     * intersection of the DoF indices associated with their vertices. Because
+     * there are vertex DoFs, the finite elements contained in the DoF handlers
+     * should be @p H1. The intersection of the DoF indices is returned via
+     * argument by reference.
      *
-     * \mynote{This is the function actually being called in my program.}
+     * \alert{Comparison of DoF indices implies that the two cells should belong
+     * to a same DoFHandler. Otherwise, there will be two sets of DoF indices,
+     * which cannot be compared.}
+     *
+     * \mynote{N.B. The template argument @p dim of this function cannot be
+     * automatically inducted by the compiler from its input arguments, since
+     * even though the template argument @p GeometryInfo<dim>::vertices_per_cell
+     * of the two input arguments @p first_cell_vertex_dof_indices and
+     * @p second_cell_vertex_dof_indices contains @p dim, the whole
+     * @p GeometryInfo<dim>::vertices_per_cell will be evaluated into an
+     * integer by the compiler, so that @p dim will be discarded.}
+     *
+     * @param first_cell_vertex_dof_indices
+     * @param second_cell_vertex_dof_indices
+     * @param vertex_dof_index_intersection Before calling this function, this
+     * variable should be cleared.
+     * @return Cell neighboring type
+     */
+    template <int dim>
+    CellNeighboringType
+    detect_cell_neighboring_type_for_same_h1_dofhandlers(
+      const std::array<types::global_dof_index,
+                       GeometryInfo<dim>::vertices_per_cell>
+        &first_cell_vertex_dof_indices,
+      const std::array<types::global_dof_index,
+                       GeometryInfo<dim>::vertices_per_cell>
+                                           &second_cell_vertex_dof_indices,
+      std::vector<types::global_dof_index> &vertex_dof_index_intersection)
+    {
+      std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
+        first_cell_vertex_dof_indices_sorted(first_cell_vertex_dof_indices);
+      std::array<types::global_dof_index, GeometryInfo<dim>::vertices_per_cell>
+        second_cell_vertex_dof_indices_sorted(second_cell_vertex_dof_indices);
+
+      std::sort(first_cell_vertex_dof_indices_sorted.begin(),
+                first_cell_vertex_dof_indices_sorted.end());
+      std::sort(second_cell_vertex_dof_indices_sorted.begin(),
+                second_cell_vertex_dof_indices_sorted.end());
+
+      /**
+       * Calculate the intersection of the two cells' vertex DoF indices.
+       */
+      std::set_intersection(first_cell_vertex_dof_indices_sorted.begin(),
+                            first_cell_vertex_dof_indices_sorted.end(),
+                            second_cell_vertex_dof_indices_sorted.begin(),
+                            second_cell_vertex_dof_indices_sorted.end(),
+                            std::back_inserter(vertex_dof_index_intersection));
+
+      CellNeighboringType cell_neighboring_type;
+      switch (vertex_dof_index_intersection.size())
+        {
+          case (0):
+            cell_neighboring_type = Regular;
+            break;
+          case (1):
+            cell_neighboring_type = CommonVertex;
+            break;
+          case (2):
+            cell_neighboring_type = CommonEdge;
+            break;
+          case (4):
+            cell_neighboring_type = SamePanel;
+            break;
+          default:
+            Assert(false, ExcInternalError());
+            cell_neighboring_type = None;
+        }
+
+      return cell_neighboring_type;
+    }
+
+
+    /**
+     * Detect the cell neighboring type for the two cells pointed by the input
+     * cell iterators. This function handles the case when the involved two DoF
+     * handlers are the same, i.e. both the associated finite elements and
+     * triangulations are the same.
+     *
+     * In this case, the vertex indices for the two cells are numbered in a same
+     * index system. Same situation holds for DoF indices for the two cells.
+     * Hence, when the finite element is @p H1, such as @p FE_Q, in each pair
+     * of the returned vector @p common_vertex_pair_dof_indices, the two elements
+     * are the same.
+     *
+     * When the finite element type is @p H1, e.g. @p FE_Q, we get the common
+     * vertex DoF indices by taking the intersection of vertex indices in the
+     * two cells.
+     *
+     * In principle, we can call the function
+     * @p detect_cell_neighboring_type_for_same_triangulations as what is done
+     * for the other case @p L2 element. However, it involves comparison of
+     * point coordinates, which is less efficient.
+     *
+     * @param first_cell_iter
+     * @param second_cell_iter
+     * @param first_cell_mapping
+     * @param second_cell_mapping
+     * @param common_vertex_pair_dof_indices A vector of pairs of DoF indices. Each
+     * pair corresponds to a common vertex and in each pair, the first DoF index
+     * is in the first cell, while the second DoF index is in the second cell.
+     * @param threshold
+     * @return
+     */
+    template <int dim, int spacedim = dim>
+    CellNeighboringType
+    detect_cell_neighboring_type_for_same_dofhandlers(
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+        &first_cell_iter,
+      const typename DoFHandler<dim, spacedim>::active_cell_iterator
+                                   &second_cell_iter,
+      const Mapping<dim, spacedim> &first_cell_mapping,
+      const Mapping<dim, spacedim> &second_cell_mapping,
+      std::vector<std::pair<types::global_dof_index, types::global_dof_index>>
+                  &common_vertex_pair_dof_indices,
+      const double threshold = 1e-12)
+    {
+      /**
+       * Get the finite element, which should be the same for the two cell
+       * iterators.
+       */
+      const FiniteElement<dim, spacedim> &fe = first_cell_iter->get_fe();
+
+      if (fe.conforms(FiniteElementData<dim>::H1))
+        {
+          const unsigned int vertices_per_cell =
+            GeometryInfo<dim>::vertices_per_cell;
+
+          common_vertex_pair_dof_indices.clear();
+
+          /**
+           * Get the list of vertex DoF indices in the two cells
+           */
+          std::array<types::global_dof_index, vertices_per_cell>
+            first_cell_vertex_dof_indices(get_vertex_dof_indices_in_cell(
+              first_cell_iter, first_cell_mapping, threshold));
+
+          std::array<types::global_dof_index, vertices_per_cell>
+            second_cell_vertex_dof_indices(get_vertex_dof_indices_in_cell(
+              second_cell_iter, second_cell_mapping, threshold));
+
+          std::vector<types::global_dof_index> vertex_dof_index_intersection;
+
+          detect_cell_neighboring_type_for_same_h1_dofhandlers<dim>(
+            first_cell_vertex_dof_indices,
+            second_cell_vertex_dof_indices,
+            vertex_dof_index_intersection);
+
+          /**
+           * Fill the vector of pairs for @p common_vertex_dof_indices.
+           */
+          for (auto dof_index : vertex_dof_index_intersection)
+            {
+              common_vertex_pair_dof_indices.push_back(
+                std::pair<types::global_dof_index, types::global_dof_index>(
+                  dof_index, dof_index));
+            }
+
+          CellNeighboringType cell_neighboring_type;
+          switch (common_vertex_pair_dof_indices.size())
+            {
+              case (0):
+                cell_neighboring_type = Regular;
+                break;
+              case (1):
+                cell_neighboring_type = CommonVertex;
+                break;
+              case (2):
+                cell_neighboring_type = CommonEdge;
+                break;
+              case (4):
+                cell_neighboring_type = SamePanel;
+                break;
+              default:
+                cell_neighboring_type = None;
+                Assert(false, ExcInternalError());
+            }
+
+          return cell_neighboring_type;
+        }
+      else if (fe.conforms(FiniteElementData<dim>::L2))
+        {
+          return detect_cell_neighboring_type_for_same_triangulations(
+            first_cell_iter,
+            second_cell_iter,
+            first_cell_mapping,
+            second_cell_mapping,
+            common_vertex_pair_dof_indices);
+        }
+      else
+        {
+          Assert(false, ExcNotImplemented());
+
+          return CellNeighboringType::None;
+        }
+    }
+
+
+    /**
+     * Detect the neighboring type of two cells based on their vertex indices.
      *
      * @param method_for_cell_neighboring_type
      * @param first_cell_iter
@@ -2897,62 +2921,6 @@ namespace HierBEM
 
 
     /**
-     * Calculate the surface Jacobian determinant at the specified area
-     * coordinates. Support points in the real cell should have been
-     * reordered to the lexicographic order before the calculation.
-     *
-     * @param fe
-     * @param support_points_in_real_cell A list of support points in the real
-     * cell in the lexicographic order.
-     * @param p The area coordinates of the point in the unit cell.
-     * @return Surface Jacobian determinant or surface metric tensor
-     */
-    template <int dim, int spacedim>
-    double
-    surface_jacobian_det(
-      const FiniteElement<dim, spacedim> &fe,
-      const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      const Point<dim>                   &p)
-    {
-      /**
-       * \mynote{Currently, only @p dim=2 and @p spacedim=3 are supported.}
-       */
-      Assert((dim == 2) && (spacedim == 3), ExcInternalError());
-
-      Assert(fe.has_support_points(),
-             ExcMessage("The finite element should have support points."));
-
-      /**
-       * Calculate the shape function's gradient matrix, the rows of which are
-       * in the lexicographic order.
-       */
-      LAPACKFullMatrixExt<double> shape_grad_matrix_at_p(
-        shape_grad_matrix_in_lexicographic_order(fe, p));
-
-      /**
-       * Calculate those 2x2 Jacobian determinants appearing in the surface
-       * metric
-       * tensor, namely,\f$J_{01}\f$, \f$J_{12}\f$ and \f$J_{20}\f$.
-       */
-      double                      jacobian_det_squared = 0.0;
-      LAPACKFullMatrixExt<double> jacobian_matrix_2x2(dim, dim);
-      for (unsigned int i = 0; i < spacedim; i++)
-        {
-          LAPACKFullMatrixExt<double> support_point_components =
-            collect_two_components_from_point3(support_points_in_real_cell,
-                                               i,
-                                               (i + 1) % spacedim);
-          support_point_components.mmult(jacobian_matrix_2x2,
-                                         shape_grad_matrix_at_p);
-          jacobian_det_squared +=
-            Utilities::fixed_power<2>(jacobian_matrix_2x2.determinant2x2());
-        }
-
-      return std::sqrt(jacobian_det_squared);
-    }
-
-
-    /**
      * Calculate the surface Jacobian determinant at the quadrature point
      * specified by its index.
      *
@@ -2997,101 +2965,6 @@ namespace HierBEM
         }
 
       return std::sqrt(jacobian_det_squared);
-    }
-
-
-    /**
-     * Calculate the surface Jacobian determinant and the normal vector at the
-     * specified coordinates in the unit cell. Support points in the real cell
-     * should have been reordered to the lexicographic or reversed lexicographic
-     * order before the calculation.
-     *
-     * \mynote{N.B. The reversed lexicographic order appears for \f$K_y\f$ when
-     * the cell neighboring type is common edge. Then the calculated normal
-     * vector \f$n_y\f$ has the opposite direction of the real one, which should
-     * be negated in the subsequent calculation.}
-     *
-     * @param fe
-     * @param support_points_in_real_cell A list of support points in the real
-     * cell in the lexicographic or reversed lexicographic order.
-     * @param p The area coordinates of the point in the unit cell.
-     * @param normal_vector [out] The calculated normal vector. If it belongs to
-     * \f$K_y\f$ and the cell neighboring type is common edge, it should be
-     * negated in the subsequent calculation.
-     * @param is_normal_vector_negated Whether the direction of the computed
-     * normal vector should be negated.
-     * @return Surface Jacobian determinant or surface metric tensor
-     */
-    template <int dim, int spacedim>
-    double
-    surface_jacobian_det_and_normal_vector(
-      const FiniteElement<dim, spacedim> &fe,
-      const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      const Point<dim>                   &p,
-      Tensor<1, spacedim>                &normal_vector,
-      const bool                          is_normal_vector_negated = false)
-    {
-      /**
-       * \mynote{Currently, only @p dim=2 and @p spacedim=3 are supported.}
-       */
-      Assert((dim == 2) && (spacedim == 3), ExcInternalError());
-
-      Assert(fe.has_support_points(),
-             ExcMessage("The finite element should have support points."));
-
-      /**
-       * Calculate the shape function's gradient matrix, the rows of which are
-       * in the lexicographic order.
-       */
-      LAPACKFullMatrixExt<double> shape_grad_matrix_at_p(
-        shape_grad_matrix_in_lexicographic_order(fe, p));
-
-      /**
-       * Calculate those 2x2 Jacobian determinants appearing in the surface
-       * metric
-       * tensor, namely,\f$J_{01}\f$, \f$J_{12}\f$ and \f$J_{20}\f$. These
-       * components are stored in the array @p surface_jacobian_det_components.
-       */
-      double                      surface_jacobian_det = 0.0;
-      LAPACKFullMatrixExt<double> jacobian_matrix_2x2(dim, dim);
-      double                      surface_jacobian_det_components[spacedim];
-      for (unsigned int i = 0; i < spacedim; i++)
-        {
-          LAPACKFullMatrixExt<double> support_point_components =
-            collect_two_components_from_point3(support_points_in_real_cell,
-                                               i,
-                                               (i + 1) % spacedim);
-          support_point_components.mmult(jacobian_matrix_2x2,
-                                         shape_grad_matrix_at_p);
-          surface_jacobian_det_components[i] =
-            jacobian_matrix_2x2.determinant2x2();
-          surface_jacobian_det +=
-            Utilities::fixed_power<2>(surface_jacobian_det_components[i]);
-        }
-
-      surface_jacobian_det = std::sqrt(surface_jacobian_det);
-
-      /**
-       * This loop transform the vector \f$[J_{01}, J_{12}, J_{20}]/\abs{J}\f$
-       * to \f$[J_{12}, J_{20}, J_{01}]/\abs{J}\f$, which is the normal vector.
-       */
-      for (unsigned int i = 0; i < spacedim; i++)
-        {
-          if (is_normal_vector_negated)
-            {
-              normal_vector[i] =
-                -surface_jacobian_det_components[(i + 1) % spacedim] /
-                surface_jacobian_det;
-            }
-          else
-            {
-              normal_vector[i] =
-                surface_jacobian_det_components[(i + 1) % spacedim] /
-                surface_jacobian_det;
-            }
-        }
-
-      return surface_jacobian_det;
     }
 
 

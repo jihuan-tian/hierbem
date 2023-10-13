@@ -739,7 +739,7 @@ namespace HierBEM
                     n_q_points);
 
     /**
-     * Initialize the internal data held in the mapping objects.
+     * Initialize the internal data field in the mapping objects.
      */
     kx_mapping_data.shape_values.resize(kx_mapping_n_shape_functions *
                                         n_q_points);
@@ -837,8 +837,8 @@ namespace HierBEM
          *
          * \alert{Even though the internally generated polynomials in the
          * mapping object are in the tensor product order, the shape function
-         * values and derivatives are still in the hierarchic order. This can be
-         * verified by checking the source code of
+         * values and derivatives within @p InternalData are still stored in the
+         * hierarchic order. This can be verified by checking the source code of
          * @p MappingQ<dim, spacedim>::InternalData::compute_shape_function_values.
          * (see
          * http://localhost/dealii-9.4.1-doc/mapping__q_8cc_source.html#l00271)

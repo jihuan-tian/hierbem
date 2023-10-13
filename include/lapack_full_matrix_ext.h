@@ -2391,8 +2391,8 @@ namespace HierBEM
     const LAPACKFullMatrixExt<Number> &matrix)
   {
     LAPACKFullMatrix<Number>::operator=(matrix);
-    state    = matrix.state;
-    property = matrix.property;
+    state                             = matrix.state;
+    property                          = matrix.property;
     /**
      * Since \p ipiv contains the crucial permutation data if the matrix has been
      * factorized by LU, it needs to be copied.
@@ -2534,8 +2534,8 @@ namespace HierBEM
         for (size_type i = 0; i < nrows; i++)
           {
             // Ignore the row \p row_index during the copy.
-            const size_type ii            = (i < row_index ? i : i + 1);
-                            (*this)(i, j) = copy(ii, j);
+            const size_type ii = (i < row_index ? i : i + 1);
+            (*this)(i, j)      = copy(ii, j);
           }
       }
   }

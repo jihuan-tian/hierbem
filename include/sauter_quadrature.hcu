@@ -7432,10 +7432,10 @@ namespace HierBEM
    * ds_x ds_y.
    * \f]
    * It needs special treatment, i.e. calculation of the surface curl of the
-   * basis functions for ansatz and test functions.}
+   * basis functions for ansatz and test functions.
    *
-   * \mynote{This is only applicable to the case when a full matrix for a
-   * boundary integral operator is to be constructed. Therefore, this function
+   * This function is only used in the case when a full matrix for
+   * a boundary integral operator is to be constructed. Therefore, this function
    * is only meaningful for algorithm verification. In real application, an
    * \hmatrix should be built. Also note that even for the near field matrix
    * node in an \hmatrix, which must be a full matrix, the Sauter's quadrature
@@ -7443,8 +7443,17 @@ namespace HierBEM
    * cells". This is because the two cluster trees associated with an \hmatrix
    * use partition by DoF support points in stead of partition by cells.
    *
-   * Before calling this function, the mapping support points and DoF indices
-   * in \f$K_x\f$ should have been calculated.}
+   * Usually, this function is called in a double loop: the outer loop iterates
+   * over each cell, i.e. \f$K_x\f$, in the test space, while the inner loop
+   * iterates over each cell, i.e. \f$K_y\f$, in the ansatz space. Therefore,
+   * before calling this function, the mapping support points and DoF indices in
+   * \f$K_x\f$ have been calculated in the outer loop and there is no need to
+   * compute them again.
+   *
+   * When this function is called independently for demonstration or
+   * verification purpose, the mapping support points and DoF indices in
+   * \f$K_x\f$ may not have been computed. This condition is indicated in the
+   * flag variable @p is_kx_mapping_internaldata_computed.}
    *
    * @param kernel
    * @param factor
@@ -7456,8 +7465,9 @@ namespace HierBEM
    * @param map_from_ky_mesh_to_volume_mesh
    * @param method_for_cell_neighboring_type
    * @param bem_values
-   * @param scratch
-   * @param data
+   * @param scratch_data
+   * @param copy_data
+   * @param is_kx_mapping_internaldata_computed
    */
   template <int dim,
             int spacedim,
@@ -7465,7 +7475,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   void
-  sauter_assemble_on_one_pair_of_cells(
+  sauter_quadrature_on_one_pair_of_cells(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const typename DoFHandler<dim, spacedim>::active_cell_iterator
@@ -7484,7 +7494,8 @@ namespace HierBEM
       method_for_cell_neighboring_type,
     const BEMValues<dim, spacedim, RangeNumberType>         &bem_values,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    const bool is_kx_mapping_internaldata_computed = true)
   {
     /**
      * Detect the cell neighboring type based on cell vertex indices.
@@ -7514,7 +7525,7 @@ namespace HierBEM
     /**
      * @internal Calculate the mapping support points and DoF indices in the
      * cell \f$K_y\f$ via the mapping object. N.B. Corresponding data for
-     * \f$K_x\f$ have already been calculated in the outer loop of
+     * \f$K_x\f$ may have already been calculated in the outer loop of
      * @p assemble_bem_full_matrix.
      *
      * Because the calculated mapping support points are stored in a member
@@ -7523,7 +7534,169 @@ namespace HierBEM
      * @p ky_mapping is passed as const reference into this function and a
      * local copy @p ky_mapping_copy of it is made.
      */
+    MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
     MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+
+    if (!is_kx_mapping_internaldata_computed)
+      {
+        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping_copy.get_support_points();
+        kx_cell_iter->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
+      }
+
+    ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+    scratch_data.ky_mapping_support_points_in_default_order =
+      ky_mapping_copy.get_support_points();
+    ky_cell_iter->get_dof_indices(
+      scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+    permute_dofs_and_mapping_support_points_for_sauter_quad(
+      scratch_data,
+      copy_data,
+      cell_neighboring_type,
+      kx_cell_iter,
+      ky_cell_iter,
+      kx_mapping_copy,
+      ky_mapping_copy);
+
+    calc_jacobian_normals_for_sauter_quad(cell_neighboring_type,
+                                          bem_values,
+                                          scratch_data,
+                                          active_quad_rule);
+
+    /**
+     * When the bilinear form for the hyper singular operator is evaluated,
+     * the covariant transformation is required.
+     */
+    if (kernel.kernel_type == HyperSingularRegular)
+      {
+        calc_covariant_transformations(cell_neighboring_type,
+                                       bem_values,
+                                       scratch_data,
+                                       active_quad_rule);
+      }
+
+    /**
+     *  Clear the local matrix in case that it is reused from another
+     *  finished task. N.B. Its memory has already been allocated in the
+     *  constructor of @p CellPairWisePerTaskData.
+     */
+    copy_data.local_pair_cell_matrix.reinit(
+      copy_data.kx_local_dof_indices_permuted.size(),
+      copy_data.ky_local_dof_indices_permuted.size());
+
+    // Iterate over DoFs for test function space in \f$K_x\f$.
+    for (unsigned int i = 0; i < kx_n_dofs; i++)
+      {
+        // Iterate over DoFs for trial function space in \f$K_y\f$.
+        for (unsigned int j = 0; j < ky_n_dofs; j++)
+          {
+            // Pullback the kernel function to unit cell.
+            HierBEM::CUDAWrappers::KernelPulledbackToUnitCell<
+              dim,
+              spacedim,
+              KernelFunctionType,
+              RangeNumberType>
+              kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
+
+            // Pullback the kernel function to Sauter parameter space.
+            HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<
+              dim,
+              spacedim,
+              KernelFunctionType,
+              RangeNumberType>
+              kernel_pullback_on_sauter(kernel_pullback_on_unit,
+                                        cell_neighboring_type);
+
+            // Apply Sauter numerical quadrature.
+            copy_data.local_pair_cell_matrix(i, j) =
+              ApplyQuadratureUsingBEMValues(active_quad_rule,
+                                            kernel_pullback_on_sauter,
+                                            kernel_factor,
+                                            bem_values,
+                                            scratch_data);
+          }
+      }
+  }
+
+
+  /**
+   * Perform the Galerkin-BEM double integral with respect to a boundary
+   * integral operator (represented as the input kernel function) using
+   * Sauter's quadrature for the DoFs in a pair of cells \f$K_x\f$ and
+   * \f$K_y\f$.
+   *
+   * This version does not need mapping from cells in the surface mesh to faces
+   * in the volume mesh.
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  void
+  sauter_quadrature_on_one_pair_of_cells(
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator
+      &kx_cell_iter,
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator
+                                                            &ky_cell_iter,
+    const MappingQGenericExt<dim, spacedim>                 &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>                 &ky_mapping,
+    const BEMValues<dim, spacedim, RangeNumberType>         &bem_values,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data,
+    const bool is_kx_mapping_internaldata_computed = true)
+  {
+    /**
+     * Detect the cell neighboring type based on cell vertex indices.
+     */
+    CellNeighboringType cell_neighboring_type =
+      detect_cell_neighboring_type_for_same_triangulations<dim, spacedim>(
+        kx_cell_iter,
+        ky_cell_iter,
+        scratch_data.common_vertex_pair_local_indices);
+
+    /**
+     * Create a quadrature rule, which depends on the cell neighboring type.
+     */
+    const QGauss<dim * 2> active_quad_rule =
+      select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
+                                              bem_values);
+
+    const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
+    const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+
+    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+
+    /**
+     * @internal Calculate the mapping support points and DoF indices in the
+     * cell \f$K_y\f$ via the mapping object. N.B. Corresponding data for
+     * \f$K_x\f$ may have already been calculated in the outer loop of
+     * @p assemble_bem_full_matrix.
+     *
+     * Because the calculated mapping support points are stored in a member
+     * variable in the mapping object @p ky_mapping and several instances of
+     * this function will be called by @p assemble_bem_full_matrix in parallel,
+     * @p ky_mapping is passed as const reference into this function and a
+     * local copy @p ky_mapping_copy of it is made.
+     */
+    MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+    MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+
+    if (!is_kx_mapping_internaldata_computed)
+      {
+        kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping_copy.get_support_points();
+        kx_cell_iter->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
+      }
+
     ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
     scratch_data.ky_mapping_support_points_in_default_order =
       ky_mapping_copy.get_support_points();
@@ -7600,6 +7773,128 @@ namespace HierBEM
   }
 
 
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType = double>
+  RangeNumberType
+  sauter_quadrature_on_one_pair_of_shape_functions(
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                kernel_factor,
+    const unsigned int                                   i,
+    const unsigned int                                   j,
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator
+      &kx_cell_iter,
+    const typename DoFHandler<dim, spacedim>::active_cell_iterator
+                                                            &ky_cell_iter,
+    const MappingQGenericExt<dim, spacedim>                 &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>                 &ky_mapping,
+    const BEMValues<dim, spacedim, RangeNumberType>         &bem_values,
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
+  {
+    /**
+     * Detect the cell neighboring type based on cell vertex indices.
+     */
+    CellNeighboringType cell_neighboring_type =
+      detect_cell_neighboring_type_for_same_triangulations<dim, spacedim>(
+        kx_cell_iter,
+        ky_cell_iter,
+        scratch_data.common_vertex_pair_local_indices);
+
+    /**
+     * Create a quadrature rule, which depends on the cell neighboring type.
+     */
+    const QGauss<dim * 2> active_quad_rule =
+      select_sauter_quad_rule_from_bem_values(cell_neighboring_type,
+                                              bem_values);
+
+    const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
+    const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
+
+    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+
+    /**
+     * @internal Calculate the mapping support points and DoF indices in the
+     * cell \f$K_y\f$ via the mapping object. N.B. Corresponding data for
+     * \f$K_x\f$ may have already been calculated in the outer loop of
+     * @p assemble_bem_full_matrix.
+     *
+     * Because the calculated mapping support points are stored in a member
+     * variable in the mapping object @p ky_mapping and several instances of
+     * this function will be called by @p assemble_bem_full_matrix in parallel,
+     * @p ky_mapping is passed as const reference into this function and a
+     * local copy @p ky_mapping_copy of it is made.
+     */
+    MappingQGenericExt<dim, spacedim> kx_mapping_copy(kx_mapping);
+    MappingQGenericExt<dim, spacedim> ky_mapping_copy(ky_mapping);
+
+    kx_mapping_copy.compute_mapping_support_points(kx_cell_iter);
+    scratch_data.kx_mapping_support_points_in_default_order =
+      kx_mapping_copy.get_support_points();
+    kx_cell_iter->get_dof_indices(
+      scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+    ky_mapping_copy.compute_mapping_support_points(ky_cell_iter);
+    scratch_data.ky_mapping_support_points_in_default_order =
+      ky_mapping_copy.get_support_points();
+    ky_cell_iter->get_dof_indices(
+      scratch_data.ky_local_dof_indices_in_default_dof_order);
+
+    permute_dofs_and_mapping_support_points_for_sauter_quad(
+      scratch_data,
+      copy_data,
+      cell_neighboring_type,
+      kx_cell_iter,
+      ky_cell_iter,
+      kx_mapping_copy,
+      ky_mapping_copy);
+
+    calc_jacobian_normals_for_sauter_quad(cell_neighboring_type,
+                                          bem_values,
+                                          scratch_data,
+                                          active_quad_rule);
+
+    /**
+     * When the bilinear form for the hyper singular operator is evaluated,
+     * the covariant transformation is required.
+     */
+    if (kernel.kernel_type == HyperSingularRegular)
+      {
+        calc_covariant_transformations(cell_neighboring_type,
+                                       bem_values,
+                                       scratch_data,
+                                       active_quad_rule);
+      }
+
+    AssertIndexRange(i, kx_n_dofs);
+    AssertIndexRange(j, ky_n_dofs);
+
+    // Pullback the kernel function to unit cell.
+    HierBEM::CUDAWrappers::KernelPulledbackToUnitCell<dim,
+                                                      spacedim,
+                                                      KernelFunctionType,
+                                                      RangeNumberType>
+      kernel_pullback_on_unit(kernel, cell_neighboring_type, i, j);
+
+    // Pullback the kernel function to Sauter parameter space.
+    HierBEM::CUDAWrappers::KernelPulledbackToSauterSpace<dim,
+                                                         spacedim,
+                                                         KernelFunctionType,
+                                                         RangeNumberType>
+      kernel_pullback_on_sauter(kernel_pullback_on_unit, cell_neighboring_type);
+
+    // Apply Sauter numerical quadrature.
+    return ApplyQuadratureUsingBEMValues(active_quad_rule,
+                                         kernel_pullback_on_sauter,
+                                         kernel_factor,
+                                         bem_values,
+                                         scratch_data);
+  }
+
+
   /**
    * Perform Galerkin-BEM double integral with respect to a given kernel on a
    * pair of DoFs \f$(i, j)\f$ using the Sauter quadrature.
@@ -7646,7 +7941,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   RangeNumberType
-  sauter_assemble_on_one_pair_of_dofs(
+  sauter_quadrature_on_one_pair_of_dofs(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const types::global_dof_index                        i,
@@ -7679,7 +7974,7 @@ namespace HierBEM
   {
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      "sauter_assemble_on_one_pair_of_dofs");
+      "sauter_quadrature_on_one_pair_of_dofs");
 #endif
 
     /**
@@ -8169,7 +8464,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   RangeNumberType
-  sauter_assemble_on_one_pair_of_dofs(
+  sauter_quadrature_on_one_pair_of_dofs(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const RangeNumberType                                mass_matrix_factor,
@@ -8204,7 +8499,7 @@ namespace HierBEM
   {
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      "sauter_assemble_on_one_pair_of_dofs with mass matrix");
+      "sauter_quadrature_on_one_pair_of_dofs with mass matrix");
 #endif
 
     /**
@@ -8766,7 +9061,7 @@ namespace HierBEM
             typename KernelFunctionType,
             typename RangeNumberType = double>
   RangeNumberType
-  sauter_assemble_on_one_pair_of_dofs(
+  sauter_quadrature_on_one_pair_of_dofs(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                kernel_factor,
     const types::global_dof_index                        i,
@@ -8792,7 +9087,7 @@ namespace HierBEM
   {
 #if ENABLE_NVTX == 1
     HierBEM::CUDAWrappers::NVTXRange nvtx_range(
-      "sauter_assemble_on_one_pair_of_dofs for far field");
+      "sauter_quadrature_on_one_pair_of_dofs for far field");
 #endif
 
     /**
