@@ -40,7 +40,7 @@ namespace HierBEM
      *
      * At present, only quad-tree is allowed.
      */
-    static const unsigned int child_num = 4;
+    inline static const unsigned int child_num = 4;
 
     /**
      * Print a whole block cluster tree using recursion.

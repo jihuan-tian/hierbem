@@ -77,7 +77,7 @@ namespace HierBEM
      *
      * At present, only binary tree is allowed.
      */
-    static const unsigned int child_num = 2;
+    inline static const unsigned int child_num = 2;
 
     /**
      * Default constructor, which initializes an empty binary tree.
