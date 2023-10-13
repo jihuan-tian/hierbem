@@ -68,6 +68,12 @@ html/
 # Ignore generated include files
 include/config.h
 
+# Ignore generated scripts
+scripts/init-test*.sh
+
+# Ignore Visual Studio Code settings
+.vscode
+
 # Other manually added files to be ignored
 src/generate_block_cluster_tree
 tests/aca-full-matrix-approximation/2022-03-19-aca-plus-for-full-matrix

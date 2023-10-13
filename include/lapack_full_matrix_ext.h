@@ -4771,17 +4771,17 @@ namespace HierBEM
     const types::blas_int n_rhs  = 1;
     types::blas_int       info   = 0;
 
-    if (state == lu)
+    if (state == State::lu)
       {
         getrs(
           trans, &nn, &n_rhs, values, &nn, ipiv.data(), v.begin(), &nn, &info);
       }
-    else if (state == cholesky)
+    else if (state == State::cholesky)
       {
         potrs(
           &LAPACKSupport::L, &nn, &n_rhs, values, &nn, v.begin(), &nn, &info);
       }
-    else if (property == upper_triangular || property == lower_triangular)
+    else if (property == Property::upper_triangular || property == Property::lower_triangular)
       {
         const char uplo =
           (property == upper_triangular ? LAPACKSupport::U : LAPACKSupport::L);
@@ -4829,7 +4829,7 @@ namespace HierBEM
      * Permute RHS vector if the current matrix is obtained from LU
      * factorization.
      */
-    if (state == lu && permute_rhs_vector)
+    if (state == LAPACKSupport::State::lu && permute_rhs_vector)
       {
         // @p ipiv is the vector storing the permutations applied for pivoting in
         // the LU factorization. Hence, we make an assertion about its size.
