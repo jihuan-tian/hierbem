@@ -13,4 +13,10 @@ SET(TEST_LIBRARIES
     ${OCTAVE_LIBRARIES}
 )
 
+# XXX Relax compiler's pedantic checks to include buggy Octave headers.
+# deal.ii testing framework could generate multiple actual targets
+# based on the given TEST_TARGET. So we can only relax globally
+SET(HBEM_CHECK_RELAXED 1)
+
 DEAL_II_PICKUP_TESTS()
+

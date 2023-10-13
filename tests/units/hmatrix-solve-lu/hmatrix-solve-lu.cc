@@ -61,7 +61,7 @@ TEST_CASE("H-matrix solve equations by LU decomposition", "[hmatrix]")
       }
 
     // Check relative error
-    octave_value out;
+    HBEMOctaveValue out;
     out = inst.eval_string("hmat_rel_err");
     REQUIRE_THAT(out.double_value(),
                  WithinAbs(0.0, 1e-6) || WithinRel(0.0, 1e-8));

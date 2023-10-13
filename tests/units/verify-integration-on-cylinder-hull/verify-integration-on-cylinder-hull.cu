@@ -35,7 +35,7 @@
 using namespace dealii;
 
 int
-main(int argc, char *argv[])
+main(int /* argc */, char * /* argv */[])
 {
   deallog.pop();
   deallog.depth_console(3);
@@ -72,7 +72,9 @@ main(int argc, char *argv[])
    */
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler;
-  dof_handler.initialize(surface_mesh, fe);
+  // dof_handler.initialize(surface_mesh, fe);
+  dof_handler.reinit(surface_mesh);
+  dof_handler.distribute_dofs(fe);
 
   /**
    * Function to be integrated on the cylinder hull. At the moment, it is simply

@@ -16,13 +16,34 @@
 #ifndef HBEM_OCTAVE_WRAPPER_H_
 #define HBEM_OCTAVE_WRAPPER_H_
 
-#include <octave/ov.h>
+#include <string>
 
+class octave_value;
 namespace HierBEM
 {
   // Hide Octave related details
-  class HBEMOctaveWrapperImpl;
+  class HBEMOctaveValueImpl;
+  class HBEMOctaveValue
+  {
+  public:
+    HBEMOctaveValue();
+    HBEMOctaveValue(octave_value const &ov);
+    HBEMOctaveValue(HBEMOctaveValue const &other);
+    void
+    operator=(HBEMOctaveValue const &other);
+    ~HBEMOctaveValue();
 
+    // Old-fashioned proxy methods
+    int
+    int_value() const;
+    double
+    double_value() const;
+
+  private:
+    HBEMOctaveValueImpl *m_impl;
+  };
+
+  class HBEMOctaveWrapperImpl;
   class HBEMOctaveWrapper
   {
   public:
@@ -36,7 +57,7 @@ namespace HierBEM
 
     ~HBEMOctaveWrapper();
 
-    octave_value
+    HBEMOctaveValue
     eval_string(const std::string &eval_str);
     void
     source_file(const std::string &file_name);

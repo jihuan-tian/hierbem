@@ -19,7 +19,7 @@ TEST_CASE("test octave wrapper functionality", "[wrapper]")
 
   SECTION("test single retval eval_string()")
   {
-    octave_value val = inst.eval_string("a=1;\nb=2;\na+b");
+    auto val = inst.eval_string("a=1;\nb=2;\na+b");
     int          out = val.int_value();
     REQUIRE(out == 3);
   }
@@ -28,7 +28,7 @@ TEST_CASE("test octave wrapper functionality", "[wrapper]")
   {
     inst.source_file(SOURCE_DIR "/test.m");
 
-    octave_value val = inst.eval_string("d");
+    auto val = inst.eval_string("d");
     double       out = val.double_value();
     REQUIRE_THAT(out, WithinRel(1.0, 1e-6) || WithinAbs(1.0, 1e-8));
   }

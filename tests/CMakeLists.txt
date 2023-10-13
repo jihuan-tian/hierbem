@@ -1,5 +1,6 @@
 INCLUDE(macro_load_test_deps)
 INCLUDE(macro_sync_test_list)
+INCLUDE(macro_hbem_std_compile_flags)
 
 SET(_test_list_file ${CMAKE_CURRENT_LIST_DIR}/TestCases.cmake)
 
@@ -22,6 +23,10 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/include/hbem_test_config.h.in ${CMAKE
 
 # Add testing config header files to include path
 INCLUDE_DIRECTORIES(APPEND ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Enable more strict compilation for C++ and CUDA
+HBEM_STD_COMPILE_FLAGS()
+
 ADD_SUBDIRECTORY(src)
 
 # Add all testcase subdirectories

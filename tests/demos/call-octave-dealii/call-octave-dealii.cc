@@ -151,7 +151,7 @@ init_octave_interpreter()
 }
 
 int
-main(int argc, const char *argv[])
+main(int /*argc*/, const char * /*argv*/[])
 {
   deallog.depth_console(2);
   deallog.pop();

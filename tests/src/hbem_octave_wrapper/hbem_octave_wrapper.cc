@@ -18,6 +18,48 @@
 
 namespace HierBEM
 {
+  struct HBEMOctaveValueImpl
+  {
+    ::octave_value oct_val;
+  };
+
+  HBEMOctaveValue::HBEMOctaveValue()
+    : m_impl(new HBEMOctaveValueImpl)
+  {}
+
+  HBEMOctaveValue::HBEMOctaveValue(::octave_value const &ov)
+    : m_impl(new HBEMOctaveValueImpl)
+  {
+    m_impl->oct_val = ov;
+  }
+  HBEMOctaveValue::HBEMOctaveValue(HBEMOctaveValue const &other)
+    : m_impl(new HBEMOctaveValueImpl)
+  {
+    m_impl->oct_val = other.m_impl->oct_val;
+  }
+
+  void
+  HBEMOctaveValue::operator=(HBEMOctaveValue const &other)
+  {
+    m_impl->oct_val = other.m_impl->oct_val;
+  }
+
+  HBEMOctaveValue::~HBEMOctaveValue()
+  {
+    delete m_impl;
+  }
+
+  int
+  HBEMOctaveValue::int_value() const
+  {
+    return m_impl->oct_val.int_value();
+  }
+
+  double
+  HBEMOctaveValue::double_value() const
+  {
+    return m_impl->oct_val.double_value();
+  }
 
   struct HBEMOctaveWrapperImpl
   {
@@ -44,7 +86,7 @@ namespace HierBEM
     delete m_impl;
   }
 
-  octave_value
+  HBEMOctaveValue
   HBEMOctaveWrapper::eval_string(const std::string &eval_str)
   {
     int  parse_status;
@@ -53,7 +95,7 @@ namespace HierBEM
       {
         throw std::runtime_error("parse error");
       }
-    return ret;
+    return HBEMOctaveValue(ret);
   }
 
   void
@@ -65,7 +107,7 @@ namespace HierBEM
   void
   HBEMOctaveWrapper::add_path(const std::string &path)
   {
-    octave_value_list in;
+    ::octave_value_list in;
     in(0) = path;
     Faddpath(m_impl->interp, in);
   }
@@ -73,7 +115,8 @@ namespace HierBEM
   HBEMOctaveWrapper &
   HBEMOctaveWrapper::get_instance()
   {
-    static thread_local HBEMOctaveWrapper instance; // Guarantteed to be destroyed
+    static thread_local HBEMOctaveWrapper
+      instance; // Guarantteed to be destroyed
     return instance;
   }
 

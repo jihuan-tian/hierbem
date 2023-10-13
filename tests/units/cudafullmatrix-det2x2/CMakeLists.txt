@@ -3,8 +3,10 @@
 # found by Visual Studio Code's TestMate extension
 SET(_target cudafullmatrix-det2x2-test)
 ADD_EXECUTABLE(${_target} cudafullmatrix-det2x2.cu)
+
 # Allow target to include deal.ii header files
 DEAL_II_SETUP_TARGET(${_target})
+
 TARGET_LINK_LIBRARIES(
     ${_target}
     generic_tools
