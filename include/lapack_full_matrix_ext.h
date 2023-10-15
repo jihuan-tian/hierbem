@@ -4950,7 +4950,7 @@ namespace HierBEM
              * data type is \p matrix.
              */
             std::getline(in, line_buf);
-            Assert(line_buf.compare("# type: matrix") == 0,
+            AssertThrow(line_buf.compare("# type: matrix") == 0,
                    ExcMessage(
                      "Data type for the matrix to be read should be 'matrix'"));
 
@@ -4959,9 +4959,9 @@ namespace HierBEM
              */
             std::getline(in, line_buf);
             std::smatch sm;
-            [[maybe_unused]] bool        found =
+            bool        found =
               std::regex_match(line_buf, sm, std::regex("# rows: (\\d+)"));
-            Assert(found, ExcMessage("Cannot get n_rows of the matrix!"));
+            AssertThrow(found, ExcMessage("Cannot get n_rows of the matrix!"));
             const unsigned int n_rows = std::stoi(sm.str(1));
 
             /**
@@ -4970,11 +4970,11 @@ namespace HierBEM
             std::getline(in, line_buf);
             found =
               std::regex_match(line_buf, sm, std::regex("# columns: (\\d+)"));
-            Assert(found, ExcMessage("Cannot get n_cols of the matrix!"));
+            AssertThrow(found, ExcMessage("Cannot get n_cols of the matrix!"));
             const unsigned int n_cols = std::stoi(sm.str(1));
 
-            Assert(n_rows > 0, ExcMessage("Matrix to be read has no rows!"));
-            Assert(n_cols > 0, ExcMessage("Matrix to be read has no columns!"));
+            AssertThrow(n_rows > 0, ExcMessage("Matrix to be read has no rows!"));
+            AssertThrow(n_cols > 0, ExcMessage("Matrix to be read has no columns!"));
 
             reinit(n_rows, n_cols);
             /**
