@@ -1,0 +1,2042 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage{varwidth}
+\input{tech-doc-preamble}
+
+\begin{document}
+\emergencystretch 10em
+\title{Theory and Implementation of HierBEM}
+\author{Jihuan Tian \footnote{\myemail}}
+\maketitle
+\tableofcontents
+
+\section{Basic definitions and conventions}
+
+\begin{enumerate}
+\item Use $x$ for the field point, while $y$ for the source point.
+\item Use the subscript $i$ for test functions, while $j$ for ansatz functions.
+\item Use the subscript $i$ for basis functions on the field point, while $j$ for those on
+  the source point.
+\end{enumerate}
+
+\section{Miscellaneous algorithms}
+
+\subsection{Conversion between multi-dimensional indices and linear index}
+
+Let the array have $d$ dimensions and the sizes in these dimensions are
+$(n_0, \cdots, n_{d-1})$. Let the multi-dimensional indices for accessing the array be
+$(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
+
+\begin{Definition}[C style index]  
+  In the multi-dimensional indices $(i_0,\cdots,i_{d-1})$, the right most index component
+  $i_{d-1}$ runs the fastest, then $i_{d-1}, i_{d-2} \cdots$, and so on.
+\end{Definition}
+
+\begin{Definition}[Fortran style index]
+  In the multi-dimensional indices $(i_0,\cdots,i_{d-1})$, the left most index component
+  $i_{0}$ runs the fastest, then $i_1, i_2 \cdots$, and so on.
+\end{Definition}
+
+\begin{breakablealgorithm}
+  \caption{Convert multi-dimensional indices $(i_0,\cdots,i_{d-1})$ to linear index $I$ using C style}
+  \begin{algorithmic}[1]
+    \State $I = i_0$
+    \For{$k \gets 1, \cdots, d-1$}
+      \State $I \coloneqq I \cdot n_k + i_k$
+    \EndFor
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\begin{breakablealgorithm}
+  \caption{Convert multi-dimensional indices $(i_0,\cdots,i_{d-1})$ to linear index $I$ using Fortran style}
+  \begin{algorithmic}[1]
+    \State $I = i_{d-1}$
+    \For{$k \gets d-2, \cdots, 0$}
+      \State $I \coloneqq I \cdot n_k + i_k$
+    \EndFor
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\begin{breakablealgorithm}
+  \caption{Convert linear index $I$ to multi-dimensional indices $(i_0,\cdots,i_{d-1})$ using C style}
+  \begin{algorithmic}[1]
+    \For{$k \gets d-1, \cdots, 1$}
+      \State $i_{k} \coloneqq I \bmod n_k$
+      \State $I \coloneqq I/n_k$
+    \EndFor
+
+    \State $i_0 \coloneqq I$
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\begin{breakablealgorithm}
+  \caption{Convert linear index $I$ to multi-dimensional indices $(i_0,\cdots,i_{d-1})$ using Fortran style}
+  \begin{algorithmic}[1]
+    \For{$k \gets 0, \cdots, d-2$}
+      \State $i_{k} \coloneqq I \bmod n_k$
+      \State $I \coloneqq I/n_k$
+    \EndFor
+
+    \State $i_{d-1} \coloneqq I$
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\section{Sauter quadrature}
+\label{sec:sauter-quad}
+
+\subsection{Matrix entry of discretized bilinear form}
+
+Sauter quadrature is used to compute the singular double surface integral in Galerkin BEM.
+Let $k(x,y)$ be the kernel function associated with a boundary integral operator $A$. Let
+$\psi(x)$ be a function in the test space and $\varphi(y)$ be a function in the ansatz
+space. The bilinear form with respect to $A$ is $b_A$:
+\begin{equation}
+  \label{eq:bem-bilinear-form-general}
+  b_A(\psi, \varphi) = \int_{\Gamma}\psi(x)\int_{\Gamma}k(x,y)\varphi(y) \intd s_y \intd s_x,
+\end{equation}
+which appears in the variational formulation of boundary integral equations. $\varphi(y)$
+can either be the unknown function to be solved or a given distribution of boundary data.
+
+We use finite dimensional functional spaces to approximate the original test and ansatz
+spaces of infinite dimensions. Let $\left\{ \psi_i(x) \right\}_{i=1}^m$ be the basis of
+the test space and $\left\{ \varphi_j(y) \right\}_{j=1}^n$ be the basis of the ansatz
+space. Then $\varphi(y)$ can be expanded as finite series:
+\begin{equation}
+  \varphi(y) = \sum_{i=1}^n a_i\varphi_i(y).
+\end{equation}
+Instead of using one arbitrary $\varphi(x)$ as the test function in
+\eqref{eq:bem-bilinear-form-general}, we use each $\psi_i(x)$ in the basis of the test
+space independently so $m$ equations are obtained:
+\begin{equation}
+  \begin{aligned}
+    b_A(\psi_1,\varphi) &=
+    \int_{\Gamma}\psi_1(x)\int_{\Gamma}k(x,y) \left( \sum_{i=1}^na_i\varphi_i(y) \right) \intd s_y \intd
+    s_x = \sum_{i=1}^n \left( \int_{\Gamma}\psi_1(x)\int_{\Gamma}k(x,y) \varphi_i(y) \intd s_y
+    \intd s_x  \right) a_i, \\
+    &\vdots \\
+    b_A(\psi_m,\varphi) &=
+    \int_{\Gamma}\psi_m(x)\int_{\Gamma}k(x,y) \left( \sum_{i=1}^na_i\varphi_i(y) \right) \intd s_y \intd
+    s_x = \sum_{i=1}^n \left( \int_{\Gamma}\psi_m(x)\int_{\Gamma}k(x,y) \varphi_i(y) \intd s_y
+    \intd s_x  \right) a_i.
+  \end{aligned}
+\end{equation}
+Let $\mathscr{A}$ be a matrix with its entry
+\begin{equation}
+  \label{eq:bilinear-form-matrix-entry}
+  \mathscr{A}_{ij} = \int_{\Gamma} \psi_i(x) \int_{\Gamma} k(x,y)\varphi_j(y) \intd s_y
+  \intd s_x.
+\end{equation}
+Let $a=(a_1,\cdots,a_n)^{\mathrm{T}}$ and
+$b=(b_A(\psi_1,\varphi),\cdots,b_A(\psi_m,\varphi))^{\mathrm{T}}$, the above set of
+equations can be written as
+\begin{equation}
+  b = \mathscr{A} a.
+\end{equation}
+The matrix $\mathscr{A}$ is the discretization of the bilinear form $A$. The vector $a$ is
+the discretization of the distribution $\varphi(y)$. The original single boundary integral
+equation is discretized into $m$ independent equations.
+
+\subsection{Basis functions and shape functions}
+
+Usually, functions with small compact support, i.e. the pre-image of non-zero function
+values is confined in a bounded and closed domain, are adopted as basis functions for both
+test and ansatz spaces. This means a basis function only span a few cells in the mesh (see
+Figure \ref{fig:basis-function-with-compact-support}).
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth, height=\textheight,
+  keepaspectratio]{figures/basis-function-with-compact-support-on-mesh-draft}
+  \caption{}
+  \label{fig:basis-function-with-compact-support}
+\end{figure}
+Taking Lagrange finite element \texttt{FE\_Q} as example, the construction of a basis
+function needs the following steps:
+\begin{enumerate}
+\item Define a bunch of polynomials $\left\{ \hat{P}_k(\hat{x}) \right\}_{k=1}^N$ on a
+  standard cell $\hat{\tau}=[0,1]^2$. $\hat{\tau}$ is called the reference cell and the
+  polynomials are called shape functions. Each shape function $\hat{P}_k$ is associated
+  with a support point $\hat{p}_k$, at which $\hat{P}_k$ is evaluated to 1. At the support
+  points of the other shape functions, $\hat{P}_k$ is zero, i.e.
+  $\hat{P}_k(\hat{p}_{l}) = \delta_k^l$.
+\item For each real cell $\tau$ in the mesh, there is the map
+  $\chi_{\tau}: \hat{\tau} \rightarrow \tau$ and its inverse
+  $\chi_{\tau}^{-1}: \tau \rightarrow \hat{\tau}$. Therefore, the shape functions
+  transformed onto the real cell are $P_k^{\tau}(x) = \hat{P}_k(\chi_{\tau}^{-1}(x))$, which is
+  the composition of $\hat{P}_k$ and $\chi_{\tau}^{-1}$.
+\item The basis function $\varphi_i$ is also associated with a support point $p_i$ in the
+  real mesh. $p_i$ is usually shared by several neighboring cells
+  $\left\{ \tau_{i_{e}} \right\}_{e=1}^{E(i)}$, where $i_e$ is the global cell index of
+  the $e$-th cell which contains $p_i$ and $E(i)$ is the total number of cells containing
+  $p_i$. In any of these cells $\tau_{i_e}$, there is a support point $\hat{p}_k$ and
+  associated shape function $\hat{P}_k$ in the reference cell, such that
+  $\chi_{\tau_{i_e}}(\hat{p}_k) = p_i$. N.B. For a different $\tau_{i_e}$, the shape
+  function index $k$ in $\hat{P}_k$ is usually different and we can define a function
+  $k(i, e)$ which returns the shape function index. The counterpart polynomial of
+  $\hat{P}_{k(i_e)}$ in the real cell $\tau_{i_e}$ is $P_{k(i, e)}^{\tau_{i_e}}$. Then the
+  basis function $\varphi_i$ is a piecewise combination of all such shape functions in the
+  real cells $\left\{ \tau_{i_e} \right\}_{e=1}^{E(i)}$:
+  \begin{equation}
+    \label{eq:basis-function-from-shape-functions}
+    \varphi_i(x) = P_{k(i,e)}^{\tau_{i_e}}(x) = \hat{P}_{k(i,e)}\tau_{i_e}^{-1}(x) \quad x\in\tau_{i_e}, e=1,\cdots,E(i).
+  \end{equation}
+\end{enumerate}
+
+Second order Lagrange shape functions on the reference cell are shown in Figure \ref{fig:lagrange-shape-functions}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(0,0)}
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(0,1)}
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(0,2)}
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(1,0)}
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(1,1)}
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(1,2)}
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(2,0)}
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(2,1)}
+  \includegraphics[width=0.3\textwidth, height=\textheight,
+  keepaspectratio]{figures/n=2_k=(2,2)}
+  \caption{}
+  \label{fig:lagrange-shape-functions}
+\end{figure}
+
+Figure \ref{fig:local-shape-function-and-global-dof} shows the numbering of vertices and
+cells in the mesh, local shape function indices in each cell, shape function indices
+related to the global basis function or DoF with the index 10. N.B. The shape functions in
+each cell are in the lexicographic order and the first shape function starts from the
+first vertex in the cell.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth, height=\textheight, keepaspectratio]{figures/shape-function-index-and-global-dof-index-draft}
+  \caption{}
+  \label{fig:local-shape-function-and-global-dof}
+\end{figure}
+
+When basis functions with compact support are adopted for test and ansatz spaces, the
+integration domain will be restricted to only a few cells and the
+computation of matrix entry $\mathscr{A}_{ij}$ in \eqref{eq:bilinear-form-matrix-entry}
+now becomes
+\begin{equation}
+  \label{eq:bilinear-form-matrix-entry-cell-pairs}
+  \begin{aligned}
+    \mathscr{A}_{ij} &= \int_{\left\{ \tau_{i_{e}} \right\}_{e=1}^{E(i)}} \psi_i(x)
+    \int_{\left\{ \tau_{j_{e'}} \right\}_{e'=1}^{E(j)}} k(x,y)\varphi_j(y) \intd s_y \intd
+    s_x \\
+    &= \sum_{e=1}^{E(i)} \sum_{e'=1}^{E(j)} \int_{\tau_{i_e}} \psi_i(x)
+  \int_{\tau_{j_{e'}}} k(x,y)\varphi_j(y) \intd s_y \intd s_x \\
+    &= \sum_{e=1}^{E(i)} \sum_{e'=1}^{E(j)} \int_{\tau_{i_e}} P_{k(i,e)}^{\tau_{i_e}}(x)
+  \int_{\tau_{j_{e'}}} k(x,y) P_{k(j,e')}^{\tau_{j_e}}(y) \intd s_y \intd s_x.
+  \end{aligned}
+\end{equation}
+This indicates that an entry $\mathscr{A}_{ij}$ in the matrix of a bilinear form is
+ contributed from the interaction of a shape function within each cell in the support of $\psi_i(x)$ and a shape function within each cell in the support of $\varphi_j(y)$. Therefore, a double loop is needed to compute $\mathscr{A}_{ij}$.
+
+\subsection{Surface integral in 3D space}
+
+Let $S$ be a surface in the 3D space $\mathbb{R}^3$. Since $S$ is intrinsically a 2D
+object (it may be curved), it can be characterized with only two coordinate variables.
+Even though $S$ may not be represented in a unique \emph{global} 2D coordinate frame, $S$
+can be partitioned into a collection of subdomains, each of which can be assigned a
+\emph{local} 2D coordinate frame or chart. When any two of the charts have an overlap, any
+point in their intersection should have consistent coordinates when its coordinates in two
+local frames are transformed into the global frame. Meanwhile, the transformations between
+these local 2D frames are differentiable. The set of all these local frames forms a
+complete representation of the whole surface $S$, which is called \emph{atlas}. Then $S$
+is called a 2D \emph{differential manifold} embedded in $\mathbb{R}^3$ and $\mathbb{R}^3$
+is the ambient space of $S$. These are basic concepts in differential geometry.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth, height=\textheight, keepaspectratio]{figures/manifold-draft}
+  \caption{}
+  \label{fig:differential-manifold}
+\end{figure}
+A typical example of a 2D differential manifold is the sphere. As shown in Figure
+\ref{fig:sphere-manifold}, six open sets on the sphere can be assigned their individual
+local coordinate frames.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth, height=\textheight, keepaspectratio]{figures/coordinate-chart-for-sphere-draft}
+  \caption{}
+  \label{fig:sphere-manifold}
+\end{figure}
+In FEM or BEM, the geometric model for simulation is built in the ambient space
+$\mathbb{R}^3$. Then we discretize the geometric domain into a triangulation
+$\mathcal{T}$, construct finite element basis functions directly on the reference cell
+$\hat{\tau}$ and maintain a set of maps
+$\left\{ \chi_{\tau} \right\}_{\tau\in\mathcal{T}}$ from the reference to cell
+$\hat{\tau}$ to each real cell $\tau$ in the triangulation $\mathcal{T}$ (see Figure
+\ref{fig:mesh-manifold}). This process is equivalent to creating an atlas, in which each
+coordinate chart is local to each cell. We can say FEM or BEM itself is an direct
+embodiment of the spirit of differential geometry.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth, height=\textheight, keepaspectratio]{figures/coordinate-chart-for-mesh-draft}
+  \caption{}
+  \label{fig:mesh-manifold}
+\end{figure}
+
+Let $\mathbb{R}^3$ be parameterized by $(x_1,x_2,x_3)$. Let the integration domain
+$\Gamma$ in (\ref{eq:bilinear-form-matrix-entry}) be locally parameterized by
+$(\hat{x}_1,\hat{x}_2)$, i.e. in each cell $\tau$ in $\Gamma$, the coordinate frame of its
+reference cell is adopted. Because double integral is involved, for each pair of cells, the actual integration
+domain is a 4D hyper-cube $[0,1]^4$. Because both shape functions and quadrature points
+are defined on reference cells, it is easy do calculus in reference cells.
+
+When a coordinate transformation is applied to a surface integral, a scaling of the
+integral element $\partial \hat{x}_1 \wedge \partial \hat{x}_2$ is needed. On a curved
+surface or 2D manifold, such scaling is the area of the parallelogram spanned by the
+tangent vectors $\frac{\pdiff x}{\pdiff \hat{x}_1}$ and
+$\frac{\pdiff x}{\pdiff \hat{x}_2}$ (see Figure \ref{fig:surface-element-scaling}).
+\footnote{In a cell $\tau$, the transformation from $(\hat{x}_1, \hat{x}_2)$ to $x$ is
+  just $\chi_{\tau}$.}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth, height=\textheight, keepaspectratio]{figures/surface-element-scaling-draft}
+  \caption{}
+  \label{fig:surface-element-scaling}
+\end{figure}
+The scaling factor is equal to the amplitude of the cross product of the two tangent
+vectors:
+\begin{equation}
+  \tilde{\vect{e}}_3=\tilde{\vect{e}}_1\times\tilde{\vect{e}}_2=\left\vert\begin{matrix}
+      \vect{i} & \vect{j} & \vect{k} \\
+      \frac{\pdiff x_{1}}{\pdiff \hat{x}_{1}} & \frac{\pdiff x_{2}}{\pdiff \hat{x}_{1}} & \frac{\pdiff
+        x_{3}}{\pdiff \hat{x}_{1}} \\
+      \frac{\pdiff x_{1}}{\pdiff \hat{x}_{2}} & \frac{\pdiff x_{2}}{\pdiff \hat{x}_{2}} & \frac{\pdiff
+        x_{3}}{\pdiff \hat{x}_{2}}
+    \end{matrix}\right\vert=
+  \left\vert\frac{\pdiff (x_{2},x_{3})}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert \vect{i} +
+  \left\vert\frac{\pdiff (x_{3},x_{1})}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert \vect{j} +
+  \left\vert\frac{\pdiff (x_{1},x_{2})}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert \vect{k}
+\end{equation}
+
+\begin{mycomment}
+  Note the order of the subscripts: $(2,3)$, $(3,1)$, $(1,2)$. If the subscript starts from 0, we
+  have $(1,2)$, $(2,0)$, $(0,1)$. Such cyclic indices are similar to those appearing in the $\curl$
+  operation, for example,
+  \begin{equation}
+    \curl\vect{A} =
+    \left\vert\begin{matrix}
+        \vect{i} & \vect{j} & \vect{k} \\
+        \frac{\pdiff }{\pdiff x_1} & \frac{\pdiff }{\pdiff x_2} & \frac{\pdiff }{\pdiff x_3} \\
+        A_1 & A_2 & A_3
+    \end{matrix}\right\vert = \left( \frac{\pdiff A_3}{\pdiff x_{\emphr{2}}} - \frac{\pdiff A_{2}}{\pdiff
+      x_{\emphr{3}}} \right) \vect{i} + \left( \frac{\pdiff A_{1}}{\pdiff x_{\emphr{3}}} -
+    \frac{\pdiff A_{3}}{\pdiff x_{\emphr{1}}} \right) \vect{j} + \left( \frac{\pdiff A_{2}}{\pdiff
+      x_{\emphr{1}}} - \frac{\pdiff A_{1}}{\pdiff x_{\emphr{2}}} \right) \vect{k}.
+  \end{equation}
+  The cyclic indices can be generated by using the $\mod$ operation as below.
+  \begin{enumerate}
+  \item When the index starts from 0:
+    \begin{breakablealgorithm}
+      \caption{Generate curl-like pairs of cyclic indices ($starting\_index \equiv 0$)}
+      \begin{algorithmic}[1]
+        \For {$i=[0,1,2]$}
+          \State {(i\%3, (i+1)\%3)}
+        \EndFor
+      \end{algorithmic}
+    \end{breakablealgorithm}
+    It produces the index pairs $(0,1), (1,2), (2,0)$.
+  \item When the index starts from 1:
+    \begin{breakablealgorithm}
+      \caption{Generate curl-like pairs of cyclic indices ($starting\_index \equiv 1$)}
+      \begin{algorithmic}[1]
+        \For {$i=[1,2,3]$}
+          \State {$([(i-1)\%3]+1, i\%3+1)$}
+        \EndFor
+      \end{algorithmic}
+    \end{breakablealgorithm}
+    It produces the index pairs $(1,2),(2,3),(3,1)$.
+  \end{enumerate}
+
+  \alertbox{It can be seen that using indices starting from zero is more convenient than
+    starting from 1.}
+\end{mycomment}
+
+Let $\abs{J_{23}} = \left\vert \frac{\pdiff (x_2,x_3)}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert$,
+$\abs{J_{31}} = \left\vert \frac{\pdiff (x_3,x_1)}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert$ and
+$\abs{J_{12}} = \left\vert \frac{\pdiff (x_1,x_2)}{\pdiff (\hat{x}_1,\hat{x}_2)}\right\vert$. Then
+the unit normal vector at $(\hat{x}_1,\hat{x}_2)$ is
+\begin{equation}
+  \label{eq:surface-normal-vector}
+  \vect{n} = \frac{(\abs{J_{23}},\abs{J_{31}},\abs{J_{12}})^T}{(\abs{J_{23}}^2+\abs{J_{31}}^2+\abs{J_{12}}^2)^{\frac{1}{2}}}.
+\end{equation}
+The scaling factor or surface metric is
+\begin{equation}
+  \label{eq:surface-metric}
+  \abs{J} = (\abs{J_{23}}^2+\abs{J_{31}}^2+\abs{J_{12}}^2)^{\frac{1}{2}}.
+\end{equation}
+
+$\abs{J}$ can also be calculated from the Gramian matrix $G = J^TJ$, with $J$ being the
+Jacobi matrix of the map from unit cell to real cell:
+\begin{equation}
+  \label{eq:surface-metric-from-gramian-matrix}
+  \abs{J} = \sqrt{\det(G)} = \sqrt{\det(J^TJ)}.
+\end{equation}
+The covariant matrix $C$ can also be calculated from $G$, which will be used for
+coordinate transformation of gradient vector:
+\begin{equation}
+  \label{eq:covariant-matrix}
+  C = J G^{-1} = J(J^TJ)^{-1}.
+\end{equation}
+
+In a cell $K^e$, let the number of DoFs for geometry representation be $n$. The coordinate
+components of $x\in K^e$ are the linear combination of shape functions:
+\begin{equation}
+  \begin{split}
+    x &= \sum_{i=1}^n x_iN_i(\xi_1,\xi_2) \\
+    y &= \sum_{i=1}^n y_iN_i(\xi_1,\xi_2) \\
+    z &= \sum_{i=1}^n z_iN_i(\xi_1,\xi_2)
+  \end{split}
+\end{equation}
+
+General form of the integrals to be handled in BEM:
+\begin{equation}
+  \int_{\Gamma} \varphi_i(x) \int_{\Gamma}k(x,y,y-x) \varphi_j(y) \intd s_y \intd s_x
+\end{equation}
+\begin{equation}
+  \int_{\Gamma}\varphi_i(x)\int_{\Gamma}k(x,y,y-x)r(y) \intd s_y \intd s_x
+\end{equation}
+where $r(y)$ is a given function on the right-hand side. If $r(y)$ is expanded by the basis
+functions $\{\varphi_j(y)\}_{j\geq 1}$, this second integral is the same as the first one.
+
+For integration over pairs of panels $\tau\times t$, there are four cases to be handled:
+\begin{enumerate}
+\item Identical panels
+\item Common edge
+\item Common vertex
+\item Regular
+\end{enumerate}
+
+\subsection{Cell mapping}
+
+As said above, the map from a reference cell to a real cell is $\chi_{\tau}: \hat{\tau}
+\rightarrow \tau$. Moreover, in Sauter quadrature, 
+
+
+\subsection{Detection of cell neighboring types}
+
+\begin{itemize}
+\item 
+\end{itemize}
+
+\subsection{Ordering of support points}
+
+Assume there is a 4x4 grid assigned with the two kinds of numbering, lexicographic and hierarchic. Use the grid point as the physical entity for establishing an equivalence or mapping relation between the two types of numbering.
+
+Under this notion, the function \texttt{FETools::lexicographic\_to\_hierarchic\_numbering} returns an array of indices in the hierarchic numbering, which corresponds to the list of lexicographic numbering in the natural order \(0,1,\cdots,15\). The array is
+\begin{lstlisting}[language=text]
+[0,8,9,1,4,12,13,6,5,14,15,7,2,10,11,3]
+\end{lstlisting}
+
+which can be considered as the mapping from lexicographic numbering to hierarchic numbering, or as the assignment of the hierarchic numbering to the lexicographic numbering.
+
+On the contrary, the function \texttt{FETools:hiergraphic\_to\_lexicographic\_numbering}
+returns an array of indices in the lexicographic numbering, which corresponds to the list
+of hierarchic numbering in the natural order \(0,1,\cdots,15\). The array is
+\begin{lstlisting}[language=text]
+[0,3,12,15,4,8,7,11,1,2,13,14,5,6,9,10]
+\end{lstlisting}
+
+Another understanding is like this. For \texttt{FETools::lexicographic\_to\_hierarchic\_numbering}, it is equivalent to think a list of naturally ordered numbering \(0,1,\cdots,15\) arranged in the space in the hierarchic order, which is to be accessed in the lexicographic order. Similarly, for \texttt{FETools::hierarchic\_to\_lexicographic\_numbering}, it is a list of naturally ordered numbering arranged in the space int he lexicographic order, which is to be accessed in the hierarchic order.
+
+Generally, assume there are two sets of numbering \(A\) and \(B\) assigned to a same grid. A direct index mapping from \(A\) to \(B\) is used to access in the order \(A\) a naturally ordered numbering, which is arranged in the space in the order \(B\).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.3\textwidth]{figures/2022-05-25-lexicographic-numbering.eps}
+\caption{Lexicographic numbering assigned to a 4x4 gird.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.3\textwidth]{figures/2022-05-25-hierarchic-numbering.eps}
+\caption{Hierarchic numbering assigned to a 4x4 grid.}
+\end{figure}
+
+\subsection{Reason for making local copies of mapping objects in
+  \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} and
+  \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells}}
+
+At the moment, in the \texttt{LaplaceBEM} class, there are only two mapping objects \texttt{kx\_mapping} and \texttt{ky\_mapping} of the type \texttt{MappingQGenericExt} defined. When calling the member function \texttt{MappingQGenericExt::compute\_mapping\_support\_points}, the member variable \texttt{support\_points} in \texttt{MappingQGenericExt} will be overwritten.
+
+\begin{enumerate}
+\item \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells} is called by \texttt{assemble\_bem\_full\_matrix}. In this function, the outer loop iterates over each cell in the test space, while the TBB parallelized inner loop iterates over each cell in the trial space. In the outer loop, the mapping support points and DoF indices are computed for \(K_x\) in the main thread without parallelism. In the inner loop, several working threads need to calculate the mapping support points and DoF indices for their own \(K_y\) in parallel. Hence, if these threads operates directly on only one instance of \texttt{ky\_mapping}, there will be resource competition and memory inconsistency.
+
+Therefore, the current solution is to pass \texttt{kx\_mapping} and \texttt{ky\_mapping} into \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells} via \texttt{const} references. Inside this function, a local copy associated with the thread is made for \texttt{ky\_mapping} for calculating the mapping support points and DoF indices. Since \texttt{kx\_mapping} related data have already been computed in the outer loop in \texttt{assemble\_bem\_full\_matrix}, there is no need to recalculate it in \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells}.
+
+\item \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} is called by \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus}, which itself contains double loops, with the outer loop iterating over the cells in the support of the \(i\)-th DoF and the inner loop iterating over the cells in the support of the \(j\)-th DoF. Because \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus} will be executed in several TBB threads at the same time, computation of the mapping support points should be performed in thread dependent local copies of \texttt{kx\_mapping} and \texttt{ky\_mapping}. Similar to the treatment in \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells}, \texttt{kx\_mapping} and \texttt{ky\_mapping} are passed as const references into \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs}. Inside this function, a local copy of \texttt{kx\_mapping} is made in the outer loop and another copy of \texttt{ky\_mapping} is made in the inner loop.
+\end{enumerate}
+
+\subsection{Identical panels}
+
+The integral is performed in the sense of Cauchy principal value:
+\begin{equation}
+  \int_{\tau} \varphi_i(x) \; p.v.\int_{\tau}k(x,y,y-x) \varphi_j(y) \intd s_y \intd s_x
+\end{equation}
+
+Merge the basis function $\varphi_i$ and $\varphi_j$ into the kernel, we define
+$k_1(x,y,z)=\varphi_i(x)k(x,y,z)\varphi_j(y)$. For $x\in\tau$ and sufficiently small
+$\varepsilon_0>0$, define
+\begin{equation}
+  I_{\varepsilon}\coloneqq \int_{\tau}\int_{\tau\backslash B_{\varepsilon}(x)} k_1(x,y,y-x) \intd
+  s_y \intd s_x
+\end{equation}
+
+Let $\chi_{\tau}: \hat{\tau} \rightarrow \tau$ be the map from the reference cell to the real cell
+$\tau$. Then pull back the function $k_1$ from the real cell to the reference cell, define the
+function $k_2$:
+\begin{equation}
+  k_2(\hat{x}, \hat{y}) \coloneqq k_1(\chi_{\tau}(\hat{x}), \chi_{\tau}(\hat{y}), \chi_{\tau}(\hat{y})
+  - \chi_{\tau}(\hat{x})) g_{\tau}(\hat{x}) g_{\tau}(\hat{y})
+\end{equation}
+where $g_{\tau}(\hat{x})$ is the Jacobian determinant of the map $\chi_{\tau}$ which is evaluated at
+$\hat{x}$.
+
+\subsection{Common edge}
+
+\subsubsection{Permutation of the support points and DoF indices}
+
+\draft{About finding the starting vertex}
+
+Assume the list of support points are arranged the lexicographic or reversed lexicographic order.
+Extract those support points located at cell vertices. Then if we swap the last two vertex support
+points, the list of vertex support points will be in either clockwise or counter-clockwise order.
+
+\draft{General work flow}
+
+This part handles the common edge case of Sauter's quadrature rule.
+\begin{enumerate}
+\item Get the DoF indices in the lexicographic order for $K_x$.
+\item Get the DoF indices in the reversed lexicographic order for $K_y$.
+\item Extract only those DoF indices which are located at cell vertices in $K_x$ and $K_y$.
+  N.B. The DoF indices for the last two vertices are swapped, such that the four vertices are in
+  either clockwise or counter clockwise order.
+\item Determine the starting vertex for $K_x$ and regenerate the permutation numbering for
+  traversing in the forward lexicographic order by starting from this vertex.
+\item Determine the starting vertex for $K_y$ and regenerate the permutation numbering for
+  traversing in the backward lexicographic order by starting from this vertex.
+\item Apply permutation to support points and DoF indices using the newly generated permutation
+  numbering schemes.
+\end{enumerate}
+
+
+\subsection{Common vertex}
+
+\subsection{General formulation}
+
+The integrand in local coordinates for the reference cell is
+\begin{equation}
+  k_3(\hat{x}, \hat{y}) \coloneqq \hat{\varphi_i}(\hat{x})\hat{\varphi_j}(\hat{y})
+  k(\chi_{\tau}(\hat{x}), \chi_{\tau}(\hat{y}), \chi_{\tau}(\hat{y}) 
+  - \chi_{\tau}(\hat{x})) g_{\tau}(\hat{x}) g_{\tau}(\hat{y})
+\end{equation}
+The integral on pairs of panels is
+\begin{equation}
+  I_{\tau\times t} \coloneqq \int_{\hat{\tau}} p.v. \int_{\hat{t}} k_3(\hat{x},\hat{y}) \intd
+  \hat{y} \intd \hat{x}
+\end{equation}
+The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the parameter space.
+
+\subsection{Cell pair configuration and permutation of DoFs}
+
+\subsubsection{Common edge case}
+
+\begin{itemize}
+\item Because the DoFs in $K_y$ are accessed in the reversed lexicographic order due to permutation,
+  the calculated surface normal vector $n_y$ using Equation \eqref{eq:surface-normal-vector} has a
+  direction opposite to the real normal vector. Therefore, it should be negated when it is used in
+  the kernel function evaluation.
+\item Extract the DoFs of the four vertices in $K_x$ and $K_y$ to determine the common edge and the
+  starting point. Because the DoFs are accessed in the lexicographic or reversed lexicographic
+  order, the vertices corresponding to the obtained four DoFs are in a zigzag form. Therefore, the
+  last two elements should be swapped so that the vertices are in the clockwise or counter clockwise
+  order.
+\end{itemize}
+
+\subsubsection{Common vertex case}
+
+\subsection{Precalculation of data tables}
+
+\begin{itemize}
+\item Precalculation of data tables is mandatory for achieving a practical performance.
+\item It involves different $k_3$ terms in the panel pair integral $I_{\tau\times t}$. This is
+  because different $k_3$ terms are pulled back to the parameter space under different mapping
+  relations. Therefore, besides the dimensions for shape function index and quadrature point index
+  in the table, an additional dimension for indexing $k_3$ terms is required.
+\item Table \ref{tab:shape-value-table} shows the dimensions for shape function value.
+\item In Table \ref{tab:shape-grad-value-table}, each data item in the table is itself a matrix with
+  the dimension $dofs\_per\_cell*spacedim$.
+\item Number of shape functions is $(fe\_order+1)^{dim}=(fe\_order+1)^{2}$, since tensor product shape functions
+  constructed on the submanifold with dimension $dim$ are adopted.
+\item Number of quadrature points is $quad\_order^{2*dim}=quad\_order^{4}$, since the quadrature is
+  performed on a \textbf{pair} of unit cells.
+\end{itemize}
+
+\begin{table}[tbp]
+  \caption{\label{tab:shape-value-table} Data table for shape function values used in Sauter quadrature.}
+  \centering
+  \begin{tabular}{*{3}{|c}|}\hline
+    \textbf{Dimension name} & \multicolumn{2}{|c|}{\textbf{Dimension size}} \\\hline
+    Shape function index & \multicolumn{2}{|c|}{$dofs\_per\_cell$} \\\hline
+    $k_3$ term index & Same panel & 8 \\\cline{2-3}
+                            & Common edge & 6 \\\cline{2-3}
+                            & Common vertex & 4 \\\cline{2-3}
+                            & Regular & 1 \\\hline
+    Quadrature point index & \multicolumn{2}{|c|}{Number of quadrature points} \\\hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[tbp]
+  \caption{\label{tab:shape-grad-value-table} Data table for the gradient of shape functions used in Sauter quadrature.}
+  \centering
+  \begin{tabular}{*{3}{|c}|}\hline
+    \textbf{Dimension name} & \multicolumn{2}{|c|}{\textbf{Dimension size}} \\\hline
+    $k_3$ term index & Same panel & 8 \\\cline{2-3}
+                            & Common edge & 6 \\\cline{2-3}
+                            & Common vertex & 4 \\\cline{2-3}
+                            & Regular & 1 \\\hline
+    Quadrature point index & \multicolumn{2}{|c|}{Number of quadrature points} \\\hline
+  \end{tabular}
+\end{table}
+
+\subsection{Design of data organization for parallelization}
+
+\begin{itemize}
+\item The definition of the class \texttt{BEMValues} is a counterpart of the \texttt{FEValues}
+  defined in deal.ii.
+\item \texttt{BEMValues} are not reinitialized for each pair of cells, because its data,
+  i.e. shape function values and their gradient values\footnote{At the moment, only first
+    order derivatives are computed and stored.} (with respect to the local
+  coordinates) as well as Sauter's quadrature rules are all defined or evaluated on the
+  unit cell, which do not depend on the information of the real cells.
+\item \emph{Purpose of \texttt{ScratchData}: all large chunks of data involving dynamic memory
+    allocation during the computation of cell or pair cell integral should be encapsulated into
+    \texttt{ScratchData}. Before the quadrature computation on each pair of cells,
+    \texttt{ScratchData} should be reinitialized.}
+\item \emph{Purpose of \texttt{PerTaskData}: all large chunks of data involving dynamic memory
+    allocation during the \texttt{copy\_local\_to\_global} operation should be encapsulated into
+    \texttt{PerTaskData}.}
+\item All small objects involving dynamic memory allocation or objects with fixed data
+  length should be simply defined within the procedure \texttt{assemble\_on\_one\_cell} or
+  \texttt{assemble\_on\_one\_pair\_of\_cells}.
+\item \texttt{detect\_cell\_neighboring\_type} does not contain dynamic memory allocation, hence
+  cell neighboring types are not included within \texttt{PerTaskData} and \texttt{ScratchData}.
+\end{itemize}
+
+\subsection{Key functions}
+
+\begin{itemize}
+\item Functions for coordinate transformation from the 4D parametric space to the Cartesian product
+  space of unit cells for the pair of panels $K_x$ and $K_y$:
+  \begin{itemize}
+  \item \texttt{sauter\_same\_panel\_parametric\_coords\_to\_unit\_cells}
+  \item \texttt{sauter\_common\_edge\_parametric\_coords\_to\_unit\_cells}
+  \item \texttt{sauter\_common\_vertex\_parametric\_coords\_to\_unit\_cells}
+  \item \texttt{sauter\_regular\_parametric\_coords\_to\_unit\_cells}
+  \end{itemize}
+\item Functions for computing the Galerkin-type double integration of a kernel function on a pair of
+  cells using the Sauter's quadrature
+  \begin{itemize}
+  \item Return the local matrix and \textbf{without} pre-calculation of \texttt{BEMValues}.
+    % \begin{lstlisting}[language=C++]
+    %   template <int dim, int spacedim, typename RangeNumberType = double>
+    %   FullMatrix<RangeNumberType> SauterQuadRule( const LaplaceKernel::KernelFunction<spacedim, RangeNumberType> & kernel_function, const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter, const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter, const MappingQGeneric<dim, spacedim> & kx_mapping = MappingQGeneric<dim, spacedim>(1), const MappingQGeneric<dim, spacedim> &ky_mapping = MappingQGeneric<dim, spacedim>(1), "hello world")
+    % \end{lstlisting}
+  \item Assemble the local matrix to the global matrix and \textbf{without} pre-calculation of \texttt{BEMValues}.
+    \begin{lstlisting}[language=C++]
+      template <int dim, int spacedim, typename RangeNumberType = double> void SauterQuadRule( FullMatrix<RangeNumberType> &system_matrix, const LaplaceKernel::KernelFunction<spacedim, RangeNumberType> & kernel_function, const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter, const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter, const MappingQGeneric<dim, spacedim> & kx_mapping = MappingQGeneric<dim, spacedim>(1), const MappingQGeneric<dim, spacedim> &ky_mapping = MappingQGeneric<dim, spacedim>(1))
+    \end{lstlisting}
+  \item Return the local matrix and \textbf{with} pre-calculation of \texttt{BEMValues}.
+    \begin{lstlisting}[language=C++]
+      template <int dim, int spacedim, typename RangeNumberType = double> FullMatrix<RangeNumberType> SauterQuadRule( const LaplaceKernel::KernelFunction<spacedim, RangeNumberType> & kernel_function, const BEMValues<dim, spacedim> & bem_values, const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter, const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter, const MappingQGeneric<dim, spacedim> & kx_mapping = MappingQGeneric<dim, spacedim>(1), const MappingQGeneric<dim, spacedim> &ky_mapping = MappingQGeneric<dim, spacedim>(1))
+    \end{lstlisting}
+  \item Assemble the local matrix to the global matrix and \textbf{with} pre-calculation of
+    \texttt{BEMValues}.
+    \begin{lstlisting}[language=C++]
+      template <int dim, int spacedim, typename RangeNumberType = double> void SauterQuadRule( FullMatrix<RangeNumberType> &system_matrix, const LaplaceKernel::KernelFunction<spacedim, RangeNumberType> & kernel_function, const BEMValues<dim, spacedim> & bem_values, const typename DoFHandler<dim, spacedim>::cell_iterator &kx_cell_iter, const typename DoFHandler<dim, spacedim>::cell_iterator &ky_cell_iter, const MappingQGeneric<dim, spacedim> & kx_mapping = MappingQGeneric<dim, spacedim>(1), const MappingQGeneric<dim, spacedim> &ky_mapping = MappingQGeneric<dim, spacedim>(1))
+    \end{lstlisting}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Different types of DoF indices involved in Sauter quadrature}
+
+\begin{itemize}
+\item The natural numbering (starting from zero) for the global DoFs in a
+  \texttt{DoFHandler} as well as the corresponding DoF support points is called the
+  \textbf{external numbering}.
+\item During the partition of DoF support points for building a cluster tree, the global
+  DoF indices stored in a cluster are in the \textbf{external numbering}.
+\item After the initial construction of a cluster tree, the global DoF indices in the
+  external numbering will be reordered by iterating over the leaf cluster nodes. Then we
+  get the \textbf{internal numbering} along with bidirectional maps between the
+  \textbf{internal numbering} and \textbf{external numbering}. These two maps are
+  implemented as \texttt{std::vector}:
+  \begin{lstlisting}[language=C++]
+    std::vector<types::global_dof_index> &kx_dof_i2e_numbering;
+    std::vector<types::global_dof_index> &ky_dof_i2e_numbering;
+    std::vector<types::global_dof_index> &kx_dof_e2i_numbering;
+    std::vector<types::global_dof_index> &ky_dof_e2i_numbering;
+  \end{lstlisting}
+  \textbf{Only through this reordering, we do not need to store the global DoF indices in
+    the external numbering associated with each cluster node or block cluster node. And
+    what need to be stored are two numbers defining an index range. This greatly reduces
+    memory consumption with only the additional overhead of storing the maps between the
+    internal numbering and external numbering.}
+\item If only a subset of the complete DoFs in a \texttt{DoFHandler} is
+  effective/selected, there is an additional map corresponding to the above global DoF
+  indices in the \textbf{external numbering} for the subset to the complete DoF indices in
+  the \texttt{DoFHandler}.
+\item Row index range and column index range stored in an \(\mathcal{H}\)-matrix node are
+  global DoF indices in the \textbf{internal numbering}.
+\item Input arguments \texttt{fullmat\_row\_index} and \texttt{fullmat\_col\_index}: row
+  and column indices of the entry in the full matrix to be computed. When they are added
+  to the first element in the row or column index range as mentioned above, we can get the
+  global DoF indices associated with the full matrix entry in the \textbf{internal
+    numbering}.
+\item Input arguments \texttt{i} and \texttt{j}: \textbf{global} DoF indices related to
+  the full matrix entry, which are in the \textbf{external numbering} with respect to the
+  \textbf{complete} DoF set in the \texttt{DoFHandler}.
+\item In the constructed DoF index-to-cell topology, \textbf{global} DoF indices in the
+  \textbf{external numbering} with respect to the \textbf{complete} DoF set in the
+  \texttt{DoFHandler} are adopted. \emph{That's why such global DoF indices are passed
+    into the function \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs}.}
+  \begin{lstlisting}[language=C++]
+    std::vector<std::vector<unsigned int>>        &kx_dof_to_cell_topo;
+    std::vector<std::vector<unsigned int>>        &ky_dof_to_cell_topo;
+  \end{lstlisting}
+\item Calling the function,
+  \begin{lstlisting}[language=C++]
+    DoFAccessor::get_dof_indices(std::vector<types::global_dof_index> &dof_indices,
+    const unsigned int                    fe_index);
+  \end{lstlisting}
+  as in my code below
+  \begin{lstlisting}[language=C++]
+    kx_cell_iter->get_dof_indices(
+    scratch_data.kx_local_dof_indices_in_default_dof_order);
+  \end{lstlisting}
+  we can get the list of \textbf{global} DoF indices in the \textbf{external numbering}
+  with respect to the complete DoF set in the \texttt{DoFHandler}.
+\item \texttt{i\_index} and \texttt{j\_index} calculated inside the function
+  \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} are the array indices for accessing
+  the vectors of permuted indices, i.e.
+  \texttt{copy\_data.kx\_local\_dof\_indices\_permuted} and
+  \texttt{copy\_data.ky\_local\_dof\_indices\_permuted}, to obtain the \texttt{i} and
+  \texttt{j} mentioned above. The indices stored in these two vectors are initially
+  obtained from \texttt{DoFAccessor::get\_dof\_indices}. Therefore, the stored indices are
+  \textbf{global} DoF indices in the \textbf{external numbering} with respect to the
+  complete DoF set in the \texttt{DoFHandler}.
+\item Which indices should be added to the Sauter quadrature task ring buffer?
+
+  When \texttt{i\_index} and \texttt{j\_index} are determined, the global DoF indices
+  \texttt{i} and \texttt{j} are not needed for applying the Sauter quadrature. Meanwhile,
+  \texttt{fullmat\_row\_index} and \texttt{fullmat\_col\_index} are still needed to
+  assemble the Sauter quadrature result into the full matrix. Therefore, \texttt{i},
+  \texttt{j}, \texttt{fullmat\_row\_index} and \texttt{fullmat\_col\_index} should be
+  added into the task ring buffer.
+\end{itemize}
+
+\subsection{Sauter quadrature for building near field $\mathcal{H}$-matrices}
+
+\subsubsection{Design of ring buffer which holds Sauter quadrature tasks}
+
+\paragraph{Basic considerations}
+
+\begin{itemize}
+\item The quadrature tasks in ring buffer have a same cell neighboring type, so that the
+  CUDA threads can run in lockstep without branching.
+\item The tail of a ring buffer is used for inserting a quadrature tasks from a producer
+  thread, while the head of a ring buffer is used for fetching a batch of quadrature
+  tasks, which will be processed in a consumer thread.
+\item Four pointers are defined for inserting and fetching quadrature tasks, which move
+  around the ring buffer. The purpose of such design instead of using only two pointers
+  \texttt{head} and \texttt{tail} is to reduce the time of locking the ring buffer, so
+  that the other producer or consumer threads may have more chance to add or fetch tasks
+  from the buffer. The ring buffer is locked only when a task is \emph{requested} to be
+  added or fetched. During the creation and processing of the task, the ring buffer is
+  unlocked.
+  \begin{itemize}
+  \item \texttt{tail\_pending}: it points to the next position for inserting a new
+    quadrature task.
+  \item \texttt{tail\_committed}: there are two cases:
+    \begin{itemize}
+    \item if there are quadrature tasks in the process of creation, i.e. they have the
+      task status \texttt{SauterQuadratureTaskStatus::during\_creation}, this pointer
+      points to the first of these tasks.
+    \item if all quadrature tasks to be added have been created, i.e. they have the task
+      status \texttt{SauterQuadratureTaskStatus::created}, this pointer overlaps with
+      \texttt{tail\_pending}.
+    \end{itemize}
+  \item \texttt{head\_pending}: it points to the next position for fetching a task
+    \footnote{Actually, a batch of tasks, not a single task, are fetched for parallel
+      processing on the GPU.} having the status
+    \texttt{SauterQuadratureTaskStatus::created} to be processed by a consumer thread.
+  \item \texttt{head\_committed}: there are two cases:
+    \begin{itemize}
+    \item if there are quadrature tasks being processed, i.e. they have the task status
+      \texttt{SauterQuadratureTaskStatus::during\_processing}, this pointer points to the
+      first of these tasks.
+    \item if all fetched quadrature tasks have been processed, i.e. they have the initial
+      task status \texttt{SauterQuadratureTaskStatus::before\_creation}, this pointer
+      overlaps with \texttt{head\_pending}.
+    \end{itemize}
+  \end{itemize}
+\item In principle, the capacity of the ring buffer is set to multiple of the task batch
+  size $n \cdot \text{batch\_size}$. However, to differentiate the pointer states for
+  empty buffer and full buffer, the capacity is $n \cdot \text{batch\_size} + 1$.
+\item Mutexes
+  \begin{itemize}
+  \item \texttt{SauterQuadratureTaskRingBuffer::buffer\_lock}: used for protecting
+    multi-threaded accesses to the ring buffer properties, such as the pointer values, but
+    not the actual task data.
+  \item \texttt{SauterQuadratureTaskRingBuffer::task\_status\_ring\_buffer[capacity]}: this
+    array of atomic variables store the status of all quadrature tasks in the ring buffer.
+  \item \texttt{result\_lock} as a local variable in the function
+    \texttt{fill\_hmatrix\_with\_aca\_plus\_smp}: used to protect assembling quadrature
+    results into near field full matrices, so that the quadrature results computed in
+    different consumer threads are assembled in a serial fashion. The reason for
+    introducing this mutex is as below.
+
+    A full matrix entry is associated with a pair of global DoFs $(i, j)$. Because the
+    support sets of $i$ and $j$ may contain several cells, this matrix entry should be
+    contributed from each pair of these cells, one from the support of $i$ and one from
+    the support of $j$. These cell pairs may have different neighboring types and their
+    associated quadrature tasks are placed in different ring buffers. These tasks are then
+    processed in different consumer threads. For example in Figure
+    \ref{fig:dofs-and-supports}, the support of $i$ contains cells
+    $$
+    [1,2,3,4,5,6],
+    $$
+    while the support of $j$ contains cells
+    $$
+    [3,4,7,8,9,10,11].
+    $$
+    Among all possible pairs of cells for $(i, j)$, $[3, 4]$, $[3, 7]$, $[4,3]$, $[2, 3]$,
+    $[4, 3]$ and $[4, 11]$ have the common edge neighboring type, $[2, 7]$, $[2, 4]$,
+    $[3, 8]$, $[3, 9]$, $[3, 10]$, $[3, 11]$, $[4, 7]$, $[4, 8]$, $[4, 9]$, $[4, 10]$,
+    $[5, 11]$, $[5, 3]$, $[1, 3]$, $[1, 4]$, $[6, 3]$ and $[6, 4]$ have the common vertex
+    neighboring type; the other cell pairs have the regular neighboring type.
+    
+    At the moment, I assign an exclusive consumer thread for each ring buffer with a
+    specific cell neighboring type. Therefore, the assembly of their quadrature results
+    into the full matrix entry $(i, j)$ should be performed in serial. And this is
+    achieved by introducing the mutex \texttt{result\_lock}.
+
+    \begin{figure}[htbp]
+      \centering
+      \includegraphics{figures/2023-06-21-dofs-and-supports}
+      \caption{Global DoFs $(i, j)$ and their supports}
+      \label{fig:dofs-and-supports}
+    \end{figure}
+  \end{itemize}
+\end{itemize}
+
+\begin{mycomment}
+  All pointer increment should be taken modulus with respect to the capacity of the ring buffer.
+\end{mycomment}
+
+\paragraph{Ranges formed by ring buffer pointers}
+
+With the above definition of four pointers, the following ranges are naturally derived:
+\begin{itemize}
+\item Range for quadrature tasks during creation:
+  $$
+  \begin{cases}
+    [\text{tail\_committed}, \text{tail\_pending}) & \text{tail\_pending} \geq
+    \text{tail\_committed} \\
+    [\text{tail\_committed}, \text{capacity}) \cup [0, \text{tail\_pending}) &
+    \text{tail\_pending} < \text{tail\_committed}
+  \end{cases}
+  $$
+  When $\text{tail\_pending} - \text{tail\_committed}$ is zero, there are no active
+  producer threads.
+\item Range for created quadrature tasks that are ready for processing:
+  $$
+  \begin{cases}
+    [\text{head\_pending}, \text{tail\_committed}) & \text{tail\_committed} \geq
+    \text{head\_pending} \\
+    [\text{head\_pending}, \text{capacity}) \cup [0, \text{tail\_committed}) &
+    \text{tail\_committed} < \text{head\_pending}
+  \end{cases}
+  $$
+\item Range for quadrature tasks during processing:
+  $$
+  \begin{cases}
+    [\text{head\_committed}, \text{head\_pending}) & \text{head\_pending} \geq
+    \text{head\_committed} \\
+    [\text{head\_committed}, \text{capacity}) \cup [0, \text{head\_pending}) &
+    \text{head\_pending} < \text{head\_committed}
+  \end{cases}
+  $$
+  When $\text{head\_pending} - \text{head\_committed}$ is zero, there are no active
+  consumer threads.
+\item Range for all types of quadrature tasks in the ring buffer, which is a union of the
+  above ranges:
+  $$
+  \begin{cases}
+    [\text{head\_committed}, \text{tail\_pending}) & \text{tail\_pending} \geq
+    \text{head\_committed} \\
+    [\text{head\_committed}, \text{capacity}) \cup [0, \text{tail\_pending}) &
+    \text{tail\_pending} < \text{head\_committed}
+  \end{cases}
+  $$
+  \begin{itemize}
+  \item When the ring buffer is empty: $\text{tail\_pending} = \text{head\_committed}$
+  \item When the ring buffer is full:
+    $(\text{tail\_pending} + 1) \% \text{capacity} = \text{head\_committed}$
+  \end{itemize}
+\end{itemize}
+
+\begin{mycomment}
+  The modulo operation used in ring buffer pointer increment is replaced by conditional
+  expression for performance issue:
+  $$
+  (\text{tail\_pending} + \text{incr\_steps}) \geq \text{capacity} ?
+  (\text{tail\_pending} + \text{incr\_steps} - \text{capacity}) :
+  (\text{tail\_pending} + \text{incr\_steps})
+  $$
+\end{mycomment}
+
+\paragraph{Typical ring buffer states}
+
+In the following illustrations, I use $Pn$ to represent a quadrature task which is to be
+created by producer $n$ and $Cn$ to represent a task which has been fetched and to be
+processed by consumer $n$. I use the red color to indicate the task has been requested for
+creation or processing and use the green color to indicate the task has been created or
+processed.
+
+\begin{itemize}
+\item Initial empty ring buffer
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-initial-empty}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item Assume there are three producers which have requested to insert three tasks
+  $P1, P2, P3$. Because the three producers run parallel in different threads $1 \sim 3$,
+  the thread indices of the requested three tasks are not in the ascending order. At this
+  stage, the three tasks are still being prepared, so the pointer \texttt{tail\_committed}
+  has not moved forward and the number of tasks ready for processing is still zero.
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-add-three-tasks}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item When the task $P1$ is created, the pointer \texttt{tail\_committed} does not move,
+  because the creation of $P2$ is not finished. This mechanism ensures that all tasks in
+  the range $[\texttt{head\_pending}, \text{tail\_committed})$ are ready for processing.
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-add-three-tasks-one-finished}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item When $P2$ is ready, which was previously pointed by \texttt{tail\_committed},
+  \texttt{tail\_committed} moves forward to $P1$. Since $P1$ has also been created,
+  \texttt{tail\_committed} continues to move a step further and stops at $P3$.
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-add-three-tasks-two-finished}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item When $P3$ is ready, the pointer \texttt{tail\_committed} moves forward and overlap
+  with \texttt{tail\_pending}. Up to now, all tasks requested to be added have been
+  created.
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-add-three-tasks-all-finished}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item Assume there are two consumers in different threads. Each of them has fetched a task
+  for further processing. Then the pointer \texttt{head\_pending} moves forward to $P3$.
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-fetch-two-tasks}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item It’s possible that the processing of $C2$ is finished before $C1$. In this case,
+  the pointer \texttt{head\_committed} does not move and still points to $C1$.
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-fetch-two-tasks-one-finished}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item When $C1$ is processed, \texttt{head\_committed} moves forward to $ C2$. Since $C2$
+  has also been processed, \texttt{head\_committed} moves a step further and overlaps with
+  \texttt{head\_pending}. Now, there are no task during processing
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-fetch-two-tasks-all-finished}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item Then the task $P3$ is fetched and processed by consumer $1$. Now all pointers perch
+  at a same location and the ring buffer is empty.
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-all-tasks-fetched-and-processed}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\item This is the condition when the ring buffer is full:
+  $(\text{tail\_pending} + 1) \% \text{capacity} = \text{head\_committed}$.
+  \begin{center}
+    \includegraphics[width=0.6\textwidth,
+    keepaspectratio]{figures/2023-05-10-ring-buffer-full}
+    \includegraphics{figures/2023-05-10-ring-buffer-pointer-symbols}
+  \end{center}
+\end{itemize}
+
+\subsection{Sauter quadrature for building far field $\mathcal{H}$-matrices}
+
+\section{$\mathcal{H}$-matrix}
+
+\subsection{$\mathcal{H}$-matrix features}
+
+Several member variables are defined for the class \texttt{HMatrix} which describes the
+matrix features.
+
+\begin{enumerate}
+\item \texttt{State}: this property indicates what is actually stored in the
+  \texttt{HMatrix}. After various matrix operations having been applied to the matrix, its
+  contents may be changed. For example,
+  \begin{itemize}
+  \item after calling the in-situ version of \texttt{compute\_lu\_factorization}, the
+    matrix stores the resulted $L$ and $U$\footnote{$L$ is a normed lower triangular
+      matrix, whose diagonal entries are 1. $U$ is an upper triangular matrix. Therefore,
+      for the storage of $L$ and $U$ into a single matrix, $U$ is stored as intact, while
+      $L$ is stored without its diagonal entries.}, which should have the state
+    \texttt{lu};
+  \item after calling the in-situ version of \texttt{compute\_cholesky\_factorization},
+    the matrix stores only the lower triangular $L$ matrix. Being different from $L$
+    returned by the LU factorization, $L$ here is usually not normed.
+  \end{itemize}
+\item \texttt{BlockType}: it is \emph{not} whether the $\mathcal{H}$-matrix node \emph{itself} is
+  an upper or lower triangular matrix, but stands for the location of the
+  $\mathcal{H}$-matrix node within the top level $\mathcal{H}$-matrix (see Figure
+  \ref{fig:hmat-node-block-types}).
+  \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth, height=\textheight, keepaspectratio]{figures/2023-01-23-hmat-block-type.eps}
+    \caption{Block types of a $\mathcal{H}$-matrix node.}
+    \label{fig:hmat-node-block-types}
+  \end{figure}
+\item \texttt{Property}: it specifies whether the $\mathcal{H}$-matrix is symmetric, lower
+  triangular or upper triangular. For these cases, only a part of the matrix entries are
+  stored and implementing matrix operations, such as matrix addition, matrix-vector
+  multiplication, special treatment should be made.
+  \begin{itemize}
+  \item \texttt{general}: all the $\mathcal{H}$-matrix nodes in the $\mathcal{H}$-matrix
+    hierarchy are created and allocated with memory.
+  \item \texttt{symmetric}: only the diagonal blocks (which must belong to the near field)
+    and matrix blocks in the lower triangular part\footnote{A matrix block is in the lower
+      (upper) triangular part is equivalent to say it has the lower (upper) triangular
+      block type.} are created and allocated with memory.
+
+    For diagonal matrix blocks, memory is still allocated for the associated whole full
+    matrix, but only the lower triangular matrix entries (including diagonal) are filled
+    during matrix assembly and included into algebraic matrix computation.
+
+    For matrix blocks in the upper triangular part, basic matrix information, such as
+    dimension, associated block cluster node, etc., is still initialized and maintained,
+    but the memory is not allocated. When performing matrix operations such as
+    matrix-vector multiplication, the contribution from these blocks in the upper
+    triangular part should be taken into account by transposing their counterparts in the
+    lower triangular part.
+  \item \texttt{upper\_triangular}: only the matrix blocks in the upper triangular part and
+    the diagonal blocks are created and allocated with memory. The matrix blocks in the
+    lower triangular part have only basic matrix information but no memory is allocated.
+  \item \texttt{lower\_triangular}: only the matrix blocks in the lower triangular part and
+    the diagonal blocks are created and allocated with memory. The matrix blocks in the
+    upper triangular part have only basic matrix information but no memory is allocated.
+  \end{itemize}
+\end{enumerate}
+
+\subsubsection{Recursively assign $\mathcal{H}$-matrix node block types}
+\begin{enumerate}
+\item The block type of the top level $\mathcal{H}$-matrix node is diagonal block;
+\item Assume the block cluster tree is a quad-tree. If the cluster $\sigma$ and $\tau$
+  are divided as $[\sigma_1, \sigma_2]$ and $[\tau_1, \tau_2]$, the array of children of
+  the parent block cluster $\sigma\times\tau$ is organized as
+  $[(\sigma_1, \tau_1), (\sigma_1, \tau_2), (\sigma_2, \tau_1), (\sigma_2, \tau_2)]$,
+  i.e.
+  $$
+  \begin{pmatrix}
+    (\sigma_1, \tau_1) & (\sigma_1, \tau_2) \\
+    (\sigma_2, \tau_1) & (\sigma_2, \tau_2)
+  \end{pmatrix}
+  $$
+
+  If the current $\mathcal{H}$-matrix node has the diagonal block type, then
+  $\sigma_1 \equiv \tau_1$ and $\sigma_2 \equiv \tau_2$. If it is not a leaf node, then
+  its first child submatrix $(\sigma_1, \tau_1) = (\sigma_1, \sigma_1)$ and last child
+  submatrix $(\sigma_2, \sigma_2)$ are still diagonal blocks. The second child submatrix
+  $(\sigma_1, \tau_2) = (\sigma_1, \sigma_2)$ has the upper triangular block type and
+  the third child submatrix $(\sigma_2,\tau_1) = (\sigma_2,\sigma_1)$ has the lower
+  triangular block type.
+\item If the current $\mathcal{H}$-matrix node, which is not a leaf node, has the upper
+  (lower) triangular block type, all of its children have the upper (lower) triangular
+  block type.
+\end{enumerate}  
+
+\subsubsection{Recursively assign $\mathcal{H}$-matrix node properties}
+
+\begin{enumerate}
+\item When the property of the top level $\mathcal{H}$-matrix node is \texttt{general}, all descendant
+  $\mathcal{H}$-matrix nodes have the \texttt{general} property.
+\item When the property of the top level $\mathcal{H}$-matrix node is \texttt{symmetric}:
+  \begin{enumerate}
+  \item All diagonal blocks on all levels in the $\mathcal{H}$-matrix hierarchy have the
+    same \texttt{symmetric} property.
+  \item All lower triangular blocks on all levels in the $\mathcal{H}$-matrix hierarchy
+    have the \texttt{general} property.
+  \item All upper triangular blocks on all levels in the $\mathcal{H}$-matrix hierarchy
+    have the \texttt{general} property.
+  \end{enumerate}  
+\end{enumerate}
+
+\subsection{General workflow for $\mathcal{H}$-matrix construction}
+
+An \(\mathcal{H}\)-matrix are associated with two DoF handlers, which correspond
+respectively to the test space and trial space for discretizing the related bilinear form.
+In my current implementation, there are four cases about these DoF handlers:
+\begin{enumerate}
+\item a same finite element on a same triangulation, e.g. the matrix $\mathscr{V}$ for the
+  single layer potential boundary operator in a pure Dirichlet Laplace problem;
+\item a same finite element on two different triangulations, e.g. the matrix $\mathscr{V}$
+  for the single layer potential boundary operator on the right hand side of the equation
+  in a mixed boundary value Laplace problem;
+\item two different finite elements on a same triangulation, e.g. the matrix $\mathscr{K}$
+  for the double layer potential boundary operator in a pure Dirichlet Laplace problem;
+\item two different finite elements on two different triangulations, e.g. the matrix
+  $\mathscr{K}$ for the double layer potential boundary operator on the left hand side of
+  the equation in a mixed boundary value Laplace problem;
+\end{enumerate}
+
+The general workflow for $\mathcal{H}$-matrix construction is as follows.
+\begin{itemize}
+\item Generate the list(s) of DoF indices (starting from zero in my convention) for the DoF
+  handler(s) associated with the $\mathcal{H}$-matrix.
+\item Extract the list(s) of coordinates for the DoF support points held within the DoF handler(s).
+\item Estimate the average mesh cell sizes at support points.
+\item Create cluster tree(s) for DoF handlers.
+  \begin{itemize}
+  \item Call a constructor to initialize.
+  \item Perform the support point based partition.
+  \end{itemize}
+\item Create block cluster tree(s) from the cluster tree(s).
+  \begin{itemize}
+  \item Call a constructor to initialize.
+  \item Perform the support point based partition.
+  \end{itemize}
+\item Initialize the \(\mathcal{H}\)-matrix from the block cluster tree.
+\item Calculate entries in the $\mathcal{H}$-matrix using ACA (see Section \ref{sec:aca}).
+\end{itemize}
+
+\subsection{$\mathcal{H}$-matrix construction parameter tuning and selection}
+
+\begin{itemize}
+\item According to \cite{KriemannParallel2005a}, the typical value of $n_{\min}$ is about
+  30-60 in most practical applications.
+\end{itemize}
+
+\subsection{$\mathcal{H}$-matrix fundamental algebraic operation}
+
+\subsubsection{Matrix-Vector multiplication}
+\label{sec:hmat-vmult}
+
+\paragraph{Matrix-Vector multiplication in $\mathcal{H}$-matrix algebra should be accumulative}
+
+Matrix-vector multiplication is intrinsically accumulative, i.e. the result vector is obtained by
+collecting the product vector for each block cluster $b=\tau\times\sigma$ in the partition $P$. Such
+accumulation is similar to the assembly of FEM matrix.
+
+In the classical version of matrix-vector multiplication for full matrices, such as that provided
+for LAPACK matrices, there are usually two versions: one performs the calculation $y \coloneqq Mx$,
+which directly overwrites the result vector $y$; the other is additive, $y \coloneqq y + Mx$. For
+matrix-vector multiplication in $\mathcal{H}$-matrix algebra, there is only the additive version,
+since the operation is intrinsically accumulative.
+
+According to Equation (7.1) in \cite{HackbuschHierarchical2015}, $MVM(y, M, x, b)$
+recursively calls $MVM(y, M, x, b')$, where $b'\in S(b)$. If $MVM$ is implemented as the
+``overwriting'' version, $MVM(y, M, x, b')$ will clear the values in $y$ as well as any other
+recursive calls of $MVM$. This violates the accumulative behavior required by the matrix-vector
+multiplication in $\mathcal{H}$-matrix algebra.
+
+\subsubsection{Matrix-Matrix multiplication}
+
+Basic considerations about Algorithm \ref{algo:mmr}:
+\begin{itemize}
+\item $\widetilde{M}_0 = M\big\vert_{\tau_0\times\rho_0}$,
+  $\widetilde{M} = M\big\vert_{\tau\times\rho}$,
+  $\widetilde{M}_1 = M_1\big\vert_{\tau\times\sigma}$,
+  $\widetilde{M}_2 = M_2\big\vert_{\sigma\times\rho}$
+\item This function \texttt{MMR} is recursive, hence $\tau_0\times\rho_0$ is the block cluster
+  $\tau\times\rho$ when it is called for the first time.
+\item $\widetilde{M}$ on $\tau\times\rho$ should belong to the leaf set of the product matrix
+  in the first call of this function, i.e. $\tau_0\times\rho_0 \in P$. In further recursive
+  call, we can only ensure there exists a $b \in P$ such that $\tau\times\rho \subset b \in P$
+  and this $b$ is just $\tau_0\times\rho_0$. This is caused by the fact that even though the
+  original block cluster $\tau\times\rho$ in the product matrix belongs to the leaf set of
+  $T(I\times K, P)$, the block clusters associated with the two operands $\widetilde{M}_1$ and
+  $\widetilde{M}_2$ have children, which produce smaller block matrix in the result. This also
+  explains why the block cluster tree $T_{\rm ind}$ introduced in the general
+  $\mathcal{H}$-matrix multiplication is usually finer than $T'$ and $T''$.
+\item Based on the above consideration, the initial product matrix $\widetilde{M}_0$ is passed
+  as an argument, from which the block cluster $b$ can be obtained. Whether $b \in P^+$ or
+  $b \in P^-$ determines the format of the corresponding result matrix block.
+\item Clusters $\tau$, $\sigma$, $\rho$ are already associated with the input matrices, so
+  they do not appear in the argument list.
+\item $\widetilde{M}_1 \cdot \widetilde{M}_2$ is just one of the terms contributing to the
+  result matrix $\widetilde{M}$, since
+  $$
+  \widetilde{M} = \sum_{\sigma\in\Sigma}\widetilde{M}_1 \cdot \widetilde{M}_2 =
+  \sum_{\sigma\in\Sigma} M_1\big\vert_{\tau\times\sigma} \cdot
+  M_2\big\vert_{\sigma\times\rho},
+  $$
+  where $\Sigma$ is a partition of the index set $J$. Hence its evaluation should be appended
+  to $\widetilde{M}$.
+\end{itemize}
+
+\begin{breakablealgorithm}
+  \label{algo:mmr}
+  \caption{Multiplication by starting from a leaf node}
+  \begin{algorithmic}[1]\raggedright
+  \Procedure{MMR}{$\widetilde{M}_0, \widetilde{M}, \widetilde{M}_1, \widetilde{M}_2$}
+    \footnote{Create a local $\mathcal{H}$-matrix $Z$ whose matrix type depends on the initial block
+cluster $b = \tau_0\times\rho_0$}
+    \If {$\tau_0\times\rho_0 \in P^+$}
+      \State {Let $Z$ have \texttt{RkMatrixType} and be associated with the block cluster
+$\tau\times\rho$} \footnote{N.B. The block cluster $\tau\times\rho$ is created locally, but not on the heap.}
+    \Else \footnote{Case: $\tau_0\times\rho_0 \in P^-$}
+      \State {Let $Z$ have FullMatrixType and be associated with the block cluster $\tau\times\rho$}
+\footnote{N.B. The block cluster $\tau\times\rho$ is created locally, but no on the heap.}
+    \EndIf
+    
+    \If {$\tau\times\sigma \in P'$ or $\sigma\times\rho \in P''$} \Comment {When either
+$\widetilde{M}_1$ or $\widetilde{M}_2$ is a leaf node in its respective $\mathcal{H}$-matrix
+hierarchy, we can directly perform the matrix multiplication, whose operands involve either rank-k matrix or full matrix.}
+
+    % \redcomment{In the following, we directly represent $Z$ as a rank-k or % full matrix instead of an $\mathcal{H}$-matrix for this consideration: $Z$ % will be further appended to the result matrix via embedding and formatted % addition; since we do not bother to associate a block cluster node with % $Z$, we will perform the calculation directly instead of using % $\mathcal{H}$-matrix member functions.}
+
+      \State {Initialize local matrices $Z_R$ and $Z_F$ for storing the multiplication results, which will be associated with the local matrix $Z$ and further assembled into the matrix $\widetilde{M}$.}
+    
+      \If {$\widetilde{M}_1 \in \mathcal{R}$}
+        \State {Apply $\mathcal{R}\times\mathcal{H} \rightarrow \mathcal{R}$ for $Z_R :=
+\widetilde{M}_1 \cdot \widetilde{M}_2$}
+      \ElsIf {$\widetilde{M}_2 \in \mathcal{R}$}
+        \State {Apply $\mathcal{H}\times\mathcal{R} \rightarrow \mathcal{R}$ for $Z_R :=
+\widetilde{M}_1 \cdot \widetilde{M}_2$}
+      \ElsIf {$\widetilde{M}_1 \in \mathcal{F}$}
+        \State {Apply $\mathcal{F}\times\mathcal{H} \rightarrow \mathcal{F}$ for $Z_F :=
+\widetilde{M}_1 \cdot \widetilde{M}_2$}
+      \ElsIf {$\widetilde{M}_2 \in \mathcal{F}$}
+        \State {Apply $\mathcal{H}\times\mathcal{F} \rightarrow \mathcal{F}$ for $Z_F :=
+\widetilde{M}_1 \cdot \widetilde{M}_2$}
+      \EndIf
+
+      \If {$\tau_0\times\rho_0 \in P^+$} \Comment{If the top level result of the matrix product, when
+this function is called for the first time, is a rank-k matrix}
+        \If {the result of the matrix product for the current level is a full matrix, i.e. $Z_F$}
+          \State $Z_R := \mathcal{T}_r^{\mathcal{R}}(Z_F)$ \Comment{Truncate the full matrix to an
+rank-k matrix}
+        \EndIf
+        \State Associate $Z_R$ with $Z$
+      \Else \Comment {Case: $\tau_0\times\rho_0 \in P^-$, i.e. the top level result of the matrix
+product is a full matrix}
+        \If {the result of the matrix product for the current level is a rank-k matrix, i.e. $Z_R$}
+          \State $Z_F := \mathcal{T}^{\mathcal{F} \leftarrow \mathcal{R}}(Z_R)$ \Comment{Convert the
+rank-k matrix to a full matrix}
+        \EndIf
+        \State Associate $Z_F$ with $Z$
+      \EndIf
+    \Else \Comment {Case: $\tau\times\sigma \notin P'$ and $\sigma\times\rho \notin P''$, which
+means both the two operands $\widetilde{M}_1$ and $\widetilde{M}_2$ have children, hence multiplication of submatrices should be performed.}
+    
+      \Comment{Next, perform multiplication of submatrices in $\widetilde{M}_1$ and $\widetilde{M}_2$:
+        $$
+        \begin{aligned} \widetilde{M}_1\cdot\widetilde{M}_2 &=
+          \begin{pmatrix} \widetilde{M}_1[0] & \widetilde{M}_1[1] \\ \widetilde{M}_1[2] &
+            \widetilde{M}_1[3]
+        \end{pmatrix} \cdot
+        \begin{pmatrix} \widetilde{M}_2[0] & \widetilde{M}_2[1] \\ \widetilde{M}_2[2] &
+          \widetilde{M}_2[3]
+        \end{pmatrix} \\ &=
+        \begin{pmatrix} \widetilde{M}_1[0]\widetilde{M}_2[0] + \widetilde{M}_1[1]\widetilde{M}_2[2] &
+          \widetilde{M}_1[0]\widetilde{M}_2[1] + \widetilde{M}_1[1]\widetilde{M}_2[3] \\
+          \widetilde{M}_1[2]\widetilde{M}_2[0] + \widetilde{M}_1[3]\widetilde{M}_2[2] &
+          \widetilde{M}_1[2]\widetilde{M}_2[1] + \widetilde{M}_1[3]\widetilde{M}_2[3]
+        \end{pmatrix}
+        \end{aligned}
+        $$
+        From this we can see that there are eight multiplication operations for submatrices.}
+
+      \State {MMR($\widetilde{M}_0, Z, \widetilde{M}_1[0], \widetilde{M}_2[0]$)}
+      \State {MMR($\widetilde{M}_0, Z, \widetilde{M}_1[1], \widetilde{M}_2[2]$)}
+      \State {MMR($\widetilde{M}_0, Z, \widetilde{M}_1[0], \widetilde{M}_2[1]$)}
+      \State {MMR($\widetilde{M}_0, Z, \widetilde{M}_1[1], \widetilde{M}_2[3]$)}
+      \State {MMR($\widetilde{M}_0, Z, \widetilde{M}_1[2], \widetilde{M}_2[0]$)}
+      \State {MMR($\widetilde{M}_0, Z, \widetilde{M}_1[3], \widetilde{M}_2[2]$)}
+      \State {MMR($\widetilde{M}_0, Z, \widetilde{M}_1[2], \widetilde{M}_2[1]$)}
+      \State {MMR($\widetilde{M}_0, Z, \widetilde{M}_1[3], \widetilde{M}_2[3]$)}
+    \EndIf
+    
+    \Comment{Finally, assemble the local result matrix $Z$ into the matrix $\widetilde{M}$}
+    \If {$\tau_0\times\rho_0 \in P^+$} \Comment {$Z$ has \texttt{RkMatrixType}}
+      \State {Embed the rank-k matrix to have the same size as the larger matrix, then perform
+formatted addition.}
+    \Else \Comment {$Z$ has \texttt{FullMatrixType}}
+      \State {Directly assemble the full matrix to the larger matrix.}
+    \EndIf
+  \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\begin{breakablealgorithm}
+  \caption{Multiplication of level-conserving $\mathcal{H}$-matrices}
+  \label{algo:hmat-mmult-level-conserving}
+  \begin{algorithmic}[1]
+  \Procedure{MM}{$M, M_1, M_2$}
+    \If {$\tau\times\sigma \notin P'$ and $\sigma\times\rho \notin P''$ and $\tau\times\rho \notin
+P$} \Comment {When all matrices (two operands and one product) are not leaf nodes, perform multiplication of submatrices:
+      $$
+      \begin{pmatrix} M[0] & M[1] \\ M[2] & M[3]
+      \end{pmatrix} =
+      \begin{pmatrix} M_1[0]M_2[0] + M_1[1]M_2[2] & M_1[0]M_2[1] + M_1[1]M_2[3] \\ M_1[2]M_2[0] + M_1[3]M_2[2] & M_1[2]M_2[1] + M_1[3]M_2[3]
+      \end{pmatrix}
+      $$}
+      \State {MM($M[0], M_1[0], M_2[0]$)}
+      \State {MM($M[0], M_1[1], M_2[2]$)}
+      \State {MM($M[1], M_1[0], M_2[1]$)}
+      \State {MM($M[1], M_1[1], M_2[3]$)}
+      \State {MM($M[2], M_1[2], M_2[0]$)}
+      \State {MM($M[2], M_1[3], M_2[2]$)}
+      \State {MM($M[3], M_1[2], M_2[1]$)}
+      \State {MM($M[3], M_1[3], M_2[3]$)}
+    \ElsIf {$\tau\times\rho \notin P$} \Comment{Case: one of the operands is a leaf node while the
+result matrix block can still be split.}
+      \State {Create a rank-k matrix $Z$ on the block cluster $\tau\times\rho$}
+
+      \If {$M_1 \in \mathcal{R}$}
+        \State {Apply $\mathcal{R}\times\mathcal{H} \rightarrow \mathcal{R}$ for $Z := M_1M_2$}
+      \ElsIf {$M_2 \in \mathcal{R}$}
+        \State {Apply $\mathcal{H}\times\mathcal{R} \rightarrow \mathcal{R}$ for $Z := M_1M_2$}
+      \ElsIf {$M_1 \in \mathcal{F}$}
+        \State {Apply $\mathcal{F}\times\mathcal{H} \rightarrow \mathcal{R}$ for $Z := M_1M_2$}
+      \ElsIf {$M_2 \in \mathcal{F}$}
+        \State {Apply $\mathcal{H}\times\mathcal{F} \rightarrow \mathcal{R}$ for $Z := M_1M_2$}
+      \EndIf
+
+      \State {Add $Z$ into $M$ via $\mathcal{R} \oplus_r \mathcal{H} \rightarrow \mathcal{H}$.} \Comment {Since $M$ has descendants, the rank-k matrix $Z$ needs to be restricted to each leaf node of $M$ and then perform addition with full leaf matrix or formatted addition with rank-k leaf matrix.}
+      
+    \Else \Comment {Case: $\tau\times\rho \in P$, while there is no ``leaf node'' requirement on the operands.}
+      \State {\hyperref[algo:mmr]{MMR}($M, M, M_1, M_2$)}
+    \EndIf
+  \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+Considerations about LU factorization Algorithm \ref{algo:lu}:
+\begin{itemize}
+\item $M$ is the source matrix to be factorized.
+\item $LU$ is the resulted matrix storing the factor matrices $L$ and $U$ at the same time. Hence, the LU factorization performed is in situ, just like the LAPACK procedure \texttt{*getrf}.
+\item Both $M$ and $LU$ are on a same block cluster $\tau\times\tau$.
+\item This function will be recursive until the block cluster $\tau\times\tau$ belongs to the leaf set, which indicates the current matrix must be a full matrix.
+\end{itemize}
+
+\begin{breakablealgorithm}
+  \label{algo:lu}
+  \caption{LU factorization}
+  \begin{algorithmic}[1]
+    \Procedure{LU\_factorization}{$M$, $LU$}
+      \If {the current matrix is a leaf node}
+        \State {Perform LU factorization on the full matrix.} \footnote{This will call
+the LAPACK function \texttt{*getrf}, which adopts partial pivoting with row permutation. The
+factorization has the form $A = P \cdot L \cdot U$.}
+      \Else
+        \For{each block row in $M$: $i\coloneqq1,\cdots,\#S(\tau)$}
+          \For{each block column in $M$: $j\coloneqq1,\cdots,\#S(\sigma)$} \footnote{$\sigma$ is the
+ same as $\tau$ when performing LU factorization on a square matrix.}
+            \For{each block column in $M$ before the column $k_0\coloneqq\min\{i,j\}$:
+ $k\coloneqq1,\cdots,k_0-1$} \footnote{Since $M_{\tau[i]\times\sigma[j]}$ is overwritten, LU factorization should not
+ be a \texttt{const} C++ member function.}
+              \State{
+                $$
+                M_{\tau[i]\times\sigma[j]} \coloneqq M_{\tau[i]\times\sigma[j]} - L_{\tau[i]\times\sigma[k]} \cdot U_{\tau[k]\times\sigma[j]}
+                $$}
+            \EndFor
+
+            \If{$j<i$}
+              \State{Solve the problem
+                $$
+                L_{\tau[i]\times\sigma[j]}U_{\tau[j]\times\sigma[j]}=M_{\tau[i]\times\sigma[j]}
+                $$
+                for $L_{\tau[i]\times\sigma[j]}$ using the matrix-valued forward substitution for
+   transpose matrix.}
+            \ElsIf{$j=i$}
+              \State{Perform LU factorization on the submatrix block $M_{\tau[i]\times\sigma[i]}$:
+                $$
+                LU(M_{\tau[i]\times\sigma[i]}, LU_{\tau[i]\times\sigma[i]}).
+                $$
+                Hence the recursion goes one level deeper.}
+            \ElsIf{$j>i$}
+              \State{Solve the problem
+                $$
+                L_{\tau[i]\times\sigma[i]}U_{\tau[i]\times\sigma[j]} = M_{\tau[i]\times\sigma[j]}
+                $$
+                for $U_{\tau[i]\times\sigma[j]}$ using the matrix-valued forward substitution.}
+            \EndIf
+          \EndFor
+        \EndFor
+      \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\subsection{$\mathcal{H}$-matrix solvers}
+
+\subsubsection{LU factorization of a full matrix}
+
+\paragraph{LAPACK's implementation}
+
+\paragraph{Octave's implementation}
+
+\subsubsection{Function names for $\mathcal{H}$-matrix solvers}
+
+At present, the naming convention for $\mathcal{H}$-matrix related solvers is a bit confusing, which is clarified as follows. Here we use lower case letters to represent vectors and upper case letters to represent matrices. Meanwhile, all matrices are $\mathcal{H}$-matrices.
+\begin{itemize}
+\item Solve \(Lx=b\)
+\begin{itemize}
+\item \texttt{solve\_by\_forward\_substitution}: when \(L\) is a lower triangular matrix
+\item \texttt{solve\_block\_triangular\_by\_forward\_substitution}: when \(L\) is a lower block triangular matrix
+\item \texttt{solve\_cholesky\_by\_forward\_substitution}: when \(L\) is obtained from Cholesky factorization, whose diagonal is not unit
+\end{itemize}
+\item Solve \(Ux=b\)
+\begin{itemize}
+\item \texttt{solve\_by\_backward\_substitution}: when \(U\) is an upper triangular matrix
+\item \texttt{solve\_block\_triangular\_by\_backward\_substitution}: when \(U\) is an upper block triangular matrix
+\end{itemize}
+\item Solve \(U^Tx=b\): \texttt{solve\_transpose\_by\_forward\_substitution}
+\item Solve \(L^Tx=b\): \texttt{solve\_cholesky\_by\_backward\_substitution}, where \(L\) is obtained from Cholesky factorization
+
+\item Solve \(LX=Z\)
+\begin{itemize}
+\item \texttt{solve\_by\_forward\_substitution\_matrix\_valued}:
+\item \texttt{solve\_cholesky\_by\_forward\_substitution\_matrix\_valued}: when \(L\) is obtained from Cholesky factorization, whose diagonal is not unit
+\end{itemize}
+\item Solve \(XU=Z\), which is equivalent to \(U^T X^T=Z^T\):
+
+  \texttt{solve\_transpose\_by\_forward\_substitution\_matrix\_valued}
+\item Solve \(XL^T=Z\), which is equivalent to \(L X^T=Z^T\):
+
+  \texttt{solve\_cholesky\_transpose\_by\_forward\_substitution\_matrix\_valued}, where \(L\) is obtained from Cholesky factorization
+\end{itemize}
+
+\section{Adaptive cross approximation}
+\label{sec:aca}
+
+\subsection{Basic concepts and understanding}
+
+\subsection{Algorithms for heuristic ACA and ACA+}
+
+\begin{enumerate}
+\item $S$ is the approximant of the original matrix $A\in\mathbb{R}^{\tau\times\sigma}$,
+  where $\abs{\tau}=m$ and $\abs{\sigma}=n$ \footnote{The operator $\abs{\cdot}$ gets the
+    cardinality of the set.}.
+\item $R$ is the remainder or error matrix.
+\item $Z_{\rm r}$ is the collection of already selected or checked row indices. N.B. A
+  zero row vector will not be selected but, but its row index will be added to $Z_{\rm r}$.
+\item $Z_{\rm c}$ is the collection of already selected or checked column indices. N.B. A
+  zero column vector will not be selected, but its column index will be added to $Z_{\rm c}$.
+\item $\bar{Z}_{\rm r}$ is the set of remaining row indices, which have not been selected or checked.
+\item $\bar{Z}_{\rm c}$ is the set of remaining column indices, which have not been selected or checked.
+\item $r$ is the current reference row index.
+\item $c$ is the current reference column index.
+\item $row\_approx\_counters\in\mathbb{Z}^m$ and $col\_approx\_counters\in\mathbb{Z}^{n}$ are the arrays of counters recording successful times of approximating rows and columns respectively.
+\item $i_k$ and $j_k$ are the currently selected row and column indices.
+\item $u_k=(R_{k-1})_{1:m,j_k}$ and $\widetilde{v}_k=(R_{k-1})_{i_k,1:n}^T$ comprise the currently selected cross, both of which are stored as column vectors.
+\item $v_k=(R_{k-1})_{i_k j_k}^{-1}\widetilde{v}_{k}\equiv (\widetilde{v}_k)_{j_k}^{-1}\widetilde{v}_k \equiv (u_k)_{i_k}^{-1}\widetilde{v}_k$ is the scaled row vector.
+\item Update of the approximant matrix $S$ is a gradual accumulation of crosses into an initially empty matrix:
+  \begin{equation*}
+    \begin{split} S_0 &= 0 \\ S_{k} &= S_{k-1}+(R_{k-1})_{i_k
+        j_k}^{-1}(R_{k-1})_{1:m,j_k}(R_{k-1})_{i_k,1:n} = S_{k-1} + u_kv_k^T.
+    \end{split}
+  \end{equation*}
+\item Update of the remainder matrix $R$ is a gradual removal of crosses from the original matrix $A$:
+  \begin{equation*}
+    \begin{split} R_0 &= A \\ R_{k} &= R_{k-1}-(R_{k-1})_{i_k
+        j_k}^{-1}(R_{k-1})_{1:m,j_k}(R_{k-1})_{i_k,1:n} = R_{k-1}-u_kv_k^T.
+    \end{split}
+  \end{equation*}
+\item Since the original matrix $A$ is expensive to compute, which should be prevented, extracting a row or column vector from the original matrix $A$ requires the evaluation of kernel integration.
+\end{enumerate}
+
+\begin{remark} The cross at the $k$-th step is selected from the remainder matrix $R_{k-1}$ instead of the original matrix $A$.
+\end{remark}
+
+\begin{breakablealgorithm}
+  \caption{Heuristic ACA\footnote{\emphr{How to estimate $\norm{R}_{\rm F}$ in this algorithm?}}}
+  \begin{algorithmic}[1]
+    \State Start with $k=1$, $Z_{\rm r}=\Phi$, $S=0$, $R=A$, $row\_approx\_counters=0$ and
+$col\_approx\_counters=0$.
+    \Repeat
+      \State{\bluecomment{Select a new row index $i_k$ for approximation.}}
+      \If {$k\equiv 1$}
+        \State{Select the row index $i_k$ whose support point has the closest distance to
+the centroid of $X_{\tau}$.} \Comment{This is the ACA-new method in
+\cite{BebendorfHierarchical2008}.}
+        \State{Or}
+        \State{Select the row index $i_k$ whose support point has the closest distance to
+the centroid of $X_{\sigma}$.} \Comment{This is the ACA-old method in
+\cite{BebendorfHierarchical2008} or the method in \cite{HackbuschHierarchical2015}.}
+      \Else
+        \State{Select the row index $i_k$ such that $row\_approx\_counters[i_k]$ has the minimum value:
+          \begin{equation*}
+            i_k = \argmin_{i=1,\cdots,m} row\_approx\_counters[i]
+          \end{equation*}} \Comment{N.B. The minimum value may not be unique. Then
+randomly select one or simply select the first one.}
+      \EndIf
+
+      \State{Append the row index $i_k$ to the set $Z_{\rm r}$: $Z_{\rm r} = Z_{\rm r}
+\cup \{i_k\}$.}
+      \State{Extract the $i_k$-th row from $A$: $\widetilde{v}_k= a_{i_k,1:n}$.}
+
+      \\
+      \State{\bluecomment{Transform the $i_k$-th row of $A$ into the $i_k$-th row of
+$R_{k-1}$ when $k>1$.}}
+      \If {$k>1$}
+        \State{\bluecomment{Accumulate the influence of previous steps into the $i_k$-th
+row of $A$, so that the $i_k$-th row of $R_{k-1}$ is obtained.}}
+        \For {$l=1,\cdots,k-1$}
+          \State{$\widetilde{v}_k=\widetilde{v}_k-(u_l)_{i_k}v_l$}
+        \EndFor
+      \EndIf
+      \\
+
+      \If {$\widetilde{v}_k$ does not vanish}
+        \State{\bluecomment{Select a new column index $j_k$ for approximation.}}
+        \If {$k\equiv 1$}
+          \State{Select the column index $j_k$ so that $(\widetilde{v}_k)_{j_k}$ has the maximum absolute value:
+          \begin{equation*}
+            j_k = \argmax_{j=1,\cdots,n} \abs{(\widetilde{v}_k)_j}
+          \end{equation*}}
+        \Else
+          \State{Select the column index $j_k$ such that $col\_approx\_counters[j_k]$ has the minimum value:
+          \begin{equation*}
+            j_k = \argmin_{j=1,\cdots,n} col\_approx\_counters[j]
+          \end{equation*}} \Comment{N.B. The minimum value may not be unique. Then
+randomly select one or simply select the first one.}
+        \EndIf
+        \\
+
+        \State{Scale $\widetilde{v}_k$ using the value at the current cross point in
+$R_{k-1}$: $v_k = (\widetilde{v}_k)_{j_k}^{-1}\widetilde{v}_k$}
+        \State{Select the $j_k$-th column from $A$: $u_k = a_{1:m,j_k}$}
+
+        \State{\bluecomment{Transform the $j_k$-th column of $A$ into the $j_k$-th column
+of $R_{k-1}$ when $k>1$.}}
+        \If {$k>1$}
+          \State{\bluecomment{Accumulate the influence of previous steps into the $j_k$-th
+column of $A$, so that the $j_k$-th column of $R_{k-1}$ is obtained.}}
+          \For {$l=1,\cdots,k-1$}
+            \State{$u_k = u_k-u_l(v_l)_{j_k}$}
+          \EndFor
+        \EndIf
+
+        \State{\emphr{Calculate the Frobenius norm of $R$.}} \Comment{When $k=1$, $\norm{R}_{\rm F}=0$.}
+
+        \State{\bluecomment{Update the row approximation counter arrays.}}
+        \For {$i=1,\cdots,m$}
+          \If {$\abs{(u_k)_i} \leq \norm{R}_{\rm F}$} \Comment{At present, $R \equiv
+R_{k-1}$.}
+            \State{$row\_approx\_counters[i]++$}
+          \EndIf
+        \EndFor
+
+        \State{\bluecomment{Update the column approximation counter arrays.}}
+        \For {$j=1,\cdots,n$}
+          \If {$\abs{(v_k)_j} \leq \norm{R}_{\rm F}$} \Comment{At
+present, $R \equiv R_{k-1}$.}
+            \State{$col\_approx\_counters[j]++$}
+          \EndIf
+        \EndFor
+
+        \State{Update the approximant $S$ of $A$: $S=S+u_kv_k^T$.} \Comment{$u_kv_k^T$ is
+a cross appended to the approximant $S$, so that the approximant matrix gradually
+approaches to the original matrix. Here $v_k$ is the selected row vector but stored as a
+column vector, hence there is a transposition here.}
+
+        \State{\emphr{Update the remainder matrix $R$: $R=R-u_kv_k^T$.}\footnote{\emphr{Because the full matrix $A$ should be evaluated to calculate $R$, this procedure is not practical.}}} \Comment{In each iteration, the cross $u_kv_k^T$ is removed from the remainder matrix $R$, so that the error matrix gradually approaches to zero.}
+
+        \State{\bluecomment{Check the convergence condition.}}
+        \If {$\norm{u_k}_2\norm{v_k}_2 \leq
+\frac{\varepsilon(1-\eta)}{1+\varepsilon}\norm{S}_{\rm F}$}
+          \State{Exit loop.}
+        \Else
+          \State{$k=k+1$}
+        \EndIf
+      \Else
+        \State{Continue.} \Comment{Since no valid row is selected, the iteration counter
+$k$ does not increase.}
+      \EndIf
+    \Until{$Z_{\rm r}=\{1,\cdots,m\}$} \Comment{i.e. All rows of $A$ have been tried for selection.}
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\begin{breakablealgorithm}
+  \caption{Reference row selection in ACA+ proposed in \cite{GrasedyckAdaptive2005}}
+  \begin{algorithmic}[1]
+    \Function{select\_ref\_row}{$A$, $\bar{Z}_{\rm r}$, $r$}
+      \While {$\bar{Z}_{\rm r} \neq \Phi$}
+        \State {Randomly select an index $p$ from $\bar{Z}_{\rm r}$.}
+        \If {$p \neq r$}
+          \State {Compute the $p$-th row of the matrix $A$: $v_p = a_{p,1:n}$.}
+          \If {$\norm{v_p} \equiv 0$}
+            \State {Remove the index $p$ from $\bar{Z}_{\rm r}$: $\bar{Z}_{\rm r} =
+\bar{Z}_{\rm r}\backslash\{p\}$.}
+            \State {Continue to select another non-zero row.}
+          \Else
+            \State {\Return $p$.}
+          \EndIf
+        \Else
+          \If {$\abs{\bar{Z}_{\rm r}} \equiv 1$}
+            \State {\emphr{Throw an error that no reference row can be selected!}}
+\Comment {Since there is only the $r$-th row left.}
+          \Else
+            \State {Continue to select another row different from the $r$-th row.}
+          \EndIf
+        \EndIf
+      \EndWhile
+
+      \State {\emphr{Throw an error that no reference row can be selected!}}
+    \EndFunction
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\begin{breakablealgorithm}
+  \caption{Reference column selection in ACA+ proposed in \cite{GrasedyckAdaptive2005}}
+  \begin{algorithmic}[1]
+    \Function{select\_ref\_col}{$A$, $\bar{Z}_{\rm c}$, $c$}
+      \While {$\bar{Z}_{\rm c} \neq \Phi$}
+        \State {Randomly select an index $p$ from $\bar{Z}_{\rm c}$.}
+        \If {$p \neq c$}
+          \State {Compute the $p$-th column of the matrix $A$: $v_p = a_{1:m,p}$.}
+          \If {$\norm{v_p} \equiv 0$}
+            \State {Remove the index $p$ from $\bar{Z}_{\rm c}$: $\bar{Z}_{\rm c} =
+\bar{Z}_{\rm c}\backslash\{p\}$.}
+            \State {Continue to select another non-zero column.}
+          \Else
+            \State {\Return $p$.}
+          \EndIf
+        \Else
+          \If {$\abs{\bar{Z}_{\rm c}} \equiv 1$}
+            \State {\emphr{Throw an error that no reference column can be selected!}}
+\Comment {Since there is only the $c$-th column left.}
+          \Else
+            \State {Continue to select another column different from the $c$-th column.}
+          \EndIf
+        \EndIf
+      \EndWhile
+      \State {\emphr{Throw an error that no reference column can be selected!}}
+    \EndFunction
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\begin{breakablealgorithm}
+  \caption{ACA+ proposed in \cite{GrasedyckAdaptive2005}}
+  \begin{algorithmic}[1]
+    \State {Start with $k=1$, $\bar{Z}_{\rm r}=\{1:m\}$, $\bar{Z}_{\rm c}=\{1:n\}$,
+$S=0$.}
+    \State {Randomly select a reference row index $r$: $r=select\_ref\_row(A, \bar{Z}_{\rm
+r}, -1)$.} \Comment{Initially, the current reference row index is $-1$.}
+    \State {Randomly select a reference column index $c$: $c=select\_ref\_col(A,
+\bar{Z}_{\rm c}, -1)$.} \Comment{Initially, the current reference column index is $-1$.}
+    \State {Compute the $r$-th row of $A$ and store it as a column vector: $v_{\rm r} =
+a_{r, 1:n}^T$.} \Comment{In each ACA iteration, $v_{\rm r}$ will be updated.}
+    \State {Compute the $c$-th column of $A$: $u_{\rm c} = a_{1:m,c}$.} \Comment{In each
+ACA iteration, $u_{\rm c}$ will be updated.}\\
+    
+    \Repeat
+      \State {Determine a row index $i^{*}$ as the maximiser of the reference column $c$
+in $R_{k-1}$:
+        \begin{equation*}
+          i^{*} = \argmax_{i=1,\cdots,m} \abs{(u_{\rm c})_i}.
+        \end{equation*}}
+
+      \State {Determine a column index $j^{*}$ as the maximiser of the reference row $r$
+in $R_{k-1}$:
+        \begin{equation*}
+          j^{*} = \argmax_{j=1,\cdots,n} \abs{(v_{\rm r})_j}.
+        \end{equation*}}
+
+      \If {$\abs{(u_{\rm c})_{i^{*}}} > \abs{(v_{\rm r})_{j^{*}}}$}
+        \State {Select $i_k = i^{*}$ as the current row index.}
+        \State{Compute the $i_k$-th row of $A$: $\widetilde{v}_k= a_{i_k,1:n}$.}
+        \State{\bluecomment{Transform the $i_k$-th row of $A$ into the $i_k$-th row of
+$R_{k-1}$ when $k>1$, i.e. accumulate the influence of previous steps into the $i_k$-th
+row of $A$, so that the $i_k$-th row of $R_{k-1}$ is obtained.}}
+        \For {$l=1,\cdots,k-1$}
+          \State{$\widetilde{v}_k=\widetilde{v}_k-(u_l)_{i_k}v_l$}
+        \EndFor
+
+        \State {Select the current column index $j_k$ as
+          \begin{equation*}
+            j_k = \argmax_{j=1,\cdots,n} \abs{(\widetilde{v}_k)_{j}}.
+          \end{equation*}}
+
+        \State{Scale $\widetilde{v}_k$ using the value at the current cross point in
+$R_{k-1}$: $v_k = (\widetilde{v}_k)_{j_k}^{-1}\widetilde{v}_k$}
+        \State{Select the $j_k$-th column from $A$: $u_k = a_{1:m,j_k}$}
+        \State{\bluecomment{Transform the $j_k$-th column of $A$ into the $j_k$-th column
+of $R_{k-1}$ when $k>1$, i.e. accumulate the influence of previous steps into the $j_k$-th
+column of $A$, so that the $j_k$-th column of $R_{k-1}$ is obtained.}}
+        \For {$l=1,\cdots,k-1$}
+          \State{$u_k = u_k-u_l(v_l)_{j_k}$}
+        \EndFor
+      \Else
+        \State {Select $j_k = j^{*}$ as the current column index.}
+        \State {Compute the $j_k$-th column of $A$: $u_k = a_{1:m,j_k}$.}
+        \State {\bluecomment{Transform the $j_k$-th column of $A$ into the $j_k$-th column
+of $R_{k-1}$ when $k>1$, i.e. accumulate the influence of previous steps into the $j_k$-th
+column of $A$, so that the $j_k$-th column of $R_{k-1}$ is obtained.}}
+        \For {$l=1,\cdots,k-1$}
+          \State{$u_k = u_k-u_l(v_l)_{j_k}$}
+        \EndFor
+
+        \State {Select the current row index $i_k$ as
+          \begin{equation*}
+            i_k = \argmax_{i=1,\cdots,m}\abs{(u_k)_i}.
+          \end{equation*}}
+
+        \State{Compute the $i_k$-th row of $A$: $\widetilde{v}_k= a_{i_k,1:n}$.}
+        \State{\bluecomment{Transform the $i_k$-th row of $A$ into the $i_k$-th row of
+$R_{k-1}$ when $k>1$, i.e. accumulate the influence of previous steps into the $i_k$-th
+row of $A$, so that the $i_k$-th row of $R_{k-1}$ is obtained.}}
+        \For {$l=1,\cdots,k-1$}
+          \State{$\widetilde{v}_k=\widetilde{v}_k-(u_l)_{i_k}v_l$}
+        \EndFor
+
+        \State{Scale $\widetilde{v}_k$ using the value at the current cross point in
+$R_{k-1}$: $v_k = (\widetilde{v}_k)_{j_k}^{-1}\widetilde{v}_k$}
+      \EndIf
+
+      \State{Update the approximant $S$ of $A$: $S=S+u_kv_k^T$.} \Comment{$u_kv_k^T$ is a
+cross appended to the approximant $S$, so that the approximant matrix gradually approaches
+to the original matrix. Here $v_k$ is the selected row vector but stored as a column
+vector, hence there is a transposition here.}
+      \State {Remove the selected row index from the set of remaining row indices: $\bar{Z}_{\rm
+r}=\bar{Z}_{\rm r}\backslash\{i_k\}$}
+      \State {Remove the selected column index from the set of remaining column indices:
+$\bar{Z}_{\rm c}=\bar{Z}_{\rm c}\backslash\{j_k\}$}
+
+      \If {$i_k \equiv r$} \Comment {If the current selected row clashes with the
+reference row, reselect a reference.}
+        \State {$r=select\_ref\_row(A, \bar{Z}_{\rm r}, r)$.}
+        \State {Compute the $r$-th row of $A$ and store it as a column vector: $v_{\rm r}
+= a_{r, 1:n}^T$.}
+        \State{\bluecomment{Transform the $r$-th row of $A$ into the $r$-th row of $R_k$
+when $k\geq1$, i.e. accumulate the influence of previous steps into the $r$-th row of $A$,
+so that the $r$-th row of $R_k$ is obtained.}}
+        \For {$l=1,\cdots,k$}
+          \State {$v_{\rm r} = v_{\rm r} - (u_l)_rv_l$}
+        \EndFor
+      \Else
+        \State {Calculate the $r$-th row of $R_{k}$: $v_{\rm r} = v_{\rm r} -
+(u_k)_rv_k$.}
+      \EndIf\\
+
+      \If {$j_k \equiv c$} \Comment {If the current selected column clashes with the
+reference column, reselect a reference.}
+        \State {$c=select\_ref\_col(A, \bar{Z}_{\rm c}, c)$.}
+        \State {Compute the $c$-th column of $A$: $u_{\rm c} = a_{1:m,c}$.}
+        \State{\bluecomment{Transform the $c$-th column of $A$ into the $c$-th column of
+$R_k$ when $k\geq1$, i.e. accumulate the influence of previous steps into the $c$-th
+column of $A$, so that the $c$-th column of $R_k$ is obtained.}}
+        \For {$l=1,\cdots,k$}
+          \State {$u_{\rm c} = u_{\rm c} - u_l(v_l)_c$}
+        \EndFor
+      \Else
+        \State {Calculate the $c$-th column of $R_{k}$: $u_{\rm c} = u_{\rm c} -
+u_k(v_k)_c$.}
+      \EndIf
+
+      \State{\bluecomment{Check the convergence condition.}}
+      \If {$\norm{u_k}_2\norm{v_k}_2 \leq
+\frac{\varepsilon(1-\eta)}{1+\varepsilon}\norm{S_{k-1}}_{\rm F}$}
+        \State{Exit loop.}
+      \Else
+        \State{$k=k+1$}
+      \EndIf
+    \Until{$\bar{Z}_{\rm r} \equiv \Phi$} \Comment{i.e. All rows of $A$ have been tried for selection.}
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\subsection{Hierarchy of function calls for building an $\mathcal{H}$-matrix via ACA}
+
+The following functions are defined in the header file \texttt{aca\_plus.h}.
+
+\begin{itemize}
+\item \texttt{fill\_hmatrix\_with\_aca\_plus\_serial}: serial version\footnote{Serial is in the
+    sense that each $\mathcal{H}$-matrix node in the leaf set is assembled one-by-one with
+    parallelization on CPU.} including three variants
+  \begin{itemize}
+  \item only BEM matrix without mass matrix
+  \item BEM matrix plus the mass matrix, for example
+    \begin{itemize}
+    \item the right hand side matrix $\sigma\mathscr{I}+\mathscr{K}$ in the interior
+      Dirichlet problem
+    \item the right hand side matrix $(\sigma-1)\mathscr{I}+\mathscr{K}$ in the exterior Dirichlet
+      problem
+    \item the right hand side matrix $(1-\sigma)\mathscr{I}-\mathscr{K}'$ in the interior Neumann
+      problem
+    \item the right hand side matrix $-\sigma \mathscr{I}-\mathscr{K}'$ in the exterior Neumann problem
+    \item the right hand side matrices $\sigma \mathscr{I}+\mathscr{K}$ and
+      $(1-\sigma)\mathscr{I}-\mathscr{K}'$ in the interior mixed problem
+    \item the right hand side matrices $(\sigma-1)\mathscr{I}+\mathscr{K}$ and $-\sigma
+      \mathscr{I}-\mathscr{K}'$ in the exterior mixed problem
+    \end{itemize}
+  \item BEM matrix with kernel regularization\footnote{At the moment, only the hyper-singular
+      kernel $D$ needs regularization.}
+  \end{itemize}
+  For each leaf node, this function calls the corresponding \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus}.
+\item \texttt{fill\_hmatrix\_with\_aca\_plus\_smp}: parallel version\footnote{Parallel is
+    in the sense that the $\mathcal{H}$-matrix leaf set is partitioned into ranges and
+    parallelized by TBB.} including three variants:
+  \begin{itemize}
+  \item only BEM matrix without mass matrix
+  \item BEM matrix plus the mass matrix
+  \item BEM matrix with kernel regularization
+  \end{itemize}
+\item \texttt{fill\_far\_field\_hmatrix\_leaf\_node\_subrange\_with\_aca\_plus}: build
+  far field $\mathcal{H}$-matrix leaf nodes within a subrange, which has two variants
+  \begin{itemize}
+  \item only BEM matrix without mass matrix
+  \item BEM matrix with kernel regularization
+  \end{itemize}
+  N.B. Mass matrix only contributes to near field $\mathcal{H}$-matrices. Therefore, there
+  is no overload version for handling BEM matrix with mass matrix.
+\item \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus}: build a single
+  $\mathcal{H}$-matrix leaf node, which has three variants corresponding
+  to \texttt{fill\_hmatrix\_with\_aca\_plus\_smp}.
+  \begin{itemize}
+  \item For near field leaf node, 
+  \end{itemize}
+\end{itemize}
+
+Additional notices
+\begin{itemize}
+\item Build symmetric $\mathcal{H}$-matrix
+
+  When the $\mathcal{H}$-matrix block type is rank-k matrix, if the top level
+  $\mathcal{H}$-matrix is symmetric and the flag \texttt{enable\_build\_symmetric\_hmat}
+  is \texttt{true}, only those matrix blocks belonging to the lower triangular part will
+  be computed. Otherwise, the rank-k matrix block will always be computed.
+\item Quadrature objects
+
+  In the function interface for \(\mathcal{H}\)-matrix construction with the mass matrix,
+  only the quadrature formula for the mass matrix is explicitly passed into the function
+  but without the Sauter quadrature formula for BEM matrix. This is because it is
+  contained in \texttt{BEMValues}.
+\end{itemize}
+
+\section{Matrix and vector assembly in BEM}
+
+\subsection{Cell based assembly}
+
+\begin{itemize}
+\item Usage of \texttt{std::bind}: \texttt{std::bind} creates a functor which captures local variables as well as the user provided function pointer or function object from outside either pass-by-value or pass-by-reference. The former is the default, while the latter should be enabled by explicitly specifying the keyword \texttt{std::ref} or \texttt{std::cref}. These captured values become the member variables of the functor created by \texttt{std::bind}. It overloads the \texttt{operator()}, in which parameters are organized and passed to the user provided functor.
+\item \texttt{ScratchData} and \texttt{CopyData} are passed to the local cell assembly function by reference, since their members will be modified in the function. \texttt{CopyData} is passed to the local-to-global copy function by const reference, since there is modification inside.
+\item \texttt{ScratchData} and \texttt{CopyData} are passed to the \texttt{std::bind} function for the local cell assembly function by value. Similarly, \texttt{CopyData} is passed to the \texttt{std::bind} function for the local-to-global copy function by value. In this way, each working thread can have its own copy of \texttt{ScratchData} and \texttt{CopyData}.
+
+We also note that the \texttt{CopyData} is passed to the local cell assembly function and the local-to-global copy function by value. Then a question comes, do these two copies point to a same object? In principle, it must. Otherwise, the updated DoF indices in the local assembly function cannot be embodied in the local copy function. \emph{Even though I cannot understand the mechanism here, such behavior has been verified in my previous program for assembling mass matrix and BEM full matrix.}
+\begin{lstlisting}[language=C++]
+WorkStream::run(
+    cell_iterator_pairs_for_mass_matrix.begin(),
+    cell_iterator_pairs_for_mass_matrix.end(),
+    std::bind(&assemble_fem_scaled_mass_matrix_on_one_cell<dim,
+              spacedim,
+              RangeNumberType>,
+              factor,
+              std::placeholders::_1,
+              std::placeholders::_2,
+              std::placeholders::_3),
+    std::bind(&copy_cell_local_to_global_for_fem_matrix<dim,
+              spacedim,
+              RangeNumberType,
+              MatrixType>,
+              std::placeholders::_1,
+              std::ref(target_full_matrix)),
+    CellWiseScratchData<dim, spacedim>(dof_handler_for_test_space.get_fe(),
+                                       dof_handler_for_trial_space.get_fe(),
+                                       quad_rule,
+                                       update_values | update_JxW_values),
+    CellWisePerTaskData<dim, spacedim, RangeNumberType>(
+        dof_handler_for_test_space.get_fe(),
+        dof_handler_for_trial_space.get_fe()));
+\end{lstlisting}
+\end{itemize}
+
+\subsubsection{Notices for FEM mass matrix assembly in BEM}
+\label{sec:fem-mass-matrix-assembly-in-bem}
+During FEM mass matrix assembly, when the test space and trial space are constructed on different triangulations (even though the underlying geometry is the same), we need to note the following points.
+\begin{itemize}
+\item The enumeration of cells in their triangulations or DoF handlers are usually different.
+\item Hence, their cell indices are different and we cannot check if a cell from the test space is the same cell as that from the trial space by testing their respective cell index.
+\item Even if the two cells from the test space and trial space are the same, their vertex orderings may still be different, because each triangulation object has its own way of ordering its contained geometric entities.
+\item Because the list of quadrature points generated by a \texttt{FEValue} object in a cell depends on the ordering of vertices and the ordering of the support points in the mapping object, the quadrature points generated for a cell in the test space usually have different ordering from the ordering in a cell in the trial space.
+\end{itemize}
+The above consideration reminds us that when we want to assemble a FEM matrix, for the convenience of implementation, the test space and trial space had better be constructed on a same triangulation. If this cannot be guaranteed, we need to reorder the vertices in both cells and support points in both mapping objects, like the \texttt{SamePanel} case used in the Sauter quadrature.
+
+\subsection{DoF based assembly}
+
+\subsection{DoF numberings adopted during $\mathcal{H}$-matrix assembly}
+
+In the mixed boundary value problem, we need two definitions.
+
+\begin{Definition}[Extended Dirichlet domain $\tilde{\Gamma}_D$]
+  It is the original Dirichlet domain $\Gamma_D$ extended by one layer of cells which
+  are contained in $\Gamma_N$ and neighbor $\Gamma_D$. Whether a cell neighbors $\Gamma_D$
+  depends on if it has at least a vertex located on $\Gamma_D \cap \Gamma_N$.
+\end{Definition}
+
+\begin{Definition}[Retracted Neumann domain $\tilde{\Gamma}_{N}$]
+  It is the original Neumann domain $\Gamma_{N}$ with the interface $\Gamma_D\cap\Gamma_N$
+  removed.
+
+  Hence, the Neumann domain is an open set.
+\end{Definition}
+
+\begin{itemize}
+\item Original numbering
+
+  The indices (starting from zero) for all DoFs within a DoF handler.
+  
+  For all function spaces used in the Dirichlet problem and Neumann problem, and for the
+  Neumann function space in the mixed boundary value problem, all DoFs in the DoF handler
+  are used.
+
+\item Local numbering
+
+  For the Dirichlet function space in the mixed boundary value problem, i.e. Dirichlet
+  function space on the \emph{extended} Dirichlet domain and \emph{retracted} Neumann
+  domain, only a subset of the DoFs in the corresponding DoF handler are selected to build
+  the cluster tree, block cluster tree and $\mathcal{H}$-matrix.
+
+  These selected DoFs are renumbered in the local numbering (starting from zero).
+  
+\item Internal numbering
+
+  Due to the partition of support points during building a cluster tree, the effective
+  DoFs in a DoF handler along with their support points will be reordered. This is the
+  internal DoF numbering.
+  
+\item External numbering
+
+  Contrary to the concept of internal numbering, the original DoF indices before building
+  a cluster tree have the external numbering.
+
+\item In the class \texttt{LaplaceBEM}, we have the following maps
+  \begin{itemize}
+  \item maps from internal to external DoF indices for various DoF handlers
+  \item maps from external to internal DoF indices for various DoF handlers
+  \item map from local to original DoF indices for the Dirichlet function space on Dirichlet domain
+  \item map from local to original DoF indices for the Dirichlet function space on Neumann domain
+  \end{itemize}
+\end{itemize}
+
+
+\section{Test cases}
+
+\subsection{Exterior Laplace problem with different types of boundary conditions on a
+  sphere}
+\label{sec:testcase-exterior-laplace}
+
+Assume the domain $\Omega$ is a unit sphere in $\mathbb{R}^3$ located at the origin. $n$ is the
+\textbf{outward} unit normal vector on the sphere surface $\Gamma$. A unit Dirac source is
+located at $x_0$ within $\Omega$. The potential $u$ generated by this source is the
+fundamental solution
+\begin{equation}
+  u(x) = \frac{1}{4\pi\norm{x-x_0}} \quad (x\neq x_0),
+\end{equation}
+which is the Dirichlet data.
+
+Its normal derivative at $\Gamma$ is
+\begin{equation}
+  \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = n(x)\cdot\nabla_x
+  \left( \frac{1}{4\pi\norm{x-x_0}} \right) = \frac{1}{4\pi}\frac{(n(x),
+    x_0-x)}{\norm{x-x_0}^3} \quad (x\in\Gamma),
+\end{equation}
+which is the Neumann data.
+
+Because $\Omega$ is a unit sphere located at the origin, the outward unit normal vector
+$n(x)$ rooted on $\Gamma$ is just $x$ itself. Hence,
+\begin{equation}
+  \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{1}{4\pi}\frac{(x,
+    x_0-x)}{\norm{x-x_0}^3} \quad (x\in\Gamma).
+\end{equation}
+N.B. Because $x_0$ is inside $\Omega$, $x_0-x$ points into the sphere, while $x$ points
+outside the sphere. Hence, the Neumann data on $\Gamma$ are all negative. This is
+reasonable, the electric field generated by a positive point charge directs outward, while
+its normal derivative points inward.
+
+With the above analytical formulations for the Dirichlet and Neumann data on $\Gamma$,
+test cases for Laplace exterior problems are defined below.
+
+\begin{itemize}
+\item Dirichlet problem
+  \begin{equation}
+    \begin{cases}
+      \triangle u = 0 & \text{in $\Omega^{\rm c}\coloneqq\mathbb{R}^3\backslash\overline{\Omega}$} \\
+      u(x) = g_{\rm D} = \frac{1}{4\pi\norm{x-x_0}} & x\in\Gamma, x_0\in\Omega \\
+      \abs{u(x)} = O(\norm{x}^{-1}) & \text{when $\norm{x-x_0}\rightarrow\infty$}
+    \end{cases}
+  \end{equation}
+  Its solution is the Neumann data.
+\item Neumann problem
+  \begin{equation}
+    \begin{cases}
+      \triangle u = 0 & \text{in $\Omega^{\rm c}\coloneqq\mathbb{R}^3\backslash\overline{\Omega}$} \\
+      \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = g_{\rm N} = \frac{1}{4\pi}\frac{(n(x),
+        x_0-x)}{\norm{x-x_0}^3} & x\in\Gamma, x_0\in\Omega \\
+      \abs{u(x)} = O(\norm{x}^{-1}) & \text{when $\norm{x-x_0}\rightarrow\infty$}
+    \end{cases}
+  \end{equation}
+  Its solution is the Dirichlet data.
+\item Mixed boundary value problem
+
+  When $x\in\Gamma$ and $x_3\geq 0$, assign the boundary condition with the Dirichlet data.
+  When $x\in\Gamma$ and $x_3<0$, assign the Neumann data. The solution is also split into
+  halves, with the Neumann data for $x_3\geq 0$ and the Dirichlet data for $x_3<0$.
+\end{itemize}
+
+\begin{mycomment}
+  In \cite{ErichsenEfficient1998}, the inward unit normal vector is adopted, hence the
+  boundary condition $f$ of my version has a different sign. My formulation follows the
+  convention adopted by \cite{SteinbachNumerical2007}.
+\end{mycomment}
+
+\subsection{Integral on curved domain: spherical surface}
+
+The potential function $u$ of a unit Dirac source at $x_0$ satisfies
+\begin{equation}
+  -\triangle u = \delta(x-x_0) \quad \text{in $\mathbb{R}^3$}.
+\end{equation}
+For any domain $\Omega$ containing $x_0$, apply the Gauss's divergence theorem, we have
+\begin{equation}
+  \int_{\Gamma} -\frac{\pdiff u}{\pdiff n} \intd s = 1.
+\end{equation}
+Therefore, we adopt the $\Omega$ in Section \ref{sec:testcase-exterior-laplace} and
+integrate the negative Neumann data $\frac{1}{4\pi}\frac{(x, x-x_0)}{\norm{x-x_0}^3}$ on
+the sphere surface. The deviation of the result from 1 is a direct evaluation of the
+accuracy of the numerical quadrature.
+
+\bibliography{hierbem}
+
+\listofalgorithms
+
+\lstlistoflistings
+
+\end{document}

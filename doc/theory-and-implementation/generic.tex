@@ -1,0 +1,756 @@
+\synctex=1
+
+% in the document preamble
+\usepackage[stable]{footmisc}
+
+\usepackage{ifthen}
+\makeatletter
+\@ifclassloaded{beamer}{
+  %% Configuration for the beamer class.
+  %% For subfigure typesetting
+  \usepackage{caption}
+  \usepackage{subcaption}
+}{
+  %% Configuration for other classes.
+  
+  \ifthenelse{\(\isundefined\pdfoutput\)\OR\(\pdfoutput < 1\)}{
+    %% When the PDF output is not enabled.
+    \usepackage[dvips]{graphicx}
+    \usepackage[dvipdfm, bookmarksopen=true, bookmarksnumbered=true, colorlinks=true, citecolor=blue, hyperindex=true, plainpages=false, pdfpagelabels=true, destlabel=true]{hyperref}
+  }{
+    %% When the PDF output is enabled.
+    \usepackage[pdftex]{graphicx}
+    %% For subfigure typesetting
+    \usepackage{subfigure}
+
+    \usepackage[pdftex, unicode=true, bookmarksopen=true, bookmarksnumbered=true, colorlinks=true, citecolor=blue, hyperindex=true, plainpages=false, pdfpagelabels=true, destlabel=true]{hyperref}
+  }
+
+  \hypersetup{
+    pdfnewwindow=true
+  }
+
+  %% Use color by names
+  \usepackage[usenames]{xcolor}
+
+  % Let "paragraph" be the 4-th level heading.
+  \usepackage{titlesec}
+  \setcounter{secnumdepth}{4}
+  \setcounter{tocdepth}{4}
+  \titleformat{\paragraph}
+  {\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+  \titlespacing*{\paragraph}
+  {0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+}
+\makeatother
+
+%% Customized colors
+\definecolor{comment-green}{RGB}{0, 102, 0}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+\definecolor{solarized-yellow}{RGB}{246, 240, 222}
+% Background color for highlighting source code
+\definecolor{code-hl}{RGB}{204, 255, 255}
+
+% Highlight color
+\usepackage{soul}
+\sethlcolor{code-hl}
+
+% SI units: use \squaren to represent squared units. Otherwise, there will be a
+% conflict with the \square command defined in amssymb.
+\usepackage[cdot, thinqspace, squaren]{SIunits}
+
+% Typesetting chemistry
+\usepackage{mhchem}
+
+% For typesetting the tilde symbol in normal text.
+\usepackage{textcomp}
+
+% Typesetting source code
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{comment-green},
+  stringstyle=\color{magenta},
+  columns=fullflexible,
+  frame=single,
+  breaklines=true
+}
+
+\makeatletter
+\@ifclassloaded{beamer}{
+  \newsavebox\redarrow
+  \sbox\redarrow{\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}}}
+  \lstset{postbreak=\usebox\redarrow}
+}{\lstset{postbreak=\hbox{\textcolor{red}{$\hookrightarrow$}\space}}}
+\makeatother
+
+% Define an empty language which is responsible for typesetting text-mode source
+% code block in Emacs.
+\lstdefinelanguage{Text}{}
+
+% Define a new language for cmake.
+\lstdefinelanguage{cmake}{
+  morekeywords = [1]{
+    add_compile_definitions,
+    add_compile_options,
+    add_custom_command,
+    add_custom_target,
+    add_definitions,
+    add_dependencies,
+    add_executable,
+    add_library,
+    add_link_options,
+    add_subdirectory,
+    add_test,
+    aux_source_directory,
+    break,
+    build_command,
+    cmake_host_system_information,
+    cmake_language,
+    cmake_minimum_required,
+    cmake_path,
+    cmake_parse_arguments,
+    cmake_policy,
+    configure_file,
+    continue,
+    create_test_sourcelist,
+    ctest_build,
+    ctest_configure,
+    ctest_coverage,
+    ctest_empty_binary_directory,
+    ctest_memcheck,
+    ctest_read_custom_files,
+    ctest_run_script,
+    ctest_sleep,
+    ctest_start,
+    ctest_submit,
+    ctest_test,
+    ctest_update,
+    ctest_upload,
+    define_property,
+    else,
+    elseif,
+    enable_language,
+    enable_testing,
+    endforeach,
+    endfunction,
+    endif,
+    endmacro,
+    endwhile,
+    execute_process,
+    export,
+    file,
+    find_file,
+    find_library,
+    find_package,
+    find_path,
+    find_program,
+    fltk_wrap_ui,
+    foreach,
+    function,
+    get_cmake_property,
+    get_directory_property,
+    get_filename_component,
+    get_property,
+    get_source_file_property,
+    get_target_property,
+    get_test_property,
+    if,
+    include,
+    include_directories,
+    include_external_msproject,
+    include_guard,
+    include_regular_expression,
+    install,
+    link_directories,
+    link_libraries,
+    list,
+    load_cache,
+    macro,
+    mark_as_advanced,
+    math,
+    message,
+    option,
+    project,
+    qt_wrap_cpp,
+    qt_wrap_ui,
+    remove_definitions,
+    return,
+    separate_arguments,
+    set,
+    set_directory_properties,
+    set_property,
+    set_source_files_properties,
+    set_target_properties,
+    set_tests_properties,
+    site_name,
+    source_group,
+    string,
+    target_compile_definitions,
+    target_compile_features,
+    target_compile_options,
+    target_include_directories,
+    target_link_directories,
+    target_link_libraries,
+    target_link_options,
+    target_precompile_headers,
+    target_sources,
+    try_compile,
+    try_run,
+    unset,
+    variable_watch,
+    while
+    },
+  morekeywords = [2]{
+    @ONLY,
+    ABSOLUTE,
+    ABSOLUTE_PATH,
+    AFTER,
+    ALIAS,
+    AND,
+    ANDROID_MK,
+    ANGLE-R,
+    ANSI,
+    APPEND,
+    APPEND_STRING,
+    ARCHIVE,
+    ARGN,
+    ASCII,
+    ASCII,
+    AUTHOR_WARNING,
+    AUTO,
+    AVAILABLE_PHYSICAL_MEMORY,
+    AVAILABLE_VIRTUAL_MEMORY,
+    BASE_DIR,
+    BASE_DIRECTORY,
+    BEFORE,
+    BOOL,
+    BRIEF_DOCS,
+    BUILD,
+    BUILD_INTERFACE,
+    BUNDLE,
+    BYPRODUCTS,
+    CACHE,
+    CACHED_VARIABLE,
+    CALL,
+    CAPTURE_CMAKE_ERROR,
+    CDASH_UPLOAD,
+    CDASH_UPLOAD_TYPE,
+    CMAKE_ARGS,
+    CMAKE_AUTOMOC,
+    CMAKE_AUTORCC,
+    CMAKE_AUTOUIC,
+    CMAKE_CURRENT_BINARY_DIR,
+    CMAKE_CURRENT_LIST_DIR,
+    CMAKE_CURRENT_SOURCE_DIR,
+    CMAKE_FIND_ROOT_PATH_BOTH,
+    CMAKE_FLAGS,
+    CMAKE_STATIC_LIBRARY_PREFIX,
+    CMAKE_STATIC_LIBRARY_SUFFIX,
+    CODE,
+    COMMA,
+    COMMAND,
+    COMMAND_CONFIG,
+    COMMAND_EXPAND_LISTS,
+    COMMENT,
+    COMPARE
+    COMPARE,
+    COMPARE,
+    COMPATIBILITY,
+    COMPILE_DEFINITIONS,
+    COMPILE_FEATURES,
+    COMPILE_LANGUAGE,
+    COMPILE_LANG_AND_ID,
+    COMPILE_OUTPUT_VARIABLE,
+    COMPONENT,
+    COMPONENTS,
+    CONCAT,
+    CONFIG,
+    CONFIGS,
+    CONFIGURATION,
+    CONFIGURATIONS,
+    CONFIGURE,
+    CONVERT,
+    COPY,
+    COPYONLY,
+    COPY_FILE,
+    COPY_FILE_ERROR,
+    CRLF,
+    CUDA_COMPILER_ID,
+    CUDA_COMPILER_VERSION,
+    CXX_COMPILER_ID,
+    CXX_COMPILER_VERSION,
+    C_COMPILER_ID,
+    C_COMPILER_VERSION,
+    DECIMAL,
+    DEFECT_COUNT,
+    DEFER,
+    DEFINED,
+    DEPENDS,
+    DEPFILE,
+    DEPRECATION,
+    DESCRIPTION,
+    DESTINATION,
+    DEVICE_LINK,
+    DIRECTORY,
+    DIRECTORY_PERMISSIONS,
+    DOC,
+    DOS,
+    DOWNLOAD,
+    ENCODING,
+    END,
+    ENV,
+    EQUAL,
+    ERROR_FILE,
+    ERROR_QUIET,
+    ERROR_STRIP_TRAILING_WHITESPACE,
+    ERROR_VARIABLE,
+    ESCAPE_QUOTES,
+    EVAL,
+    EXACT,
+    EXCLUDE,
+    EXCLUDE_FIXTURE,
+    EXCLUDE_FIXTURE_CLEANUP,
+    EXCLUDE_FIXTURE_SETUP,
+    EXCLUDE_FROM_ALL,
+    EXCLUDE_LABEL,
+    EXISTS,
+    EXPORT,
+    EXPORT_ANDROID_MK,
+    EXPORT_LINK_INTERFACE_LIBRARIES,
+    EXPR,
+    EXT,
+    EXTENSION,
+    EXTRA_INCLUDE,
+    FALSE,
+    FATAL_ERROR,
+    FILE,
+    FILENAME,
+    FILEPATH,
+    FILES,
+    FILES_MATCHING,
+    FILE_PERMISSIONS,
+    FILTER,
+    FIND,
+    FLAGS,
+    FORCE,
+    FQDN,
+    FRAMEWORK,
+    FULL_DOCS,
+    FUNCTION,
+    Fortran_COMPILER_ID,
+    Fortran_COMPILER_VERSION,
+    GENERATE,
+    GENEX_EVAL,
+    GENEX_STRIP,
+    GET,
+    GET,
+    GLOB,
+    GLOBAL,
+    GLOB_RECURSE,
+    GREATER,
+    GREATER_EQUAL,
+    GUID,
+    HASH,
+    HAS_AMD_3DNOW,
+    HAS_AMD_3DNOW_PLUS,
+    HAS_EXTENSION,
+    HAS_FILENAME,
+    HAS_FPU,
+    HAS_IA64,
+    HAS_MMX,
+    HAS_MMX_PLUS,
+    HAS_PARENT_PATH,
+    HAS_RELATIVE_PART,
+    HAS_ROOT_DIRECTORY,
+    HAS_ROOT_NAME,
+    HAS_ROOT_PATH,
+    HAS_SERIAL_NUMBER,
+    HAS_SSE,
+    HAS_SSE2,
+    HAS_SSE_FP,
+    HAS_SSE_MMX,
+    HAS_STEM,
+    HEXADECIMAL,
+    HINTS,
+    HOMEPAGE_URL,
+    HOSTNAME,
+    HOST_LINK,
+    HTTPHEADER,
+    IF,
+    IMPLICIT_DEPENDS,
+    IMPORTED,
+    IMPORTED_IMPLIB,
+    IMPORTED_IMPLIB_DEBUG,
+    IMPORTED_IMPLIB_RELEASE,
+    IMPORTED_LOCATION,
+    IMPORTED_LOCATION_DEBUG,
+    IMPORTED_LOCATION_RELEASE,
+    INCLUDE,
+    INCLUDES,
+    INCLUDE_INTERNALS,
+    INCLUDE_LABEL,
+    INHERITED,
+    INPUT_FILE,
+    INSERT,
+    INSTALL,
+    INSTALL_DESTINATION,
+    INSTALL_DIR,
+    INSTALL_INTERFACE,
+    INSTALL_PREFIX,
+    INTERFACE,
+    INTERFACE_INCLUDE_DIRECTORIES,
+    INTERNAL,
+    IN_LIST,
+    ISPC_COMPILER_ID,
+    ISPC_COMPILER_VERSION,
+    IS_64BIT,
+    IS_ABSOLUTE,
+    IS_DIRECTORY,
+    IS_NEWER_THAN,
+    IS_PREFIX,
+    IS_RELATIVE,
+    IS_SYMLINK,
+    ITEMS,
+    JOIN,
+    LABELS,
+    LANGUAGES,
+    LAST_ONLY,
+    LENGTH,
+    LESS,
+    LESS_EQUAL,
+    LF,
+    LIBRARY,
+    LINK_LANGUAGE,
+    LINK_LANG_AND_ID,
+    LINK_LIBRARIES,
+    LINK_ONLY,
+    LISTS,
+    LOCK,
+    LOWER_CASE,
+    MACOSX_BUNDLE,
+    MAIN_DEPENDENCY,
+    MAKE_C_IDENTIFIER,
+    MAKE_DIRECTORY,
+    MATCH,
+    MATCHALL,
+    MATCHES,
+    MD5,
+    MESSAGE_NEVER,
+    MODULE,
+    NAME,
+    NAMELINK_COMPONENT,
+    NAMELINK_ONLY,
+    NAMELINK_SKIP,
+    NAMES,
+    NAMESPACE,
+    NAMES_PER_DIR,
+    NAME_WE,
+    NATIVE,
+    NATIVE_PATH,
+    NEW,
+    NEWLINE_STYLE,
+    NEW_PROCESS,
+    NONE,
+    NORMALIZE,
+    NORMAL_PATH,
+    NOT,
+    NO_CMAKE_ENVIRONMENT_PATH,
+    NO_CMAKE_FIND_ROOT_PATH,
+    NO_CMAKE_PACKAGE_REGISTRY,
+    NO_CMAKE_PATH,
+    NO_CMAKE_SYSTEM_PACKAGE_REGISTRY,
+    NO_CMAKE_SYSTEM_PATH,
+    NO_DEFAULT_PATH,
+    NO_MODULE,
+    NO_PACKAGE_ROOT_PATH,
+    NO_POLICY_SCOPE,
+    NO_SYSTEM_ENVIRONMENT_PATH,
+    NUMBER_ERRORS,
+    NUMBER_OF_LOGICAL_CORES,
+    NUMBER_OF_PHYSICAL_CORES,
+    NUMBER_WARNINGS,
+    OBJCXX_COMPILER_ID,
+    OBJCXX_COMPILER_VERSION,
+    OBJC_COMPILER_ID,
+    OBJC_COMPILER_VERSION,
+    OBJECT,
+    OBJECTS,
+    OEM,
+    OFF,
+    OLD,
+    ON,
+    ONLY_CMAKE_FIND_ROOT_PATH,
+    OP,
+    OPTIONAL,
+    OPTIONAL_COMPONENTS,
+    OPTIONS,
+    OR,
+    OS_NAME,
+    OS_PLATFORM,
+    OS_RELEASE,
+    OS_VERSION,
+    OUTPUT,
+    OUTPUT_CONFIG,
+    OUTPUT_FILE,
+    OUTPUT_FORMAT,
+    OUTPUT_QUIET,
+    OUTPUT_STRIP_TRAILING_WHITESPACE,
+    OUTPUT_VARIABLE,
+    PACKAGE,
+    PARALLEL_LEVEL,
+    PARENT_PATH,
+    PARENT_SCOPE,
+    PARTS,
+    PATH,
+    PATHS,
+    PATH_SUFFIXES,
+    PATH_VARS,
+    PATTERN,
+    PERMISSIONS,
+    PLATFORM,
+    PLATFORM_ID,
+    POLICY,
+    POP,
+    POSITION_INDEPENDENT_CODE,
+    POST_BUILD,
+    PREFIX,
+    PREPEND,
+    PRE_BUILD,
+    PRE_LINK,
+    PRIVATE,
+    PRIVATE_HEADER,
+    PROCESSOR_DESCRIPTION,
+    PROCESSOR_NAME,
+    PROCESSOR_SERIAL_NUMBER,
+    PROGRAM,
+    PROGRAMS,
+    PROGRAM_ARGS,
+    PROJECT_NAME,
+    PROJECT_VERSION,
+    PROPERTIES,
+    PROPERTY,
+    PUBLIC,
+    PUBLIC_HEADER,
+    PUSH,
+    QUERY,
+    QUIET,
+    RANDOM,
+    READ,
+    READ_WITH_PREFIX,
+    REALPATH,
+    REGEX,
+    REGULAR_EXPRESSION,
+    RELATIVE_PART,
+    RELATIVE_PATH,
+    REMOVE,
+    REMOVE_AT,
+    REMOVE_DUPLICATES,
+    REMOVE_EXTENSION,
+    REMOVE_FILENAME,
+    REMOVE_ITEM,
+    REMOVE_RECURSE,
+    RENAME,
+    REPLACE,
+    REPLACE_EXTENSION,
+    REPLACE_FILENAME,
+    REQUIRED,
+    RESOURCE,
+    RESULT,
+    RESULTS_VARIABLE,
+    RESULT_VAR,
+    RESULT_VARIABLE,
+    RETRY_COUNT,
+    RETRY_DELAY,
+    RETURN_VALUE,
+    REVERSE,
+    ROOT_DIRECTORY,
+    ROOT_NAME,
+    ROOT_PATH,
+    RUNTIME,
+    RUN_OUTPUT_VARIABLE,
+    SCHEDULE_RANDOM,
+    SEMICOLON,
+    SEND_ERROR,
+    SET,
+    SHARED,
+    SHELL_PATH,
+    SORT,
+    SOURCE,
+    SOURCES,
+    SOVERSION,
+    START,
+    STATIC,
+    STATUS,
+    STEM,
+    STOP_TIME,
+    STREQUAL,
+    STRGREATER,
+    STRGREATER_EQUAL,
+    STRIDE,
+    STRING,
+    STRINGS,
+    STRIP,
+    STRLESS,
+    STRLESS_EQUAL,
+    SUBLIST,
+    SUBSTRING,
+    SYSTEM,
+    TARGET,
+    TARGETS,
+    TARGET_BUNDLE_CONTENT_DIR,
+    TARGET_BUNDLE_DIR,
+    TARGET_EXISTS,
+    TARGET_FILE,
+    TARGET_FILE_BASE_NAME,
+    TARGET_FILE_DIR,
+    TARGET_FILE_NAME,
+    TARGET_FILE_PREFIX,
+    TARGET_FILE_SUFFIX,
+    TARGET_GENEX_EVAL,
+    TARGET_LINKER_FILE,
+    TARGET_LINKER_FILE_BASE_NAME,
+    TARGET_LINKER_FILE_DIR,
+    TARGET_LINKER_FILE_NAME,
+    TARGET_LINKER_FILE_PREFIX,
+    TARGET_LINKER_FILE_SUFFIX,
+    TARGET_NAME,
+    TARGET_NAME_IF_EXISTS,
+    TARGET_OBJECTS,
+    TARGET_PDB_FILE,
+    TARGET_PDB_FILE_BASE_NAME,
+    TARGET_PDB_FILE_DIR,
+    TARGET_PDB_FILE_NAME,
+    TARGET_POLICY,
+    TARGET_PROPERTY,
+    TARGET_SONAME_FILE,
+    TARGET_SONAME_FILE_DIR,
+    TARGET_SONAME_FILE_NAME,
+    TEST,
+    TEST_LOAD,
+    TIMEOUT,
+    TIMESTAMP,
+    TOLOWER,
+    TOTAL_PHYSICAL_MEMORY,
+    TOTAL_VIRTUAL_MEMORY,
+    TOUCH,
+    TOUCH_NOCREATE,
+    TOUPPER,
+    TO_CMAKE_PATH,
+    TO_CMAKE_PATH_LIST,
+    TO_NATIVE_PATH,
+    TO_NATIVE_PATH_LIST,
+    TRACK,
+    TRANSFORM,
+    TREE,
+    TRUE,
+    TYPE,
+    UNIX,
+    UNIX,
+    UNKNOWN,
+    UPLOAD,
+    UPPER_CASE,
+    URL,
+    URL_HASH,
+    USES_TERMINAL,
+    USE_SOURCE_PERMISSIONS,
+    UTC,
+    UTF-8,
+    UTF8,
+    UUID,
+    VARIABLE,
+    VERBATIM,
+    VERSION,
+    VERSION_EQUAL,
+    VERSION_GREATER,
+    VERSION_GREATER_EQUAL,
+    VERSION_LESS,
+    VERSION_LESS_EQUAL,
+    WARNING,
+    WIN32,
+    WINDOWS,
+    WORKING_DIRECTORY,
+    WRITE,
+    \$ENV
+    _COMMAND,
+    },
+  morestring = [b]",
+  morecomment = [l]\#,
+  keywordstyle = [1]\color{blue},
+  keywordstyle = [2]\color{darkblue},
+  commentstyle = \color{comment-green},
+  sensitive= true
+}
+
+\lstdefinestyle{cmake}{
+        	tabsize=2
+}
+
+% Bibliography
+\makeatletter
+\@ifclassloaded{beamer}{
+  \bibliographystyle{alpha}
+}{
+  \usepackage[round, authoryear]{natbib}
+  \bibliographystyle{plainnat}}
+\makeatother
+
+% Several symbols used for writing draft
+\usepackage{bbding}
+\newcommand{\outline}[1]{\noindent \textcolor{blue}{\NibSolidRight\;#1}}
+\usepackage{fontawesome}
+\newcommand{\draft}[1]{\noindent \textcolor{comment-green}{\faCommenting\;#1}}
+\newcommand{\todo}[1]{\noindent \textcolor{red}{\faCalendar\;#1}}
+
+% Four kinds of emphasis style
+\newcommand{\emphr}[1]{\textcolor{red}{#1}}
+\newcommand{\emphg}[1]{\textcolor{comment-green}{#1}}
+\newcommand{\empho}[1]{\textcolor{orange}{#1}}
+\newcommand{\emphb}[1]{\textcolor{blue}{#1}}
+\newcommand{\comment}[1]{\textcolor{comment-green}{#1}}
+\makeatletter
+\@ifclassloaded{beamer}{
+}{
+  \newcommand{\alert}[1]{\textcolor{red}{\textbf{#1}}}}
+\makeatletter
+\newcommand{\greencomment}[1]{\comment{$\triangleright$ #1}}
+\newcommand{\redcomment}[1]{\emphr{$\triangleright$ #1}}
+\newcommand{\bluecomment}[1]{\emphb{$\triangleright$ #1}}
+\newcommand{\alertcomment}[1]{\alert{$\triangleright$ #1}}
+
+% Emphasis with box frame
+%% Used in normal context
+\newcommand{\alertbox}[1]{{%
+    \setlength{\fboxrule}{.4mm}
+    \color{red}\fbox{{\color{black}#1}}}}
+\newcommand{\embox}[1]{{\setlength{\fboxrule}{.4mm}\fbox{#1}}}
+%% Used in math context
+\newcommand{\alertboxm}[1]{{%
+    \setlength{\fboxrule}{.4mm}
+    \color{red}\boxed{{\color{black}#1}}}}
+\newcommand{\emboxm}[1]{{\setlength{\fboxrule}{.4mm}\boxed{#1}}}
+
+% % Automatically hyphenate within \texttt.
+% % Ref: https://tex.stackexchange.com/questions/44361/how-to-automatically-hyphenate-within-texttt
+% \makeatletter
+% \DeclareRobustCommand\ttfamily
+%         {\not@math@alphabet\ttfamily\mathtt
+%          \fontfamily\ttdefault\selectfont\hyphenchar\font=-1\relax}
+% \makeatother
+% \DeclareTextFontCommand{\mytexttt}{\ttfamily\hyphenchar\font=`\_\relax}
+% \let\oldtexttt\texttt
+% \renewcommand{\texttt}[1]{\oldtexttt{\hl{#1}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Self-defined miscellaneous commands
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% et al
+\newcommand{\etal}{{\it et al}}
+
+% Creative commons license
+\newcommand{\cclic}{This work is licensed under a \href{http://creativecommons.org/licenses/by-nc-sa/4.0/}{Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License}. Copyright \copyright\ \the\year\ \href{mailto:jihuan_tian@hotmail.com}{Jihuan Tian}. All rights reserved.}
+\newcommand{\cclicy}[1]{This work is licensed under a \href{http://creativecommons.org/licenses/by-nc-sa/4.0/}{Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License}. Copyright \copyright\ #1\ \href{mailto:jihuan_tian@hotmail.com}{Jihuan Tian}. All rights reserved.}
+
+% Email
+\newcommand{\myemail}{\href{mailto:jihuan_tian@hotmail.com}{jihuan\_tian@hotmail.com}}

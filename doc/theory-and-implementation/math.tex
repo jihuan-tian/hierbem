@@ -1,0 +1,183 @@
+% Framed box
+\usepackage[framemethod=tikz]{mdframed}
+
+% Miscellaneous math packages
+\usepackage{amsmath, amssymb, amstext, amsfonts, amscd, amsxtra}
+\usepackage{mathrsfs}
+% dashed lines in array
+\usepackage{arydshln}
+% For typesetting some mathematical symbols, such as := (\coloneqq),
+% =: (\eqqcolon), etc.
+\usepackage{mathtools}
+
+% For typesetting matrices with dashed separation lines
+\usepackage{pmat}
+%% Enlarge the default number of allowed columns in matrix environment
+\setcounter{MaxMatrixCols}{20}
+
+% For tikz drawing
+\usepackage{tikz}
+%% For drawing tikz commutative diagram
+\usepackage{tikz-cd}
+\usetikzlibrary{matrix, arrows, decorations.pathmorphing}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Self-defined math definitions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Math symbol commands
+\newcommand{\intd}{\,\mathrm{d}}   % Symbol 'd' used in integration, such as 'dx'
+\newcommand{\diff}{\mathrm{d}}     % Symbol 'd' used in differentiation
+\newcommand{\Diff}{\mathrm{D}}     % Symbol 'D' used in differentiation
+\newcommand{\pdiff}{\partial}   % Partial derivative
+\newcommand{\DD}[2]{\frac{\diff}{\diff #2}\left( #1 \right)}
+\newcommand{\Dd}[2]{\frac{\diff #1}{\diff #2}}
+\newcommand{\PD}[2]{\frac{\pdiff}{\pdiff #2}\left( #1 \right)}
+\newcommand{\Pd}[2]{\frac{\pdiff #1}{\pdiff #2}}
+\newcommand{\rme}{\mathrm{e}}      % Exponential e
+\newcommand{\rmi}{\mathrm{i}}      % Imaginary unit i
+\newcommand{\rmj}{\mathrm{j}}      % Imaginary unit j
+\newcommand{\vect}[1]{\boldsymbol{#1}}       % Vector typeset in bold and italic
+\newcommand{\normvect}{\vect{n}} % Normal vector: n
+\newcommand{\dform}[1]{\overset{\rightharpoonup}{\boldsymbol{#1}}}       % Vector for differential form
+\newcommand{\cochain}[1]{\overset{\rightharpoonup}{#1}}       % Vector for cochain
+\newcommand{\Abs}[1]{\big\lvert#1\big\rvert} % Absolute value (single big vertical bar)
+\newcommand{\abs}[1]{\lvert#1\rvert} % Absolute value (single vertical bar)
+\newcommand{\Norm}[1]{\big\lVert#1\big\rVert} % Norm (double big vertical bar)
+\newcommand{\norm}[1]{\lVert#1\rVert} % Norm (double vertical bar)
+\newcommand{\ouset}[3]{\overset{#3}{\underset{#2}{#1}}} % over and under set
+% Super/subscript for column index of a matrix, which is used in tensor analysis.
+\newcommand{\cscript}[1]{\;\; #1}
+\newcommand{\suchthat}{\textit{S.T.\;}} % S.T., such that
+% Star symbol used as prefix in front of a paragraph with no indent
+\newcommand{\prefstar}{\noindent$\ast$ }      
+% Big vertical line restricting the function.
+% Example: $u(x)\restrict_{\Omega_0}$
+\newcommand{\restrict}{\big\vert}
+
+% Math operators which are typeset in Roman font
+\DeclareMathOperator{\sgn}{sgn} % Sign function
+\DeclareMathOperator{\erf}{erf} % Error function
+\DeclareMathOperator{\Bd}{Bd}   % Boundary of a set or domain, used in topology
+\DeclareMathOperator{\Int}{Int} % Interior of a set or domain, used in topology
+\DeclareMathOperator{\rank}{rank} % Rank of a matrix
+\DeclareMathOperator{\divergence}{div} % Divergence
+\DeclareMathOperator{\curl}{curl} % Curl
+\DeclareMathOperator{\grad}{grad} % Gradient
+\DeclareMathOperator{\diag}{diag} % Diagonal
+\DeclareMathOperator{\tr}{tr} % Trace
+\DeclareMathOperator{\lhs}{LHS} % Left hand side
+\DeclareMathOperator{\rhs}{RHS} % Right hand side
+\DeclareMathOperator{\argmax}{argmax}
+\DeclareMathOperator{\argmin}{argmin}
+\DeclareMathOperator{\esssup}{ess\,sup}
+\DeclareMathOperator{\essinf}{ess\,inf}
+\DeclareMathOperator{\kernel}{ker} % The kernel set of a map
+\DeclareMathOperator{\image}{Im}  % The image set of a map
+\DeclareMathOperator{\diam}{diam} % Diameter of a domain or a set
+\DeclareMathOperator{\dist}{dist} % Distance between two sets
+\DeclareMathOperator{\const}{const}
+
+\mathchardef\ordinarycolon\mathcode`\:
+\mathcode`\:=\string"8000
+\begingroup \catcode`\:=\active
+  \gdef:{\mathrel{\mathop\ordinarycolon}}
+\endgroup
+
+% Mathematical environment
+%% standard: enable the standard set of theorems.
+%% thmmarks: enable the automatic placement of endmarks, which should be used
+%% together with the option amsmath when the amsmath package has been loaded.
+%% thref: enables the extended reference features.
+\usepackage{framed}
+\makeatletter
+\@ifclassloaded{beamer}{\newtheorem{remark}{Remark}}
+{
+  %% When the document class is not beamer, define the following theorem environments.
+  \usepackage[standard, framed, amsmath, hyperref, thmmarks, thref]{ntheorem}
+  % Define new mathematical environment.
+  \newtheorem{mynote}{Note}
+  \newtheorem{mycomment}{Comment}
+}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Pseudocode typesetting
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Use "algorithm" environment for floating an algorithm.
+\usepackage{algorithm}
+% Use algorithmicx package
+\usepackage{algpseudocode}
+
+% Draw vertical lines to visualize the hierarchy.
+\makeatletter
+% This is the vertical rule that is inserted
+% \def\therule{\makebox[\algorithmicindent][l]{\hspace*{.5em}\vrule height
+%     1\baselineskip depth .25\baselineskip}}%
+\def\therule{\makebox[\algorithmicindent][l]{\hspace*{.5em} \vrule height 0.75 \baselineskip depth .25\baselineskip}}%
+
+\newtoks\therules% Contains rules
+\therules={}% Start with empty token list
+\def\appendto#1#2{\expandafter#1\expandafter{\the#1#2}}% Append to token list
+\def\gobblefirst#1{% Remove (first) from token list
+  #1\expandafter\expandafter\expandafter{\expandafter\@gobble\the#1}}%
+\def\LState{\State\unskip\the\therules}% New line-state
+\def\pushindent{\appendto\therules\therule}%
+\def\popindent{\gobblefirst\therules}%
+\def\printindent{\unskip\the\therules}%
+\def\printandpush{\printindent\pushindent}%
+\def\popandprint{\popindent\printindent}%
+
+%      ***      DECLARED LOOPS      ***
+% (from algpseudocode.sty)
+\algdef{SE}[WHILE]{While}{EndWhile}[1]
+  {\printandpush\algorithmicwhile\ #1\ \algorithmicdo}
+  {\popandprint\algorithmicend\ \algorithmicwhile}%
+\algdef{SE}[FOR]{For}{EndFor}[1]
+  {\printandpush\algorithmicfor\ #1\ \algorithmicdo}
+  {\popandprint\algorithmicend\ \algorithmicfor}%
+\algdef{S}[FOR]{ForAll}[1]
+  {\printindent\algorithmicforall\ #1\ \algorithmicdo}%
+\algdef{SE}[LOOP]{Loop}{EndLoop}
+  {\printandpush\algorithmicloop}
+  {\popandprint\algorithmicend\ \algorithmicloop}%
+\algdef{SE}[REPEAT]{Repeat}{Until}
+  {\printandpush\algorithmicrepeat}[1]
+  {\popandprint\algorithmicuntil\ #1}%
+\algdef{SE}[IF]{If}{EndIf}[1]
+  {\printandpush\algorithmicif\ #1\ \algorithmicthen}
+  {\popandprint\algorithmicend\ \algorithmicif}%
+\algdef{C}[IF]{IF}{ElsIf}[1]
+  {\popandprint\pushindent\algorithmicelse\ \algorithmicif\ #1\ \algorithmicthen}%
+\algdef{Ce}[ELSE]{IF}{Else}{EndIf}
+  {\popandprint\pushindent\algorithmicelse}%
+\algdef{SE}[PROCEDURE]{Procedure}{EndProcedure}[2]
+   {\printandpush\algorithmicprocedure\ \textproc{#1}\ifthenelse{\equal{#2}{}}{}{(#2)}}%
+   {\popandprint\algorithmicend\ \algorithmicprocedure}%
+\algdef{SE}[FUNCTION]{Function}{EndFunction}[2]
+   {\printandpush\algorithmicfunction\ \textproc{#1}\ifthenelse{\equal{#2}{}}{}{(#2)}}%
+   {\popandprint\algorithmicend\ \algorithmicfunction}%
+\makeatother
+
+% Redefine the comment used in algorithmx.
+\algrenewcommand{\algorithmiccomment}[1]{\comment{$\triangleright$ #1}}
+
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+   \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+       {\raggedright\textbf{\fname@algorithm~\thealgorithm} ##2\par}%
+       \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+       \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+       \fi
+       \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+   \end{center}
+  }
+\makeatother

@@ -1,0 +1,47 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Customized A4 paper size for a general document
+% Page margin=2cm
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Page margins
+\newlength{\pageleftmargin}
+\newlength{\pagerightmargin}
+\newlength{\pagetopmargin}
+\newlength{\pagebottommargin}
+\setlength{\pageleftmargin}{2cm}
+\setlength{\pagerightmargin}{2cm}
+\setlength{\pagetopmargin}{2cm}
+\setlength{\pagebottommargin}{2cm}
+
+% LaTeX default page margin
+\newlength{\defaultpagemargin}
+\setlength{\defaultpagemargin}{1in}
+
+% Set page margins
+\setlength{\oddsidemargin}{\pageleftmargin}
+\addtolength{\oddsidemargin}{-1\defaultpagemargin}
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\topmargin}{\pagetopmargin}
+\addtolength{\topmargin}{-1\defaultpagemargin}
+
+% Set head and foot
+\setlength{\headheight}{16pt}
+\setlength{\headsep}{\headheight}
+\setlength{\topskip}{0cm}
+
+\newlength{\footheight}
+\setlength{\footheight}{16pt}
+\setlength{\footskip}{2\footheight}
+
+\flushbottom
+
+% Set text width and height
+\setlength{\textwidth}{\paperwidth}
+\addtolength{\textwidth}{-1\pageleftmargin}
+\addtolength{\textwidth}{-1\pagerightmargin}
+\setlength{\textheight}{\paperheight}
+\addtolength{\textheight}{-1\pagetopmargin}
+\addtolength{\textheight}{-1\headheight}
+\addtolength{\textheight}{-1\headsep}
+\addtolength{\textheight}{-1\footskip}
+\addtolength{\textheight}{-1\pagebottommargin}

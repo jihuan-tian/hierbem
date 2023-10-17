@@ -18,10 +18,6 @@ build
 
 # Ignore data files
 *.dat
-*.png
-*.svg
-*.jpg
-*.eps
 *.gif
 *.vtk
 *.mat
@@ -33,7 +29,6 @@ build
 *.gpl
 octave-workspace
 *.pvsm
-*.tex
 compile_commands.json
 \#*#
 
@@ -44,6 +39,14 @@ compile_commands.json
 *.aux
 *.thm
 *.dvi
+*.bbl
+*.blg
+*.loa
+*.lol
+*.out
+*.synctex.gz
+*.toc
+*.prv
 
 # Ignore Eclipse preference files
 *.prefs
