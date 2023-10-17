@@ -7813,8 +7813,8 @@ namespace HierBEM
     const FiniteElement<dim, spacedim> &kx_fe = kx_cell_iter->get_fe();
     const FiniteElement<dim, spacedim> &ky_fe = ky_cell_iter->get_fe();
 
-    const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
-    const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
+    [[maybe_unused]] const unsigned int kx_n_dofs = kx_fe.dofs_per_cell;
+    [[maybe_unused]] const unsigned int ky_n_dofs = ky_fe.dofs_per_cell;
 
     /**
      * @internal Calculate the mapping support points and DoF indices in the

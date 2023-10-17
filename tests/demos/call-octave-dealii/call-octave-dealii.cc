@@ -146,7 +146,7 @@ void
 init_octave_interpreter()
 {
   // Initialize and start Octave interpreter instance
-  int status = interpreter.execute();
+  [[maybe_unused]] int status = interpreter.execute();
   Assert(status == 0, ExcInternalError());
 }
 
