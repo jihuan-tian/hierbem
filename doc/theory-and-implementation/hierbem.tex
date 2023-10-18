@@ -100,24 +100,38 @@ can either be the unknown function to be solved or a given distribution of bound
 We use finite dimensional functional spaces to approximate the original test and ansatz
 spaces of infinite dimensions. Let $\left\{ \psi_i(x) \right\}_{i=1}^m$ be the basis of
 the test space and $\left\{ \varphi_j(y) \right\}_{j=1}^n$ be the basis of the ansatz
-space. Then $\varphi(y)$ can be expanded as finite series:
+space \footnote{N.B. The dimension of the test space may be different from that of the ansatz
+  space. This is because different finite elements may be adopted for the two spaces. For
+  example, one space is of type \texttt{FE\_Q}, the other space is of type
+  \texttt{FE\_DGQ}. Even though both finite elements are of a same type, their polynomial
+  orders may be different. Furthermore, the two finite elements may be constructed on
+  different subdomains of the triangulation. All these cases may lead to different space
+  dimensions.
+
+  Considering the fact that a \texttt{DoFHandler} object is built upon a triangulation and
+  a finite element, the above statements can be simplified as: when two
+  \texttt{DoFHandler}s are different, their corresponding finite element spaces usually
+  have different dimensions.}. Then $\varphi(y)$ can be expanded as finite series:
 \begin{equation}
-  \varphi(y) = \sum_{i=1}^n a_i\varphi_i(y).
+  \varphi(y) = \sum_{j=1}^n a_j\varphi_j(y).
 \end{equation}
-Instead of using one arbitrary $\varphi(x)$ as the test function in
+When $\varphi(y)$ is the solution function to be solved, its expansion coefficients
+$\left\{ a_j \right\}_{j=1}^n$ are the degree-of-freedoms (DoFs).
+
+Instead of using one arbitrary $\psi(x)$ as the test function in
 \eqref{eq:bem-bilinear-form-general}, we use each $\psi_i(x)$ in the basis of the test
 space independently so $m$ equations are obtained:
 \begin{equation}
   \begin{aligned}
     b_A(\psi_1,\varphi) &=
-    \int_{\Gamma}\psi_1(x)\int_{\Gamma}k(x,y) \left( \sum_{i=1}^na_i\varphi_i(y) \right) \intd s_y \intd
-    s_x = \sum_{i=1}^n \left( \int_{\Gamma}\psi_1(x)\int_{\Gamma}k(x,y) \varphi_i(y) \intd s_y
-    \intd s_x  \right) a_i, \\
+    \int_{\Gamma}\psi_1(x)\int_{\Gamma}k(x,y) \left( \sum_{j=1}^n a_j\varphi_j(y) \right) \intd s_y \intd
+    s_x = \sum_{j=1}^n \left( \int_{\Gamma}\psi_1(x)\int_{\Gamma}k(x,y) \varphi_j(y) \intd s_y
+    \intd s_x  \right) a_j, \\
     &\vdots \\
     b_A(\psi_m,\varphi) &=
-    \int_{\Gamma}\psi_m(x)\int_{\Gamma}k(x,y) \left( \sum_{i=1}^na_i\varphi_i(y) \right) \intd s_y \intd
-    s_x = \sum_{i=1}^n \left( \int_{\Gamma}\psi_m(x)\int_{\Gamma}k(x,y) \varphi_i(y) \intd s_y
-    \intd s_x  \right) a_i.
+    \int_{\Gamma}\psi_m(x)\int_{\Gamma}k(x,y) \left( \sum_{j=1}^na_j\varphi_j(y) \right) \intd s_y \intd
+    s_x = \sum_{i=j}^n \left( \int_{\Gamma}\psi_m(x)\int_{\Gamma}k(x,y) \varphi_j(y) \intd s_y
+    \intd s_x  \right) a_j.
   \end{aligned}
 \end{equation}
 Let $\mathscr{A}$ be a matrix with its entry
@@ -155,26 +169,28 @@ function needs the following steps:
 \item Define a bunch of polynomials $\left\{ \hat{P}_k(\hat{x}) \right\}_{k=1}^N$ on a
   standard cell $\hat{\tau}=[0,1]^2$. $\hat{\tau}$ is called the reference cell and the
   polynomials are called shape functions. Each shape function $\hat{P}_k$ is associated
-  with a support point $\hat{p}_k$, at which $\hat{P}_k$ is evaluated to 1. At the support
-  points of the other shape functions, $\hat{P}_k$ is zero, i.e.
-  $\hat{P}_k(\hat{p}_{l}) = \delta_k^l$.
-\item For each real cell $\tau$ in the mesh, there is the map
+  with a support point $\hat{p}_k$ in the reference cell, at which $\hat{P}_k$ is
+  evaluated to 1. At the support points of the other shape functions, $\hat{P}_k$ is zero,
+  i.e. $\hat{P}_k(\hat{p}_{l}) = \delta_k^l$.
+\item For each real cell $\tau$ in the mesh, there is a map
   $\chi_{\tau}: \hat{\tau} \rightarrow \tau$ and its inverse
   $\chi_{\tau}^{-1}: \tau \rightarrow \hat{\tau}$. Therefore, the shape functions
-  transformed onto the real cell are $P_k^{\tau}(x) = \hat{P}_k(\chi_{\tau}^{-1}(x))$, which is
-  the composition of $\hat{P}_k$ and $\chi_{\tau}^{-1}$.
+  transformed onto the real cell $\tau$ are
+  $P_k^{\tau}(x) = \hat{P}_k(\chi_{\tau}^{-1}(x))$, which is the composition of
+  $\hat{P}_k$ and $\chi_{\tau}^{-1}$.
 \item The basis function $\varphi_i$ is also associated with a support point $p_i$ in the
   real mesh. $p_i$ is usually shared by several neighboring cells
   $\left\{ \tau_{i_{e}} \right\}_{e=1}^{E(i)}$, where $i_e$ is the global cell index of
   the $e$-th cell which contains $p_i$ and $E(i)$ is the total number of cells containing
-  $p_i$. In any of these cells $\tau_{i_e}$, there is a support point $\hat{p}_k$ and
-  associated shape function $\hat{P}_k$ in the reference cell, such that
-  $\chi_{\tau_{i_e}}(\hat{p}_k) = p_i$. N.B. For a different $\tau_{i_e}$, the shape
-  function index $k$ in $\hat{P}_k$ is usually different and we can define a function
-  $k(i, e)$ which returns the shape function index. The counterpart polynomial of
-  $\hat{P}_{k(i_e)}$ in the real cell $\tau_{i_e}$ is $P_{k(i, e)}^{\tau_{i_e}}$. Then the
-  basis function $\varphi_i$ is a piecewise combination of all such shape functions in the
-  real cells $\left\{ \tau_{i_e} \right\}_{e=1}^{E(i)}$:
+  $p_i$. For any of these cells $\tau_{i_e}$, there is a support point $\hat{p}_k$ and
+  associated shape function $\hat{P}_k$ in its reference cell, such that
+  $\chi_{\tau_{i_e}}(\hat{p}_k) = p_i$. N.B. For a different $\tau_{i_e}$ which contains
+  $p_i$, the shape function index $k$ in $\hat{P}_k$ is usually different and we can
+  define a function $k(i, e)$ which returns this shape function index. The counterpart
+  polynomial of $\hat{P}_{k(i_e)}$ in the real cell $\tau_{i_e}$ is
+  $P_{k(i, e)}^{\tau_{i_e}}$. Then the basis function $\varphi_i$ is a piecewise
+  combination of all such shape functions in the real cells
+  $\left\{ \tau_{i_e} \right\}_{e=1}^{E(i)}$:
   \begin{equation}
     \label{eq:basis-function-from-shape-functions}
     \varphi_i(x) = P_{k(i,e)}^{\tau_{i_e}}(x) = \hat{P}_{k(i,e)}\tau_{i_e}^{-1}(x) \quad x\in\tau_{i_e}, e=1,\cdots,E(i).
@@ -217,11 +233,25 @@ first vertex in the cell.
   \caption{}
   \label{fig:local-shape-function-and-global-dof}
 \end{figure}
+If the finite element \texttt{FE\_DGQ} is adopted, because it is a discontinuous element,
+the situation is much simpler. According to Figure \ref{fig:fe-dgq-2nd-order}, on the
+common edge between the two cells, there are duplicated support points. Take the central
+point on the edge as example, the \texttt{DoFHandler} will assign two basis functions for
+it: $\varphi_i$ for the left cell and $\varphi_{i'}$ for the right cell. Then each basis
+function belongs to only one cell and it relates to only one shape function in the
+associated reference cell. Therefore, there is no need to find all
+cells sharing a common support point as what is done for \texttt{FE\_Q}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth, height=\textheight, keepaspectratio]{figures/fe-dgq-2nd-order}
+  \caption{}
+  \label{fig:fe-dgq-2nd-order}
+\end{figure}
 
 When basis functions with compact support are adopted for test and ansatz spaces, the
-integration domain will be restricted to only a few cells and the
-computation of matrix entry $\mathscr{A}_{ij}$ in \eqref{eq:bilinear-form-matrix-entry}
-now becomes
+integration domain will be restricted to only a few cells. If \texttt{FE\_Q} is adopted,
+computation of the matrix entry $\mathscr{A}_{ij}$ in
+\eqref{eq:bilinear-form-matrix-entry} now becomes
 \begin{equation}
   \label{eq:bilinear-form-matrix-entry-cell-pairs}
   \begin{aligned}
@@ -235,7 +265,23 @@ now becomes
   \end{aligned}
 \end{equation}
 This indicates that an entry $\mathscr{A}_{ij}$ in the matrix of a bilinear form is
- contributed from the interaction of a shape function within each cell in the support of $\psi_i(x)$ and a shape function within each cell in the support of $\varphi_j(y)$. Therefore, a double loop is needed to compute $\mathscr{A}_{ij}$.
+contributed from the interaction of a shape function within each cell in the support of
+$\psi_i(x)$ and a shape function within each cell in the support of $\varphi_j(y)$.
+Therefore, a double loop is needed to compute $\mathscr{A}_{ij}$.
+
+If \texttt{FE\_DGQ} is adopted for both ansatz and test spaces, each basis function or DoF
+belongs to only one cell and Equation \ref{eq:bilinear-form-matrix-entry-cell-pairs} has a
+simpler form
+\begin{equation}
+  \mathscr{A}_{ij} = \int_{\tau_i} P_{k(i)}^{\tau_i}(x)
+  \int_{\tau_j} k(x,y) P_{k(j)}^{\tau_j}(y) \intd s_y \intd s_x.
+\end{equation}
+The $i$-th basis function in the test space belongs to the cell $\tau_i$ and the $j$-th
+basis function in the ansatz space belongs to the cell $\tau_j$. The index of the
+corresponding shape function in $\tau_i$ is $k(i)$, which only depends on the DoF index
+$i$. Similarly, the index of t he corresponding shape function in $\tau_j$ is $k(j)$.
+Therefore, in this case, $\mathscr{A}_{ij}$ can be directly computed without the double
+loop for \texttt{FE\_Q}.
 
 \subsection{Surface integral in 3D space}
 
