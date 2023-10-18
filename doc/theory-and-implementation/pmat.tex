@@ -1,0 +1,156 @@
+\documentclass[a4paper]{article}
+\usepackage{pmat}
+
+\begin{document}
+
+\title{The \texttt{pmat} package to typeset partitioned matrices}
+\author{Tom\'as Oliveira e Silva \\[4pt] Universidade de Aveiro \\
+  Aveiro, Portugal \\[8pt] email: \texttt{tos@inesca.pt}}
+\date{January 1, 1996}
+\maketitle
+
+This document is a very short description of the \texttt{pmat} package,
+version $0.1$. The \texttt{pmat} package provides the macros \verb+\pmat+
+and \verb+\endpmat+ to typeset partitioned matrices, and it works under
+\TeX\ and under \LaTeX\ (any version). Under \LaTeX\ it is possible to replace
+\verb+\pmat+ and \verb+\endpmat+ by \verb+\begin{pmat}+ and \verb+\end{pmat}+,
+respectively.
+
+The \verb+\pmat+ macro takes three arguments. The first one is a left
+delimiter (the thing you put immediately after a \verb+\left+ command). 
+The last one is a right delimiter (the thing you put immediately after a
+\verb+\right+ command). As usual, a delimiter may be omitted by using a dot
+(.). The middle argument specifies the dashed vertical lines that are to be
+placed between columns of the matrix. This argument must contain exactly $n-1$
+characters, where $n$ is the number of columns of the matrix. If a character
+is a \verb+|+ then a dashed vertical line will be placed between the
+appropriate columns. Otherwise, no dashed line will be placed between those
+columns (we recommend the use of the character dot (.) in these cases) . The
+format of the entries of the partitioned matrix follows the conventions of
+plain \TeX, i.e., entries are separated by a \verb+&+ (just like in \LaTeX),
+but lines are separated by a \verb+\cr+ (instead of the \verb+\\+ used in
+\LaTeX). All entries are typeset in math mode (in \verb+\textstyle+). For
+technical reasons, a \verb+\cr+ must also be placed at the end of the last
+line. The placement of horizontal dashed lines is done with the command
+\verb+\-+, which must be placed immediately after the command \verb+\cr+. For
+example, the code
+\begin{verbatim}
+\[
+  \begin{pmat}[{.|}]
+    a_{11} & a_{12} & b_{11} \cr
+    a_{21} & a_{22} & b_{21} \cr\-
+    c_{11} & c_{12} & d_{11} \cr
+  \end{pmat}
+\]
+\end{verbatim}
+produces the matrix
+\[
+  \begin{pmat}[{.|}]
+    a_{11} & a_{12} & b_{11} \cr
+    a_{21} & a_{22} & b_{21} \cr\-
+    c_{11} & c_{12} & d_{11} \cr
+  \end{pmat}
+\]
+
+There are two macros that can be used to modify the shape of the crossings
+between horizontal and vertical dash lines. The first one, \verb+\pmatcross+,
+makes horizontal and vertical dash lines to cross. (It is the default.) The
+other, \verb+\pmatnocross+, makes the lines not to cross. Under \LaTeX2e, the
+first one can be made the default (it already is) by passing the option
+\verb+cross+ to the package, and the second one can be made the default by
+passing the option \verb+nocross+ to the package. The difference between the
+two forms can be examined in the following example (before the second
+\verb+\begin{pmat}+ we have put a \verb+\pmatnocross+)
+\[
+  \begin{pmat}[{.|}]
+    a_{11} & a_{12} & b_{11} \cr
+    a_{21} & a_{22} & b_{21} \cr\-
+    c_{11} & c_{12} & d_{11} \cr
+  \end{pmat}
+  \qquad\qquad
+  \pmatnocross\begin{pmat}[{.|}]
+    a_{11} & a_{12} & b_{11} \cr
+    a_{21} & a_{22} & b_{21} \cr\-
+    c_{11} & c_{12} & d_{11} \cr
+  \end{pmat}
+\]
+
+There are seven internal parameters that control the inner workings of the
+\verb+pmat+ macros. To hide their names they can only be accessed or changed
+through the macros \verb+\pmatget+ and \verb+\pmatset+. The \verb+\pmatget+
+macro takes one argument, the number of the parameter (from 0 to 6). It
+``returns'' the current value of that parameter. The \verb+\pmatset+ macro
+takes two arguments, the number of the parameter, and its new value. All
+parameters are dimensions, so do not forget to put a unit of length (such as
+\verb+mm+) after its numerical value. The seven parameters are the following:
+\begin{description}
+  \item[0] This parameter controls the length of a dash ``unit''. All
+    horizontal and vertical dash lines have a length that is an integer
+    multiple of this parameter. Its default value is \verb+2.88pt+.
+  \item[1] This parameter controls the thickness of the dash lines. Its
+    default value is \verb+0.36pt+.
+  \item[2] This parameter controls the minimum distance between two lines. Its
+    default value is \verb+2pt+.
+  \item[3] This parameter controls the minimum distance between two columns.
+    Its default value is \verb+8pt+.
+  \item[4] This parameter controls the minimum width of each entry of the
+    matrix. Its default value is \verb+0pt+.
+  \item[5] This parameter controls the minimum height of each entry of the
+    matrix. Its default value is \verb+6pt+.
+  \item[6] This parameter controls the minimum depth of each entry of the
+    matrix. Its default value is \verb+1.5pt+.
+\end{description}
+Due to the way lengths are quantized, to avoid larger than strictly necessary
+gaps between lines the values of $[5]+([1]+[2])/2$ and $[6]+([1]+[2])/2$
+should be smaller but close to a multiple of $[0]$. (A number inside square
+brackets refers to the corresponding parameter.) For example, the code
+\begin{verbatim}
+\[
+  \pmatset{1}{0.72pt}
+  \pmatset{0}{2\pmatget{1}}
+  \pmatset{5}{0pt}
+  \pmatset{6}{0pt}
+  \begin{pmat}[{||}]
+    A_{11} & A_{12} & A_{13} \cr\-
+    A_{21} & A_{22} & A_{23} \cr\-
+    A_{31} & A_{32} & A_{33} \cr
+  \end{pmat}
+\]
+\end{verbatim}
+produces the matrix
+\[
+  \pmatset{1}{0.72pt}
+  \pmatset{0}{2\pmatget{1}}
+  \pmatset{5}{0pt}
+  \pmatset{6}{0pt}
+  \begin{pmat}[{||}]
+    A_{11} & A_{12} & A_{13} \cr\-
+    A_{21} & A_{22} & A_{23} \cr\-
+    A_{31} & A_{32} & A_{33} \cr
+  \end{pmat}
+\]
+
+For a uniform look of the document all matrices, partitioned and not
+partitioned, should be typeset using the \verb+pmat+ macros.
+
+\bigskip
+{\bfseries Possible future improvements:} Instead of quantizing the height and
+depth of each entry separately, maybe their sum should be quantized. Perhaps
+the minimum height and depth of each entry should depend upon the current font
+size.
+
+\bigskip
+\hrule height 1pt
+\[
+  \begin{pmat}[{|}]
+    \mathbf{A} & \mathbf{B} \cr\-
+    \mathbf{C} & \mathbf{D} \cr
+  \end{pmat} = \begin{pmat}[{.|}]
+    -k_1 & -k_2\sqrt{1-k^2_1} & \sqrt{(1-k^2_1)(1-k^2_2)} \cr
+    \sqrt{1-k^2_1} & -k_1k_2 & k_1\sqrt{1-k^2_2} \cr\-
+    0 & \sqrt{1-k^2_2} & k_2 \cr
+  \end{pmat}
+\]
+
+
+\end{document}
