@@ -1,0 +1,52 @@
+#+TITLE: Figures in the documentation
+#+AUTHOR: Jihuan Tian
+#+OPTIONS: ':t toc:5 H:5
+#+PROPERTY: header-args :eval never-export
+#+LATEX_CLASS: article
+
+* Introduction
+  Some figures in the documentation are plotted using scripts, such as GNU Octave, [[https://asymptote.sourceforge.io/][Asymptote]], etc. The source code is organized within code blocks and categorized in this Emacs Org file. Using the functionality of [[https://orgmode.org/worg/org-contrib/babel/][Org Babel]] module, we can interactively run the code block and directly preview the generated figures in an Emacs buffer.
+* Differential geometry
+** Tangent vector
+   #+BEGIN_SRC octave :session org-babel-octave :exports both :results file
+     pkg load matgeom;
+
+     N = 10;
+     phi = linspace(0, 2*pi, N+1)';
+     phi = phi(1:end-1);
+     theta = pi/4;
+     r = 1;
+
+     ## Generate root points on the circle, in the format [x1 y1 z1; x2 y2 z2; ...]
+     p = [r*cos(phi)*sin(theta), r*sin(phi)*sin(theta), r*cos(theta) * ones(N,1)];
+     ## Generate vectors in the dphi direction.
+     vect_length = 0.2;
+     phi_dir = [-r*sin(phi)*sin(theta), r*cos(phi)*sin(theta), zeros(N,1)] * vect_length;
+     theta_dir = [r*cos(phi)*cos(theta), r*sin(phi)*cos(theta), -r*sin(theta)*ones(N,1)] * vect_length;
+
+     figure("visible", "on");
+     hold on;
+     ## Plot command goes here.
+     sphere();
+     drawVector3d(p, phi_dir, 'r');
+     drawVector3d(p, theta_dir, 'g');
+
+     colormap ocean;
+     axis equal;
+     grid on;
+     view(-20, 30);
+     xlabel("$x$");
+     ylabel("$y$");
+     zlabel("$z$");
+     scale_fig(gcf, 2);
+
+     PrintGCFLatex("./figures/basis-on-sphere.png");
+     ans="./figures/basis-on-sphere.png";
+   #+END_SRC
+
+   #+CAPTION: caption
+   #+NAME: fig:basis-on-sphere
+   #+ATTR_HTML: :width 800px
+   #+ATTR_LATEX: :width 0.5\textwidth
+   #+RESULTS:
+   [[file:./figures/basis-on-sphere.png]]
