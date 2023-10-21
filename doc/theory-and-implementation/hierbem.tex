@@ -81,6 +81,517 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   \end{algorithmic}
 \end{breakablealgorithm}
 
+\section{Manifold and tangent vector}
+
+\subsection{Submanifold of $\mathbb{R}^{n+r}$ and implicit function theorem}
+\label{sec:submanifold-of-R}
+
+\begin{Definition}[Submanifold of $\mathbb{R}^n$]
+  Let $M = M^n \subset \mathbb{R}^{n+r}$, $\forall p \in M$, $\exists$ a neighborhood $U$
+  of $p$ in $M$ such that $\forall q \in U$, its $r$ coordinate components
+  $(x^{i_1}, \cdots, x^{i_r})$\footnote{As a convention in differential geometry, the
+    superscripts here do not represent power exponent but indices of coordinate
+    components.} can be \textbf{differentiably} represented in terms of the other $n$
+  components $(x^{i_{r+1}}, \cdots, x^{i_{r+n}})$:
+  $$
+  x^{i_k} = f^{i_k}(x^{i_{r+1}}, \cdots, x^{i_{r+n}}) \quad k=1, \cdots, r
+  $$
+  Then $M$ is called a submanifold of the Cartesian space $\mathbb{R}^{n+r}$. The set of
+  coordinate components $x^{i_{r+1}}, \cdots, x^{i_{r+n}}$ is called the local curvilinear
+  coordinates for the neighborhood $U$ of $p$ in $M$.
+\end{Definition}
+
+\begin{Remark}
+  The key concept of submanifold is local differentiable coordinate representation. The
+  submanifold $M$ has an open covering $\bigcup_i U_i$, and each $U_i$ is assigned a
+  chart. Then all charts covering the whole space $M$ is called an atlas.
+\end{Remark}
+
+\begin{Remark}
+  ``Submanifold of $\mathbb{R}^{n+r}$'' also means it has already been assigned
+  coordinates, i.e. \textit{digitized}.
+\end{Remark}
+
+\begin{Theorem}[Implicit function theorem]
+  \label{theo:implicit-func}
+  Let $A$ be an open set in $\mathbb{R}^{n+r}$ and $f: A \rightarrow \mathbb{R}^r$ be
+  $\mathbb{C}^r$. $f$ can be written as $f(x,y)$, where $x \in \mathbb{R}^n$ and
+  $y \in \mathbb{R}^{r}$. Assume $(a,b) \in A$, where $a \in \mathbb{R}^n$,
+  $b \in \mathbb{R}^r$ and $f(a,b) = 0$, and the Jacobian
+  $\abs{\frac{\pdiff f}{\pdiff y}}_{x=a, y=b} \neq 0$. Then $\exists$ neighborhood $B$ of
+  $a$ in $\mathbb{R}^n$ and a unique $\mathbb{C}^r$ function
+  $g: B \rightarrow \mathbb{R}^r$ such that $g(a) = b$ and
+  $f(x, g(x)) = 0 \; (\forall x \in B)$, i.e. $y \in \mathbb{R}^r$ can be differentiably
+  represented by $x \in \mathbb{R}^n$ in a neighborhood of $(a,b)$.
+\end{Theorem}
+
+\begin{Remark}
+  After removing $r$ variables from the $r$ equations, there are $n$ independent variables
+  left.
+\end{Remark}
+
+\begin{Corollary}
+  If the function $f(a, b) = 0$ in \thref{theo:implicit-func} is $f(a, b) = t$,
+  where $t$ is a constant in $\mathbb{R}^r$, while the other conditions are the
+  same, then $\exists$ neighborhood $B$ of $a$ in $\mathbb{R}^n$ and a unique
+  $\mathbb{C}^r$ function $g: B \rightarrow \mathbb{R}^r$ such that $g(a) = b$
+  and $f(x, g(x)) = t \; (\forall x \in B)$.
+\end{Corollary}
+
+\begin{Proof}
+  Let $f'(a, b) = f(a, b) - t = 0$, it's easy to see that
+  $$
+  \frac{\pdiff f'}{\pdiff y} = \frac{\pdiff f}{\pdiff y}
+  $$
+  Therefore, $\abs{\frac{\pdiff f'}{\pdiff y}}_{x=a, y=b} \neq 0$. According to
+  \thref{theo:implicit-func}, $\exists$ neighborhood $B$ of $a$ in
+  $\mathbb{R}^n$ and a unique $\mathbb{C}^r$ function $g: B \rightarrow
+  \mathbb{R}^r$ such that $g(a) = b$ and $f'(x, g(x)) = 0 \; (\forall x \in B)$,
+  which is equivalent to $f(x, g(x)) = t$.
+\end{Proof}
+
+\begin{Corollary}
+  \label{cor:implicit-func-local-full-rank}
+  Let $A$ be an open set in $\mathbb{R}^{n+r}$ and $f: A \rightarrow \mathbb{R}^r$ be
+  $\mathbb{C}^r$, $f(x) = t \; \forall x \in A$, $t$ is a constant in $\mathbb{R}^r$. Then
+  if $\exists x_0 \in A$ such that
+  $\rank\left( \left[ \frac{\pdiff f}{\pdiff x} \right] \bigg\vert_{x=x_0} \right)=r$,
+  then $\exists$ neighborhood $B$ of $x_0$ in $\mathbb{R}^{n+r}$ such that
+  $\forall x \in B$, its $r$ components can be uniquely represented by a $\mathbb{C}^r$
+  function $g$ in terms of the other $n$ components. If $\forall x_0 \in A$ satisfies the
+  above condition, $A$ is a $n$-dimensional submanifold in $\mathbb{R}^{n+r}$. Its
+  codimension is $r$.
+\end{Corollary}
+
+\begin{Remark}
+  Compared to Theorem \ref{theo:implicit-func}, we do not know which $n$ coordinate
+  components are independent in Corollary \ref{cor:implicit-func-local-full-rank}, but
+  only know their number is $n$.
+\end{Remark}
+
+According to \thref{cor:implicit-func-local-full-rank}, the main submanifold
+theorem in $\mathbb{R}^{n+r}$ can be obtained:
+
+\begin{Theorem}[Main submanifold theorem in $\mathbb{R}^{n+r}$]
+  Let $F: \mathbb{R}^{n+r} \rightarrow \mathbb{R}^r$ and
+  $F^{-1}(y_0) = \{x \in \mathbb{R}^{n+r} \vert F(x) = y_0\}$ is not empty. If
+  $\forall x_0 \in F^{-1}(y_0)$ the Jacobi map
+  $F_{*}: \mathbb{R}_{x_0}^{n+r} \rightarrow \mathbb{R}_{y_0}^r$ is surjective, then
+  $F^{-1}(y_0)$ is a $n$-dimensional submanifold of
+  $\mathbb{R}^{n+r}$.\footnote{$F^{-1}(y_0)$ is the level set of $F$ with respect to
+    $y_0$.}
+\end{Theorem}
+
+\begin{Proof}
+  The Jacobi map $\vect{F}_{*}$, which is a linear transformation, is
+  surjective, so its range is $\mathbb{R}^r$ and its rank is $r$.
+  Then according to \thref{cor:implicit-func-local-full-rank},
+  $\exists$ neighborhood $B$ of $x_0$ in $\mathbb{R}^{n+r}$ such that
+  $r$ components of any point in $B$ can be represented by the
+  remaining $n$ components, and this holds
+  $\forall x_0 \in \vect{F}^{-1}(y_0)$. Therefore,
+  $\vect{F}^{-1}(y_0)$ is a submanifold of $\mathbb{R}^{n+r}$.
+\end{Proof}
+
+\comment{The implicit function theorem, its corollaries and main submanifold
+  theorem, especially the local full rank property, are used to prove an object
+  is a submanifold.}
+
+\subsection{Manifold}
+
+\begin{Definition}[Topological manifold]
+  \label{def:topological-manifold}
+  If every point $p$ in the set $M$ has a neighborhood which is homeomorphic to the real
+  Euclidean space $\mathbb{R}^n$, $M$ is a $n$-dimensional topological manifold.
+\end{Definition}
+
+\comment{A $n$-dimensional topological manifold $M$ locally resembles $\mathbb{R}^n$. At
+  this moment, there is no additional structure, such as differential structure, assigned
+  to the space $M$.}
+
+\begin{Definition}[Manifold]
+  \label{def:manifold}
+  Let $M$ be a set \footnote{It does not need a topology.} which can be covered by its
+  subsets as $M=U \bigcup V \bigcup \cdots$. For each subset $U$ in the covering,
+  $\exists$ $\phi_U : U \rightarrow \mathbb{R}^n$ which is \textbf{injective} with its
+  domain $\phi_U(U)$ being an \textbf{open} subset of $\mathbb{R}^n$. Let $V$ be another
+  subset in the covering with the injective map $\phi_V$. If $U \cap V \neq \Phi$, we
+  require $\phi_U(U \cap V)$ to be an open subset of $\mathbb{R}^n$ and the following
+  transition/overlap map to be differentiable:
+  $$
+  f_{VU} = \phi_V \circ \phi_U^{-1}: \phi_U(U \cap V) \rightarrow \mathbb{R}^n
+  $$
+  then $M$ is called a manifold (see Figure \ref{fig:manifold}). Each pair $(U, \phi_U)$
+  locally defines a coordinate patch/chart on $M$ and $\phi_U$ is called a coordinate map.
+\end{Definition}
+
+\comment{$\mathbb{R}^n$ has a standard topology, so $\phi_U(U)$, $\phi_V(V)$ and
+  $\phi_U(U \cap V)$ being open is meaningful.}
+
+\begin{Remark}
+  The differentiability of the overlap map is used to prove that a set assigned with
+  several coordinate charts is a manifold.
+\end{Remark}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=\textheight, keepaspectratio]{figures/manifold-draft}
+  \caption{}
+  \label{fig:manifold}
+\end{figure}
+
+\begin{Definition}[Differentiable manifold]
+  Let $M$ be a $n$-dimensional manifold. A topology can be defined for $M$ from the local
+  coordinate map like this: a subset $W$ of $M$ is open if $\forall p \in W$, there exists
+  a coordinate chart $(U, \phi_U)$ such that $p \in U$ and $U$ is contained in $W$
+  \footnote{Remember in the Definition \ref{def:manifold}, the image of a coordinate map
+    $\phi_U$ is an open set in $\mathbb{R}^n$.}. If such induced topology is Hausdorff and
+  $M$ has a countable base, $M$ is called a $n$-dimensional differentiable manifold.
+\end{Definition}
+
+Before we have another description of manifold when $M$ is given a topology, we
+need to have the following definitions.
+
+\begin{Definition}[Homeomorphism]
+  Let $X$ and $Y$ be topological spaces and let $f: X \rightarrow Y$ be a
+  bijection. If $f$ and its inverse $f^{-1}$ are both continuous, then $f$ is a
+  homeomorphism between $X$ and $Y$.
+\end{Definition}
+
+\comment{We say that $X$ and $Y$ are topologically the same.}
+
+\begin{Definition}[Differentiable homeomorphism]
+  Let $f: X \rightarrow Y$ be a homeomorphism between topological spaces $X$ and $Y$. If
+  $f$ is differentiable, then $f$ is called a differentiable homeomorphism, i.e. $f$ is
+  differentiable, while $f^{-1}$ is continuous and may not be differentiable.
+\end{Definition}
+
+\begin{Definition}[Diffeomorphism]
+  Let $f: X \rightarrow Y$ be a homeomorphism between topological spaces $X$ and
+  $Y$. If both $f$ and $f^{-1}$ are differentiable, then $f$ is called a
+  diffeomorphism.
+\end{Definition}
+
+With the assistance of inverse function theorem, a differentiable homeomorphism can be
+locally \textit{upgraded} to a diffeomorphism.
+
+\begin{Theorem}[Inverse function theorem]
+  \label{theo:inv-func}
+  Let $f: U \rightarrow V$ be a continuous and differentiable bijective map with
+  its inverse $f^{-1}$. Let $F_{*}$ be the Jacobi map of $f$. If $\det{F_{*}}
+  \neq 0$ at $p \in U$, then $\exists$ $f(p)$'s neighborhood $W \subset V$
+  such that $f^{-1}\big\vert_{W}$ is continuous and differentiable.
+\end{Theorem}
+
+\comment{$f$ is a local diffeomorphism on $f^{-1}(W)$.}
+
+\begin{Proposition}
+  \label{prop:jacobi-and-diffeomorphism}
+  Let $f: X \rightarrow Y$ be a differentiable homeomorphism between $X$ and
+  $Y$. Let $F_{*}$ be the Jacobi map of $f$. If $\forall p \in X$, $\det{F_{*}}
+  \neq 0$, then $f$ is a diffeomorphism.
+\end{Proposition}
+
+When a topology is defined for $M$, we will show that when the following
+conditions are satisfied, $M$ is also a manifold.
+
+\begin{Proposition}[Manifold with a topology: local diffeomorphism]
+  \label{prop:local-diffeomorphism-and-manifold}
+  Let $M$ have an open covering $M=U \bigcup V \bigcup \cdots$. For each open
+  subset $U$ in the covering, we require that $\exists \phi_U: U \rightarrow
+  \phi_U(U) \subset \mathbb{R}^n$ is a diffeomorphism, then $M$ is a manifold.
+\end{Proposition}
+
+\begin{Proof}
+  $\phi_U$ is a diffeomorphism, so it is a one-to-one correspondence between $U$ and an
+  open subset of $\mathbb{R}^n$. Both $\phi_U$ and its inverse $\phi_U^{-1}$ are
+  continuous and differentiable bijections. This holds for each open subset in the
+  covering.
+
+  We have $\phi_U^{-1}(\phi_U(U \cap V)) = U \cap V$ and because $U \cap V$ is open and
+  $\phi_U^{-1}$ is continuous,
+  $\phi_U(U \cap V)=(\phi_U^{-1})^{-1}(U \cap V) = \phi_U(U \cap V)$ is open.
+  
+  In addition, we know that
+  \begin{enumerate}
+  \item the composition of two bijections is bijective,
+  \item the composition of two continuous functions is continuous,
+  \item the composition of two differentiable functions is differentiable,
+  \end{enumerate}
+  so the overlap map $f_{VU}$ and its inverse $f_{UV}$ are both bijective, continuous and
+  differentiable. Therefore, the overlap map $f_{VU}$ is differentiable.
+
+  \textbf{In summary, the existence of a local diffeomorphism on each coordinate patch
+    ensures that $M$ is a manifold.}
+\end{Proof}
+
+\begin{Proposition}[Manifold with a topology: local differentiable homeomorphism]
+  Let $M$ have an open covering $M=U \bigcup V \bigcup \cdots$. For each open subset $U$
+  in the covering, we require that
+  $\exists \phi_U: U \rightarrow \phi_U(U) \subset \mathbb{R}^n$ is a differentiable
+  homeomorphism and $\forall p \in U$ its Jacobian $\det{\phi_U^{*}} \neq 0$, then $M$ is
+  a manifold.
+\end{Proposition}
+
+\begin{Proof}
+  This can be proved according to
+  \thref{prop:jacobi-and-diffeomorphism} and
+  \thref{prop:local-diffeomorphism-and-manifold}.
+\end{Proof}
+
+\comment{This is equivalent to say that if there is a differentiable
+  homeomorphism that has nonzero Jacobian everywhere on each patch in
+  the open covering of $M$, then $M$ itself is a manifold.}
+
+\subsection{Submanifold of manifold}
+
+We already have the definition of a $n$-dimensional submanifold of a Cartesian space
+$\mathbb{R}^{n+r}$ in Section \ref{sec:submanifold-of-R}, where the submanifold $M$ is a
+geometric entity in $\mathbb{R}^{n+r}$, which has already been assigned coordinates.
+
+According to Definition \ref{def:manifold}, a $n$-dimensional manifold can be covered by
+an atlas, which comprises a collection of local coordinate charts. The image of the
+coordinate map in each coordinate chart is an open set in $\mathbb{R}^{n}$. Any two
+coordinate charts having non-empty overlap can be differentiably transformed
+back-and-forth via overlap maps. Therefore, a manifold is locally equivalent
+(homeomorphic) to an open set in the Cartesian space. And we can still have a similar
+definition for the submanifold of a manifold.
+
+\begin{Definition}[Submanifold of manifold]
+  $W^r \subset M^n$ is a submanifold embedded in the manifold $M^n$, if
+  $\forall p \in W^r$, there exists a coordinate chart $(U, x) \subset W^r$ containing $p$
+  such that $U$ can be represented by a locus:
+  $$
+  F^1(x) = 0, \cdots, F^{n-r}(x) = 0
+  $$
+  whose Jacobian matrix $\frac{\pdiff F}{\pdiff x}$ has rank $n-r$ at each point of U.
+  Then $W^r$ is a $r$-dimensional submanifold of $M^n$.
+\end{Definition}
+
+\begin{Remark}
+  As a subspace of the manifold $M^n$, $W^r$ inherits the property of locally homeomorphic
+  to an open subset of $\mathbb{R}^n$ and the existence of differentiable overlap maps,
+  since $W^r$ is itself a manifold.
+\end{Remark}
+
+\begin{Theorem}[Main theorem of submanifold in manifold]
+  Let $M^{n+r}$ and $V^r$ be two manifolds. Let $F: M^{n+r} \rightarrow V^r$ and the level
+  set $F^{-1}(y_0) = \{x \in M^{n+r} \vert F(x) = y_0\}$ is not empty. If
+  $\forall x_0 \in F^{-1}(y_0)$ the Jacobi map
+  $F_{*}: M_{x_0}^{n+r} \rightarrow V_{y_0}^r$ is surjective\footnote{The rank of the
+    Jacobian matrix is $r$.}, then $F^{-1}(y_0)$ is a $n$-dimensional submanifold of
+  $M^{n+r}$.
+\end{Theorem}
+
+\subsection{Comparison of several concepts}
+
+\begin{Definition}[Bijection]
+  This is the equivalence in the sense of one-to-one and surjective  mapping or correspondence.
+\end{Definition}
+
+\begin{Definition}[Isomorphism]
+  This is the equivalence in the sense of algebraic structure of group.
+\end{Definition}
+
+\begin{Definition}[Homeomorphism]
+  This is the equivalence in the sense of topology and requires the
+  forward map $f$ and backward map $f^{-1}$ to be continuous. It
+  includes bijection.
+\end{Definition}
+
+\begin{Definition}[Isometry]
+  This is the equivalence in the sense of metric.
+\end{Definition}
+
+\begin{Definition}[Differentiable homeomorphism]
+  It is a homeomorphism with the forward map $f$ being differentiable.
+\end{Definition}
+
+\begin{Definition}[Diffeomorphism]
+  It is a homeomorphism with both the forward map $f$ and backward map
+  $f^{-1}$ being differentiable.
+\end{Definition}
+
+\subsection{Tangent vector}
+
+\subsubsection{Directional derivative}
+
+\begin{Definition}[Directional derivative of a function with respect to a vector]
+  Let $\vect{v}$ be a vector and $f$ a scalar function. The directional derivative of $f$
+  with respect to $\vect{v}$ at point $p$ is
+  \begin{equation}
+    \label{eq:directional-derivative-wrt-v}
+    D_{\vect{v}}(f) = \frac{\diff}{\diff t} \left[ f(p + t\vect{v}) \right] \big\vert_{t=0}.
+  \end{equation}
+\end{Definition}
+This can be understood as the time derivative of $f$ when we move from $p$ with a speed
+vector $\vect{v}$. When $\vect{v}$ is a unit speed, i.e. $\norm{v}=1$, this definition is
+consistent with the directional derivative in classical calculus.
+
+Assume $f$ is defined on a $d$-dimensional manifold with a coordinate chart $(U, x_{U})$
+containing $p$. Since a manifold is locally homeomorphic to $\mathbb{R}^d$, starting from
+$p$ then moving with the speed vector $\vect{v}_U$ on the manifold in an infinitesimal
+time $\intd t$ is actually walking along a straight line $x_U(t) = p_U+t\vect{v}_U$. Hence
+the above derivative of $f$ can be expanded as
+\begin{equation}
+  \label{eq:df-in-xu}
+  D_{\vect{v}_U}(f) = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_U^i} \frac{\diff
+    x_{U}^i(t)}{\diff t} = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_U^i}\Bigg\vert_{x_U=p_U} v_U^i.
+\end{equation}
+If another coordinate chart $(V, x_V)$ is adopted which overlaps with $(U,x_U)$, the
+derivative of $f$ can also be written as
+\begin{equation}
+  \label{eq:df-in-xv}
+  D_{\vect{v}_V}(f) = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_V^i} \frac{\diff
+    x_{V}^i(t)}{\diff t} = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_V^i} \Bigg\vert_{x_V=p_V} v_V^i.
+\end{equation}
+We can prove that such definition of directional derivative is actually coordinate
+independent.
+
+\begin{Proof}[Directional derivative of $f$ is coordinate independent]
+  Since $v$ is a tangent vector. Its transformation from $(U,x_U)$ to $(V,x_V)$ requires
+  the Jacobi matrix of the transition map $\phi_{VU}$ as below:
+  \begin{equation}
+    \label{eq:tangent-vector-transform}
+    v_V^i = \sum_{j=1}^d \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} x_U^j \quad (i=1,\cdots,d).
+  \end{equation}
+  Substitute this transformation into Equation (\ref{eq:df-in-xv}), we have
+  $$
+  D_{\vect{v}_V}(f) = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_V^i} \sum_{j=1}^d \frac{\pdiff
+    x_{V}^i}{\pdiff x_{U}^j} x_U^j = \sum_{j=1}^d \left( \sum_{i=1}^d \frac{\pdiff f}{\pdiff
+      x_V^i} \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} \right) x_U^j = \sum_{j=1}^d \frac{\pdiff
+    f}{\pdiff x_U^j} x_U^j = D_{\vect{v}_U}(f).
+  $$
+  This is means $D_v(f)$ itself is a \emph{physical entity}, which does not depend on the
+  actual coordinate chart we've assigned to the neighborhood of $p$.
+\end{Proof}
+
+\begin{Remark}
+  The number of coordinate components in $x_U$ does not have to be the same as that of
+  $x_V$. And it is neither necessarily the same as the manifold dimension $d$. This is
+  because the manifold may be embedded in a higher dimensional space, which needs more
+  coordinate components to describe. For example, in the 3D Cartesian space, a 2D sphere
+  manifold still needs three coordinates.
+\end{Remark}
+
+\subsubsection{Tangent vector as a differential operator}
+
+As shown in Equation (\ref{eq:directional-derivative-wrt-v}), there is a one-to-one
+correspondence between a directional derivative operator and a tangent vector. Therefore,
+a tangent vector $X_p$ rooted at $p$ in a local coordinate chart $(U,x)$ can be
+identified with a differential operator:
+\begin{equation}
+  \label{eq:tangent-vector}
+  X_p=\sum_jX^j \frac{\pdiff}{\pdiff x^j}\Bigg\vert_p.
+\end{equation}
+Here $X_j$ is the vector coefficient and the differential operator
+$\frac{\pdiff }{\pdiff x^j}\Big\vert_p$ is the corresponding basis vector, which will be
+written as $\frac{\vect{\pdiff}}{\vect{\pdiff} x^j}$ in bold typeface from now on or in a
+simpler form $\vect{\pdiff} x^j$. Hence, $\left\{ \vect{\pdiff} x^j \right\}_{j=1}^d$ is a
+basis of the coordinate chart $(U,x)$. Since the $j$-th component of $X_p$ in this chart
+is just $X^j$, the corresponding basis vector $\vect{\pdiff} x^j$ is numerically the same
+as the basis vector $\vect{e}_j$ of the Cartesian frame $\mathbb{R}^d$, i.e. the $i$-th
+component of $\vect{\pdiff}x^j$ is the Kronecker $\delta_j^i$. However, it is different
+from $\vect{e}_j$ in the global Cartesian frame. It is actually the tangent vector or
+velocity vector of the $j$-th coordinate curve at $p$ in $(U,x)$.
+\emph{$\left\{ \vect{\pdiff} x^j \right\}_{j=1}^d$ can be considered as a local Cartesian
+  coordinate frame at $p$ using the coordinate chart $(U,x)$.}
+
+\begin{Definition}[Coordinate curve]
+  The $i$-th coordinate curve of a coordinate chart $(U,x)$ with $x=(x^1,\cdots,x^d)$ is
+  defined as
+  \begin{equation}
+    \label{eq:coordinate-curves}
+    \begin{cases}
+      x^i(t)=\text{const} & (i\neq j) \\
+      x^j(t)=t
+    \end{cases}
+    \quad (j=1,\cdots,d).
+  \end{equation}
+\end{Definition}
+This definition means the $j$-th coordinate curve is parameterized by $x^j$ only, while
+the other coordinate components are kept constant. The velocity vector of this coordinate
+curve at $p$ is the derivative of $x$ at $t=0$, since $p$ is the root point:
+\begin{equation}
+  \label{eq:tangent-vector-of-coordinate-curve}
+  \frac{\diff x}{\diff t}\Bigg\vert_{t=0}=(\delta_{j}^1, \cdots, \delta_j^{d}).
+\end{equation}
+This is just equal to $\vect{\pdiff}x^j$.
+
+Therefore, the set of velocity vectors of all coordinate curves at $p$ using the
+coordinate chart $(U,x)$ forms the basis of the tangent space at $p$, i.e.
+$\left\{\frac{\pdiff}{\pdiff x^j}\Big\vert_p\right\}_{j=1}^d$, which is written simply as
+$\left\{\frac{\pdiff}{\pdiff x^j} \right\}_{j=1}^d$. This is the same as the results
+derived from treating a tangent vector as a differential operator.
+
+If a different coordinate chart $(V,y)$ containing $p$ is adopted, where
+$y = (y^1,\cdots,y^{d'})$ may have different number of components from $x$, the basis
+$\left\{ \vect{\pdiff}x^j \right\}_{j=1}^d$ in $(U,x)$ can be transformed to the new chart
+via the Jacobi matrix of the transition map $\phi_{VU}$, since each basis vector is a
+tangent vector, which follows the same transformation rule as in
+(\ref{eq:tangent-vector-transform}). For the basis vector $\vect{\pdiff}x^j$, the $i$-th
+component in the transformed vector is
+\begin{equation}
+  \label{eq:tangent-space-basis-transform}
+  \sum_{k=1}^d \frac{\pdiff y^i}{\pdiff x^k} (\vect{\pdiff} x^j)_k = \sum_{k=1}^d
+  \frac{\pdiff y^i}{\pdiff x^k} \delta_k^j = \frac{\pdiff y^{i}}{\pdiff x^{j}} \quad (i=1,\cdots,d').
+\end{equation}
+Hence, the transformed vector of $\vect{\pdiff}x^j$ is just the $j$-th column of the
+Jacobi matrix
+$$
+\begin{pmatrix}
+  \frac{\pdiff y^{1}}{\pdiff x^j} \\
+  \vdots \\
+  \frac{\pdiff y^{d'}}{\pdiff x^j}
+\end{pmatrix}.
+$$
+
+\begin{Example}[Coordinate curves of a sphere parameterized by $(r, \varphi, \theta)$]
+  Select a neighborhood $U$ of the circle with a latitude $\frac{\pi}{4}$ on the sphere
+  which has a radius $r$ and centered at the origin. For example, $U$ can be an open band
+  between latitude $\frac{\pi}{5}$ and $\frac{\pi}{3}$. Assign a local coordinate chart
+  $(\varphi, \theta)$ to $U$, i.e. the spherical coordinates. Meanwhile, we can still
+  assign Cartesian coordinate chart $(x,y,z)$ to $U$. The transformation or transition map
+  from $(\varphi,\theta)$ to $(x,y,z)$ is
+  \begin{equation}
+    \begin{aligned}
+      x &= r \cos\varphi \sin\theta \\
+      y &= r \sin\varphi \sin\theta \\
+      z &= r \cos\theta
+    \end{aligned}.
+  \end{equation}
+  The Jacobi matrix of this map is
+  \begin{equation}
+    \begin{pmatrix}
+      -r\sin\phi \sin\theta & r\cos\phi \cos\theta \\
+      r\cos\phi \sin\theta & r \sin\phi \cos\theta \\
+      0 & -r\sin\theta
+    \end{pmatrix}.
+  \end{equation}
+  Then for a point $p$ in $U$, the basis of the tangent space represented in the chart
+  $(\varphi, \theta)$ is $\left\{ \vect{\pdiff}\varphi, \vect{\pdiff}\theta \right\}$. In
+  the chart $(x,y,z)$, the basis is
+  $\left\{ (-r\sin\phi \sin\theta, r\cos\phi \sin\theta, 0)^{\mathrm{T}}, (r\cos\phi
+    \cos\theta, r\sin\phi \cos\theta, -r\sin\theta)^{\mathrm{T}} \right\}$. This can be
+  visualized in Figure \ref{fig:basis-on-sphere}, where a set of points are selected as
+  $p$ whose latitude is $\frac{\pi}{4}$.
+  \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth, height=\textheight, keepaspectratio]{figures/basis-on-sphere}
+    \caption{}
+    \label{fig:basis-on-sphere}
+  \end{figure}
+\end{Example}
+
+The above tangent and velocity vectors of a manifold $M$ can be visualized in an Euclidean
+space with a higher dimension, which is ensured by a theorem proposed by Hassler Whitney.
+\begin{Theorem}[Hassler Whitney]
+  Every $n$-dimensional manifold $M^n$ can be realized as a submanifold of $\mathbb{R}^{2n}$.
+\end{Theorem}
+This is consistent with our intuition, just imaginge how we understand a 2-sphere in
+$\mathbb{R}^3$. However, the definition of tangent vectors for a manifold does not require
+such embedding.
+
 \section{Sauter quadrature}
 \label{sec:sauter-quad}
 
@@ -270,16 +781,17 @@ $\psi_i(x)$ and a shape function within each cell in the support of $\varphi_j(y
 Therefore, a double loop is needed to compute $\mathscr{A}_{ij}$.
 
 If \texttt{FE\_DGQ} is adopted for both ansatz and test spaces, each basis function or DoF
-belongs to only one cell and Equation \ref{eq:bilinear-form-matrix-entry-cell-pairs} has a
+belongs to only one cell and Equation \eqref{eq:bilinear-form-matrix-entry-cell-pairs} has a
 simpler form
 \begin{equation}
+  \label{eq:bilinear-form-matrix-entry-cell-pairs-fedgq}
   \mathscr{A}_{ij} = \int_{\tau_i} P_{k(i)}^{\tau_i}(x)
   \int_{\tau_j} k(x,y) P_{k(j)}^{\tau_j}(y) \intd s_y \intd s_x.
 \end{equation}
 The $i$-th basis function in the test space belongs to the cell $\tau_i$ and the $j$-th
 basis function in the ansatz space belongs to the cell $\tau_j$. The index of the
 corresponding shape function in $\tau_i$ is $k(i)$, which only depends on the DoF index
-$i$. Similarly, the index of t he corresponding shape function in $\tau_j$ is $k(j)$.
+$i$. Similarly, the index of the corresponding shape function in $\tau_j$ is $k(j)$.
 Therefore, in this case, $\mathscr{A}_{ij}$ can be directly computed without the double
 loop for \texttt{FE\_Q}.
 
@@ -328,11 +840,12 @@ embodiment of the spirit of differential geometry.
 \end{figure}
 
 Let $\mathbb{R}^3$ be parameterized by $(x_1,x_2,x_3)$. Let the integration domain
-$\Gamma$ in (\ref{eq:bilinear-form-matrix-entry}) be locally parameterized by
+$\Gamma$ in Equation \eqref{eq:bilinear-form-matrix-entry} be locally parameterized by
 $(\hat{x}_1,\hat{x}_2)$, i.e. in each cell $\tau$ in $\Gamma$, the coordinate frame of its
-reference cell is adopted. Because double integral is involved, for each pair of cells, the actual integration
-domain is a 4D hyper-cube $[0,1]^4$. Because both shape functions and quadrature points
-are defined on reference cells, it is easy do calculus in reference cells.
+reference cell is adopted. Because double integral is involved, for each pair of cells,
+the actual integration domain is a 4D hyper-cube $[0,1]^4$. Because both shape functions
+and quadrature points are defined on reference cells, it is easy do calculus in reference
+cells.
 
 When a coordinate transformation is applied to a surface integral, a scaling of the
 integral element $\partial \hat{x}_1 \wedge \partial \hat{x}_2$ is needed. On a curved
