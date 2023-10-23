@@ -183,7 +183,7 @@ main(int argc, char *argv[])
     }
   else
     {
-      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere.msh");
+      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere-refine-2.msh");
     }
 
   timer.stop();
