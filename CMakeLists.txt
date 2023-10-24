@@ -75,8 +75,8 @@ IF (HBEM_ENABLE_VALGRIND_PROFILE AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 ENDIF()
 
 # Set CUDA compiler flags.
-SET(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread")
-SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
+SET(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread --nvlink-options=-suppress-stack-size-warning")
+SET(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread --nvlink-options=-suppress-stack-size-warning")
 
 # #########################################################
 # Configuration for performance profiling in nsight-sys

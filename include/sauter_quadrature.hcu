@@ -5436,10 +5436,8 @@ namespace HierBEM
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                       &ky_dof_to_cell_topo,
       const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
-                                      &bem_values_gpu,
-      const DoFHandler<dim, spacedim> &kx_dof_handler,
-      const DoFHandler<dim, spacedim> &ky_dof_handler,
+      const DoFHandler<dim, spacedim>                 &kx_dof_handler,
+      const DoFHandler<dim, spacedim>                 &ky_dof_handler,
       const std::vector<types::global_dof_index>
         *kx_map_from_local_to_full_dof_indices,
       const std::vector<types::global_dof_index>
@@ -5580,8 +5578,6 @@ namespace HierBEM
                                 j_global_dof_index,
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
-                                kx_dof_handler,
-                                ky_dof_handler,
                                 kx_mapping,
                                 ky_mapping,
                                 map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5645,8 +5641,6 @@ namespace HierBEM
                                 j_global_dof_index,
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
-                                kx_dof_handler,
-                                ky_dof_handler,
                                 kx_mapping,
                                 ky_mapping,
                                 map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5709,8 +5703,6 @@ namespace HierBEM
                         j_global_dof_index,
                         kx_dof_to_cell_topo,
                         ky_dof_to_cell_topo,
-                        kx_dof_handler,
-                        ky_dof_handler,
                         kx_mapping,
                         ky_mapping,
                         map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5760,8 +5752,6 @@ namespace HierBEM
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                       &ky_dof_to_cell_topo,
       const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
-      const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
-                                      &bem_values_gpu,
       const QGauss<dim>               &mass_matrix_quadrature_formula,
       const DoFHandler<dim, spacedim> &kx_dof_handler,
       const DoFHandler<dim, spacedim> &ky_dof_handler,
@@ -5915,8 +5905,6 @@ namespace HierBEM
                                 j_global_dof_index,
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
-                                kx_dof_handler,
-                                ky_dof_handler,
                                 kx_mapping,
                                 ky_mapping,
                                 map_from_kx_boundary_mesh_to_volume_mesh,
@@ -5982,8 +5970,6 @@ namespace HierBEM
                                 j_global_dof_index,
                                 kx_dof_to_cell_topo,
                                 ky_dof_to_cell_topo,
-                                kx_dof_handler,
-                                ky_dof_handler,
                                 kx_mapping,
                                 ky_mapping,
                                 map_from_kx_boundary_mesh_to_volume_mesh,
@@ -6048,8 +6034,6 @@ namespace HierBEM
                         j_global_dof_index,
                         kx_dof_to_cell_topo,
                         ky_dof_to_cell_topo,
-                        kx_dof_handler,
-                        ky_dof_handler,
                         kx_mapping,
                         ky_mapping,
                         map_from_kx_boundary_mesh_to_volume_mesh,
@@ -6156,8 +6140,6 @@ namespace HierBEM
      * selected, this index is with respect to the complete DoF set.
      * @param kx_dof_to_cell_topo
      * @param ky_dof_to_cell_topo
-     * @param kx_dof_handler
-     * @param ky_dof_handler
      * @param kx_mapping
      * @param ky_mapping
      * @param map_from_kx_boundary_mesh_to_volume_mesh
@@ -6192,8 +6174,6 @@ namespace HierBEM
       const std::vector<
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                               &ky_dof_to_cell_topo,
-      const DoFHandler<dim, spacedim>         &kx_dof_handler,
-      const DoFHandler<dim, spacedim>         &ky_dof_handler,
       const MappingQGenericExt<dim, spacedim> &kx_mapping,
       const MappingQGenericExt<dim, spacedim> &ky_mapping,
       const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -6441,8 +6421,6 @@ namespace HierBEM
      * selected, this index is with respect to the complete DoF set.
      * @param kx_dof_to_cell_topo
      * @param ky_dof_to_cell_topo
-     * @param kx_dof_handler
-     * @param ky_dof_handler
      * @param kx_mapping
      * @param ky_mapping
      * @param map_from_kx_boundary_mesh_to_volume_mesh
@@ -6479,8 +6457,6 @@ namespace HierBEM
       const std::vector<
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                               &ky_dof_to_cell_topo,
-      const DoFHandler<dim, spacedim>         &kx_dof_handler,
-      const DoFHandler<dim, spacedim>         &ky_dof_handler,
       const MappingQGenericExt<dim, spacedim> &kx_mapping,
       const MappingQGenericExt<dim, spacedim> &ky_mapping,
       const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -6854,8 +6830,6 @@ namespace HierBEM
      * @param j_global_dof_index
      * @param kx_dof_to_cell_topo
      * @param ky_dof_to_cell_topo
-     * @param kx_dof_handler
-     * @param ky_dof_handler
      * @param kx_mapping
      * @param ky_mapping
      * @param scratch_data
@@ -6875,8 +6849,6 @@ namespace HierBEM
       const std::vector<
         std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                               &ky_dof_to_cell_topo,
-      const DoFHandler<dim, spacedim>         &kx_dof_handler,
-      const DoFHandler<dim, spacedim>         &ky_dof_handler,
       const MappingQGenericExt<dim, spacedim> &kx_mapping,
       const MappingQGenericExt<dim, spacedim> &ky_mapping,
       PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
@@ -7924,8 +7896,6 @@ namespace HierBEM
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
    * @param bem_values
-   * @param kx_dof_handler
-   * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
    * @param map_from_kx_boundary_mesh_to_volume_mesh
@@ -7955,8 +7925,6 @@ namespace HierBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                             &bem_values_gpu,
-    const DoFHandler<dim, spacedim>         &kx_dof_handler,
-    const DoFHandler<dim, spacedim>         &ky_dof_handler,
     const MappingQGenericExt<dim, spacedim> &kx_mapping,
     const MappingQGenericExt<dim, spacedim> &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -8446,8 +8414,6 @@ namespace HierBEM
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
    * @param bem_values
-   * @param kx_dof_handler
-   * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
    * @param map_from_kx_boundary_mesh_to_volume_mesh
@@ -8479,8 +8445,6 @@ namespace HierBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                             &bem_values_gpu,
-    const DoFHandler<dim, spacedim>         &kx_dof_handler,
-    const DoFHandler<dim, spacedim>         &ky_dof_handler,
     const MappingQGenericExt<dim, spacedim> &kx_mapping,
     const MappingQGenericExt<dim, spacedim> &ky_mapping,
     const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
@@ -9075,8 +9039,6 @@ namespace HierBEM
     const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                                             &bem_values_gpu,
-    const DoFHandler<dim, spacedim>                         &kx_dof_handler,
-    const DoFHandler<dim, spacedim>                         &ky_dof_handler,
     const MappingQGenericExt<dim, spacedim>                 &kx_mapping,
     const MappingQGenericExt<dim, spacedim>                 &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,

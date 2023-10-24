@@ -101,12 +101,50 @@ namespace HierBEM
 
     template <int dim1,
               int spacedim1,
+              typename RangeNumberType,
+              typename MatrixType>
+    friend void
+    assemble_fem_scaled_mass_matrix_serial(
+      const DoFHandler<dim1, spacedim1> &dof_handler_for_test_space,
+      const DoFHandler<dim1, spacedim1> &dof_handler_for_trial_space,
+      const RangeNumberType              factor,
+      const Quadrature<dim1>            &quad_rule,
+      MatrixType                        &target_full_matrix);
+
+    template <int dim1,
+              int spacedim1,
               template <int, typename>
               typename KernelFunctionType,
               typename RangeNumberType,
               typename MatrixType>
     friend void
     assemble_bem_full_matrix(
+      const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+      const DoFHandler<dim1, spacedim1>   &dof_handler_for_test_space,
+      const DoFHandler<dim1, spacedim1>   &dof_handler_for_trial_space,
+      MappingQGenericExt<dim1, spacedim1> &kx_mapping,
+      MappingQGenericExt<dim1, spacedim1> &ky_mapping,
+      typename MappingQGeneric<dim1, spacedim1>::InternalData &kx_mapping_data,
+      typename MappingQGeneric<dim1, spacedim1>::InternalData &ky_mapping_data,
+      const std::map<typename Triangulation<dim1, spacedim1>::cell_iterator,
+                     typename Triangulation<dim1 + 1, spacedim1>::face_iterator>
+        &map_from_test_space_mesh_to_volume_mesh,
+      const std::map<typename Triangulation<dim1, spacedim1>::cell_iterator,
+                     typename Triangulation<dim1 + 1, spacedim1>::face_iterator>
+        &map_from_trial_space_mesh_to_volume_mesh,
+      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+      const SauterQuadratureRule<dim1>     &sauter_quad_rule,
+      MatrixType                           &target_full_matrix);
+
+
+    template <int dim1,
+              int spacedim1,
+              template <int, typename>
+              typename KernelFunctionType,
+              typename RangeNumberType,
+              typename MatrixType>
+    friend void
+    assemble_bem_full_matrix_serial(
       const KernelFunctionType<spacedim, RangeNumberType> &kernel,
       const DoFHandler<dim1, spacedim1>   &dof_handler_for_test_space,
       const DoFHandler<dim1, spacedim1>   &dof_handler_for_trial_space,
@@ -192,7 +230,7 @@ namespace HierBEM
      * Read the volume mesh from a file.
      */
     void
-    read_volume_mesh(const std::string &mesh_file, const bool debug=false);
+    read_volume_mesh(const std::string &mesh_file, const bool debug = false);
 
     /**
      * Read independent mesh files for two spheres then merge the triangulation.
@@ -284,6 +322,15 @@ namespace HierBEM
     {
       alpha_for_neumann = alphaForNeumann;
     }
+
+    bool
+    is_cpu_serial() const;
+    void
+    set_cpu_serial(bool cpuSerial);
+    bool
+    is_use_hmat() const;
+    void
+    set_use_hmat(bool useHmat);
 
   private:
     void
@@ -523,7 +570,12 @@ namespace HierBEM
     /**
      * Whether \hmatrix is used.
      */
-    bool is_use_hmat;
+    bool use_hmat;
+
+    /**
+     * Whether run in a single thread on CPU.
+     */
+    bool cpu_serial;
 
     /**
      * Cluster trees
@@ -815,7 +867,8 @@ namespace HierBEM
     , ky_mapping_data_for_dirichlet_domain(nullptr)
     , kx_mapping_data_for_neumann_domain(nullptr)
     , ky_mapping_data_for_neumann_domain(nullptr)
-    , is_use_hmat(false)
+    , use_hmat(false)
+    , cpu_serial(false)
     , n_min_for_ct(0)
     , n_min_for_bct(0) // By default, it is the same as the @p n_min_for_ct
     , eta(0)
@@ -864,7 +917,8 @@ namespace HierBEM
     , ky_mapping_data_for_dirichlet_domain(nullptr)
     , kx_mapping_data_for_neumann_domain(nullptr)
     , ky_mapping_data_for_neumann_domain(nullptr)
-    , is_use_hmat(false)
+    , use_hmat(false)
+    , cpu_serial(false)
     , n_min_for_ct(0)
     , n_min_for_bct(0)
     , eta(0)
@@ -923,7 +977,8 @@ namespace HierBEM
     , ky_mapping_data_for_dirichlet_domain(nullptr)
     , kx_mapping_data_for_neumann_domain(nullptr)
     , ky_mapping_data_for_neumann_domain(nullptr)
-    , is_use_hmat(true)
+    , use_hmat(true)
+    , cpu_serial(false)
     , n_min_for_ct(n_min_for_ct)
     , n_min_for_bct(n_min_for_bct)
     , eta(eta)
@@ -974,7 +1029,8 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::read_volume_mesh(const std::string &mesh_file, const bool debug)
+  LaplaceBEM<dim, spacedim>::read_volume_mesh(const std::string &mesh_file,
+                                              const bool         debug)
   {
     /**
      * The template parameters @p dim and @p spacedim of the @p LaplaceBEM
@@ -988,26 +1044,28 @@ namespace HierBEM
     grid_in.read_msh(in);
     in.close();
 
-    if(debug) {
-      std::cout << "=== Volume mesh information ===" << std::endl;
-      print_mesh_info(std::cout, volume_triangulation);
-    }
+    if (debug)
+      {
+        std::cout << "=== Volume mesh information ===" << std::endl;
+        print_mesh_info(std::cout, volume_triangulation);
+      }
 
     map_from_surface_mesh_to_volume_mesh =
       GridGenerator::extract_boundary_mesh(volume_triangulation,
                                            surface_triangulation);
 
-    if(debug) {
-      std::cout << "=== Surface mesh information ===" << std::endl;
-      print_mesh_info(std::cout, surface_triangulation);
+    if (debug)
+      {
+        std::cout << "=== Surface mesh information ===" << std::endl;
+        print_mesh_info(std::cout, surface_triangulation);
 
-      /**
-       * @internal Save the surface mesh file.
-       */
-      std::ofstream surface_mesh_file(
-        mesh_file.substr(0, mesh_file.find_last_of('.')) + "-surface.msh");
-      write_msh_correct(surface_triangulation, surface_mesh_file);
-    }
+        /**
+         * @internal Save the surface mesh file.
+         */
+        std::ofstream surface_mesh_file(
+          mesh_file.substr(0, mesh_file.find_last_of('.')) + "-surface.msh");
+        write_msh_correct(surface_triangulation, surface_mesh_file);
+      }
   }
 
 
@@ -1299,7 +1357,7 @@ namespace HierBEM
             std::cout << "Number of DoFs in Neumann space: "
                       << n_dofs_for_neumann_space << std::endl;
 
-            if (!is_use_hmat)
+            if (!use_hmat)
               {
                 /**
                  * If full matrices are used for verification purpose,
@@ -1643,7 +1701,7 @@ namespace HierBEM
                                      *dirichlet_bc_functor_ptr,
                                      dirichlet_bc);
 
-            if (is_use_hmat)
+            if (use_hmat)
               {
                 /**
                  * Permute the Dirichlet boundary data by following the mapping
@@ -1667,7 +1725,7 @@ namespace HierBEM
             system_rhs_on_dirichlet_domain.reinit(n_dofs_for_neumann_space);
             neumann_data.reinit(n_dofs_for_neumann_space);
 
-            if (is_use_hmat)
+            if (use_hmat)
               {
                 // Solution vector in the internal numbering.
                 neumann_data_on_dirichlet_domain_internal_dof_numbering.reinit(
@@ -1694,7 +1752,7 @@ namespace HierBEM
             std::cout << "Number of DoFs in Neumann space: "
                       << n_dofs_for_neumann_space << std::endl;
 
-            if (!is_use_hmat)
+            if (!use_hmat)
               {
                 /**
                  * If full matrices are used for verification purpose,
@@ -1918,7 +1976,7 @@ namespace HierBEM
                                      *neumann_bc_functor_ptr,
                                      neumann_bc);
 
-            if (is_use_hmat)
+            if (use_hmat)
               {
                 /**
                  * Permute the Neumann boundary data by following the mapping
@@ -1955,7 +2013,7 @@ namespace HierBEM
             system_rhs_on_neumann_domain.reinit(n_dofs_for_dirichlet_space);
             dirichlet_data.reinit(n_dofs_for_dirichlet_space);
 
-            if (is_use_hmat)
+            if (use_hmat)
               {
                 // Solution vector in the internal numbering
                 dirichlet_data_on_neumann_domain_internal_dof_numbering.reinit(
@@ -1965,7 +2023,7 @@ namespace HierBEM
             break;
           }
           case MixedBCProblem: {
-            Assert(is_use_hmat, ExcInternalError());
+            Assert(use_hmat, ExcInternalError());
 
             // Initialize DoF handlers.
             dof_handler_for_dirichlet_space.reinit(surface_triangulation);
@@ -2558,6 +2616,8 @@ namespace HierBEM
   void
   LaplaceBEM<dim, spacedim>::assemble_full_matrix_system()
   {
+    LogStream::Prefix prefix_string("assemble_full_matrix");
+
     MultithreadInfo::set_thread_limit(thread_num);
 
     switch (problem_type)
@@ -2581,71 +2641,151 @@ namespace HierBEM
              * potential reference \f$u_0\f$ is zero when \f$\abs{x} \rightarrow
              * \infty\f$.
              */
+            Timer timer;
             if (is_interior_problem)
               {
-                assemble_fem_scaled_mass_matrix(
-                  dof_handler_for_neumann_space,
-                  dof_handler_for_dirichlet_space,
-                  0.5,
-                  QGauss<2>(fe_for_dirichlet_space.degree + 1),
-                  K2_matrix_with_mass_matrix);
+                if (cpu_serial)
+                  {
+                    assemble_fem_scaled_mass_matrix_serial(
+                      dof_handler_for_neumann_space,
+                      dof_handler_for_dirichlet_space,
+                      0.5,
+                      QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                      K2_matrix_with_mass_matrix);
+                  }
+                else
+                  {
+                    assemble_fem_scaled_mass_matrix(
+                      dof_handler_for_neumann_space,
+                      dof_handler_for_dirichlet_space,
+                      0.5,
+                      QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                      K2_matrix_with_mass_matrix);
+                  }
               }
             else
               {
-                assemble_fem_scaled_mass_matrix(
-                  dof_handler_for_neumann_space,
-                  dof_handler_for_dirichlet_space,
-                  -0.5,
-                  QGauss<2>(fe_for_dirichlet_space.degree + 1),
-                  K2_matrix_with_mass_matrix);
+                if (cpu_serial)
+                  {
+                    assemble_fem_scaled_mass_matrix_serial(
+                      dof_handler_for_neumann_space,
+                      dof_handler_for_dirichlet_space,
+                      -0.5,
+                      QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                      K2_matrix_with_mass_matrix);
+                  }
+                else
+                  {
+                    assemble_fem_scaled_mass_matrix(
+                      dof_handler_for_neumann_space,
+                      dof_handler_for_dirichlet_space,
+                      -0.5,
+                      QGauss<2>(fe_for_dirichlet_space.degree + 1),
+                      K2_matrix_with_mass_matrix);
+                  }
               }
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble mass matrix I");
 
             /**
              * Assemble the DLP matrix, which is added with the previous
              * scaled FEM mass matrix.
              */
             std::cout << "=== Assemble DLP matrix ===" << std::endl;
-            assemble_bem_full_matrix(
-              double_layer_kernel,
-              1.0,
-              dof_handler_for_neumann_space,
-              dof_handler_for_dirichlet_space,
-              kx_mapping_for_dirichlet_domain,
-              ky_mapping_for_dirichlet_domain,
-              *kx_mapping_data_for_dirichlet_domain,
-              *ky_mapping_data_for_dirichlet_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
-              SauterQuadratureRule<dim>(5, 4, 4, 3),
-              K2_matrix_with_mass_matrix);
+
+            timer.start();
+            if (cpu_serial)
+              {
+                assemble_bem_full_matrix_serial(
+                  double_layer_kernel,
+                  1.0,
+                  dof_handler_for_neumann_space,
+                  dof_handler_for_dirichlet_space,
+                  kx_mapping_for_dirichlet_domain,
+                  ky_mapping_for_dirichlet_domain,
+                  *kx_mapping_data_for_dirichlet_domain,
+                  *ky_mapping_data_for_dirichlet_domain,
+                  map_from_surface_mesh_to_volume_mesh,
+                  map_from_surface_mesh_to_volume_mesh,
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                    SameTriangulations,
+                  SauterQuadratureRule<dim>(5, 4, 4, 3),
+                  K2_matrix_with_mass_matrix);
+              }
+            else
+              {
+                assemble_bem_full_matrix(
+                  double_layer_kernel,
+                  1.0,
+                  dof_handler_for_neumann_space,
+                  dof_handler_for_dirichlet_space,
+                  kx_mapping_for_dirichlet_domain,
+                  ky_mapping_for_dirichlet_domain,
+                  *kx_mapping_data_for_dirichlet_domain,
+                  *ky_mapping_data_for_dirichlet_domain,
+                  map_from_surface_mesh_to_volume_mesh,
+                  map_from_surface_mesh_to_volume_mesh,
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                    SameTriangulations,
+                  SauterQuadratureRule<dim>(5, 4, 4, 3),
+                  K2_matrix_with_mass_matrix);
+              }
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble K");
 
             /**
              * Assemble the SLP matrix.
              */
             std::cout << "=== Assemble SLP matrix ===" << std::endl;
-            assemble_bem_full_matrix(
-              single_layer_kernel,
-              1.0,
-              dof_handler_for_neumann_space,
-              dof_handler_for_neumann_space,
-              kx_mapping_for_dirichlet_domain,
-              ky_mapping_for_dirichlet_domain,
-              *kx_mapping_data_for_dirichlet_domain,
-              *ky_mapping_data_for_dirichlet_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
-              SauterQuadratureRule<dim>(5, 4, 4, 3),
-              V1_matrix);
+
+            timer.start();
+            if (cpu_serial)
+              {
+                assemble_bem_full_matrix_serial(
+                  single_layer_kernel,
+                  1.0,
+                  dof_handler_for_neumann_space,
+                  dof_handler_for_neumann_space,
+                  kx_mapping_for_dirichlet_domain,
+                  ky_mapping_for_dirichlet_domain,
+                  *kx_mapping_data_for_dirichlet_domain,
+                  *ky_mapping_data_for_dirichlet_domain,
+                  map_from_surface_mesh_to_volume_mesh,
+                  map_from_surface_mesh_to_volume_mesh,
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                    SameTriangulations,
+                  SauterQuadratureRule<dim>(5, 4, 4, 3),
+                  V1_matrix);
+              }
+            else
+              {
+                assemble_bem_full_matrix(
+                  single_layer_kernel,
+                  1.0,
+                  dof_handler_for_neumann_space,
+                  dof_handler_for_neumann_space,
+                  kx_mapping_for_dirichlet_domain,
+                  ky_mapping_for_dirichlet_domain,
+                  *kx_mapping_data_for_dirichlet_domain,
+                  *ky_mapping_data_for_dirichlet_domain,
+                  map_from_surface_mesh_to_volume_mesh,
+                  map_from_surface_mesh_to_volume_mesh,
+                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
+                    SameTriangulations,
+                  SauterQuadratureRule<dim>(5, 4, 4, 3),
+                  V1_matrix);
+              }
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble V");
 
             /**
              * Calculate the RHS vector.
              */
+            timer.start();
             K2_matrix_with_mass_matrix.vmult(system_rhs_on_dirichlet_domain,
                                              dirichlet_bc);
+            timer.stop();
+            print_wall_time(deallog, timer, "assemble RHS vector");
 
             break;
           }
@@ -3759,7 +3899,7 @@ namespace HierBEM
 
     std::cout << "=== Solve problem ===" << std::endl;
 
-    if (!is_use_hmat)
+    if (!use_hmat)
       {
         switch (problem_type)
           {
@@ -4300,7 +4440,7 @@ namespace HierBEM
     timer.stop();
     print_wall_time(deallog, timer, "setup system");
 
-    if (!is_use_hmat)
+    if (!use_hmat)
       {
         timer.start();
         assemble_full_matrix_system();
@@ -4428,6 +4568,33 @@ namespace HierBEM
       }
   }
 
+  template <int dim, int spacedim>
+  inline bool
+  LaplaceBEM<dim, spacedim>::is_cpu_serial() const
+  {
+    return cpu_serial;
+  }
+
+  template <int dim, int spacedim>
+  inline void
+  LaplaceBEM<dim, spacedim>::set_cpu_serial(bool cpuSerial)
+  {
+    cpu_serial = cpuSerial;
+  }
+
+  template <int dim, int spacedim>
+  inline bool
+  LaplaceBEM<dim, spacedim>::is_use_hmat() const
+  {
+    return use_hmat;
+  }
+
+  template <int dim, int spacedim>
+  inline void
+  LaplaceBEM<dim, spacedim>::set_use_hmat(bool useHmat)
+  {
+    use_hmat = useHmat;
+  }
 
   template <int dim, int spacedim>
   void
@@ -4435,7 +4602,7 @@ namespace HierBEM
   {
     Assert(problem_type == ProblemType::NeumannBCProblem, ExcInternalError());
 
-    if (!is_use_hmat)
+    if (!use_hmat)
       {
         /**
          * Assemble the SLP matrix which is used for solving the natural
@@ -4514,7 +4681,7 @@ namespace HierBEM
     SolverControl            solver_control(1000, 1e-6, true, true);
     SolverCG<Vector<double>> solver(solver_control);
 
-    if (!is_use_hmat)
+    if (!use_hmat)
       {
         solver.solve(V1_matrix,
                      natural_density,

@@ -7,6 +7,7 @@ SET(_test_list_file ${CMAKE_CURRENT_LIST_DIR}/TestCases.cmake)
 # Update testcase list
 SYNC_TEST_LIST(
     ${_test_list_file}
+    baseline/
     units/
     functions/
     regressions/
