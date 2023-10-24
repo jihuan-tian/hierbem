@@ -329,7 +329,7 @@ namespace HierBEM
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    [[maybe_unused]] const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -343,7 +343,7 @@ namespace HierBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    HierBEM::CUDAWrappers::
+    [[maybe_unused]] HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)
@@ -727,7 +727,7 @@ namespace HierBEM
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
                                                     &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+    [[maybe_unused]] const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -741,7 +741,7 @@ namespace HierBEM
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
-    HierBEM::CUDAWrappers::
+    [[maybe_unused]] HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
                                                             &scratch_data_gpu,
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &copy_data)

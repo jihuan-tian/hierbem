@@ -216,6 +216,12 @@ namespace HierBEM
       __host__ __device__ size_type
       n_elements() const;
 
+      __host__
+      CUDATable() = default;
+
+      __host__
+      CUDATable(const CUDATable<N, T> &) = default;
+
       /**
        * Assignment operator: copy the values from another @p CUDATable object.
        *
@@ -890,7 +896,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ CUDATable<N, T> &
+    __host__ CUDATable<N, T>          &
     CUDATable<N, T>::operator=(const CUDATable<N, T> &src)
     {
       if (table_size != src.table_size)
