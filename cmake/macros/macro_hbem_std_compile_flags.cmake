@@ -27,6 +27,6 @@ MACRO(HBEM_STD_COMPILE_FLAGS)
     ADD_COMPILE_OPTIONS(
         "${_common_flags}"
         "$<${_is_cxx}:-Werror;${_pedantic_if_not_relaxed}>"
-        "$<${_is_cuda}:-Werror=all-warnings;-Xptxas=-suppress-stack-size-warning>"
+        "$<${_is_cuda}:--nvlink-options=-suppress-stack-size-warning>"
     )
 ENDMACRO()

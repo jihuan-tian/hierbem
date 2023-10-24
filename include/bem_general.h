@@ -29,6 +29,21 @@ namespace HierBEM
   using namespace dealii;
   using namespace BEMTools;
 
+  /**
+   * Assemble the mass matrix in FEM on one cell.
+   *
+   * The results is stored in a local cellwise matrix in the copy data.
+   *
+   * @pre
+   * @post
+   * @tparam dim
+   * @tparam spacedim
+   * @tparam RangeNumberType
+   * @param factor
+   * @param iterator_for_cell_iterator_pairs
+   * @param scratch_data
+   * @param copy_data
+   */
   template <int dim, int spacedim, typename RangeNumberType>
   void
   assemble_fem_scaled_mass_matrix_on_one_cell(
@@ -360,6 +375,8 @@ namespace HierBEM
 
 
   /**
+   * Assemble the mass matrix in FEM.
+   *
    * \mynote{We should bear in mind the following points.
    * 1. The test and ansatz function spaces related to the mass matrix may
    * be two different function spaces but residing on a same triangulation;
@@ -432,6 +449,80 @@ namespace HierBEM
       CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType>(
         dof_handler_for_test_space.get_fe(),
         dof_handler_for_trial_space.get_fe()));
+  }
+
+
+  /**
+   * Assemble the mass matrix in FEM in a single thread.
+   *
+   * @pre
+   * @post
+   * @tparam dim
+   * @tparam spacedim
+   * @tparam RangeNumberType
+   * @tparam MatrixType
+   * @param dof_handler_for_test_space
+   * @param dof_handler_for_trial_space
+   * @param factor
+   * @param quad_rule
+   * @param target_full_matrix
+   */
+  template <int dim,
+            int spacedim,
+            typename RangeNumberType,
+            typename MatrixType>
+  void
+  assemble_fem_scaled_mass_matrix_serial(
+    const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+    const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
+    const RangeNumberType            factor,
+    const Quadrature<dim>           &quad_rule,
+    MatrixType                      &target_full_matrix)
+  {
+    // Because the test and ansatz function spaces related to the mass matrix
+    // are on a same spatial domain, here we make an assertion about the
+    // equality of the number of cells in their respective triangulations.
+    AssertDimension(
+      dof_handler_for_test_space.get_triangulation().n_active_cells(),
+      dof_handler_for_trial_space.get_triangulation().n_active_cells());
+
+    std::vector<
+      std::pair<typename DoFHandler<dim, spacedim>::active_cell_iterator,
+                typename DoFHandler<dim, spacedim>::active_cell_iterator>>
+      cell_iterator_pairs_for_mass_matrix(
+        dof_handler_for_test_space.get_triangulation().n_active_cells());
+
+    initialize_cell_iterator_pairs_for_mass_matrix(
+      dof_handler_for_test_space,
+      dof_handler_for_trial_space,
+      cell_iterator_pairs_for_mass_matrix);
+
+    CellWiseScratchDataForMassMatrix<dim, spacedim> scratch_data(
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe(),
+      quad_rule,
+      update_values | update_JxW_values);
+
+    CellWiseCopyDataForMassMatrix<dim, spacedim, RangeNumberType> copy_data(
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe());
+
+    boost::progress_display pd(cell_iterator_pairs_for_mass_matrix.size(),
+                               std::cerr);
+
+    for (auto cell_pair_iter = cell_iterator_pairs_for_mass_matrix.begin();
+         cell_pair_iter != cell_iterator_pairs_for_mass_matrix.end();
+         cell_pair_iter++)
+      {
+        assemble_fem_scaled_mass_matrix_on_one_cell(factor,
+                                                    cell_pair_iter,
+                                                    scratch_data,
+                                                    copy_data);
+
+        copy_cell_local_to_global_for_fem_matrix(copy_data, target_full_matrix);
+
+        ++pd;
+      }
   }
 
 
@@ -692,6 +783,152 @@ namespace HierBEM
                     std::ref(target_full_matrix)),
           scratch_data,
           per_task_data);
+
+        ++pd;
+      }
+  }
+
+
+  /**
+   * Assemble a BEM full matrix in a single thread.
+   *
+   * @pre
+   * @post
+   * @tparam dim
+   * @tparam spacedim
+   * @tparam KernelFunctionType
+   * @tparam RangeNumberType
+   * @tparam MatrixType
+   * @param kernel
+   * @param factor
+   * @param dof_handler_for_test_space
+   * @param dof_handler_for_trial_space
+   * @param kx_mapping
+   * @param ky_mapping
+   * @param kx_mapping_data
+   * @param ky_mapping_data
+   * @param map_from_test_space_mesh_to_volume_mesh
+   * @param map_from_trial_space_mesh_to_volume_mesh
+   * @param method_for_cell_neighboring_type
+   * @param sauter_quad_rule
+   * @param target_full_matrix
+   */
+  template <int dim,
+            int spacedim,
+            template <int, typename>
+            typename KernelFunctionType,
+            typename RangeNumberType,
+            typename MatrixType>
+  void
+  assemble_bem_full_matrix_serial(
+    const KernelFunctionType<spacedim, RangeNumberType> &kernel,
+    const RangeNumberType                                factor,
+    const DoFHandler<dim, spacedim>   &dof_handler_for_test_space,
+    const DoFHandler<dim, spacedim>   &dof_handler_for_trial_space,
+    MappingQGenericExt<dim, spacedim> &kx_mapping,
+    MappingQGenericExt<dim, spacedim> &ky_mapping,
+    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
+    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_test_space_mesh_to_volume_mesh,
+    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
+                   typename Triangulation<dim + 1, spacedim>::face_iterator>
+      &map_from_trial_space_mesh_to_volume_mesh,
+    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const SauterQuadratureRule<dim>      &sauter_quad_rule,
+    MatrixType                           &target_full_matrix)
+  {
+    /**
+     * Precalculate data tables for shape values at quadrature points.
+     *
+     * \mynote{Precalculate shape function values and their gradient
+     * values at each quadrature point. N.B.
+     * 1. The data tables for shape function values and their gradient
+     * values should be calculated for both function space on
+     * \f$K_x\f$ and function space on \f$K_y\f$.
+     * 2. Being different from the integral in FEM, the integral in
+     * BEM handled by Sauter's quadrature rule has multiple parts of
+     * \f$k_3\f$ (except the regular cell neighboring type), each of
+     * which should be evaluated at a different set of quadrature
+     * points in the unit cell after coordinate transformation from
+     * the parametric space. Therefore, an additional dimension with respect to
+     * \f$k_3\f$ term index should be added to the data table compared
+     * to the usual FEValues and this brings about
+     * the class @p BEMValues.
+     * 3. In Galerkin BEM, finite elements for the Dirichlet domain
+     * and Neumann domain are different. For SLP BEM matrix, both the
+     * test function space, to which \f$K_x\f$ belongs, space and the
+     * trial function space, to which \f$K_y\f$ belongs, is @p FE_DGQ.
+     * For DLP BEM matrix and the mass matrix, the test function space
+     * is @p FE_DGQ and the trial function space is @p FE_Q.}
+     */
+    BEMValues<dim, spacedim, RangeNumberType> bem_values(
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe(),
+      kx_mapping_data,
+      ky_mapping_data,
+      sauter_quad_rule.quad_rule_for_same_panel,
+      sauter_quad_rule.quad_rule_for_common_edge,
+      sauter_quad_rule.quad_rule_for_common_vertex,
+      sauter_quad_rule.quad_rule_for_regular);
+
+    bem_values.fill_shape_function_value_tables();
+
+    /**
+     * Create data structure for parallel matrix assembly.
+     *
+     * \alert{Since @p scratch_data and @p per_task_data should be copied into
+     * each thread and will further be modified in the working
+     * function @p assemble_on_one_pair_of_cells, they should be passed by value.}
+     */
+    PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe(),
+      kx_mapping,
+      ky_mapping,
+      bem_values);
+    PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
+      dof_handler_for_test_space.get_fe(),
+      dof_handler_for_trial_space.get_fe());
+
+    boost::progress_display pd(
+      dof_handler_for_test_space.get_triangulation().n_active_cells(),
+      std::cerr);
+
+    for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
+      {
+        /**
+         * Calculate Kx related data so that they won't be redundantly
+         * calculated within @p sauter_quadrature_on_one_pair_of_cells.
+         */
+        kx_mapping.compute_mapping_support_points(e);
+        scratch_data.kx_mapping_support_points_in_default_order =
+          kx_mapping.get_support_points();
+        e->get_dof_indices(
+          scratch_data.kx_local_dof_indices_in_default_dof_order);
+
+        for (const auto &f :
+             dof_handler_for_trial_space.active_cell_iterators())
+          {
+            sauter_quadrature_on_one_pair_of_cells(
+              kernel,
+              factor,
+              e,
+              f,
+              kx_mapping,
+              ky_mapping,
+              map_from_test_space_mesh_to_volume_mesh,
+              map_from_trial_space_mesh_to_volume_mesh,
+              method_for_cell_neighboring_type,
+              bem_values,
+              scratch_data,
+              per_task_data,
+              true);
+
+            copy_pair_of_cells_local_to_global_for_bem_full_matrix(
+              per_task_data, target_full_matrix);
+          }
 
         ++pd;
       }
