@@ -123,7 +123,7 @@ main(int argc, char *argv[])
     }
   else
     {
-      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "two-spheres_hex.msh");
+      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "two-spheres.msh");
     }
 
   // // Generate the mesh for the two spheres using deal.ii.

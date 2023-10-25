@@ -95,7 +95,6 @@ TEST_CASE(
 
   const Point<3> source_loc(1, 1, 1);
   const Point<3> center(0, 0, 0);
-  const double   radius(1);
 
   DirichletBC dirichlet_bc(source_loc);
   bem.assign_dirichlet_bc(dirichlet_bc);
