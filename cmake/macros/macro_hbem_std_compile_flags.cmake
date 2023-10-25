@@ -23,10 +23,17 @@ MACRO(HBEM_STD_COMPILE_FLAGS)
     SET(_is_global_relaxed "$<BOOL:HBEM_CHECK_RELAXED>")
     SET(_is_target_relaxed "$<BOOL:$<TARGET_PROPERTY:HBEM_CHECK_RELAXED>>")
     SET(_is_relaxed "$<OR:${_is_global_relaxed},${_is_target_relaxed}>")
+
+    # Do not report pedantic errors if relaxed (such as trailing extra semicolon, etc.)
     SET(_pedantic_if_not_relaxed "$<IF:${_is_relaxed},,-pedantic-errors>")
+    # ptxas in CUDA 11.4 has a bug that it will not honor stack size warning opts
+    SET(_is_buggy_ptxas "$<VERSION_LESS:${CUDAToolkit_VERSION},11.8>")
+    # Suppress all warnings for buggy ptxas instead of just stack size warning
+    SET(_stack_size_opts "$<IF:${_is_buggy_ptxas},-Xptxas=-w,-Xptxas=-suppress-stack-size-warning;-Xnvlink=-suppress-stack-size-warning>")
+
     ADD_COMPILE_OPTIONS(
         "${_common_flags}"
         "$<${_is_cxx}:-Werror;${_pedantic_if_not_relaxed}>"
-        "$<${_is_cuda}:-Werror=all-warnings;-Xptxas=-suppress-stack-size-warning>"
+        "$<${_is_cuda}:-Werror=all-warnings;${_stack_size_opts}>"
     )
 ENDMACRO()

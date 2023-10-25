@@ -36,6 +36,9 @@ ENDIF()
 # Project name
 PROJECT("hierbem" LANGUAGES CUDA CXX)
 
+# Get CUDA toolkit versions
+FIND_PACKAGE(CUDAToolkit)
+
 # Include additional CMake modules
 LIST(APPEND CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/cmake/macros
