@@ -48,6 +48,9 @@ LIST(APPEND CMAKE_MODULE_PATH
 INCLUDE(macro_add_flags)
 INCLUDE(macro_replace_flag)
 
+# Enable ccache to speed up compilation if possible
+INCLUDE(AutoCCache)
+
 MESSAGE("=== Default compiler and linker flags configured by deal.ii ===")
 MESSAGE("DEAL_II_CXX_FLAGS: ${DEAL_II_CXX_FLAGS}")
 MESSAGE("DEAL_II_CXX_FLAGS_DEBUG: ${DEAL_II_CXX_FLAGS_DEBUG}")
