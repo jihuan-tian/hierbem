@@ -10,8 +10,8 @@
 
 #include <iostream>
 
-#include "laplace_bem.h"
 #include "hbem_test_config.h"
+#include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -100,7 +100,7 @@ private:
 };
 
 int
-main()
+main(int argc, char *argv[])
 {
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
@@ -113,8 +113,15 @@ main()
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     true,
     MultithreadInfo::n_cores());
-  // bem.read_volume_mesh("sphere-from-gmsh-fine_hex.msh");
-  bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere.msh");
+
+  if (argc > 1)
+    {
+      bem.read_volume_mesh(argv[1]);
+    }
+  else
+    {
+      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere.msh");
+    }
 
   const Point<3> source_loc(1, 1, 1);
   const Point<3> center(0, 0, 0);
