@@ -1,4 +1,4 @@
-\documentclass[11pt, a4paper]{article}
+\documentclass[11pt, a4paper]{book}
 
 \usepackage{varwidth}
 \input{tech-doc-preamble}
@@ -10,7 +10,7 @@
 \maketitle
 \tableofcontents
 
-\section{Basic definitions and conventions}
+\chapter{Basic definitions and conventions}
 
 \begin{enumerate}
 \item Use $x$ for the field point, while $y$ for the source point.
@@ -81,7 +81,9 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   \end{algorithmic}
 \end{breakablealgorithm}
 
-\section{Manifold and tangent vector}
+\chapter{Differential geometry}
+
+\section{Manifolds}
 
 \subsection{Submanifold of $\mathbb{R}^{n+r}$ and implicit function theorem}
 \label{sec:submanifold-of-R}
@@ -168,6 +170,28 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   components are independent in Corollary \ref{cor:implicit-func-local-full-rank}, but
   only know their number is $n$.
 \end{Remark}
+
+\begin{Example}[Sphere ($S^2$) as a two dimensional submanifold in $\mathbb{R}^3$]
+  The equation of $S^2$ is
+  \begin{equation*}
+    x^2 + y^2 + z^2 = 1.
+  \end{equation*}
+  The Jacobi matrix of the equation is $(2x, 2y, 2z)$. Because the point $(0,0,0)$ does
+  not belong $S^2$, the rank of the Jacobi matrix is always 1, which means one coordinate
+  component can be uniquely represented by the other two components. For example, for the
+  upper hemisphere, we have
+  \begin{equation*}
+    z = \sqrt{1 - x^2 - y^2}.
+  \end{equation*}
+  Its derivatives with respect to $x$ and $y$ are
+  \begin{equation*}
+    \frac{\pdiff z}{\pdiff x} = \frac{-x}{\sqrt{1 - x^2 - y^2}}, \; \frac{\pdiff z}{\pdiff
+      y} = \frac{-y}{\sqrt{1 - x^2 - y^2}}.
+  \end{equation*}
+  When $(x,y,z)$ approaches to the equator, $\frac{\pdiff z}{\pdiff x}$ and
+  $\frac{\pdiff z}{\pdiff y}$ will be finite. Therefore, the upper hemisphere excluding
+  the equator is an open set where $z$ can be differentiably represented by $x$ and $y$.
+\end{Example}
 
 According to \thref{cor:implicit-func-local-full-rank}, the main submanifold
 theorem in $\mathbb{R}^{n+r}$ can be obtained:
@@ -412,9 +436,55 @@ definition for the submanifold of a manifold.
   $f^{-1}$ being differentiable.
 \end{Definition}
 
-\subsection{Tangent vector}
+\section{Tangent vector and tangent space}
 
-\subsubsection{Directional derivative}
+\begin{Definition}[Tangent vector]
+  A tangent vector $v$ at a point $p$ in an $n$-dimensional manifold $M^n$ is
+  defined as an entity that for each coordinate chart $(U,x)$ containing $p$, it can be
+  represented as an $n$-tuple of real numbers $(v_U^1, \cdots, v_U^n)$\footnote{The
+    subscript $U$ indicates the coordinates belong to the chart $U$ and the super script
+    $i=1,\cdots,n$ is the coordinate component index.}. The transformation between any two
+  of such $n$-tuples derived from two different charts $(U,x_U)$ and $(V,x_V)$ is
+  \begin{equation}
+    \label{eq:contravariant-transformation}
+    v_V^i = \sum_{j=1}^n \frac{\pdiff x_V^i}{\pdiff x_U^j} \Bigg\vert_p v_U^j.
+  \end{equation}
+\end{Definition}
+If we use a column vector to represent $v$, the matrix form of (\ref{eq:contravariant-transformation}) is
+\begin{equation}
+  \label{eq:contravariant-transformation-matrix-form}
+  v_V = \left[ \frac{\pdiff x_{V}}{\pdiff x_U} \right] \Bigg\vert_p v_U,
+\end{equation}
+where $\left[ \frac{\pdiff x_{V}}{\pdiff x_U} \right]\Big\vert_p$ is the Jacobi matrix of the transition
+map $\phi_{VU}$ evaluated at $p$. The transition map $\phi_{VU}$ is
+\begin{equation}
+  x_V^i = x_V^i(x_U^1, \cdots, x_U^n) \quad (i=1,\cdots,n).
+\end{equation}
+The Jacobi matrix is
+\begin{equation}
+  \begin{pmatrix}
+    \frac{\pdiff x_V^1}{\pdiff x_U^1} & \cdots & \frac{\pdiff x_V^1}{\pdiff x_U^n} \\
+    \vdots & \vdots & \vdots \\
+    \frac{\pdiff x_V^n}{\pdiff x_U^1} & \cdots & \frac{\pdiff x_V^n}{\pdiff x_U^n}
+  \end{pmatrix}.
+\end{equation}
+
+\begin{Definition}[Contravariant transformation]
+  The rule in Equation (\ref{eq:contravariant-transformation}) is called
+  \emph{contravariant transformation}.
+\end{Definition}
+
+\begin{Definition}[Contravariant vector]
+  Correspondingly, a vector which transforms with respect to Equation
+  (\ref{eq:contravariant-transformation}) is called a \emph{contravariant vector}.
+\end{Definition}
+
+\begin{Definition}[Tangent space]
+  The collection of all tangent vectors at $p$ in $M^n$ is $\mathbb{R}^n$ rooted at $p$,
+  which is called the tangent space. It is represented as $M_p^n$.
+\end{Definition}
+
+\subsection{Directional derivative}
 
 \begin{Definition}[Directional derivative of a function with respect to a vector]
   Let $\vect{v}$ be a vector and $f$ a scalar function. The directional derivative of $f$
@@ -431,7 +501,7 @@ consistent with the directional derivative in classical calculus.
 Assume $f$ is defined on a $d$-dimensional manifold with a coordinate chart $(U, x_{U})$
 containing $p$. Since a manifold is locally homeomorphic to $\mathbb{R}^d$, starting from
 $p$ then moving with the speed vector $\vect{v}_U$ on the manifold in an infinitesimal
-time $\intd t$ is actually walking along a straight line $x_U(t) = p_U+t\vect{v}_U$. Hence
+time $\diff t$ is actually walking along a straight line $x_U(t) = p_U+t\vect{v}_U$. Hence
 the above derivative of $f$ can be expanded as
 \begin{equation}
   \label{eq:df-in-xu}
@@ -474,14 +544,14 @@ independent.
   manifold still needs three coordinates.
 \end{Remark}
 
-\subsubsection{Tangent vector as a differential operator}
+\subsection{Tangent vector as a differential operator}
 
 As shown in Equation (\ref{eq:directional-derivative-wrt-v}), there is a one-to-one
 correspondence between a directional derivative operator and a tangent vector. Therefore,
 a tangent vector $X_p$ rooted at $p$ in a local coordinate chart $(U,x)$ can be
 identified with a differential operator:
 \begin{equation}
-  \label{eq:tangent-vector}
+  \label{eq:tangent-vector-as-diff-op}
   X_p=\sum_jX^j \frac{\pdiff}{\pdiff x^j}\Bigg\vert_p.
 \end{equation}
 Here $X_j$ is the vector coefficient and the differential operator
@@ -490,12 +560,10 @@ written as $\frac{\vect{\pdiff}}{\vect{\pdiff} x^j}$ in bold typeface from now o
 simpler form $\vect{\pdiff} x^j$. Hence, $\left\{ \vect{\pdiff} x^j \right\}_{j=1}^d$ is a
 basis of the coordinate chart $(U,x)$. Since the $j$-th component of $X_p$ in this chart
 is just $X^j$, the corresponding basis vector $\vect{\pdiff} x^j$ is numerically the same
-as the basis vector $\vect{e}_j$ of the Cartesian frame $\mathbb{R}^d$, i.e. the $i$-th
-component of $\vect{\pdiff}x^j$ is the Kronecker $\delta_j^i$. However, it is different
-from $\vect{e}_j$ in the global Cartesian frame. It is actually the tangent vector or
-velocity vector of the $j$-th coordinate curve at $p$ in $(U,x)$.
-\emph{$\left\{ \vect{\pdiff} x^j \right\}_{j=1}^d$ can be considered as a local Cartesian
-  coordinate frame at $p$ using the coordinate chart $(U,x)$.}
+as the basis vector $\boldsymbol{e}_j$ of the Cartesian frame $\mathbb{R}^d$, i.e. the $i$-th
+component of $\vect{\pdiff}x^j$ is the Kronecker $\delta_j^i$. However, it is not a global
+Cartesian frame, but a local Cartesian coordinate frame at $p$ using the coordinate chart
+$(U,x)$.
 
 \begin{Definition}[Coordinate curve]
   The $i$-th coordinate curve of a coordinate chart $(U,x)$ with $x=(x^1,\cdots,x^d)$ is
@@ -520,15 +588,14 @@ This is just equal to $\vect{\pdiff}x^j$.
 
 Therefore, the set of velocity vectors of all coordinate curves at $p$ using the
 coordinate chart $(U,x)$ forms the basis of the tangent space at $p$, i.e.
-$\left\{\frac{\pdiff}{\pdiff x^j}\Big\vert_p\right\}_{j=1}^d$, which is written simply as
-$\left\{\frac{\pdiff}{\pdiff x^j} \right\}_{j=1}^d$. This is the same as the results
-derived from treating a tangent vector as a differential operator.
+$\left\{ \vect{\pdiff} x^j \right\}_{j=1}^d$. This is the same as the results derived from
+treating a tangent vector as a differential operator.
 
 If a different coordinate chart $(V,y)$ containing $p$ is adopted, where
 $y = (y^1,\cdots,y^{d'})$ may have different number of components from $x$, the basis
 $\left\{ \vect{\pdiff}x^j \right\}_{j=1}^d$ in $(U,x)$ can be transformed to the new chart
-via the Jacobi matrix of the transition map $\phi_{VU}$, since each basis vector is a
-tangent vector, which follows the same transformation rule as in
+via the Jacobi matrix of the transition map $\phi_{VU}$, since each basis vector is also a
+tangent vector, which should follow the same transformation rule as in
 (\ref{eq:tangent-vector-transform}). For the basis vector $\vect{\pdiff}x^j$, the $i$-th
 component in the transformed vector is
 \begin{equation}
@@ -592,10 +659,434 @@ This is consistent with our intuition, just imaginge how we understand a 2-spher
 $\mathbb{R}^3$. However, the definition of tangent vectors for a manifold does not require
 such embedding.
 
-\section{Sauter quadrature}
+\subsection{Coordinate transformation of a basis vector in the tangent space}
+
+Assume there are two coordinate charts $(U,x_U)$ and $(V,x_V)$ assigned to the tangent
+space $M_p^n$. The basis vector of $M_p^n$ represented in $(U,x_U)$ is
+$\left\{ \vect{\pdiff}x_U^j \right\}$ and the basis vector represented in $(V,x_V)$ is
+$\left\{ \vect{\pdiff}x_V^i \right\}$. Then we want to know how each basis vector
+$\vect{\pdiff}x_V^i$ is expanded in the basis $\left\{ \vect{\pdiff}x_U^j \right\}$, i.e.
+we want to compute the expansion coefficients $a_j$ in the following expression
+\begin{equation*}
+  \vect{\pdiff}x_V^i = \sum_j a^j \vect{\pdiff}x_U^j.
+\end{equation*}
+Because $\vect{\pdiff}x_V^i$ itself is a tangent vector, its transformation from $(V,x_V)$
+into $(U,x_U)$ follows the rule of contravariant transformation in Equation
+(\ref{eq:contravariant-transformation}):
+\begin{equation*}
+  \frac{\pdiff x_U}{\pdiff x_V} (\vect{\pdiff}x_V^i)^{\mathrm{T}}.
+\end{equation*}
+Note here we've transposed the basis vector $\vect{\pdiff}x_V^i$, because as a convention,
+a tangent vector in the matrix form is written as a column vector, while the matrix form
+of a basis vector in the tangent space is a row vector. Since $\vect{\pdiff}x_V^i$ is
+equivalent to $\vect{e}_i$, the above expression extracts the $i$-th column of the Jacobi
+matrix. Therefore, $a^{j}$ is just the $j$-th component in this column vector, i.e.
+\begin{equation}
+  a^j = \frac{\pdiff x_U^j}{\pdiff x_V^i}.
+\end{equation}
+Hence, the basis vector $\vect{\pdiff}x_V^i$ is represented as
+\begin{equation}
+  \label{eq:tangent-vector-basis-transformation}
+  \vect{\pdiff}x_V^i = \sum_j \frac{\pdiff x_U^j}{\pdiff x_V^i} \vect{\pdiff}x_U^j.
+\end{equation}
+If we horizontally juxtapose the basis vectors as
+$(\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n)$ and
+$(\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n)$, the matrix formulation of the contravariant
+basis transformation is
+\begin{equation}
+  (\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n) =
+  (\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n) \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
+\end{equation}
+
+\section{Covector and cotangent space}
+
+\subsection{Concept of duality}
+\label{sec:duality-concept}
+
+Taking the familiar inner product in linear algebra as an example (see Figure
+\ref{fig:inner-product-of-vectors}). The two vectors $a$ and $b$ have equal status, both
+of which are vectors in $\mathbb{R}^n$. The meaning of inner product
+$\left\langle a,b \right\rangle$ or $a\cdot b$ is projecting $b$ to $a$.
+
+From the view of measurement, $a$ is the measurement device and $b$ is the object to be
+measured. For example, $a$ can be imagined as an electric field meter, $b$ is the electric
+field. When the meter is aligned with the electric field line, it registers maximum value.
+
+Adopting the functional analysis point of view, $\left\langle a,b \right\rangle$ or
+$a\cdot b$ can be written as $a(b)$. Now $b$ is an element in the space $X$ and
+$a: X \rightarrow \mathbb{R}$ is a linear functional or operator in the dual space $X'$.
+
+In computer programming, $a$ can be considered as a functor, while $b$ is the data or
+operand to be manipulated.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth, height=\textheight, keepaspectratio]{figures/inner-product-of-vectors-draft}
+  \caption{}
+  \label{fig:inner-product-of-vectors}
+\end{figure}
+
+In essence, $a$ and $b$ have different status and they are dual to each other.
+
+\begin{Example}[Duality]  
+  \begin{itemize}
+  \item When we compute the inner product using matrix multiplication, $a$ is a row vector
+    and $b$ is a column vector. Such difference indicates they are different types of
+    vectors.
+  \item Ket $|\psi\rangle$ and bra $\langle \varphi |$ in quantum mechanics.
+    $\langle \varphi |$ is in the dual space and $|\psi\rangle$ is in the original space.
+  \item Inner product of two functions $\int_\Omega u(x)v(x) dx$. $u$ is in the dual space,
+    which defines an integral operator, the kernel. $v$ is in the original space to be
+    transformed.
+  \end{itemize}
+\end{Example}
+
+\subsection{Linear functional and dual space}
+
+\begin{Definition}[Linear functional]
+  \label{def:linear-functional}
+  Let $X$ be a linear space. If the map $f: X \rightarrow \mathbb{R}$ is a linear
+  operator, i.e.
+  $$
+  \begin{aligned}
+    f(x + y) &= f(x) + f(y) \quad \forall x, y \in X \\
+    f(\alpha x) &= \alpha f(x) \quad \forall x \in X, \alpha \in \mathbb{R}
+  \end{aligned},
+  $$
+  $f$ is a linear functional on $X$.
+\end{Definition}
+
+\begin{Definition}[Algebraic dual space]
+  \label{def:alg-dual}
+  Let $X$ be a linear space. The algebraic dual space $X^{*}$ of $X$ is the collection of
+  all linear functionals on $X$. $X^{*}$ is also a linear space, which satisfies
+  \begin{equation*}
+    \begin{aligned}
+      (\alpha+\beta)(v) &= \alpha(v) + \beta(v) \\
+      (c\alpha)(v) &= c\alpha(v)
+    \end{aligned}
+    \quad \forall \alpha,\beta\in X^{*}, v\in X, c\in \mathbb{R}
+  \end{equation*}
+\end{Definition}
+
+\begin{Definition}[Bounded linear functional]
+  \label{def:bounded-linear-functional}
+  Let $X$ be a linear space and assigned with a norm $\norm{\cdot}$. $f$ is a bounded
+  linear functional on $X$, if for all $x$ in $X$,
+  $$
+  \abs{f(x)} \leq C \norm{x},
+  $$
+  where $C$ is a finite constant.
+\end{Definition}
+
+\begin{Definition}[Dual space]
+  Let $X$ be a linear space and assigned with a norm $\norm{\cdot}$. The dual space $X'$
+  of $X$ is the set of all bounded linear functionals on $X$.
+\end{Definition}
+
+\subsection{Basis of dual space}
+
+\begin{Definition}[Projection operator]
+  A projection operator $\sigma^i: X \rightarrow \mathbb{R}$ is defined as
+  \begin{equation*}
+    \sigma^i(\vect{e}_j) = \delta^i_j,
+  \end{equation*}
+  where $\vect{e}_j$ is the $j$-th basis vector of the linear space $X$.
+\end{Definition}
+
+For all $v\in X$,
+\begin{equation*}
+  \sigma^i(v) = \sigma^{i}\left( \sum_j\vect{e}_jv^j \right) = \sum_j
+  \sigma^i(\vect{e}_j) v^j = \sum_j\delta^i_j v^j = v^i.
+\end{equation*}
+This means the projection operator $\sigma^i$ extracts the $i$-th component of the
+vector $v$, i.e. it projects $v$ to the $i$-th coordinate axis.
+
+\begin{Proposition}
+  Let $X$ be an $n$-dimensional linear space and $X^{*}$ be its dual space. The projection
+  operators $\left\{ \sigma^1,\cdots,\sigma^n \right\}$ are linearly independent and any
+  linear operator in $X^{*}$ can be uniquely expanded by $\left\{ \sigma^1,\cdots,\sigma^n
+  \right\}$. Hence, $\left\{ \sigma^1,\cdots,\sigma^n \right\}$ is a basis of $X^{*}$.
+\end{Proposition}
+
+\subsection{0-form}
+
+\begin{Definition}[0-form]
+  Let $M^n$ be an $n$-dimensional manifold which contains the point $p$. A scalar function
+  $f$ defined on a coordinate chart containing $p$ is called a 0-form.
+\end{Definition}
+
+\begin{Definition}[Differential 0-form]
+  If the values of a 0-form can be differentiably assigned to each point in all coordinate
+  charts covering $M^n$, it is called a differential 0-form.
+\end{Definition}
+
+\subsection{Covector (1-form) and cotangent space}
+
+\begin{Definition}[Cotangent space]
+  Let $M^n$ be an $n$-dimensional manifold which contains the point $p$. $M_p^n$ is the
+  tangent space at $p$. The dual space of $M_p^n$ is the called the cotangent space at
+  $p$, which is written as $M_p^{n*}$.
+\end{Definition}
+
+\begin{Definition}[Cotangent vector, covector or 1-form]
+  A linear operator $\alpha: M_p^n \rightarrow \mathbb{R}$ in the cotangent space
+  $M_p^{n*}$ is called a cotangent vector or covariant vector or covector or 1-form.
+\end{Definition}
+Applying a 1-form to a tangent vector, we obtain a scalar value.
+
+\begin{Definition}[Differential 1-form]
+  Let a 1-form $\alpha$ in the cotangent space $X^{*}$ be expanded by the basis $\left\{
+    \sigma^j \right\}$
+  \begin{equation*}
+    \alpha = \sum_j a_j(x) \sigma^j,
+  \end{equation*}
+  where each expansion coefficient $a_j$ depends on the local coordinate $x$. If its
+  values are differentiably assigned to each point in the coordinate charts covering
+  $M^n$, $\alpha$ is a differential 1-form.
+\end{Definition}
+
+Apply $\alpha$ to the $i$-th basis vector $\vect{\pdiff}x^i$ of the tangent space, we
+obtain the $i$-th expansion coefficient of $\alpha$:
+\begin{equation}
+  \label{eq:apply-1-form-to-basis}
+  \alpha(\vect{\pdiff}x^i) = \sum_j a_j \sigma^j(\vect{\pdiff}x^i) = \sum_j a_j
+  \delta^j_i = a_i.
+\end{equation}
+
+\subsubsection{Differential of 0-form is 1-form}
+
+Let $f: M^n \rightarrow \mathbb{R}$ be a 0-form on $M^n$. At point $p$, the basis of the
+tangent space $M_p^n$ is $\left\{ \vect{\pdiff}x^j \right\}$ and the basis of the
+cotangent space $M_p^{n*}$ is $\left\{ \sigma^i \right\}$.
+$df: M_p^n \rightarrow \mathbb{R}$ is the differential of $f$, which is a linear
+functional operating on a tangent vector $v$. It is defined to be the same as the
+directional derivative of $f$ with respect to $v$ (see Equation
+(\ref{eq:directional-derivative-wrt-v}) and (\ref{eq:tangent-vector-as-diff-op})):
+\begin{equation*}
+  df(v) = D_v(f) = v(f) = df \left( \sum_j v^j \vect{\pdiff}x^j \right) = \sum_j v^j
+  df(\vect{\pdiff}x^j) = \sum_j v^j \frac{\pdiff f}{\pdiff x^j}\Bigg\vert_p.
+\end{equation*}
+We can see that applying $df$ to the $j$ basis vector in the tangent space simply returns
+the partial derivative of $f$ with respect to $x^j$ evaluated at $p$.
+
+If $f=x^i$, we have
+\begin{equation*}
+  df(v) = dx^i(v) = \sum_j v^j \frac{\pdiff x^{i}}{\pdiff x^j} = \sum_j v^j \delta^i_j = v^i.
+\end{equation*}
+This means the operator $dx^i$ extracts the $i$-th component of $v$, which is the same as
+the projection operator $\sigma^i$. Therefore, $\left\{ dx^i \right\}$ is the basis of the
+dual space.
+
+Assume $df$ can be expanded as $df = \sum_j a_j dx^j$. According to Equation
+(\ref{eq:apply-1-form-to-basis}),
+$a_j = df(\vect{\pdiff}x^j) = \frac{\pdiff f}{\pdiff x^j} \Big\vert_p$. Hence,
+\begin{equation}
+  \label{eq:differential-of-0-form}
+  df = \sum_j \frac{\pdiff f}{\pdiff x^j}\Bigg\vert_p dx^j.
+\end{equation}
+
+\subsubsection{Coordinate transformation of a basis vector in the cotangent space}
+
+Assume there are two coordinate charts $(U,x_U)$ and $(V,x_V)$ such that the point $p$
+belongs to their intersection. The basis vector $dx_V^{i}$ of the cotangent space
+$M_p^{n*}$ in the chart $(V,x_V)$ can be expanded by the basis
+$\left\{ dx_U^1,\cdots,dx_U^n \right\}$ in the chart $(U,x_U)$. Because there is the
+differentiable transition map $\phi_{VU}$ from $U$ to $V$, $x_V^i$ is actually a function
+of $x_U$. Therefore, according to Equation (\ref{eq:differential-of-0-form}), the
+expansion of $dx_V^i$ takes the form
+\begin{equation}
+  \label{eq:cotangent-basis-transformation}
+  dx_V^i=\sum_j \frac{\pdiff x_V^i}{\pdiff x_U^j} dx_U^j.
+\end{equation}
+Its matrix formulation is
+\begin{equation}
+  dx_V = \left[ \frac{\pdiff x_V}{\pdiff x_U} \right]\Bigg\vert_p dx_U,
+\end{equation}
+where $dx_V = (dx_V^1,\cdots,dx_V^n)^{\mathrm{T}}$ and $dx_U = (dx_U^1,\cdots,dx_U^n)^{\mathrm{T}}$.
+
+
+\subsubsection{Coordinate transformation of a covector in the cotangent space}
+
+Let $\alpha$ be a 1-form in the cotangent space $M_p^{n*}$. In the coordinate chart
+$(V,x_V)$, it can be expanded as
+\begin{equation*}
+  \alpha = \sum_i a_i^V dx_V^i.
+\end{equation*}
+Substitute Equation (\ref{eq:cotangent-basis-transformation}) for $dx_V^i$, we can get the
+expansion of $\alpha$ in the coordinate chart $(U,x_U)$ as below.
+\begin{equation*}
+  \alpha = \sum_i a_i^V \sum_j \frac{\pdiff x_V^i}{\pdiff x_U^j} dx_U^j = \sum_i\sum_j
+  a_i^V \left( \frac{\pdiff x_V^i}{\pdiff x_U^j} \right) dx_U^j = \sum_j \left[ \sum_i
+    a_i^V \left( \frac{\pdiff x_V^i}{\pdiff x_U^j} \right) \right] dx_U^j = \sum_j a_j^U dx_U^j,
+\end{equation*}
+where the expansion coefficient is
+\begin{equation*}
+  \label{eq:covector-transformation}
+  a_j^U = \sum_i a_i^V \left( \frac{\pdiff x_V^i}{\pdiff x_U^j} \right).
+\end{equation*}
+Its matrix formulation is
+\begin{equation}
+  a^U = a^V \left[ \frac{\pdiff x_V}{\pdiff x_U} \right],
+\end{equation}
+where $a^U = (a_1^U,\cdots,a_n^U)$ and $a^V = (a_1^V,\cdots,a_n^V)$,
+$\left[ \frac{\pdiff x_V}{\pdiff x_U} \right]$ is the Jacobi matrix of the transition map
+$\phi_{VU}$. Similarly,
+\begin{equation}
+a^V = a^U \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
+\end{equation}
+
+The above coordinate transformation is called the \emph{covariant transformation}.
+
+\subsubsection{Relationship between Jacobi matrices}
+
+We've already met two Jacobi matrices $\left[ \frac{\pdiff x_V}{\pdiff x_U} \right]$ and
+$\left[ \frac{\pdiff x_U}{\pdiff x_V} \right]$. The former is the Jacobi matrix of the
+transition map $\phi_{VU}$ and the latter is that of the map $\phi_{UV}$. Here we should
+emphasize that the number of coordinate components in the chart $(U,x_U)$ may be different
+from that of $(V,x_V)$. Moreover, neither of them is necessarily equal to the manifold
+dimension $n$. If $(U,x_U)$ has $m$ coordinate components and $(U,x_V)$ has $n$ coordinate
+components, $\left[ \frac{\pdiff x_V}{\pdiff x_U} \right] \in \mathbb{R}^{n\times m}$ and
+$\left[ \frac{\pdiff x_U}{\pdiff x_V} \right]\in \mathbb{R}^{m\times n}$, i.e. both of
+which may be rectangular matrices and have no inverse matrices.
+
+The product of these two matrices are
+\begin{equation}
+  \left[ \frac{\pdiff x_V}{\pdiff x_U} \right] \cdot \left[ \frac{\pdiff x_U}{\pdiff x_V}
+  \right] = \left\{ \sum_k \frac{\pdiff x_V^i}{\pdiff x_U^k} \frac{\pdiff x_U^k}{\pdiff
+      x_V^j} \right\}_{ij} = \frac{\pdiff x_V^i}{\pdiff x_V^j} = \left\{ \delta^i_j
+  \right\}_{ij} = I_n.
+\end{equation}
+Similarly,
+\begin{equation}
+  \left[ \frac{\pdiff x_U}{\pdiff x_V} \right] \cdot \left[ \frac{\pdiff x_V}{\pdiff x_U} \right] = I_m.
+\end{equation}
+
+\section{Tensor and differential forms}
+
+\subsection{Inner product and metric tensor}
+
+In a same coordinate chart $(x)$ containing $p$, the inner product of two tangent vectors
+$a$ and $b$ in $M_p^n$ is
+\begin{equation}
+  \label{eq:inner-product}
+  \left\langle a,b \right\rangle = \left\langle \sum_i a^i \vect{\pdiff}x^i, \sum_j b^j
+    \vect{\pdiff}x^j \right\rangle = \sum_i\sum_j a^i b^j \left\langle \vect{\pdiff}x^i,
+    \vect{\pdiff}x^j \right\rangle.
+\end{equation}
+
+\begin{Definition}[Metric tensor]
+  \label{def:metric-tensor}
+  $g_{ij} \coloneqq \left\langle \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle$ is
+  called the metric tensor.
+\end{Definition}
+The inner product in matrix formulation is
+\begin{equation}
+  \left\langle a,b \right\rangle = a^T G b.
+\end{equation}
+
+According to the section \ref{sec:duality-concept}, the inner product can also be
+considered as the application of a covector to a tangent vector. Let $\alpha$ be a
+covector in $M_p^{n*}$ and define $\alpha(b) = \left\langle a, b \right\rangle$. This
+means the tangent vector $a$ determines a covector $\alpha$.
+
+\begin{Theorem}[Riesz representation theorem]
+  Let $X$ be a Hilbert space and $f$ be a bounded linear functional on $X$, i.e. $f \in
+  X'$. There exists a unique vector $a$ in $X$, such that for all $b$ in $X$, $f(b) =
+  \left\langle a, b \right\rangle$ and $\norm{f} = \norm{a}$.
+\end{Theorem}
+
+Assume the covector $\alpha$ above can be expanded as
+\begin{equation*}
+  \alpha = \sum_j \alpha_j dx^j = \sum_j \alpha(\vect{\pdiff}x^j) dx^j = \sum_j
+  \left\langle a, \vect{\pdiff}x^j \right\rangle dx^j.
+\end{equation*}
+If the tangent vector $a$ is expanded as $a = \sum_i a^i \vect{\pdiff}x^i$, we have
+\begin{equation*}
+  \alpha = \sum_j \left\langle \sum_i a^i \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle
+  dx^j = \sum_j\sum_i a^i \left\langle \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle
+  dx^j = \sum_j\sum_i a^i g_{ij} dx^j = \sum_j \left( \sum_i a^i g_{ij} \right) dx^j.
+\end{equation*}
+Therefore, the expansion coefficient of the covector $\alpha$ is
+\begin{equation}
+  \alpha_j = \sum_i a^i g_{ij}.
+\end{equation}
+Because the inner product is symmetric with respect to its two operands, so that $g_{ij} = g_{ji}$.
+And we prefer the following equivalent formulation of $\alpha_j$
+\begin{equation}
+  \alpha_j = \sum_i g_{ji} a^i.
+\end{equation}
+This is because according to the convention, the tangent $a$ vector is represented as a
+column vector, while the metric tensor $g_{ji}$ is represented as a matrix. Then the
+transformation from the tangent vector $a$ to the covector $\alpha$ can be written as
+\begin{equation}
+  \alpha = (G a)^{\mathrm{T}} = a^{\mathrm{T}} G.
+\end{equation}
+
+On the other hand, the transformation from a covector to its associated tangent vector is
+\begin{equation}
+  a =  G^{-\mathrm{T}} \alpha^{\mathrm{T}} = G^{-1} \alpha^{\mathrm{T}}.
+\end{equation}
+Here $G^{-1}$ is an another tensor, whose entry is written as $g^{ij}$. Therefore
+\begin{equation}
+  a^i = \sum_{j} g^{ij} \alpha_j.
+\end{equation}
+
+\begin{Definition}[Flat operator $\flat$]
+  The operator which transforms a tangent vector to the associated cotangent vector is the
+  flat operator $\flat$.
+\end{Definition}
+
+\begin{Definition}[Sharp operator $\sharp$]
+  The operator which transforms a cotangent vector to the associated tangent vector is the
+  sharp operator $\sharp$.
+\end{Definition}
+
+\subsection{Coordinate transformation of the metric tensor}
+
+According to Definition \ref{def:metric-tensor}, the metric tensor depends on the basis
+vectors of the tangent space. Therefore, using the coordinate transformation of
+tangent basis vectors in Equation (\ref{eq:tangent-vector-basis-transformation}), we can
+obtain the coordinate transformation of a metric tensor.
+
+Let $(U,x_U)$ and $(V,x_V)$ be two coordinate charts containing point $p$. In the
+neighborhood of $p$, the metric tensor can be represented as
+\begin{equation*}
+  g_{ij}^V = \left\langle \vect{\pdiff}x_V^i, \vect{\pdiff}x_V^j \right\rangle
+\end{equation*}
+using the chart $(V,x_V)$. Or it can be represented as
+\begin{equation*}
+  g_{rs}^V = \left\langle \vect{\pdiff}x_U^r, \vect{\pdiff}x_U^s \right\rangle
+\end{equation*}
+in the chart $(U,x_U)$.
+
+According to Equation (\ref{eq:tangent-vector-basis-transformation}), we have
+\begin{equation*}
+  \vect{\pdiff}x_V^i = \sum_r \frac{\pdiff x_U^r}{\pdiff x_V^i} \vect{\pdiff}x_U^r
+\end{equation*}
+and
+\begin{equation*}
+  \vect{\pdiff}x_V^j = \sum_s \frac{\pdiff x_U^s}{\pdiff x_V^j} \vect{\pdiff}x_U^s.
+\end{equation*}
+Then
+\begin{equation}
+  \label{eq:metric-tensor-transformation}
+  g_{ij}^V = \left\langle \sum_r \frac{\pdiff x_U^r}{\pdiff x_V^i} \vect{\pdiff}x_U^r,
+    \sum_s \frac{\pdiff x_U^s}{\pdiff x_V^j} \vect{\pdiff}x_U^s \right\rangle =
+  \sum_r\sum_s \frac{\pdiff x_U^r}{\pdiff x_V^i} \frac{\pdiff x_U^s}{\pdiff x_V^j}
+  \left\langle \vect{\pdiff}x_U^r, \vect{\pdiff}x_U^s \right\rangle = \sum_r\sum_s
+  \frac{\pdiff x_U^r}{\pdiff x_V^i} \frac{\pdiff x_U^s}{\pdiff x_V^j} g_{rs}^U.
+\end{equation}
+Its matrix formulation is
+\begin{equation}
+  \label{eq:metric-tensor-transformation-matrix-form}
+  G^V = \left[ \frac{\pdiff x_U}{\pdiff x_V} \right]^{\mathrm{T}} G^U \left[ \frac{\pdiff
+      x_U}{\pdiff x_V} \right].
+\end{equation}
+
+\chapter{Sauter quadrature}
 \label{sec:sauter-quad}
 
-\subsection{Matrix entry of discretized bilinear form}
+\section{Matrix entry of discretized bilinear form}
 
 Sauter quadrature is used to compute the singular double surface integral in Galerkin BEM.
 Let $k(x,y)$ be the kernel function associated with a boundary integral operator $A$. Let
@@ -661,7 +1152,7 @@ The matrix $\mathscr{A}$ is the discretization of the bilinear form $A$. The vec
 the discretization of the distribution $\varphi(y)$. The original single boundary integral
 equation is discretized into $m$ independent equations.
 
-\subsection{Basis functions and shape functions}
+\section{Basis functions and shape functions}
 
 Usually, functions with small compact support, i.e. the pre-image of non-zero function
 values is confined in a bounded and closed domain, are adopted as basis functions for both
@@ -795,7 +1286,7 @@ $i$. Similarly, the index of the corresponding shape function in $\tau_j$ is $k(
 Therefore, in this case, $\mathscr{A}_{ij}$ can be directly computed without the double
 loop for \texttt{FE\_Q}.
 
-\subsection{Surface integral in 3D space}
+\section{Surface integral in 3D space}
 
 Let $S$ be a surface in the 3D space $\mathbb{R}^3$. Since $S$ is intrinsically a 2D
 object (it may be curved), it can be characterized with only two coordinate variables.
@@ -973,19 +1464,19 @@ For integration over pairs of panels $\tau\times t$, there are four cases to be 
 \item Regular
 \end{enumerate}
 
-\subsection{Cell mapping}
+\section{Cell mapping}
 
 As said above, the map from a reference cell to a real cell is $\chi_{\tau}: \hat{\tau}
 \rightarrow \tau$. Moreover, in Sauter quadrature, 
 
 
-\subsection{Detection of cell neighboring types}
+\section{Detection of cell neighboring types}
 
 \begin{itemize}
 \item 
 \end{itemize}
 
-\subsection{Ordering of support points}
+\section{Ordering of support points}
 
 Assume there is a 4x4 grid assigned with the two kinds of numbering, lexicographic and hierarchic. Use the grid point as the physical entity for establishing an equivalence or mapping relation between the two types of numbering.
 
@@ -1019,7 +1510,7 @@ Generally, assume there are two sets of numbering \(A\) and \(B\) assigned to a 
 \caption{Hierarchic numbering assigned to a 4x4 grid.}
 \end{figure}
 
-\subsection{Reason for making local copies of mapping objects in
+\section{Reason for making local copies of mapping objects in
   \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} and
   \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells}}
 
@@ -1033,7 +1524,7 @@ Therefore, the current solution is to pass \texttt{kx\_mapping} and \texttt{ky\_
 \item \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs} is called by \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus}, which itself contains double loops, with the outer loop iterating over the cells in the support of the \(i\)-th DoF and the inner loop iterating over the cells in the support of the \(j\)-th DoF. Because \texttt{fill\_hmatrix\_leaf\_node\_with\_aca\_plus} will be executed in several TBB threads at the same time, computation of the mapping support points should be performed in thread dependent local copies of \texttt{kx\_mapping} and \texttt{ky\_mapping}. Similar to the treatment in \texttt{sauter\_assemble\_on\_one\_pair\_of\_cells}, \texttt{kx\_mapping} and \texttt{ky\_mapping} are passed as const references into \texttt{sauter\_assemble\_on\_one\_pair\_of\_dofs}. Inside this function, a local copy of \texttt{kx\_mapping} is made in the outer loop and another copy of \texttt{ky\_mapping} is made in the inner loop.
 \end{enumerate}
 
-\subsection{Identical panels}
+\section{Identical panels}
 
 The integral is performed in the sense of Cauchy principal value:
 \begin{equation}
@@ -1058,9 +1549,9 @@ function $k_2$:
 where $g_{\tau}(\hat{x})$ is the Jacobian determinant of the map $\chi_{\tau}$ which is evaluated at
 $\hat{x}$.
 
-\subsection{Common edge}
+\section{Common edge}
 
-\subsubsection{Permutation of the support points and DoF indices}
+\subsection{Permutation of the support points and DoF indices}
 
 \draft{About finding the starting vertex}
 
@@ -1086,9 +1577,9 @@ This part handles the common edge case of Sauter's quadrature rule.
 \end{enumerate}
 
 
-\subsection{Common vertex}
+\section{Common vertex}
 
-\subsection{General formulation}
+\section{General formulation}
 
 The integrand in local coordinates for the reference cell is
 \begin{equation}
@@ -1103,9 +1594,9 @@ The integral on pairs of panels is
 \end{equation}
 The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the parameter space.
 
-\subsection{Cell pair configuration and permutation of DoFs}
+\section{Cell pair configuration and permutation of DoFs}
 
-\subsubsection{Common edge case}
+\subsection{Common edge case}
 
 \begin{itemize}
 \item Because the DoFs in $K_y$ are accessed in the reversed lexicographic order due to permutation,
@@ -1119,9 +1610,9 @@ The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the p
   order.
 \end{itemize}
 
-\subsubsection{Common vertex case}
+\subsection{Common vertex case}
 
-\subsection{Precalculation of data tables}
+\section{Precalculation of data tables}
 
 \begin{itemize}
 \item Precalculation of data tables is mandatory for achieving a practical performance.
@@ -1165,7 +1656,7 @@ The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the p
   \end{tabular}
 \end{table}
 
-\subsection{Design of data organization for parallelization}
+\section{Design of data organization for parallelization}
 
 \begin{itemize}
 \item The definition of the class \texttt{BEMValues} is a counterpart of the \texttt{FEValues}
@@ -1189,7 +1680,7 @@ The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the p
   cell neighboring types are not included within \texttt{PerTaskData} and \texttt{ScratchData}.
 \end{itemize}
 
-\subsection{Key functions}
+\section{Key functions}
 
 \begin{itemize}
 \item Functions for coordinate transformation from the 4D parametric space to the Cartesian product
@@ -1224,7 +1715,7 @@ The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the p
   \end{itemize}
 \end{itemize}
 
-\subsection{Different types of DoF indices involved in Sauter quadrature}
+\section{Different types of DoF indices involved in Sauter quadrature}
 
 \begin{itemize}
 \item The natural numbering (starting from zero) for the global DoFs in a
@@ -1301,11 +1792,11 @@ The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the p
   added into the task ring buffer.
 \end{itemize}
 
-\subsection{Sauter quadrature for building near field $\mathcal{H}$-matrices}
+\section{Sauter quadrature for building near field $\mathcal{H}$-matrices}
 
-\subsubsection{Design of ring buffer which holds Sauter quadrature tasks}
+\subsection{Design of ring buffer which holds Sauter quadrature tasks}
 
-\paragraph{Basic considerations}
+\subsubsection{Basic considerations}
 
 \begin{itemize}
 \item The quadrature tasks in ring buffer have a same cell neighboring type, so that the
@@ -1400,7 +1891,7 @@ The integral variables $(\hat{x}, \hat{y})$ will further be pulled back to the p
   All pointer increment should be taken modulus with respect to the capacity of the ring buffer.
 \end{mycomment}
 
-\paragraph{Ranges formed by ring buffer pointers}
+\subsubsection{Ranges formed by ring buffer pointers}
 
 With the above definition of four pointers, the following ranges are naturally derived:
 \begin{itemize}
@@ -1462,7 +1953,7 @@ With the above definition of four pointers, the following ranges are naturally d
   $$
 \end{mycomment}
 
-\paragraph{Typical ring buffer states}
+\subsubsection{Typical ring buffer states}
 
 In the following illustrations, I use $Pn$ to represent a quadrature task which is to be
 created by producer $n$ and $Cn$ to represent a task which has been fetched and to be
@@ -1549,11 +2040,11 @@ processed.
   \end{center}
 \end{itemize}
 
-\subsection{Sauter quadrature for building far field $\mathcal{H}$-matrices}
+\section{Sauter quadrature for building far field $\mathcal{H}$-matrices}
 
-\section{$\mathcal{H}$-matrix}
+\chapter{$\mathcal{H}$-matrix}
 
-\subsection{$\mathcal{H}$-matrix features}
+\section{$\mathcal{H}$-matrix features}
 
 Several member variables are defined for the class \texttt{HMatrix} which describes the
 matrix features.
@@ -1614,7 +2105,7 @@ matrix features.
   \end{itemize}
 \end{enumerate}
 
-\subsubsection{Recursively assign $\mathcal{H}$-matrix node block types}
+\subsection{Recursively assign $\mathcal{H}$-matrix node block types}
 \begin{enumerate}
 \item The block type of the top level $\mathcal{H}$-matrix node is diagonal block;
 \item Assume the block cluster tree is a quad-tree. If the cluster $\sigma$ and $\tau$
@@ -1641,7 +2132,7 @@ matrix features.
   block type.
 \end{enumerate}  
 
-\subsubsection{Recursively assign $\mathcal{H}$-matrix node properties}
+\subsection{Recursively assign $\mathcal{H}$-matrix node properties}
 
 \begin{enumerate}
 \item When the property of the top level $\mathcal{H}$-matrix node is \texttt{general}, all descendant
@@ -1657,7 +2148,7 @@ matrix features.
   \end{enumerate}  
 \end{enumerate}
 
-\subsection{General workflow for $\mathcal{H}$-matrix construction}
+\section{General workflow for $\mathcal{H}$-matrix construction}
 
 An \(\mathcal{H}\)-matrix are associated with two DoF handlers, which correspond
 respectively to the test space and trial space for discretizing the related bilinear form.
@@ -1695,19 +2186,19 @@ The general workflow for $\mathcal{H}$-matrix construction is as follows.
 \item Calculate entries in the $\mathcal{H}$-matrix using ACA (see Section \ref{sec:aca}).
 \end{itemize}
 
-\subsection{$\mathcal{H}$-matrix construction parameter tuning and selection}
+\section{$\mathcal{H}$-matrix construction parameter tuning and selection}
 
 \begin{itemize}
 \item According to \cite{KriemannParallel2005a}, the typical value of $n_{\min}$ is about
   30-60 in most practical applications.
 \end{itemize}
 
-\subsection{$\mathcal{H}$-matrix fundamental algebraic operation}
+\section{$\mathcal{H}$-matrix fundamental algebraic operation}
 
-\subsubsection{Matrix-Vector multiplication}
+\subsection{Matrix-Vector multiplication}
 \label{sec:hmat-vmult}
 
-\paragraph{Matrix-Vector multiplication in $\mathcal{H}$-matrix algebra should be accumulative}
+\subsubsection{Matrix-Vector multiplication in $\mathcal{H}$-matrix algebra should be accumulative}
 
 Matrix-vector multiplication is intrinsically accumulative, i.e. the result vector is obtained by
 collecting the product vector for each block cluster $b=\tau\times\sigma$ in the partition $P$. Such
@@ -1725,7 +2216,7 @@ recursively calls $MVM(y, M, x, b')$, where $b'\in S(b)$. If $MVM$ is implemente
 recursive calls of $MVM$. This violates the accumulative behavior required by the matrix-vector
 multiplication in $\mathcal{H}$-matrix algebra.
 
-\subsubsection{Matrix-Matrix multiplication}
+\subsection{Matrix-Matrix multiplication}
 
 Basic considerations about Algorithm \ref{algo:mmr}:
 \begin{itemize}
@@ -1955,15 +2446,15 @@ factorization has the form $A = P \cdot L \cdot U$.}
   \end{algorithmic}
 \end{breakablealgorithm}
 
-\subsection{$\mathcal{H}$-matrix solvers}
+\section{$\mathcal{H}$-matrix solvers}
 
-\subsubsection{LU factorization of a full matrix}
+\subsection{LU factorization of a full matrix}
 
-\paragraph{LAPACK's implementation}
+\subsubsection{LAPACK's implementation}
 
-\paragraph{Octave's implementation}
+\subsubsection{Octave's implementation}
 
-\subsubsection{Function names for $\mathcal{H}$-matrix solvers}
+\subsection{Function names for $\mathcal{H}$-matrix solvers}
 
 At present, the naming convention for $\mathcal{H}$-matrix related solvers is a bit confusing, which is clarified as follows. Here we use lower case letters to represent vectors and upper case letters to represent matrices. Meanwhile, all matrices are $\mathcal{H}$-matrices.
 \begin{itemize}
@@ -1994,12 +2485,12 @@ At present, the naming convention for $\mathcal{H}$-matrix related solvers is a 
   \texttt{solve\_cholesky\_transpose\_by\_forward\_substitution\_matrix\_valued}, where \(L\) is obtained from Cholesky factorization
 \end{itemize}
 
-\section{Adaptive cross approximation}
+\chapter{Adaptive cross approximation}
 \label{sec:aca}
 
-\subsection{Basic concepts and understanding}
+\section{Basic concepts and understanding}
 
-\subsection{Algorithms for heuristic ACA and ACA+}
+\section{Algorithms for heuristic ACA and ACA+}
 
 \begin{enumerate}
 \item $S$ is the approximant of the original matrix $A\in\mathbb{R}^{\tau\times\sigma}$,
@@ -2333,7 +2824,7 @@ u_k(v_k)_c$.}
   \end{algorithmic}
 \end{breakablealgorithm}
 
-\subsection{Hierarchy of function calls for building an $\mathcal{H}$-matrix via ACA}
+\section{Hierarchy of function calls for building an $\mathcal{H}$-matrix via ACA}
 
 The following functions are defined in the header file \texttt{aca\_plus.h}.
 
@@ -2401,9 +2892,9 @@ Additional notices
   contained in \texttt{BEMValues}.
 \end{itemize}
 
-\section{Matrix and vector assembly in BEM}
+\chapter{Matrix and vector assembly in BEM}
 
-\subsection{Cell based assembly}
+\section{Cell based assembly}
 
 \begin{itemize}
 \item Usage of \texttt{std::bind}: \texttt{std::bind} creates a functor which captures local variables as well as the user provided function pointer or function object from outside either pass-by-value or pass-by-reference. The former is the default, while the latter should be enabled by explicitly specifying the keyword \texttt{std::ref} or \texttt{std::cref}. These captured values become the member variables of the functor created by \texttt{std::bind}. It overloads the \texttt{operator()}, in which parameters are organized and passed to the user provided functor.
@@ -2438,7 +2929,7 @@ WorkStream::run(
 \end{lstlisting}
 \end{itemize}
 
-\subsubsection{Notices for FEM mass matrix assembly in BEM}
+\subsection{Notices for FEM mass matrix assembly in BEM}
 \label{sec:fem-mass-matrix-assembly-in-bem}
 During FEM mass matrix assembly, when the test space and trial space are constructed on different triangulations (even though the underlying geometry is the same), we need to note the following points.
 \begin{itemize}
@@ -2449,9 +2940,9 @@ During FEM mass matrix assembly, when the test space and trial space are constru
 \end{itemize}
 The above consideration reminds us that when we want to assemble a FEM matrix, for the convenience of implementation, the test space and trial space had better be constructed on a same triangulation. If this cannot be guaranteed, we need to reorder the vertices in both cells and support points in both mapping objects, like the \texttt{SamePanel} case used in the Sauter quadrature.
 
-\subsection{DoF based assembly}
+\section{DoF based assembly}
 
-\subsection{DoF numberings adopted during $\mathcal{H}$-matrix assembly}
+\section{DoF numberings adopted during $\mathcal{H}$-matrix assembly}
 
 In the mixed boundary value problem, we need two definitions.
 
@@ -2507,9 +2998,9 @@ In the mixed boundary value problem, we need two definitions.
 \end{itemize}
 
 
-\section{Test cases}
+\chapter{Test cases}
 
-\subsection{Exterior Laplace problem with different types of boundary conditions on a
+\section{Exterior Laplace problem with different types of boundary conditions on a
   sphere}
 \label{sec:testcase-exterior-laplace}
 
@@ -2577,7 +3068,7 @@ test cases for Laplace exterior problems are defined below.
   convention adopted by \cite{SteinbachNumerical2007}.
 \end{mycomment}
 
-\subsection{Integral on curved domain: spherical surface}
+\section{Integral on curved domain: spherical surface}
 
 The potential function $u$ of a unit Dirac source at $x_0$ satisfies
 \begin{equation}
