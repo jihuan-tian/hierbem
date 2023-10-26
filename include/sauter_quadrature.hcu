@@ -5457,7 +5457,7 @@ namespace HierBEM
       const bool                            enable_build_symmetric_hmat = false)
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
-      std::cerr << "Producer thread " << current_thread_id << " starts...\n";
+      deallog << "Producer thread " << current_thread_id << " starts...\n";
 #if ENABLE_NVTX == 1
       nvtxNameOsThread(getpid(), "producer thread");
 #endif
@@ -5722,7 +5722,7 @@ namespace HierBEM
       scratch_data.release();
       copy_data.release();
 
-      std::cerr << "Producer thread " << current_thread_id << " exits...\n";
+      deallog << "Producer thread " << current_thread_id << " exits...\n";
     }
 
 
@@ -5774,7 +5774,7 @@ namespace HierBEM
       const bool                            enable_build_symmetric_hmat = false)
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
-      std::cerr << "Producer thread " << current_thread_id << " starts...\n";
+      deallog << "Producer thread " << current_thread_id << " starts...\n";
 #if ENABLE_NVTX == 1
       nvtxNameOsThread(getpid(), "producer thread");
 #endif
@@ -6054,7 +6054,7 @@ namespace HierBEM
       scratch_data.release();
       copy_data.release();
 
-      std::cerr << "Producer thread " << current_thread_id << " exits...\n";
+      deallog << "Producer thread " << current_thread_id << " exits...\n";
     }
 
 
@@ -6075,7 +6075,7 @@ namespace HierBEM
       const unsigned int                                   block_size)
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
-      std::cerr << "Consumer thread " << current_thread_id << " for "
+      deallog << "Consumer thread " << current_thread_id << " for "
                 << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
                 << " starts..." << std::endl;
 #if ENABLE_NVTX == 1
@@ -6109,7 +6109,7 @@ namespace HierBEM
       AssertCuda(cudaStreamDestroy(cuda_stream_handle));
 
 
-      std::cerr << "Consumer thread " << current_thread_id << " for "
+      deallog << "Consumer thread " << current_thread_id << " for "
                 << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
                 << " exits..." << std::endl;
     }

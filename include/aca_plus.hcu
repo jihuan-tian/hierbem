@@ -5312,13 +5312,13 @@ namespace HierBEM
                                   rkmat.frobenius_norm(k - 1);
               }
 
-            std::cerr << "uk.l2_norm() * vk.l2_norm(): "
+            deallog << "uk.l2_norm() * vk.l2_norm(): "
                       << uk.l2_norm() * vk.l2_norm() << "\n"
                       << "error_threshold: " << error_threshold << std::endl;
           }
         else
           {
-            std::cerr << "uk.l2_norm() * vk.l2_norm(): "
+            deallog << "uk.l2_norm() * vk.l2_norm(): "
                       << uk.l2_norm() * vk.l2_norm() << std::endl;
           }
 
@@ -5333,7 +5333,7 @@ namespace HierBEM
                  */
                 rkmat.truncate_to_rank(k);
                 // DEBUG
-                std::cerr << "Early successful return from ACA+!" << std::endl;
+                deallog << "Early successful return from ACA+!" << std::endl;
               }
 
             return;
@@ -5364,7 +5364,7 @@ namespace HierBEM
      * rank is equal to its real rank.
      */
     // DEBUG
-    std::cerr << "All columns in the rank-k matrix have been filled!"
+    deallog << "All columns in the rank-k matrix have been filled!"
               << std::endl;
   }
 
@@ -6904,7 +6904,7 @@ namespace HierBEM
     const bool enable_build_symmetric_hmat = false)
   {
     const std::thread::id current_thread_id = std::this_thread::get_id();
-    std::cerr << "WorkStream " << current_thread_id << " starts..."
+    deallog << "WorkStream " << current_thread_id << " starts..."
               << std::endl;
 
     /**
@@ -6953,7 +6953,7 @@ namespace HierBEM
     scratch_data.release();
     copy_data.release();
 
-    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
+    deallog << "WorkStream " << current_thread_id << " exits..." << std::endl;
   }
 
 
@@ -7017,7 +7017,7 @@ namespace HierBEM
     const bool enable_build_symmetric_hmat = false)
   {
     const std::thread::id current_thread_id = std::this_thread::get_id();
-    std::cerr << "WorkStream " << current_thread_id << " starts..."
+    deallog << "WorkStream " << current_thread_id << " starts..."
               << std::endl;
 
     /**
@@ -7068,7 +7068,7 @@ namespace HierBEM
     scratch_data.release();
     copy_data.release();
 
-    std::cerr << "WorkStream " << current_thread_id << " exits..." << std::endl;
+    deallog << "WorkStream " << current_thread_id << " exits..." << std::endl;
   }
 
 

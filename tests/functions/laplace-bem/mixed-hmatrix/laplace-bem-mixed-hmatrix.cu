@@ -10,6 +10,7 @@
 
 #include <cuda_runtime.h>
 
+#include <fstream>
 #include <iostream>
 
 #include "debug_tools.hcu"
@@ -77,8 +78,13 @@ main(int argc, char *argv[])
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
+  // Write run-time logs to file
+  std::ofstream ofs("hierbem.log");
   deallog.pop();
-  deallog.depth_console(5);
+  deallog.depth_console(0);
+  deallog.depth_file(5);
+  deallog.attach(ofs);
+
   LogStream::Prefix prefix_string("HierBEM");
 
   /**
