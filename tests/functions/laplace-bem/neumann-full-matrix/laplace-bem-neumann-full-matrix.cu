@@ -5,8 +5,12 @@
  * 2022-09-19
  */
 
+#include <deal.II/base/logstream.h>
+
+#include <fstream>
 #include <iostream>
 
+#include "hbem_test_config.h"
 #include "laplace_bem.h"
 
 using namespace dealii;
@@ -98,6 +102,15 @@ private:
 int
 main()
 {
+  // Write run-time logs to file
+  std::ofstream ofs("hierbem.log");
+  deallog.pop();
+  deallog.depth_console(0);
+  deallog.depth_file(5);
+  deallog.attach(ofs);
+
+  LogStream::Prefix prefix_string("HierBEM");
+
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
@@ -109,7 +122,7 @@ main()
     LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
     false,
     MultithreadInfo::n_cores());
-  bem.read_volume_mesh("sphere-from-gmsh-fine_hex.msh");
+  bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere.msh");
 
   bem.set_alpha_for_neumann(1);
 

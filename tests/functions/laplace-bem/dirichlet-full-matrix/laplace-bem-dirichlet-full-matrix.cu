@@ -8,6 +8,7 @@
  * \date 2022-06-22
  */
 
+#include <fstream>
 #include <iostream>
 
 #include "hbem_test_config.h"
@@ -102,6 +103,13 @@ private:
 int
 main(int argc, char *argv[])
 {
+  // Write run-time logs to file
+  std::ofstream ofs("hierbem.log");
+  deallog.pop();
+  deallog.depth_console(0);
+  deallog.depth_file(5);
+  deallog.attach(ofs);
+
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 

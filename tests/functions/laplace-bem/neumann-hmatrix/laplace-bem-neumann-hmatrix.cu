@@ -10,10 +10,12 @@
 
 #include <cuda_runtime.h>
 
+#include <fstream>
 #include <iostream>
 
 #include "debug_tools.hcu"
 #include "laplace_bem.h"
+#include "hbem_test_config.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -107,8 +109,13 @@ main(int argc, char *argv[])
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
+  // Write run-time logs to file
+  std::ofstream ofs("hierbem.log");
   deallog.pop();
-  deallog.depth_console(5);
+  deallog.depth_console(0);
+  deallog.depth_file(5);
+  deallog.attach(ofs);
+
   LogStream::Prefix prefix_string("HierBEM");
 
   /**
@@ -154,11 +161,11 @@ main(int argc, char *argv[])
 
   if (argc > 1)
     {
-      bem.read_volume_mesh(std::string(argv[1]));
+      bem.read_volume_mesh(argv[1]);
     }
   else
     {
-      bem.read_volume_mesh(std::string("sphere-from-gmsh_hex.msh"));
+      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere.msh");
     }
 
   timer.stop();
