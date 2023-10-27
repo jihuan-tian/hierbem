@@ -439,8 +439,8 @@ definition for the submanifold of a manifold.
 \section{Tangent vector and tangent space}
 
 \begin{Definition}[Tangent vector]
-  A tangent vector $v$ at a point $p$ in an $n$-dimensional manifold $M^n$ is
-  defined as an entity that for each coordinate chart $(U,x)$ containing $p$, it can be
+  A tangent vector $v$ at a point $p$ in an $n$-dimensional manifold $M^n$ is defined as a
+  physical entity such that for each coordinate chart $(U,x)$ containing $p$, it can be
   represented as an $n$-tuple of real numbers $(v_U^1, \cdots, v_U^n)$\footnote{The
     subscript $U$ indicates the coordinates belong to the chart $U$ and the super script
     $i=1,\cdots,n$ is the coordinate component index.}. The transformation between any two
@@ -491,29 +491,29 @@ The Jacobi matrix is
   with respect to $\vect{v}$ at point $p$ is
   \begin{equation}
     \label{eq:directional-derivative-wrt-v}
-    D_{\vect{v}}(f) = \frac{\diff}{\diff t} \left[ f(p + t\vect{v}) \right] \big\vert_{t=0}.
+    D_{\vect{v}}(f) = \frac{d}{dt} \left[ f(p + t\vect{v}) \right] \big\vert_{t=0}.
   \end{equation}
 \end{Definition}
 This can be understood as the time derivative of $f$ when we move from $p$ with a speed
 vector $\vect{v}$. When $\vect{v}$ is a unit speed, i.e. $\norm{v}=1$, this definition is
 consistent with the directional derivative in classical calculus.
 
-Assume $f$ is defined on a $d$-dimensional manifold with a coordinate chart $(U, x_{U})$
-containing $p$. Since a manifold is locally homeomorphic to $\mathbb{R}^d$, starting from
+Assume $f$ is defined on an $n$-dimensional manifold with a coordinate chart $(U, x_{U})$
+containing $p$. Since a manifold is locally homeomorphic to $\mathbb{R}^n$, starting from
 $p$ then moving with the speed vector $\vect{v}_U$ on the manifold in an infinitesimal
-time $\diff t$ is actually walking along a straight line $x_U(t) = p_U+t\vect{v}_U$. Hence
+time $dt$ is actually walking along a straight line $x_U(t) = p_U+t\vect{v}_U$. Hence
 the above derivative of $f$ can be expanded as
 \begin{equation}
   \label{eq:df-in-xu}
-  D_{\vect{v}_U}(f) = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_U^i} \frac{\diff
-    x_{U}^i(t)}{\diff t} = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_U^i}\Bigg\vert_{x_U=p_U} v_U^i.
+  D_{\vect{v}_U}(f) = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_U^i} \frac{\diff
+    x_{U}^i(t)}{\diff t} = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_U^i}\Bigg\vert_{x_U=p_U} v_U^i.
 \end{equation}
 If another coordinate chart $(V, x_V)$ is adopted which overlaps with $(U,x_U)$, the
 derivative of $f$ can also be written as
 \begin{equation}
   \label{eq:df-in-xv}
-  D_{\vect{v}_V}(f) = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_V^i} \frac{\diff
-    x_{V}^i(t)}{\diff t} = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_V^i} \Bigg\vert_{x_V=p_V} v_V^i.
+  D_{\vect{v}_V}(f) = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_V^i} \frac{\diff
+    x_{V}^i(t)}{\diff t} = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_V^i} \Bigg\vert_{x_V=p_V} v_V^i.
 \end{equation}
 We can prove that such definition of directional derivative is actually coordinate
 independent.
@@ -523,13 +523,13 @@ independent.
   the Jacobi matrix of the transition map $\phi_{VU}$ as below:
   \begin{equation}
     \label{eq:tangent-vector-transform}
-    v_V^i = \sum_{j=1}^d \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} x_U^j \quad (i=1,\cdots,d).
+    v_V^i = \sum_{j=1}^n \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} x_U^j \quad (i=1,\cdots,n).
   \end{equation}
   Substitute this transformation into Equation (\ref{eq:df-in-xv}), we have
   $$
-  D_{\vect{v}_V}(f) = \sum_{i=1}^d \frac{\pdiff f}{\pdiff x_V^i} \sum_{j=1}^d \frac{\pdiff
-    x_{V}^i}{\pdiff x_{U}^j} x_U^j = \sum_{j=1}^d \left( \sum_{i=1}^d \frac{\pdiff f}{\pdiff
-      x_V^i} \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} \right) x_U^j = \sum_{j=1}^d \frac{\pdiff
+  D_{\vect{v}_V}(f) = \sum_{i=1}^n \frac{\pdiff f}{\pdiff x_V^i} \sum_{j=1}^n \frac{\pdiff
+    x_{V}^i}{\pdiff x_{U}^j} x_U^j = \sum_{j=1}^n \left( \sum_{i=1}^n \frac{\pdiff f}{\pdiff
+      x_V^i} \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} \right) x_U^j = \sum_{j=1}^n \frac{\pdiff
     f}{\pdiff x_U^j} x_U^j = D_{\vect{v}_U}(f).
   $$
   This is means $D_v(f)$ itself is a \emph{physical entity}, which does not depend on the
@@ -538,7 +538,7 @@ independent.
 
 \begin{Remark}
   The number of coordinate components in $x_U$ does not have to be the same as that of
-  $x_V$. And it is neither necessarily the same as the manifold dimension $d$. This is
+  $x_V$. And it is neither necessarily the same as the manifold dimension $n$. This is
   because the manifold may be embedded in a higher dimensional space, which needs more
   coordinate components to describe. For example, in the 3D Cartesian space, a 2D sphere
   manifold still needs three coordinates.
@@ -548,25 +548,28 @@ independent.
 
 As shown in Equation (\ref{eq:directional-derivative-wrt-v}), there is a one-to-one
 correspondence between a directional derivative operator and a tangent vector. Therefore,
-a tangent vector $X_p$ rooted at $p$ in a local coordinate chart $(U,x)$ can be
+a tangent vector $v$ rooted at $p$ in a local coordinate chart $(U,x)$ can be
 identified with a differential operator:
 \begin{equation}
   \label{eq:tangent-vector-as-diff-op}
-  X_p=\sum_jX^j \frac{\pdiff}{\pdiff x^j}\Bigg\vert_p.
+  v=\sum_j v^j \frac{\pdiff}{\pdiff x^j}\Bigg\vert_p.
 \end{equation}
-Here $X_j$ is the vector coefficient and the differential operator
+Here $v^j$ is the vector coefficient and the differential operator
 $\frac{\pdiff }{\pdiff x^j}\Big\vert_p$ is the corresponding basis vector, which will be
 written as $\frac{\vect{\pdiff}}{\vect{\pdiff} x^j}$ in bold typeface from now on or in a
-simpler form $\vect{\pdiff} x^j$. Hence, $\left\{ \vect{\pdiff} x^j \right\}_{j=1}^d$ is a
-basis of the coordinate chart $(U,x)$. Since the $j$-th component of $X_p$ in this chart
-is just $X^j$, the corresponding basis vector $\vect{\pdiff} x^j$ is numerically the same
-as the basis vector $\boldsymbol{e}_j$ of the Cartesian frame $\mathbb{R}^d$, i.e. the $i$-th
+simpler form $\vect{\pdiff} x^j$. Hence, $\left\{ \vect{\pdiff} x^j \right\}_{j=1}^n$ is a
+basis of the coordinate chart $(U,x)$. Since the $j$-th component of $v$ in this chart is
+just $v^j$, the corresponding basis vector $\vect{\pdiff} x^j$ is numerically the same as
+the basis vector $\boldsymbol{e}_j$ of the Cartesian frame $\mathbb{R}^n$, i.e. the $i$-th
 component of $\vect{\pdiff}x^j$ is the Kronecker $\delta_j^i$. However, it is not a global
 Cartesian frame, but a local Cartesian coordinate frame at $p$ using the coordinate chart
-$(U,x)$.
+$(U,x)$. More importantly, we should keep in mind that the length of one unit along the
+axis $\vect{\pdiff}x^j$ is not necessarily 1, since $\vect{\pdiff}x^j$ may not be a
+normalized tangent vector and the metric tensor associated with the coordinate chart may
+not be an identity matrix (see Section \ref{sec:metric-tensor} for more information).
 
 \begin{Definition}[Coordinate curve]
-  The $i$-th coordinate curve of a coordinate chart $(U,x)$ with $x=(x^1,\cdots,x^d)$ is
+  The $i$-th coordinate curve of a coordinate chart $(U,x)$ with $x=(x^1,\cdots,x^n)$ is
   defined as
   \begin{equation}
     \label{eq:coordinate-curves}
@@ -574,7 +577,7 @@ $(U,x)$.
       x^i(t)=\text{const} & (i\neq j) \\
       x^j(t)=t
     \end{cases}
-    \quad (j=1,\cdots,d).
+    \quad (j=1,\cdots,n).
   \end{equation}
 \end{Definition}
 This definition means the $j$-th coordinate curve is parameterized by $x^j$ only, while
@@ -582,26 +585,26 @@ the other coordinate components are kept constant. The velocity vector of this c
 curve at $p$ is the derivative of $x$ at $t=0$, since $p$ is the root point:
 \begin{equation}
   \label{eq:tangent-vector-of-coordinate-curve}
-  \frac{\diff x}{\diff t}\Bigg\vert_{t=0}=(\delta_{j}^1, \cdots, \delta_j^{d}).
+  \frac{dx}{dt}\Bigg\vert_{t=0}=(\delta_{j}^1, \cdots, \delta_j^n).
 \end{equation}
 This is just equal to $\vect{\pdiff}x^j$.
 
 Therefore, the set of velocity vectors of all coordinate curves at $p$ using the
 coordinate chart $(U,x)$ forms the basis of the tangent space at $p$, i.e.
-$\left\{ \vect{\pdiff} x^j \right\}_{j=1}^d$. This is the same as the results derived from
+$\left\{ \vect{\pdiff} x^j \right\}_{j=1}^n$. This is the same as the results derived from
 treating a tangent vector as a differential operator.
 
 If a different coordinate chart $(V,y)$ containing $p$ is adopted, where
-$y = (y^1,\cdots,y^{d'})$ may have different number of components from $x$, the basis
-$\left\{ \vect{\pdiff}x^j \right\}_{j=1}^d$ in $(U,x)$ can be transformed to the new chart
+$y = (y^1,\cdots,y^{n'})$ may have different number of components from $x$, the basis
+$\left\{ \vect{\pdiff}x^j \right\}_{j=1}^n$ in $(U,x)$ can be transformed to the new chart
 via the Jacobi matrix of the transition map $\phi_{VU}$, since each basis vector is also a
 tangent vector, which should follow the same transformation rule as in
 (\ref{eq:tangent-vector-transform}). For the basis vector $\vect{\pdiff}x^j$, the $i$-th
 component in the transformed vector is
 \begin{equation}
   \label{eq:tangent-space-basis-transform}
-  \sum_{k=1}^d \frac{\pdiff y^i}{\pdiff x^k} (\vect{\pdiff} x^j)_k = \sum_{k=1}^d
-  \frac{\pdiff y^i}{\pdiff x^k} \delta_k^j = \frac{\pdiff y^{i}}{\pdiff x^{j}} \quad (i=1,\cdots,d').
+  \sum_{k=1}^n \frac{\pdiff y^i}{\pdiff x^k} (\vect{\pdiff} x^j)_k = \sum_{k=1}^n
+  \frac{\pdiff y^i}{\pdiff x^k} \delta_k^j = \frac{\pdiff y^{i}}{\pdiff x^{j}} \quad (i=1,\cdots,n').
 \end{equation}
 Hence, the transformed vector of $\vect{\pdiff}x^j$ is just the $j$-th column of the
 Jacobi matrix
@@ -629,6 +632,7 @@ $$
   \end{equation}
   The Jacobi matrix of this map is
   \begin{equation}
+    \label{eq:sphere-jacobi}
     \begin{pmatrix}
       -r\sin\phi \sin\theta & r\cos\phi \cos\theta \\
       r\cos\phi \sin\theta & r \sin\phi \cos\theta \\
@@ -659,17 +663,27 @@ This is consistent with our intuition, just imaginge how we understand a 2-spher
 $\mathbb{R}^3$. However, the definition of tangent vectors for a manifold does not require
 such embedding.
 
-\subsection{Coordinate transformation of a basis vector in the tangent space}
+\subsection{Relationship between bases of different coordinate charts}
 
 Assume there are two coordinate charts $(U,x_U)$ and $(V,x_V)$ assigned to the tangent
-space $M_p^n$. The basis vector of $M_p^n$ represented in $(U,x_U)$ is
-$\left\{ \vect{\pdiff}x_U^j \right\}$ and the basis vector represented in $(V,x_V)$ is
-$\left\{ \vect{\pdiff}x_V^i \right\}$. Then we want to know how each basis vector
-$\vect{\pdiff}x_V^i$ is expanded in the basis $\left\{ \vect{\pdiff}x_U^j \right\}$, i.e.
-we want to compute the expansion coefficients $a_j$ in the following expression
+space $M_p^n$. The basis vector using the coordinate chart $(U,x_U)$ is
+$\left\{ \vect{\pdiff}x_U^j \right\}$ and the basis vector of $(V,x_V)$ is
+$\left\{ \vect{\pdiff}x_V^i \right\}$. Still as before, the number of coordinate
+components in $x_U$ and $x_V$ may not be the same. Then we want to know how each basis
+vector $\vect{\pdiff}x_V^i$ in $(V,x_V)$ is represented using the basis
+$\left\{ \vect{\pdiff}x_U^j \right\}$ in $(U,x_U)$, i.e. we want to compute the expansion
+coefficients $a_j$ in the following expression
 \begin{equation*}
   \vect{\pdiff}x_V^i = \sum_j a^j \vect{\pdiff}x_U^j.
 \end{equation*}
+\begin{Remark}
+  It should be emphasized that unlike a tangent vector $v$ in $M_p^n$ which is a fixed physical
+  entity having multiple representations in different coordinate charts, the basis vectors
+  in different coordinate charts like $\vect{\pdiff}x_U^j$ and $\vect{\pdiff}x_V^i$ are
+  two different physical entities, i.e. they are usually two different tangent vectors in
+  $M_p^n$.
+\end{Remark}
+
 Because $\vect{\pdiff}x_V^i$ itself is a tangent vector, its transformation from $(V,x_V)$
 into $(U,x_U)$ follows the rule of contravariant transformation in Equation
 (\ref{eq:contravariant-transformation}):
@@ -679,24 +693,46 @@ into $(U,x_U)$ follows the rule of contravariant transformation in Equation
 Note here we've transposed the basis vector $\vect{\pdiff}x_V^i$, because as a convention,
 a tangent vector in the matrix form is written as a column vector, while the matrix form
 of a basis vector in the tangent space is a row vector. Since $\vect{\pdiff}x_V^i$ is
-equivalent to $\vect{e}_i$, the above expression extracts the $i$-th column of the Jacobi
-matrix. Therefore, $a^{j}$ is just the $j$-th component in this column vector, i.e.
+numerically equivalent to $\vect{e}_i$, the above expression extracts the $i$-th column of
+the Jacobi matrix of $\phi_{UV}$. Therefore, the expansion coefficient $a^{j}$ is just the
+$j$-th component in this column vector, i.e.
 \begin{equation}
   a^j = \frac{\pdiff x_U^j}{\pdiff x_V^i}.
 \end{equation}
-Hence, the basis vector $\vect{\pdiff}x_V^i$ is represented as
+Hence, the basis vector $\vect{\pdiff}x_V^i$ can be represented as
 \begin{equation}
-  \label{eq:tangent-vector-basis-transformation}
+  \label{eq:tangent-vector-basis-relation}
   \vect{\pdiff}x_V^i = \sum_j \frac{\pdiff x_U^j}{\pdiff x_V^i} \vect{\pdiff}x_U^j.
 \end{equation}
 If we horizontally juxtapose the basis vectors as
 $(\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n)$ and
-$(\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n)$, the matrix formulation of the contravariant
-basis transformation is
+$(\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n)$, the matrix formulation of the
+relationship between the two bases is
 \begin{equation}
   (\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n) =
   (\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n) \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
 \end{equation}
+
+\begin{Example}[Basis of spherical coordinate chart]
+  We still use the spherical coordinate system as an example. Let $(U,x_U)$ be a
+  coordinate chart using the Cartesian coordinate frame and $(V,x_V)$ be a coordinate
+  chart using the spherical coordinate frame. Then the basis of $(U,x_U)$ is
+  $\left\{ \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$ and the basis of
+  $(V,x_V)$ is $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$. We want to see
+  how $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$ is represented in $\left\{
+    \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$. According to Equation
+  (\ref{eq:sphere-jacobi}),
+  \begin{equation}
+    \begin{aligned}
+      \vect{\pdiff}\phi &= -r\sin\phi \sin\theta \vect{\pdiff}x + r\cos\phi \sin\theta
+      \vect{\pdiff}y \\
+      \vect{\pdiff}\theta &= r\cos\phi\cos\theta \vect{\pdiff}x + r\sin\phi\cos\theta
+      \vect{\pdiff}y - r\sin\theta \vect{\pdiff}z
+    \end{aligned},
+  \end{equation}
+  i.e. $\vect{\pdiff}\phi$ in the Cartesian frame is just the first column of the Jacobi
+  matrix and $\vect{\pdiff}\theta$ is the second column.
+\end{Example}
 
 \section{Covector and cotangent space}
 
@@ -964,6 +1000,7 @@ Similarly,
 \section{Tensor and differential forms}
 
 \subsection{Inner product and metric tensor}
+\label{sec:metric-tensor}
 
 In a same coordinate chart $(x)$ containing $p$, the inner product of two tangent vectors
 $a$ and $b$ in $M_p^n$ is
@@ -1041,12 +1078,13 @@ Here $G^{-1}$ is an another tensor, whose entry is written as $g^{ij}$. Therefor
   sharp operator $\sharp$.
 \end{Definition}
 
-\subsection{Coordinate transformation of the metric tensor}
+\subsection{Relationship between metric tensors in different coordinate charts}
 
-According to Definition \ref{def:metric-tensor}, the metric tensor depends on the basis
-vectors of the tangent space. Therefore, using the coordinate transformation of
-tangent basis vectors in Equation (\ref{eq:tangent-vector-basis-transformation}), we can
-obtain the coordinate transformation of a metric tensor.
+Similar to a basis vector of a tangent space, metric tensors in different coordinate
+charts are different entities. According to Definition \ref{def:metric-tensor}, the metric
+tensor depends on the basis vectors of the tangent space. Therefore, using Equation
+(\ref{eq:tangent-vector-basis-relation}), we can obtain the relationship between metric
+tensors in different coordinate charts.
 
 Let $(U,x_U)$ and $(V,x_V)$ be two coordinate charts containing point $p$. In the
 neighborhood of $p$, the metric tensor can be represented as
@@ -1057,9 +1095,8 @@ using the chart $(V,x_V)$. Or it can be represented as
 \begin{equation*}
   g_{rs}^V = \left\langle \vect{\pdiff}x_U^r, \vect{\pdiff}x_U^s \right\rangle
 \end{equation*}
-in the chart $(U,x_U)$.
-
-According to Equation (\ref{eq:tangent-vector-basis-transformation}), we have
+in the chart $(U,x_U)$. According to Equation (\ref{eq:tangent-vector-basis-relation}), we
+have
 \begin{equation*}
   \vect{\pdiff}x_V^i = \sum_r \frac{\pdiff x_U^r}{\pdiff x_V^i} \vect{\pdiff}x_U^r
 \end{equation*}
@@ -1082,6 +1119,24 @@ Its matrix formulation is
   G^V = \left[ \frac{\pdiff x_U}{\pdiff x_V} \right]^{\mathrm{T}} G^U \left[ \frac{\pdiff
       x_U}{\pdiff x_V} \right].
 \end{equation}
+
+\begin{Example}[Metric tensor of spherical coordinate chart]
+  Let $(U,x_U)$ be a coordinate chart using the Cartesian coordinate frame and $(V,x_V)$
+  be a coordinate chart using the spherical coordinate frame. Then the basis of $(U,x_U)$
+  is $\left\{ \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$ and the basis of
+  $(V,x_V)$ is $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$. The metric
+  tensor $G^U$ of $(U,x_U)$ is simply a $3\times 3$ identity matrix. Hence, the metric
+  tensor $G^V$ of $(V,x_V)$ is
+  \begin{equation*}
+    G^V = J_{UV}^{\mathrm{T}} J_{UV} = \ifx\endpmatrix\undefined\pmatrix{\else\begin{pmatrix}\fi r^2\,
+        \sin ^2\theta&0\cr 0&r^2\cr 
+        \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi.
+  \end{equation*}
+  Therefore, the spherical coordinate frame is orthogonal but not normalized. When $r=1$,
+  the basis vector $\vect{\pdiff}\theta$ has unit length but $\vect{\pdiff}\phi$ usually
+  does not. $\vect{\pdiff}\phi$ only has unit length when $\theta=\frac{\pi}{2}$, i.e. at
+  the equator.
+\end{Example}
 
 \chapter{Sauter quadrature}
 \label{sec:sauter-quad}

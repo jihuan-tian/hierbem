@@ -50,3 +50,25 @@
    #+ATTR_LATEX: :width 0.5\textwidth
    #+RESULTS:
    [[file:./figures/basis-on-sphere.png]]
+** Metric tensor of spherical coordinate chart
+   #+begin_src maxima :exports both :results output
+     /* Relationship between Cartesian and spherical coordinate frames */
+     x:r*cos(phi)*sin(theta);
+     y:r*sin(phi)*sin(theta);
+     z:r*cos(theta);
+
+     Juv:matrix([diff(x,phi), diff(x,theta)], [diff(y,phi), diff(y,theta)], [diff(z,phi), diff(z,theta)]);
+     tex(Juv);
+
+     G:trigsimp(transpose(Juv) . Juv);
+     tex(G);
+   #+end_src
+
+   #+RESULTS:
+   : $$\ifx\endpmatrix\undefined\pmatrix{\else\begin{pmatrix}\fi -\sin 
+   :  \varphi\,r\,\sin \vartheta&\cos \varphi\,r\,\cos \vartheta\cr \cos 
+   :  \varphi\,r\,\sin \vartheta&\sin \varphi\,r\,\cos \vartheta\cr 0&-r\,
+   :  \sin \vartheta\cr \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi $$
+   : $$\ifx\endpmatrix\undefined\pmatrix{\else\begin{pmatrix}\fi r^2\,
+   :  \sin ^2\vartheta&0\cr 0&r^2\cr 
+   :  \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi $$
