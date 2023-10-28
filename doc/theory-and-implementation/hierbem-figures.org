@@ -72,3 +72,26 @@
    : $$\ifx\endpmatrix\undefined\pmatrix{\else\begin{pmatrix}\fi r^2\,
    :  \sin ^2\vartheta&0\cr 0&r^2\cr 
    :  \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi $$
+
+   #+begin_src maxima :exports both :results output
+     x:r*cos(phi)*sin(theta);
+     y:r*sin(phi)*sin(theta);
+     z:r*cos(theta);
+
+     Juv:matrix([diff(x, r), diff(x,phi), diff(x,theta)], [diff(y, r), diff(y,phi), diff(y,theta)], [diff(z, r), diff(z,phi), diff(z,theta)]);
+     tex(Juv);
+
+     G:trigsimp(transpose(Juv) . Juv);
+     tex(G);
+   #+end_src
+
+   #+RESULTS:
+   : $$\ifx\endpmatrix\undefined\pmatrix{\else\begin{pmatrix}\fi \cos 
+   :  \varphi\,\sin \vartheta&-\sin \varphi\,r\,\sin \vartheta&\cos 
+   :  \varphi\,r\,\cos \vartheta\cr \sin \varphi\,\sin \vartheta&\cos 
+   :  \varphi\,r\,\sin \vartheta&\sin \varphi\,r\,\cos \vartheta\cr \cos 
+   :  \vartheta&0&-r\,\sin \vartheta\cr 
+   :  \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi $$
+   : $$\ifx\endpmatrix\undefined\pmatrix{\else\begin{pmatrix}\fi 1&0&0\cr 
+   :  0&r^2\,\sin ^2\vartheta&0\cr 0&0&r^2\cr 
+   :  \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi $$

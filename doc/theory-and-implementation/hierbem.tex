@@ -632,7 +632,7 @@ $$
   \end{equation}
   The Jacobi matrix of this map is
   \begin{equation}
-    \label{eq:sphere-jacobi}
+    \label{eq:spherical-coordinate-jacobi}
     \begin{pmatrix}
       -r\sin\phi \sin\theta & r\cos\phi \cos\theta \\
       r\cos\phi \sin\theta & r \sin\phi \cos\theta \\
@@ -706,7 +706,7 @@ Hence, the basis vector $\vect{\pdiff}x_V^i$ can be represented as
 \end{equation}
 If we horizontally juxtapose the basis vectors as
 $(\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n)$ and
-$(\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n)$, the matrix formulation of the
+$(\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n)$, the matrix form of the
 relationship between the two bases is
 \begin{equation}
   (\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n) =
@@ -714,6 +714,7 @@ relationship between the two bases is
 \end{equation}
 
 \begin{Example}[Basis of spherical coordinate chart]
+  \label{exam:spherical-coordinate-basis}
   We still use the spherical coordinate system as an example. Let $(U,x_U)$ be a
   coordinate chart using the Cartesian coordinate frame and $(V,x_V)$ be a coordinate
   chart using the spherical coordinate frame. Then the basis of $(U,x_U)$ is
@@ -721,17 +722,33 @@ relationship between the two bases is
   $(V,x_V)$ is $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$. We want to see
   how $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$ is represented in $\left\{
     \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$. According to Equation
-  (\ref{eq:sphere-jacobi}),
+  (\ref{eq:spherical-coordinate-jacobi}),
   \begin{equation}
     \begin{aligned}
       \vect{\pdiff}\phi &= -r\sin\phi \sin\theta \vect{\pdiff}x + r\cos\phi \sin\theta
       \vect{\pdiff}y \\
       \vect{\pdiff}\theta &= r\cos\phi\cos\theta \vect{\pdiff}x + r\sin\phi\cos\theta
-      \vect{\pdiff}y - r\sin\theta \vect{\pdiff}z
-    \end{aligned},
+      \vect{\pdiff}y - r\sin\theta \vect{\pdiff}z,
+    \end{aligned}
   \end{equation}
   i.e. $\vect{\pdiff}\phi$ in the Cartesian frame is just the first column of the Jacobi
-  matrix and $\vect{\pdiff}\theta$ is the second column.
+  matrix and $\vect{\pdiff}\theta$ is the second column. We also notice that the basis
+  vectors $\vect{\pdiff}\phi$ and $\vect{\pdiff}\theta$ are not
+  normalized or unit vectors:
+  \begin{equation*}
+    \begin{aligned}
+      \norm{\vect{\pdiff}\phi} &= \sqrt{r^2\sin^2\phi\sin^2\theta +
+        r^2\cos^2\phi\sin^2\theta} = \sqrt{r^2\sin^2\theta} = r\sin\theta \\
+      \norm{\vect{\pdiff}\theta} &= \sqrt{r^2\cos^2\phi\cos^{2}\theta +
+        r^2\sin^2\phi\cos^2\theta + r^2\sin^2\theta} = \sqrt{r^2\cos^2\theta +
+        r^2\sin^2\theta} = r.
+    \end{aligned}
+  \end{equation*}
+  Therefore, a normalized basis
+  $\left\{ \vect{\pdiff}\hat{\phi}, \vect{\pdiff}\hat{\theta} \right\}$ of the spherical
+  coordinate chart is
+  $\left\{ \frac{1}{r\sin\theta} \vect{\pdiff}\phi, \frac{1}{r} \vect{\pdiff}\theta
+  \right\}$.
 \end{Example}
 
 \section{Covector and cotangent space}
@@ -898,10 +915,11 @@ $df: M_p^n \rightarrow \mathbb{R}$ is the differential of $f$, which is a linear
 functional operating on a tangent vector $v$. It is defined to be the same as the
 directional derivative of $f$ with respect to $v$ (see Equation
 (\ref{eq:directional-derivative-wrt-v}) and (\ref{eq:tangent-vector-as-diff-op})):
-\begin{equation*}
+\begin{equation}
+  \label{eq:df-and-directional-derivative}
   df(v) = D_v(f) = v(f) = df \left( \sum_j v^j \vect{\pdiff}x^j \right) = \sum_j v^j
   df(\vect{\pdiff}x^j) = \sum_j v^j \frac{\pdiff f}{\pdiff x^j}\Bigg\vert_p.
-\end{equation*}
+\end{equation}
 We can see that applying $df$ to the $j$ basis vector in the tangent space simply returns
 the partial derivative of $f$ with respect to $x^j$ evaluated at $p$.
 
@@ -934,7 +952,7 @@ expansion of $dx_V^i$ takes the form
   \label{eq:cotangent-basis-transformation}
   dx_V^i=\sum_j \frac{\pdiff x_V^i}{\pdiff x_U^j} dx_U^j.
 \end{equation}
-Its matrix formulation is
+Its matrix form is
 \begin{equation}
   dx_V = \left[ \frac{\pdiff x_V}{\pdiff x_U} \right]\Bigg\vert_p dx_U,
 \end{equation}
@@ -960,7 +978,7 @@ where the expansion coefficient is
   \label{eq:covector-transformation}
   a_j^U = \sum_i a_i^V \left( \frac{\pdiff x_V^i}{\pdiff x_U^j} \right).
 \end{equation*}
-Its matrix formulation is
+Its matrix form is
 \begin{equation}
   a^U = a^V \left[ \frac{\pdiff x_V}{\pdiff x_U} \right],
 \end{equation}
@@ -1016,7 +1034,15 @@ $a$ and $b$ in $M_p^n$ is
   $g_{ij} \coloneqq \left\langle \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle$ is
   called the metric tensor.
 \end{Definition}
-The inner product in matrix formulation is
+
+\begin{Definition}[Riemann metric, Riemann manifold]
+  Let $M^n$ be an $n$-dimensional manifold. If for all $p$ in $M^n$, the tangent space
+  $M_p^n$ is differentiably assigned a positive definite inner product, i.e. the matrix
+  form $G$ of the metric tensor $g_{ij}$ is positive definite, the manifold $M^n$ has a
+  Riemann metric and it is a Riemann manifold.
+\end{Definition}
+
+The inner product in matrix form is
 \begin{equation}
   \left\langle a,b \right\rangle = a^T G b.
 \end{equation}
@@ -1024,59 +1050,13 @@ The inner product in matrix formulation is
 According to the section \ref{sec:duality-concept}, the inner product can also be
 considered as the application of a covector to a tangent vector. Let $\alpha$ be a
 covector in $M_p^{n*}$ and define $\alpha(b) = \left\langle a, b \right\rangle$. This
-means the tangent vector $a$ determines a covector $\alpha$.
+means the tangent vector $a$ determines or defines a covector $\alpha$.
 
 \begin{Theorem}[Riesz representation theorem]
   Let $X$ be a Hilbert space and $f$ be a bounded linear functional on $X$, i.e. $f \in
   X'$. There exists a unique vector $a$ in $X$, such that for all $b$ in $X$, $f(b) =
   \left\langle a, b \right\rangle$ and $\norm{f} = \norm{a}$.
 \end{Theorem}
-
-Assume the covector $\alpha$ above can be expanded as
-\begin{equation*}
-  \alpha = \sum_j \alpha_j dx^j = \sum_j \alpha(\vect{\pdiff}x^j) dx^j = \sum_j
-  \left\langle a, \vect{\pdiff}x^j \right\rangle dx^j.
-\end{equation*}
-If the tangent vector $a$ is expanded as $a = \sum_i a^i \vect{\pdiff}x^i$, we have
-\begin{equation*}
-  \alpha = \sum_j \left\langle \sum_i a^i \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle
-  dx^j = \sum_j\sum_i a^i \left\langle \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle
-  dx^j = \sum_j\sum_i a^i g_{ij} dx^j = \sum_j \left( \sum_i a^i g_{ij} \right) dx^j.
-\end{equation*}
-Therefore, the expansion coefficient of the covector $\alpha$ is
-\begin{equation}
-  \alpha_j = \sum_i a^i g_{ij}.
-\end{equation}
-Because the inner product is symmetric with respect to its two operands, so that $g_{ij} = g_{ji}$.
-And we prefer the following equivalent formulation of $\alpha_j$
-\begin{equation}
-  \alpha_j = \sum_i g_{ji} a^i.
-\end{equation}
-This is because according to the convention, the tangent $a$ vector is represented as a
-column vector, while the metric tensor $g_{ji}$ is represented as a matrix. Then the
-transformation from the tangent vector $a$ to the covector $\alpha$ can be written as
-\begin{equation}
-  \alpha = (G a)^{\mathrm{T}} = a^{\mathrm{T}} G.
-\end{equation}
-
-On the other hand, the transformation from a covector to its associated tangent vector is
-\begin{equation}
-  a =  G^{-\mathrm{T}} \alpha^{\mathrm{T}} = G^{-1} \alpha^{\mathrm{T}}.
-\end{equation}
-Here $G^{-1}$ is an another tensor, whose entry is written as $g^{ij}$. Therefore
-\begin{equation}
-  a^i = \sum_{j} g^{ij} \alpha_j.
-\end{equation}
-
-\begin{Definition}[Flat operator $\flat$]
-  The operator which transforms a tangent vector to the associated cotangent vector is the
-  flat operator $\flat$.
-\end{Definition}
-
-\begin{Definition}[Sharp operator $\sharp$]
-  The operator which transforms a cotangent vector to the associated tangent vector is the
-  sharp operator $\sharp$.
-\end{Definition}
 
 \subsection{Relationship between metric tensors in different coordinate charts}
 
@@ -1113,7 +1093,7 @@ Then
   \left\langle \vect{\pdiff}x_U^r, \vect{\pdiff}x_U^s \right\rangle = \sum_r\sum_s
   \frac{\pdiff x_U^r}{\pdiff x_V^i} \frac{\pdiff x_U^s}{\pdiff x_V^j} g_{rs}^U.
 \end{equation}
-Its matrix formulation is
+Its matrix form is
 \begin{equation}
   \label{eq:metric-tensor-transformation-matrix-form}
   G^V = \left[ \frac{\pdiff x_U}{\pdiff x_V} \right]^{\mathrm{T}} G^U \left[ \frac{\pdiff
@@ -1121,21 +1101,226 @@ Its matrix formulation is
 \end{equation}
 
 \begin{Example}[Metric tensor of spherical coordinate chart]
+  \label{exam:spherical-coordinate-metric-tensor}
   Let $(U,x_U)$ be a coordinate chart using the Cartesian coordinate frame and $(V,x_V)$
   be a coordinate chart using the spherical coordinate frame. Then the basis of $(U,x_U)$
   is $\left\{ \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$ and the basis of
   $(V,x_V)$ is $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$. The metric
   tensor $G^U$ of $(U,x_U)$ is simply a $3\times 3$ identity matrix. Hence, the metric
   tensor $G^V$ of $(V,x_V)$ is
-  \begin{equation*}
+  \begin{equation}
+    \label{eq:spherical-coordinate-metric-tensor}
     G^V = J_{UV}^{\mathrm{T}} J_{UV} = \ifx\endpmatrix\undefined\pmatrix{\else\begin{pmatrix}\fi r^2\,
         \sin ^2\theta&0\cr 0&r^2\cr 
         \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi.
-  \end{equation*}
+  \end{equation}
   Therefore, the spherical coordinate frame is orthogonal but not normalized. When $r=1$,
   the basis vector $\vect{\pdiff}\theta$ has unit length but $\vect{\pdiff}\phi$ usually
   does not. $\vect{\pdiff}\phi$ only has unit length when $\theta=\frac{\pi}{2}$, i.e. at
   the equator.
+\end{Example}
+
+\subsection{Transformation between tangent vector and covector via metric tensor}
+
+Assume the covector $\alpha$ above can be expanded as
+\begin{equation*}
+  \alpha = \sum_j \alpha_j dx^j = \sum_j \alpha(\vect{\pdiff}x^j) dx^j = \sum_j
+  \left\langle a, \vect{\pdiff}x^j \right\rangle dx^j.
+\end{equation*}
+If the tangent vector $a$ is expanded as $a = \sum_i a^i \vect{\pdiff}x^i$, we have
+\begin{equation*}
+  \alpha = \sum_j \left\langle \sum_i a^i \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle
+  dx^j = \sum_j\sum_i a^i \left\langle \vect{\pdiff}x^i, \vect{\pdiff}x^j \right\rangle
+  dx^j = \sum_j\sum_i a^i g_{ij} dx^j = \sum_j \left( \sum_i a^i g_{ij} \right) dx^j.
+\end{equation*}
+Therefore, the expansion coefficient of the covector $\alpha$ is
+\begin{equation}
+  \alpha_j = \sum_i a^i g_{ij}.
+\end{equation}
+Because the inner product is symmetric with respect to its two operands, so that $g_{ij} = g_{ji}$.
+And we prefer the following equivalent formulation of $\alpha_j$
+\begin{equation}
+  \alpha_j = \sum_i g_{ji} a^i.
+\end{equation}
+This is because according to the convention, the tangent $a$ vector is represented as a
+column vector, while the metric tensor $g_{ji}$ is represented as a matrix. Then the
+transformation from the tangent vector $a$ to the covector $\alpha$ can be written as
+\begin{equation}
+  \alpha = (G a)^{\mathrm{T}} = a^{\mathrm{T}} G.
+\end{equation}
+
+On the other hand, the transformation from a covector to its associated tangent vector is
+\begin{equation}
+  a =  G^{-\mathrm{T}} \alpha^{\mathrm{T}} = G^{-1} \alpha^{\mathrm{T}}.
+\end{equation}
+Here $G^{-1}$ is an another tensor, whose entry is $g^{ij}$. Therefore
+\begin{equation}
+  a^i = \sum_{j} g^{ij} \alpha_j.
+\end{equation}
+
+\begin{Definition}[Flat operator $\flat$]
+  \label{def:flat-operator}
+  The operator which transforms a tangent vector to the associated cotangent vector is the
+  flat operator $\flat$.
+\end{Definition}
+
+\begin{Definition}[Sharp operator $\sharp$]
+  \label{def:sharp-operator}
+  The operator which transforms a cotangent vector to the associated tangent vector is the
+  sharp operator $\sharp$.
+\end{Definition}
+
+The flat operator $\flat$ and the sharp operator $\sharp$ are inverse to each other.
+
+\subsection{Relationship between the differential of $f$ and its gradient}
+
+According to Equation (\ref{eq:df-and-directional-derivative}), the differential of a
+0-form $f$ is a 1-form $df$. When $df$ is applied to a tangent vector $v$, the returned
+scalar value is the directional derivative of $f$ with respect to $v$. In classical
+calculus, this is just the projection of the gradient of $f$ to the vector $v$. Hence, the
+following definition of the gradient operator is consistent with that learned in calculus.
+
+\begin{Definition}[Gradient operator $\nabla$]
+  \label{def:gradient-operator}
+  Let $M_p^n$ be the tangent space at $p$ of the manifold $M^n$. $f$ is a 0-form and $df$
+  is its differential. For any tangent vector $v$ in $M_p^n$, the gradient operator
+  $\nabla$ is defined as
+  \begin{equation}
+    \label{eq:gradient-operator}
+    df(v) = \left\langle \nabla f, v \right\rangle.
+  \end{equation}
+  Applying $\nabla$ to the 0-form $f$ returns a vector in the tangent space.
+\end{Definition}
+Compare
+\begin{equation*}
+  df(v) = \sum_j \frac{\pdiff f}{\pdiff x^j} v^j
+\end{equation*}
+and
+\begin{equation*}
+  \left\langle \nabla f, v \right\rangle = \sum_i\sum_j \left( \nabla f \right)^i v^j
+  g_{ij} = \sum_j \left( \sum_i \left( \nabla f \right)^i g_{ij} \right) v^j,
+\end{equation*}
+we have the relationship between the components of the 1-form $df$ and the tangent vector
+$\nabla f$
+\begin{equation*}
+  \frac{\pdiff f}{\pdiff x^j} = \sum_i \left( \nabla f \right)^i g_{ij}.
+\end{equation*}
+Because the metric tensor is symmetric, $g_{ij} = g_{ji}$,
+\begin{equation}
+  \label{eq:gradient-to-df}
+  \frac{\pdiff f}{\pdiff x^j} = \sum_i g_{ji} \left( \nabla f \right)^i.
+\end{equation}
+Swapping the subscripts is to derive the following matrix form,
+\begin{equation}
+  df^{\mathrm{T}} = G \nabla f,
+\end{equation}
+where $df$ is a row vector and $\nabla f$ is a column vector.
+
+On the other hand,
+\begin{equation}
+  \label{eq:df-to-gradient}
+  \left( \nabla f \right)^i = \sum_j g^{ij} \frac{\pdiff f}{\pdiff x^{i}}
+\end{equation}
+with the matrix form
+\begin{equation}
+  \nabla f = G^{-1} df^{\mathrm{T}}.
+\end{equation}
+
+According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
+\begin{equation}
+  df = \flat(\nabla f), \; \nabla f = \sharp(df).
+\end{equation}
+
+\begin{Example}[Gradient vector on sphere manifold $S^2$]
+  According to Example \ref{exam:spherical-coordinate-metric-tensor}, the matrix form of
+  the metric tensor $G$ in the spherical coordinate chart is Equation
+  (\ref{eq:spherical-coordinate-metric-tensor}). If the basis
+  $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$ is adopted for the tangent space, the matrix form of
+  $\nabla f$ is
+  \begin{equation}
+    \nabla f = \begin{pmatrix}
+      \frac{1}{r^2\sin^2\theta} & 0 \\
+      0 & \frac{1}{r^2}
+    \end{pmatrix}
+    \cdot
+    \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff \phi} \\
+      \frac{\pdiff f}{\pdiff \theta}
+    \end{pmatrix} = \begin{pmatrix}
+      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \\
+      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta}
+    \end{pmatrix}.
+  \end{equation}
+  Its tangent vector form is
+  \begin{equation}
+    \nabla f = \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\phi +
+    \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\theta.
+  \end{equation}
+  If the normalized basis
+  $\left\{ \vect{\pdiff}\hat{\phi}, \vect{\pdiff}\hat{\theta} \right\}$ as in Example
+  \ref{exam:spherical-coordinate-basis} is adopted, the tangent vector form is
+  \begin{equation}
+    \nabla f = \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} r\sin\theta \vect{\pdiff}\hat{\phi} +
+    \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} r \vect{\pdiff}\hat{\theta} =
+    \frac{1}{r\sin\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\hat{\phi} +
+    \frac{1}{r} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\hat{\theta}.
+  \end{equation}
+\end{Example}
+
+\begin{Example}[Gradient vector on ball manifold]
+  Compared to the sphere manifold, now the basis of the tangent space in the local
+  spherical coordinate chart is
+  $\left\{ \vect{\pdiff}r, \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$. The Jacobi
+  matrix from the spherical coordinate chart to the Cartesian coordinate chart is
+  \begin{equation}
+    \label{eq:ball-coordinate-jacobi}
+    J = \begin{pmatrix}
+      \cos\phi \sin\theta & -r\sin\phi \sin\theta & r\cos\phi \cos\theta \\
+      \sin\phi \sin\theta & r\cos\phi \sin\theta & r \sin\phi \cos\theta \\
+      \cos\theta & 0 & -r\sin\theta
+    \end{pmatrix}.
+  \end{equation}
+  The metric tensor is
+  \begin{equation}
+    \label{eq:ball-coordinate-metric-tensor}
+    G = J^{\mathrm{T}} J = \begin{pmatrix}
+      1&0&0 \\
+      0&r^2\,\sin ^2\theta&0 \\
+      0&0&r^2
+    \end{pmatrix}.
+  \end{equation}
+  The matrix form of $\nabla f$ is
+  \begin{equation}
+    \nabla f = \begin{pmatrix}
+      1 & 0 & 0\\
+      0 & \frac{1}{r^2\sin^2\theta} & 0 \\
+      0 & 0 & \frac{1}{r^2}
+    \end{pmatrix}
+    \cdot
+    \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff r} \\
+      \frac{\pdiff f}{\pdiff \phi} \\
+      \frac{\pdiff f}{\pdiff \theta}
+    \end{pmatrix} = \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff r} \\
+      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \\
+      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta}
+    \end{pmatrix}.
+  \end{equation}
+  Its tangent vector form is
+  \begin{equation}
+    \nabla f = \frac{\pdiff f}{\pdiff r}\vect{\pdiff}r + \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\phi +
+    \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\theta.
+  \end{equation}
+  Using the normalized basis
+  $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\phi}, \vect{\pdiff}\hat{\theta}
+  \right\}$, where $\vect{\pdiff}\hat{r} = \vect{\pdiff}r$, we have
+  \begin{equation}
+    \nabla f = \frac{\pdiff f}{\pdiff r}\vect{\pdiff}\hat{r} + \frac{1}{r\sin\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\hat{\phi} +
+    \frac{1}{r} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\hat{\theta}.
+  \end{equation}
+  This is consistent with the result in a classical electrodynamics book such as
+  \citep{GriffithsIntroduction1999}.
 \end{Example}
 
 \chapter{Sauter quadrature}
