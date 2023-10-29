@@ -129,8 +129,6 @@ main(int argc, char *argv[])
       bem.assign_surface_triangulation(std::move(surface_tria), true);
     }
 
-  bem.set_alpha_for_neumann(1);
-
   NeumannBC neumann_bc(source_loc, center, radius);
   bem.assign_neumann_bc(neumann_bc);
 

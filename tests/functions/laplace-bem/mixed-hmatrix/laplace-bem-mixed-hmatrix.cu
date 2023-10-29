@@ -134,7 +134,7 @@ main(int argc, char *argv[])
     1.0,                 // eta for preconditioner
     2,                   // max rank for preconditioner
     0.1,                 // aca epsilon for preconditioner
-    MultithreadInfo::n_cores());
+    1);
 
   bem.set_dirichlet_boundary_ids({1, 2});
   bem.set_neumann_boundary_ids({3, 4, 5, 6});

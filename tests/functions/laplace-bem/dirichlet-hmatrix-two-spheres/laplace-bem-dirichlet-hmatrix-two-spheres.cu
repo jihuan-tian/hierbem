@@ -106,7 +106,10 @@ main(int argc, char *argv[])
     1.0,                 // eta for preconditioner
     2,                   // max rank for preconditioner
     0.1,                 // aca epsilon for preconditioner
-    MultithreadInfo::n_cores());
+    1 // Use a single thread to make ACA deterministic. The assembly of near
+      // field H-matrix nodes still use multiple threads for running the
+      // producer-consumer model.
+  );
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");

@@ -189,8 +189,6 @@ main(int argc, char *argv[])
 
   timer.start();
 
-  bem.set_alpha_for_neumann(1);
-
   NeumannBC neumann_bc(source_loc, center, radius);
   bem.assign_neumann_bc(neumann_bc);
 
