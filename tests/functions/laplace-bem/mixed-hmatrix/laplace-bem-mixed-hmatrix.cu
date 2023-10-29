@@ -1,6 +1,7 @@
 /**
  * \file laplace-bem-mixed-hmatrix.cc
  * \brief Verify solve Laplace mixed boundary value problem using \hmat.
+ *
  * \ingroup testers
  * \author Jihuan Tian
  * \date 2022-11-21
@@ -14,8 +15,8 @@
 #include <iostream>
 
 #include "debug_tools.hcu"
-#include "laplace_bem.h"
 #include "hbem_test_config.h"
+#include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -108,6 +109,12 @@ main(int argc, char *argv[])
   AssertCuda(
     cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
+  /**
+   * @internal Use 8-byte bank size in shared memory, since double value type is
+   * used.
+   */
+  // AssertCuda(cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte));
+
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
@@ -120,7 +127,7 @@ main(int argc, char *argv[])
     LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
     is_interior_problem, // is interior problem
     4,                   // n_min for cluster tree
-    32,                  // n_min for block cluster tree
+    4,                   // n_min for block cluster tree
     0.8,                 // eta for H-matrix
     5,                   // max rank for H-matrix
     0.01,                // aca epsilon for H-matrix

@@ -13,8 +13,6 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
-#include <boost/progress.hpp>
-
 #include <functional>
 #include <map>
 #include <utility>
@@ -507,9 +505,6 @@ namespace HierBEM
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe());
 
-    boost::progress_display pd(cell_iterator_pairs_for_mass_matrix.size(),
-                               std::cerr);
-
     for (auto cell_pair_iter = cell_iterator_pairs_for_mass_matrix.begin();
          cell_pair_iter != cell_iterator_pairs_for_mass_matrix.end();
          cell_pair_iter++)
@@ -520,8 +515,6 @@ namespace HierBEM
                                                     copy_data);
 
         copy_cell_local_to_global_for_fem_matrix(copy_data, target_full_matrix);
-
-        ++pd;
       }
   }
 
@@ -716,10 +709,6 @@ namespace HierBEM
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe());
 
-    boost::progress_display pd(
-      dof_handler_for_test_space.get_triangulation().n_active_cells(),
-      std::cerr);
-
     for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
       {
         /**
@@ -783,8 +772,6 @@ namespace HierBEM
                     std::ref(target_full_matrix)),
           scratch_data,
           per_task_data);
-
-        ++pd;
       }
 
     scratch_data.release();
@@ -895,10 +882,6 @@ namespace HierBEM
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe());
 
-    boost::progress_display pd(
-      dof_handler_for_test_space.get_triangulation().n_active_cells(),
-      std::cerr);
-
     for (const auto &e : dof_handler_for_test_space.active_cell_iterators())
       {
         /**
@@ -932,8 +915,6 @@ namespace HierBEM
             copy_pair_of_cells_local_to_global_for_bem_full_matrix(
               per_task_data, target_full_matrix);
           }
-
-        ++pd;
       }
 
     scratch_data.release();
@@ -1387,7 +1368,6 @@ namespace HierBEM
      * Iterate over each target point.
      */
     const unsigned int      n_target_points = target_point_list.size();
-    boost::progress_display pd(n_target_points, std::cerr);
 
     for (unsigned int i = 0; i < n_target_points; i++)
       {
@@ -1428,8 +1408,6 @@ namespace HierBEM
          */
         potential_values(i) +=
           kernel_evaluation_discretized_to_dofs * dof_values_in_trial_space;
-
-        ++pd;
       }
   }
 } // namespace HierBEM

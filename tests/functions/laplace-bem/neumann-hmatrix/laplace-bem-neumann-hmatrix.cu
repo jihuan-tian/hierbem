@@ -1,6 +1,8 @@
 /**
  * \file laplace-bem-neumann-hmatrix.cc
- * \brief
+ * \brief Verify solving the Laplace problem with Neumann boundary condition
+ * using H-matrix based BEM.
+ *
  * \ingroup testers
  * \author Jihuan Tian
  * \date 2022-09-23
@@ -14,47 +16,11 @@
 #include <iostream>
 
 #include "debug_tools.hcu"
-#include "laplace_bem.h"
 #include "hbem_test_config.h"
+#include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;
-
-/**
- * Function object for the Dirichlet boundary condition data, which is
- * also the solution of the Neumann problem. The analytical expression is:
- * \f[
- * u=\frac{1}{4\pi\norm{x-x_0}}
- * \f]
- */
-class DirichletBC : public Function<3>
-{
-public:
-  // N.B. This function should be defined outside class NeumannBC or class
-  // Example2, if no inline.
-  DirichletBC()
-    : Function<3>()
-    , x0(0.25, 0.25, 0.25)
-  {}
-
-  DirichletBC(const Point<3> &x0)
-    : Function<3>()
-    , x0(x0)
-  {}
-
-  double
-  value(const Point<3> &p, const unsigned int component = 0) const
-  {
-    (void)component;
-    return 1.0 / 4.0 / numbers::PI / (p - x0).norm();
-  }
-
-private:
-  /**
-   * Location of the Dirac point source \f$\delta(x-x_0)\f$.
-   */
-  Point<3> x0;
-};
 
 /**
  * Function object for the Neumann boundary condition data, which is also
@@ -103,6 +69,15 @@ private:
   double   model_sphere_radius;
 };
 
+
+namespace HierBEM
+{
+  namespace CUDAWrappers
+  {
+    extern cudaDeviceProp device_properties;
+  }
+} // namespace HierBEM
+
 int
 main(int argc, char *argv[])
 {
@@ -133,6 +108,18 @@ main(int argc, char *argv[])
   AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
   deallog << "CUDA stack size has been set to " << stack_size << std::endl;
 
+  /**
+   * @internal Get GPU device properties.
+   */
+  AssertCuda(
+    cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
+
+  /**
+   * @internal Use 8-byte bank size in shared memory, since double value type is
+   * used.
+   */
+  // AssertCuda(cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte));
+
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
@@ -145,7 +132,7 @@ main(int argc, char *argv[])
     LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
     is_interior_problem, // is interior problem
     4,                   // n_min for cluster tree
-    32,                  // n_min for block cluster tree
+    4,                   // n_min for block cluster tree
     0.8,                 // eta for H-matrix
     5,                   // max rank for H-matrix
     0.01,                // aca epsilon for H-matrix
@@ -159,13 +146,42 @@ main(int argc, char *argv[])
 
   timer.start();
 
+  /**
+   * @internal Set the Dirac source location according to interior or exterior
+   * problem.
+   */
+  Point<spacedim> source_loc;
+
+  if (is_interior_problem)
+    {
+      source_loc = Point<spacedim>(1, 1, 1);
+    }
+  else
+    {
+      source_loc = Point<spacedim>(0.25, 0.25, 0.25);
+    }
+
+  const Point<spacedim> center(0, 0, 0);
+  const double          radius(1);
+
   if (argc > 1)
     {
       bem.read_volume_mesh(argv[1]);
     }
   else
     {
-      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere.msh");
+      Triangulation<spacedim> tria;
+      // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
+      GridGenerator::hyper_ball(tria, center, radius);
+      tria.refine_global(1);
+
+      bem.assign_volume_triangulation(std::move(tria), true);
+
+      Triangulation<dim, spacedim>           surface_tria;
+      const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
+      surface_tria.set_manifold(0, ball_surface_manifold);
+
+      bem.assign_surface_triangulation(std::move(surface_tria), true);
     }
 
   timer.stop();
@@ -173,28 +189,9 @@ main(int argc, char *argv[])
 
   timer.start();
 
-  /**
-   * @internal Set the Dirac source location according to interior or exterior
-   * problem.
-   */
-  Point<3> source_loc;
+  bem.set_alpha_for_neumann(1);
 
-  if (is_interior_problem)
-    {
-      source_loc = Point<3>(1, 1, 1);
-    }
-  else
-    {
-      source_loc = Point<3>(0.25, 0.25, 0.25);
-    }
-
-  const Point<3> center(0, 0, 0);
-  const double   radius(1);
-
-  DirichletBC dirichlet_bc(source_loc);
-  NeumannBC   neumann_bc(source_loc, center, radius);
-
-  bem.assign_dirichlet_bc(dirichlet_bc);
+  NeumannBC neumann_bc(source_loc, center, radius);
   bem.assign_neumann_bc(neumann_bc);
 
   timer.stop();
