@@ -3604,14 +3604,23 @@ namespace HierBEM
             // its rank.
             V1_hmat_preconditioner = V1_hmat;
 
-            V1_hmat_preconditioner.truncate_to_rank_preserve_positive_definite(
-              max_hmat_rank_for_preconditioner);
+            // Only when the \hmat actually has a hierarchical structure, the
+            // SPD preserving rank truncation will be performed. This excludes
+            // the case when @p V1 has a single root node, which is a full
+            // matrix.
+            if (V1_hmat_preconditioner.get_type() ==
+                HMatrixType::HierarchicalMatrixType)
+              {
+                V1_hmat_preconditioner
+                  .truncate_to_rank_preserve_positive_definite(
+                    max_hmat_rank_for_preconditioner);
+              }
 
             timer.stop();
             print_wall_time(deallog, timer, "truncate V");
 
             /**
-             * Perform Cholesky factorisation of the preconditioner.
+             * Perform Cholesky factorization of the preconditioner.
              */
             std::cout
               << "=== Cholesky factorization of the preconditioner for V ==="
@@ -3633,8 +3642,18 @@ namespace HierBEM
             // Directly make a copy of the existing \hmat and then truncate
             // its rank.
             D1_hmat_preconditioner = D1_hmat;
-            D1_hmat_preconditioner.truncate_to_rank_preserve_positive_definite(
-              max_hmat_rank_for_preconditioner);
+
+            // Only when the \hmat actually has a hierarchical structure, the
+            // SPD preserving rank truncation will be performed. This excludes
+            // the case when @p D1 has a single root node, which is a full
+            // matrix.
+            if (D1_hmat_preconditioner.get_type() ==
+                HMatrixType::HierarchicalMatrixType)
+              {
+                D1_hmat_preconditioner
+                  .truncate_to_rank_preserve_positive_definite(
+                    max_hmat_rank_for_preconditioner);
+              }
 
             timer.stop();
             print_wall_time(deallog, timer, "truncate D");
@@ -3666,24 +3685,50 @@ namespace HierBEM
             M12_in_preconditioner = K1_hmat;
             M22_in_preconditioner = D1_hmat;
 
-            M11_in_preconditioner.truncate_to_rank_preserve_positive_definite(
-              max_hmat_rank_for_preconditioner);
+            // Only when the \hmat actually has a hierarchical structure, the
+            // SPD preserving rank truncation will be performed. This excludes
+            // the case when @p M11 has a single root node, which is a full
+            // matrix.
+            if (M11_in_preconditioner.get_type() ==
+                HMatrixType::HierarchicalMatrixType)
+              {
+                M11_in_preconditioner
+                  .truncate_to_rank_preserve_positive_definite(
+                    max_hmat_rank_for_preconditioner);
+              }
 
             timer.stop();
             print_wall_time(deallog, timer, "truncate M11(==V1)");
 
             timer.start();
 
-            M12_in_preconditioner.truncate_to_rank(
-              max_hmat_rank_for_preconditioner);
+            // Only when the \hmat actually has a hierarchical structure, the
+            // rank truncation will be performed. This excludes
+            // the case when @p M12 has a single root node, which is a full
+            // matrix.
+            if (M12_in_preconditioner.get_type() ==
+                HMatrixType::HierarchicalMatrixType)
+              {
+                M12_in_preconditioner.truncate_to_rank(
+                  max_hmat_rank_for_preconditioner);
+              }
 
             timer.stop();
             print_wall_time(deallog, timer, "truncate M12(==K1)");
 
             timer.start();
 
-            M22_in_preconditioner.truncate_to_rank_preserve_positive_definite(
-              max_hmat_rank_for_preconditioner);
+            // Only when the \hmat actually has a hierarchical structure, the
+            // SPD preserving rank truncation will be performed. This excludes
+            // the case when @p M22 has a single root node, which is a full
+            // matrix.
+            if (M22_in_preconditioner.get_type() ==
+                HMatrixType::HierarchicalMatrixType)
+              {
+                M22_in_preconditioner
+                  .truncate_to_rank_preserve_positive_definite(
+                    max_hmat_rank_for_preconditioner);
+              }
 
             timer.stop();
             print_wall_time(deallog, timer, "truncate M22(==D1)");
