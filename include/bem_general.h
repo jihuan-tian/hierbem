@@ -786,6 +786,9 @@ namespace HierBEM
 
         ++pd;
       }
+
+    scratch_data.release();
+    per_task_data.release();
   }
 
 
@@ -932,6 +935,9 @@ namespace HierBEM
 
         ++pd;
       }
+
+    scratch_data.release();
+    per_task_data.release();
   }
 
 
