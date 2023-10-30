@@ -13,11 +13,19 @@
 namespace HierBEM
 {
   // Global definition of the random number device and generator.
+#if RANDOM_ACA
   std::random_device rd;
-#ifdef DEAL_II_WITH_64BIT_INDICES
+#  ifdef DEAL_II_WITH_64BIT_INDICES
   std::mt19937_64 rand_engine(rd());
-#else
+#  else
   std::mt19937 rand_engine(rd());
+#  endif
+#else
+#  ifdef DEAL_II_WITH_64BIT_INDICES
+  std::mt19937_64 rand_engine;
+#  else
+  std::mt19937 rand_engine;
+#  endif
 #endif
 
   size_type

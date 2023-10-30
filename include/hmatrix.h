@@ -14446,6 +14446,27 @@ namespace HierBEM
         release();
         copy_hmatrix_node((*this), std::move(H));
         H.clear_hmat_node();
+
+        /**
+         * \alert{When the block cluster node corresponding to the current \hmat
+         * node is the root node and the \hmat has no children, the leaf set
+         * should be rebuilt because it previously stored the \hmat node pointer
+         * of @p H.
+         *
+         * N.B. In \hmat algebraic operations, there will be the case that an
+         * \hmat node is created with respect to a non-root block cluster node.
+         * Even though the \hmat node itself has no parent, its associated block
+         * cluster node has parent. In this case, the leaf set will not be
+         * rebuilt.}
+         */
+        if (bc_node->is_root() && submatrices.size() == 0)
+          {
+            // When there is only one root node in the \hmat hierarchy, the
+            // \hmat type can only be @p FullMatrixType.
+            Assert(type == HMatrixType::FullMatrixType,
+                   ExcInvalidHMatrixType(type));
+            build_leaf_set();
+          }
       }
 
     return (*this);

@@ -7,14 +7,11 @@
  * @author Jihuan Tian
  * @date 2023-10-24
  */
-#include <catch2/catch_all.hpp>
-
 #include <iostream>
 
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
 
-using namespace Catch::Matchers;
 using namespace dealii;
 using namespace HierBEM;
 
@@ -54,13 +51,9 @@ private:
   Point<3> x0;
 };
 
-TEST_CASE(
-  "Solve Laplace Dirichlet problem using full matrix in a single thread",
-  "[baseline][laplace]")
+int
+main()
 {
-  INFO("*** test start");
-  CHECK(1 == 1);
-
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
@@ -112,8 +105,5 @@ TEST_CASE(
   deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
           << std::endl;
 
-  double result   = 0.5;
-  double expected = 0.5;
-  REQUIRE_THAT(result, WithinAbs(expected, 1e-6) || WithinRel(expected, 1e-8));
-  INFO("*** test end");
+  return 0;
 }

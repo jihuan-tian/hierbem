@@ -1,8 +1,11 @@
 /**
  * \file laplace-bem-neumann-full-matrix.cc
  * \brief Verify solving the Laplace problem with Neumann boundary condition
- * using full matrix based BEM. \ingroup testers \author Jihuan Tian \date
- * 2022-09-19
+ * using full matrix based BEM.
+ *
+ * \ingroup testers
+ * \author Jihuan Tian
+ * \date 2022-09-19
  */
 
 #include <deal.II/base/logstream.h>
@@ -15,42 +18,6 @@
 
 using namespace dealii;
 using namespace HierBEM;
-
-/**
- * Function object for the Dirichlet boundary condition data, which is
- * also the solution of the Neumann problem. The analytical expression is:
- * \f[
- * u=\frac{1}{4\pi\norm{x-x_0}}
- * \f]
- */
-class DirichletBC : public Function<3>
-{
-public:
-  // N.B. This function should be defined outside class NeumannBC or class
-  // Example2, if no inline.
-  DirichletBC()
-    : Function<3>()
-    , x0(0.25, 0.25, 0.25)
-  {}
-
-  DirichletBC(const Point<3> &x0)
-    : Function<3>()
-    , x0(x0)
-  {}
-
-  double
-  value(const Point<3> &p, const unsigned int component = 0) const
-  {
-    (void)component;
-    return 1.0 / 4.0 / numbers::PI / (p - x0).norm();
-  }
-
-private:
-  /**
-   * Location of the Dirac point source \f$\delta(x-x_0)\f$.
-   */
-  Point<3> x0;
-};
 
 /**
  * Function object for the Neumann boundary condition data, which is also
@@ -100,7 +67,7 @@ private:
 };
 
 int
-main()
+main(int argc, char *argv[])
 {
   // Write run-time logs to file
   std::ofstream ofs("hierbem.log");
@@ -114,26 +81,55 @@ main()
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
+  const bool                is_interior_problem = false;
   LaplaceBEM<dim, spacedim> bem(
     1,
     0,
     1,
     1,
     LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
-    false,
+    is_interior_problem,
     MultithreadInfo::n_cores());
-  bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "sphere.msh");
 
-  bem.set_alpha_for_neumann(1);
+  /**
+   * @internal Set the Dirac source location according to interior or exterior
+   * problem.
+   */
+  Point<spacedim> source_loc;
 
-  const Point<3> source_loc(0.25, 0.25, 0.25);
-  const Point<3> center(0, 0, 0);
-  const double   radius(1);
+  if (is_interior_problem)
+    {
+      source_loc = Point<spacedim>(1, 1, 1);
+    }
+  else
+    {
+      source_loc = Point<spacedim>(0.25, 0.25, 0.25);
+    }
 
-  DirichletBC dirichlet_bc(source_loc);
-  NeumannBC   neumann_bc(source_loc, center, radius);
+  const Point<spacedim> center(0, 0, 0);
+  const double          radius(1);
 
-  bem.assign_dirichlet_bc(dirichlet_bc);
+  if (argc > 1)
+    {
+      bem.read_volume_mesh(argv[1]);
+    }
+  else
+    {
+      Triangulation<spacedim> tria;
+      // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
+      GridGenerator::hyper_ball(tria, center, radius);
+      tria.refine_global(1);
+
+      bem.assign_volume_triangulation(std::move(tria), true);
+
+      Triangulation<dim, spacedim>           surface_tria;
+      const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
+      surface_tria.set_manifold(0, ball_surface_manifold);
+
+      bem.assign_surface_triangulation(std::move(surface_tria), true);
+    }
+
+  NeumannBC neumann_bc(source_loc, center, radius);
   bem.assign_neumann_bc(neumann_bc);
 
   bem.run();

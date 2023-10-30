@@ -15,8 +15,8 @@
 
 #include "cu_profile.hcu"
 #include "debug_tools.hcu"
-#include "laplace_bem.h"
 #include "hbem_test_config.h"
+#include "laplace_bem.h"
 
 using namespace dealii;
 using namespace HierBEM;
@@ -98,25 +98,18 @@ main(int argc, char *argv[])
     1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem, // is interior problem
-    64,                  // n_min for cluster tree
-    64,                  // n_min for block cluster tree
+    4,                   // n_min for cluster tree
+    4,                   // n_min for block cluster tree
     0.8,                 // eta for H-matrix
-    20,                  // max rank for H-matrix
-    0.001,               // aca epsilon for H-matrix
+    5,                   // max rank for H-matrix
+    0.01,                // aca epsilon for H-matrix
     1.0,                 // eta for preconditioner
     2,                   // max rank for preconditioner
     0.1,                 // aca epsilon for preconditioner
-    MultithreadInfo::n_cores());
-
-  //  // Use full matrix solver.
-  //  LaplaceBEM<dim, spacedim> bem(
-  //    1, // fe order for dirichlet space
-  //    0, // fe order for neumann space
-  //    1, // mapping order for dirichlet domain
-  //    1, // mapping order for neumann domain
-  //    LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
-  //    is_interior_problem,
-  //    MultithreadInfo::n_cores());
+    1 // Use a single thread to make ACA deterministic. The assembly of near
+      // field H-matrix nodes still use multiple threads for running the
+      // producer-consumer model.
+  );
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
@@ -129,15 +122,81 @@ main(int argc, char *argv[])
     }
   else
     {
-      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "two-spheres.msh");
+      Triangulation<spacedim> left_ball, right_ball, tria;
+      double                  inter_distance = 8;
+      double                  radius         = 1.0;
+
+      GridGenerator::hyper_ball(left_ball,
+                                Point<spacedim>(-inter_distance / 2.0, 0, 0),
+                                radius);
+      GridGenerator::hyper_ball(right_ball,
+                                Point<spacedim>(inter_distance / 2.0, 0, 0),
+                                radius);
+
+      /**
+       * @internal Set different manifold ids and material ids to all the cells
+       * in the two balls.
+       */
+      for (typename Triangulation<spacedim>::active_cell_iterator cell =
+             left_ball.begin_active();
+           cell != left_ball.end();
+           cell++)
+        {
+          cell->set_all_manifold_ids(0);
+          cell->set_material_id(0);
+        }
+
+      for (typename Triangulation<spacedim>::active_cell_iterator cell =
+             right_ball.begin_active();
+           cell != right_ball.end();
+           cell++)
+        {
+          cell->set_all_manifold_ids(1);
+          cell->set_material_id(1);
+        }
+
+      /**
+       * @internal @p merge_triangulation can only operate on coarse mesh, i.e.
+       * triangulations not refined. During the merging, the material ids are
+       * copied. When the last argument is true, the manifold ids are copied.
+       * Boundary ids will not be copied.
+       */
+      GridGenerator::merge_triangulations(
+        left_ball, right_ball, tria, 1e-12, true);
+
+      /**
+       * @internal Assign manifold objects to the two balls in the merged mesh.
+       */
+      const SphericalManifold<spacedim> left_ball_manifold(
+        Point<spacedim>(-inter_distance / 2.0, 0, 0));
+      const SphericalManifold<spacedim> right_ball_manifold(
+        Point<spacedim>(inter_distance / 2.0, 0, 0));
+
+      tria.set_manifold(0, left_ball_manifold);
+      tria.set_manifold(1, right_ball_manifold);
+
+      // Refine the volume mesh.
+      tria.refine_global(1);
+
+      bem.assign_volume_triangulation(std::move(tria), true);
+
+      // Extract the boundary mesh. N.B. Before the operation, the association
+      // of manifold objects and manifold ids must also be set for the surface
+      // triangulation. The manifold objects for the surface triangulation have
+      // different dimension template paramreters as those for the volume
+      // triangulation.
+      Triangulation<dim, spacedim> surface_tria;
+
+      const SphericalManifold<dim, spacedim> left_ball_surface_manifold(
+        Point<spacedim>(-inter_distance / 2.0, 0, 0));
+      const SphericalManifold<dim, spacedim> right_ball_surface_manifold(
+        Point<spacedim>(inter_distance / 2.0, 0, 0));
+
+      surface_tria.set_manifold(0, left_ball_surface_manifold);
+      surface_tria.set_manifold(1, right_ball_surface_manifold);
+
+      bem.assign_surface_triangulation(std::move(surface_tria), true);
     }
-
-  // // Generate the mesh for the two spheres using deal.ii.
-  // bem.generate_volume_mesh();
-
-  //  // Read independent Gmsh files for the two spheres then merge them in
-  //  deal.ii.
-  // bem.read_two_spheres();
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
@@ -146,7 +205,6 @@ main(int argc, char *argv[])
 
   // Assign constant Dirichlet boundary conditions.
   DirichletBC dirichlet_bc;
-
   bem.assign_dirichlet_bc(dirichlet_bc);
 
   timer.stop();

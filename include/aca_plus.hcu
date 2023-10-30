@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "bem_kernels.hcu"
+#include "config.h"
 #include "cu_bem_values.hcu"
 #include "cu_table.hcu"
 #include "debug_tools.hcu"
@@ -50,7 +51,10 @@ namespace HierBEM
   /**
    * Global declaration of the random number device and engine.
    */
+#if RANDOM_ACA
   extern std::random_device rd;
+#endif
+
 #ifdef DEAL_II_WITH_64BIT_INDICES
   extern std::mt19937_64 rand_engine;
 #else
@@ -5313,13 +5317,13 @@ namespace HierBEM
               }
 
             deallog << "uk.l2_norm() * vk.l2_norm(): "
-                      << uk.l2_norm() * vk.l2_norm() << "\n"
-                      << "error_threshold: " << error_threshold << std::endl;
+                    << uk.l2_norm() * vk.l2_norm() << "\n"
+                    << "error_threshold: " << error_threshold << std::endl;
           }
         else
           {
             deallog << "uk.l2_norm() * vk.l2_norm(): "
-                      << uk.l2_norm() * vk.l2_norm() << std::endl;
+                    << uk.l2_norm() * vk.l2_norm() << std::endl;
           }
 
         if ((k > 1) && (uk.l2_norm() * vk.l2_norm() <= error_threshold))
@@ -5365,7 +5369,7 @@ namespace HierBEM
      */
     // DEBUG
     deallog << "All columns in the rank-k matrix have been filled!"
-              << std::endl;
+            << std::endl;
   }
 
 
@@ -6904,8 +6908,7 @@ namespace HierBEM
     const bool enable_build_symmetric_hmat = false)
   {
     const std::thread::id current_thread_id = std::this_thread::get_id();
-    deallog << "WorkStream " << current_thread_id << " starts..."
-              << std::endl;
+    deallog << "WorkStream " << current_thread_id << " starts..." << std::endl;
 
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
@@ -7017,8 +7020,7 @@ namespace HierBEM
     const bool enable_build_symmetric_hmat = false)
   {
     const std::thread::id current_thread_id = std::this_thread::get_id();
-    deallog << "WorkStream " << current_thread_id << " starts..."
-              << std::endl;
+    deallog << "WorkStream " << current_thread_id << " starts..." << std::endl;
 
     /**
      * Define @p PairCellWiseScratchData and @p PairCellWisePerTaskData which
