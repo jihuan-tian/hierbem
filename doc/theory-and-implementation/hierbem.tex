@@ -862,6 +862,7 @@ vector $v$, i.e. it projects $v$ to the $i$-th coordinate axis.
 \end{Proposition}
 
 \subsection{0-form}
+\label{sec:0-form}
 
 \begin{Definition}[0-form]
   Let $M^n$ be an $n$-dimensional manifold which contains the point $p$. A scalar function
@@ -874,6 +875,7 @@ vector $v$, i.e. it projects $v$ to the $i$-th coordinate axis.
 \end{Definition}
 
 \subsection{Covector (1-form) and cotangent space}
+\label{sec:1-form}
 
 \begin{Definition}[Cotangent space]
   Let $M^n$ be an $n$-dimensional manifold which contains the point $p$. $M_p^n$ is the
@@ -1014,6 +1016,55 @@ Similarly,
 \begin{equation}
   \left[ \frac{\pdiff x_U}{\pdiff x_V} \right] \cdot \left[ \frac{\pdiff x_V}{\pdiff x_U} \right] = I_m.
 \end{equation}
+
+\subsection{Conventions for super and subscripts}
+
+This section summarizes the conventions for superscripts and subscripts used to indicate
+the component of a vector and the index of a basis vector in both tangent space and
+cotangent space.
+
+Let $v$ be a tangent vector in the tangent space $M_p^n$ and $\alpha$ a cotangent vector
+in the cotangent space $M_p^{n*}$. The basis of $M_p^n$ is
+$\left\{ \vect{\pdiff}x^i \right\}_{i=1}^n$. The basis of $M_p^{n*}$ is
+$\left\{ dx^i \right\}_{i=1}^n$. Superscripts are adopted for
+\begin{enumerate}
+\item a component of the tangent vector $v$: $v^i$
+\item index of a basis vector in the tangent space: $\vect{\pdiff}x^i$. \emph{N.B. The
+    superscript $i$ used here is only formal. In fact, $\vect{\pdiff}x^i$ is short for
+    $\frac{\pdiff}{\pdiff x^i}$. The superscript $i$ assigned to $x$ appears in the
+    denominator, which can be considered as a subscript to index the basis vectors.}
+\item index of a basis vector in the cotangent space: $dx^i$
+\end{enumerate}
+Subscripts are adopted for a component of the covariant vector $\alpha$: $a_i$.
+
+When a vector component or basis vector has been assigned a superscript (subscript), we
+can explicitly specify the coordinate chart this entity is using via the unused subscript
+(superscript). For example, $v_U^{i}$ is the $i$-th component of the tangent vector $v$,
+when the coordinate chart $(U,x_U)$ is adopted. $a_i^U$ is the $i$-th component of the
+cotangent vector $\alpha$ and $\vect{\pdiff}x_U^i$ is the $i$-th basis vector in this
+chart.
+
+The reason for bothering with the above conventions is to use these formal symbols to
+explicitly embody the duality between a tangent space and a cotangent space.
+
+\subsection{Conventions for row and column vectors}
+
+This section summarizes the conventions for using row or column vectors to represent
+tangent and cotangent vectors as well as basis vectors in matrix form.
+
+Row vectors are adopted for
+\begin{itemize}
+\item a covariant vector $\alpha$
+\item a basis vector $\vect{\pdiff}x^i$ of the tangent space
+\end{itemize}
+Column vectors are adopted for
+\begin{itemize}
+\item a tangent vector $v$
+\item a basis vector $dx^i$ of the cotangent space
+\end{itemize}
+
+Like sub and superscripts, row and column vectors are adopted to explicitly embody the
+duality between a tangent space and a cotangent space.
 
 \section{Tensor and differential forms}
 
@@ -1322,6 +1373,96 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
   This is consistent with the result in a classical electrodynamics book such as
   \citep{GriffithsIntroduction1999}.
 \end{Example}
+
+\subsection{General definition of tensors}
+
+\subsubsection{Covariant tensor}
+
+1-form introduced in Section \ref{sec:1-form} is a linear functional in the cotangent
+(covariant) space, which is dual to the tangent (contravariant) space. The application of
+a 1-form to a tangent vector produces a scalar value. The concept of tensor is a
+generalization of 1-form. Instead of operating on a single tangent vector, a tensor $Q$ is
+a \emph{multilinear} functional operating on $r$ tangent vectors, $v_1, \cdots, v_r$. The
+collection of this sequence of $r$ tangent vectors is called a $r$-vector, which belongs
+to the Cartesian product of $r$ tangent spaces $M_p^n$, i.e. $\otimes^r M_p^n$. Then this
+tensor $Q$ has a rank $r$ and belongs to the dual space of $\otimes^r M_p^n$, i.e.
+$\left( \otimes^r M_p^n \right)^*r$, which is a Cartesian product of $r$ cotangent spaces
+$M_p^{n*}$,
+\begin{equation}
+  \left( \otimes^r M_p^n \right)^* = \otimes^r M_p^{n*}.
+\end{equation}
+Because $Q$ belongs to the dual space or product of cotangent spaces, it is called a
+covariant tensor.
+
+\begin{Definition}[Covariant tensor]
+  An $r$-th rank covariant tensor $Q$ is a multilinear functional operating on the product
+  tangent spaces $\otimes^r M_p^n$, i.e. $Q: \otimes^r M_p^n \rightarrow \mathbb{R}$.
+\end{Definition}
+Therefore, a 1-form can be considered as a rank-1 tensor, which is a degenerate case.
+
+For any $v_1, \cdots, v_r$ in $M_p^n$, using multilinearity, we have
+\begin{equation}
+  \begin{aligned}
+    Q(v_1,\cdots,v_r) &= Q(\sum_{i_1}v_1^{i_1} \vect{\pdiff}x^{i_1}, \cdots,
+    \sum_{i_r}v_r^{i_r} \vect{\pdiff}x^{i_r}) \\
+    &= \sum_{i_1}v_1^{i_1} Q(\vect{\pdiff}x^{i_1},\cdots,\sum_{i_r}v_r^{i_r}\vect{\pdiff}x^{i_r}) \\
+    &= \sum_{i_1}\cdots\sum_{i_r}v_1^{i_1}\cdots v_r^{i_r}
+    Q(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r}),
+  \end{aligned}
+\end{equation}
+where we use $i_k$ as the index to iterative over each component of the $k$-th tangent
+vector $v_k$ for $k=1,\cdots,r$. Let
+$Q_{i_1\cdots i_r}= Q(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r})$, which is the
+application of $Q$ to a basis vector of the product tangent space. Using the Einstein
+summation notation (i.e. the summation symbol $\sum_{i_k}$ with respect to an index $i_k$
+can be omitted whenever there is a pair of subscript $i_k$ and superscript $i_k$ appearing
+in the summand), we have
+\begin{equation}
+  \label{eq:covariant-tensor-applied-to-r-vectors}
+  Q(v_1,\cdots,v_r) = v_1^{i_1}\cdots v_r^{i_r} Q(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r}).
+\end{equation}
+
+An $r$-th rank covariant tensor $Q$ can also be considered as a \emph{tensor product} of
+$r$ 1-forms. Let $\alpha^1,\cdots,\alpha^r$ be 1-forms in $M_p^{n*}$, their tensor product
+is $\otimes_i\alpha^i: \otimes^r M_p^n \rightarrow \mathbb{R}$, which is a multilinear
+functional on the Cartesian product of $r$ tangent spaces $M_p^n$. For any
+$v_1, \cdots, v_r$ in $M_p^n$,
+\begin{equation}
+  \left(\otimes_i\alpha^i\right)(v_1,\cdots,v_r) = \prod_i \alpha^i(v_i).
+\end{equation}
+Apply $\otimes_i\alpha^i$ to $\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}$, we have
+\begin{equation}
+  \left( \otimes_i\alpha^i \right)(\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}) =
+  \prod_i\alpha^i(\vect{\pdiff}x^{k_i}) = \prod_i \alpha_{k_i}^{i}.
+\end{equation}
+Then expand $\prod_i \alpha^i(v_i)$:
+\begin{equation}
+  \begin{aligned}
+    \prod_i \alpha^i(v_i) &= \prod_i \alpha^i\left( \sum_{k_i}v_i^{k_i}
+      \vect{\pdiff}x^{k_i} \right) = \prod_i \sum_{k_i}v_i^{k_i}
+    \alpha^i(\vect{\pdiff}x^{k_i}) = \prod_i \sum_{k_i} v_i^{k_i} \alpha_{k_i}^i \\
+    &= \sum_{k_1}\cdots\sum_{k_r} v_1^{k_1}\cdots v_r^{k_r}
+    \alpha_{k_1}^1\cdots\alpha_{k_r}^r = v_1^{k_1}\cdots v_r^{k_r} \left(
+      \otimes_i\alpha^i \right)(\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}).
+  \end{aligned}
+\end{equation}
+This means the construction of a $r$-rank covariant tensor via tensor product of $r$
+1-forms is consistent with Equation (\ref{eq:covariant-tensor-applied-to-r-vectors}).
+
+\subsubsection{Contravariant tensor}
+
+\subsubsection{Mixed tensor}
+
+\subsubsection{Conventions for super and subscripts}
+
+This section summarizes the conventions for subscripts and superscripts used to indicate
+the component of a tensor.
+
+ component of the inverse of the metric tensor contravariant tensor: e.g. $g^{ji}$, the inverse of the metric
+    tensor that transforms a covector to a contravariant vector,
+    i.e. the subscript is promoted to a superscript.
+
+\subsection{Coordinate transformation of tensors}
 
 \chapter{Sauter quadrature}
 \label{sec:sauter-quad}
