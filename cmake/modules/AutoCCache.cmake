@@ -1,5 +1,7 @@
 option(AUTO_CCACHE "Use ccache to speed up rebuilds" ON)
+
 find_program(CCACHE_PROGRAM ccache)
+
 if(CCACHE_PROGRAM AND ${AUTO_CCACHE})
   message(STATUS "Using ${CCACHE_PROGRAM} as compiler launcher")
   set(ENV{CCACHE_SLOPPINESS} "pch_defines,time_macros")

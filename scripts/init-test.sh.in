@@ -92,16 +92,16 @@ fi
 # CMakeList.txt template using dealii testing framework
 cmakelist_dealii_template=$(
     cat <<EOF
-SET(TEST_TARGET ${test_target_name})
+set(TEST_TARGET ${test_target_name})
 
 # Link TEST_TARGET to my generic_tools library.
-SET(TEST_LIBRARIES
+set(TEST_LIBRARIES
     generic_tools
     boost_program_options
     dl  # Lazy way: always link with libdl no matter if CUDA is used or not
 )
 
-DEAL_II_PICKUP_TESTS()
+deal_ii_pickup_tests()
 EOF
 )
 # CMakeList.txt template using Catch2 testing framework
@@ -109,17 +109,17 @@ cmakelist_catch2_template=$(
     cat <<EOF
 # Target should contains 'test' substring in any cases in order to be
 # found by Visual Studio Code's TestMate extension
-SET(_target test-${test_target_name})
+set(_target test-${test_target_name})
 
-ADD_EXECUTABLE(\${_target} ${src_filename})
+add_executable(\${_target} ${src_filename})
 
 # Allow target to include deal.ii header files
-DEAL_II_SETUP_TARGET(\${_target})
+deal_ii_setup_target(\${_target})
 
 # Define SOURCE_DIR macro to be used in the source files
-TARGET_COMPILE_DEFINITIONS(\${_target} PUBLIC SOURCE_DIR="\${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(\${_target} PUBLIC SOURCE_DIR="\${CMAKE_CURRENT_SOURCE_DIR}")
 
-TARGET_LINK_LIBRARIES(
+target_link_libraries(
     \${_target}
     generic_tools
     boost_program_options
@@ -128,9 +128,9 @@ TARGET_LINK_LIBRARIES(
 )
 
 # Discover Catch2 testcases
-INCLUDE(CTest)
-INCLUDE(Catch)
-CATCH_DISCOVER_TESTS(\${_target})
+include(CTest)
+include(Catch)
+catch_discover_tests(\${_target})
 EOF
 )
 
