@@ -485,6 +485,7 @@ The Jacobi matrix is
 \end{Definition}
 
 \subsection{Directional derivative}
+\label{sec:directional-derivative}
 
 \begin{Definition}[Directional derivative of a function with respect to a vector]
   Let $\vect{v}$ be a vector and $f$ a scalar function. The directional derivative of $f$
@@ -962,6 +963,7 @@ where $dx_V = (dx_V^1,\cdots,dx_V^n)^{\mathrm{T}}$ and $dx_U = (dx_U^1,\cdots,dx
 
 
 \subsubsection{Coordinate transformation of a covector in the cotangent space}
+\label{sec:covector-transformation}
 
 Let $\alpha$ be a 1-form in the cotangent space $M_p^{n*}$. In the coordinate chart
 $(V,x_V)$, it can be expanded as
@@ -1419,11 +1421,11 @@ can be omitted whenever there is a pair of subscript $i_k$ and superscript $i_k$
 in the summand), we have
 \begin{equation}
   \label{eq:covariant-tensor-applied-to-r-vectors}
-  Q(v_1,\cdots,v_r) = v_1^{i_1}\cdots v_r^{i_r} Q(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r}).
+  Q(v_1,\cdots,v_r) = v_1^{i_1}\cdots v_r^{i_r} Q_{i_1 \cdots i_r}.
 \end{equation}
 
 An $r$-th rank covariant tensor $Q$ can also be considered as a \emph{tensor product} of
-$r$ 1-forms. Let $\alpha^1,\cdots,\alpha^r$ be 1-forms in $M_p^{n*}$, their tensor product
+$r$ 1-forms. Let $\alpha^1,\cdots,\alpha^r$ be $r$ 1-forms in $M_p^{n*}$, their tensor product
 is $\otimes_i\alpha^i: \otimes^r M_p^n \rightarrow \mathbb{R}$, which is a multilinear
 functional on the Cartesian product of $r$ tangent spaces $M_p^n$. For any
 $v_1, \cdots, v_r$ in $M_p^n$,
@@ -1435,7 +1437,12 @@ Apply $\otimes_i\alpha^i$ to $\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}$,
   \left( \otimes_i\alpha^i \right)(\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}) =
   \prod_i\alpha^i(\vect{\pdiff}x^{k_i}) = \prod_i \alpha_{k_i}^{i}.
 \end{equation}
-Then expand $\prod_i \alpha^i(v_i)$:
+Then expand $\prod_i \alpha^i(v_i)$\footnote{Originally, we may want to expand it like this:
+  $\prod_i \alpha^i(v_i) = \prod_i \alpha^i\left( \sum_k v_i^k \vect{\pdiff}x^k \right) =
+  \prod_i \sum_k v_i^k \alpha^i(\vect{\pdiff}x^k)$. However, this hides the fact that for
+  each multiplier in the product, its summation index is independent from others.
+  Therefore, the summation index $k$ for the $i$-th multiplier should have a subscript $i$
+  to distinguish it from others.}:
 \begin{equation}
   \begin{aligned}
     \prod_i \alpha^i(v_i) &= \prod_i \alpha^i\left( \sum_{k_i}v_i^{k_i}
@@ -1446,23 +1453,188 @@ Then expand $\prod_i \alpha^i(v_i)$:
       \otimes_i\alpha^i \right)(\vect{\pdiff}x^{k_1},\cdots,\vect{\pdiff}x^{k_r}).
   \end{aligned}
 \end{equation}
-This means the construction of a $r$-rank covariant tensor via tensor product of $r$
+This means the construction of a $r$-th rank covariant tensor via tensor product of $r$
 1-forms is consistent with Equation (\ref{eq:covariant-tensor-applied-to-r-vectors}).
+
+Since a covariant tensor is constructed from the tensor product of $r$ 1-forms, a basis
+vector of the covariant tensor space can be constructed via a tensor product of the bases
+for all the cotangent spaces in which the $r$ 1-forms reside. Therefore,
+$dx^{i_1}\otimes\cdots\otimes dx^{i_r}$ is a basis vector of the covariant tensor space
+and the tensor $Q$ can be represented as
+\begin{equation}
+  \label{eq:covariant-tensor-expanded-as-tensor-product}
+  Q = Q_{i_1\cdots i_r} dx^{i_1}\otimes\cdots\otimes dx^{i_r}.
+\end{equation}
+It can be shown that this definition of $Q$ is consistent with Equation
+(\ref{eq:covariant-tensor-applied-to-r-vectors}) by applying it to $v_1,\cdots,v_r$:
+\begin{equation}
+  Q(v_1,\cdots,v_r) = Q_{i_1\cdots i_r} dx^{i_1}\otimes\cdots\otimes
+  dx^{i_r}(v_1,\cdots,v_r) = Q_{i_1\cdots i_r} dx^{i_1}(v_1)\cdots dx^{i_r}(v_r) =
+  Q_{i_1\cdots i_r} v_1^{i_1}\cdots v_r^{i_r}.
+\end{equation}
+Because the summation indices $i_1,\cdots,i_r$ are independent from each other and each of
+them have $n$ terms, the dimension of the covariant tensor space is $n^r$.
+
+\begin{Remark}
+  From a programming point of view, the tensor product operation related to an $r$-th rank
+  tensor is actually nested $r$ loops.
+  \begin{breakablealgorithm}
+  \begin{algorithmic}[1]
+    \For {$i_1 \coloneqq 1,\cdots,n$}
+      \For {$i_2 \coloneqq 1,\cdots,n$}
+        \State {$\cdots$}
+        \For {$i_r \coloneqq 1,\cdots,n$}
+          \State {Compute a component of the tensor.}
+        \EndFor
+      \EndFor
+    \EndFor
+  \end{algorithmic}
+  \end{breakablealgorithm}
+\end{Remark}
 
 \subsubsection{Contravariant tensor}
 
+\begin{Definition}[Contravariant tensor]
+  An $r$-th rank contravariant tensor $T$ is a multilinear real valued function on $s$
+  1-forms, i.e. $T: \otimes^s M_p^{n*} \rightarrow \mathbb{R}$.
+\end{Definition}
+Actually, an $r$-th rank contravariant tensor $T$ is also a multilinear functional on the
+product of cotangent spaces. A cotangent space is the dual space of a tangent space, which
+is the set of all linear functionals on the tangent space. Similarly, the product of
+cotangent spaces is the dual space of the product of tangent spaces. Now, the tensor $T$
+belongs to the dual space of the product of cotangent spaces, i.e.
+$\left( \otimes^s M_p^{n*} \right)^{*}$. Hence it is actually the dual of the dual space
+of the product of tangent spaces, i.e. $\left( \otimes^s M_p^n \right)^{**}$. According to
+functional analysis theory, the original product of tangent spaces $\otimes^s M_p^n$ is an
+embedding into the dual of dual space $\left( \otimes^s M_p^n \right)^{**}$.\footnote{An
+  embedding is an injective map, which preserves the linear structure of the space.} When
+$\otimes^s M_p^n$ is a finite dimensional space, the embedding is an isomorphism, which
+means the map from $\otimes^s M_p^n$ to $\left( \otimes^s M_p^n \right)^{**}$ is bijective
+which preserves the linear structure. Therefore, $\otimes^s M_p^n$ and
+$\left( \otimes^s M_p^n \right)^{**}$ are identical. In this case, the product space
+$\otimes^s M_p^n$ is called a \emph{reflexive} space.
+
+Similar to applying $Q$ to a tuple of tangent vectors, we apply $T$ to $s$ 1-forms
+$\alpha^1,\cdots,\alpha^s$,
+\begin{equation}
+  \label{eq:contravariant-tensor-applied-to-s-1-forms}
+  T(\alpha^1,\cdots,\alpha^s) = T(\sum_{i_1}\alpha_{i_1}^1 dx^{i_1}, \cdots,
+  \sum_{i_s}\alpha_{i_s}^s dx^{i_s}) = \alpha_{i_1}^1\cdots\alpha_{i_s}^s T^{i_1 \cdots i_s},
+\end{equation}
+where $T^{i_s\cdots i_s}$ is the application of $T$ to a basis vector of the product
+cotangent space $T(dx^{i_1},\cdots,dx^{i_s})$.
+
+$T$ can also be constructed from the tensor product of $s$ tangent vectors. Let
+$v_1,\cdots,v_s$ be $s$ tangent vectors in $M_p^n$. Their tensor product is
+$\otimes_i v_i: \prod_i M_p^{n*} \rightarrow \mathbb{R}$, which is a multilinear
+functional on the product of $s$ cotangent spaces $M_p^{n*}$. For any
+$\alpha^1,\cdots,\alpha^s$ in $M_p^{n*}$,
+\begin{equation}
+  \left( \otimes_i v_i \right)(\alpha^1,\cdots,\alpha^s) = \prod_i v_i(\alpha^i) = \prod_i
+  \alpha^i(v_i).
+\end{equation}
+Apply $\otimes_iv_i$ to the tuple of basis vectors $dx^{k_1},\cdots,dx^{k_s}$, we have
+\begin{equation}
+  \left( \otimes_i v_i \right)(dx^{k_1},\cdots,dx^{k_s}) = \prod_i v_i(dx^{k_i}) = \prod_i
+  dx^{k_i}(v_i) = \prod_i v_i^{k_i}.
+\end{equation}
+Then expand $\prod_i v_i(\alpha^i)$:
+\begin{equation}
+  \begin{aligned}
+    \prod_i v_i(\alpha^i) &= \prod_i v_i \left( \sum_{k_i}\alpha_{k_i}^i dx^{k_i} \right)
+    = \prod_i\sum_{k_i} \alpha_{k_i}^iv_i(dx^{k_i}) = \prod_i\sum_{k_i}\alpha_{k_i}^i
+    dx^{k_i}(v_i) \\
+    &= \prod_i\sum_{k_i} \alpha_{k_i}^i v_i^{k_i} =
+    \sum_{k_1}\cdots\sum_{k_s}\alpha_{k_1}^1\cdots\alpha_{k_s}^s v_1^{k_1}\cdots v_s^{k_s} \\
+    &= \alpha_{k_s}^1\cdots\alpha_{k_s}^s \otimes_iv_i(dx^{k_1},\cdots,dx^{k_s}).
+  \end{aligned}
+\end{equation}
+Since a contravariant tensor is constructed from the tensor product of $s$ tangent
+vectors, a basis vector of the contravariant tensor space can be represented as the tensor
+product of the bases for all the tangent spaces in which the $s$ tangent vectors reside.
+Therefore, $\vect{\pdiff}x^{i_1}\otimes\cdots\otimes \vect{\pdiff}x^{i_s}$ is a basis
+vector of the contravariant tensor space and the tensor $T$ can be represented as
+\begin{equation}
+  \label{eq:contravariant-tensor-expanded-as-tensor-product}
+  T = T^{i_1\cdots i_s} \vect{\pdiff}x^{i_1}\otimes\cdots\otimes \vect{\pdiff}x^{i_s}.
+\end{equation}
+
 \subsubsection{Mixed tensor}
+
+\begin{Definition}[Mixed tensor]
+  A mixed tensor $W$, which has contravariant rank $s$ and covariant rank $r$, is a
+  multilinear real valued function on $s$ 1-forms and $r$ tangent vectors, i.e.
+  $W:\left( \otimes^s M_p^{n*} \right) \otimes \left( \otimes^r M_p^n \right) \rightarrow
+  \mathbb{R}$.
+\end{Definition}
+Hence $W$ belongs to the dual space of the product space
+$\left( \otimes^s M_p^{n*} \right) \otimes \left( \otimes^r M_p^n \right)$.
+
+Similar as before, apply $W$ to a basis vector of this product space,
+$(dx^{i_1},\cdots,dx^{i_s},\vect{\pdiff}x^{j_1},\cdots,\vect{\pdiff}x^{j_r})$, we obtain
+\begin{equation}
+  W^{i_1\cdots i_s}_{j_1\cdots j_r} = W(dx^{i_1},\cdots,dx^{i_s},\vect{\pdiff}x^{j_1},\cdots,\vect{\pdiff}x^{j_r}).
+\end{equation}
+Then
+\begin{equation}
+  W(\alpha^1,\cdots,\alpha^s,v_1,\cdots,v_r) = \alpha_{i_1}^1\cdots \alpha_{i_s}^s
+  W^{i_1\cdots i_s}_{j_1\cdots j_r} v_1^{j_1}\cdots v_r^{j_r}.
+\end{equation}
+There are altogether $r+s$ summations in this expression.
+
+Similar as the expansion of a covariant or contravariant tensor, a mixed tensor can be
+represented as
+\begin{equation}
+  \label{eq:mixed-tensor-expanded-as-tensor-product}
+  W = W^{i_1\cdots i_s}_{j_1\cdots j_r} \vect{\pdiff}x^{i_1}\otimes\cdots\otimes
+  \vect{\pdiff}x^{i_s}\otimes dx^{j_1}\otimes\cdots\otimes dx^{j_r}.
+\end{equation}
 
 \subsubsection{Conventions for super and subscripts}
 
 This section summarizes the conventions for subscripts and superscripts used to indicate
 the component of a tensor.
 
- component of the inverse of the metric tensor contravariant tensor: e.g. $g^{ji}$, the inverse of the metric
-    tensor that transforms a covector to a contravariant vector,
-    i.e. the subscript is promoted to a superscript.
+Generally speaking, a tensor is a multilinear functional on a product space comprising of
+a few cotangent spaces and/or tangent spaces. When a component vector in the product space
+to be operated by the tensor is covariant, the coefficients of which are indexed by subscripts, then
+the tensor coefficients will have a corresponding superscript. On the contrary, when a
+component vector in the product space to be operated by the tensor is contravariant, the
+coefficients of which are indexed by superscripts, then the tensor coefficients will have
+corresponding subscript.
 
 \subsection{Coordinate transformation of tensors}
+
+Because a tensor is the generalization of the concept of a tangent vector and 1-form via
+tensor product, its coordinate transformation is also a generalization of the
+transformation for a tangent vector (see Section \ref{sec:directional-derivative}) and
+1-form (see Section \ref{sec:covector-transformation}).
+
+Let $(U,x_U)$ and $(V,x_V)$ be two coordinate charts having non-empty overlap. We use
+indices $r\cdots s$ and $c\cdots d$ for quantities in the chart $(U,x_U)$ and use indices
+$i\cdots j$ and $k\cdots l$ for $(V,x_V)$.
+\begin{itemize}
+\item Coordinate transformation of a covariant tensor
+  \begin{equation}
+    \label{eq:covariant-tensor-transform}
+    Q_{i\cdots j}^V = \left( \frac{\pdiff x_U^r}{\pdiff x_V^i} \right) \cdots \left(
+      \frac{\pdiff x_U^s}{\pdiff x_V^j} \right) Q_{r \cdots s}^U
+  \end{equation}
+\item Coordinate transformation of a contravariant tensor
+  \begin{equation}
+    \label{eq:contravariant-tensor-transform}
+    T_V^{i \cdots j} = \left( \frac{\pdiff x_V^i}{\pdiff x_U^r} \right) \cdots \left(
+      \frac{\pdiff x_V^j}{\pdiff x_U^s} \right) T_U^{r \cdots s}
+  \end{equation}
+\item Coordinate transformation of a mixed tensor
+  \begin{equation}
+    \label{eq:mixed-tensor-transform}
+    \left( W^{i \cdots j}_{k \cdots l} \right)_V = \left( \frac{\pdiff x_V^i}{\pdiff x_U^c} \right)
+    \cdots \left( \frac{\pdiff x_V^j}{\pdiff x_U^d} \right) \left( \frac{\pdiff
+        x_U^r}{\pdiff x_V^k} \right) \cdots \left( \frac{\pdiff x_U^s}{\pdiff x_V^l}
+    \right) \left( W^{c \cdots d}_{r \cdots s} \right)_U
+  \end{equation}
+\end{itemize}
 
 \chapter{Sauter quadrature}
 \label{sec:sauter-quad}
