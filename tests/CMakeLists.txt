@@ -32,3 +32,10 @@ ADD_SUBDIRECTORY(src)
 
 # Add all testcase subdirectories
 INCLUDE(${_test_list_file})
+
+# Add custom target to cleanup deal.ii test output files
+ADD_CUSTOM_TARGET(
+  clean_output
+  COMMAND find -name output -delete
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  VERBATIM)
