@@ -177,7 +177,6 @@ symv(const char                    *uplo,
 #endif
 }
 
-
 template <typename number1, typename number2>
 inline void
 trsv(const char                    *uplo,
@@ -189,6 +188,14 @@ trsv(const char                    *uplo,
      number2                       *x,
      const dealii::types::blas_int *incx)
 {
+  (void)uplo;
+  (void)trans;
+  (void)diag;
+  (void)n;
+  (void)a;
+  (void)lda;
+  (void)x;
+  (void)incx;
   Assert(false, ExcNotImplemented());
 }
 

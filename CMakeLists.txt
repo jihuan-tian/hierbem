@@ -89,6 +89,15 @@ endif()
 set(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread")
 set(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
 
+# Remove unknown flag from Clang compiler flags
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  replace_flag(DEAL_II_CXX_FLAGS_RELEASE "-funroll-all-loops" "")
+  replace_flag(DEAL_II_CXX_FLAGS "-Wno-placement-new" "")
+  replace_flag(DEAL_II_CXX_FLAGS "-Wno-literal-suffix" "")
+  replace_flag(DEAL_II_CXX_FLAGS "-Wno-psabi" "")
+  replace_flag(DEAL_II_CXX_FLAGS "-Wno-class-memaccess" "")
+endif()
+
 # ##############################################################################
 # Configuration for performance profiling in nsight-sys
 # ##############################################################################

@@ -2445,8 +2445,8 @@ namespace HierBEM
   void
   LAPACKFullMatrixExt<Number>::set_column_zeros(const size_type col_index)
   {
-    size_type mm = this->m();
-    size_type nn = this->n();
+    [[maybe_unused]] size_type mm = this->m();
+    [[maybe_unused]] size_type nn = this->n();
 
     AssertIndexRange(col_index, nn);
 
@@ -2461,7 +2461,7 @@ namespace HierBEM
   void
   LAPACKFullMatrixExt<Number>::set_row_zeros(const size_type row_index)
   {
-    const size_type mm = this->m();
+    [[maybe_unused]] const size_type mm = this->m();
     const size_type nn = this->n();
 
     AssertIndexRange(row_index, mm);

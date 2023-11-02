@@ -22,7 +22,7 @@ class octave_value;
 namespace HierBEM
 {
   // Hide Octave related details
-  class HBEMOctaveValueImpl;
+  struct HBEMOctaveValueImpl;
   class HBEMOctaveValue
   {
   public:
@@ -43,7 +43,7 @@ namespace HierBEM
     HBEMOctaveValueImpl *m_impl;
   };
 
-  class HBEMOctaveWrapperImpl;
+  struct HBEMOctaveWrapperImpl;
   class HBEMOctaveWrapper
   {
   public:
