@@ -197,7 +197,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ CUDAVector<T> &
+    __host__ __device__ CUDAVector<T>                     &
     CUDAVector<T>::operator=(const CUDAVector<T> &vec)
     {
       assert(n == vec.n);
@@ -212,7 +212,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ CUDAVector<T> &
+    __host__ __device__ CUDAVector<T>                     &
     CUDAVector<T>::operator=(CUDAVector<T> &&vec)
     {
       values = vec.values;
@@ -229,7 +229,8 @@ namespace HierBEM
                         const size_type source_offset,
                         const size_type target_offset)
     {
-      const size_type allowed_n_elements_for_copy = n - target_offset;
+      [[maybe_unused]] const size_type allowed_n_elements_for_copy =
+        n - target_offset;
 
       assert(n_elements_for_copy <= allowed_n_elements_for_copy);
 
@@ -241,7 +242,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAVector<T>::size_type
+    __host__ __device__ inline typename CUDAVector<T>::size_type
              CUDAVector<T>::size() const
     {
       return n;
@@ -249,7 +250,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAVector<T>::pointer
+    __host__ __device__ inline typename CUDAVector<T>::pointer
              CUDAVector<T>::data()
     {
       return values;
@@ -257,7 +258,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAVector<T>::const_pointer
+    __host__ __device__ inline typename CUDAVector<T>::const_pointer
              CUDAVector<T>::data() const
     {
       return values;
@@ -265,32 +266,32 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAVector<T>::reference
-    CUDAVector<T>::operator()(const size_type i)
+    __host__ __device__ inline typename CUDAVector<T>::reference
+             CUDAVector<T>::operator()(const size_type i)
     {
       return values[i];
     }
 
 
     template <typename T>
-    __host__ __device__ inline CUDAVector<T>::reference
-    CUDAVector<T>::operator[](const size_type i)
+    __host__ __device__ inline typename CUDAVector<T>::reference
+             CUDAVector<T>::operator[](const size_type i)
     {
       return values[i];
     }
 
 
     template <typename T>
-    __host__ __device__ inline CUDAVector<T>::const_reference
-    CUDAVector<T>::operator()(const size_type i) const
+    __host__ __device__ inline typename CUDAVector<T>::const_reference
+             CUDAVector<T>::operator()(const size_type i) const
     {
       return values[i];
     }
 
 
     template <typename T>
-    __host__ __device__ inline CUDAVector<T>::const_reference
-    CUDAVector<T>::operator[](const size_type i) const
+    __host__ __device__ inline typename CUDAVector<T>::const_reference
+             CUDAVector<T>::operator[](const size_type i) const
     {
       return values[i];
     }

@@ -1175,7 +1175,7 @@ namespace HierBEM
 
 
     template <int N, typename T>
-    __host__ __device__ inline CUDATable<N, T>::size_type
+    __host__ __device__ inline typename CUDATable<N, T>::size_type
              CUDATable<N, T>::size(const size_type i) const
     {
       return table_size[i];

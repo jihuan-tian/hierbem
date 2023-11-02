@@ -402,7 +402,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAFullMatrix<T>::size_type
+    __host__ __device__ inline typename CUDAFullMatrix<T>::size_type
              CUDAFullMatrix<T>::m() const
     {
       return rows;
@@ -410,7 +410,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAFullMatrix<T>::size_type
+    __host__ __device__ inline typename CUDAFullMatrix<T>::size_type
              CUDAFullMatrix<T>::n() const
     {
       return cols;
@@ -418,7 +418,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAFullMatrix<T>::size_type
+    __host__ __device__ inline typename CUDAFullMatrix<T>::size_type
              CUDAFullMatrix<T>::n_elements() const
     {
       return rows * cols;
@@ -426,7 +426,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ CUDAFullMatrix<T>::size_type
+    __host__ __device__ typename CUDAFullMatrix<T>::size_type
                         CUDAFullMatrix<T>::size(const size_type i) const
     {
       switch (i)
@@ -446,7 +446,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAFullMatrix<T>::pointer
+    __host__ __device__ inline typename CUDAFullMatrix<T>::pointer
              CUDAFullMatrix<T>::data()
     {
       return values;
@@ -454,7 +454,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAFullMatrix<T>::const_pointer
+    __host__ __device__ inline typename CUDAFullMatrix<T>::const_pointer
              CUDAFullMatrix<T>::data() const
     {
       return values;
@@ -462,7 +462,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAFullMatrix<T>::reference
+    __host__ __device__ inline typename CUDAFullMatrix<T>::reference
     CUDAFullMatrix<T>::operator()(const size_type i,
                                   const size_type j,
                                   const bool      is_column_major)
@@ -472,7 +472,7 @@ namespace HierBEM
 
 
     template <typename T>
-    __host__ __device__ inline CUDAFullMatrix<T>::const_reference
+    __host__ __device__ inline typename CUDAFullMatrix<T>::const_reference
     CUDAFullMatrix<T>::operator()(const size_type i,
                                   const size_type j,
                                   const bool      is_column_major) const
