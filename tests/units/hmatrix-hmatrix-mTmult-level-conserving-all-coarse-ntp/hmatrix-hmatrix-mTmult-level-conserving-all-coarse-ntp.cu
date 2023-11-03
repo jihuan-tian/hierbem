@@ -1,13 +1,12 @@
 /**
- * \file hmatrix-hmatrix-Tmmult-level-conserving-fine-fine-coarse-ntp.cc
+ * \file hmatrix-hmatrix-mTmult-level-conserving-all-coarse-ntp.cc
  * \brief Verify the multiplication of two level-conserving
- * \f$\mathcal{H}\f$-matrices with the first operand transposed. Both operands
- * have the fine non-tensor product partitions, while the result matrix has the
- * coarse non-tensor product partitions.
+ * \f$\mathcal{H}\f$-matrices with the second operand transposed. Both operands
+ * and the result matrices have the coarse non-tensor product partitions.
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
- * \date 2022-11-28
+ * \date 2021-11-11
  */
 
 #include <cmath>
@@ -15,6 +14,8 @@
 #include <iostream>
 
 #include "hmatrix.h"
+
+using namespace HierBEM;
 
 int
 main()
@@ -42,15 +43,14 @@ main()
   cluster_tree.partition();
 
   /**
-   * Generate block cluster tree via fine structured non-tensor product
+   * Generate block cluster tree via coarse structured non-tensor product
    * partition.
    */
   const unsigned int          n_min_bct = 2;
   BlockClusterTree<3, double> bc_tree1(cluster_tree, cluster_tree, n_min_bct);
-  bc_tree1.partition_fine_non_tensor_product();
+  bc_tree1.partition_coarse_non_tensor_product();
   BlockClusterTree<3, double> bc_tree2(bc_tree1);
-  BlockClusterTree<3, double> bc_tree3(cluster_tree, cluster_tree, n_min_bct);
-  bc_tree3.partition_coarse_non_tensor_product();
+  BlockClusterTree<3, double> bc_tree3(bc_tree1);
 
   /**
    * Create two full matrices as the source data.
@@ -89,6 +89,12 @@ main()
    * Create the empty result \hmatrix \p H3.
    */
   HMatrix<3, double> H3(bc_tree3.get_root(), fixed_rank_k);
+
+  /**
+   * Create the empty result \hmatrix \p H4.
+   */
+  HMatrix<3, double> H4(bc_tree3.get_root(), fixed_rank_k);
+
   /**
    * Get the full matrix representations of \p H1 and \p H2 as well as their
    * product.
@@ -99,17 +105,19 @@ main()
   H1_full.print_formatted_to_mat(std::cout, "H1_full", 16, false, 25, "0");
   H2_full.print_formatted_to_mat(std::cout, "H2_full", 16, false, 25, "0");
 
-  H1_full.Tmmult(H1_mult_H2_full, H2_full);
+  H1_full.mTmult(H1_mult_H2_full, H2_full);
   H1_mult_H2_full.print_formatted_to_mat(
     std::cout, "H1_mult_H2_full", 16, false, 25, "0");
 
   /**
    * Multiply the two H-matrices \p H1 and \p H2.
    */
-  h_h_Tmmult_level_conserving(H3, H1, H2, fixed_rank_k);
+  h_h_mTmult_level_conserving(H3, H1, H2, fixed_rank_k);
   std::ofstream H3_out("H3_bct.dat");
   H3.write_leaf_set_by_iteration(H3_out);
   H3_out.close();
+
+  H1.mTmult_level_conserving(H4, 0.5, H2, fixed_rank_k, false);
 
   /**
    * Convert the result matrix into a full matrix for verification.
@@ -117,6 +125,10 @@ main()
   LAPACKFullMatrixExt<double> H3_full;
   H3.convertToFullMatrix(H3_full);
   H3_full.print_formatted_to_mat(std::cout, "H3_full", 16, false, 25, "0");
+
+  LAPACKFullMatrixExt<double> H4_full;
+  H4.convertToFullMatrix(H4_full);
+  H4_full.print_formatted_to_mat(std::cout, "H4_full", 16, false, 25, "0");
 
   return 0;
 }

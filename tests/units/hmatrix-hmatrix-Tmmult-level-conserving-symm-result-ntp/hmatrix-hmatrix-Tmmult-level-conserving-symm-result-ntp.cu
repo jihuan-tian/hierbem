@@ -14,6 +14,8 @@
 
 #include "hmatrix.h"
 
+using namespace HierBEM;
+
 int
 main()
 {

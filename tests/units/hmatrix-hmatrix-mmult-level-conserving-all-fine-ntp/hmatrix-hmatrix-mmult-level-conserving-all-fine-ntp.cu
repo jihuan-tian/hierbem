@@ -1,16 +1,12 @@
 /**
- * \file
- * hmatrix-hmatrix-alpha-mmult-level-conserving-all-fine-ntp-member-function-call.cc
- *
+ * \file hmatrix-hmatrix-mmult-level-conserving-all-fine-ntp.cc
  * \brief Verify the multiplication of two level-conserving
- * \f$\mathcal{H}\f$-matrices with the result scaled by a factor, i.e. \f$M = M
- * + \alpha \cdot M_1 M_2\f$. Both operands and the result matrices have the
- * fine non-tensor product partitions. This version uses the member function
- * call of multiplication.
+ * \f$\mathcal{H}\f$-matrices. Both operands and the result matrices have the
+ * fine non-tensor product partitions.
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
- * \date 2021-10-24
+ * \date 2021-09-28
  */
 
 #include <cmath>
@@ -19,10 +15,12 @@
 
 #include "hmatrix.h"
 
+using namespace HierBEM;
+
 int
 main()
 {
-  const unsigned int p = 6;
+  const unsigned int p = 4;
   const unsigned int n = std::pow(2, p);
 
   /**
@@ -101,16 +99,14 @@ main()
   H1_full.print_formatted_to_mat(std::cout, "H1_full", 16, false, 25, "0");
   H2_full.print_formatted_to_mat(std::cout, "H2_full", 16, false, 25, "0");
 
-  const double alpha = 2.3;
-  H1_full.mmult(H1_mult_H2_full, alpha, H2_full);
+  H1_full.mmult(H1_mult_H2_full, H2_full);
   H1_mult_H2_full.print_formatted_to_mat(
     std::cout, "H1_mult_H2_full", 16, false, 25, "0");
 
   /**
-   * Multiply the two H-matrices \p H1 and \p H2 with the result scaled by a
-   * factor.
+   * Multiply the two H-matrices \p H1 and \p H2.
    */
-  H1.mmult_level_conserving(H3, alpha, H2, fixed_rank_k);
+  h_h_mmult_level_conserving(H3, H1, H2, fixed_rank_k);
   std::ofstream H3_out("H3_bct.dat");
   H3.write_leaf_set_by_iteration(H3_out);
   H3_out.close();
