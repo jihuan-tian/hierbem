@@ -2445,7 +2445,7 @@ namespace HierBEM
   void
   LAPACKFullMatrixExt<Number>::set_column_zeros(const size_type col_index)
   {
-    [[maybe_unused]] size_type mm = this->m();
+    size_type                  mm = this->m();
     [[maybe_unused]] size_type nn = this->n();
 
     AssertIndexRange(col_index, nn);
@@ -2462,7 +2462,7 @@ namespace HierBEM
   LAPACKFullMatrixExt<Number>::set_row_zeros(const size_type row_index)
   {
     [[maybe_unused]] const size_type mm = this->m();
-    const size_type nn = this->n();
+    const size_type                  nn = this->n();
 
     AssertIndexRange(row_index, mm);
 
@@ -4950,9 +4950,10 @@ namespace HierBEM
              * data type is \p matrix.
              */
             std::getline(in, line_buf);
-            AssertThrow(line_buf.compare("# type: matrix") == 0,
-                   ExcMessage(
-                     "Data type for the matrix to be read should be 'matrix'"));
+            AssertThrow(
+              line_buf.compare("# type: matrix") == 0,
+              ExcMessage(
+                "Data type for the matrix to be read should be 'matrix'"));
 
             /**
              * Read a new line to extract the number of rows.
@@ -4973,8 +4974,10 @@ namespace HierBEM
             AssertThrow(found, ExcMessage("Cannot get n_cols of the matrix!"));
             const unsigned int n_cols = std::stoi(sm.str(1));
 
-            AssertThrow(n_rows > 0, ExcMessage("Matrix to be read has no rows!"));
-            AssertThrow(n_cols > 0, ExcMessage("Matrix to be read has no columns!"));
+            AssertThrow(n_rows > 0,
+                        ExcMessage("Matrix to be read has no rows!"));
+            AssertThrow(n_cols > 0,
+                        ExcMessage("Matrix to be read has no columns!"));
 
             reinit(n_rows, n_cols);
             /**
