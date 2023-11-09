@@ -3023,8 +3023,8 @@ At present, the naming convention for $\mathcal{H}$-matrix related solvers is a 
 \item \texttt{solve\_block\_triangular\_by\_backward\_substitution}: when \(U\) is an upper block triangular matrix
 \end{itemize}
 \item Solve \(U^Tx=b\): \texttt{solve\_transpose\_by\_forward\_substitution}
-\item Solve \(L^Tx=b\): \texttt{solve\_cholesky\_by\_backward\_substitution}, where \(L\) is obtained from Cholesky factorization
-
+\item Solve \(L^Tx=b\): \texttt{solve\_cholesky\_by\_backward\_substitution}, where \(L\)
+  is obtained from Cholesky factorization, whose diagonal is not unit
 \item Solve \(LX=Z\)
 \begin{itemize}
 \item \texttt{solve\_by\_forward\_substitution\_matrix\_valued}:
@@ -3035,7 +3035,8 @@ At present, the naming convention for $\mathcal{H}$-matrix related solvers is a 
   \texttt{solve\_transpose\_by\_forward\_substitution\_matrix\_valued}
 \item Solve \(XL^T=Z\), which is equivalent to \(L X^T=Z^T\):
 
-  \texttt{solve\_cholesky\_transpose\_by\_forward\_substitution\_matrix\_valued}, where \(L\) is obtained from Cholesky factorization
+  \texttt{solve\_cholesky\_transpose\_by\_forward\_substitution\_matrix\_valued}, where
+  \(L\) is obtained from Cholesky factorization, whose diagonal is not unit
 \end{itemize}
 
 \chapter{Adaptive cross approximation}
