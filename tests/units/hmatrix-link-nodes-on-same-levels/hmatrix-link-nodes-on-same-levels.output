@@ -1,0 +1,747 @@
+#@startdot
+digraph hmatrix {
+node [style=filled, shape=box]
+"Non-leaf block" [fillcolor=white]
+"Near field block" [fillcolor=red]
+"Far field block" [fillcolor=green]
+"0x7ffe4b7ffac0"[label=<<b>0x7ffe4b7ffac0</b><br/>tau: [0,32)<br/>sigma: [0,32)<br/>Level: 0<br/>Parent: 0<br/>Submatrix index: 9<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x7ffe4b7ffac0"->"0x556ad8712e10"
+"0x7ffe4b7ffac0"->"0x556ad85a99c0"
+"0x7ffe4b7ffac0"->"0x556ad85749c0"
+"0x7ffe4b7ffac0"->"0x556ad8559070"
+
+"0x556ad8712e10"[label=<<b>0x556ad8712e10</b><br/>tau: [0,16)<br/>sigma: [0,16)<br/>Level: 1<br/>Parent: 0x7ffe4b7ffac0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad8712e10"->"0x556ad7ec39b0"
+"0x556ad8712e10"->"0x556ad85f4400"
+"0x556ad8712e10"->"0x556ad85e12d0"
+"0x556ad8712e10"->"0x556ad8591810"
+
+"0x556ad8712e10"->"0x556ad85a99c0" [style=dotted]
+"0x556ad7ec39b0"[label=<<b>0x556ad7ec39b0</b><br/>tau: [0,8)<br/>sigma: [0,8)<br/>Level: 2<br/>Parent: 0x556ad8712e10<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad7ec39b0"->"0x556ad87670e0"
+"0x556ad7ec39b0"->"0x556ad855fb50"
+"0x556ad7ec39b0"->"0x556ad87dac80"
+"0x556ad7ec39b0"->"0x556ad87bdc50"
+
+"0x556ad7ec39b0"->"0x556ad85f4400" [style=dotted]
+"0x556ad87670e0"[label=<<b>0x556ad87670e0</b><br/>tau: [0,4)<br/>sigma: [0,4)<br/>Level: 3<br/>Parent: 0x556ad7ec39b0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad87670e0"->"0x556ad875a1c0"
+"0x556ad87670e0"->"0x556ad87cb020"
+"0x556ad87670e0"->"0x556ad858e780"
+"0x556ad87670e0"->"0x556ad859b4b0"
+
+"0x556ad87670e0"->"0x556ad855fb50" [style=dotted]
+"0x556ad875a1c0"[label=<<b>0x556ad875a1c0</b><br/>tau: [0,2)<br/>sigma: [0,2)<br/>Level: 4<br/>Parent: 0x556ad87670e0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad875a1c0"->"0x556ad87cb020" [style=dotted]
+"0x556ad87cb020"[label=<<b>0x556ad87cb020</b><br/>tau: [0,2)<br/>sigma: [2,4)<br/>Level: 4<br/>Parent: 0x556ad87670e0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad87cb020"->"0x556ad858e780" [style=dotted]
+"0x556ad858e780"[label=<<b>0x556ad858e780</b><br/>tau: [2,4)<br/>sigma: [0,2)<br/>Level: 4<br/>Parent: 0x556ad87670e0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad858e780"->"0x556ad859b4b0" [style=dotted]
+"0x556ad859b4b0"[label=<<b>0x556ad859b4b0</b><br/>tau: [2,4)<br/>sigma: [2,4)<br/>Level: 4<br/>Parent: 0x556ad87670e0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad859b4b0"->"0x556ad8563ec0" [style=dotted]
+"0x556ad855fb50"[label=<<b>0x556ad855fb50</b><br/>tau: [0,4)<br/>sigma: [4,8)<br/>Level: 3<br/>Parent: 0x556ad7ec39b0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad855fb50"->"0x556ad8563ec0"
+"0x556ad855fb50"->"0x556ad85e0bc0"
+"0x556ad855fb50"->"0x556ad87ecb70"
+"0x556ad855fb50"->"0x556ad87e3610"
+
+"0x556ad855fb50"->"0x556ad87dac80" [style=dotted]
+"0x556ad8563ec0"[label=<<b>0x556ad8563ec0</b><br/>tau: [0,2)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 0x556ad855fb50<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8563ec0"->"0x556ad85e0bc0" [style=dotted]
+"0x556ad85e0bc0"[label=<<b>0x556ad85e0bc0</b><br/>tau: [0,2)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 0x556ad855fb50<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85e0bc0"->"0x556ad87ecb70" [style=dotted]
+"0x556ad87ecb70"[label=<<b>0x556ad87ecb70</b><br/>tau: [2,4)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 0x556ad855fb50<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad87ecb70"->"0x556ad87e3610" [style=dotted]
+"0x556ad87e3610"[label=<<b>0x556ad87e3610</b><br/>tau: [2,4)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 0x556ad855fb50<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad87e3610"->"0x556ad87d91c0" [style=dotted]
+"0x556ad87dac80"[label=<<b>0x556ad87dac80</b><br/>tau: [4,8)<br/>sigma: [0,4)<br/>Level: 3<br/>Parent: 0x556ad7ec39b0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad87dac80"->"0x556ad87d91c0"
+"0x556ad87dac80"->"0x556ad87d3710"
+"0x556ad87dac80"->"0x556ad87c75b0"
+"0x556ad87dac80"->"0x556ad87c2960"
+
+"0x556ad87dac80"->"0x556ad87bdc50" [style=dotted]
+"0x556ad87d91c0"[label=<<b>0x556ad87d91c0</b><br/>tau: [4,6)<br/>sigma: [0,2)<br/>Level: 4<br/>Parent: 0x556ad87dac80<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad87d91c0"->"0x556ad87d3710" [style=dotted]
+"0x556ad87d3710"[label=<<b>0x556ad87d3710</b><br/>tau: [4,6)<br/>sigma: [2,4)<br/>Level: 4<br/>Parent: 0x556ad87dac80<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad87d3710"->"0x556ad87c75b0" [style=dotted]
+"0x556ad87c75b0"[label=<<b>0x556ad87c75b0</b><br/>tau: [6,8)<br/>sigma: [0,2)<br/>Level: 4<br/>Parent: 0x556ad87dac80<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad87c75b0"->"0x556ad87c2960" [style=dotted]
+"0x556ad87c2960"[label=<<b>0x556ad87c2960</b><br/>tau: [6,8)<br/>sigma: [2,4)<br/>Level: 4<br/>Parent: 0x556ad87dac80<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad87c2960"->"0x556ad87b4180" [style=dotted]
+"0x556ad87bdc50"[label=<<b>0x556ad87bdc50</b><br/>tau: [4,8)<br/>sigma: [4,8)<br/>Level: 3<br/>Parent: 0x556ad7ec39b0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad87bdc50"->"0x556ad87b4180"
+"0x556ad87bdc50"->"0x556ad8612e90"
+"0x556ad87bdc50"->"0x556ad87ef290"
+"0x556ad87bdc50"->"0x556ad85b94b0"
+
+"0x556ad87bdc50"->"0x556ad8581120" [style=dotted]
+"0x556ad87b4180"[label=<<b>0x556ad87b4180</b><br/>tau: [4,6)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 0x556ad87bdc50<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad87b4180"->"0x556ad8612e90" [style=dotted]
+"0x556ad8612e90"[label=<<b>0x556ad8612e90</b><br/>tau: [4,6)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 0x556ad87bdc50<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8612e90"->"0x556ad87ef290" [style=dotted]
+"0x556ad87ef290"[label=<<b>0x556ad87ef290</b><br/>tau: [6,8)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 0x556ad87bdc50<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad87ef290"->"0x556ad85b94b0" [style=dotted]
+"0x556ad85b94b0"[label=<<b>0x556ad85b94b0</b><br/>tau: [6,8)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 0x556ad87bdc50<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad85b94b0"->"0x556ad8549750" [style=dotted]
+"0x556ad85f4400"[label=<<b>0x556ad85f4400</b><br/>tau: [0,8)<br/>sigma: [8,16)<br/>Level: 2<br/>Parent: 0x556ad8712e10<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad85f4400"->"0x556ad8581120"
+"0x556ad85f4400"->"0x556ad85a5d20"
+"0x556ad85f4400"->"0x556ad8582860"
+"0x556ad85f4400"->"0x556ad85e7970"
+
+"0x556ad85f4400"->"0x556ad85e12d0" [style=dotted]
+"0x556ad8581120"[label=<<b>0x556ad8581120</b><br/>tau: [0,4)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 0x556ad85f4400<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad8581120"->"0x556ad85a5d20" [style=dotted]
+"0x556ad85a5d20"[label=<<b>0x556ad85a5d20</b><br/>tau: [0,4)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 0x556ad85f4400<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad85a5d20"->"0x556ad8582860" [style=dotted]
+"0x556ad8582860"[label=<<b>0x556ad8582860</b><br/>tau: [4,8)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 0x556ad85f4400<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad8582860"->"0x556ad8549750"
+"0x556ad8582860"->"0x556ad85498d0"
+"0x556ad8582860"->"0x556ad8580ae0"
+"0x556ad8582860"->"0x556ad8580c60"
+
+"0x556ad8582860"->"0x556ad85e7970" [style=dotted]
+"0x556ad8549750"[label=<<b>0x556ad8549750</b><br/>tau: [4,6)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 0x556ad8582860<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8549750"->"0x556ad85498d0" [style=dotted]
+"0x556ad85498d0"[label=<<b>0x556ad85498d0</b><br/>tau: [4,6)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 0x556ad8582860<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85498d0"->"0x556ad8580ae0" [style=dotted]
+"0x556ad8580ae0"[label=<<b>0x556ad8580ae0</b><br/>tau: [6,8)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 0x556ad8582860<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8580ae0"->"0x556ad8580c60" [style=dotted]
+"0x556ad8580c60"[label=<<b>0x556ad8580c60</b><br/>tau: [6,8)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 0x556ad8582860<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8580c60"->"0x556ad85aa670" [style=dotted]
+"0x556ad85e7970"[label=<<b>0x556ad85e7970</b><br/>tau: [4,8)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 0x556ad85f4400<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad85e7970"->"0x556ad85e1450" [style=dotted]
+"0x556ad85e12d0"[label=<<b>0x556ad85e12d0</b><br/>tau: [8,16)<br/>sigma: [0,8)<br/>Level: 2<br/>Parent: 0x556ad8712e10<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad85e12d0"->"0x556ad85e1450"
+"0x556ad85e12d0"->"0x556ad85e0250"
+"0x556ad85e12d0"->"0x556ad8571800"
+"0x556ad85e12d0"->"0x556ad8571980"
+
+"0x556ad85e12d0"->"0x556ad8591810" [style=dotted]
+"0x556ad85e1450"[label=<<b>0x556ad85e1450</b><br/>tau: [8,12)<br/>sigma: [0,4)<br/>Level: 3<br/>Parent: 0x556ad85e12d0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad85e1450"->"0x556ad85e0250" [style=dotted]
+"0x556ad85e0250"[label=<<b>0x556ad85e0250</b><br/>tau: [8,12)<br/>sigma: [4,8)<br/>Level: 3<br/>Parent: 0x556ad85e12d0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad85e0250"->"0x556ad85aa670"
+"0x556ad85e0250"->"0x556ad85aa7f0"
+"0x556ad85e0250"->"0x556ad8566a10"
+"0x556ad85e0250"->"0x556ad8566b90"
+
+"0x556ad85e0250"->"0x556ad8571800" [style=dotted]
+"0x556ad85aa670"[label=<<b>0x556ad85aa670</b><br/>tau: [8,10)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 0x556ad85e0250<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85aa670"->"0x556ad85aa7f0" [style=dotted]
+"0x556ad85aa7f0"[label=<<b>0x556ad85aa7f0</b><br/>tau: [8,10)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 0x556ad85e0250<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85aa7f0"->"0x556ad8566a10" [style=dotted]
+"0x556ad8566a10"[label=<<b>0x556ad8566a10</b><br/>tau: [10,12)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 0x556ad85e0250<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad8566a10"->"0x556ad8566b90" [style=dotted]
+"0x556ad8566b90"[label=<<b>0x556ad8566b90</b><br/>tau: [10,12)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 0x556ad85e0250<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad8566b90"->"0x556ad857a5f0" [style=dotted]
+"0x556ad8571800"[label=<<b>0x556ad8571800</b><br/>tau: [12,16)<br/>sigma: [0,4)<br/>Level: 3<br/>Parent: 0x556ad85e12d0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad8571800"->"0x556ad8571980" [style=dotted]
+"0x556ad8571980"[label=<<b>0x556ad8571980</b><br/>tau: [12,16)<br/>sigma: [4,8)<br/>Level: 3<br/>Parent: 0x556ad85e12d0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad8571980"->"0x556ad8591990" [style=dotted]
+"0x556ad8591810"[label=<<b>0x556ad8591810</b><br/>tau: [8,16)<br/>sigma: [8,16)<br/>Level: 2<br/>Parent: 0x556ad8712e10<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad8591810"->"0x556ad8591990"
+"0x556ad8591810"->"0x556ad8599330"
+"0x556ad8591810"->"0x556ad8597770"
+"0x556ad8591810"->"0x556ad85c60d0"
+
+"0x556ad8591810"->"0x556ad85a9b40" [style=dotted]
+"0x556ad8591990"[label=<<b>0x556ad8591990</b><br/>tau: [8,12)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 0x556ad8591810<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad8591990"->"0x556ad857a5f0"
+"0x556ad8591990"->"0x556ad85cc470"
+"0x556ad8591990"->"0x556ad85a4720"
+"0x556ad8591990"->"0x556ad85cf880"
+
+"0x556ad8591990"->"0x556ad8599330" [style=dotted]
+"0x556ad857a5f0"[label=<<b>0x556ad857a5f0</b><br/>tau: [8,10)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 0x556ad8591990<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad857a5f0"->"0x556ad85cc470" [style=dotted]
+"0x556ad85cc470"[label=<<b>0x556ad85cc470</b><br/>tau: [8,10)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 0x556ad8591990<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85cc470"->"0x556ad85a4720" [style=dotted]
+"0x556ad85a4720"[label=<<b>0x556ad85a4720</b><br/>tau: [10,12)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 0x556ad8591990<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85a4720"->"0x556ad85cf880" [style=dotted]
+"0x556ad85cf880"[label=<<b>0x556ad85cf880</b><br/>tau: [10,12)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 0x556ad8591990<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad85cf880"->"0x556ad85994b0" [style=dotted]
+"0x556ad8599330"[label=<<b>0x556ad8599330</b><br/>tau: [8,12)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 0x556ad8591810<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad8599330"->"0x556ad85994b0"
+"0x556ad8599330"->"0x556ad858bda0"
+"0x556ad8599330"->"0x556ad85639b0"
+"0x556ad8599330"->"0x556ad85c6d60"
+
+"0x556ad8599330"->"0x556ad8597770" [style=dotted]
+"0x556ad85994b0"[label=<<b>0x556ad85994b0</b><br/>tau: [8,10)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 0x556ad8599330<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85994b0"->"0x556ad858bda0" [style=dotted]
+"0x556ad858bda0"[label=<<b>0x556ad858bda0</b><br/>tau: [8,10)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 0x556ad8599330<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad858bda0"->"0x556ad85639b0" [style=dotted]
+"0x556ad85639b0"[label=<<b>0x556ad85639b0</b><br/>tau: [10,12)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 0x556ad8599330<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85639b0"->"0x556ad85c6d60" [style=dotted]
+"0x556ad85c6d60"[label=<<b>0x556ad85c6d60</b><br/>tau: [10,12)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 0x556ad8599330<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85c6d60"->"0x556ad8599630" [style=dotted]
+"0x556ad8597770"[label=<<b>0x556ad8597770</b><br/>tau: [12,16)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 0x556ad8591810<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad8597770"->"0x556ad8599630"
+"0x556ad8597770"->"0x556ad860a880"
+"0x556ad8597770"->"0x556ad85a4090"
+"0x556ad8597770"->"0x556ad8561c50"
+
+"0x556ad8597770"->"0x556ad85c60d0" [style=dotted]
+"0x556ad8599630"[label=<<b>0x556ad8599630</b><br/>tau: [12,14)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 0x556ad8597770<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad8599630"->"0x556ad860a880" [style=dotted]
+"0x556ad860a880"[label=<<b>0x556ad860a880</b><br/>tau: [12,14)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 0x556ad8597770<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad860a880"->"0x556ad85a4090" [style=dotted]
+"0x556ad85a4090"[label=<<b>0x556ad85a4090</b><br/>tau: [14,16)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 0x556ad8597770<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85a4090"->"0x556ad8561c50" [style=dotted]
+"0x556ad8561c50"[label=<<b>0x556ad8561c50</b><br/>tau: [14,16)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 0x556ad8597770<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad8561c50"->"0x556ad85c9910" [style=dotted]
+"0x556ad85c60d0"[label=<<b>0x556ad85c60d0</b><br/>tau: [12,16)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 0x556ad8591810<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad85c60d0"->"0x556ad85c9910"
+"0x556ad85c60d0"->"0x556ad85c9d40"
+"0x556ad85c60d0"->"0x556ad85755a0"
+"0x556ad85c60d0"->"0x556ad85966a0"
+
+"0x556ad85c60d0"->"0x556ad8581ae0" [style=dotted]
+"0x556ad85c9910"[label=<<b>0x556ad85c9910</b><br/>tau: [12,14)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 0x556ad85c60d0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad85c9910"->"0x556ad85c9d40" [style=dotted]
+"0x556ad85c9d40"[label=<<b>0x556ad85c9d40</b><br/>tau: [12,14)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 0x556ad85c60d0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85c9d40"->"0x556ad85755a0" [style=dotted]
+"0x556ad85755a0"[label=<<b>0x556ad85755a0</b><br/>tau: [14,16)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 0x556ad85c60d0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85755a0"->"0x556ad85966a0" [style=dotted]
+"0x556ad85966a0"[label=<<b>0x556ad85966a0</b><br/>tau: [14,16)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 0x556ad85c60d0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad85966a0"->"0x556ad8578140" [style=dotted]
+"0x556ad85a99c0"[label=<<b>0x556ad85a99c0</b><br/>tau: [0,16)<br/>sigma: [16,32)<br/>Level: 1<br/>Parent: 0x7ffe4b7ffac0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad85a99c0"->"0x556ad85a9b40"
+"0x556ad85a99c0"->"0x556ad8575720"
+"0x556ad85a99c0"->"0x556ad8583590"
+"0x556ad85a99c0"->"0x556ad85cf020"
+
+"0x556ad85a99c0"->"0x556ad85749c0" [style=dotted]
+"0x556ad85a9b40"[label=<<b>0x556ad85a9b40</b><br/>tau: [0,8)<br/>sigma: [16,24)<br/>Level: 2<br/>Parent: 0x556ad85a99c0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad85a9b40"->"0x556ad8575720" [style=dotted]
+"0x556ad8575720"[label=<<b>0x556ad8575720</b><br/>tau: [0,8)<br/>sigma: [24,32)<br/>Level: 2<br/>Parent: 0x556ad85a99c0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad8575720"->"0x556ad8583590" [style=dotted]
+"0x556ad8583590"[label=<<b>0x556ad8583590</b><br/>tau: [8,16)<br/>sigma: [16,24)<br/>Level: 2<br/>Parent: 0x556ad85a99c0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad8583590"->"0x556ad8581ae0"
+"0x556ad8583590"->"0x556ad85c68d0"
+"0x556ad8583590"->"0x556ad8598590"
+"0x556ad8583590"->"0x556ad871d9f0"
+
+"0x556ad8583590"->"0x556ad85cf020" [style=dotted]
+"0x556ad8581ae0"[label=<<b>0x556ad8581ae0</b><br/>tau: [8,12)<br/>sigma: [16,20)<br/>Level: 3<br/>Parent: 0x556ad8583590<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad8581ae0"->"0x556ad85c68d0" [style=dotted]
+"0x556ad85c68d0"[label=<<b>0x556ad85c68d0</b><br/>tau: [8,12)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 0x556ad8583590<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad85c68d0"->"0x556ad8598590" [style=dotted]
+"0x556ad8598590"[label=<<b>0x556ad8598590</b><br/>tau: [12,16)<br/>sigma: [16,20)<br/>Level: 3<br/>Parent: 0x556ad8583590<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad8598590"->"0x556ad8578140"
+"0x556ad8598590"->"0x556ad85782c0"
+"0x556ad8598590"->"0x556ad85784e0"
+"0x556ad8598590"->"0x556ad871d7d0"
+
+"0x556ad8598590"->"0x556ad871d9f0" [style=dotted]
+"0x556ad8578140"[label=<<b>0x556ad8578140</b><br/>tau: [12,14)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 0x556ad8598590<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8578140"->"0x556ad85782c0" [style=dotted]
+"0x556ad85782c0"[label=<<b>0x556ad85782c0</b><br/>tau: [12,14)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 0x556ad8598590<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85782c0"->"0x556ad85784e0" [style=dotted]
+"0x556ad85784e0"[label=<<b>0x556ad85784e0</b><br/>tau: [14,16)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 0x556ad8598590<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85784e0"->"0x556ad871d7d0" [style=dotted]
+"0x556ad871d7d0"[label=<<b>0x556ad871d7d0</b><br/>tau: [14,16)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 0x556ad8598590<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad871d7d0"->"0x556ad85872a0" [style=dotted]
+"0x556ad871d9f0"[label=<<b>0x556ad871d9f0</b><br/>tau: [12,16)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 0x556ad8583590<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad871d9f0"->"0x556ad8586b80" [style=dotted]
+"0x556ad85cf020"[label=<<b>0x556ad85cf020</b><br/>tau: [8,16)<br/>sigma: [24,32)<br/>Level: 2<br/>Parent: 0x556ad85a99c0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad85cf020"->"0x556ad8574b40" [style=dotted]
+"0x556ad85749c0"[label=<<b>0x556ad85749c0</b><br/>tau: [16,32)<br/>sigma: [0,16)<br/>Level: 1<br/>Parent: 0x7ffe4b7ffac0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad85749c0"->"0x556ad8574b40"
+"0x556ad85749c0"->"0x556ad85d5be0"
+"0x556ad85749c0"->"0x556ad85c7f90"
+"0x556ad85749c0"->"0x556ad85d1ca0"
+
+"0x556ad85749c0"->"0x556ad8559070" [style=dotted]
+"0x556ad8574b40"[label=<<b>0x556ad8574b40</b><br/>tau: [16,24)<br/>sigma: [0,8)<br/>Level: 2<br/>Parent: 0x556ad85749c0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad8574b40"->"0x556ad85d5be0" [style=dotted]
+"0x556ad85d5be0"[label=<<b>0x556ad85d5be0</b><br/>tau: [16,24)<br/>sigma: [8,16)<br/>Level: 2<br/>Parent: 0x556ad85749c0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad85d5be0"->"0x556ad8586b80"
+"0x556ad85d5be0"->"0x556ad8587120"
+"0x556ad85d5be0"->"0x556ad85a8e30"
+"0x556ad85d5be0"->"0x556ad85d0b50"
+
+"0x556ad85d5be0"->"0x556ad85c7f90" [style=dotted]
+"0x556ad8586b80"[label=<<b>0x556ad8586b80</b><br/>tau: [16,20)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 0x556ad85d5be0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad8586b80"->"0x556ad8587120" [style=dotted]
+"0x556ad8587120"[label=<<b>0x556ad8587120</b><br/>tau: [16,20)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 0x556ad85d5be0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad8587120"->"0x556ad85872a0"
+"0x556ad8587120"->"0x556ad85a87d0"
+"0x556ad8587120"->"0x556ad85a89f0"
+"0x556ad8587120"->"0x556ad85a8c10"
+
+"0x556ad8587120"->"0x556ad85a8e30" [style=dotted]
+"0x556ad85872a0"[label=<<b>0x556ad85872a0</b><br/>tau: [16,18)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 0x556ad8587120<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85872a0"->"0x556ad85a87d0" [style=dotted]
+"0x556ad85a87d0"[label=<<b>0x556ad85a87d0</b><br/>tau: [16,18)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 0x556ad8587120<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85a87d0"->"0x556ad85a89f0" [style=dotted]
+"0x556ad85a89f0"[label=<<b>0x556ad85a89f0</b><br/>tau: [18,20)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 0x556ad8587120<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85a89f0"->"0x556ad85a8c10" [style=dotted]
+"0x556ad85a8c10"[label=<<b>0x556ad85a8c10</b><br/>tau: [18,20)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 0x556ad8587120<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85a8c10"->"0x556ad857d4b0" [style=dotted]
+"0x556ad85a8e30"[label=<<b>0x556ad85a8e30</b><br/>tau: [20,24)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 0x556ad85d5be0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad85a8e30"->"0x556ad85d0b50" [style=dotted]
+"0x556ad85d0b50"[label=<<b>0x556ad85d0b50</b><br/>tau: [20,24)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 0x556ad85d5be0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad85d0b50"->"0x556ad857d330" [style=dotted]
+"0x556ad85c7f90"[label=<<b>0x556ad85c7f90</b><br/>tau: [24,32)<br/>sigma: [0,8)<br/>Level: 2<br/>Parent: 0x556ad85749c0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad85c7f90"->"0x556ad85d1ca0" [style=dotted]
+"0x556ad85d1ca0"[label=<<b>0x556ad85d1ca0</b><br/>tau: [24,32)<br/>sigma: [8,16)<br/>Level: 2<br/>Parent: 0x556ad85749c0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad85d1ca0"->"0x556ad85591f0" [style=dotted]
+"0x556ad8559070"[label=<<b>0x556ad8559070</b><br/>tau: [16,32)<br/>sigma: [16,32)<br/>Level: 1<br/>Parent: 0x7ffe4b7ffac0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad8559070"->"0x556ad85591f0"
+"0x556ad8559070"->"0x556ad8589b10"
+"0x556ad8559070"->"0x556ad8585770"
+"0x556ad8559070"->"0x556ad86ec790"
+
+"0x556ad85591f0"[label=<<b>0x556ad85591f0</b><br/>tau: [16,24)<br/>sigma: [16,24)<br/>Level: 2<br/>Parent: 0x556ad8559070<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad85591f0"->"0x556ad857d330"
+"0x556ad85591f0"->"0x556ad85473f0"
+"0x556ad85591f0"->"0x556ad858aeb0"
+"0x556ad85591f0"->"0x556ad858f6f0"
+
+"0x556ad85591f0"->"0x556ad8589b10" [style=dotted]
+"0x556ad857d330"[label=<<b>0x556ad857d330</b><br/>tau: [16,20)<br/>sigma: [16,20)<br/>Level: 3<br/>Parent: 0x556ad85591f0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad857d330"->"0x556ad857d4b0"
+"0x556ad857d330"->"0x556ad857d630"
+"0x556ad857d330"->"0x556ad857d850"
+"0x556ad857d330"->"0x556ad857da70"
+
+"0x556ad857d330"->"0x556ad85473f0" [style=dotted]
+"0x556ad857d4b0"[label=<<b>0x556ad857d4b0</b><br/>tau: [16,18)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 0x556ad857d330<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad857d4b0"->"0x556ad857d630" [style=dotted]
+"0x556ad857d630"[label=<<b>0x556ad857d630</b><br/>tau: [16,18)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 0x556ad857d330<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad857d630"->"0x556ad857d850" [style=dotted]
+"0x556ad857d850"[label=<<b>0x556ad857d850</b><br/>tau: [18,20)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 0x556ad857d330<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad857d850"->"0x556ad857da70" [style=dotted]
+"0x556ad857da70"[label=<<b>0x556ad857da70</b><br/>tau: [18,20)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 0x556ad857d330<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad857da70"->"0x556ad8547570" [style=dotted]
+"0x556ad85473f0"[label=<<b>0x556ad85473f0</b><br/>tau: [16,20)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 0x556ad85591f0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad85473f0"->"0x556ad8547570"
+"0x556ad85473f0"->"0x556ad8547790"
+"0x556ad85473f0"->"0x556ad85479b0"
+"0x556ad85473f0"->"0x556ad8547bd0"
+
+"0x556ad85473f0"->"0x556ad858aeb0" [style=dotted]
+"0x556ad8547570"[label=<<b>0x556ad8547570</b><br/>tau: [16,18)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 0x556ad85473f0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8547570"->"0x556ad8547790" [style=dotted]
+"0x556ad8547790"[label=<<b>0x556ad8547790</b><br/>tau: [16,18)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 0x556ad85473f0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8547790"->"0x556ad85479b0" [style=dotted]
+"0x556ad85479b0"[label=<<b>0x556ad85479b0</b><br/>tau: [18,20)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 0x556ad85473f0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85479b0"->"0x556ad8547bd0" [style=dotted]
+"0x556ad8547bd0"[label=<<b>0x556ad8547bd0</b><br/>tau: [18,20)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 0x556ad85473f0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8547bd0"->"0x556ad858b030" [style=dotted]
+"0x556ad858aeb0"[label=<<b>0x556ad858aeb0</b><br/>tau: [20,24)<br/>sigma: [16,20)<br/>Level: 3<br/>Parent: 0x556ad85591f0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad858aeb0"->"0x556ad858b030"
+"0x556ad858aeb0"->"0x556ad858b460"
+"0x556ad858aeb0"->"0x556ad8594570"
+"0x556ad858aeb0"->"0x556ad85949a0"
+
+"0x556ad858aeb0"->"0x556ad858f6f0" [style=dotted]
+"0x556ad858b030"[label=<<b>0x556ad858b030</b><br/>tau: [20,22)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 0x556ad858aeb0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad858b030"->"0x556ad858b460" [style=dotted]
+"0x556ad858b460"[label=<<b>0x556ad858b460</b><br/>tau: [20,22)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 0x556ad858aeb0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad858b460"->"0x556ad8594570" [style=dotted]
+"0x556ad8594570"[label=<<b>0x556ad8594570</b><br/>tau: [22,24)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 0x556ad858aeb0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad8594570"->"0x556ad85949a0" [style=dotted]
+"0x556ad85949a0"[label=<<b>0x556ad85949a0</b><br/>tau: [22,24)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 0x556ad858aeb0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85949a0"->"0x556ad858f870" [style=dotted]
+"0x556ad858f6f0"[label=<<b>0x556ad858f6f0</b><br/>tau: [20,24)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 0x556ad85591f0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad858f6f0"->"0x556ad858f870"
+"0x556ad858f6f0"->"0x556ad858fca0"
+"0x556ad858f6f0"->"0x556ad85900d0"
+"0x556ad858f6f0"->"0x556ad85896e0"
+
+"0x556ad858f6f0"->"0x556ad8589c90" [style=dotted]
+"0x556ad858f870"[label=<<b>0x556ad858f870</b><br/>tau: [20,22)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 0x556ad858f6f0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad858f870"->"0x556ad858fca0" [style=dotted]
+"0x556ad858fca0"[label=<<b>0x556ad858fca0</b><br/>tau: [20,22)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 0x556ad858f6f0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad858fca0"->"0x556ad85900d0" [style=dotted]
+"0x556ad85900d0"[label=<<b>0x556ad85900d0</b><br/>tau: [22,24)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 0x556ad858f6f0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85900d0"->"0x556ad85896e0" [style=dotted]
+"0x556ad85896e0"[label=<<b>0x556ad85896e0</b><br/>tau: [22,24)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 0x556ad858f6f0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad85896e0"->"0x556ad85b9e50" [style=dotted]
+"0x556ad8589b10"[label=<<b>0x556ad8589b10</b><br/>tau: [16,24)<br/>sigma: [24,32)<br/>Level: 2<br/>Parent: 0x556ad8559070<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad8589b10"->"0x556ad8589c90"
+"0x556ad8589b10"->"0x556ad8590280"
+"0x556ad8589b10"->"0x556ad85b9cd0"
+"0x556ad8589b10"->"0x556ad8585530"
+
+"0x556ad8589b10"->"0x556ad8585770" [style=dotted]
+"0x556ad8589c90"[label=<<b>0x556ad8589c90</b><br/>tau: [16,20)<br/>sigma: [24,28)<br/>Level: 3<br/>Parent: 0x556ad8589b10<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad8589c90"->"0x556ad8590280" [style=dotted]
+"0x556ad8590280"[label=<<b>0x556ad8590280</b><br/>tau: [16,20)<br/>sigma: [28,32)<br/>Level: 3<br/>Parent: 0x556ad8589b10<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad8590280"->"0x556ad85b9cd0" [style=dotted]
+"0x556ad85b9cd0"[label=<<b>0x556ad85b9cd0</b><br/>tau: [20,24)<br/>sigma: [24,28)<br/>Level: 3<br/>Parent: 0x556ad8589b10<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad85b9cd0"->"0x556ad85b9e50"
+"0x556ad85b9cd0"->"0x556ad85ba280"
+"0x556ad85b9cd0"->"0x556ad8584cd0"
+"0x556ad85b9cd0"->"0x556ad8585100"
+
+"0x556ad85b9cd0"->"0x556ad8585530" [style=dotted]
+"0x556ad85b9e50"[label=<<b>0x556ad85b9e50</b><br/>tau: [20,22)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 0x556ad85b9cd0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85b9e50"->"0x556ad85ba280" [style=dotted]
+"0x556ad85ba280"[label=<<b>0x556ad85ba280</b><br/>tau: [20,22)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 0x556ad85b9cd0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85ba280"->"0x556ad8584cd0" [style=dotted]
+"0x556ad8584cd0"[label=<<b>0x556ad8584cd0</b><br/>tau: [22,24)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 0x556ad85b9cd0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8584cd0"->"0x556ad8585100" [style=dotted]
+"0x556ad8585100"[label=<<b>0x556ad8585100</b><br/>tau: [22,24)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 0x556ad85b9cd0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad8585100"->"0x556ad85b9150" [style=dotted]
+"0x556ad8585530"[label=<<b>0x556ad8585530</b><br/>tau: [20,24)<br/>sigma: [28,32)<br/>Level: 3<br/>Parent: 0x556ad8589b10<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
+
+
+"0x556ad8585530"->"0x556ad85b88b0" [style=dotted]
+"0x556ad8585770"[label=<<b>0x556ad8585770</b><br/>tau: [24,32)<br/>sigma: [16,24)<br/>Level: 2<br/>Parent: 0x556ad8559070<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad8585770"->"0x556ad85b88b0"
+"0x556ad8585770"->"0x556ad85b8fd0"
+"0x556ad8585770"->"0x556ad85b92d0"
+"0x556ad8585770"->"0x556ad86ebfe0"
+
+"0x556ad8585770"->"0x556ad86ec790" [style=dotted]
+"0x556ad85b88b0"[label=<<b>0x556ad85b88b0</b><br/>tau: [24,28)<br/>sigma: [16,20)<br/>Level: 3<br/>Parent: 0x556ad8585770<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad85b88b0"->"0x556ad85b8fd0" [style=dotted]
+"0x556ad85b8fd0"[label=<<b>0x556ad85b8fd0</b><br/>tau: [24,28)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 0x556ad8585770<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad85b8fd0"->"0x556ad85b9150"
+"0x556ad85b8fd0"->"0x556ad85c3190"
+"0x556ad85b8fd0"->"0x556ad85c35c0"
+"0x556ad85b8fd0"->"0x556ad85c39f0"
+
+"0x556ad85b8fd0"->"0x556ad85b92d0" [style=dotted]
+"0x556ad85b9150"[label=<<b>0x556ad85b9150</b><br/>tau: [24,26)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 0x556ad85b8fd0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85b9150"->"0x556ad85c3190" [style=dotted]
+"0x556ad85c3190"[label=<<b>0x556ad85c3190</b><br/>tau: [24,26)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 0x556ad85b8fd0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85c3190"->"0x556ad85c35c0" [style=dotted]
+"0x556ad85c35c0"[label=<<b>0x556ad85c35c0</b><br/>tau: [26,28)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 0x556ad85b8fd0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85c35c0"->"0x556ad85c39f0" [style=dotted]
+"0x556ad85c39f0"[label=<<b>0x556ad85c39f0</b><br/>tau: [26,28)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 0x556ad85b8fd0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85c39f0"->"0x556ad85a1f00" [style=dotted]
+"0x556ad85b92d0"[label=<<b>0x556ad85b92d0</b><br/>tau: [28,32)<br/>sigma: [16,20)<br/>Level: 3<br/>Parent: 0x556ad8585770<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad85b92d0"->"0x556ad86ebfe0" [style=dotted]
+"0x556ad86ebfe0"[label=<<b>0x556ad86ebfe0</b><br/>tau: [28,32)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 0x556ad8585770<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
+
+
+"0x556ad86ebfe0"->"0x556ad85a1d80" [style=dotted]
+"0x556ad86ec790"[label=<<b>0x556ad86ec790</b><br/>tau: [24,32)<br/>sigma: [24,32)<br/>Level: 2<br/>Parent: 0x556ad8559070<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad86ec790"->"0x556ad85a1d80"
+"0x556ad86ec790"->"0x556ad85badb0"
+"0x556ad86ec790"->"0x556ad858d0f0"
+"0x556ad86ec790"->"0x556ad85cd620"
+
+"0x556ad85a1d80"[label=<<b>0x556ad85a1d80</b><br/>tau: [24,28)<br/>sigma: [24,28)<br/>Level: 3<br/>Parent: 0x556ad86ec790<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad85a1d80"->"0x556ad85a1f00"
+"0x556ad85a1d80"->"0x556ad85a2330"
+"0x556ad85a1d80"->"0x556ad85a2760"
+"0x556ad85a1d80"->"0x556ad85a2b90"
+
+"0x556ad85a1d80"->"0x556ad85badb0" [style=dotted]
+"0x556ad85a1f00"[label=<<b>0x556ad85a1f00</b><br/>tau: [24,26)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 0x556ad85a1d80<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad85a1f00"->"0x556ad85a2330" [style=dotted]
+"0x556ad85a2330"[label=<<b>0x556ad85a2330</b><br/>tau: [24,26)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 0x556ad85a1d80<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85a2330"->"0x556ad85a2760" [style=dotted]
+"0x556ad85a2760"[label=<<b>0x556ad85a2760</b><br/>tau: [26,28)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 0x556ad85a1d80<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85a2760"->"0x556ad85a2b90" [style=dotted]
+"0x556ad85a2b90"[label=<<b>0x556ad85a2b90</b><br/>tau: [26,28)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 0x556ad85a1d80<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad85a2b90"->"0x556ad85baf30" [style=dotted]
+"0x556ad85badb0"[label=<<b>0x556ad85badb0</b><br/>tau: [24,28)<br/>sigma: [28,32)<br/>Level: 3<br/>Parent: 0x556ad86ec790<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
+
+"0x556ad85badb0"->"0x556ad85baf30"
+"0x556ad85badb0"->"0x556ad85bb360"
+"0x556ad85badb0"->"0x556ad85bb790"
+"0x556ad85badb0"->"0x556ad858ccc0"
+
+"0x556ad85badb0"->"0x556ad858d0f0" [style=dotted]
+"0x556ad85baf30"[label=<<b>0x556ad85baf30</b><br/>tau: [24,26)<br/>sigma: [28,30)<br/>Level: 4<br/>Parent: 0x556ad85badb0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85baf30"->"0x556ad85bb360" [style=dotted]
+"0x556ad85bb360"[label=<<b>0x556ad85bb360</b><br/>tau: [24,26)<br/>sigma: [30,32)<br/>Level: 4<br/>Parent: 0x556ad85badb0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85bb360"->"0x556ad85bb790" [style=dotted]
+"0x556ad85bb790"[label=<<b>0x556ad85bb790</b><br/>tau: [26,28)<br/>sigma: [28,30)<br/>Level: 4<br/>Parent: 0x556ad85badb0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85bb790"->"0x556ad858ccc0" [style=dotted]
+"0x556ad858ccc0"[label=<<b>0x556ad858ccc0</b><br/>tau: [26,28)<br/>sigma: [30,32)<br/>Level: 4<br/>Parent: 0x556ad85badb0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad858ccc0"->"0x556ad858d270" [style=dotted]
+"0x556ad858d0f0"[label=<<b>0x556ad858d0f0</b><br/>tau: [28,32)<br/>sigma: [24,28)<br/>Level: 3<br/>Parent: 0x556ad86ec790<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
+
+"0x556ad858d0f0"->"0x556ad858d270"
+"0x556ad858d0f0"->"0x556ad858d6a0"
+"0x556ad858d0f0"->"0x556ad858dad0"
+"0x556ad858d0f0"->"0x556ad85cd1f0"
+
+"0x556ad858d0f0"->"0x556ad85cd620" [style=dotted]
+"0x556ad858d270"[label=<<b>0x556ad858d270</b><br/>tau: [28,30)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 0x556ad858d0f0<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad858d270"->"0x556ad858d6a0" [style=dotted]
+"0x556ad858d6a0"[label=<<b>0x556ad858d6a0</b><br/>tau: [28,30)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 0x556ad858d0f0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad858d6a0"->"0x556ad858dad0" [style=dotted]
+"0x556ad858dad0"[label=<<b>0x556ad858dad0</b><br/>tau: [30,32)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 0x556ad858d0f0<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad858dad0"->"0x556ad85cd1f0" [style=dotted]
+"0x556ad85cd1f0"[label=<<b>0x556ad85cd1f0</b><br/>tau: [30,32)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 0x556ad858d0f0<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85cd1f0"->"0x556ad85cd7a0" [style=dotted]
+"0x556ad85cd620"[label=<<b>0x556ad85cd620</b><br/>tau: [28,32)<br/>sigma: [28,32)<br/>Level: 3<br/>Parent: 0x556ad86ec790<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
+
+"0x556ad85cd620"->"0x556ad85cd7a0"
+"0x556ad85cd620"->"0x556ad85cdbd0"
+"0x556ad85cd620"->"0x556ad85ce000"
+"0x556ad85cd620"->"0x556ad85735f0"
+
+"0x556ad85cd7a0"[label=<<b>0x556ad85cd7a0</b><br/>tau: [28,30)<br/>sigma: [28,30)<br/>Level: 4<br/>Parent: 0x556ad85cd620<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+"0x556ad85cd7a0"->"0x556ad85cdbd0" [style=dotted]
+"0x556ad85cdbd0"[label=<<b>0x556ad85cdbd0</b><br/>tau: [28,30)<br/>sigma: [30,32)<br/>Level: 4<br/>Parent: 0x556ad85cd620<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
+
+
+"0x556ad85cdbd0"->"0x556ad85ce000" [style=dotted]
+"0x556ad85ce000"[label=<<b>0x556ad85ce000</b><br/>tau: [30,32)<br/>sigma: [28,30)<br/>Level: 4<br/>Parent: 0x556ad85cd620<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
+
+
+"0x556ad85ce000"->"0x556ad85735f0" [style=dotted]
+"0x556ad85735f0"[label=<<b>0x556ad85735f0</b><br/>tau: [30,32)<br/>sigma: [30,32)<br/>Level: 4<br/>Parent: 0x556ad85cd620<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
+
+
+}
+#@enddot

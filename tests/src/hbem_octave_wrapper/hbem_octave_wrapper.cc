@@ -16,6 +16,8 @@
 #include <octave/octave.h>
 #include <octave/parse.h>
 
+#include <cstring>
+
 namespace HierBEM
 {
   struct HBEMOctaveValueImpl
@@ -59,6 +61,21 @@ namespace HierBEM
   HBEMOctaveValue::double_value() const
   {
     return m_impl->oct_val.double_value();
+  }
+
+  void
+  HBEMOctaveValue::matrix_value(std::vector<double> &mat_data,
+                                unsigned int        &m,
+                                unsigned int        &n)
+  {
+    Matrix oct_mat = m_impl->oct_val.matrix_value();
+    m              = oct_mat.size(0);
+    n              = oct_mat.size(1);
+    mat_data.resize(m * n);
+
+    std::memcpy((void *)mat_data.data(),
+                (void *)oct_mat.fortran_vec(),
+                mat_data.size() * sizeof(double));
   }
 
   struct HBEMOctaveWrapperImpl

@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -2687,6 +2688,9 @@ namespace HierBEM
                         &partition,
       const unsigned int fixed_rank_k);
 
+    void
+    link_hmat_nodes_on_same_levels();
+
     /**
      * Build the leaf set of the current \hmatnode.
      */
@@ -3052,6 +3056,11 @@ namespace HierBEM
      * Pointer to the parent \hmatrix.
      */
     HMatrix<spacedim, Number> *parent;
+
+    /**
+     * Pointer to next \hmatrix node on a same level.
+     */
+    HMatrix<spacedim, Number> *next_same_level_hmat_node;
 
     /**
      * Submatrix index of the current \hmatnode wrt. its parent \hmatnode.
@@ -13920,27 +13929,28 @@ namespace HierBEM
   copy_hmatrix_node(HMatrix<spacedim, Number>  &hmat_dst,
                     HMatrix<spacedim, Number> &&hmat_src)
   {
-    hmat_dst.type                = hmat_src.type;
-    hmat_dst.state               = hmat_src.state;
-    hmat_dst.property            = hmat_src.property;
-    hmat_dst.block_type          = hmat_src.block_type;
-    hmat_dst.submatrices         = hmat_src.submatrices;
-    hmat_dst.submatrix_index     = hmat_src.submatrix_index;
-    hmat_dst.parent              = hmat_src.parent;
-    hmat_dst.leaf_set            = hmat_src.leaf_set;
-    hmat_dst.near_field_leaf_set = hmat_src.near_field_leaf_set;
-    hmat_dst.far_field_leaf_set  = hmat_src.far_field_leaf_set;
-    hmat_dst.rkmatrix            = hmat_src.rkmatrix;
-    hmat_dst.fullmatrix          = hmat_src.fullmatrix;
-    hmat_dst.bc_node             = hmat_src.bc_node;
-    hmat_dst.row_index_range     = hmat_src.row_index_range;
-    hmat_dst.col_index_range     = hmat_src.col_index_range;
-    hmat_dst.m                   = hmat_src.m;
-    hmat_dst.n                   = hmat_src.n;
-    hmat_dst.Sigma_P             = hmat_src.Sigma_P;
-    hmat_dst.Sigma_R             = hmat_src.Sigma_R;
-    hmat_dst.Sigma_F             = hmat_src.Sigma_F;
-    hmat_dst.Tind                = std::move(hmat_src.Tind);
+    hmat_dst.type                      = hmat_src.type;
+    hmat_dst.state                     = hmat_src.state;
+    hmat_dst.property                  = hmat_src.property;
+    hmat_dst.block_type                = hmat_src.block_type;
+    hmat_dst.submatrices               = hmat_src.submatrices;
+    hmat_dst.submatrix_index           = hmat_src.submatrix_index;
+    hmat_dst.parent                    = hmat_src.parent;
+    hmat_dst.next_same_level_hmat_node = hmat_src.next_same_level_hmat_node;
+    hmat_dst.leaf_set                  = hmat_src.leaf_set;
+    hmat_dst.near_field_leaf_set       = hmat_src.near_field_leaf_set;
+    hmat_dst.far_field_leaf_set        = hmat_src.far_field_leaf_set;
+    hmat_dst.rkmatrix                  = hmat_src.rkmatrix;
+    hmat_dst.fullmatrix                = hmat_src.fullmatrix;
+    hmat_dst.bc_node                   = hmat_src.bc_node;
+    hmat_dst.row_index_range           = hmat_src.row_index_range;
+    hmat_dst.col_index_range           = hmat_src.col_index_range;
+    hmat_dst.m                         = hmat_src.m;
+    hmat_dst.n                         = hmat_src.n;
+    hmat_dst.Sigma_P                   = hmat_src.Sigma_P;
+    hmat_dst.Sigma_R                   = hmat_src.Sigma_R;
+    hmat_dst.Sigma_F                   = hmat_src.Sigma_F;
+    hmat_dst.Tind                      = std::move(hmat_src.Tind);
   }
 
 
@@ -14040,6 +14050,7 @@ namespace HierBEM
     , block_type(HMatrixSupport::undefined_block)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14070,6 +14081,7 @@ namespace HierBEM
     , block_type(block_type)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14088,6 +14100,7 @@ namespace HierBEM
   {
     InitAndCreateHMatrixChildren(this, bct.get_root(), fixed_rank_k, property);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14104,6 +14117,7 @@ namespace HierBEM
     , block_type(block_type)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14122,6 +14136,7 @@ namespace HierBEM
   {
     InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, property);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14137,6 +14152,7 @@ namespace HierBEM
     , block_type(block_type)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14161,6 +14177,7 @@ namespace HierBEM
     InitAndCreateHMatrixChildren(
       this, bct.get_root(), fixed_rank_k, M, property);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14175,6 +14192,7 @@ namespace HierBEM
     , block_type(block_type)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14198,6 +14216,7 @@ namespace HierBEM
 
     InitAndCreateHMatrixChildren(this, bct.get_root(), M, property);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14215,6 +14234,7 @@ namespace HierBEM
     , block_type(block_type)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14233,6 +14253,7 @@ namespace HierBEM
   {
     InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, M, property);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14249,6 +14270,7 @@ namespace HierBEM
     , block_type(block_type)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14267,6 +14289,7 @@ namespace HierBEM
   {
     InitAndCreateHMatrixChildren(this, bc_node, M, property);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14283,6 +14306,7 @@ namespace HierBEM
     , block_type(block_type)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14301,6 +14325,7 @@ namespace HierBEM
   {
     InitAndCreateHMatrixChildren(this, bc_node, std::move(H));
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14316,6 +14341,7 @@ namespace HierBEM
     , block_type(block_type)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14334,6 +14360,7 @@ namespace HierBEM
   {
     InitAndCreateHMatrixChildren(this, bct.get_root(), std::move(H));
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14345,6 +14372,7 @@ namespace HierBEM
     , block_type(HMatrixSupport::undefined_block)
     , submatrices(0)
     , parent(nullptr)
+    , next_same_level_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14363,6 +14391,7 @@ namespace HierBEM
   {
     copy_hmatrix(*this, H);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14374,6 +14403,7 @@ namespace HierBEM
     , block_type(H.block_type)
     , submatrices(H.submatrices)
     , parent(H.parent)
+    , next_same_level_hmat_node(H.next_same_level_hmat_node)
     , submatrix_index(H.submatrix_index)
     , leaf_set(H.leaf_set)
     , near_field_leaf_set(H.near_field_leaf_set)
@@ -14412,6 +14442,7 @@ namespace HierBEM
                                  fixed_rank_k,
                                  this->property);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14431,6 +14462,7 @@ namespace HierBEM
 
     InitAndCreateHMatrixChildren(this, bc_node, fixed_rank_k, this->property);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -14466,6 +14498,10 @@ namespace HierBEM
             Assert(type == HMatrixType::FullMatrixType,
                    ExcInvalidHMatrixType(type));
             build_leaf_set();
+            /**
+             * Since there is only one node in the \hmatrix hierarchy, there is
+             * no need to link nodes on same levels.
+             */
           }
       }
 
@@ -14480,6 +14516,7 @@ namespace HierBEM
     release();
     copy_hmatrix(*this, H);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
 
     return (*this);
   }
@@ -15011,17 +15048,18 @@ namespace HierBEM
     near_field_leaf_set.clear();
     far_field_leaf_set.clear();
 
-    type            = UndefinedMatrixType;
-    state           = HMatrixSupport::matrix;
-    property        = HMatrixSupport::general,
-    block_type      = HMatrixSupport::undefined_block;
-    bc_node         = nullptr;
-    parent          = nullptr;
-    submatrix_index = submatrix_index_invalid;
-    row_index_range = nullptr;
-    col_index_range = nullptr;
-    m               = 0;
-    n               = 0;
+    type                      = UndefinedMatrixType;
+    state                     = HMatrixSupport::matrix;
+    property                  = HMatrixSupport::general,
+    block_type                = HMatrixSupport::undefined_block;
+    bc_node                   = nullptr;
+    parent                    = nullptr;
+    next_same_level_hmat_node = nullptr;
+    submatrix_index           = submatrix_index_invalid;
+    row_index_range           = nullptr;
+    col_index_range           = nullptr;
+    m                         = 0;
+    n                         = 0;
 
     Sigma_P.clear();
 
@@ -15082,8 +15120,9 @@ namespace HierBEM
     property   = HMatrixSupport::general;
     block_type = HMatrixSupport::undefined_block;
     submatrices.clear();
-    parent          = nullptr;
-    submatrix_index = submatrix_index_invalid;
+    parent                    = nullptr;
+    next_same_level_hmat_node = nullptr;
+    submatrix_index           = submatrix_index_invalid;
     leaf_set.clear();
     near_field_leaf_set.clear();
     far_field_leaf_set.clear();
@@ -16011,6 +16050,18 @@ namespace HierBEM
             << "\"" << std::hex << submatrix << "\"\n";
       }
     out << "\n";
+
+    /**
+     * Construct the relationship between the current node and its sequel on a
+     * same level, if there is any. The connection edge uses dotted line.
+     */
+    if (next_same_level_hmat_node != nullptr)
+      {
+        out << "\"" << std::hex << this << "\""
+            << "->"
+            << "\"" << std::hex << next_same_level_hmat_node
+            << "\" [style=dotted]\n";
+      }
 
     /**
      * Print each submatrix node.
@@ -22477,7 +22528,10 @@ namespace HierBEM
      * Rebuild the leaf set of the current \hmatrix and its inverse.
      */
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
+
     M_inv.build_leaf_set();
+    M_inv.link_hmat_nodes_on_same_levels();
   }
 
 
@@ -25111,6 +25165,7 @@ namespace HierBEM
   {
     coarsen_to_partition(subtree.get_leaf_set(), fixed_rank_k);
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
   }
 
 
@@ -25149,6 +25204,57 @@ namespace HierBEM
         for (HMatrix *submatrix : submatrices)
           {
             submatrix->coarsen_to_partition(partition, fixed_rank_k);
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::link_hmat_nodes_on_same_levels()
+  {
+    std::queue<HMatrix<spacedim, Number> *> work_queue;
+
+    if (submatrices.size() > 0)
+      {
+        work_queue.push(this);
+
+        while (!work_queue.empty())
+          {
+            HMatrix<spacedim, Number> *current_hmat_node = work_queue.front();
+            work_queue.pop();
+
+            /**
+             * When there is a subsequent \hmatrix node in the queue and if it
+             * is on a same level as the current \hmatrix node, link them.
+             */
+            if (work_queue.size() > 0)
+              {
+                HMatrix<spacedim, Number> *next_hmat_node = work_queue.front();
+                if (current_hmat_node->bc_node->get_level() ==
+                    next_hmat_node->bc_node->get_level())
+                  {
+                    current_hmat_node->next_same_level_hmat_node =
+                      next_hmat_node;
+                  }
+                else
+                  {
+                    current_hmat_node->next_same_level_hmat_node = nullptr;
+                  }
+              }
+            else
+              {
+                current_hmat_node->next_same_level_hmat_node = nullptr;
+              }
+
+            /**
+             * Push all submatrix nodes of the current \hmatrix node into the
+             * queue, if there is any.
+             */
+            for (auto hmat : current_hmat_node->submatrices)
+              {
+                work_queue.push(hmat);
+              }
           }
       }
   }
@@ -25376,6 +25482,7 @@ namespace HierBEM
      * new \hmatrix hierarchy.
      */
     build_leaf_set();
+    link_hmat_nodes_on_same_levels();
 
     /**
      *   </dd>
@@ -25447,6 +25554,7 @@ namespace HierBEM
          */
         hmat_new.coarsen_to_partition(target_leaf_set, fixed_rank_k2);
         hmat_new.build_leaf_set();
+        hmat_new.link_hmat_nodes_on_same_levels();
 
         /**
          * \mynote{The structure of the \bct associated with the \hmat is

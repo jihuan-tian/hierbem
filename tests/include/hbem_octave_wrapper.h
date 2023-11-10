@@ -17,6 +17,7 @@
 #define HBEM_OCTAVE_WRAPPER_H_
 
 #include <string>
+#include <vector>
 
 class octave_value;
 namespace HierBEM
@@ -38,6 +39,10 @@ namespace HierBEM
     int_value() const;
     double
     double_value() const;
+    void
+    matrix_value(std::vector<double> &mat_data,
+                 unsigned int        &m,
+                 unsigned int        &n);
 
   private:
     HBEMOctaveValueImpl *m_impl;
