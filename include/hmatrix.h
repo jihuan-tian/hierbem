@@ -1098,7 +1098,7 @@ namespace HierBEM
      * @param out
      */
     void
-    print_matrix_info_as_dot(std::ostream &out) const;
+    print_matrix_info_as_dot(std::ostream &out);
 
     /**
      * Print the \hmatrix as a @p LAPACKFullMatrixExt to Octave mat format.
@@ -2688,8 +2688,22 @@ namespace HierBEM
                         &partition,
       const unsigned int fixed_rank_k);
 
+    /**
+     * Link all \hmatrix nodes on a same level.
+     */
     void
     link_hmat_nodes_on_same_levels();
+
+    /**
+     * Starting from a diagonal block, link \hmatrix nodes on a same level and
+     * same row as well as \hmatrix nodes on a same level and same column. This
+     * member function should only be called when the \hmatrix object is a
+     * diagonal block.
+     *
+     * This is function is only needed by H-LU factorization at the moment.
+     */
+    void
+    link_hmat_nodes_on_cross_from_diagonal_blocks();
 
     /**
      * Build the leaf set of the current \hmatnode.
@@ -2912,6 +2926,15 @@ namespace HierBEM
 
   private:
     /**
+     * Assign IDs to \hmatnodes, which will be used to generate the dot
+     * directed graph.
+     *
+     * @param current_id
+     */
+    void
+    assign_node_ids_for_dot();
+
+    /**
      * Print the \hmatrix hierarchy information recursively as a node in the
      * directional graph in Graphviz dot format.
      *
@@ -3048,6 +3071,11 @@ namespace HierBEM
     HMatrixSupport::BlockType block_type;
 
     /**
+     * Node ID used for generating the directed graph in GraphViz dot.
+     */
+    size_type dot_node_id;
+
+    /**
      * A list of submatrices of type \hmatrix.
      */
     std::vector<HMatrix<spacedim, Number> *> submatrices;
@@ -3058,9 +3086,21 @@ namespace HierBEM
     HMatrix<spacedim, Number> *parent;
 
     /**
-     * Pointer to next \hmatrix node on a same level.
+     * Pointer to the next \hmatrix node on a same level.
      */
     HMatrix<spacedim, Number> *next_same_level_hmat_node;
+
+    /**
+     * Pointer to the next \hmatrix node on a same level, which is also on a
+     * same row as the same-level diagonal block.
+     */
+    HMatrix<spacedim, Number> *next_same_level_same_row_hmat_node;
+
+    /**
+     * Pointer to the next \hmatrix node on a same level, which is also on a
+     * same column as the same-level diagonal block.
+     */
+    HMatrix<spacedim, Number> *next_same_level_same_column_hmat_node;
 
     /**
      * Submatrix index of the current \hmatnode wrt. its parent \hmatnode.
@@ -13933,24 +13973,29 @@ namespace HierBEM
     hmat_dst.state                     = hmat_src.state;
     hmat_dst.property                  = hmat_src.property;
     hmat_dst.block_type                = hmat_src.block_type;
+    hmat_dst.dot_node_id               = hmat_src.dot_node_id;
     hmat_dst.submatrices               = hmat_src.submatrices;
     hmat_dst.submatrix_index           = hmat_src.submatrix_index;
     hmat_dst.parent                    = hmat_src.parent;
     hmat_dst.next_same_level_hmat_node = hmat_src.next_same_level_hmat_node;
-    hmat_dst.leaf_set                  = hmat_src.leaf_set;
-    hmat_dst.near_field_leaf_set       = hmat_src.near_field_leaf_set;
-    hmat_dst.far_field_leaf_set        = hmat_src.far_field_leaf_set;
-    hmat_dst.rkmatrix                  = hmat_src.rkmatrix;
-    hmat_dst.fullmatrix                = hmat_src.fullmatrix;
-    hmat_dst.bc_node                   = hmat_src.bc_node;
-    hmat_dst.row_index_range           = hmat_src.row_index_range;
-    hmat_dst.col_index_range           = hmat_src.col_index_range;
-    hmat_dst.m                         = hmat_src.m;
-    hmat_dst.n                         = hmat_src.n;
-    hmat_dst.Sigma_P                   = hmat_src.Sigma_P;
-    hmat_dst.Sigma_R                   = hmat_src.Sigma_R;
-    hmat_dst.Sigma_F                   = hmat_src.Sigma_F;
-    hmat_dst.Tind                      = std::move(hmat_src.Tind);
+    hmat_dst.next_same_level_same_row_hmat_node =
+      hmat_src.next_same_level_same_row_hmat_node;
+    hmat_dst.next_same_level_same_column_hmat_node =
+      hmat_src.next_same_level_same_column_hmat_node;
+    hmat_dst.leaf_set            = hmat_src.leaf_set;
+    hmat_dst.near_field_leaf_set = hmat_src.near_field_leaf_set;
+    hmat_dst.far_field_leaf_set  = hmat_src.far_field_leaf_set;
+    hmat_dst.rkmatrix            = hmat_src.rkmatrix;
+    hmat_dst.fullmatrix          = hmat_src.fullmatrix;
+    hmat_dst.bc_node             = hmat_src.bc_node;
+    hmat_dst.row_index_range     = hmat_src.row_index_range;
+    hmat_dst.col_index_range     = hmat_src.col_index_range;
+    hmat_dst.m                   = hmat_src.m;
+    hmat_dst.n                   = hmat_src.n;
+    hmat_dst.Sigma_P             = hmat_src.Sigma_P;
+    hmat_dst.Sigma_R             = hmat_src.Sigma_R;
+    hmat_dst.Sigma_F             = hmat_src.Sigma_F;
+    hmat_dst.Tind                = std::move(hmat_src.Tind);
   }
 
 
@@ -14048,9 +14093,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(HMatrixSupport::general)
     , block_type(HMatrixSupport::undefined_block)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14079,9 +14127,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(property)
     , block_type(block_type)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14115,9 +14166,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(property)
     , block_type(block_type)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14150,9 +14204,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(HMatrixSupport::general)
     , block_type(block_type)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14190,9 +14247,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(HMatrixSupport::general)
     , block_type(block_type)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14232,9 +14292,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(property)
     , block_type(block_type)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14268,9 +14331,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(property)
     , block_type(block_type)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14304,9 +14370,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(property)
     , block_type(block_type)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14339,9 +14408,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(property)
     , block_type(block_type)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14370,9 +14442,12 @@ namespace HierBEM
     , state(HMatrixSupport::matrix)
     , property(HMatrixSupport::general)
     , block_type(HMatrixSupport::undefined_block)
+    , dot_node_id(0)
     , submatrices(0)
     , parent(nullptr)
     , next_same_level_hmat_node(nullptr)
+    , next_same_level_same_row_hmat_node(nullptr)
+    , next_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14401,9 +14476,13 @@ namespace HierBEM
     , state(H.state)
     , property(H.property)
     , block_type(H.block_type)
+    , dot_node_id(H.dot_node_id)
     , submatrices(H.submatrices)
     , parent(H.parent)
     , next_same_level_hmat_node(H.next_same_level_hmat_node)
+    , next_same_level_same_row_hmat_node(H.next_same_level_same_row_hmat_node)
+    , next_same_level_same_column_hmat_node(
+        H.next_same_level_same_column_hmat_node)
     , submatrix_index(H.submatrix_index)
     , leaf_set(H.leaf_set)
     , near_field_leaf_set(H.near_field_leaf_set)
@@ -15048,18 +15127,21 @@ namespace HierBEM
     near_field_leaf_set.clear();
     far_field_leaf_set.clear();
 
-    type                      = UndefinedMatrixType;
-    state                     = HMatrixSupport::matrix;
-    property                  = HMatrixSupport::general,
-    block_type                = HMatrixSupport::undefined_block;
-    bc_node                   = nullptr;
-    parent                    = nullptr;
-    next_same_level_hmat_node = nullptr;
-    submatrix_index           = submatrix_index_invalid;
-    row_index_range           = nullptr;
-    col_index_range           = nullptr;
-    m                         = 0;
-    n                         = 0;
+    type                                  = UndefinedMatrixType;
+    state                                 = HMatrixSupport::matrix;
+    property                              = HMatrixSupport::general,
+    block_type                            = HMatrixSupport::undefined_block;
+    dot_node_id                           = 0;
+    bc_node                               = nullptr;
+    parent                                = nullptr;
+    next_same_level_hmat_node             = nullptr;
+    next_same_level_same_row_hmat_node    = nullptr;
+    next_same_level_same_column_hmat_node = nullptr;
+    submatrix_index                       = submatrix_index_invalid;
+    row_index_range                       = nullptr;
+    col_index_range                       = nullptr;
+    m                                     = 0;
+    n                                     = 0;
 
     Sigma_P.clear();
 
@@ -15115,14 +15197,17 @@ namespace HierBEM
   void
   HMatrix<spacedim, Number>::clear_hmat_node()
   {
-    type       = UndefinedMatrixType;
-    state      = HMatrixSupport::matrix;
-    property   = HMatrixSupport::general;
-    block_type = HMatrixSupport::undefined_block;
+    type        = UndefinedMatrixType;
+    state       = HMatrixSupport::matrix;
+    property    = HMatrixSupport::general;
+    block_type  = HMatrixSupport::undefined_block;
+    dot_node_id = 0;
     submatrices.clear();
-    parent                    = nullptr;
-    next_same_level_hmat_node = nullptr;
-    submatrix_index           = submatrix_index_invalid;
+    parent                                = nullptr;
+    next_same_level_hmat_node             = nullptr;
+    next_same_level_same_row_hmat_node    = nullptr;
+    next_same_level_same_column_hmat_node = nullptr;
+    submatrix_index                       = submatrix_index_invalid;
     leaf_set.clear();
     near_field_leaf_set.clear();
     far_field_leaf_set.clear();
@@ -15897,8 +15982,10 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
-  HMatrix<spacedim, Number>::print_matrix_info_as_dot(std::ostream &out) const
+  HMatrix<spacedim, Number>::print_matrix_info_as_dot(std::ostream &out)
   {
+    assign_node_ids_for_dot();
+
     /**
      * Write the header of the Graphviz dot file.
      */
@@ -15998,6 +16085,35 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
+  HMatrix<spacedim, Number>::assign_node_ids_for_dot()
+  {
+    size_type current_node_id = 0;
+
+    std::queue<HMatrix<spacedim, Number> *> work_queue;
+    work_queue.push(this);
+
+    while (!work_queue.empty())
+      {
+        HMatrix<spacedim, Number> *current_hmat_node = work_queue.front();
+        work_queue.pop();
+
+        current_hmat_node->dot_node_id = current_node_id;
+        current_node_id++;
+
+        /**
+         * Push all submatrix nodes of the current \hmatrix node into the
+         * queue, if there is any.
+         */
+        for (auto hmat : current_hmat_node->submatrices)
+          {
+            work_queue.push(hmat);
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
   HMatrix<spacedim, Number>::_print_matrix_info_as_dot_node(
     std::ostream &out) const
   {
@@ -16006,21 +16122,21 @@ namespace HierBEM
      * \hmatnode is a full matrix, use red background. When it is a rank-k
      * matrix, use green background.
      */
-    out << "\"" << std::hex << this << "\""
-        << "[label=<<b>" << std::hex << this << "</b><br/>" << std::dec
+    out << "\"" << dot_node_id << "\""
+        << "[label=<<b>ID: " << dot_node_id << "</b><br/>"
         << "tau: [" << (*row_index_range)[0] << "," << (*row_index_range)[1]
         << ")<br/>";
     out << "sigma: [" << (*col_index_range)[0] << "," << (*col_index_range)[1]
         << ")<br/>";
     out << "Level: " << bc_node->get_level() << "<br/>";
-    out << "Parent: " << std::hex << parent << "<br/>";
-    out << "Submatrix index: " << std::dec << submatrix_index << "<br/>";
-    out << "H-matrix state: " << HMatrixSupport::state_name(this->state)
+    out << "Parent: " << ((parent == nullptr) ? 0 : parent->dot_node_id)
+        << "<br/>";
+    out << "Submatrix index: " << submatrix_index << "<br/>";
+    out << "H-matrix state: " << HMatrixSupport::state_name(state) << "<br/>"
+        << "H-matrix property: " << HMatrixSupport::property_name(property)
         << "<br/>"
-        << "H-matrix property: "
-        << HMatrixSupport::property_name(this->property) << "<br/>"
         << "H-matrix block type: "
-        << HMatrixSupport::block_type_name(this->block_type) << ">,";
+        << HMatrixSupport::block_type_name(block_type) << ">,";
 
     std::string node_color;
 
@@ -16045,9 +16161,9 @@ namespace HierBEM
       {
         Assert(submatrix != nullptr, ExcInternalError());
 
-        out << "\"" << std::hex << this << "\""
+        out << "\"" << dot_node_id << "\""
             << "->"
-            << "\"" << std::hex << submatrix << "\"\n";
+            << "\"" << submatrix->dot_node_id << "\"\n";
       }
     out << "\n";
 
@@ -16057,10 +16173,36 @@ namespace HierBEM
      */
     if (next_same_level_hmat_node != nullptr)
       {
-        out << "\"" << std::hex << this << "\""
+        out << "\"" << dot_node_id << "\""
             << "->"
-            << "\"" << std::hex << next_same_level_hmat_node
+            << "\"" << next_same_level_hmat_node->dot_node_id
             << "\" [style=dotted]\n";
+      }
+
+    /**
+     * Construct the relationship between the current node and its sequel on a
+     * same level and on a same row, if there is any. The connection edge uses
+     * red dotted line.
+     */
+    if (next_same_level_same_row_hmat_node != nullptr)
+      {
+        out << "\"" << dot_node_id << "\""
+            << "->"
+            << "\"" << next_same_level_same_row_hmat_node->dot_node_id
+            << "\" [style=dotted,color=red]\n";
+      }
+
+    /**
+     * Construct the relationship between the current node and its sequel on a
+     * same level and on a same column, if there is any. The connection edge
+     * uses green dotted line.
+     */
+    if (next_same_level_same_column_hmat_node != nullptr)
+      {
+        out << "\"" << dot_node_id << "\""
+            << "->"
+            << "\"" << next_same_level_same_column_hmat_node->dot_node_id
+            << "\" [style=dotted,color=green]\n";
       }
 
     /**
@@ -25256,6 +25398,123 @@ namespace HierBEM
                 work_queue.push(hmat);
               }
           }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::link_hmat_nodes_on_cross_from_diagonal_blocks()
+  {
+    Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
+           ExcInvalidHMatrixBlockType(block_type));
+
+    /**
+     * Iterate over each \hmatrix node on the same level by starting from the
+     * current diagonal block.
+     */
+    HMatrix<spacedim, Number> *current_hmat_node_on_same_row    = this;
+    HMatrix<spacedim, Number> *current_hmat_node_on_same_column = this;
+
+    this->next_same_level_same_row_hmat_node    = nullptr;
+    this->next_same_level_same_column_hmat_node = nullptr;
+
+    HMatrix<spacedim, Number> *current_hmat_node_on_same_level =
+      this->next_same_level_hmat_node;
+
+    while (current_hmat_node_on_same_level != nullptr)
+      {
+        /**
+         * Check if the current \hmatrix node is on the same row as the starting
+         * diagonal block.
+         */
+        if (*(current_hmat_node_on_same_level->row_index_range) ==
+            *(this->row_index_range))
+          {
+            /**
+             * 2023-11-11 According to my current understanding, when a same
+             * level block on a same row is found, its column index range must
+             * be larger than that of the diagonal block. Hence, we make an
+             * assertion here.
+             */
+            Assert((*(current_hmat_node_on_same_level->col_index_range))[0] >=
+                     (*(this->col_index_range))[1],
+                   ExcInternalError());
+
+            /**
+             * Actually, since we are searching along a linked list of \hmatrix
+             * nodes on a same level, which has been constructed using breadth
+             * first iteration, the column index ranges of two consecutive
+             * matrix blocks on a same row should be continuous.
+             */
+            Assert((*(current_hmat_node_on_same_level->col_index_range))[0] ==
+                     (*(current_hmat_node_on_same_row->col_index_range))[1],
+                   ExcInternalError());
+
+            current_hmat_node_on_same_row->next_same_level_same_row_hmat_node =
+              current_hmat_node_on_same_level;
+
+            /**
+             * Move the pointer forward.
+             */
+            current_hmat_node_on_same_row =
+              current_hmat_node_on_same_row->next_same_level_same_row_hmat_node;
+          }
+
+        /**
+         * Check if the current \hmatrix node is on the same column as the
+         * starting diagonal block.
+         */
+        if (*(current_hmat_node_on_same_level->col_index_range) ==
+            *(this->col_index_range))
+          {
+            /**
+             * 2023-11-11 According to my current understanding, when a same
+             * level block on a same column is found, its row index range must
+             * be larger than that of the diagonal block. Hence, we make an
+             * assertion here.
+             */
+            Assert((*(current_hmat_node_on_same_level->row_index_range))[0] >=
+                     (*(this->row_index_range))[1],
+                   ExcInternalError());
+
+            /**
+             * Actually, since we are searching along a linked list of \hmatrix
+             * nodes on a same level, which has been constructed using breadth
+             * first iteration, the row index ranges of two consecutive matrix
+             * blocks on a same column should be continuous.
+             */
+            Assert((*(current_hmat_node_on_same_level->row_index_range))[0] ==
+                     (*(current_hmat_node_on_same_column->row_index_range))[1],
+                   ExcInternalError());
+
+            current_hmat_node_on_same_column
+              ->next_same_level_same_column_hmat_node =
+              current_hmat_node_on_same_level;
+
+            /**
+             * Move the pointer forward.
+             */
+            current_hmat_node_on_same_column =
+              current_hmat_node_on_same_column
+                ->next_same_level_same_column_hmat_node;
+          }
+
+        /**
+         * Move the pointer forward.
+         */
+        current_hmat_node_on_same_level =
+          current_hmat_node_on_same_level->next_same_level_hmat_node;
+      }
+
+    /**
+     * Recursive into diagonal submatrices. N.B. When the block cluster tree is
+     * a quad-tree, only the first and the last submatrices are diagonal blocks.
+     */
+    if (submatrices.size() > 0)
+      {
+        submatrices[0]->link_hmat_nodes_on_cross_from_diagonal_blocks();
+        submatrices[3]->link_hmat_nodes_on_cross_from_diagonal_blocks();
       }
   }
 

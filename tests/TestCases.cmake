@@ -286,3 +286,4 @@ add_subdirectory(units/hmatrix-hmatrix-mTmult-level-conserving-fine-fine-coarse-
 add_subdirectory(units/hmatrix-hmatrix-mTmult-level-conserving-symm-result)
 add_subdirectory(units/hmatrix-link-nodes-on-same-levels)
 add_subdirectory(units/hbem-octave-wrapper-matrix-value)
+add_subdirectory(units/hmatrix-link-nodes-on-cross-from-diagonal-blocks)

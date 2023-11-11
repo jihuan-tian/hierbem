@@ -19,6 +19,8 @@ node [style=filled, shape=box]
 "1"->"8"
 
 "1"->"2" [style=dotted]
+"1"->"2" [style=dotted,color=red]
+"1"->"3" [style=dotted,color=green]
 "5"[label=<<b>ID: 5</b><br/>tau: [0,8)<br/>sigma: [0,8)<br/>Level: 2<br/>Parent: 1<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
 
 "5"->"21"
@@ -27,6 +29,8 @@ node [style=filled, shape=box]
 "5"->"24"
 
 "5"->"6" [style=dotted]
+"5"->"6" [style=dotted,color=red]
+"5"->"7" [style=dotted,color=green]
 "21"[label=<<b>ID: 21</b><br/>tau: [0,4)<br/>sigma: [0,4)<br/>Level: 3<br/>Parent: 5<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
 
 "21"->"61"
@@ -35,22 +39,30 @@ node [style=filled, shape=box]
 "21"->"64"
 
 "21"->"22" [style=dotted]
+"21"->"22" [style=dotted,color=red]
+"21"->"23" [style=dotted,color=green]
 "61"[label=<<b>ID: 61</b><br/>tau: [0,2)<br/>sigma: [0,2)<br/>Level: 4<br/>Parent: 21<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "61"->"62" [style=dotted]
+"61"->"62" [style=dotted,color=red]
+"61"->"63" [style=dotted,color=green]
 "62"[label=<<b>ID: 62</b><br/>tau: [0,2)<br/>sigma: [2,4)<br/>Level: 4<br/>Parent: 21<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "62"->"63" [style=dotted]
+"62"->"65" [style=dotted,color=red]
 "63"[label=<<b>ID: 63</b><br/>tau: [2,4)<br/>sigma: [0,2)<br/>Level: 4<br/>Parent: 21<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "63"->"64" [style=dotted]
+"63"->"69" [style=dotted,color=green]
 "64"[label=<<b>ID: 64</b><br/>tau: [2,4)<br/>sigma: [2,4)<br/>Level: 4<br/>Parent: 21<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "64"->"65" [style=dotted]
+"64"->"67" [style=dotted,color=red]
+"64"->"70" [style=dotted,color=green]
 "22"[label=<<b>ID: 22</b><br/>tau: [0,4)<br/>sigma: [4,8)<br/>Level: 3<br/>Parent: 5<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
 
 "22"->"65"
@@ -59,10 +71,12 @@ node [style=filled, shape=box]
 "22"->"68"
 
 "22"->"23" [style=dotted]
+"22"->"25" [style=dotted,color=red]
 "65"[label=<<b>ID: 65</b><br/>tau: [0,2)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 22<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "65"->"66" [style=dotted]
+"65"->"66" [style=dotted,color=red]
 "66"[label=<<b>ID: 66</b><br/>tau: [0,2)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 22<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -71,6 +85,7 @@ node [style=filled, shape=box]
 
 
 "67"->"68" [style=dotted]
+"67"->"68" [style=dotted,color=red]
 "68"[label=<<b>ID: 68</b><br/>tau: [2,4)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 22<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -83,14 +98,17 @@ node [style=filled, shape=box]
 "23"->"72"
 
 "23"->"24" [style=dotted]
+"23"->"29" [style=dotted,color=green]
 "69"[label=<<b>ID: 69</b><br/>tau: [4,6)<br/>sigma: [0,2)<br/>Level: 4<br/>Parent: 23<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "69"->"70" [style=dotted]
+"69"->"71" [style=dotted,color=green]
 "70"[label=<<b>ID: 70</b><br/>tau: [4,6)<br/>sigma: [2,4)<br/>Level: 4<br/>Parent: 23<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "70"->"71" [style=dotted]
+"70"->"72" [style=dotted,color=green]
 "71"[label=<<b>ID: 71</b><br/>tau: [6,8)<br/>sigma: [0,2)<br/>Level: 4<br/>Parent: 23<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
@@ -107,22 +125,30 @@ node [style=filled, shape=box]
 "24"->"76"
 
 "24"->"25" [style=dotted]
+"24"->"27" [style=dotted,color=red]
+"24"->"30" [style=dotted,color=green]
 "73"[label=<<b>ID: 73</b><br/>tau: [4,6)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 24<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "73"->"74" [style=dotted]
+"73"->"74" [style=dotted,color=red]
+"73"->"75" [style=dotted,color=green]
 "74"[label=<<b>ID: 74</b><br/>tau: [4,6)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 24<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "74"->"75" [style=dotted]
+"74"->"77" [style=dotted,color=red]
 "75"[label=<<b>ID: 75</b><br/>tau: [6,8)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 24<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "75"->"76" [style=dotted]
+"75"->"81" [style=dotted,color=green]
 "76"[label=<<b>ID: 76</b><br/>tau: [6,8)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 24<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "76"->"77" [style=dotted]
+"76"->"79" [style=dotted,color=red]
+"76"->"82" [style=dotted,color=green]
 "6"[label=<<b>ID: 6</b><br/>tau: [0,8)<br/>sigma: [8,16)<br/>Level: 2<br/>Parent: 1<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
 
 "6"->"25"
@@ -131,10 +157,12 @@ node [style=filled, shape=box]
 "6"->"28"
 
 "6"->"7" [style=dotted]
+"6"->"9" [style=dotted,color=red]
 "25"[label=<<b>ID: 25</b><br/>tau: [0,4)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 6<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
 
 
 "25"->"26" [style=dotted]
+"25"->"26" [style=dotted,color=red]
 "26"[label=<<b>ID: 26</b><br/>tau: [0,4)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 6<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
 
 
@@ -147,10 +175,12 @@ node [style=filled, shape=box]
 "27"->"80"
 
 "27"->"28" [style=dotted]
+"27"->"28" [style=dotted,color=red]
 "77"[label=<<b>ID: 77</b><br/>tau: [4,6)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 27<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "77"->"78" [style=dotted]
+"77"->"78" [style=dotted,color=red]
 "78"[label=<<b>ID: 78</b><br/>tau: [4,6)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 27<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -159,6 +189,7 @@ node [style=filled, shape=box]
 
 
 "79"->"80" [style=dotted]
+"79"->"80" [style=dotted,color=red]
 "80"[label=<<b>ID: 80</b><br/>tau: [6,8)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 27<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -175,10 +206,12 @@ node [style=filled, shape=box]
 "7"->"32"
 
 "7"->"8" [style=dotted]
+"7"->"13" [style=dotted,color=green]
 "29"[label=<<b>ID: 29</b><br/>tau: [8,12)<br/>sigma: [0,4)<br/>Level: 3<br/>Parent: 7<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
 
 
 "29"->"30" [style=dotted]
+"29"->"31" [style=dotted,color=green]
 "30"[label=<<b>ID: 30</b><br/>tau: [8,12)<br/>sigma: [4,8)<br/>Level: 3<br/>Parent: 7<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
 
 "30"->"81"
@@ -187,14 +220,17 @@ node [style=filled, shape=box]
 "30"->"84"
 
 "30"->"31" [style=dotted]
+"30"->"32" [style=dotted,color=green]
 "81"[label=<<b>ID: 81</b><br/>tau: [8,10)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 30<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "81"->"82" [style=dotted]
+"81"->"83" [style=dotted,color=green]
 "82"[label=<<b>ID: 82</b><br/>tau: [8,10)<br/>sigma: [6,8)<br/>Level: 4<br/>Parent: 30<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "82"->"83" [style=dotted]
+"82"->"84" [style=dotted,color=green]
 "83"[label=<<b>ID: 83</b><br/>tau: [10,12)<br/>sigma: [4,6)<br/>Level: 4<br/>Parent: 30<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
@@ -219,6 +255,8 @@ node [style=filled, shape=box]
 "8"->"36"
 
 "8"->"9" [style=dotted]
+"8"->"11" [style=dotted,color=red]
+"8"->"14" [style=dotted,color=green]
 "33"[label=<<b>ID: 33</b><br/>tau: [8,12)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 8<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
 
 "33"->"85"
@@ -227,22 +265,30 @@ node [style=filled, shape=box]
 "33"->"88"
 
 "33"->"34" [style=dotted]
+"33"->"34" [style=dotted,color=red]
+"33"->"35" [style=dotted,color=green]
 "85"[label=<<b>ID: 85</b><br/>tau: [8,10)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 33<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "85"->"86" [style=dotted]
+"85"->"86" [style=dotted,color=red]
+"85"->"87" [style=dotted,color=green]
 "86"[label=<<b>ID: 86</b><br/>tau: [8,10)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 33<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "86"->"87" [style=dotted]
+"86"->"89" [style=dotted,color=red]
 "87"[label=<<b>ID: 87</b><br/>tau: [10,12)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 33<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "87"->"88" [style=dotted]
+"87"->"93" [style=dotted,color=green]
 "88"[label=<<b>ID: 88</b><br/>tau: [10,12)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 33<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "88"->"89" [style=dotted]
+"88"->"91" [style=dotted,color=red]
+"88"->"94" [style=dotted,color=green]
 "34"[label=<<b>ID: 34</b><br/>tau: [8,12)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 8<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
 
 "34"->"89"
@@ -251,10 +297,12 @@ node [style=filled, shape=box]
 "34"->"92"
 
 "34"->"35" [style=dotted]
+"34"->"37" [style=dotted,color=red]
 "89"[label=<<b>ID: 89</b><br/>tau: [8,10)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 34<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "89"->"90" [style=dotted]
+"89"->"90" [style=dotted,color=red]
 "90"[label=<<b>ID: 90</b><br/>tau: [8,10)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 34<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -263,6 +311,7 @@ node [style=filled, shape=box]
 
 
 "91"->"92" [style=dotted]
+"91"->"92" [style=dotted,color=red]
 "92"[label=<<b>ID: 92</b><br/>tau: [10,12)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 34<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -275,14 +324,17 @@ node [style=filled, shape=box]
 "35"->"96"
 
 "35"->"36" [style=dotted]
+"35"->"41" [style=dotted,color=green]
 "93"[label=<<b>ID: 93</b><br/>tau: [12,14)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 35<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "93"->"94" [style=dotted]
+"93"->"95" [style=dotted,color=green]
 "94"[label=<<b>ID: 94</b><br/>tau: [12,14)<br/>sigma: [10,12)<br/>Level: 4<br/>Parent: 35<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "94"->"95" [style=dotted]
+"94"->"96" [style=dotted,color=green]
 "95"[label=<<b>ID: 95</b><br/>tau: [14,16)<br/>sigma: [8,10)<br/>Level: 4<br/>Parent: 35<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
@@ -299,22 +351,30 @@ node [style=filled, shape=box]
 "36"->"100"
 
 "36"->"37" [style=dotted]
+"36"->"39" [style=dotted,color=red]
+"36"->"42" [style=dotted,color=green]
 "97"[label=<<b>ID: 97</b><br/>tau: [12,14)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 36<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "97"->"98" [style=dotted]
+"97"->"98" [style=dotted,color=red]
+"97"->"99" [style=dotted,color=green]
 "98"[label=<<b>ID: 98</b><br/>tau: [12,14)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 36<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "98"->"99" [style=dotted]
+"98"->"101" [style=dotted,color=red]
 "99"[label=<<b>ID: 99</b><br/>tau: [14,16)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 36<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "99"->"100" [style=dotted]
+"99"->"105" [style=dotted,color=green]
 "100"[label=<<b>ID: 100</b><br/>tau: [14,16)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 36<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "100"->"101" [style=dotted]
+"100"->"103" [style=dotted,color=red]
+"100"->"106" [style=dotted,color=green]
 "2"[label=<<b>ID: 2</b><br/>tau: [0,16)<br/>sigma: [16,32)<br/>Level: 1<br/>Parent: 0<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
 
 "2"->"9"
@@ -327,6 +387,7 @@ node [style=filled, shape=box]
 
 
 "9"->"10" [style=dotted]
+"9"->"10" [style=dotted,color=red]
 "10"[label=<<b>ID: 10</b><br/>tau: [0,8)<br/>sigma: [24,32)<br/>Level: 2<br/>Parent: 2<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
 
 
@@ -339,10 +400,12 @@ node [style=filled, shape=box]
 "11"->"40"
 
 "11"->"12" [style=dotted]
+"11"->"12" [style=dotted,color=red]
 "37"[label=<<b>ID: 37</b><br/>tau: [8,12)<br/>sigma: [16,20)<br/>Level: 3<br/>Parent: 11<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
 
 
 "37"->"38" [style=dotted]
+"37"->"38" [style=dotted,color=red]
 "38"[label=<<b>ID: 38</b><br/>tau: [8,12)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 11<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
 
 
@@ -355,10 +418,12 @@ node [style=filled, shape=box]
 "39"->"104"
 
 "39"->"40" [style=dotted]
+"39"->"40" [style=dotted,color=red]
 "101"[label=<<b>ID: 101</b><br/>tau: [12,14)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 39<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "101"->"102" [style=dotted]
+"101"->"102" [style=dotted,color=red]
 "102"[label=<<b>ID: 102</b><br/>tau: [12,14)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 39<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -367,6 +432,7 @@ node [style=filled, shape=box]
 
 
 "103"->"104" [style=dotted]
+"103"->"104" [style=dotted,color=red]
 "104"[label=<<b>ID: 104</b><br/>tau: [14,16)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 39<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -391,6 +457,7 @@ node [style=filled, shape=box]
 
 
 "13"->"14" [style=dotted]
+"13"->"15" [style=dotted,color=green]
 "14"[label=<<b>ID: 14</b><br/>tau: [16,24)<br/>sigma: [8,16)<br/>Level: 2<br/>Parent: 3<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
 
 "14"->"41"
@@ -399,10 +466,12 @@ node [style=filled, shape=box]
 "14"->"44"
 
 "14"->"15" [style=dotted]
+"14"->"16" [style=dotted,color=green]
 "41"[label=<<b>ID: 41</b><br/>tau: [16,20)<br/>sigma: [8,12)<br/>Level: 3<br/>Parent: 14<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = green]
 
 
 "41"->"42" [style=dotted]
+"41"->"43" [style=dotted,color=green]
 "42"[label=<<b>ID: 42</b><br/>tau: [16,20)<br/>sigma: [12,16)<br/>Level: 3<br/>Parent: 14<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
 
 "42"->"105"
@@ -411,14 +480,17 @@ node [style=filled, shape=box]
 "42"->"108"
 
 "42"->"43" [style=dotted]
+"42"->"44" [style=dotted,color=green]
 "105"[label=<<b>ID: 105</b><br/>tau: [16,18)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 42<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "105"->"106" [style=dotted]
+"105"->"107" [style=dotted,color=green]
 "106"[label=<<b>ID: 106</b><br/>tau: [16,18)<br/>sigma: [14,16)<br/>Level: 4<br/>Parent: 42<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "106"->"107" [style=dotted]
+"106"->"108" [style=dotted,color=green]
 "107"[label=<<b>ID: 107</b><br/>tau: [18,20)<br/>sigma: [12,14)<br/>Level: 4<br/>Parent: 42<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
@@ -458,6 +530,8 @@ node [style=filled, shape=box]
 "17"->"48"
 
 "17"->"18" [style=dotted]
+"17"->"18" [style=dotted,color=red]
+"17"->"19" [style=dotted,color=green]
 "45"[label=<<b>ID: 45</b><br/>tau: [16,20)<br/>sigma: [16,20)<br/>Level: 3<br/>Parent: 17<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = white]
 
 "45"->"109"
@@ -466,22 +540,30 @@ node [style=filled, shape=box]
 "45"->"112"
 
 "45"->"46" [style=dotted]
+"45"->"46" [style=dotted,color=red]
+"45"->"47" [style=dotted,color=green]
 "109"[label=<<b>ID: 109</b><br/>tau: [16,18)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 45<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "109"->"110" [style=dotted]
+"109"->"110" [style=dotted,color=red]
+"109"->"111" [style=dotted,color=green]
 "110"[label=<<b>ID: 110</b><br/>tau: [16,18)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 45<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "110"->"111" [style=dotted]
+"110"->"113" [style=dotted,color=red]
 "111"[label=<<b>ID: 111</b><br/>tau: [18,20)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 45<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "111"->"112" [style=dotted]
+"111"->"117" [style=dotted,color=green]
 "112"[label=<<b>ID: 112</b><br/>tau: [18,20)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 45<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "112"->"113" [style=dotted]
+"112"->"115" [style=dotted,color=red]
+"112"->"118" [style=dotted,color=green]
 "46"[label=<<b>ID: 46</b><br/>tau: [16,20)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 17<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
 
 "46"->"113"
@@ -490,10 +572,12 @@ node [style=filled, shape=box]
 "46"->"116"
 
 "46"->"47" [style=dotted]
+"46"->"49" [style=dotted,color=red]
 "113"[label=<<b>ID: 113</b><br/>tau: [16,18)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 46<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "113"->"114" [style=dotted]
+"113"->"114" [style=dotted,color=red]
 "114"[label=<<b>ID: 114</b><br/>tau: [16,18)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 46<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -502,6 +586,7 @@ node [style=filled, shape=box]
 
 
 "115"->"116" [style=dotted]
+"115"->"116" [style=dotted,color=red]
 "116"[label=<<b>ID: 116</b><br/>tau: [18,20)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 46<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -514,14 +599,17 @@ node [style=filled, shape=box]
 "47"->"120"
 
 "47"->"48" [style=dotted]
+"47"->"53" [style=dotted,color=green]
 "117"[label=<<b>ID: 117</b><br/>tau: [20,22)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 47<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "117"->"118" [style=dotted]
+"117"->"119" [style=dotted,color=green]
 "118"[label=<<b>ID: 118</b><br/>tau: [20,22)<br/>sigma: [18,20)<br/>Level: 4<br/>Parent: 47<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "118"->"119" [style=dotted]
+"118"->"120" [style=dotted,color=green]
 "119"[label=<<b>ID: 119</b><br/>tau: [22,24)<br/>sigma: [16,18)<br/>Level: 4<br/>Parent: 47<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
@@ -538,22 +626,30 @@ node [style=filled, shape=box]
 "48"->"124"
 
 "48"->"49" [style=dotted]
+"48"->"51" [style=dotted,color=red]
+"48"->"54" [style=dotted,color=green]
 "121"[label=<<b>ID: 121</b><br/>tau: [20,22)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 48<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "121"->"122" [style=dotted]
+"121"->"122" [style=dotted,color=red]
+"121"->"123" [style=dotted,color=green]
 "122"[label=<<b>ID: 122</b><br/>tau: [20,22)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 48<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "122"->"123" [style=dotted]
+"122"->"125" [style=dotted,color=red]
 "123"[label=<<b>ID: 123</b><br/>tau: [22,24)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 48<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "123"->"124" [style=dotted]
+"123"->"129" [style=dotted,color=green]
 "124"[label=<<b>ID: 124</b><br/>tau: [22,24)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 48<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "124"->"125" [style=dotted]
+"124"->"127" [style=dotted,color=red]
+"124"->"130" [style=dotted,color=green]
 "18"[label=<<b>ID: 18</b><br/>tau: [16,24)<br/>sigma: [24,32)<br/>Level: 2<br/>Parent: 4<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
 
 "18"->"49"
@@ -566,6 +662,7 @@ node [style=filled, shape=box]
 
 
 "49"->"50" [style=dotted]
+"49"->"50" [style=dotted,color=red]
 "50"[label=<<b>ID: 50</b><br/>tau: [16,20)<br/>sigma: [28,32)<br/>Level: 3<br/>Parent: 18<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = green]
 
 
@@ -578,10 +675,12 @@ node [style=filled, shape=box]
 "51"->"128"
 
 "51"->"52" [style=dotted]
+"51"->"52" [style=dotted,color=red]
 "125"[label=<<b>ID: 125</b><br/>tau: [20,22)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 51<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "125"->"126" [style=dotted]
+"125"->"126" [style=dotted,color=red]
 "126"[label=<<b>ID: 126</b><br/>tau: [20,22)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 51<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -590,6 +689,7 @@ node [style=filled, shape=box]
 
 
 "127"->"128" [style=dotted]
+"127"->"128" [style=dotted,color=red]
 "128"[label=<<b>ID: 128</b><br/>tau: [22,24)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 51<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -610,6 +710,7 @@ node [style=filled, shape=box]
 
 
 "53"->"54" [style=dotted]
+"53"->"55" [style=dotted,color=green]
 "54"[label=<<b>ID: 54</b><br/>tau: [24,28)<br/>sigma: [20,24)<br/>Level: 3<br/>Parent: 19<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = white]
 
 "54"->"129"
@@ -618,14 +719,17 @@ node [style=filled, shape=box]
 "54"->"132"
 
 "54"->"55" [style=dotted]
+"54"->"56" [style=dotted,color=green]
 "129"[label=<<b>ID: 129</b><br/>tau: [24,26)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 54<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "129"->"130" [style=dotted]
+"129"->"131" [style=dotted,color=green]
 "130"[label=<<b>ID: 130</b><br/>tau: [24,26)<br/>sigma: [22,24)<br/>Level: 4<br/>Parent: 54<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "130"->"131" [style=dotted]
+"130"->"132" [style=dotted,color=green]
 "131"[label=<<b>ID: 131</b><br/>tau: [26,28)<br/>sigma: [20,22)<br/>Level: 4<br/>Parent: 54<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
@@ -657,22 +761,30 @@ node [style=filled, shape=box]
 "57"->"136"
 
 "57"->"58" [style=dotted]
+"57"->"58" [style=dotted,color=red]
+"57"->"59" [style=dotted,color=green]
 "133"[label=<<b>ID: 133</b><br/>tau: [24,26)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 57<br/>Submatrix index: 0<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "133"->"134" [style=dotted]
+"133"->"134" [style=dotted,color=red]
+"133"->"135" [style=dotted,color=green]
 "134"[label=<<b>ID: 134</b><br/>tau: [24,26)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 57<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
 "134"->"135" [style=dotted]
+"134"->"137" [style=dotted,color=red]
 "135"[label=<<b>ID: 135</b><br/>tau: [26,28)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 57<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "135"->"136" [style=dotted]
+"135"->"141" [style=dotted,color=green]
 "136"[label=<<b>ID: 136</b><br/>tau: [26,28)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 57<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: diagonal block>,fillcolor = red]
 
 
 "136"->"137" [style=dotted]
+"136"->"139" [style=dotted,color=red]
+"136"->"142" [style=dotted,color=green]
 "58"[label=<<b>ID: 58</b><br/>tau: [24,28)<br/>sigma: [28,32)<br/>Level: 3<br/>Parent: 20<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = white]
 
 "58"->"137"
@@ -685,6 +797,7 @@ node [style=filled, shape=box]
 
 
 "137"->"138" [style=dotted]
+"137"->"138" [style=dotted,color=red]
 "138"[label=<<b>ID: 138</b><br/>tau: [24,26)<br/>sigma: [30,32)<br/>Level: 4<br/>Parent: 58<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -693,6 +806,7 @@ node [style=filled, shape=box]
 
 
 "139"->"140" [style=dotted]
+"139"->"140" [style=dotted,color=red]
 "140"[label=<<b>ID: 140</b><br/>tau: [26,28)<br/>sigma: [30,32)<br/>Level: 4<br/>Parent: 58<br/>Submatrix index: 3<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
@@ -709,10 +823,12 @@ node [style=filled, shape=box]
 
 
 "141"->"142" [style=dotted]
+"141"->"143" [style=dotted,color=green]
 "142"[label=<<b>ID: 142</b><br/>tau: [28,30)<br/>sigma: [26,28)<br/>Level: 4<br/>Parent: 59<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
 "142"->"143" [style=dotted]
+"142"->"144" [style=dotted,color=green]
 "143"[label=<<b>ID: 143</b><br/>tau: [30,32)<br/>sigma: [24,26)<br/>Level: 4<br/>Parent: 59<br/>Submatrix index: 2<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: lower triangular block>,fillcolor = red]
 
 
@@ -732,6 +848,8 @@ node [style=filled, shape=box]
 
 
 "145"->"146" [style=dotted]
+"145"->"146" [style=dotted,color=red]
+"145"->"147" [style=dotted,color=green]
 "146"[label=<<b>ID: 146</b><br/>tau: [28,30)<br/>sigma: [30,32)<br/>Level: 4<br/>Parent: 60<br/>Submatrix index: 1<br/>H-matrix state: matrix<br/>H-matrix property: general<br/>H-matrix block type: upper triangular block>,fillcolor = red]
 
 
