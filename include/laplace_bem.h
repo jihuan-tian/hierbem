@@ -39,6 +39,7 @@
 
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/vector_tools_interpolate.templates.h>
 
 #include <algorithm>
 #include <array>
@@ -405,12 +406,6 @@ namespace HierBEM
     std::set<types::boundary_id> boundary_ids_for_dirichlet_domain;
 
     /**
-     * A set of boundary indices for the extended Dirichlet domain
-     * \f$\tilde{\Gamma}_D\f$.
-     */
-    std::set<types::boundary_id> boundary_ids_for_extended_dirichlet_domain;
-
-    /**
      * A set of boundary indices for the Neumann domain.
      */
     std::set<types::boundary_id> boundary_ids_for_neumann_domain;
@@ -722,7 +717,7 @@ namespace HierBEM
     /**
      * Pointer to the Neumann boundary condition function object.
      */
-    Function<spacedim> *neumann_bc_functor_ptr;
+    Function<spacedim, double> *neumann_bc_functor_ptr;
 
     /**
      * Neumann boundary condition data on all DoFs in the associated DoF
@@ -746,7 +741,7 @@ namespace HierBEM
     /**
      * Pointer to the Dirichlet boundary condition function object.
      */
-    Function<spacedim> *dirichlet_bc_functor_ptr;
+    Function<spacedim, double> *dirichlet_bc_functor_ptr;
 
     /**
      * Dirichlet boundary condition data on all DoFs in the associated DoF
@@ -1012,7 +1007,6 @@ namespace HierBEM
     map_from_surface_mesh_to_volume_mesh.clear();
 
     boundary_ids_for_dirichlet_domain.clear();
-    boundary_ids_for_extended_dirichlet_domain.clear();
     boundary_ids_for_neumann_domain.clear();
 
     local_to_full_dirichlet_dof_indices_on_dirichlet_domain.clear();
@@ -2306,18 +2300,29 @@ namespace HierBEM
              */
             timer.start();
 
-            dirichlet_bc.reinit(dof_handler_for_dirichlet_space.n_dofs());
-            VectorTools::interpolate(dof_handler_for_dirichlet_space,
-                                     *dirichlet_bc_functor_ptr,
-                                     dirichlet_bc);
-
-            for (types::global_dof_index i = 0; i < dirichlet_bc.size(); i++)
+            /**
+             * TODO At the moment, there is only one functor defining the
+             * boundary condition. In the future, there will be a functor for
+             * each material id involved in the subdomain.
+             *
+             * N.B. The boundary ids in the volume mesh will be come material
+             * ids in the surface mesh.
+             */
+            std::map<types::material_id, const Function<spacedim, double> *>
+              dirichlet_bc_function_map;
+            for (auto boundary_id : boundary_ids_for_dirichlet_domain)
               {
-                if (!dof_selectors_for_dirichlet_space_on_dirichlet_domain[i])
-                  {
-                    dirichlet_bc[i] = 0.;
-                  }
+                dirichlet_bc_function_map.insert(
+                  {static_cast<types::material_id>(boundary_id),
+                   dirichlet_bc_functor_ptr});
               }
+
+            dirichlet_bc.reinit(dof_handler_for_dirichlet_space.n_dofs());
+            VectorTools::interpolate_based_on_material_id(
+              kx_mapping_for_dirichlet_domain,
+              dof_handler_for_dirichlet_space,
+              dirichlet_bc_function_map,
+              dirichlet_bc);
 
             /**
              * Extract the Dirichlet boundary data on the selected DoFs.
@@ -2344,12 +2349,28 @@ namespace HierBEM
               dirichlet_bc_internal_dof_numbering);
 
             /**
-             * Interpolate the Neumann boundary data.
+             * TODO At the moment, there is only one functor defining the
+             * boundary condition. In the future, there will be a functor for
+             * each material id involved in the subdomain.
+             *
+             * N.B. The boundary ids in the volume mesh will be come material
+             * ids in the surface mesh.
              */
+            std::map<types::material_id, const Function<spacedim, double> *>
+              neumann_bc_function_map;
+            for (auto boundary_id : boundary_ids_for_neumann_domain)
+              {
+                neumann_bc_function_map.insert(
+                  {static_cast<types::material_id>(boundary_id),
+                   neumann_bc_functor_ptr});
+              }
+
             neumann_bc.reinit(dof_handler_for_neumann_space.n_dofs());
-            VectorTools::interpolate(dof_handler_for_neumann_space,
-                                     *neumann_bc_functor_ptr,
-                                     neumann_bc);
+            VectorTools::interpolate_based_on_material_id(
+              kx_mapping_for_neumann_domain,
+              dof_handler_for_neumann_space,
+              neumann_bc_function_map,
+              neumann_bc);
 
             /**
              * Extract the Neumann boundary data on the selected DoFs.
