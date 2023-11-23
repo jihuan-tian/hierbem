@@ -13,6 +13,8 @@
 
 #include <deal.II/lac/full_matrix.h>
 
+#include <tbb/tbb.h>
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -83,6 +85,29 @@ namespace HierBEM
      * Declare the type for container size.
      */
     using size_type = std::make_unsigned<types::blas_int>::type;
+
+    /**
+     * Declare the type for TBB flow graph node.
+     */
+    using TaskNode    = tbb::flow::continue_node<tbb::flow::continue_msg>;
+    using TaskNodePtr = std::shared_ptr<TaskNode>;
+
+    /**
+     * Struct for holding the task node, which updates an \hmatnode during LU
+     * factorization.
+     */
+    struct UpdateTaskNodeForLU
+    {
+      /**
+       * Pointer to the diagonal \hmatnode, which is on a same row or column of
+       * the associated \hmatnode.
+       */
+      HMatrix<spacedim, Number> *diagonal_hmat_node;
+      /**
+       * Task node for updating an \hmatnode.
+       */
+      TaskNodePtr update;
+    };
 
     template <int spacedim1, typename Number1>
     friend void
@@ -891,6 +916,30 @@ namespace HierBEM
      */
     HMatrixType
     get_type() const;
+
+    /**
+     * If the \hmatnode belongs to the near field leaf set.
+     *
+     * @return
+     */
+    bool
+    is_near_field() const;
+
+    /**
+     * If the \hmatnode belongs to the far field leaf set.
+     *
+     * @return
+     */
+    bool
+    is_far_field() const;
+
+    /**
+     * If the \hmatnode blongs to the leaf set.
+     *
+     * @return
+     */
+    bool
+    is_leaf() const;
 
     /**
      * Get the number of rows of the current \hmatnode.
@@ -1882,7 +1931,8 @@ namespace HierBEM
      * vector \f$x\f$.
      *
      * \alert{The vector \p b is **local**, i.e. associated with a cluster.
-     * Therefore, the starting \hmat should be explicitly specified.}
+     * Therefore, the \hmat passed at the beginning of the recursion should be
+     * explicitly specified.}
      *
      * @param b Right hand side global vector. After execution, it stores the
      * result vector.
@@ -2040,6 +2090,12 @@ namespace HierBEM
      */
     void
     solve_transpose_by_forward_substitution_matrix_valued(
+      HMatrix<spacedim, Number> &X,
+      HMatrix<spacedim, Number> &Z,
+      const unsigned int         fixed_rank) const;
+
+    void
+    solve_transpose_by_forward_substitution_matrix_valued_for_leaf(
       HMatrix<spacedim, Number> &X,
       HMatrix<spacedim, Number> &Z,
       const unsigned int         fixed_rank) const;
@@ -2581,6 +2637,10 @@ namespace HierBEM
     void
     compute_lu_factorization(const unsigned int fixed_rank);
 
+    void
+    compute_lu_factorization_task_parallel(const unsigned int fixed_rank);
+
+
     /**
      * Compute the Cholesky factorization of an \hmatrix. Only the lower
      * triangular \hmatrix factor \f$L\f$ is stored in the output variable \p L.
@@ -3017,10 +3077,34 @@ namespace HierBEM
      * HMatrix::compute_lu_factorization(const unsigned int fixed_rank).
      * @endcode
      *
+     * This algorithm is in situ.
+     *
      * @param fixed_rank
      */
     void
     _compute_lu_factorization(const unsigned int fixed_rank);
+
+    /**
+     * Compute the directed acyclic graph for H-LU factorization.
+     *
+     * @param fixed_rank
+     */
+    void
+    compute_lu_dag(tbb::flow::graph &dag, const unsigned int fixed_rank);
+
+    /**
+     * Create a task node for the LU factorization of the current diagonal
+     * block. It only has actual computation when the current \hmatnode belongs
+     * to the leaf set.
+     */
+    void
+    lu_factorize_diagonal_block(tbb::flow::graph &dag);
+
+    void
+    lu_solve_upper(tbb::flow::graph          &dag,
+                   HMatrix<spacedim, Number> &X,
+                   HMatrix<spacedim, Number> &Z,
+                   const unsigned int         fixed_rank);
 
     /**
      * Internal recursive function to be called by
@@ -3186,6 +3270,18 @@ namespace HierBEM
      * multiplication.
      */
     std::vector<LAPACKFullMatrixExt<Number> *> Sigma_F;
+
+    /**
+     * Pointer to the task node for LU factorization of a diagonal \hmatnode.
+     */
+    TaskNodePtr factorize_lu_graph_node;
+
+    /**
+     * Pointer to the task node for solving a non-diagonal \hmatnode.
+     */
+    TaskNodePtr solve_upper_or_lower_lu_graph_node;
+
+    std::vector<UpdateTaskNodeForLU> update_lu_graph_nodes;
   };
 
 
@@ -15241,6 +15337,31 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
+  bool
+  HMatrix<spacedim, Number>::is_near_field() const
+  {
+    return (type == HMatrixType::FullMatrixType);
+  }
+
+
+  template <int spacedim, typename Number>
+  bool
+  HMatrix<spacedim, Number>::is_far_field() const
+  {
+    return (type == HMatrixType::RkMatrixType);
+  }
+
+
+  template <int spacedim, typename Number>
+  bool
+  HMatrix<spacedim, Number>::is_leaf() const
+  {
+    return (type == HMatrixType::FullMatrixType ||
+            type == HMatrixType::RkMatrixType);
+  }
+
+
+  template <int spacedim, typename Number>
   typename HMatrix<spacedim, Number>::size_type
   HMatrix<spacedim, Number>::get_m() const
   {
@@ -23429,6 +23550,93 @@ namespace HierBEM
   template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::
+    solve_transpose_by_forward_substitution_matrix_valued_for_leaf(
+      HMatrix<spacedim, Number> &X,
+      HMatrix<spacedim, Number> &Z,
+      const unsigned int         fixed_rank) const
+  {
+    AssertDimension(Z.m, X.m);
+    AssertDimension(Z.n, X.n);
+    Assert(
+      Z.type == X.type,
+      ExcMessage(
+        "Matrix Z and X should be built on a same block cluster and thus have a same H-matrix type!"));
+    AssertDimension(this->m, this->n);
+    AssertDimension(X.n, this->m);
+
+    if (Z.type == FullMatrixType)
+      {
+        /**
+         * When the current \hmatnode of \p X or \p Z is a full matrix, we need to
+         * solve a multiple RHS problem.
+         */
+        Vector<Number> X_row(X.n);
+        Vector<Number> Z_row(Z.n);
+
+        /**
+         * Iterate over each row of \p X and \p Z.
+         */
+        for (size_type i = 0; i < Z.m; i++)
+          {
+            Z.fullmatrix->get_row(i, Z_row);
+
+            /**
+             * Solve the problem
+             * \f$X\vert_{i,\sigma}U\vert_{\sigma\times\sigma} =
+             * Z\vert_{i,\sigma}\f$ using the transposed forward
+             * substitution for \hmatrices.
+             */
+            this->solve_transpose_by_forward_substitution(X_row,
+                                                          Z_row,
+                                                          (*this));
+
+            /**
+             * Merge back the solution vector \p X_row into \p X, while the matrix
+             * \p Z is intact.
+             */
+            X.fullmatrix->fill_row(i, X_row);
+          }
+      }
+    else if (Z.type == RkMatrixType)
+      {
+        (*X.rkmatrix) = (*Z.rkmatrix);
+
+        // Let \f$Z\vert_{\tau\times\sigma} = A\cdot B^T\f$ and
+        // \f$X\vert_{\tau\times\sigma}=A\cdot B'^T\f$, solve the problem \f$U^T
+        // B' = B\f$.
+        Vector<Number> B_prime_col(X.n);
+        for (size_type j = 0; j < Z.rkmatrix->get_formal_rank(); j++)
+          {
+            // Get the current RHS vector directly into the solution vector.
+            Z.rkmatrix->get_B().get_column(j, B_prime_col);
+
+            /**
+             * Solve the problem using the transposed forward substitution
+             * for \hmatrices.
+             */
+            this->solve_transpose_by_forward_substitution(B_prime_col, (*this));
+
+            /**
+             * Merge back the column vector of \p B' into the component matrix \f$B'\f$
+             * that is contained in the rank-k matrix
+             * \f$X\vert_{\tau\times\sigma}\f$.
+             */
+            X.rkmatrix->get_B().fill_col(j, B_prime_col);
+          }
+      }
+    else
+      {
+        /**
+         * This case should not happen.
+         */
+        Assert(false, ExcInternalError());
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::
     solve_cholesky_transpose_by_forward_substitution_matrix_valued(
       HMatrix<spacedim, Number> &X,
       HMatrix<spacedim, Number> &Z,
@@ -24770,6 +24978,149 @@ namespace HierBEM
               }
           }
       }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::compute_lu_factorization_task_parallel(
+    const unsigned int fixed_rank)
+  {
+    tbb::flow::graph dag;
+
+    compute_lu_dag(dag, fixed_rank);
+
+    dag.wait_for_all();
+
+    /**
+     * After LU factorization, set the state of the current matrix to be @p lu.
+     */
+    this->set_state(HMatrixSupport::lu);
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::compute_lu_dag(tbb::flow::graph  &dag,
+                                            const unsigned int fixed_rank)
+  {
+    const unsigned int n_row_blocks =
+      bc_node->get_data_reference().get_tau_node()->get_child_num();
+    const unsigned int n_col_blocks =
+      bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+    /**
+     * At present, LU factorization is only to be applied to square
+     * matrix and block square matrix.
+     */
+    AssertDimension(n_row_blocks, n_col_blocks);
+
+    /**
+     * Iterative over each block row.
+     */
+    for (size_type i = 0; i < n_row_blocks; i++)
+      {
+        // @p i * n_col_blocks + i returns the linear index for the diagonal block on the i-th row.
+        HMatrix<spacedim, Number> *current_diag_block =
+          submatrices[i * n_col_blocks + i];
+        const bool is_diag_block_leaf = current_diag_block->is_leaf();
+
+        current_diag_block->compute_lu_dag(dag, fixed_rank);
+        current_diag_block->lu_factorize_diagonal_block(dag);
+
+        /**
+         * Iterate over each matrix blocks on a same level and on a same
+         * column from the diagonal block: solve_upper stage.
+         */
+        for (HMatrix<spacedim, Number> *current_same_level_column_block =
+               current_diag_block->next_same_level_same_row_hmat_node;
+             current_same_level_column_block != nullptr;
+             current_same_level_column_block =
+               current_same_level_column_block
+                 ->next_same_level_same_column_hmat_node)
+          {
+            if (is_diag_block_leaf ||
+                current_same_level_column_block->is_leaf())
+              {
+                /**
+                 * Since there is one \hmatnode belongs to the leaf set, the
+                 * following solving task has actual computation.
+                 */
+                // current_diag_block->lu_solve_upper(dag, X, Z, fixed_rank);
+              }
+          }
+
+        /**
+         * Iterate over each matrix blocks on a same level and on a same row
+         * from the diagonal block: solve_lower stage
+         */
+        for (HMatrix<spacedim, Number> *current_same_level_row_block =
+               current_diag_block->next_same_level_same_row_hmat_node;
+             current_same_level_row_block != nullptr;
+             current_same_level_row_block =
+               current_same_level_row_block->next_same_level_same_row_hmat_node)
+          {
+            if (is_diag_block_leaf || current_same_level_row_block->is_leaf())
+              {
+                /**
+                 * Since there is one \hmatnode belongs to the leaf set, the
+                 * following solve task has actual computation.
+                 */
+              }
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::lu_factorize_diagonal_block(tbb::flow::graph &dag)
+  {
+    Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
+           ExcInvalidHMatrixBlockType(block_type));
+
+    this->factorize_lu_graph_node = std::make_shared<TaskNode>(
+      dag, [this](const tbb::flow::continue_msg &msg) {
+        if (this->type != HierarchicalMatrixType)
+          {
+            /**
+             * When the current \hmatnode belongs to the leaf set, it must be a
+             * full matrix and the LU factorization can be directly applied to
+             * it using LAPACK.
+             *
+             * N.B. The LU factorization performed by LAPACK has row partial
+             * pivoting.
+             */
+            Assert(this->type == FullMatrixType,
+                   ExcInvalidHMatrixType(this->type));
+            Assert(this->fullmatrix != nullptr, ExcInternalError());
+
+            /**
+             * After the LU factorization, L and U matrices are stored in the
+             * same full matrix. Hence, this operation is in situ.
+             */
+            this->fullmatrix->compute_lu_factorization();
+          }
+
+        return msg;
+      });
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::lu_solve_upper(tbb::flow::graph          &dag,
+                                            HMatrix<spacedim, Number> &X,
+                                            HMatrix<spacedim, Number> &Z,
+                                            const unsigned int fixed_rank)
+  {
+    this->solve_upper_or_lower_lu_graph_node = std::make_shared<TaskNode>(
+      dag, [this, &X, &Z, fixed_rank](const tbb::flow::continue_msg &msg) {
+        this->solve_transpose_by_forward_substitution_matrix_valued(X,
+                                                                    Z,
+                                                                    fixed_rank);
+        return msg;
+      });
   }
 
 

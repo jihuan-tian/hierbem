@@ -1095,7 +1095,7 @@ $a$ and $b$ in $M_p^n$ is
   Riemann metric and it is a Riemann manifold.
 \end{Definition}
 
-The inner product in matrix form is
+The inner product of two tangent vectors in matrix form is
 \begin{equation}
   \left\langle a,b \right\rangle = a^T G b.
 \end{equation}
@@ -1114,12 +1114,13 @@ means the tangent vector $a$ determines or defines a covector $\alpha$.
 \subsection{Relationship between metric tensors in different coordinate charts}
 
 Similar to a basis vector of a tangent space, metric tensors in different coordinate
-charts are different entities. According to Definition \ref{def:metric-tensor}, the metric
-tensor depends on the basis vectors of the tangent space. Therefore, using Equation
-(\ref{eq:tangent-vector-basis-relation}), we can obtain the relationship between metric
-tensors in different coordinate charts.
+charts are different entities instead of a single fixed entity which has different
+numerical representations under different coordinate charts. According to Definition
+\ref{def:metric-tensor}, the metric tensor depends on the basis vectors of the tangent
+space. Therefore, using Equation (\ref{eq:tangent-vector-basis-relation}), we can obtain
+the relationship between metric tensors in different coordinate charts.
 
-Let $(U,x_U)$ and $(V,x_V)$ be two coordinate charts containing point $p$. In the
+Let $(U,x_U)$ and $(V,x_V)$ be two coordinate charts containing the point $p$. In the
 neighborhood of $p$, the metric tensor can be represented as
 \begin{equation*}
   g_{ij}^V = \left\langle \vect{\pdiff}x_V^i, \vect{\pdiff}x_V^j \right\rangle
@@ -1150,7 +1151,7 @@ Its matrix form is
 \begin{equation}
   \label{eq:metric-tensor-transformation-matrix-form}
   G^V = \left[ \frac{\pdiff x_U}{\pdiff x_V} \right]^{\mathrm{T}} G^U \left[ \frac{\pdiff
-      x_U}{\pdiff x_V} \right].
+      x_U}{\pdiff x_V} \right] = J_{UV}^{\mathrm{T}} G^U J_{UV}.
 \end{equation}
 
 \begin{Example}[Metric tensor of spherical coordinate chart]
@@ -1167,10 +1168,11 @@ Its matrix form is
         \sin ^2\theta&0\cr 0&r^2\cr 
         \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi.
   \end{equation}
-  Therefore, the spherical coordinate frame is orthogonal but not normalized. When $r=1$,
-  the basis vector $\vect{\pdiff}\theta$ has unit length but $\vect{\pdiff}\phi$ usually
-  does not. $\vect{\pdiff}\phi$ only has unit length when $\theta=\frac{\pi}{2}$, i.e. at
-  the equator.
+  Because $G^V$ is a diagonal matrix but not an identity matrix, the spherical coordinate
+  frame is orthogonal but not normalized. When $r=1$, the basis vector
+  $\vect{\pdiff}\theta$ has unit length but $\vect{\pdiff}\phi$ usually does not.
+  $\vect{\pdiff}\phi$ only has unit length when $\theta=\frac{\pi}{2}$, i.e. at the
+  equator.
 \end{Example}
 
 \subsection{Transformation between tangent vector and covector via metric tensor}
@@ -1383,11 +1385,12 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
 1-form introduced in Section \ref{sec:1-form} is a linear functional in the cotangent
 (covariant) space, which is dual to the tangent (contravariant) space. The application of
 a 1-form to a tangent vector produces a scalar value. The concept of tensor is a
-generalization of 1-form. Instead of operating on a single tangent vector, a tensor $Q$ is
-a \emph{multilinear} functional operating on $r$ tangent vectors, $v_1, \cdots, v_r$. The
-collection of this sequence of $r$ tangent vectors is called a $r$-vector, which belongs
-to the Cartesian product of $r$ tangent spaces $M_p^n$, i.e. $\otimes^r M_p^n$. Then this
-tensor $Q$ has a rank $r$ and belongs to the dual space of $\otimes^r M_p^n$, i.e.
+generalization of 1-form. Instead of operating on a single tangent vector and being a
+linear functional, an $r$-th rank tensor $Q$ is a \emph{multilinear} functional operating
+on $r$ tangent vectors, $v_1, \cdots, v_r$. This sequence \footnote{``Sequence'' means the
+  $r$ tangent vectors are ordered.} of $r$ tangent vectors is called a $r$-vector, which
+belongs to the Cartesian product of $r$ tangent spaces $M_p^n$, i.e. $\otimes^r M_p^n$.
+Then this tensor $Q$ belongs to the dual space of $\otimes^r M_p^n$, i.e.
 $\left( \otimes^r M_p^n \right)^*$, which is a Cartesian product of $r$ cotangent spaces
 $M_p^{n*}$,
 \begin{equation}
@@ -1397,12 +1400,13 @@ Because $Q$ belongs to the dual space or product of cotangent spaces, it is call
 covariant tensor.
 
 \begin{Definition}[Covariant tensor]
-  An $r$-th rank covariant tensor $Q$ is a multilinear functional operating on the product
-  of tangent spaces $\otimes^r M_p^n$, i.e. $Q: \otimes^r M_p^n \rightarrow \mathbb{R}$.
+  An $r$-th rank covariant tensor $Q$ is a multilinear functional operating on the
+  Cartesian product $r$ of tangent spaces $\otimes^r M_p^n$, i.e.
+  $Q: \otimes^r M_p^n \rightarrow \mathbb{R}$.
 \end{Definition}
 Therefore, a 1-form can be considered as a rank-1 tensor, which is a degenerate case.
 
-For any $v_1, \cdots, v_r$ in $M_p^n$, using multilinearity, we have
+Applying $Q$ to any $v_1, \cdots, v_r$ in $M_p^n$, using multilinearity, we have
 \begin{equation}
   \begin{aligned}
     Q(v_1,\cdots,v_r) &= Q(\sum_{i_1}v_1^{i_1} \vect{\pdiff}x^{i_1}, \cdots,
@@ -1635,6 +1639,18 @@ $i\cdots j$ and $k\cdots l$ for $(V,x_V)$.
     \right) \left( W^{c \cdots d}_{r \cdots s} \right)_U
   \end{equation}
 \end{itemize}
+
+\subsection{Exterior form and exterior algebra}
+
+\begin{Definition}[(Exterior) $p$-form]
+  A $p$-rank covariant tensor which is antisymmetric (or called skew symmetric):
+  $$
+  \alpha(\cdots v_r, \cdots, v_s \cdots) = -\alpha(\cdots v_s, \cdots, v_r \cdots).
+  $$
+  It is obvious to see that if any of the two contravariant vectors are the
+  same $v_i = v_j$, the $p$-form evaluates to zero.
+\end{Definition}
+
 
 \chapter{Sauter quadrature}
 \label{sec:sauter-quad}
@@ -2607,13 +2623,13 @@ matrix features.
   \texttt{HMatrix}. After various matrix operations having been applied to the matrix, its
   contents may be changed. For example,
   \begin{itemize}
-  \item after calling the in-situ version of \texttt{compute\_lu\_factorization}, the
+  \item after calling the in situ version of \texttt{compute\_lu\_factorization}, the
     matrix stores the resulted $L$ and $U$\footnote{$L$ is a normed lower triangular
       matrix, whose diagonal entries are 1. $U$ is an upper triangular matrix. Therefore,
       for the storage of $L$ and $U$ into a single matrix, $U$ is stored as intact, while
       $L$ is stored without its diagonal entries.}, which should have the state
     \texttt{lu};
-  \item after calling the in-situ version of \texttt{compute\_cholesky\_factorization},
+  \item after calling the in situ version of \texttt{compute\_cholesky\_factorization},
     the matrix stores only the lower triangular $L$ matrix. Being different from $L$
     returned by the LU factorization, $L$ here is usually not normed.
   \end{itemize}
@@ -2942,55 +2958,836 @@ result matrix block can still be split.}
   \end{algorithmic}
 \end{breakablealgorithm}
 
-Considerations about LU factorization Algorithm \ref{algo:lu}:
+\section{$\mathcal{H}$-matrix solvers}
+
+\subsection{Forward substitution: $Lx=b$}
+\label{sec:forward-subst}
+
+Let's start from the forward substitution for a full matrix. Let $L\in \mathbb{R}^{n\times
+  n}$ be a lower triangular matrix, $x, b\in \mathbb{R}^n$. Solve the problem $Lx=b$,
+\begin{equation}
+\begin{pmatrix}
+  a_{11} & & & & \\
+  a_{21} & a_{22} & & &\\
+  a_{31} & a_{32} & a_{33} & & \\
+  \vdots & \vdots & \vdots & \ddots & \\
+  a_{n1} & \cdots & \cdots & \cdots & a_{nn}
+\end{pmatrix}
+\begin{pmatrix}
+  x_1 \\ x_2 \\ x_3 \\ \vdots \\ x_n
+\end{pmatrix} =
+\begin{pmatrix}
+  b_1 \\ b_2 \\ b_3 \\ \vdots \\ b_n
+\end{pmatrix}.
+\end{equation}
+From the first row, we have $x_1 = \frac{b_1}{a_{11}}$, assuming $a_{11}\neq 0$. Then from
+the second row, we have $x_2 = \frac{b_2 - a_{21}x_1}{a_{22}}$. For the $i$-th row,
+\begin{equation}
+  x_i = \frac{b_i - \sum_{j=1}^{i-1} a_{ij}x_j}{a_{ii}}.
+\end{equation}
+Each $x_i$ depends on $b_i$ and on all previous $x_j$ with $j=1, \cdots, i-1$. Hence,
+$x_i$ depends on all $b_j$ with $j=1, \cdots, i$. Therefore, the forward substitution can
+be performed in situ, i.e. the right hand side vector $b$ can be overwritten by the
+solution vector $x$ and there is no need to allocate additional memory for $x$. The
+algorithm of forward substitution for a full matrix is show in \ref{algo:forward-subst-full}.
+\begin{breakablealgorithm}
+  \label{algo:forward-subst-full}
+  \caption{Forward substitution for a lower triangular full matrix}
+  \begin{algorithmic}[1]
+    \Procedure{ForwardSubstF}{$L, b$}
+      \For {each row of $L$: $i=1, \cdots, n$}
+        \For {each column before the $i$-th column: $j=1, \cdots, i-1$}
+          \State {$b_i \coloneqq b_i - a_{ij} x_j$}
+        \EndFor
+        \State {$x_i\coloneqq \frac{b_i}{a_{ii}}$}
+      \EndFor
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+A variant of the problem $Lx=b$ is $xU = b$, which is equivalent to $U^{\mathrm{T}}x = b$.
+This can still be solved by the work flow of forward substitution, which is summarized in Algorithm \ref{algo:forward-subst-full-transposed}.
+\begin{breakablealgorithm}
+  \label{algo:forward-subst-full-transposed}
+  \caption{Forward substitution for an upper triangular full matrix}
+  \begin{algorithmic}[1]
+    \Procedure{ForwardSubstFT}{$U, b$}
+      \For {each column of $U$: $j=1, \cdots, n$}
+        \For {each row before the $j$-th row: $i=1, \cdots, j-1$}
+          \State {$b_j \coloneqq b_j - a_{ji} x_i$}
+        \EndFor
+        \State {$x_j \coloneqq \frac{b_j}{a_{jj}}$}
+      \EndFor
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+Algorithm \ref{algo:forward-subst-full} and \ref{algo:forward-subst-full-transposed}
+correspond to a same LAPACK function \texttt{trsv}.
+
+When the matrix is an $\mathcal{H}$-matrix, let it be written as
+$L\big\vert_{\tau\times \tau}$. Assume the cluster $\tau$ has $p$ children. Then this
+$\mathcal{H}$-matrix has the following block structure:
+\begin{equation}
+  \begin{pmatrix}
+    L_{11} & & & \\
+    L_{21} & L_{22} & & \\
+    \vdots & \vdots & \ddots & \\
+    L_{p1} & L_{p2} & \cdots & L_{pp}
+  \end{pmatrix}.
+\end{equation}
+Each block in the above matrix is actually
+$L_{ij} \coloneqq L\big\vert_{\tau[i]\times\tau[j]}$, with $\tau[i]$ being the $i$-th
+child of the cluster $\tau$. Also note that the diagonal blocks
+$L\big\vert_{\tau[i]\times\tau[i]}$ are lower triangular matrices not general matrices on
+the diagonal line.
+
+To solve $L\big\vert_{\tau\times\tau}x\big\vert_{\tau}=b\big\vert_{\tau}$ we still apply
+the work flow of the forward substitution for a full matrix, but replace the scalar value
+computation in $x_i$ with $\mathcal{H}$-matrix operations. In this way, the forward
+substitution for an $\mathcal{H}$-matrix naturally becomes recursive. The algorithm is
+shown in Algorithm \ref{algo:forward-subst-hmat}.
+\begin{breakablealgorithm}
+  \label{algo:forward-subst-hmat}
+  \caption{Forward substitution for a lower triangular $\mathcal{H}$-matrix}
+  \begin{algorithmic}[1]
+    \Procedure{ForwardSubstH}{$L\big\vert_{\tau\times\tau}, b \big\vert_{\tau}$}
+      \If {$L\big\vert_{\tau\times\tau} \in P$} \Comment{Because
+$L\big\vert_{\tau\times\tau}$ is a diagonal block, i.e. the row block cluster is the same
+as the column block cluster, it belongs to $P^-$ and is a full matrix.}
+        \State{Solve $L\big\vert_{\tau\times\tau} x\big\vert_{\tau} = b\big\vert_{\tau}$
+using the forward substitution for a full matrix:\\\textsc{ForwardSubstF}($L\big\vert_{\tau\times\tau}, b \big\vert_{\tau}$)}
+      \Else
+        \For {each block row of $L\big\vert_{\tau\times\tau}$: $i=1, \cdots, \#S(\tau)$}
+          \For {each block column before the $i$-th column: $j=1,\cdots,i-1$}
+            \State{$b\big\vert_{\tau[i]} \coloneqq b\big\vert_{\tau[i]} -
+L\big\vert_{\tau[i]\times\tau[j]}x\big\vert_{\tau[j]}$}
+\Comment{$L\big\vert_{\tau[i]\times\tau[j]}x\big\vert_{\tau[j]}$ is
+$\mathcal{H}$-matrix-vector multiplication.}
+          \EndFor
+          \State{\textsc{ForwardSubstH}($L\big\vert_{\tau[i]\times\tau[i]}, b \big\vert_{\tau[i]}$)}
+        \EndFor
+      \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+Similar, the variant problem $X \big\vert_{\tau} U \big\vert_{\tau} = b \big\vert_{\tau}$
+can be solved by forward substitution in Algorithm
+\ref{algo:forward-subst-hmat-transpose}.
+\begin{breakablealgorithm}
+  \label{algo:forward-subst-hmat-transpose}
+  \caption{Forward substitution for an upper triangular $\mathcal{H}$-matrix}
+  \begin{algorithmic}[1]
+    \Procedure{ForwardSubstHT}{$U\big\vert_{\tau\times\tau}, b \big\vert_{\tau}$}
+      \If {$U\big\vert_{\tau\times\tau} \in P$} \Comment{Because
+$U\big\vert_{\tau\times\tau}$ is a diagonal block, i.e. the row block cluster is the same
+as the column block cluster, it belongs to $P^-$ and is a full matrix.}
+        \State{Solve $x\big\vert_{\tau} U\big\vert_{\tau\times\tau} = b\big\vert_{\tau}$
+using the forward substitution for a transposed full matrix:\\\textsc{ForwardSubstFT}($U\big\vert_{\tau\times\tau}, b \big\vert_{\tau}$)}
+      \Else
+        \For {each block column of $U \big\vert_{\tau\times\tau}$: $j=1, \cdots, \#S(\tau)$}
+          \For {each block row before the $j$-th row: $i=1,\cdots,j-1$}
+            \State{$b\big\vert_{\tau[j]} \coloneqq b\big\vert_{\tau[j]} -
+U^{\mathrm{T}}\big\vert_{\tau[j]\times\tau[i]} x\big\vert_{\tau[i]}$}
+          \EndFor
+          \State{\textsc{ForwardSubstHT}($U\big\vert_{\tau[j]\times\tau[j]}, b \big\vert_{\tau[j]}$)}
+        \EndFor
+      \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\subsection{Backward substitution: $Ux=b$}
+
+Let $U\in \mathbb{R}^{n\times n}$ be an upper triangular full matrix. Solve the problem
+$Ux=b$
+\begin{equation}
+  \begin{pmatrix}
+    a_{11} & a_{12} & a_{13} & \cdots & a_{1n} \\
+    & a_{22} & a_{23} & \cdots & a_{2n} \\
+    & & a_{33} & \cdots & a_{3n} \\
+    & & & \ddots & \vdots \\
+    & & & & a_{nn}
+  \end{pmatrix}
+  \begin{pmatrix}
+    x_1\\x_2\\x_3\\\vdots\\x_n
+  \end{pmatrix}=
+  \begin{pmatrix}
+    b_1\\b_2\\b_3\\\vdots\\b_n
+  \end{pmatrix}
+\end{equation}
+using the backward substitution in Algorithm \ref{algo:backward-subst-full}.
+\begin{breakablealgorithm}
+  \label{algo:backward-subst-full}
+  \caption{Backward substitution for a full matrix}
+  \begin{algorithmic}[1]
+    \Procedure{BackwardSubstF}{$U, b$}
+      \For {each row of $U$: $i=n, n-1, \cdots, 1$}
+        \For {each column after the $i$-th column: $j=i+1,\cdots,n$}
+          \State{$b_i\coloneqq b_i - a_{ij}x_j$}
+        \EndFor
+        \State{$x_i\coloneqq \frac{b_i}{a_{ii}}$}
+      \EndFor
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+Algorithm \ref{algo:backward-subst-full} corresponds to the LAPACK function \texttt{trsv}.
+
+Let $U\big\vert_{\tau\times\tau}$ be an upper triangular $\mathcal{H}$-matrix which has
+the following block structure:
+\begin{equation}
+  \begin{pmatrix}
+    U_{11} & U_{12} & \cdots & U_{1p} \\
+    & U_{22} & \cdots & U_{2p} \\
+    & & \ddots & \vdots \\
+    & & & U_{pp}
+  \end{pmatrix}.
+\end{equation}
+Solve $U\big\vert_{\tau\times\tau} x \big\vert_{\tau} = b \big\vert_{\tau} $ using
+Algorithm \ref{algo:backward-subst-hmat}.
+\begin{breakablealgorithm}
+  \label{algo:backward-subst-hmat}
+  \caption{Backward substitution for an upper triangular $\mathcal{H}$-matrix}
+  \begin{algorithmic}[1]
+    \Procedure{BackwardSubstH}{$U \big\vert_{\tau\times\tau}, b \big\vert_{\tau}$}
+      \If {$U \big\vert_{\tau\times\tau}\in P$}
+        \State{Solve $U \big\vert_{\tau\times\tau}x \big\vert_{\tau} = b \big\vert_{\tau}$ using
+  the backward substitution for a full matrix:\\\textsc{BackwardSubstF}($U \big\vert_{\tau\times\tau}, b \big\vert_{\tau}$)}
+      \Else
+        \For {each block row of $U \big\vert_{\tau\times\tau}$: $i=\#S(\tau), \#S(\tau)-1, \cdots,
+        1$}
+          \For {For each block column after the $i$-th column: $j=i+1,\cdots,\#S(\tau)$}
+            \State{$b \big\vert_{\tau[i]} \coloneqq b \big\vert_{\tau[i]} - U
+\big\vert_{\tau[i]\times\tau[i]} b \big\vert_{\tau[j]}$}
+          \EndFor
+        \State{\textsc{BackwardSubstH}($U \big\vert_{\tau[i]\times\tau[i]},b \big\vert_{\tau[i]}$)}
+        \EndFor
+      \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+\subsection{Matrix-valued forward substitution: $LX = Z$}
+\label{sec:forward-subst-matrix-valued}
+
+The problem to be solved is
+$L \big\vert_{\tau\times\tau} X \big\vert_{\tau\times\sigma} = Z
+\big\vert_{\tau\times\sigma}$, where $L \big\vert_{\tau\times\tau}$ is an
+$\mathcal{H}$-matrix constructed with respect to the block cluster tree $T(I\times I, P)$,
+$X \big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ are
+$\mathcal{H}$-matrices constructed with respect to the block cluster tree
+$T(I\times J, P')$. If the index set $I$ is different from $J$, or if $I$ is equal to $J$,
+but they are partitioned into different cluster trees, the two block cluster trees
+$T(I\times I)$ and $T(I\times J)$ may have different leaf sets $P$ and $P'$. Also note the
+right hand side term $Z$ and the solution term $X$ are now $\mathcal{H}$-matrices instead
+of vectors. That's why the algorithm for solving this problem is called
+\emph{matrix-valued} forward substitution. In addition, $X$ and $Z$ are built on a same
+block cluster $\tau\times\sigma$, while $L$ is a diagonal block and built on the block
+cluster $\tau\times\tau$.
+
+To formulate this algorithm, the following cases should be clarified:
 \begin{itemize}
-\item $M$ is the source matrix to be factorized.
-\item $LU$ is the resulted matrix storing the factor matrices $L$ and $U$ at the same time. Hence, the LU factorization performed is in situ, just like the LAPACK procedure \texttt{*getrf}.
-\item Both $M$ and $LU$ are on a same block cluster $\tau\times\tau$.
-\item This function will be recursive until the block cluster $\tau\times\tau$ belongs to the leaf set, which indicates the current matrix must be a full matrix.
+\item When $\tau\times\sigma\in P'^-$, both $X \big\vert_{\tau\times\sigma}$ and
+  $Z \big\vert_{\tau\times\sigma}$ are full matrices. Now
+  $L \big\vert_{\tau\times\tau} X \big\vert_{\tau\times\sigma} = Z
+  \big\vert_{\tau\times\sigma}$ is a multi-right hand side (RHS) problem. For the $j$-th
+  column in $X \big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$, i.e.
+  $X \big\vert_{\tau\times\sigma_j}$ and $Z \big\vert_{\tau\times\sigma_j}$ \footnote{Here
+    we use $\sigma_j$ to represent the $j$-th index in the index set $\sigma$.}, we can
+  solve
+  $L \big\vert_{\tau\times\tau} X \big\vert_{\tau\times\sigma_j} = Z
+  \big\vert_{\tau\times\sigma_j}$ for $X \big\vert_{\tau\times\sigma_j}$ using
+  \textsc{ForwardSubstH}, since $L \big\vert_{\tau\times\tau}$ is still an
+  $\mathcal{H}$-matrix.
+ \item When $\tau\times\sigma\in P'^+$, both $X \big\vert_{\tau\times\sigma}$ and
+  $Z \big\vert_{\tau\times\sigma}$ are rank-$k$ matrices. $Z \big\vert_{\tau\times\sigma}$
+  is known and has the low-rank expansion
+  $Z \big\vert_{\tau\times\sigma} = A B^{\mathrm{T}}$. $X \big\vert_{\tau\times\sigma}$ is
+  unknown and we assume it has the ansatz expansion
+  $X \big\vert_{\tau\times\sigma} = A' B^{\mathrm{T}}$, where the second component $B$ is
+  adopted as the same in the expansion of $Z \big\vert_{\tau\times\sigma}$. Then the
+  equation becomes
+  \begin{equation}
+    L \big\vert_{\tau\times\tau} A' B^{\mathrm{T}} = A B^{\mathrm{T}}.
+  \end{equation}
+  $B^{\mathrm{T}}$ on the two sides of the equation can be eliminated and the equation to
+  be solved is
+  \begin{equation}
+    L \big\vert_{\tau\times\tau} A' = A.
+  \end{equation}
+  Because both $A'$ and $A$ are full matrices, we can use the same method in the previous
+  case to solve each column in $A'$.
+\item When $\tau\times\sigma\notin P'$, both $X \big\vert_{\tau\times\sigma}$ and $Z
+  \big\vert_{\tau\times\sigma}$ have submatrix structures. Because the size of $\tau$ is
+  still larger than $n_{\min}$, $L \big\vert_{\tau\times\tau}$ also has a submatrix
+  structure. Assume $\#S(\tau) = p$ and $\#S(\sigma) = q$, a matrix-valued equation as below should
+  be solved
+  \begin{equation}
+    \begin{pmatrix}
+      L_{11} & & & \\
+      L_{21} & L_{22} & & \\
+      \vdots & & \ddots & \\
+      L_{p1} & L_{p2} & \cdots & L_{pp}
+    \end{pmatrix}
+    \begin{pmatrix}
+      X_{11} & \cdots & X_{1q} \\
+      \vdots & \vdots & \vdots \\
+      X_{p1} & \cdots & X_{pq}
+    \end{pmatrix} =
+    \begin{pmatrix}
+      Z_{11} & \cdots & Z_{1q} \\
+      \vdots & \vdots & \vdots \\
+      Z_{p1} & \cdots & Z_{pq}
+    \end{pmatrix}.
+  \end{equation}
+  For the first block row, we have the following $q$ equations
+  \begin{equation*}
+    L_{11}X_{11} = Z_{11},\; L_{11}X_{12} = Z_{12}, \cdots, L_{11}X_{1q} = Z_{1q}.
+  \end{equation*}
+  For the second block row, we have
+  \begin{equation*}
+    L_{21}X_{11} + L_{22}X_{21} = Z_{21}, \cdots, L_{21}X_{1q} + L_{22}X_{2q} = Z_{2q}.
+  \end{equation*}
+  Then for the $i$-th block row, we have
+  \begin{equation*}
+    \sum_{k=1}^{i} L_{ik}X_{k1} = Z_{i1}, \cdots, \sum_{k=1}^i L_{ik}X_{kq} = Z_{iq}.
+  \end{equation*}
+  Equations from the first block row are still matrix-valued lower triangular problems,
+  which can be directly solved by one recursive call of this algorithm. So
+  $X_{11}, X_{12}, \cdots, X_{1q}$ are obtained.
+
+  For equations from the second block row, we keep the terms related to the diagonal block
+  $L_{22}$ on the left hand side and move the other terms to the right hand side,
+  \begin{equation*}
+    L_{22}X_{21} = Z_{21} - L_{21}X_{11}, \cdots, L_{22}X_{2q} = Z_{2q} - L_{21}X_{1q}.
+  \end{equation*}
+  With the solutions obtained from the first block row, we can solve
+  $X_{21}, \cdots, X_{2q}$ by one recursive call of this algorithm.
+
+  Without loss of generality, for equations from the $i$-th block row, we keep the terms
+  related to the diagonal block $L_{ii}$ on the left hand side and move the other terms to
+  the right hand side,
+  \begin{equation*}
+    L_{ii}X_{ij} = Z_{ij} - \sum_{k=1}^{i-1} L_{ik}X_{kj} \quad (j=1,\cdots,q).
+  \end{equation*}
+  Since $X_{rs}$ with $r=1,\cdots,i-1$ and $s=1,\cdots,q$ have been computed from the
+  equations in the first $i-1$ rows, we can solve $X_{i1}, \cdots, X_{iq}$.
 \end{itemize}
 
+The above cases can be summarized into Algorithm \ref{algo:forward-subst-matrix-valued}.
 \begin{breakablealgorithm}
-  \label{algo:lu}
-  \caption{LU factorization}
+  \label{algo:forward-subst-matrix-valued}
+  \caption{Matrix-valued forward substitution}
   \begin{algorithmic}[1]
-    \Procedure{LU\_factorization}{$M$, $LU$}
-      \If {the current matrix is a leaf node}
-        \State {Perform LU factorization on the full matrix.} \footnote{This will call
-the LAPACK function \texttt{*getrf}, which adopts partial pivoting with row permutation. The
-factorization has the form $A = P \cdot L \cdot U$.}
+    \Procedure{ForwardSubstM}{$L \big\vert_{\tau\times\tau}, X \big\vert_{\tau\times\sigma},
+Z \big\vert_{\tau\times\sigma}$}
+      \If {$\tau\times\sigma \in P'^-$} \Comment{Both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ are full matrices.}
+        \For {each column of $X \big\vert_{\tau\times\sigma}$ and $Z
+\big\vert_{\tau\times\sigma}$: $j=1,\cdots,\#\sigma$}
+          \State{Solve $L \big\vert_{\tau\times\tau} X \big\vert_{\tau\times\sigma_j} = Z
+  \big\vert_{\tau\times\sigma_j}$ for $X \big\vert_{\tau\times\sigma_j}$ using
+  \textsc{ForwardSubstH}.}
+        \EndFor
+      \ElsIf {$\tau\times\sigma \in P'^+$} \Comment{Both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ are rank-$k$ matrices.}
+        \State {Copy $Z \big\vert_{\tau\times\sigma} = AB^{\mathrm{T}}$ to $X
+\big\vert_{\tau\times\sigma}$.}
+        \State{Solve $L \big\vert_{\tau\times\tau} A' = A$, where $A'$ is the first
+component matrix in $X \big\vert_{\tau\times\sigma}$ via multiple calls of
+\textsc{ForwardSubstH}.}
+      \Else \Comment{When $\tau\times\sigma \notin P'$, both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ have submatrix structures.}
+        \For {each block row of $Z \big\vert_{\tau\times\sigma}$: $i=1,\cdots,\#S(\tau)$}
+          \For {each block column of $Z \big\vert_{\tau\times\sigma}$: $j=1,\cdots,\#S(\sigma)$}
+            \For {each block column before the $i$-th column in $L
+  \big\vert_{\tau\times\tau}$: $k=1,\cdots,i-1$}
+              \State{$Z \big\vert_{\tau[i]\times\sigma[j]} \coloneqq Z
+  \big\vert_{\tau[i]\times\sigma[j]} - L \big\vert_{\tau[i]\times\tau[k]}X \big\vert_{\tau[k]\times\sigma[j]}$}
+            \EndFor
+            \State{\textsc{ForwardSubstM}($L \big\vert_{\tau[i]\times\tau[i]}, X
+  \big\vert_{\tau[i]\times\sigma[j]}, Z \big\vert_{\tau[i]\times\sigma[j]}$)}
+          \EndFor
+        \EndFor
+      \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+Now if we carefully observe Algorithm \ref{algo:forward-subst-matrix-valued}, we find out
+these points:
+\begin{itemize}
+\item When the result matrix block $X \big\vert_{\tau\times\sigma}$ belongs to the near
+  field set $P'^-$, each of its column vector is independently solved from this equation
+  $L \big\vert_{\tau\times\tau} X \big\vert_{\tau\times\sigma_j} = Z
+  \big\vert_{\tau\times\sigma_j}$ using \textsc{ForwardSubstH}. Because
+  \textsc{ForwardSubstH} can be performed in situ, i.e. the result vector
+  $X \big\vert_{\tau\times\sigma_j}$ can be directly obtained by overwriting the right
+  hand side vector $Z \big\vert_{\tau\times\sigma_j}$, the solution of the whole matrix
+  block $X \big\vert_{\tau\times\sigma}$ can be in situ, i.e. the set of result vectors
+  can be directly written into the right hand side matrix block
+  $Z \big\vert_{\tau\times\sigma}$.
+\item When the result matrix block $X \big\vert_{\tau\times\sigma}$ belongs to the far
+  field set $P'^+$, after copying $Z \big\vert_{\tau\times\sigma}$ to
+  $X \big\vert_{\tau\times\sigma}$, the solution of $L \big\vert_{\tau\times\tau} A' = A$
+  using \textsc{ForwardSubstH} can be in situ. Therefore in this case, the solution of
+  $X \big\vert_{\tau\times\sigma}$ can be in situ.
+\item When the result matrix block $X \big\vert_{\tau\times\sigma}$ as well as
+  $Z \big\vert_{\tau\times\sigma}$ has a submatrix structure, each submatrix block
+  $Z \big\vert_{\tau[i]\times\sigma[j]}$ in $Z \big\vert_{\tau\times\sigma}$ is updated
+  with the negative product
+  $L \big\vert_{\tau[i]\times\tau[k]}X \big\vert_{\tau[k]\times\sigma[j]}$. Because the
+  index $k$ is smaller than the current block row index $i$ which has been iterated in
+  previous loops, it means the set of equations
+  $L \big\vert_{\tau[k]\times\tau[k]} X \big\vert_{\tau[k]\times\sigma[j]} = Z
+  \big\vert_{\tau[k]\times\sigma[j]}$ for all $j=1,\cdots,\#S(\sigma)$ have already been
+  solved. If these equations are solved in situ, the matrix blocks
+  $Z \big\vert_{\tau[k]\times\sigma[j]}$ for all $j=1,\cdots,\#S(\sigma)$ have been
+  overwritten with $X \big\vert_{\tau[k]\times\sigma[j]}$ respectively. Then, the update
+  of the current right hand side matrix block $Z \big\vert_{\tau[i]\times\sigma[j]}$ can
+  be made in situ, i.e.
+  $Z \big\vert_{\tau[i]\times\sigma[j]} \coloneqq Z \big\vert_{\tau[i]\times\sigma[j]} - L
+  \big\vert_{\tau[i]\times\tau[k]}Z \big\vert_{\tau[k]\times\sigma[j]}$.
+\end{itemize}
+In this way, Algorithm \ref{algo:forward-subst-matrix-valued} can be performed in situ.
+
+\subsection{Matrix-valued forward substitution for an upper triangular $\mathcal{H}$-matrix: $XU = Z$}
+
+The equation to be solved is
+$X \big\vert_{\tau\times\sigma} U \big\vert_{\sigma\times\sigma} = Z
+\big\vert_{\tau\times\sigma}$, where $U \big\vert_{\sigma\times\sigma}$ is an
+$\mathcal{H}$-matrix constructed with respect to the block cluster tree $T(J\times J, P)$,
+while $X \big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ are
+$\mathcal{H}$-matrices constructed with respect to the block cluster tree
+$T(I\times J, P')$. Similar to Section \ref{sec:forward-subst-matrix-valued}, we need to
+consider three cases:
+\begin{itemize}
+\item When $\tau\times\sigma\in P'^-$, both $X \big\vert_{\tau\times\sigma}$ and
+  $Z \big\vert_{\tau\times\sigma}$ are full matrices.
+  $X \big\vert_{\tau\times\sigma} U \big\vert_{\sigma\times\sigma} = Z
+  \big\vert_{\tau\times\sigma}$ is a multiple RHS problem. For the $i$-th row in
+  $X \big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$, i.e.
+  $X \big\vert_{\tau_i\times\sigma}$ and $Z \big\vert_{\tau_i\times\sigma}$, we solve
+  $X \big\vert_{\tau_i\times\sigma} U \big\vert_{\sigma\times\sigma} = Z
+  \big\vert_{\tau_i\times\sigma}$, which is equivalent to
+  $U^{\mathrm{T}} \big\vert_{\sigma\times\sigma} X^{\mathrm{T}}
+  \big\vert_{\sigma\times\tau_i} = Z^{\mathrm{T}} \big\vert_{\sigma\times\tau_i}$
+  \footnote{Here we should note that transposing an $\mathcal{H}$-matrix node on a block
+    cluster $\tau\times\sigma$ such as $X \big\vert_{\tau\times\sigma}$ is equivalent to
+    transposing the whole matrix $X$ first then restricting it to the block cluster
+    $\sigma\times\tau$. That's why we write the transpose of
+    $X \big\vert_{\tau\times\sigma}$ as $X^{\mathrm{T}} \big\vert_{\sigma\times\tau}$,
+    even though the transpose operation on the whole matrix $X$ never actually happen.}.
+  Since $U^{\mathrm{T}} \big\vert_{\sigma\times\sigma}$ is a lower triangular matrix, it
+  can be solved by the algorithm \textsc{ForwardSubstH} in Algorithm
+  \ref{algo:forward-subst-hmat}. However, due to the matrix transpose operation on
+  $U \big\vert_{\sigma\times\sigma}$, all matrix-vector multiplications (which is usually
+  named \texttt{vmult} in deal.ii) involved in \textsc{ForwardSubstH} should be replaced
+  with transposed matrix-vector multiplications (which is named \texttt{Tvmult} in
+  deal.ii). Moreover, when calling the LAPACK function \texttt{trsv} for computing the
+  full matrix forward substitution used in this algorithm, we should also tell
+  \texttt{trsv} that a transposed matrix should be used in the computation. This variation
+  of Algorithm \ref{algo:forward-subst-hmat} has been summarized as
+  \textsc{ForwardSubstHT} in Algorithm \ref{algo:forward-subst-hmat-transpose}.
+  
+\item When $\tau\times\sigma\in P'^+$, both $X \big\vert_{\tau\times\sigma}$ and
+  $Z \big\vert_{\tau\times\sigma}$ are rank-$k$ matrices. The known data
+  $Z \big\vert_{\tau\times\sigma}$ already has the two component matrices
+  $Z \big\vert_{\tau\times\sigma} = AB^{\mathrm{T}}$, while
+  $X \big\vert_{\tau\times\sigma}$ is assumed to have the ansatz form
+  $X \big\vert_{\tau\times\sigma} = A B'^{\mathrm{T}}$. Then
+  $X \big\vert_{\tau\times\sigma} U \big\vert_{\sigma\times\sigma} = Z
+  \big\vert_{\tau\times\sigma}$ is equivalent to
+  $B'^{\mathrm{T}} U \big\vert_{\sigma\times\sigma} = B^{\mathrm{T}}$. This is further
+  equivalent to $U^{\mathrm{T}} \big\vert_{\sigma\times\sigma} B' = B$, which is the
+  actual equation we should solve. Here both $B'$ and $B$ are full matrices. For each
+  column of them, i.e. $B' \big\vert_{\sigma,j}$ and $B \big\vert_{\sigma,j}$, we can
+  solve
+  $U^{\mathrm{T}} \big\vert_{\sigma\times\sigma} B' \big\vert_{\sigma,j} = B
+  \big\vert_{\sigma,j}$ using \textsc{ForwardSubstHT} for the transposed matrix
+  $U^{\mathrm{T}} \big\vert_{\sigma\times\sigma}$.
+\item When $\tau\times\sigma\notin P'$, both $X \big\vert_{\tau\times\sigma}$ and $Z
+  \big\vert_{\tau\times\sigma}$ have submatrix structures. Because $\sigma$ is a large
+  cluster , $U \big\vert_{\sigma\times\sigma}$ also has a submatrix structure. Then we
+  have the matrix-valued equation as below
+  \begin{equation}
+    \begin{pmatrix}
+      X_{11} & \cdots & X_{1q} \\
+      \vdots & \vdots & \vdots \\
+      X_{p1} & \cdots & X_{pq}
+    \end{pmatrix}
+    \begin{pmatrix}
+      U_{11} & U_{12} & \cdots & U_{1q} \\
+      & U_{22} & \cdots & U_{2q} \\
+      & & \ddots & \vdots \\
+      & & & U_{qq}
+    \end{pmatrix} =
+    \begin{pmatrix}
+      Z_{11} & \cdots & Z_{1q} \\
+      \vdots & \vdots & \vdots \\
+      Z_{p1} & \cdots & Z_{pq}
+    \end{pmatrix}.
+  \end{equation}
+  Apply transpose to this equation, we have
+  \begin{equation}
+    \begin{pmatrix}
+      U^{\mathrm{T}}_{11} & & & \\
+      U^{\mathrm{T}}_{12} & U^{\mathrm{T}}_{22} & & \\
+      \vdots & & \ddots & \\
+      U^{\mathrm{T}}_{1q} & U^{\mathrm{T}}_{2q} & \cdots & U^{\mathrm{T}}_{qq}
+    \end{pmatrix}
+    \begin{pmatrix}
+      X^{\mathrm{T}}_{11} & \cdots & X^{\mathrm{T}}_{p1} \\
+      \vdots & \vdots & \vdots \\
+      X^{\mathrm{T}}_{1q} & \cdots & X^{\mathrm{T}}_{pq}
+    \end{pmatrix} =
+    \begin{pmatrix}
+      Z^{\mathrm{T}}_{11} & \cdots & Z^{\mathrm{T}}_{p1} \\
+      \vdots & \vdots & \vdots \\
+      Z^{\mathrm{T}}_{1q} & \cdots & Z^{\mathrm{T}}_{pq}
+    \end{pmatrix},
+  \end{equation}
+  which can be solved using the work flow of matrix-valued forward substitution.
+\end{itemize}
+
+The above cases are summarized in Algorithm \ref{algo:forward-subst-matrix-valued-transpose}.
+\begin{breakablealgorithm}
+  \label{algo:forward-subst-matrix-valued-transpose}
+  \caption{Matrix-valued forward substitution for an upper triangular $\mathcal{H}$-matrix}
+  \begin{algorithmic}[1]
+    \Procedure{ForwardSubstMT}{$U \big\vert_{\sigma\times\sigma}, X \big\vert_{\tau\times\sigma},
+Z \big\vert_{\tau\times\sigma}$}
+      \If {$\tau\times\sigma \in P'^-$} \Comment{Both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ are full matrices.}
+        \For {each row of $X \big\vert_{\tau\times\sigma}$ and $Z
+\big\vert_{\tau\times\sigma}$: $i=1,\cdots,\#\tau$}
+          \State{Solve $X \big\vert_{\tau_{i}\times\sigma} U \big\vert_{\sigma\times\sigma}  = Z
+  \big\vert_{\tau_i\times\sigma}$ for $X \big\vert_{\tau_i\times\sigma}$ using
+  \textsc{ForwardSubstHT}.}
+        \EndFor
+      \ElsIf {$\tau\times\sigma \in P'^+$} \Comment{Both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ are rank-$k$ matrices.}
+        \State {Copy $Z \big\vert_{\tau\times\sigma} = AB^{\mathrm{T}}$ to $X
+\big\vert_{\tau\times\sigma}$.}
+        \State{Solve $B'^{\mathrm{T}} U \big\vert_{\sigma\times\sigma}  = B^{\mathrm{T}}$, where $B'$ is the second
+component matrix in $X \big\vert_{\tau\times\sigma}$ via multiple calls of
+\textsc{ForwardSubstHT}.}
+      \Else \Comment{When $\tau\times\sigma \notin P'$, both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ have submatrix structures.}
+        \For {each block column of $Z \big\vert_{\tau\times\sigma}$:
+$j=1,\cdots,\#S(\sigma)$}
+          \For {each block row of $Z \big\vert_{\tau\times\sigma}$: $i=1,\cdots,\#S(\tau)$}
+            \For {each block row before the $j$-th row in $U
+  \big\vert_{\sigma\times\sigma}$: $k=1,\cdots,j-1$}
+              \State{$Z \big\vert_{\tau[i]\times\sigma[j]} \coloneqq Z
+  \big\vert_{\tau[i]\times\sigma[j]} - X \big\vert_{\tau[i]\times\sigma[k]} U \big\vert_{\sigma[k]\times\sigma[j]}$}
+            \EndFor
+            \State{\textsc{ForwardSubstMT}($U \big\vert_{\sigma[j]\times\sigma[j]}, X
+  \big\vert_{\tau[i]\times\sigma[j]}, Z \big\vert_{\tau[i]\times\sigma[j]}$)}
+          \EndFor
+        \EndFor
+      \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+One special case for the equation
+$X \big\vert_{\tau\times\sigma} U \big\vert_{\sigma\times\sigma} = Z
+\big\vert_{\tau\times\sigma}$ is that $U \big\vert_{\sigma\times\sigma}$ is the
+decomposition factor $L^{\mathrm{T}} \big\vert_{\sigma\times\sigma}$ obtained from the
+Cholesky factorization of a SPD matrix. The equivalent problem to be solved is
+$L \big\vert_{\sigma\times\sigma} X^{\mathrm{T}} \big\vert_{\sigma\times\tau} =
+Z^{\mathrm{T}} \big\vert_{\sigma\times\tau}$. Same as before, we have three cases to
+handle.
+\begin{itemize}
+\item When $\tau\times\sigma \in P'^-$, both $X \big\vert_{\tau\times\sigma}$ and
+  $Z \big\vert_{\tau\times\sigma}$ are full matrices. For the $i$-th row in
+  $X \big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$, i.e.
+  $X \big\vert_{\tau_i\times\sigma}$ and $Z \big\vert_{\tau_i\times\sigma}$, we solve
+  $X \big\vert_{\tau_i\times\sigma} L^{\mathrm{T}} \big\vert_{\sigma\times\sigma} = Z
+  \big\vert_{\tau_i\times\sigma}$, which is equivalent to
+  $L \big\vert_{\sigma\times\sigma} X^{\mathrm{T}} \big\vert_{\sigma\times\tau_i} =
+  Z^{\mathrm{T}} \big\vert_{\sigma\times\tau_i}$. This can be solved by the algorithm
+  \textsc{ForwardSubstH} in Algorithm \ref{algo:forward-subst-hmat}.
+\item When $\tau\times\sigma \in P'^+$, both $X \big\vert_{\tau\times\sigma}$ and
+  $Z \big\vert_{\tau\times\sigma}$ are rank-$k$ matrices. The known data
+  $Z \big\vert_{\tau\times\sigma}$ already has the two component matrices
+  $Z \big\vert_{\tau\times\sigma} = AB^{\mathrm{T}}$, while
+  $X \big\vert_{\tau\times\sigma}$ is assumed to have the ansatz form
+  $X \big\vert_{\tau\times\sigma} = A B'^{\mathrm{T}}$. Then
+  $X \big\vert_{\tau\times\sigma} L^{\mathrm{T}} \big\vert_{\sigma\times\sigma} = Z
+  \big\vert_{\tau\times\sigma}$ is equivalent to
+  $B'^{\mathrm{T}} L^{\mathrm{T}} \big\vert_{\sigma\times\sigma} = B^{\mathrm{T}}$. This
+  is further equivalent to $L \big\vert_{\sigma\times\sigma} B' = B$. For each column of
+  $B'$ and $B$, i.e. $B' \big\vert_{\sigma,j}$ and $B \big\vert_{\sigma,j}$, we can
+  solve
+  $L \big\vert_{\sigma\times\sigma} B' \big\vert_{\sigma,j} = B
+  \big\vert_{\sigma,j}$ using \textsc{ForwardSubstH}.
+\item When $\tau\times\sigma\notin P'$, both $X \big\vert_{\tau\times\sigma}$ and
+  $Z \big\vert_{\tau\times\sigma}$ have submatrix structures. Because $\sigma$ is a large
+  cluster , $L^{\mathrm{T}} \big\vert_{\sigma\times\sigma}$ also has a submatrix
+  structure. After transposing the equation $X \big\vert_{\tau\times\sigma} L^{\mathrm{T}}
+  \big\vert_{\sigma\times\sigma} = Z \big\vert_{\tau\times\sigma}$, we have the
+  matrix-valued equation as below
+  \begin{equation}
+    \begin{pmatrix}
+      L_{11} & & & \\
+      L_{21} & L_{22} & & \\
+      \vdots & & \ddots & \\
+      L_{q1} & L_{q2} & \cdots & L_{qq}
+    \end{pmatrix}
+    \begin{pmatrix}
+      X^{\mathrm{T}}_{11} & \cdots & X^{\mathrm{T}}_{p1} \\
+      \vdots & \vdots & \vdots \\
+      X^{\mathrm{T}}_{1q} & \cdots & X^{\mathrm{T}}_{pq}
+    \end{pmatrix} =
+    \begin{pmatrix}
+      Z^{\mathrm{T}}_{11} & \cdots & Z^{\mathrm{T}}_{p1} \\
+      \vdots & \vdots & \vdots \\
+      Z^{\mathrm{T}}_{1q} & \cdots & Z^{\mathrm{T}}_{pq}
+    \end{pmatrix},
+  \end{equation}
+  which can be solved using the work flow of matrix-valued forward substitution.
+\end{itemize}
+
+The above cases are summarized in Algorithm
+\ref{algo:forward-subst-matrix-valued-transpose-cholesky}
+\begin{breakablealgorithm}
+  \label{algo:forward-subst-matrix-valued-transpose-cholesky}
+  \caption{Matrix-valued forward substitution for an upper triangular $\mathcal{H}$-matrix
+obtained from Cholesky factorization}
+  \begin{algorithmic}[1]
+    \Procedure{ForwardSubstMTC}{$L \big\vert_{\sigma\times\sigma}, X \big\vert_{\tau\times\sigma},
+Z \big\vert_{\tau\times\sigma}$}
+      \If {$\tau\times\sigma \in P'^-$} \Comment{Both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ are full matrices.}
+        \For {each row of $X \big\vert_{\tau\times\sigma}$ and $Z
+\big\vert_{\tau\times\sigma}$: $i=1,\cdots,\#\tau$}
+          \State{Solve $X \big\vert_{\tau_{i}\times\sigma} L^{\mathrm{T}} \big\vert_{\sigma\times\sigma}  = Z
+  \big\vert_{\tau_i\times\sigma}$, which is equivalent to $L
+\big\vert_{\sigma\times\sigma} X^{\mathrm{T}} \big\vert_{\sigma\times\tau_i} =
+Z^{\mathrm{T}} \big\vert_{\sigma\times\tau_i}$ using \textsc{ForwardSubstH}.}
+        \EndFor
+      \ElsIf {$\tau\times\sigma \in P'^+$} \Comment{Both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ are rank-$k$ matrices.}
+        \State {Copy $Z \big\vert_{\tau\times\sigma} = AB^{\mathrm{T}}$ to $X
+\big\vert_{\tau\times\sigma}$.}
+        \State{Solve $L \big\vert_{\sigma\times\sigma}B' = B$, where $B'$ is the second
+component matrix in $X \big\vert_{\tau\times\sigma}$ via multiple calls of
+\textsc{ForwardSubstH}.}
+      \Else \Comment{When $\tau\times\sigma \notin P'$, both $X
+\big\vert_{\tau\times\sigma}$ and $Z \big\vert_{\tau\times\sigma}$ have submatrix
+structures.}
+        \For {each block column of $Z \big\vert_{\tau\times\sigma}$:
+$j=1,\cdots,\#S(\sigma)$}
+          \For {each block row of $Z \big\vert_{\tau\times\sigma}$: $i=1,\cdots,\#S(\tau)$}
+            \For {each block column before the $j$-th column in $L
+\big\vert_{\sigma\times\sigma}$: $k=1,\cdots,j-1$}
+              \State{$Z \big\vert_{\tau[i]\times\sigma[j]} \coloneqq Z
+  \big\vert_{\tau[i]\times\sigma[j]} - X \big\vert_{\tau[i]\times\sigma[k]} L^{\mathrm{T}}
+\big\vert_{\sigma[j]\times\sigma[k]}$\footnote{$X \big\vert_{\tau[i]\times\sigma[k]} L^{\mathrm{T}}
+\big\vert_{\sigma[j]\times\sigma[k]}$ needs the multiplication operation of two
+$\mathcal{H}$-matrices with the second operand transposed. In deal.ii and HierBEM, such
+function has the name \texttt{mTmult}.}}
+            \EndFor
+            \State{\textsc{ForwardSubstMTC}($L \big\vert_{\sigma[j]\times\sigma[j]}, X
+  \big\vert_{\tau[i]\times\sigma[j]}, Z \big\vert_{\tau[i]\times\sigma[j]}$)}
+          \EndFor
+        \EndFor
+      \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{breakablealgorithm}
+
+Similar to the analysis in Section \ref{sec:forward-subst-matrix-valued}, Algorithm
+\ref{algo:forward-subst-matrix-valued-transpose} and
+\ref{algo:forward-subst-matrix-valued-transpose-cholesky} can be performed in situ.
+
+\subsection{LU factorization}
+
+\subsubsection{LU factorization of a full matrix}
+\label{sec:lu-full}
+
+The LAPACK function \texttt{getrf} is responsible for computing the LU factorization of a
+full matrix. To prevent the situation that a zero value may appear on the diagonal and
+halt the algorithm, partial pivoting\footnote{pivot [ODE] n. In the numerical evaluation
+  of a determinant, or the numerical solution of simultaneous linear equations, a non-zero
+  element of the determinant or matrix which is used as follows: all elements in its row
+  are divided by it, and appropriate multiples of that row are then subtracted
+  successively from the other rows, so that the pivot itself is replaced by unity and all
+  other elements in its column are replaced by zero; (this gives, in the case of a
+  determinant, a number, the pivot, multiplied by a determinant whose order is reduced by
+  one, and in the case of simultaneous equations, a set of equations one fewer in number
+  from which one of the variables has been eliminated).} with \emph{row} interchanges is
+adopted by this function. Then for a matrix $A$, its LU factorization has the form
+$A=P L U$ instead of the simple form $A = LU$, where $P$ is a permutation matrix for
+interchanging the rows of $A$\footnote{When the permutation matrix $P$ is applied from
+  left to $A$, i.e. $PA$, it permutes the rows of $A$. When $P$ is applied from the right,
+  it permutes the columns.}, $L$ is a normalized lower triangular matrix. Due to the
+existence of such a permutation matrix $P$, when we solve the equation $Ax = b$ by LU
+factorization, it is equivalent to solve $PLU x = b$. Therefore, before performing the
+standard forward substitution and then backward substitution, we should first multiply
+$P^{-1} = P^{\mathrm{T}}$\footnote{A permutation matrix is an orthogonal matrix.} at the
+two sides of $PLU x = b$ to eliminate $P$, then solve $LU x = b' = P^{\mathrm{T}}b$ for
+$x$.
+
+The algorithm implemented by \texttt{getrf} is \textit{in situ}, which means the input
+matrix $A$ of this function will be directly overwritten by the factorization results. The
+factorized components $L$ and $U$ are stored together in this same matrix $A$. $U$ is
+saved into the upper triangular part (including the diagonal entries), while $L$ without
+its diagonal entries is saved into the lower triangular part. This is because $L$ is
+normalized, its diagonal entries are all ones, which need not be explicitly stored.
+
+The LAPACK function for solving a set of linear equations with the system matrix having
+been factorized by \texttt{getrf} at first is \texttt{getrs}. This function handles the said
+permutation matrix and also takes into account the unsaved diagonal entries of $L$.
+
+\subsubsection{LU factorization of an $\mathcal{H}$-matrix}
+\label{sec:lu-hmat}
+
+\paragraph{Naive work flow}
+
+The work flow for LU factorization can be understood by starting from a $3\times 3$ block
+matrix. Let $M = LU$ and
+\begin{equation}
+  M = \begin{pmatrix}
+    M_{11} & M_{12} & M_{13} \\
+    M_{21} & M_{22} & M_{23} \\
+    M_{31} & M_{32} & M_{33}
+  \end{pmatrix}, \;
+  L = \begin{pmatrix}
+    L_{11} & 0 & 0 \\
+    L_{21} & L_{22} & 0 \\
+    L_{31} & L_{32} & L_{33}
+  \end{pmatrix}, \;
+  U = \begin{pmatrix}
+    U_{11} & U_{12} & U_{13} \\
+    0 & U_{22} & U_{23} \\
+    0 & 0 & U_{33}
+  \end{pmatrix}.
+\end{equation}
+Expand the product of $LU$ and establish the identity of corresponding matrix blocks on
+the two sides of $M=LU$, we have the following separate equations on each block row:
+\begin{eqnarray}
+  \label{eq:lu-3x3-row1} L_{11}U_{11} = M_{11} & L_{11}U_{12} = M_{12} & L_{11}U_{13} =M_{13} \\
+  \label{eq:lu-3x3-row2} L_{21}U_{11} = M_{21} & L_{21}U_{12} + L_{22}U_{22} = M_{22} & L_{21}U_{13} +
+                                                                                        L_{22}U_{23} = M_{23} \\
+  \label{eq:lu-3x3-row3} L_{31}U_{11} = M_{31} & L_{31}U_{12} + L_{32}U_{22} = M_{32} & L_{31}U_{13} +
+                                                                                        L_{32}U_{23} +
+                                                                                        L_{33}U_{33} = M_{33}
+\end{eqnarray}
+Then the LU factorization can be performed as below.
+\begin{itemize}
+\item For the first row (Equation \eqref{eq:lu-3x3-row1})
+  \begin{itemize}
+  \item Perform LU factorization recursively on $M_{11}$ and obtain $\left\{ L_{11}, U_{11} \right\}$.
+  \item Since $L_{11}$ is known, solve $L_{11}U_{12} = M_{12}$ for $U_{12}$ using the
+    matrix-valued forward substitution \textsc{ForwardSubstM} in Algorithm
+    \ref{algo:forward-subst-matrix-valued}.
+  \item Solve $L_{11}U_{13} = M_{13}$ for $U_{13}$ using the matrix-valued forward
+    substitution \textsc{ForwardSubstM} in Algorithm
+    \ref{algo:forward-subst-matrix-valued}.
+  \end{itemize}
+\item For the second row (Equation \eqref{eq:lu-3x3-row2})
+  \begin{itemize}
+  \item Since $U_{11}$ is known from the first row, solve $L_{21}U_{11} = M_{21}$ for
+    $L_{21}$ using the matrix-valued forward substitution for an upper triangular matrix
+    \textsc{ForwardSubstMT} in Algorithm \ref{algo:forward-subst-matrix-valued-transpose}.
+  \item When $L_{21}$ is obtained, the right hand side of
+    $L_{22}U_{22} = M_{22} - L_{21}U_{12}$ is known. Then perform LU factorization to
+    $M_{22} - L_{21}U_{12}$ and we obtain $\left\{ L_{22}, U_{22} \right\}$.
+  \item Solve the third equation $L_{22}U_{23} = M_{23} - L_{21}U_{13}$ for $U_{23}$ using
+    the matrix-valued forward substitution \textsc{ForwardSubstM} in Algorithm
+    \ref{algo:forward-subst-matrix-valued}.
+  \end{itemize}
+\item For the third row (Equation \eqref{eq:lu-3x3-row3})
+  \begin{itemize}
+  \item Solve $L_{31}U_{11} = M_{31}$ for $L_{31}$ using the matrix-valued forward
+    substitution for an upper triangular matrix \textsc{ForwardSubstMT} in Algorithm
+    \ref{algo:forward-subst-matrix-valued-transpose}.
+  \item Solve $L_{32}U_{22} = M_{32} - L_{31}U_{12}$ using the matrix-valued forward
+    substitution for an upper triangular matrix \textsc{ForwardSubstMT} in Algorithm
+    \ref{algo:forward-subst-matrix-valued-transpose}.
+  \item For $L_{33}U_{33} = M_{33} - L_{31}U_{13} - L_{32}U_{23}$, apply LU factorization
+    to $M_{33} - L_{31}U_{13} - L_{32}U_{23}$ and obtain
+    $\left\{ L_{33}, U_{33} \right\}$.
+  \end{itemize}
+\end{itemize}
+From above, we observe the following facts:
+\begin{enumerate}
+\item When equation solving is with respect to a diagonal matrix block, such as
+  $L_{11}U_{11} = M_{11}$, $L_{21}U_{12} + L_{22}U_{22} = M_{22}$ and
+  $L_{31}U_{13} + L_{32}U_{23} + L_{33}U_{33} = M_{33}$, LU factorization is adopted.
+\item When equation solving is with respect to a matrix block before the diagonal block on
+  a same row, such as $L_{21}U_{11} = M_{21}$ on the second row, $L_{31}U_{11} = M_{31}$
+  and $L_{31}U_{12} + L_{32}U_{22} = M_{32}$ on the third row, the matrix-valued forward
+  substitution for an upper triangular matrix is adopted.
+\item When equation solving is with respect to a matrix block after the diagonal block on
+  a same row, such as $L_{11}U_{12} = M_{12}$ and $L_{11}U_{13} =M_{13}$ on the first
+  row, $L_{21}U_{13} + L_{22}U_{23} = M_{23}$ on the second row, the matrix-valued forward
+  substitution is adopted.
+\item Before equation solving or LU factorization with respect to a matrix block, the
+  right hand side matrix should be updated by subtracting some terms on the left hand
+  side. For example, for the second row (Equation \eqref{eq:lu-3x3-row2}), in the second
+  equation, the right hand side should be $M_{22} - L_{21}U_{12}$ and in the third
+  equation, the right hand side should be $M_{23} - L_{21}U_{13}$. For the third row
+  (Equation \eqref{eq:lu-3x3-row3}), in the second equation, the right hand side should be
+  $M_{32} - L_{31}U_{12}$ and in the third equation, the right hand side should be
+  $M_{33} - L_{31}U_{13} - L_{32}U_{23}$. The total number of terms to be subtracted is
+  $\min\{i,j\} - 1$, where $i$ and $j$ are the row index and column index of the original
+  right hand side matrix block $M_{ij}$.
+\item In a matrix-matrix multiplication, such as $L_{21}U_{13}$ in
+  $M_{23} - L_{21}U_{13}$, the column block index of the first operand matches the row
+  block index of the second operand. Meanwhile, the row block index of the first operand
+  and the column block index of the second operand together form the indices of the result
+  matrix. This means block matrix operations follow the same index convention as that for
+  normal scalar-valued matrix operations.
+\end{enumerate}
+
+With these facts kept in mind, a naive work flow for the LU factorization of an
+$\mathcal{H}$-matrix can be summarized in Algorithm \ref{algo:lu-hmat}. Note that in the
+current implementation of HierBEM, an $\mathcal{H}$-matrix is built with respect to a
+block cluster tree which is actually a quadruple tree. This means for each level partition
+of an $\mathcal{H}$-matrix, it is subdivided into four blocks. Therefore, LU factorization
+of such an $\mathcal{H}$-matrix is simpler than the above $3\times 3$ block matrix
+example. However, the algorithm is still given in a general form, without limiting the
+total number of row blocks or columns blocks to 2.
+\begin{breakablealgorithm}
+  \label{algo:lu-hmat}
+  \caption{LU factorization of an $\mathcal{H}$-matrix}
+  \begin{algorithmic}[1]
+    \Procedure{LU}{$M \big\vert_{\tau\times\tau}$, $L \big\vert_{\tau\times\tau}$, $U \big\vert_{\tau\times\tau}$}
+      \If {$\tau\times\tau\in P$} \Comment{When the block cluster $\tau\times\tau$ of the
+current $\mathcal{H}$-matrix $M$ belongs to the leaf set $P$, since it is a diagonal
+block, it must also belongs to the near field set $P^-$. Hence, $M
+\big\vert_{\tau\times\tau}$ is a full matrix.}
+        \State {Perform LU factorization of the full matrix using LAPACK function
+\texttt{getrf} (see Section \ref{sec:lu-full}).}
       \Else
-        \For{each block row in $M$: $i\coloneqq1,\cdots,\#S(\tau)$}
-          \For{each block column in $M$: $j\coloneqq1,\cdots,\#S(\sigma)$} \footnote{$\sigma$ is the
- same as $\tau$ when performing LU factorization on a square matrix.}
-            \For{each block column in $M$ before the column $k_0\coloneqq\min\{i,j\}$:
- $k\coloneqq1,\cdots,k_0-1$} \footnote{Since $M_{\tau[i]\times\sigma[j]}$ is overwritten, LU factorization should not
- be a \texttt{const} C++ member function.}
-              \State{
-                $$
-                M_{\tau[i]\times\sigma[j]} \coloneqq M_{\tau[i]\times\sigma[j]} - L_{\tau[i]\times\sigma[k]} \cdot U_{\tau[k]\times\sigma[j]}
-                $$}
+        \For{each block row in $M \big\vert_{\tau\times\tau}$: $i \coloneqq 1,\cdots,\#S(\tau)$}
+          \For{each block column in $M \big\vert_{\tau\times\tau}$: $j \coloneqq 1,\cdots,\#S(\tau)$}
+            \For{each block column in $M \big\vert_{\tau\times\tau}$ before the column $\min\{i,j\}$:
+ $k \coloneqq 1, \cdots, \min\{i,j\}-1$}
+              \State{Update the right hand side matrix block: $M
+\big\vert_{\tau[i]\times\tau[j]} \coloneqq M \big\vert_{\tau[i]\times\tau[j]} - L
+\big\vert_{\tau[i]\times\tau[k]} U \big\vert_{\tau[k]\times\tau[j]}$}
             \EndFor
 
-            \If{$j<i$}
+            \If{$j<i$} \Comment{Before the diagonal block}
               \State{Solve the problem
-                $$
-                L_{\tau[i]\times\sigma[j]}U_{\tau[j]\times\sigma[j]}=M_{\tau[i]\times\sigma[j]}
-                $$
-                for $L_{\tau[i]\times\sigma[j]}$ using the matrix-valued forward substitution for
-   transpose matrix.}
-            \ElsIf{$j=i$}
-              \State{Perform LU factorization on the submatrix block $M_{\tau[i]\times\sigma[i]}$:
-                $$
-                LU(M_{\tau[i]\times\sigma[i]}, LU_{\tau[i]\times\sigma[i]}).
-                $$
-                Hence the recursion goes one level deeper.}
-            \ElsIf{$j>i$}
-              \State{Solve the problem
-                $$
-                L_{\tau[i]\times\sigma[i]}U_{\tau[i]\times\sigma[j]} = M_{\tau[i]\times\sigma[j]}
-                $$
-                for $U_{\tau[i]\times\sigma[j]}$ using the matrix-valued forward substitution.}
+$L \big\vert_{\tau[i]\times\tau[j]}U \big\vert_{\tau[j]\times\tau[j]} = M \big\vert_{\tau[i]\times\tau[j]}$ for
+$L \big\vert_{\tau[i]\times\tau[j]}$ using the matrix-valued forward substitution for an upper
+triangular matrix \textsc{ForwardSubstMT} in Algorithm \ref{algo:forward-subst-matrix-valued-transpose}.}
+            \ElsIf{$j=i$} \Comment{At the diagonal block}
+              \State{Perform LU factorization of the submatrix block
+$M \big\vert_{\tau[i]\times\tau[i]}$: \textsc{LU}$(M \big\vert_{\tau[i]\times\tau[i]}, L
+\big\vert_{\tau[i]\times\tau[i]}, U \big\vert_{\tau[i]\times\tau[i]})$}
+            \ElsIf{$j>i$} \Comment{After the diagonal block}
+              \State{Solve the problem $L \big\vert_{\tau[i]\times\tau[i]}U \big\vert_{\tau[i]\times\tau[j]} =
+M \big\vert_{\tau[i]\times\tau[j]}$ for $U \big\vert_{\tau[i]\times\tau[j]}$ using the matrix-valued forward
+substitution \textsc{ForwardSubstM} in Algorithm \ref{algo:forward-subst-matrix-valued}.}
             \EndIf
           \EndFor
         \EndFor
@@ -2999,13 +3796,21 @@ factorization has the form $A = P \cdot L \cdot U$.}
   \end{algorithmic}
 \end{breakablealgorithm}
 
-\section{$\mathcal{H}$-matrix solvers}
+Because full matrix LU factorization in LAPACK, \textsc{ForwardSubstM} and
+\textsc{ForwardSubstMT} can be performed in situ, LU factorization of an
+$\mathcal{H}$-matrix can also be made in situ.
 
-\subsection{LU factorization of a full matrix}
+\paragraph{Reorganized work flow}
 
-\subsubsection{LAPACK's implementation}
+\paragraph{Task parallel work flow}
 
-\subsubsection{Octave's implementation}
+\subsection{Cholesky factorization of an $\mathcal{H}$-matrix}
+
+\subsubsection{Naive work flow}
+
+\subsubsection{Reorganized work flow}
+
+\subsubsection{Task parallel work flow}
 
 \subsection{Function names for $\mathcal{H}$-matrix solvers}
 

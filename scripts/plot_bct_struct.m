@@ -13,13 +13,13 @@ function plot_bct_struct(varargin)
   p.FunctionName = "plot_bct_struct";
   p.addParameter("unit_size", 1, val_float);
   p.addParameter("show_rank", true, @isbool);
-  p.addParameter("fill_block", false, @isbool);
+  p.addParameter("fill_block", true, @isbool);
   p.addParameter("near_field_block_color", "r", @ischar);
   p.addParameter("far_field_block_color", "g", @ischar);
   p.addParameter("border_color", "white", @ischar);
   p.addParameter("border_width", 1, val_float);
-  p.addParameter("near_field_rank_color", "c", @ischar);
-  p.addParameter("far_field_rank_color", "white", @ischar);
+  p.addParameter("near_field_rank_color", "k", @ischar);
+  p.addParameter("far_field_rank_color", "k", @ischar);
 
   p.parse(varargin{2:end});
 
