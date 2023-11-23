@@ -61,9 +61,9 @@ TEST_CASE("Solve lower triangular H-matrix using forward substitution",
     // Check relative error
     HBEMOctaveValue out;
     out = inst.eval_string("hmat_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-4));
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
     out = inst.eval_string("x_rel_err");
-    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-4));
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
   }
 }

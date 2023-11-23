@@ -12,16 +12,16 @@ using namespace HierBEM;
 using namespace Catch::Matchers;
 
 void
-run_hmatrix_forward_substitution()
+run_hmatrix_backward_substitution_coarse_ntp()
 {
-  std::ofstream ofs("hmatrix-forward-substitution.output");
+  std::ofstream ofs("hmatrix-backward-substitution-coarse-ntp.output");
 
-  LAPACKFullMatrixExt<double> L;
-  std::ifstream               in1("L.dat");
-  L.read_from_mat(in1, "L");
+  LAPACKFullMatrixExt<double> U;
+  std::ifstream               in1("U.dat");
+  U.read_from_mat(in1, "U");
   in1.close();
-  REQUIRE(L.size()[0] > 0);
-  REQUIRE(L.size()[0] == L.size()[1]);
+  REQUIRE(U.size()[0] > 0);
+  REQUIRE(U.size()[0] == U.size()[1]);
 
   Vector<double> b;
   std::ifstream  in2("b.dat");
@@ -53,7 +53,7 @@ run_hmatrix_forward_substitution()
    * same.
    */
   BlockClusterTree<3, double> bct(cluster_tree, cluster_tree);
-  bct.partition_fine_non_tensor_product();
+  bct.partition_coarse_non_tensor_product();
 
   /**
    * Create the \hmatrix. Here we enforce each far field matrix block to have a
@@ -62,28 +62,27 @@ run_hmatrix_forward_substitution()
    * represent the original full matrix, which produces a very small relative
    * error in the following computation and make catch2 tests pass.
    *
-   * For an H-matrix having the fine non-tensor product partition, the largest
-   * far field matrix block size is @p n/4. Therefore, we use this value as the
+   * For an H-matrix having the coarse non-tensor product partition, the largest
+   * far field matrix block size is @p n/2. Therefore, we use this value as the
    * fixed matrix rank.
    */
-  const unsigned int fixed_rank = n / 4;
-  HMatrix<3, double> H(bct, L, fixed_rank);
+  const unsigned int fixed_rank = n / 2;
+  HMatrix<3, double> H(bct, U, fixed_rank);
   std::ofstream      H_bct("H_bct.dat");
   H.write_leaf_set_by_iteration(H_bct);
   H_bct.close();
 
   LAPACKFullMatrixExt<double> H_full;
   H.convertToFullMatrix(H_full);
-  REQUIRE(H_full.size()[0] == L.size()[0]);
-  REQUIRE(H_full.size()[1] == L.size()[1]);
+  REQUIRE(H_full.size()[0] == U.size()[0]);
+  REQUIRE(H_full.size()[1] == U.size()[1]);
 
   H_full.print_formatted_to_mat(ofs, "H_full", 15, false, 25, "0");
 
   /**
-   * Solve the matrix using forward substitution. The lower triangular matrix is
-   * not normalized.
+   * Solve the matrix using backward substitution.
    */
-  H.solve_by_forward_substitution(b, false);
+  H.solve_by_backward_substitution(b, false);
 
   /**
    * Print the result vector which has overwritten \p b.

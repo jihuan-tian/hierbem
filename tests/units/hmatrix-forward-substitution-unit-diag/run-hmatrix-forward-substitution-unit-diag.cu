@@ -12,9 +12,9 @@ using namespace HierBEM;
 using namespace Catch::Matchers;
 
 void
-run_hmatrix_forward_substitution()
+run_hmatrix_forward_substitution_unit_diag()
 {
-  std::ofstream ofs("hmatrix-forward-substitution.output");
+  std::ofstream ofs("hmatrix-forward-substitution-unit-diag.output");
 
   LAPACKFullMatrixExt<double> L;
   std::ifstream               in1("L.dat");
@@ -81,9 +81,9 @@ run_hmatrix_forward_substitution()
 
   /**
    * Solve the matrix using forward substitution. The lower triangular matrix is
-   * not normalized.
+   * normalized.
    */
-  H.solve_by_forward_substitution(b, false);
+  H.solve_by_forward_substitution(b, true);
 
   /**
    * Print the result vector which has overwritten \p b.

@@ -1,14 +1,10 @@
-clear all;
-load L.dat;
-load b.dat;
-load hmatrix-forward-substitution-coarse-ntp.output;
+clear -x enable_figure;
 
-y = forward_substitution(L, b);
-norm(x - y, 'fro') / norm(y, 'fro')
-figure;
-hold on;
-plot(x, 'b-.');
-plot(y, 'r-.');
+load "L.dat";
+load "b.dat";
+load "hmatrix-forward-substitution-coarse-ntp.output";
 
-figure;
-plot_bct_struct("H_bct.dat");
+hmat_rel_err = norm(H_full - L, 'fro') / norm(L, 'fro')
+
+x_octave = forward_substitution(L, b);
+x_rel_err = norm(x - x_octave, 'fro') / norm(x_octave, 'fro')

@@ -1,11 +1,10 @@
-clear all;
-load U.dat;
-load b.dat;
-load hmatrix-backward-substitution-unit-diag.output;
+clear -x enable_figure;
 
-y = backward_substitution(U, b);
-norm(x - y, 'fro') / norm(y, 'fro')
-figure;
-hold on;
-plot(x, 'b-.');
-plot(y, 'r-.');
+load "U.dat";
+load "b.dat";
+load "hmatrix-backward-substitution-unit-diag.output";
+
+hmat_rel_err = norm(H_full - U, 'fro') / norm(U, 'fro')
+
+x_octave = backward_substitution(U, b);
+x_rel_err = norm(x - x_octave, 'fro') / norm(x_octave, 'fro')

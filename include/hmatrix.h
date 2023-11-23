@@ -1968,10 +1968,15 @@ namespace HierBEM
      * \f$L\vert_{\tau\times\tau}X\vert_{\tau\times\sigma}=Z\vert_{\tau\times\sigma}\f$
      * using forward substitution.
      *
-     * \alert{The problem to be solved is restricted to specific \bcs. Hence,
+     * \alert{1. The problem to be solved is restricted to specific \bcs. Hence,
      * when this recursive algorithm for forward substitution comes to a leaf
      * node of \f$Z\f$, it implies the column vectors stored in \f$Z\f$ are to
-     * be accessed via local indices.}
+     * be accessed via local indices.
+     * 2. The right hand side matrix \f$Z\f$ will be modified in this algorithm
+     * during the update stage:
+     * \f$Z \big\vert_{\tau[i]\times\sigma[j]} \coloneqq Z
+     * \big\vert_{\tau[i]\times\sigma[j]} - L \big\vert_{\tau[i]\times\tau[k]}X
+     * \big\vert_{\tau[k]\times\sigma[j]}\f$}.
      *
      * @param X
      * @param Z
@@ -1981,6 +1986,24 @@ namespace HierBEM
     void
     solve_by_forward_substitution_matrix_valued(
       HMatrix<spacedim, Number> &X,
+      HMatrix<spacedim, Number> &Z,
+      const unsigned int         fixed_rank,
+      const bool                 is_unit_diagonal = true) const;
+
+    /**
+     * Solve the matrix-valued problem
+     * \f$L\vert_{\tau\times\tau}X\vert_{\tau\times\sigma}=Z\vert_{\tau\times\sigma}\f$
+     * using forward substitution.
+     *
+     * This version is in situ, i.e. the solution is directly saved into
+     * \f$Z\f$.
+     *
+     * @param Z
+     * @param fixed_rank
+     * @param is_unit_diagonal
+     */
+    void
+    solve_by_forward_substitution_matrix_valued(
       HMatrix<spacedim, Number> &Z,
       const unsigned int         fixed_rank,
       const bool                 is_unit_diagonal = true) const;
@@ -2091,6 +2114,22 @@ namespace HierBEM
     void
     solve_transpose_by_forward_substitution_matrix_valued(
       HMatrix<spacedim, Number> &X,
+      HMatrix<spacedim, Number> &Z,
+      const unsigned int         fixed_rank) const;
+
+    /**
+     * Solve the matrix-valued problem
+     * \f$X\vert_{\tau\times\sigma}U\vert_{\sigma\times\sigma} =
+     * Z\vert_{\tau\times\sigma}\f$.
+     *
+     * This version is in situ, i.e. the solution is directly saved into
+     * \f$Z\f$.
+     *
+     * @param Z
+     * @param fixed_rank
+     */
+    void
+    solve_transpose_by_forward_substitution_matrix_valued(
       HMatrix<spacedim, Number> &Z,
       const unsigned int         fixed_rank) const;
 
@@ -23179,6 +23218,157 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
+  HMatrix<spacedim, Number>::solve_by_forward_substitution_matrix_valued(
+    HMatrix<spacedim, Number> &Z,
+    const unsigned int         fixed_rank,
+    const bool                 is_unit_diagonal) const
+  {
+    AssertDimension(this->m, this->n);
+    AssertDimension(this->n, Z.m);
+
+    if (Z.type == FullMatrixType)
+      {
+        /**
+         * When the current \hmatnode of \p Z is a full matrix, we need to
+         * solve a multiple RHS vector problem.
+         */
+        Vector<Number> Z_col(Z.m);
+
+        /**
+         * Iterate over each column of \p Z.
+         */
+        for (size_type j = 0; j < Z.n; j++)
+          {
+            Z.fullmatrix->get_column(j, Z_col);
+
+            /**
+             * Solve the current lower triangular \hmatrix
+             * \f$L\vert_{\tau,\tau}X\vert_{\tau,j}=Z\vert_{\tau,j}\f$ using
+             * the forward substitution for \hmatrices.
+             */
+            this->solve_by_forward_substitution(Z_col,
+                                                (*this),
+                                                is_unit_diagonal);
+
+            /**
+             * Merge back the solution vector \p Z_col into \p Z.
+             */
+            Z.fullmatrix->fill_col(j, Z_col);
+          }
+      }
+    else if (Z.type == RkMatrixType)
+      {
+        /**
+         * When the current \hmatnode of \p X or \p Z is a rank-k matrix, we
+         * iterate over each column of its component matrix \p A and solve a
+         * multiple RHS problem. The resulted solution matrix \p A' is just the
+         * component matrix \p A of the rank-k matrix \p X.
+         *
+         * Copy the data of the rank-k matrix \p Z to the rank-k matrix \p X. The
+         * component matrix \p B of \p X will be intact, while the component
+         * matrix \p A of X will be solved by using the forward substitution for \hmatrices.
+         *
+         * This can be further elucidated as: because
+         * \f$L\vert_{\tau\times\tau}X\vert_{\tau\times\sigma} =
+         * Z\vert_{\tau\times\sigma}\f$, where \f$Z\vert_{\tau\times\sigma}
+         * = AB^T\f$. Since \f$X\f$ is also a rank-k matrix, let
+         * \f$X=A'B^T\f$. Hence, the component matrix \f$A'\f$ of \f$X\f$
+         * can be solved as \f$L\vert_{\tau\times\tau}A'=A\f$.
+         */
+        Vector<Number> A_prime_col(Z.m);
+        for (size_type j = 0; j < Z.rkmatrix->get_formal_rank(); j++)
+          {
+            Z.rkmatrix->get_A().get_column(j, A_prime_col);
+
+            this->solve_by_forward_substitution(A_prime_col,
+                                                (*this),
+                                                is_unit_diagonal);
+
+            /**
+             * Merge back the column vector of \p A' into \p A'.
+             */
+            Z.rkmatrix->get_A().fill_col(j, A_prime_col);
+          }
+      }
+    else
+      {
+        /**
+         * When the current \hmatnode of \p X or \p Z does not belong to the leaf
+         * set, perform a recursive forward substitution based on the
+         * submatrix structure of the current \hmatrix \f$L\f$.
+         */
+
+        /**
+         * The number of row blocks and column blocks of
+         * \f$L\vert_{\tau\times\tau}\f$ should be the same.
+         */
+        AssertDimension(
+          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+          this->bc_node->get_data_reference()
+            .get_sigma_node()
+            ->get_child_num());
+
+        /**
+         * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+         * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the
+         * number of row or column blocks of \f$L\vert_{\tau\times\tau}\f$.
+         */
+        const unsigned int n_row_blocks =
+          Z.bc_node->get_data_reference().get_tau_node()->get_child_num();
+        AssertDimension(
+          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+          n_row_blocks);
+        /**
+         * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+         * \f$Z\vert_{\tau\times\sigma}\f$.
+         */
+        const unsigned int n_col_blocks =
+          Z.bc_node->get_data_reference().get_sigma_node()->get_child_num();
+
+        /**
+         * Iterate over each block row of \f$L\vert_{\tau\times\tau}\f$.
+         */
+        for (size_type i = 0; i < n_row_blocks; i++)
+          {
+            /**
+             * Iterate over each child cluster node of the cluster
+             * \f$\sigma\f$, i.e. each block column of
+             * \f$X\vert_{\tau\times\sigma}\f$ or
+             * \f$Z\vert_{\tau\times\sigma}\f$.
+             */
+            for (size_type j = 0; j < n_col_blocks; j++)
+              {
+                /**
+                 * Iterate over each block column before the i'th column in
+                 * \f$L\vert_{\tau\times\tau}\f$.
+                 */
+                for (size_type k = 0; k < i; k++)
+                  {
+                    this->submatrices[i * n_row_blocks + k]
+                      ->mmult_level_conserving(
+                        *(Z.submatrices[i * n_col_blocks + j]),
+                        -1.0,
+                        *(Z.submatrices[k * n_col_blocks + j]),
+                        fixed_rank);
+                  }
+
+                /**
+                 * Go down one level of recursion and solve the current
+                 * diagonal block matrix \f$L\vert_{\tau_i\times\tau_i}\f$.
+                 */
+                this->submatrices[i * n_row_blocks + i]
+                  ->solve_by_forward_substitution_matrix_valued(
+                    *(Z.submatrices[i * n_col_blocks + j]),
+                    fixed_rank,
+                    is_unit_diagonal);
+              }
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
   HMatrix<spacedim, Number>::
     solve_cholesky_by_forward_substitution_matrix_valued(
       HMatrix<spacedim, Number> &X,
@@ -23541,6 +23731,147 @@ namespace HierBEM
                     *(X.submatrices[i * n_col_blocks + j]),
                     *(Z.submatrices[i * n_col_blocks + j]),
                     fixed_rank);
+              }
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::
+    solve_transpose_by_forward_substitution_matrix_valued(
+      HMatrix<spacedim, Number> &Z,
+      const unsigned int         fixed_rank) const
+  {
+    AssertDimension(this->m, this->n);
+    AssertDimension(Z.n, this->m);
+
+    if (Z.type == FullMatrixType)
+      {
+        /**
+         * When the current \hmatnode of \p Z is a full matrix, we need to
+         * solve a multiple RHS problem.
+         */
+        Vector<Number> Z_row(Z.n);
+
+        /**
+         * Iterate over each row of \p Z.
+         */
+        for (size_type i = 0; i < Z.m; i++)
+          {
+            Z.fullmatrix->get_row(i, Z_row);
+
+            /**
+             * Solve the problem
+             * \f$X\vert_{i,\sigma}U\vert_{\sigma\times\sigma} =
+             * Z\vert_{i,\sigma}\f$ using the transposed forward
+             * substitution for \hmatrices.
+             */
+            this->solve_transpose_by_forward_substitution(Z_row, (*this));
+
+            /**
+             * Merge back the solution vector \p Z_row into \p Z.
+             */
+            Z.fullmatrix->fill_row(i, Z_row);
+          }
+      }
+    else if (Z.type == RkMatrixType)
+      {
+        // Let \f$Z\vert_{\tau\times\sigma} = A\cdot B^T\f$ and
+        // \f$X\vert_{\tau\times\sigma}=A\cdot B'^T\f$, solve the problem \f$U^T
+        // B' = B\f$.
+        Vector<Number> B_prime_col(Z.n);
+        for (size_type j = 0; j < Z.rkmatrix->get_formal_rank(); j++)
+          {
+            // Get the current RHS vector directly into the solution vector.
+            Z.rkmatrix->get_B().get_column(j, B_prime_col);
+
+            /**
+             * Solve the problem using the transposed forward substitution
+             * for \hmatrices.
+             */
+            this->solve_transpose_by_forward_substitution(B_prime_col, (*this));
+
+            /**
+             * Merge back the column vector of \p B' into the component matrix \f$B'\f$.
+             */
+            Z.rkmatrix->get_B().fill_col(j, B_prime_col);
+          }
+      }
+    else
+      {
+        /**
+         * When the current \hmatnode of \p X or \p Z does not belong to the leaf
+         * set, perform a recursive forward substitution on the transposed
+         * matrix \f$U^T\f$, which is based on the submatrix structure of the
+         * current \hmatrix \f$U\f$.
+         */
+
+        /**
+         * The number of row blocks and column blocks of
+         * \f$L\vert_{\tau\times\tau}\f$ should be the same.
+         */
+        AssertDimension(
+          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+          this->bc_node->get_data_reference()
+            .get_sigma_node()
+            ->get_child_num());
+
+        /**
+         * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+         * \f$Z\vert_{\tau\times\sigma}\f$.
+         */
+        const unsigned int n_row_blocks =
+          Z.bc_node->get_data_reference().get_tau_node()->get_child_num();
+        /**
+         * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
+         * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the
+         * number of row or column blocks of
+         * \f$U\vert_{\sigma\times\sigma}\f$.
+         */
+        const unsigned int n_col_blocks =
+          Z.bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        AssertDimension(
+          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
+          n_col_blocks);
+
+        /**
+         * Iterate over each block column of \f$U\vert_{\sigma\times\sigma}\f$,
+         * which is equivalent to over each row column of its transpose.
+         */
+        for (size_type j = 0; j < n_col_blocks; j++)
+          {
+            /**
+             * Iterate over each child cluster node of the cluster \f$\tau\f$,
+             * i.e. each block row of \f$X\vert_{\tau\times\sigma}\f$ or
+             * \f$Z\vert_{\tau\times\sigma}\f$, which is equivalent to iterating
+             * over each block column of their transposed matrices.
+             */
+            for (size_type i = 0; i < n_row_blocks; i++)
+              {
+                /**
+                 * Iterate over each block row before the j'th row in
+                 * \f$U\vert_{\sigma\times\sigma}\f$, which is equivalent to
+                 * over each block column before the j'th column in its
+                 * transpose.
+                 */
+                for (size_type k = 0; k < j; k++)
+                  {
+                    Z.submatrices[i * n_col_blocks + k]->mmult_level_conserving(
+                      *(Z.submatrices[i * n_col_blocks + j]),
+                      -1.0,
+                      *(this->submatrices[k * n_col_blocks + j]),
+                      fixed_rank);
+                  }
+
+                /**
+                 * Go down one level of recursion and solve the current diagonal
+                 * block matrix \f$U\vert_{\sigma_j\times\sigma_j}\f$.
+                 */
+                this->submatrices[j * n_col_blocks + j]
+                  ->solve_transpose_by_forward_substitution_matrix_valued(
+                    *(Z.submatrices[i * n_col_blocks + j]), fixed_rank);
               }
           }
       }
@@ -24930,16 +25261,11 @@ namespace HierBEM
                  * \f$M_{ij}\f$.
                  */
                 const size_type min_ij = std::min(i, j);
-                /**
-                 * Create a local \hmatrix \f$Z_{ij}\f$ as the new RHS
-                 * matrix.
-                 */
-                HMatrix<spacedim, Number> Z(
-                  *(submatrices[i * n_col_blocks + j]));
+
                 for (size_type k = 0; k < min_ij; k++)
                   {
                     submatrices[i * n_col_blocks + k]->mmult_level_conserving(
-                      Z,
+                      *(submatrices[i * n_col_blocks + j]),
                       -1.0,
                       *(submatrices[k * n_col_blocks + j]),
                       fixed_rank);
@@ -24955,7 +25281,7 @@ namespace HierBEM
                      */
                     submatrices[j * n_col_blocks + j]
                       ->solve_transpose_by_forward_substitution_matrix_valued(
-                        *(submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                        *(submatrices[i * n_col_blocks + j]), fixed_rank);
                   }
                 else if (j == i)
                   {
@@ -24963,8 +25289,8 @@ namespace HierBEM
                      * When the current block column is i, go down one level
                      * of recursion for LU factorization.
                      */
-                    Z._compute_lu_factorization(
-                      *(submatrices[i * n_col_blocks + i]), fixed_rank);
+                    submatrices[i * n_col_blocks + i]
+                      ->_compute_lu_factorization(fixed_rank);
                   }
                 else if (j > i)
                   {
@@ -24973,7 +25299,7 @@ namespace HierBEM
                      */
                     submatrices[i * n_col_blocks + i]
                       ->solve_by_forward_substitution_matrix_valued(
-                        *(submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                        *(submatrices[i * n_col_blocks + j]), fixed_rank);
                   }
               }
           }

@@ -8,69 +8,63 @@
  * \date 2021-10-21
  */
 
+#include <catch2/catch_all.hpp>
+
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
-#include "debug_tools.h"
-#include "hmatrix.h"
-#include "lapack_full_matrix_ext.h"
-#include "read_octave_data.h"
+#include "hbem_octave_wrapper.h"
+#include "hbem_test_config.h"
 
-int
-main()
+using namespace Catch::Matchers;
+using namespace HierBEM;
+
+// XXX Extracted all HierBEM logic into a standalone source to prevent
+// Matrix/SparseMatrix data type conflicts
+extern void
+run_hmatrix_forward_substitution_coarse_ntp();
+
+static constexpr int FUZZING_TIMES = 5;
+TEST_CASE(
+  "Solve lower triangular H-matrix with coarse non-tensor product partition using forward substitution",
+  "[hmatrix]")
 {
-  LAPACKFullMatrixExt<double> L;
-  std::ifstream               in1("L.dat");
-  L.read_from_mat(in1, "L");
-  in1.close();
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(HBEM_ROOT_DIR "/scripts");
 
-  Vector<double> b;
-  std::ifstream  in2("b.dat");
-  read_vector_from_octave(in2, "b", b);
-  in2.close();
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    // Predefine Octave and C++ random seed to make tests repeatable
+    int rng_seed = 1234567 + trial_no * 7;
 
-  /**
-   * Generate index set.
-   */
-  const unsigned int                   n = 32;
-  std::vector<types::global_dof_index> index_set(n);
+    // Initialize random seed.
+    std::ostringstream oss;
+    oss << "rand('seed'," << rng_seed << ");\n";
+    oss << "randn('seed'," << rng_seed << ");";
+    inst.eval_string(oss.str());
 
-  for (unsigned int i = 0; i < n; i++)
-    {
-      index_set.at(i) = i;
-    }
+    REQUIRE_NOTHROW(
+      [&]() { inst.source_file(SOURCE_DIR "/gen_lower_triangle_mat.m"); }());
 
-  const unsigned int n_min = 2;
+    run_hmatrix_forward_substitution_coarse_ntp();
 
-  /**
-   * Generate cluster tree.
-   */
-  ClusterTree<3, double> cluster_tree(index_set, n_min);
-  cluster_tree.partition();
+    try
+      {
+        inst.source_file(SOURCE_DIR "/process.m");
+      }
+    catch (...)
+      {
+        // Ignore errors
+      }
 
-  /**
-   * Generate block cluster tree with the two component cluster trees being the
-   * same.
-   */
-  BlockClusterTree<3, double> bct(cluster_tree, cluster_tree);
-  bct.partition_coarse_non_tensor_product();
+    // Check relative error
+    HBEMOctaveValue out;
+    out = inst.eval_string("hmat_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
-  /**
-   * Create the \hmatrix.
-   */
-  const unsigned int fixed_rank = 10;
-  HMatrix<3, double> H(bct, L, fixed_rank);
-  std::ofstream      H_bct("H_bct.dat");
-  H.write_leaf_set_by_iteration(H_bct);
-  H_bct.close();
-
-  /**
-   * Solve the matrix using forward substitution.
-   */
-  H.solve_by_forward_substitution(b, false);
-
-  /**
-   * Print the result vector which has overwritten \p b.
-   */
-  print_vector_to_mat(std::cout, "x", b);
+    out = inst.eval_string("x_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+  }
 }

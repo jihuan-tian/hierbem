@@ -12,9 +12,9 @@ using namespace HierBEM;
 using namespace Catch::Matchers;
 
 void
-run_hmatrix_forward_substitution()
+run_hmatrix_forward_substitution_coarse_ntp()
 {
-  std::ofstream ofs("hmatrix-forward-substitution.output");
+  std::ofstream ofs("hmatrix-forward-substitution-coarse-ntp.output");
 
   LAPACKFullMatrixExt<double> L;
   std::ifstream               in1("L.dat");
@@ -53,7 +53,7 @@ run_hmatrix_forward_substitution()
    * same.
    */
   BlockClusterTree<3, double> bct(cluster_tree, cluster_tree);
-  bct.partition_fine_non_tensor_product();
+  bct.partition_coarse_non_tensor_product();
 
   /**
    * Create the \hmatrix. Here we enforce each far field matrix block to have a
@@ -62,11 +62,11 @@ run_hmatrix_forward_substitution()
    * represent the original full matrix, which produces a very small relative
    * error in the following computation and make catch2 tests pass.
    *
-   * For an H-matrix having the fine non-tensor product partition, the largest
-   * far field matrix block size is @p n/4. Therefore, we use this value as the
+   * For an H-matrix having the coarse non-tensor product partition, the largest
+   * far field matrix block size is @p n/2. Therefore, we use this value as the
    * fixed matrix rank.
    */
-  const unsigned int fixed_rank = n / 4;
+  const unsigned int fixed_rank = n / 2;
   HMatrix<3, double> H(bct, L, fixed_rank);
   std::ofstream      H_bct("H_bct.dat");
   H.write_leaf_set_by_iteration(H_bct);
