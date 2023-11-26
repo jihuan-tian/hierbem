@@ -841,9 +841,10 @@ In essence, $a$ and $b$ have different status and they are dual to each other.
 
 \begin{Definition}[Projection operator]
   A projection operator $\sigma^i: X \rightarrow \mathbb{R}$ is defined as
-  \begin{equation*}
+  \begin{equation}
+    \label{eq:projection-operator}
     \sigma^i(\vect{e}_j) = \delta^i_j,
-  \end{equation*}
+  \end{equation}
   where $\vect{e}_j$ is the $j$-th basis vector of the linear space $X$.
 \end{Definition}
 
@@ -1381,6 +1382,7 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
 \subsection{General definition of tensors}
 
 \subsubsection{Covariant tensor}
+\label{sec:covariant-tensor}
 
 1-form introduced in Section \ref{sec:1-form} is a linear functional in the cotangent
 (covariant) space, which is dual to the tangent (contravariant) space. The application of
@@ -1408,6 +1410,7 @@ Therefore, a 1-form can be considered as a rank-1 tensor, which is a degenerate 
 
 Applying $Q$ to any $v_1, \cdots, v_r$ in $M_p^n$, using multilinearity, we have
 \begin{equation}
+  \label{eq:covariant-tensor-applied-to-r-vectors-expanded}
   \begin{aligned}
     Q(v_1,\cdots,v_r) &= Q(\sum_{i_1}v_1^{i_1} \vect{\pdiff}x^{i_1}, \cdots,
     \sum_{i_r}v_r^{i_r} \vect{\pdiff}x^{i_r}) \\
@@ -1427,6 +1430,18 @@ in the summand), we have
   \label{eq:covariant-tensor-applied-to-r-vectors}
   Q(v_1,\cdots,v_r) = v_1^{i_1}\cdots v_r^{i_r} Q_{i_1 \cdots i_r}.
 \end{equation}
+
+\begin{Definition}[Tensor product of two covariant tensors]
+  Let $Q^1$\footnote{Because the subscript of $Q$ has already been used for specifying
+    multi-summation indices, here we use the superscript to label different covariant
+    tensors.} be an $r$-th rank covariant tensor and $Q^2$ be an $s$-th rank covariant
+  tensor. Their tensor product is an $(r+s)$-th rank covariant tensor which satisfies
+  \begin{equation}
+    \label{eq:tensor-product-of-covariant-tensors}
+    \left( Q^1 \otimes Q^2 \right) (v_{1},\cdots,v_{r}, v_{r+1},\cdots,v_{r+s}) =
+    Q^1(v_{1},\cdots,v_{r}) Q^2(v_{r+1},\cdots,v_{r+s}).
+  \end{equation}
+\end{Definition}
 
 An $r$-th rank covariant tensor $Q$ can also be considered as a \emph{tensor product} of
 $r$ 1-forms. Let $\alpha^1,\cdots,\alpha^r$ be $r$ 1-forms in $M_p^{n*}$, their tensor product
@@ -1499,10 +1514,10 @@ them have $n$ terms, the dimension of the covariant tensor space is $n^r$.
 \subsubsection{Contravariant tensor}
 
 \begin{Definition}[Contravariant tensor]
-  An $r$-th rank contravariant tensor $T$ is a multilinear real valued function on $s$
+  An $s$-th rank contravariant tensor $T$ is a multilinear real valued function on $s$
   1-forms, i.e. $T: \otimes^s M_p^{n*} \rightarrow \mathbb{R}$.
 \end{Definition}
-Actually, an $r$-th rank contravariant tensor $T$ is also a multilinear functional on the
+Actually, an $s$-th rank contravariant tensor $T$ is also a multilinear functional on the
 product of cotangent spaces. A cotangent space is the dual space of a tangent space, which
 is the set of all linear functionals on the tangent space. Similarly, the product of
 cotangent spaces is the dual space of the product of tangent spaces. Now, the tensor $T$
@@ -1525,8 +1540,22 @@ $\alpha^1,\cdots,\alpha^s$,
   T(\alpha^1,\cdots,\alpha^s) = T(\sum_{i_1}\alpha_{i_1}^1 dx^{i_1}, \cdots,
   \sum_{i_s}\alpha_{i_s}^s dx^{i_s}) = \alpha_{i_1}^1\cdots\alpha_{i_s}^s T^{i_1 \cdots i_s},
 \end{equation}
-where $T^{i_s\cdots i_s}$ is the application of $T$ to a basis vector of the product
-cotangent space $T(dx^{i_1},\cdots,dx^{i_s})$.
+where $T^{i_s\cdots i_s} = T(dx^{i_1},\cdots,dx^{i_s})$ is the application of $T$ to a basis vector of the product
+cotangent space.
+
+\begin{Definition}[Tensor product of two contravariant tensors]
+  Let $T_1$\footnote{Because the superscript of $T$ has already been used for specifying
+    multi-summation indices, here we use the subscript to label different contravariant
+    tensors.} be an $r$-th rank contravariant tensor and $T_2$ be an $s$-th rank
+  contravariant tensor. Their tensor product is an $(r+s)$-th rank contravariant tensor
+  which satisfies
+  \begin{equation}
+    \label{eq:tensor-product-of-contravariant-tensors}
+    \left( T_1 \otimes T_2
+    \right)(\alpha^1,\cdots,\alpha^r,\alpha^{r+1},\cdots,\alpha^{r+s}) =
+    T_1(\alpha^1,\cdots,\alpha^r) T_2(\alpha^{r+1},\cdots,\alpha^{r+s}).
+  \end{equation}
+\end{Definition}
 
 $T$ can also be constructed from the tensor product of $s$ tangent vectors. Let
 $v_1,\cdots,v_s$ be $s$ tangent vectors in $M_p^n$. Their tensor product is
@@ -1569,7 +1598,8 @@ vector of the contravariant tensor space and the tensor $T$ can be represented a
   A mixed tensor $W$, which has contravariant rank $s$ and covariant rank $r$, is a
   multilinear real valued function on $s$ 1-forms and $r$ tangent vectors, i.e.
   $W:\left( \otimes^s M_p^{n*} \right) \otimes \left( \otimes^r M_p^n \right) \rightarrow
-  \mathbb{R}$.
+  \mathbb{R}$. It is actually the tensor product of an $s$-rank contravariant tensor and
+  an $r$-th rank covariant tensor.
 \end{Definition}
 Hence $W$ belongs to the dual space of the product space
 $\left( \otimes^s M_p^{n*} \right) \otimes \left( \otimes^r M_p^n \right)$.
@@ -1642,15 +1672,496 @@ $i\cdots j$ and $k\cdots l$ for $(V,x_V)$.
 
 \subsection{Exterior form and exterior algebra}
 
-\begin{Definition}[(Exterior) $p$-form]
-  A $p$-rank covariant tensor which is antisymmetric (or called skew symmetric):
-  $$
-  \alpha(\cdots v_r, \cdots, v_s \cdots) = -\alpha(\cdots v_s, \cdots, v_r \cdots).
-  $$
-  It is obvious to see that if any of the two contravariant vectors are the
-  same $v_i = v_j$, the $p$-form evaluates to zero.
+\begin{Definition}[(Exterior) $k$-form]
+  A $k$-form $\alpha$ is an antisymmetric (also called skew symmetric) $k$-rank covariant
+  tensor, which satisfies
+  \begin{equation}
+    \alpha(v_1, \cdots, v_r, \cdots, v_s, \cdots, v_k) = -\alpha(v_1, \cdots, v_s, \cdots, v_r,
+    \cdots, v_k).
+  \end{equation}
 \end{Definition}
 
+\begin{Remark}
+  When there are two equal vectors, such as $v_r = v_s$, in the $k$-vector
+  $(v_1,\cdots,v_k)$, we have $\alpha(v_1,\cdots,v_k) = 0$.
+  
+  A 0-form is a degenerate case of a general $k$-form, where there are no tangent vectors
+  to be operated. Because there are no tangent vectors for us to swap any two of them, the
+  above definition of antisymmetry is \emph{vacuously} true\footnote{When the precondition
+    required by a statement does not exist, the statement is still considered as vacuously
+    true (see \citet{MunkresTopology2000})}.
+    
+  A 1-form is a degenerate case of a general $k$-form, where there is only one tangent
+  vector to be operated. Similar to 0-forms, the antisymmetry for 1-forms is also
+  vacuously true.
+\end{Remark}
+
+According to Equation (\ref{eq:covariant-tensor-applied-to-r-vectors-expanded}), applying
+an $r$-th rank covariant tensor $Q$ to an $r$-vector can be expanded as a multi-summation
+due to its multilinearity, where there are altogether $n^r$ terms in the sum. Now for a
+$k$-form $\alpha$, which is also a $k$-th rank covariant tensor, applying it to
+a $k$-vector $(v_1,\cdots,v_k)$ can be similarly expanded as
+\begin{equation}
+  \label{eq:k-form-applied-to-k-vector-expanded}
+  \alpha(v_{1},\cdots,v_{k}) = \alpha \left(
+    \sum_{i_1}v_1^{i_1}\vect{\pdiff}x^{i_1},\cdots,\sum_{i_k}v_k^{i_k}\vect{\pdiff}x^{i_k}
+  \right) = \sum_{i_1}\cdots\sum_{i_k}v_1^{i_1}\cdots v_k^{i_k}
+  \alpha(\vect{\pdiff}x^{i_1},\cdots, \vect{\pdiff}x^{i_k}).
+\end{equation}
+Moreover, due to the antisymmetry of $\alpha$, some terms in the above multi-summation can
+be combined. For example, because
+\begin{equation}
+  \alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_k})
+  =
+  -\alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_k}),
+\end{equation}
+the following two terms can be merged
+\begin{equation}
+  \begin{aligned}
+    & v_1^{i_1} \cdots v_r^{i_r} \cdots v_s^{i_s} \cdots v_k^{i_k}
+    \alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_k})
+    + \\
+    & v_1^{i_1} \cdots v_r^{i_s} \cdots v_s^{i_r} \cdots v_k^{i_k}
+    \alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_k})
+    \\
+    = & \left( v_1^{i_1} \cdots v_r^{i_r} \cdots v_s^{i_s} \cdots v_k^{i_k} - v_1^{i_1}
+      \cdots v_r^{i_s} \cdots v_s^{i_r} \cdots v_k^{i_k} \right) \alpha(\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_k}).
+  \end{aligned}
+\end{equation}
+For simplicity, we can write the tuple of basis vectors
+$\left(
+  \vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_r},\cdots,\vect{\pdiff}x^{i_s},\cdots,\vect{\pdiff}x^{i_k}
+\right)$ as $\vect{\pdiff}x^{I}$, where $I$ is a tuple of indices $I = (i_1,\cdots,i_k)$
+with each component index in the range $1,\cdots,n$. For any two terms in the expansion of
+Equation (\ref{eq:k-form-applied-to-k-vector-expanded}) which contain
+$\alpha(\vect{\pdiff}x^I) = \alpha_I$ and $\alpha(\vect{\pdiff}x^J) = \alpha_J$, if the
+index set $J$ is a permutation of $I$, the two terms can be combined.
+
+\begin{Remark}[Permutation independence]
+  Such \emph{permutation independence} possessed by $k$-forms is a distinct property from $k$-th
+rank covariant tensors.
+\end{Remark}
+Meanwhile, if any two indices in the index set $I$ are equal, $\alpha_I$ is evaluated to
+zero. Therefore, the total effective number of terms in the multi-summation of Equation
+(\ref{eq:k-form-applied-to-k-vector-expanded}) is is $C_n^k$, which is the number of ways
+that we can select $k$ different indices in the range $1,\cdots,n$. This also means the
+behavior of a $k$-form when it operates on a $k$-vector can be completely determined by
+applying it to all such tuples of basis vectors $\vect{\pdiff}x^I$ of the tangent space
+with an increasing index set $I = (i_1,\cdots,i_k)$. From now on, for an increasing index
+set like $I$, we write it as $\underaccent{\rightharpoondown}{I}$.
+
+Here we have three special cases:
+\begin{enumerate}
+\item When $\alpha$ is a 0-form, $C_n^0 = 1$ and there is only one term in the summation.
+  Since a 0-form defined on the manifold $M^n$ is simply a scalar function, this only term
+  is its evaluation at the point $p$.
+\item When $\alpha$ is a $n$-form, $C_n^n = 1$ and there is only term in the summation,
+  which contains $\alpha(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$.
+\item\label{item:zero-form} When $\alpha$ is a $k$-form with $k > n$, $C_n^k = 0$ and we
+  can say no matter how we select those $k$ indices in the range $1,\cdots,n$, there will
+  be at least two equal indices in the index set $I$. Therefore, there are no terms in the
+  summation and $\alpha(v_1,\cdots,v_k)$ is always zero.
+\end{enumerate}
+
+\begin{Definition}[Vector space of $k$-forms]
+  Let $\bigwedge^k M_p^{n*}$ be the space of all $k$-forms defined in the neighborhood of
+  $p$ in the manifold $M^n$. $\bigwedge^k M_p^{n*}$ is a vector space, which is also a
+  subspace of the $k$-th rank covariant tensor space $\otimes^k M_p^{n*}$, i.e.
+  $\bigwedge^k M_p^{n*} \subset \otimes^k M_p^{n*}$.
+\end{Definition}
+The dimension of $\bigwedge^k M_p^{n*}$ is equal to the number of non-zero terms in the
+expansion in Equation (\ref{eq:k-form-applied-to-k-vector-expanded}), which is $C_n^k$.
+
+\begin{Definition}[Exterior (Grassmann) algebra]
+  The vector space of all $k$-forms with $k=0,\cdots,n$ over $M_p^{n*}$ is the exterior
+  (Grassmann) algebra over $M_p^{n*}$, i.e.
+  \begin{equation}
+    \label{eq:exterior-algebra}
+    \bigwedge^{*} M_p^{n*} \coloneqq \left( \bigwedge^0 M_p^{n*} \right) \oplus \cdots
+    \oplus \left( \bigwedge^n M_p^{n*} \right).
+  \end{equation}
+\end{Definition}
+The dimension of the exterior algebra over $M_p^{n*}$ is
+\begin{equation}
+  \label{eq:exterior-algebra-dim}
+  \dim \left( \bigwedge^{*} M_p^{n*} \right) = \sum_{k=0}^n C_n^k = 2^n.
+\end{equation}
+
+\subsection{Exterior product of exterior forms}
+
+\subsubsection{Definition of exterior product}
+
+Let $\alpha$ be a $k$-form and $\beta$ be an $l$-form. Equation
+(\ref{eq:tensor-product-of-covariant-tensors}) gives the definition of the tensor product
+of two covariant tensors. If we directly adopt this definition for the tensor product of
+$\alpha$ and $\beta$, by applying this product to $k+l$ tangent vectors, we have
+\begin{equation}
+  \alpha \otimes \beta (v_1,\cdots,v_k,v_{k+1},\cdots,v_{k+l}) = \alpha(v_1,\cdots,v_k) \beta(v_{k+1},\cdots,v_{k+l}).
+\end{equation}
+If we swap any two vectors $v_i$ and $v_j$ with $i,j$ in the range $1,\cdots,k$, the above
+evaluation only changes sign. Similar result holds for the case when $i,j$ are in the
+range $k+1,\cdots,k+l$. However, if $i$ is selected from $1,\cdots,k$ and $j$ is selected
+from $k+1,\cdots,k+l$, swapping $v_i$ and $v_j$ will make $\alpha\otimes\beta$ not
+antisymmetric. Therefore, a normal tensor product of two exterior forms is not a closed
+operation and we need to define a new type of product which ensures the antisymmetric
+property.
+
+\begin{Definition}[Generalized Kronecker delta $\delta_I^J$]
+  Let $I = (i_1,\cdots,i_m)$ and $J = (j_1,\cdots,j_m)$ be two index sets.
+  \begin{equation}
+    \label{eq:kronecker-delta}
+    \delta_I^J \coloneqq
+    \begin{cases}
+      1 & \text{$J$ is an even permutation of $I$} \\
+      -1 & \text{$J$ is an odd permutation of $I$} \\
+      0 & \text{$J$ is not a permutation of $I$}
+    \end{cases}.
+  \end{equation}
+\end{Definition}
+
+\begin{Definition}[Exterior (or wedge or Grassmann) product]
+  \label{def:exterior-product}
+  Let $\alpha$ be an $l$-form and $\beta$ an $m$-form. Their exterior product is defined
+  as a map
+  \begin{equation}
+    \wedge: \bigwedge^l M_p^{n*} \times \bigwedge^m M_p^{n*} \rightarrow
+    \bigwedge^{l+m} M_p^{n*},
+  \end{equation}
+  which returns a $(l+m)$-form. When $\alpha \wedge \beta$ is applied to a tuple of $l+m$
+  tangent vectors $\vect{v}_I = (v_{i_1}, \cdots, v_{i_{l+m}})$, define
+  \begin{equation}
+    \label{eq:exterior-product-applied-to-vectors}
+    \left( \alpha\wedge\beta \right)(\vect{v}_I) \coloneqq
+    \sum_{\underaccent{\rightharpoondown}{J}}
+    \sum_{\underaccent{\rightharpoondown}{K}} \delta_I^{JK}
+    \alpha(\vect{v}_J)\beta(\vect{v}_K),
+  \end{equation}
+  where $I = (i_1,\cdots,i_{l+m})$, $J = (j_1, \cdots, j_l)$ and $K = (k_1, \cdots, k_m)$.
+  The union of $J$ and $K$ is $I$. All indices in $I$ should be different, otherwise,
+  $\left( \alpha\wedge\beta \right)(v_I)$ is zero\footnote{Here we do not have requirement
+    on the value range for each component index, since the tuple of tangent vectors $v_I$
+    can be assigned arbitrary indices. However, when $v_I$ are specifically selected as a
+    set of basis vectors of the tangent space $M_p^n$, such as
+    $\vect{\pdiff}x^I = \left( \vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_{l+m}}
+    \right)$, the component indices within $I$ should be in the range $1,\cdots,n$, since
+    there are only $n$ basis vectors in $M_p^n$ which are indexed by starting from
+    1.\label{fn:index-value-range-in-exterior-form}}. The multi-summation index sets
+  $\underaccent{\rightharpoondown}{J}$ and $\underaccent{\rightharpoondown}{K}$ mean that
+  only strictly increasing indices are allowed in $J$ and $K$ during the summation, i.e.
+  $j_1 < \cdots < j_{l}$ and $k_1 < \cdots < k_m$.
+\end{Definition}
+
+\begin{Remark}
+  \begin{itemize}
+  \item The index set $I$ is not necessarily increasing.
+  \item $l+m \leq n$ should be satisfied, otherwise $\left( \alpha+\beta \right)$ is
+    always zero according to previous discussion about the special case
+    \ref{item:zero-form} of exterior forms.
+  \item $J$ and $K$ is a partition of the index set $I$, each of which is an increasing
+    set of indices. Hence, the total number of terms in the summation
+    $\sum_{\underaccent{\rightharpoondown}{J}}\sum_{\underaccent{\rightharpoondown}{K}}$
+    is $C_{l+m}^l$.
+  \item If the tuple of $l+m$ tangent vectors are simply basis vectors of the tangent
+    space, i.e. $\vect{\pdiff}x^I =
+    (\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_{l+m}})$, Equation
+    (\ref{eq:exterior-product-applied-to-vectors}) can be written as
+    \begin{equation}
+      \label{eq:exterior-product-applied-to-basis-vectors}
+      \left( \alpha\wedge\beta \right)_I =
+      \sum_{\underaccent{\rightharpoondown}{J}}\sum_{\underaccent{\rightharpoondown}{K}}\delta_I^{JK}\alpha_J\beta_K.
+    \end{equation}
+    As explained in foot note \ref{fn:index-value-range-in-exterior-form}, the component
+    indices in the index sets $I$, $J$ and $K$ should be in the range $1,\cdots,n$.
+  \end{itemize}
+\end{Remark}
+
+\begin{Example}[Exterior product of a 2-form and a 1-form]
+  Let $\alpha^2$ be a 2-form and $\beta^1$ be a 1-form\footnote{Here we use a superscript
+    to explicitly specify the degree of an exterior form.}. Let $v_1,v_2,v_3$ be three
+  tangent vectors. Then
+  \begin{equation}
+    \begin{aligned}
+      & \left( \alpha^2 \wedge \beta^1 \right)(v_3,v_1,v_2) =
+      \delta_{312}^{123}\alpha^2(v_1,v_2)\beta^1(v_3) +
+      \delta_{312}^{132}\alpha^2(v_1,v_3)\beta^1(v_2) +
+      \delta_{312}^{231}\alpha^2(v_2,v_3)\beta^1(v_1) \\
+      = & \alpha^2(v_1,v_2)\beta^1(v_3) - \alpha^2(v_1,v_3)\beta^1(v_2) +
+      \alpha^2(v_2,v_3)\beta^1(v_1)
+    \end{aligned}
+  \end{equation}
+\end{Example}
+
+\subsubsection{Properties of exterior product}
+
+\begin{Proposition}
+  Exterior product is not commutable.
+\end{Proposition}
+
+\begin{Proof}
+  This can be proved as below by swapping $JK$ in the generalized Kronecker delta.
+  \begin{equation}
+    \left( \alpha^l\wedge\beta^m \right)_I =
+    \sum_{\underaccent{\rightharpoondown}{J}}\sum_{\underaccent{\rightharpoondown}{K}}
+    \delta_I^{JK}\alpha_J\beta_K =
+    (-1)^{lm}\sum_{\underaccent{\rightharpoondown}{J}}\sum_{\underaccent{\rightharpoondown}{K}}
+    \delta_I^{KJ}\beta_K\alpha_J = (-1)^{lm} \left( \beta^m\wedge\alpha^l \right)_I.
+  \end{equation}
+  Also note that because an exterior form is uniquely determined by its application to basis
+  vectors of the tangent space, in the above proof, the exterior forms are applied to
+  basis vectors instead of general tangent vectors.
+\end{Proof}
+
+\begin{Example}
+  Given two 1-forms $dx^i$ and $dx^j$, i.e. both are basis vectors of the cotangent
+  space $M_p^{n*}$. Their exterior product satisfies
+  \begin{equation}
+    dx^i \wedge dx^j = -dx^j \wedge dx^i.
+  \end{equation}
+  If $i=j$, we have
+  \begin{equation}
+    dx^i \wedge dx^i = 0.
+  \end{equation}
+\end{Example}
+
+\begin{Lemma}
+  Let $I,J,K,L,M$ be index sets, where $\{I, J\}$ is a partition of $M$ and $\{K,L\}$ is a
+  partition of $J$. Then we have
+  \begin{equation}
+    \label{eq:kronecker-delta-reduction}
+    \sum_{\underaccent{\rightharpoondown}{J}}\delta_M^{IJ}\delta_J^{KL} = \delta_M^{IKL}.
+  \end{equation}
+\end{Lemma}
+
+\begin{Proof}
+  We observe that among the four index sets, only $J$ appears as the summation index set,
+  which is also required to be increasing. The other three index sets are predefined and
+  do not change in the sum.
+
+  Because $\{K,L\}$ is a partition of $J$ and $J$ is an increasing index set, there is
+  actually only one non-zero term in the sum, where $J$ is the permutation of $KL$ into an
+  increasing order.
+
+  When $J$ is an even permutation of $KL$, $\delta_J^{KL} = 1$ and $J$ in $\delta_M^{IJ}$
+  can be directly replaced with $KL$. Therefore, the left hand side is just $\delta_M^{IKL}$.
+
+  When $J$ is an odd permutation of $KL$, $\delta_J^{KL} = -1$ and
+  $\delta_M^{IJ} = -\delta_M^{IKL}$. Hence, the left hand side is still equal to
+  $\delta_M^{IKL}$.
+\end{Proof}
+
+\begin{Proposition}
+  Exterior product is associable. Given exterior forms $\alpha^l$, $\beta^m$ and
+  $\gamma^r$, we should have
+  \begin{equation}
+    \left( \alpha^l\wedge\beta^m \right)\wedge\gamma^r = \alpha^l\wedge \left(
+      \beta^m\wedge\gamma^r \right).
+  \end{equation}
+\end{Proposition}
+
+\begin{Proof}
+  The identity will be proved by applying both sides to a tuple of basis vectors in the
+  tangent space and checking their equality.
+
+  Let $N = (n_1, \cdots, n_{l+m+r})$ be a tuple of index sets and
+  $(\vect{\pdiff}x^{n_1},\cdots,\vect{\pdiff}x^{l+m+r})$ be a tuple of basis vectors in
+  the tangent space $M_p^n$. Meanwhile, let $I$, $J$, $K$, $L$ and $M$ be index sets,
+  which are to be used with $\alpha^l$, $\beta^m$, $\gamma^r$, $\alpha^l\wedge\beta^m$ and
+  $\beta^m\wedge\gamma^r$ respectively.
+
+  Next, we fully expand the left hand side and right hand side of the identity.
+\begin{equation}
+    \lhs =
+    \sum_{\underaccent{\rightharpoondown}{L}}\sum_{\underaccent{\rightharpoondown}{K}}
+    \delta_N^{LK} \left( \alpha^l\wedge\beta^m \right)_L \gamma^r_K =
+    \sum_{\underaccent{\rightharpoondown}{L}}\sum_{\underaccent{\rightharpoondown}{K}}
+    \sum_{\underaccent{\rightharpoondown}{I}}\sum_{\underaccent{\rightharpoondown}{J}}
+    \delta_N^{LK}\delta_L^{IJ} \alpha_I\beta_J\gamma_K =
+    \sum_{\underaccent{\rightharpoondown}{K}}\sum_{\underaccent{\rightharpoondown}{I}}\sum_{\underaccent{\rightharpoondown}{J}}
+    \delta_N^{IJK} \alpha_I\beta_J\gamma_K.
+  \end{equation}
+  \begin{equation}
+    \rhs =
+    \sum_{\underaccent{\rightharpoondown}{I}}\sum_{\underaccent{\rightharpoondown}{M}}
+    \delta_N^{IM}\alpha_I
+    \left( \beta^m\wedge\gamma^r \right)_M =
+    \sum_{\underaccent{\rightharpoondown}{I}}\sum_{\underaccent{\rightharpoondown}{M}}
+    \sum_{\underaccent{\rightharpoondown}{J}}\sum_{\underaccent{\rightharpoondown}{K}}
+    \delta_N^{IM}\delta_M^{JK} \alpha_I\beta_J\gamma_K =
+    \sum_{\underaccent{\rightharpoondown}{I}}\sum_{\underaccent{\rightharpoondown}{J}}
+    \sum_{\underaccent{\rightharpoondown}{K}} \delta_N^{IJK}\alpha_I\beta_J\gamma_K.
+  \end{equation}
+  Therefore, the exterior product is associable.
+\end{Proof}
+
+\subsubsection{Exterior product of a set of 1-forms}
+
+Let $\alpha_{(1)}, \cdots, \alpha_{(k)}$ be a set of 1-forms\footnote{Because we have
+  already used subscript to represent the value of applying an exterior form to the
+  corresponding basis vector(s) of the tangent space, and we have also used the
+  superscript to represent the degree of the exterior form, here we have to wrap the index
+  within parentheses in the subscript to label different exterior forms.}. According to
+Definition \ref{def:exterior-product}, their exterior product is just a $k$-form. Applying
+this exterior product a tuple of tangent vectors $v_1,\cdots,v_k$ and successively using
+the rule of exterior product, we have
+\begin{equation}
+  \begin{aligned}
+    & \left( \alpha_{(1)}\wedge\cdots\wedge\alpha_{(k)} \right)(v_1,\cdots,v_k) \\
+    &= \sum_{i_1=1}^k \delta_{1,\cdots,k}^{i_1,(1,\cdots,k)\backslash
+      \{i_1\}}\alpha_{(1)}(v_{i_1}) \left( \alpha_{(2)}\wedge\cdots\wedge\alpha_{(k)}
+    \right)\left( (v_1,\cdots,v_k) \backslash
+      \{i_1\} \right) \\
+    &= \sum_{i_1=1}^k\sum_{i_2=1}^k \delta_{1,\cdots,k}^{i_1,(1,\cdots,k)\backslash
+      \{i_1\}} \delta_{(1,\cdots,k) \backslash \{i_1\}}^{i_2,(1,\cdots,k)\backslash
+      \{i_1,i_2\}} \alpha_{(1)}(v_{i_1}) \alpha_{(2)}(v_{i_2}) \left(
+      \alpha_{(3)}\wedge\cdots\wedge\alpha_{(k)} \right) \left( (v_1,\cdots,v_k)
+      \backslash \{i_1,i_2\} \right)
+  \end{aligned}
+\end{equation}
+Because there is only one possible choice of an increasing index set which is made from
+the elements in $(1,\cdots,k)\backslash\{i_1\}$, the two Kronecker delta can be merged.
+\begin{equation}
+  \begin{aligned}
+    & \left( \alpha_{(1)}\wedge\cdots\wedge\alpha_{(k)} \right)(v_1,\cdots,v_k) \\
+    &= \sum_{i_1=1}^k\sum_{i_2=1}^k \delta_{1,\cdots,k}^{i_1,i_2,(1,\cdots,k)\backslash
+      \{i_1,i_2\}} \alpha_{(1)}(v_{i_1}) \alpha_{(2)}(v_{i_2}) \left(
+      \alpha_{(3)}\wedge\cdots\wedge\alpha_{(k)} \right) \left( (v_1,\cdots,v_k)
+      \backslash \{i_1,i_2\} \right) \\
+    & \cdots \\
+    &= \sum_{i_1=1}^k \cdots \sum_{i_k=1}^k \delta_{1,\cdots,k}^I
+    \alpha_{(1)}(v_{i_1})\cdots\alpha_{(k)}(v_{i_k}) \\
+    &=\sum_I \delta_{1,\cdots,k}^I \alpha_{(1)}(v_{i_1})\cdots\alpha_{(k)}(v_{i_k})
+  \end{aligned},
+\end{equation}
+where $I$ is the tuple of indices $(i_1,\cdots,i_k)$ \emph{This is just the standard
+  definition of determinant \cite{ZeidlerOxford2004}}\footnote{Here the subscript $r$ of
+  1-form $\alpha$ is used as the row index in the determinant, while the subscript $s$ of
+  the tangent vector $v$ is used as the column index. This convention is different from
+  that adopted in \cite{FrankelGeometry2011}.}:
+\begin{equation}
+  \det(\alpha_{(r)}(v_{s})) = \det \begin{pmatrix}
+    \alpha_{(1)}(v_{1}) & \cdots & \alpha_{(1)}(v_k) \\
+    \vdots & \vdots & \vdots \\
+    \alpha_{(k)}(v_1) & \cdots & \alpha_{(k)}(v_k)
+  \end{pmatrix} = \sum_I \varepsilon_I \alpha_{(1)}(v_{i_1})\cdots\alpha_{(k)}(v_{i_k}),
+\end{equation}
+where $\varepsilon_I$ is the Levi-Civita symbol \cite{LeviCivita2023}.
+
+In the above formulation, the subscripts adopted for the 1-forms $\alpha$ and tangent
+vectors $v$ are consecutively numbered by starting from 1. Actually, they can be
+arbitrarily indexed. Let $I = (i_1,\cdots,i_k)$ and $J = (j_1,\cdots,j_k)$ be two index
+sets. Let $L$ be a permutation of $J$. Let
+$\alpha_{(I)} = \alpha_{(i_1)}\wedge\cdots\wedge\alpha_{(i_k)}$ be the wedge product of
+$k$ 1-forms and $v_J = (v_{j_1},\cdots,v_{j_k})$ be a tuple of tangent vectors. Then we
+have
+\begin{equation}
+  \label{eq:1-form-exterior-product-applied-to-k-vector}
+  \alpha_{(I)}(v_J) = \sum_{L} \delta_J^{L} \alpha_{(i_1)}(v_{l_1})\cdots\alpha_{(i_k)}(v_{l_k}),
+\end{equation}
+which is equivalent to the determinant
+\begin{equation}
+  \det(\alpha_{(i_r)}(v_{j_s})) = \det \begin{pmatrix}
+    \alpha_{(i_1)}(v_{j_1}) & \cdots & \alpha_{(i_1)}(v_{j_k}) \\
+    \vdots & \vdots & \vdots \\
+    \alpha_{(i_k)}(v_{j_1}) & \cdots & \alpha_{(i_k)}(v_{j_k})
+  \end{pmatrix}.
+\end{equation}
+
+\begin{Example}[Apply exterior product of cotangent space basis vectors to tangent space
+  basis vectors]
+  Let the tuple of 1-forms $\left( \alpha_{(i_1)},\cdots,\alpha_{(i_k)} \right)$ be the
+  basis vectors of the cotangent space $M_p^{n*}$: $(dx^{i_1},\cdots,dx^{i_k})$. Their
+  exterior product is a $k$-form $dx^I \coloneqq dx^{i_1} \wedge\cdots\wedge dx^{i_k}$.
+  Let the $k$-vector $\left( v_{j_1},\cdots,v_{j_k} \right)$ be basis vectors in the
+  tangent space $M_p^n$:
+  $\vect{\pdiff}x^J \coloneqq (\vect{\pdiff}x^{j_1},\cdots,\vect{\pdiff}x^{j_k})$. Then we
+  apply $dx^I$ to $\vect{\pdiff}x^J$ and use Equation
+  (\ref{eq:1-form-exterior-product-applied-to-k-vector}) and
+  (\ref{eq:projection-operator}):
+  \begin{equation}
+    dx^I(\vect{\pdiff}x^J) = \sum_{L} \delta_J^L dx^{i_1}(\vect{\pdiff}x^{l_1}) \cdots
+    dx^{i_k}(\vect{\pdiff}x^{l_k}) = \sum_L \delta_J^L \delta_{l_1}^{i_1} \cdots
+    \delta_{l_k}^{i_k}.
+  \end{equation}
+  It is obvious that only when $L=I$, the term in the sum is not zero. Therefore,
+  \begin{equation}
+    \label{eq:cotangent-base-appled-to-tangent-base}
+    dx^I(\vect{\pdiff}x^J) = \delta_J^I.
+  \end{equation}
+\end{Example}
+
+\subsection{Expansion of a $k$-form}
+
+\begin{Proposition}
+  \label{prop:k-form-expansion}
+  Let $\alpha^k$ be a $k$-form. Let $I = (i_1,\cdots,i_k)$ be an index set with each
+  component index in the range $1,\cdots,n$. $\alpha^k$ can be expanded as
+  \begin{equation}
+    \alpha^k = \sum_{\underaccent{\rightharpoondown}{I}} \alpha^k(\vect{\pdiff}x^I) dx^I.
+  \end{equation}
+\end{Proposition}
+
+\begin{Proof}
+  Let $J = (j_1,\cdots,j_k)$ be an index set with each component index in the range
+  $1,\cdots,n$. Apply both sides of the equation to the tuple of basis vectors in the
+  tangent space: $\vect{\pdiff}x^J$. If the equality holds for any $J$, the proposition is
+  proved.
+
+  The left hand side is simply $\alpha^k(\vect{\pdiff}x^J)$. The right hand side is
+  \begin{equation}
+    \sum_{\underaccent{\rightharpoondown}{I}}\alpha^k(\vect{\pdiff}x^I)dx^I(\vect{\pdiff}x^J)
+    = \sum_{\underaccent{\rightharpoondown}{I}} \alpha^k(\vect{\pdiff}x^I)\delta_J^I.
+  \end{equation}
+  It is obvious that only when the index set $I$ is a permutation of $J$, the term in the
+  sum is not zero. Since $I$ is ensured to be increasing, there is only one non-zero term.
+
+  When $I$ is an even permutation of $J$, $\delta_J^I=1$ and
+  $\alpha^k(\vect{\pdiff}x^I) = \alpha^k(\vect{\pdiff}x^J)$. Hence, the right hand side is
+  equal to $\alpha^k(\vect{\pdiff}x^J)$. When $I$ is an odd permutation of $J$,
+  $\delta_J^I=-1$ and $\alpha^k(\vect{\pdiff}x^I) = -\alpha^k(\vect{\pdiff}x^J)$. Hence,
+  the right hand side is still equal to $\alpha^k(\vect{\pdiff}x^J)$. Therefore, this
+  proposition is valid.
+\end{Proof}
+
+Proposition \ref{prop:k-form-expansion} means the exterior product of a set of basis
+vectors in the cotangent space $M_p^{n*}$, i.e.
+$dx^I = dx^{i_1}\wedge\cdots\wedge dx^{i_k}$, forms a basis vector in the space of
+$k$-forms. Meanwhile, the space of $k$-forms can be considered as an exterior product of
+$k$ cotangent spaces. A $k$-form can be expanded by a set of basis vectors like $dx^I$,
+each of which is indexed by an increasing index set $\underaccent{\rightharpoondown}{I}$.
+The expansion coefficient associated with $dx^I$ is the scalar value obtained from
+applying $\alpha^k$ to the set of basis vectors $\vect{\pdiff}x^I$ in the tangent space
+$M_p^n$ with the same index set $I$. This concept is similar to the expansion of a
+covariant tensor, which is given in Equation
+(\ref{eq:covariant-tensor-expanded-as-tensor-product}) in Section
+\ref{sec:covariant-tensor}.
+
+\subsection{Interior product}
+
+\subsection{Exterior differentiation}
+
+\subsection{Hodge star}
+
+\subsection{Pullback of a $k$-form}
+
+\subsection{Some special forms}
+
+\begin{itemize}
+\item 0,1,2,3-forms
+\item Area form
+\item Volume form
+\end{itemize}
+
+\subsection{Relationship between $k$-forms and vector analysis}
+
+\begin{itemize}
+\item Inner product
+\item Gradient
+\item Curl
+\item Divergence
+\item Laplace-Beltrami
+\end{itemize}
+
+\section{Maxwell equations}
 
 \chapter{Sauter quadrature}
 \label{sec:sauter-quad}
