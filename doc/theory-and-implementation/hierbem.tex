@@ -2066,11 +2066,54 @@ which is equivalent to the determinant
   \end{pmatrix}.
 \end{equation}
 
-\begin{Example}[Apply exterior product of cotangent space basis vectors to tangent space
-  basis vectors]
+\begin{Example}[Apply exterior product of cotangent space basis vectors to tangent
+  vectors]
   Let the tuple of 1-forms $\left( \alpha_{(i_1)},\cdots,\alpha_{(i_k)} \right)$ be the
   basis vectors of the cotangent space $M_p^{n*}$: $(dx^{i_1},\cdots,dx^{i_k})$. Their
   exterior product is a $k$-form $dx^I \coloneqq dx^{i_1} \wedge\cdots\wedge dx^{i_k}$.
+  Apply $dx^I$ to the tuple of tangent vectors $v_J$,
+  \begin{equation}
+    dx^I(v_J) = \det(dx^{i_r}(v_{j_s})) = \det \begin{pmatrix}
+      dx^{i_1}(v_{j_1}) & \cdots & dx^{i_1}(v_{j_k}) \\
+      \vdots & \vdots & \vdots \\
+      dx^{i_k}(v_{j_1}) & \cdots & dx^{i_k}(v_{j_k})
+    \end{pmatrix} = \det \begin{pmatrix}
+      v_{j_1}^{i_1} & \cdots & v_{j_k}^{i_1} \\
+      \vdots & \vdots & \vdots \\
+      v_{j_1}^{i_k} & \cdots & v_{j_k}^{i_k}
+    \end{pmatrix}.
+  \end{equation}
+  Because $dx^i$ is a projection vector which extracts the $i$-th component of the input
+  tangent vector, each column in the above determinant is the corresponding vector in
+  $v_J$ that is projected to the subspace spanned by the basis vectors
+  $\vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_k}$ of the tangent space. Then the
+  determinant is just the signed volume spanned by these projected vectors.
+
+  Moreover, if we take all the $n$ basis vectors in the cotangent space to generate the
+  exterior product $dx^I$ and also make sure they are in the natural order, i.e.
+  $I=(1,\cdots,n)$, $dx^I$ becomes $dx^1\wedge\cdots\wedge dx^n$. Applying this $dx^I$ to
+  $n$ tangent vectors $v_j$ will produce
+  \begin{equation}
+    dx^I(v_J) = \det(dx^r(v_{j_s})) = \det \begin{pmatrix}
+      v_{j_1}^{1} & \cdots & v_{j_n}^{1} \\
+      \vdots & \vdots & \vdots \\
+      v_{j_1}^{n} & \cdots & v_{j_n}^{n}
+    \end{pmatrix}.
+  \end{equation}
+  Now each column in the determinant is just the corresponding vector $v$ itself
+  represented in the coordinate chart $x=(x^1,\cdots,x^n)$. This is because each vector in
+  $v_J$ is projected to the full tangent space where it is originally defined.
+
+  This assigns a new meaning to the concept of determinant which we've leaned in linear
+  algebra: in $n$-dimensional Euclidean space, computing the determinant for a tuple of
+  $n$ vectors is equivalent to applying the $n$-form $dx^1 \wedge\cdots\wedge dx^n$ to
+  these ordered vectors. Or we can say the signed volume spanned by these vectors is
+  \emph{measured} by the $n$-form.
+\end{Example}
+
+\begin{Example}[Apply exterior product of cotangent space basis vectors to tangent space
+  basis vectors]
+  
   Let the $k$-vector $\left( v_{j_1},\cdots,v_{j_k} \right)$ be basis vectors in the
   tangent space $M_p^n$:
   $\vect{\pdiff}x^J \coloneqq (\vect{\pdiff}x^{j_1},\cdots,\vect{\pdiff}x^{j_k})$. Then we

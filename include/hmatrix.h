@@ -2133,12 +2133,6 @@ namespace HierBEM
       HMatrix<spacedim, Number> &Z,
       const unsigned int         fixed_rank) const;
 
-    void
-    solve_transpose_by_forward_substitution_matrix_valued_for_leaf(
-      HMatrix<spacedim, Number> &X,
-      HMatrix<spacedim, Number> &Z,
-      const unsigned int         fixed_rank) const;
-
     /**
      * Solve the matrix-valued problem
      * \f$X\vert_{\tau\times\sigma}U\vert_{\sigma\times\sigma} =
@@ -3137,13 +3131,36 @@ namespace HierBEM
      * to the leaf set.
      */
     void
-    lu_factorize_diagonal_block(tbb::flow::graph &dag);
+    lu_factorize_diagonal_block_task(tbb::flow::graph &dag);
+
+    /**
+     * Solve the problem of \f$XU=Z\f$, which can be in situ.
+     *
+     * @param dag
+     * @param X
+     * @param Z
+     * @param fixed_rank
+     */
+    void
+    lu_solve_upper_task(tbb::flow::graph          &dag,
+                        HMatrix<spacedim, Number> &Z,
+                        const unsigned int         fixed_rank);
+
+    /**
+     * Solve the problem of \f$LX=Z\f$, which can be in situ.
+     *
+     * @param dag
+     * @param X
+     * @param Z
+     * @param fixed_rank
+     */
+    void
+    lu_solve_lower_task(tbb::flow::graph          &dag,
+                        HMatrix<spacedim, Number> &Z,
+                        const unsigned int         fixed_rank);
 
     void
-    lu_solve_upper(tbb::flow::graph          &dag,
-                   HMatrix<spacedim, Number> &X,
-                   HMatrix<spacedim, Number> &Z,
-                   const unsigned int         fixed_rank);
+    lu_update_task();
 
     /**
      * Internal recursive function to be called by
@@ -3214,16 +3231,28 @@ namespace HierBEM
     HMatrix<spacedim, Number> *next_same_level_hmat_node;
 
     /**
-     * Pointer to the next \hmatrix node on a same level, which is also on a
+     * Pointer to the next \hmatrix node on a same level, which is also in a
      * same row as the same-level diagonal block.
      */
     HMatrix<spacedim, Number> *next_same_level_same_row_hmat_node;
 
     /**
-     * Pointer to the next \hmatrix node on a same level, which is also on a
+     * Pointer to the next \hmatrix node on a same level, which is also in a
      * same column as the same-level diagonal block.
      */
     HMatrix<spacedim, Number> *next_same_level_same_column_hmat_node;
+
+    /**
+     * Pointer to the previous \hmatrix node on a same level, which is also in a
+     * same row as the same-level diagonal block.
+     */
+    HMatrix<spacedim, Number> *previous_same_level_same_row_hmat_node;
+
+    /**
+     * Pointer to the previous \hmatrix node on a same level, which is also in a
+     * same column as the same-level diagonal block.
+     */
+    HMatrix<spacedim, Number> *previous_same_level_same_column_hmat_node;
 
     /**
      * Submatrix index of the current \hmatnode wrt. its parent \hmatnode.
@@ -14117,6 +14146,10 @@ namespace HierBEM
       hmat_src.next_same_level_same_row_hmat_node;
     hmat_dst.next_same_level_same_column_hmat_node =
       hmat_src.next_same_level_same_column_hmat_node;
+    hmat_dst.previous_same_level_same_row_hmat_node =
+      hmat_src.previous_same_level_same_row_hmat_node;
+    hmat_dst.previous_same_level_same_column_hmat_node =
+      hmat_src.previous_same_level_same_column_hmat_node;
     hmat_dst.leaf_set            = hmat_src.leaf_set;
     hmat_dst.near_field_leaf_set = hmat_src.near_field_leaf_set;
     hmat_dst.far_field_leaf_set  = hmat_src.far_field_leaf_set;
@@ -14234,6 +14267,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14268,6 +14303,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14307,6 +14344,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14345,6 +14384,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14388,6 +14429,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14433,6 +14476,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14472,6 +14517,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14511,6 +14558,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14549,6 +14598,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14583,6 +14634,8 @@ namespace HierBEM
     , next_same_level_hmat_node(nullptr)
     , next_same_level_same_row_hmat_node(nullptr)
     , next_same_level_same_column_hmat_node(nullptr)
+    , previous_same_level_same_row_hmat_node(nullptr)
+    , previous_same_level_same_column_hmat_node(nullptr)
     , submatrix_index(submatrix_index_invalid)
     , leaf_set(0)
     , near_field_leaf_set(0)
@@ -14618,6 +14671,10 @@ namespace HierBEM
     , next_same_level_same_row_hmat_node(H.next_same_level_same_row_hmat_node)
     , next_same_level_same_column_hmat_node(
         H.next_same_level_same_column_hmat_node)
+    , previous_same_level_same_row_hmat_node(
+        H.previous_same_level_same_row_hmat_node)
+    , previous_same_level_same_column_hmat_node(
+        H.previous_same_level_same_column_hmat_node)
     , submatrix_index(H.submatrix_index)
     , leaf_set(H.leaf_set)
     , near_field_leaf_set(H.near_field_leaf_set)
@@ -15262,21 +15319,23 @@ namespace HierBEM
     near_field_leaf_set.clear();
     far_field_leaf_set.clear();
 
-    type                                  = UndefinedMatrixType;
-    state                                 = HMatrixSupport::matrix;
-    property                              = HMatrixSupport::general,
-    block_type                            = HMatrixSupport::undefined_block;
-    dot_node_id                           = 0;
-    bc_node                               = nullptr;
-    parent                                = nullptr;
-    next_same_level_hmat_node             = nullptr;
-    next_same_level_same_row_hmat_node    = nullptr;
-    next_same_level_same_column_hmat_node = nullptr;
-    submatrix_index                       = submatrix_index_invalid;
-    row_index_range                       = nullptr;
-    col_index_range                       = nullptr;
-    m                                     = 0;
-    n                                     = 0;
+    type                                      = UndefinedMatrixType;
+    state                                     = HMatrixSupport::matrix;
+    property                                  = HMatrixSupport::general,
+    block_type                                = HMatrixSupport::undefined_block;
+    dot_node_id                               = 0;
+    bc_node                                   = nullptr;
+    parent                                    = nullptr;
+    next_same_level_hmat_node                 = nullptr;
+    next_same_level_same_row_hmat_node        = nullptr;
+    next_same_level_same_column_hmat_node     = nullptr;
+    previous_same_level_same_row_hmat_node    = nullptr;
+    previous_same_level_same_column_hmat_node = nullptr;
+    submatrix_index                           = submatrix_index_invalid;
+    row_index_range                           = nullptr;
+    col_index_range                           = nullptr;
+    m                                         = 0;
+    n                                         = 0;
 
     Sigma_P.clear();
 
@@ -15338,11 +15397,13 @@ namespace HierBEM
     block_type  = HMatrixSupport::undefined_block;
     dot_node_id = 0;
     submatrices.clear();
-    parent                                = nullptr;
-    next_same_level_hmat_node             = nullptr;
-    next_same_level_same_row_hmat_node    = nullptr;
-    next_same_level_same_column_hmat_node = nullptr;
-    submatrix_index                       = submatrix_index_invalid;
+    parent                                    = nullptr;
+    next_same_level_hmat_node                 = nullptr;
+    next_same_level_same_row_hmat_node        = nullptr;
+    next_same_level_same_column_hmat_node     = nullptr;
+    previous_same_level_same_row_hmat_node    = nullptr;
+    previous_same_level_same_column_hmat_node = nullptr;
+    submatrix_index                           = submatrix_index_invalid;
     leaf_set.clear();
     near_field_leaf_set.clear();
     far_field_leaf_set.clear();
@@ -16341,7 +16402,7 @@ namespace HierBEM
 
     /**
      * Construct the relationship between the current node and its sequel on a
-     * same level and on a same row, if there is any. The connection edge uses
+     * same level and in a same row, if there is any. The connection edge uses
      * red dotted line.
      */
     if (next_same_level_same_row_hmat_node != nullptr)
@@ -16349,12 +16410,20 @@ namespace HierBEM
         out << "\"" << dot_node_id << "\""
             << "->"
             << "\"" << next_same_level_same_row_hmat_node->dot_node_id
+            << "\" [style=solid,color=red]\n";
+      }
+
+    if (previous_same_level_same_row_hmat_node != nullptr)
+      {
+        out << "\"" << dot_node_id << "\""
+            << "->"
+            << "\"" << previous_same_level_same_row_hmat_node->dot_node_id
             << "\" [style=dotted,color=red]\n";
       }
 
     /**
      * Construct the relationship between the current node and its sequel on a
-     * same level and on a same column, if there is any. The connection edge
+     * same level and in a same column, if there is any. The connection edge
      * uses green dotted line.
      */
     if (next_same_level_same_column_hmat_node != nullptr)
@@ -16362,6 +16431,14 @@ namespace HierBEM
         out << "\"" << dot_node_id << "\""
             << "->"
             << "\"" << next_same_level_same_column_hmat_node->dot_node_id
+            << "\" [style=solid,color=green]\n";
+      }
+
+    if (previous_same_level_same_column_hmat_node != nullptr)
+      {
+        out << "\"" << dot_node_id << "\""
+            << "->"
+            << "\"" << previous_same_level_same_column_hmat_node->dot_node_id
             << "\" [style=dotted,color=green]\n";
       }
 
@@ -23881,93 +23958,6 @@ namespace HierBEM
   template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::
-    solve_transpose_by_forward_substitution_matrix_valued_for_leaf(
-      HMatrix<spacedim, Number> &X,
-      HMatrix<spacedim, Number> &Z,
-      const unsigned int         fixed_rank) const
-  {
-    AssertDimension(Z.m, X.m);
-    AssertDimension(Z.n, X.n);
-    Assert(
-      Z.type == X.type,
-      ExcMessage(
-        "Matrix Z and X should be built on a same block cluster and thus have a same H-matrix type!"));
-    AssertDimension(this->m, this->n);
-    AssertDimension(X.n, this->m);
-
-    if (Z.type == FullMatrixType)
-      {
-        /**
-         * When the current \hmatnode of \p X or \p Z is a full matrix, we need to
-         * solve a multiple RHS problem.
-         */
-        Vector<Number> X_row(X.n);
-        Vector<Number> Z_row(Z.n);
-
-        /**
-         * Iterate over each row of \p X and \p Z.
-         */
-        for (size_type i = 0; i < Z.m; i++)
-          {
-            Z.fullmatrix->get_row(i, Z_row);
-
-            /**
-             * Solve the problem
-             * \f$X\vert_{i,\sigma}U\vert_{\sigma\times\sigma} =
-             * Z\vert_{i,\sigma}\f$ using the transposed forward
-             * substitution for \hmatrices.
-             */
-            this->solve_transpose_by_forward_substitution(X_row,
-                                                          Z_row,
-                                                          (*this));
-
-            /**
-             * Merge back the solution vector \p X_row into \p X, while the matrix
-             * \p Z is intact.
-             */
-            X.fullmatrix->fill_row(i, X_row);
-          }
-      }
-    else if (Z.type == RkMatrixType)
-      {
-        (*X.rkmatrix) = (*Z.rkmatrix);
-
-        // Let \f$Z\vert_{\tau\times\sigma} = A\cdot B^T\f$ and
-        // \f$X\vert_{\tau\times\sigma}=A\cdot B'^T\f$, solve the problem \f$U^T
-        // B' = B\f$.
-        Vector<Number> B_prime_col(X.n);
-        for (size_type j = 0; j < Z.rkmatrix->get_formal_rank(); j++)
-          {
-            // Get the current RHS vector directly into the solution vector.
-            Z.rkmatrix->get_B().get_column(j, B_prime_col);
-
-            /**
-             * Solve the problem using the transposed forward substitution
-             * for \hmatrices.
-             */
-            this->solve_transpose_by_forward_substitution(B_prime_col, (*this));
-
-            /**
-             * Merge back the column vector of \p B' into the component matrix \f$B'\f$
-             * that is contained in the rank-k matrix
-             * \f$X\vert_{\tau\times\sigma}\f$.
-             */
-            X.rkmatrix->get_B().fill_col(j, B_prime_col);
-          }
-      }
-    else
-      {
-        /**
-         * This case should not happen.
-         */
-        Assert(false, ExcInternalError());
-      }
-  }
-
-
-  template <int spacedim, typename Number>
-  void
-  HMatrix<spacedim, Number>::
     solve_cholesky_transpose_by_forward_substitution_matrix_valued(
       HMatrix<spacedim, Number> &X,
       HMatrix<spacedim, Number> &Z,
@@ -25346,20 +25336,21 @@ namespace HierBEM
      */
     for (size_type i = 0; i < n_row_blocks; i++)
       {
-        // @p i * n_col_blocks + i returns the linear index for the diagonal block on the i-th row.
+        // <code>i * n_col_blocks + i</code> returns the linear index for the
+        // diagonal block on the i-th row.
         HMatrix<spacedim, Number> *current_diag_block =
           submatrices[i * n_col_blocks + i];
         const bool is_diag_block_leaf = current_diag_block->is_leaf();
 
         current_diag_block->compute_lu_dag(dag, fixed_rank);
-        current_diag_block->lu_factorize_diagonal_block(dag);
+        current_diag_block->lu_factorize_diagonal_block_task(dag);
 
         /**
          * Iterate over each matrix blocks on a same level and on a same
          * column from the diagonal block: solve_upper stage.
          */
         for (HMatrix<spacedim, Number> *current_same_level_column_block =
-               current_diag_block->next_same_level_same_row_hmat_node;
+               current_diag_block->next_same_level_same_column_hmat_node;
              current_same_level_column_block != nullptr;
              current_same_level_column_block =
                current_same_level_column_block
@@ -25370,9 +25361,21 @@ namespace HierBEM
               {
                 /**
                  * Since there is one \hmatnode belongs to the leaf set, the
-                 * following solving task has actual computation.
+                 * following solving task has actual computation and is not
+                 * recursive.
                  */
-                // current_diag_block->lu_solve_upper(dag, X, Z, fixed_rank);
+                current_diag_block->lu_solve_upper_task(
+                  dag, *current_same_level_column_block, fixed_rank);
+
+                /**
+                 * Create the dependency from factorization of the current
+                 * diagonal block to the @p solve_upper task with respect to the
+                 * current column block.
+                 */
+                tbb::flow::make_edge(
+                  *(current_diag_block->factorize_lu_graph_node),
+                  *(current_same_level_column_block
+                      ->solve_upper_or_lower_lu_graph_node));
               }
           }
 
@@ -25390,8 +25393,131 @@ namespace HierBEM
               {
                 /**
                  * Since there is one \hmatnode belongs to the leaf set, the
-                 * following solve task has actual computation.
+                 * following solve task has actual computation and is not
+                 * recursive.
                  */
+                current_diag_block->lu_solve_lower_task(
+                  dag, *current_same_level_row_block, fixed_rank);
+
+                /**
+                 * Create the dependency from factorization of the current
+                 * diagonal block to the @p solve_lower task with respect to the
+                 * current row block.
+                 */
+                tbb::flow::make_edge(
+                  *(current_diag_block->factorize_lu_graph_node),
+                  *(current_same_level_row_block
+                      ->solve_upper_or_lower_lu_graph_node));
+              }
+          }
+
+        /**
+         * Iterate over each trailing matrix blocks on a same level from the
+         * diagonal block: update stage. Both the row and column index sets of
+         * the matrix block should be larger than that of the diagonal block.
+         */
+        for (HMatrix<spacedim, Number> *
+               current_same_level_trailing_block =
+                current_diag_block->next_same_level_hmat_node,
+              current_same_level_row_block =
+                current_diag_block->next_same_level_same_row_hmat_node,
+              current_same_level_column_block =
+                current_diag_block->next_same_level_same_column_hmat_node;
+             current_same_level_trailing_block != nullptr;
+             current_same_level_trailing_block =
+               current_same_level_trailing_block->next_same_level_hmat_node)
+          {
+            /**
+             * Sift out the matrix blocks having larger row and column index
+             * sets than the diagonal block.
+             */
+            if (current_same_level_trailing_block->row_index_range[0] >=
+                  current_diag_block->row_index_range[1] &&
+                current_same_level_trailing_block->col_index_range[0] >=
+                  current_diag_block->col_index_range[1])
+              {
+                /**
+                 * Move the pointer @p current_same_level_row_block, so that it
+                 * is in a same column with the current trailing block.
+                 */
+                while (true)
+                  {
+                    if (*(current_same_level_row_block->col_index_range) ==
+                        *(current_same_level_trailing_block->col_index_range))
+                      {
+                        /**
+                         * When the two column index ranges match.
+                         */
+                        break;
+                      }
+                    else if (current_same_level_trailing_block
+                               ->col_index_range[0] >=
+                             current_same_level_row_block->col_index_range[1])
+                      {
+                        /**
+                         * Move forward @p current_same_level_row_block.
+                         */
+                        current_same_level_row_block =
+                          current_same_level_row_block
+                            ->next_same_level_same_row_hmat_node;
+                      }
+                    else if (current_same_level_row_block->col_index_range[0] >=
+                             current_same_level_trailing_block
+                               ->col_index_range[1])
+                      {
+                        /**
+                         * Move back @p current_same_level_row_block.
+                         */
+                        current_same_level_row_block =
+                          current_same_level_row_block
+                            ->previous_same_level_same_row_hmat_node;
+                      }
+                  }
+
+                /**
+                 * Move the pointer @p current_same_level_column_block, so that it
+                 * is in a same row with the current trailing block.
+                 */
+                while (true)
+                  {
+                    if (*(current_same_level_column_block->row_index_range) ==
+                        *(current_same_level_trailing_block->row_index_range))
+                      {
+                        /**
+                         * When the two column index ranges match.
+                         */
+                        break;
+                      }
+                    else if (current_same_level_trailing_block
+                               ->row_index_range[0] >=
+                             current_same_level_column_block
+                               ->row_index_range[1])
+                      {
+                        /**
+                         * Move forward @p current_same_level_column_block.
+                         */
+                        current_same_level_column_block =
+                          current_same_level_column_block
+                            ->next_same_level_same_column_hmat_node;
+                      }
+                    else if (current_same_level_column_block
+                               ->row_index_range[0] >=
+                             current_same_level_trailing_block
+                               ->row_index_range[1])
+                      {
+                        /**
+                         * Move back @p current_same_level_column_block.
+                         */
+                        current_same_level_column_block =
+                          current_same_level_column_block
+                            ->previous_same_level_same_column_hmat_node;
+                      }
+                  }
+
+                if (current_same_level_trailing_block->is_leaf() ||
+                    current_same_level_row_block->is_leaf() ||
+                    current_same_level_column_block->is_leaf())
+                  {}
               }
           }
       }
@@ -25400,7 +25526,8 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
-  HMatrix<spacedim, Number>::lu_factorize_diagonal_block(tbb::flow::graph &dag)
+  HMatrix<spacedim, Number>::lu_factorize_diagonal_block_task(
+    tbb::flow::graph &dag)
   {
     Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
            ExcInvalidHMatrixBlockType(block_type));
@@ -25435,16 +25562,28 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
-  HMatrix<spacedim, Number>::lu_solve_upper(tbb::flow::graph          &dag,
-                                            HMatrix<spacedim, Number> &X,
-                                            HMatrix<spacedim, Number> &Z,
-                                            const unsigned int fixed_rank)
+  HMatrix<spacedim, Number>::lu_solve_upper_task(tbb::flow::graph          &dag,
+                                                 HMatrix<spacedim, Number> &Z,
+                                                 const unsigned int fixed_rank)
   {
     this->solve_upper_or_lower_lu_graph_node = std::make_shared<TaskNode>(
-      dag, [this, &X, &Z, fixed_rank](const tbb::flow::continue_msg &msg) {
-        this->solve_transpose_by_forward_substitution_matrix_valued(X,
-                                                                    Z,
+      dag, [this, &Z, fixed_rank](const tbb::flow::continue_msg &msg) {
+        this->solve_transpose_by_forward_substitution_matrix_valued(Z,
                                                                     fixed_rank);
+        return msg;
+      });
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::lu_solve_lower_task(tbb::flow::graph          &dag,
+                                                 HMatrix<spacedim, Number> &Z,
+                                                 const unsigned int fixed_rank)
+  {
+    this->solve_upper_or_lower_lu_graph_node = std::make_shared<TaskNode>(
+      dag, [this, &Z, fixed_rank](const tbb::flow::continue_msg &msg) {
+        this->solve_by_forward_substitution_matrix_valued(Z, fixed_rank);
         return msg;
       });
   }
@@ -26093,8 +26232,10 @@ namespace HierBEM
     HMatrix<spacedim, Number> *current_hmat_node_on_same_row    = this;
     HMatrix<spacedim, Number> *current_hmat_node_on_same_column = this;
 
-    this->next_same_level_same_row_hmat_node    = nullptr;
-    this->next_same_level_same_column_hmat_node = nullptr;
+    this->next_same_level_same_row_hmat_node        = nullptr;
+    this->next_same_level_same_column_hmat_node     = nullptr;
+    this->previous_same_level_same_row_hmat_node    = nullptr;
+    this->previous_same_level_same_column_hmat_node = nullptr;
 
     HMatrix<spacedim, Number> *current_hmat_node_on_same_level =
       this->next_same_level_hmat_node;
@@ -26130,9 +26271,12 @@ namespace HierBEM
 
             current_hmat_node_on_same_row->next_same_level_same_row_hmat_node =
               current_hmat_node_on_same_level;
+            current_hmat_node_on_same_level
+              ->previous_same_level_same_row_hmat_node =
+              current_hmat_node_on_same_row;
 
             /**
-             * Move the pointer forward.
+             * Move the same row hmat node pointer forward.
              */
             current_hmat_node_on_same_row =
               current_hmat_node_on_same_row->next_same_level_same_row_hmat_node;
@@ -26168,9 +26312,12 @@ namespace HierBEM
             current_hmat_node_on_same_column
               ->next_same_level_same_column_hmat_node =
               current_hmat_node_on_same_level;
+            current_hmat_node_on_same_level
+              ->previous_same_level_same_column_hmat_node =
+              current_hmat_node_on_same_column;
 
             /**
-             * Move the pointer forward.
+             * Move the same column hmat node pointer forward.
              */
             current_hmat_node_on_same_column =
               current_hmat_node_on_same_column
