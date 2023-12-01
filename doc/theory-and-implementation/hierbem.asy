@@ -1,3 +1,28 @@
+// Generate a regular grid.
+path[] regular_grid(pair origin = (0, 0), pair grid_size, pair cell_num)
+{
+  path[] grid_path;
+  
+  real x_cell_size = grid_size.x / cell_num.x;
+  real y_cell_size = grid_size.y / cell_num.y;
+
+  // Plot vertical lines.
+  for (int i = 0; i <= cell_num.x; ++i)
+    {
+      real x = i * x_cell_size;
+      grid_path = grid_path^^((x, 0) + origin)--((x, grid_size.y) + origin);
+    }
+
+  // Plot horizontal lines.
+  for (int j = 0; j <= cell_num.y; ++j)
+    {
+      real y = j * y_cell_size;
+      grid_path = grid_path^^((0, y) + origin)--((grid_size.x, y) + origin);
+    }
+
+  return grid_path;
+}
+
 // Generate a \f$R^p\f$ matrix block in an H-matrix with the standard partition.
 path[] rp_block(pair left_bottom_corner, real unit_cell_size, int current_level, int max_level)
 {

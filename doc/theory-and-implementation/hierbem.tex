@@ -1915,6 +1915,7 @@ property.
   Given two 1-forms $dx^i$ and $dx^j$, i.e. both are basis vectors of the cotangent
   space $M_p^{n*}$. Their exterior product satisfies
   \begin{equation}
+    \label{eq:exterior-product-antisymmetry}
     dx^i \wedge dx^j = -dx^j \wedge dx^i.
   \end{equation}
   If $i=j$, we have
@@ -2178,9 +2179,247 @@ covariant tensor, which is given in Equation
 (\ref{eq:covariant-tensor-expanded-as-tensor-product}) in Section
 \ref{sec:covariant-tensor}.
 
-\subsection{Interior product}
-
 \subsection{Exterior differentiation}
+
+With the definition of exterior product in Definition \ref{def:exterior-product}, the
+differentiation of a 0-form, which has been given in Equation
+(\ref{eq:differential-of-0-form}), can be extended to the differentiation of any
+$k$-forms. This is called exterior differentiation.
+
+\begin{Definition}[Exterior differentiation]
+  The exterior differentiation operator $d$ applied to a $k$-form is a map
+  \begin{equation}
+    d: \bigwedge^k M_p^{n*} \rightarrow \bigwedge^{k+1} M_p^{n*},
+  \end{equation}
+  which produces a $(k+1)$-form.
+
+  For a $0$-form $\alpha^0$, its exterior differential $d\alpha^0$ is the same as its
+  differential. In a coordinate chart $(U,x)$, $\alpha^0 = a(x)$ and
+  \begin{equation}
+    d\alpha^{0} = \frac{\pdiff a(x)}{\pdiff x^j} dx^j.
+  \end{equation}
+
+  For a $k$-form $\alpha^k = \sum_{\underaccent{\rightharpoondown}{I}} \alpha_I dx^I$ with
+  $I=(i_1,\cdots,i_k)$, its exterior differential $d\alpha^k$ is defined as
+  \begin{equation}
+    \label{eq:exterior-diff-k-form}
+    d\alpha^k = d \left( \sum_{\underaccent{\rightharpoondown}{I}}\alpha_I dx^I \right) =
+    \sum_{\underaccent{\rightharpoondown}{I}} d \left( \alpha_I dx^I \right) =
+    \sum_{\underaccent{\rightharpoondown}{I}} d\alpha_I \wedge dx^I.
+  \end{equation}
+\end{Definition}
+
+Exterior differentiation satisfies the following properties:
+\begin{enumerate}
+\item Exterior differentiation is additive: for any two $k$-forms $\alpha^k$ and $\beta^k$,
+  \begin{equation}
+    d(\alpha^k+\beta^k) = d\alpha^k + d\beta^k.
+  \end{equation}
+\item Exterior differential of the wedge product of two forms:
+  \begin{equation}
+    d(\alpha^k \wedge \beta^l) = d\alpha^k \wedge \beta^l + (-1)^k \alpha^k \wedge d\beta^l.
+  \end{equation}
+
+  \begin{Proof}
+    Let $\alpha^k = \sum_{\underaccent{\rightharpoondown}{I}}\alpha_I dx^I$ and $\beta^l =
+    \sum_{\underaccent{\rightharpoondown}{J}} \beta_J dx^J$.
+    \begin{align*}
+      d(\alpha^k \wedge \beta^l)
+      &= d \left(
+        \sum_{\underaccent{\rightharpoondown}{I}}\alpha_I dx^I \wedge
+        \sum_{\underaccent{\rightharpoondown}{J}} \beta_J dx^J \right) = d \left(
+        \sum_{\underaccent{\rightharpoondown}{I}}
+        \sum_{\underaccent{\rightharpoondown}{J}} \left( \alpha_I \beta_J \right) \left(
+        dx^I \wedge dx^J \right) \right) \\
+      \intertext{Apply Equation (\ref{eq:exterior-diff-k-form}):}
+      &= \sum_{\underaccent{\rightharpoondown}{I}}
+        \sum_{\underaccent{\rightharpoondown}{J}} d(\alpha_I\beta_J) \wedge (dx^I \wedge
+        dx^J) = \sum_{\underaccent{\rightharpoondown}{I}}
+        \sum_{\underaccent{\rightharpoondown}{J}} (d\alpha_I \beta_J + \alpha_I d\beta_J)
+        \wedge dx^I \wedge dx^J \\
+      &= \sum_{\underaccent{\rightharpoondown}{I}}
+        \sum_{\underaccent{\rightharpoondown}{J}} (d\alpha_I \beta_J)\wedge dx^I \wedge dx^J
+        + \sum_{\underaccent{\rightharpoondown}{I}}
+        \sum_{\underaccent{\rightharpoondown}{J}} (\alpha_I d\beta_J) \wedge dx^I \wedge
+        dx^J \\
+      \intertext{In the first term, since $\beta_J$ is a scalar value, it can be moved to
+      $dx^J$. In the second term, swap $d\beta_J$ and $dx^I$. Because $d\beta_J$ is a
+      1-form and $dx^I$ is a $k$-form, such a swap will produce a factor $(-1)^k$:}
+      &= \sum_{\underaccent{\rightharpoondown}{I}}
+        \sum_{\underaccent{\rightharpoondown}{J}} d\alpha_I \wedge dx^I \wedge \beta_J
+        \wedge dx^J + (-1)^k\sum_{\underaccent{\rightharpoondown}{I}}
+        \sum_{\underaccent{\rightharpoondown}{J}} \alpha_Idx^I \wedge d\beta_J \wedge dx^J
+      \\
+      \intertext{Organize terms into their respective summation:}
+      &= \left( \sum_{\underaccent{\rightharpoondown}{I}} d\alpha_I \wedge dx^I \right)
+        \wedge \left( \sum_{\underaccent{\rightharpoondown}{J}} \beta_J dx^J \right) +
+        (-1)^k \sum_{\underaccent{\rightharpoondown}{I}} \alpha_Idx^I \wedge
+        \sum_{\underaccent{\rightharpoondown}{J}} d\beta_{J} \wedge dx^J \\
+      \intertext{Apply Equation (\ref{eq:exterior-diff-k-form}) again:}
+      &= d\alpha^k \wedge \beta^l + (-1)^k \alpha^k \wedge d\beta^l.
+    \end{align*}
+    Hence, the identity is proved.
+  \end{Proof}
+\item Exterior differential of the exterior differential of any form $\alpha$ is
+  zero:
+  \begin{equation}
+    d^2\alpha = d(d\alpha) = 0.
+  \end{equation}
+  \begin{Proof}
+    Let $\alpha$ be a $k$-form and is expanded as $\alpha =
+    \sum_{\underaccent{\rightharpoondown}{K}} \alpha_K dx^K$. Then
+    \begin{align*}
+      dd\alpha &=
+                 d \left( \sum_{\underaccent{\rightharpoondown}{K}} d\alpha_K \wedge dx^K
+                 \right) \\
+      \intertext{In a coordinate chart $(U,x)$:}
+               &= d \left( \sum_{\underaccent{\rightharpoondown}{K}} \frac{\pdiff
+                 \alpha_{K}(x)}{\pdiff x^i} dx^i \wedge dx^K \right) \\
+      \intertext{N.B. Einstein is adopted above and the summation with respect to $i$ is
+      omitted.}
+               &= \sum_{\underaccent{\rightharpoondown}{K}} d \left( \frac{\pdiff
+                 \alpha_K(x)}{\pdiff x^i} \right) dx^i \wedge dx^K =
+                 \sum_{\underaccent{\rightharpoondown}{K}} \frac{\pdiff^2 \alpha_K(x)}{\pdiff x^i
+                 \pdiff x^j} dx^i \wedge dx^j \wedge dx^K. \\
+    \end{align*}
+    For any pair of different $i$ and $j$,
+    $\frac{\pdiff^2 \alpha_K(x)}{\pdiff x^i \pdiff x^j}$ is equal to
+    $\frac{\pdiff^2 \alpha_K(x)}{\pdiff x^j \pdiff x^i}$ and according to Equation
+    (\ref{eq:exterior-product-antisymmetry}) $dx^i \wedge dx^j = -dx^j \wedge dx^i$.
+    Therefore, the above sum is zero.
+  \end{Proof}
+\end{enumerate}
+
+\subsubsection{Expansion of exterior differential}
+
+Let $\alpha^k$ be a $k$-form which is expanded as
+$\alpha^k = \sum_{\underaccent{\rightharpoondown}{I}} \alpha_I dx^I$, where $I$ is an
+index set with $k$ components $(i_1,\cdots,i_k)$. Its exterior differential $d\alpha^k$ is
+a $(k+1)$-form, which can be similarly expanded as
+$d\alpha^k = \sum_{\underaccent{\rightharpoondown}{J}} (d\alpha^k)_J dx^J =
+\sum_{\underaccent{\rightharpoondown}{J}} d\alpha^k(\vect{\pdiff}x^J) dx^J$, where $J$ is
+an index set with $k+1$ components $(j_1,\cdots,j_{k+1})$. Here we would like to know the
+expression for the expansion coefficient $(d\alpha^k)_{J}$. N.B. In the expansion of
+$d\alpha^k$, the index set $J$ is increasing, but in the following derivation, $J$ is not
+required to be increasing.
+
+According to Equation (\ref{eq:exterior-diff-k-form}),
+\begin{align*}
+  (d\alpha^k)_J &= \left( \sum_{\underaccent{\rightharpoondown}{I}} d\alpha_I \wedge dx^I
+                  \right)_{J} = \sum_{\underaccent{\rightharpoondown}{I}} \left( d\alpha_I
+                  \wedge dx^I\right)_J \\
+  \intertext{Apply Equation (\ref{eq:exterior-product-applied-to-basis-vectors}). Because
+  $d\alpha_I$ is a 1-form, we arbitrarily select a single index $j$ from $J$, then let
+  $d\alpha_I$ apply to $\vect{\pdiff}x^j$ and let $dx^I$ apply to
+  $\vect{\pdiff}x^{J\backslash\{j\}}$. For simplicity, let $L = J\backslash\{j\}$,}
+                &= \sum_{\underaccent{\rightharpoondown}{I}} \sum_j \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL}
+                  d\alpha_I(\vect{\pdiff}x^j) dx^I(\vect{\pdiff}x^L) \\
+  \intertext{According to Equation (\ref{eq:cotangent-base-appled-to-tangent-base}):}
+                &= \sum_{\underaccent{\rightharpoondown}{I}} \sum_j
+                  \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL} \frac{\pdiff
+                  \alpha_I(x)}{\pdiff x^j} \delta_L^I
+\end{align*}
+Since $I$ is an increasing index set and $L = J\backslash\{j\}$ is also an increasing
+index set, only when $I = L$, the term in the above sum can be non-zero. Therefore,
+\begin{equation}
+  (d\alpha^k)_J = \sum_j \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL}
+  \frac{\pdiff \alpha_L(x)}{\pdiff x^j}.
+\end{equation}
+Because $j$ is selected from $J$ and $L$ is the remaining increasing indices in $J$, when
+a $j$ is given, there is only one term in the sum with respect to
+$\underaccent{\rightharpoondown}{L}$. Because there are $k+1$ possible ways of selecting
+$j$ from $J$, there are altogether $k+1$ terms in $(d\alpha^k)_J$. Hence, we have
+\begin{equation}
+  \label{eq:expansion-of-exterior-differential}
+  (d\alpha^k)_J = \sum_j \delta_J^{jL} \frac{\pdiff \alpha_L(x)}{\pdiff x^j}.
+\end{equation}
+If $J$ is an increasing index set, the above expression can be explicitly written as
+\begin{equation}
+  (d\alpha^k)_J = \frac{\pdiff \alpha_{J\backslash\{j_1\}}}{\pdiff x^{j_1}} - \frac{\pdiff
+    \alpha_{J\backslash\{j_2\}}}{\pdiff x^{j_2}} + \frac{\pdiff
+    \alpha_{J\backslash\{j_3\}}}{\pdiff x^{j_3}} - \cdots = \sum_{r=1}^{k+1} (-1)^{r-1}
+  \frac{\pdiff \alpha_{J\backslash\{j_r\}}}{\pdiff x^{j_r}}.
+\end{equation}
+
+\begin{Example}[Exterior differential of a 1-form]
+  Let $\alpha^1 = \alpha_i dx^i$ be a 1-form. Let the index set $J$ be $(i,j)$.
+  \begin{equation}
+    \label{eq:exterior-diff-1-form}
+    (d\alpha^1)_{J} = \delta_{J}^{ij} \frac{\pdiff \alpha_j(x)}{\pdiff x^i} +
+    \delta_{J}^{ji} \frac{\pdiff \alpha_i(x)}{\pdiff x^j} = \frac{\pdiff
+      \alpha_j(x)}{\pdiff x^i} - \frac{\pdiff \alpha_i(x)}{\pdiff x^j}.
+  \end{equation}
+\end{Example}
+
+\begin{Example}[Exterior differential of a 1-form when the manifold dimension is 3]
+  Let $\alpha^1 = \alpha_1dx^1 + \alpha_2dx^2 + \alpha_3dx^3$.
+  \begin{equation}
+    \label{eq:exterior-diff-1-form-3d}
+    \begin{aligned}
+      (d\alpha^1) &= \left( \frac{\pdiff \alpha_2}{\pdiff x^1} - \frac{\pdiff
+          \alpha_1}{\pdiff x^2} \right) dx^1 \wedge dx^2 + \left( \frac{\pdiff
+          \alpha_3}{\pdiff x^2} - \frac{\pdiff \alpha_2}{\pdiff x^3} \right) dx^2 \wedge
+      dx^3 + \left( \frac{\pdiff \alpha_3}{\pdiff x^1} - \frac{\pdiff \alpha_1}{\pdiff x^3}
+      \right) dx^1 \wedge dx^3 \\
+      &= \left( \frac{\pdiff \alpha_2}{\pdiff x^1} - \frac{\pdiff
+          \alpha_1}{\pdiff x^2} \right) dx^1 \wedge dx^2 + \left( \frac{\pdiff
+          \alpha_3}{\pdiff x^2} - \frac{\pdiff \alpha_2}{\pdiff x^3} \right) dx^2 \wedge
+      dx^3 + \left( \frac{\pdiff \alpha_1}{\pdiff x^3} - \frac{\pdiff \alpha_3}{\pdiff x^1}
+      \right) dx^3 \wedge dx^1
+    \end{aligned}.
+  \end{equation}
+\end{Example}
+
+\begin{Example}[Exterior differential of a 2-form]
+  Let $\beta^2 = \sum_{i < j} \beta_{ij} dx^i \wedge dx^j$. Let the index set $J$ be
+  $(i,j,k)$ with $i < j < k$.
+  \begin{equation}
+    \label{eq:exterior-diff-2-form}
+    \begin{aligned}
+      (d\beta^2)_{J} &= \delta_J^{ijk} \frac{\pdiff \beta_{jk}(x)}{\pdiff x^i} +
+      \delta_J^{jik} \frac{\pdiff \beta_{ik}(x)}{\pdiff x^j} + \delta_J^{kij} \frac{\pdiff
+        \beta_{ij}(x)}{\pdiff x^k} \\
+      &= \frac{\pdiff \beta_{jk}(x)}{\pdiff x^i} - \frac{\pdiff \beta_{ik}(x)}{\pdiff x^j}
+      + \frac{\pdiff \beta_{ij}(x)}{\pdiff x^k} = \frac{\pdiff \beta_{jk}(x)}{\pdiff x^i}
+      + \frac{\pdiff \beta_{ki}(x)}{\pdiff x^j} + \frac{\pdiff \beta_{ij}(x)}{\pdiff x^k}
+    \end{aligned}.
+  \end{equation}
+\end{Example}
+
+\begin{Example}[Exterior differential of a 2-form when the manifold dimension is 3]
+  Let
+  $\beta^2 = \beta_{12} dx^1 \wedge dx^2 + \beta_{23} dx^2 \wedge dx^3 + \beta_{31} dx^3
+  \wedge dx^1$. $d\beta^2$ is a 3-form. When the manifold dimension is 3, it has only one
+  term.
+  \begin{equation}
+    \label{eq:exterior-diff-2-form-3d}
+    (d\beta^2) = \left( \frac{\pdiff \beta_{23}}{\pdiff x^1} + \frac{\pdiff \beta_{31}}{\pdiff
+      x^2} + \frac{\pdiff \beta_{12}}{\pdiff x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
+  \end{equation}
+\end{Example}
+
+\begin{Example}[Exterior differential of $d\alpha^1$ when the manifold dimension is 3]
+  Since $d\alpha^1$ is a 2-form, its exterior differential is a 3-form. When the manifold
+  dimension is 3, there is only one term. Apply Equation
+  (\ref{eq:exterior-diff-1-form-3d}) and (\ref{eq:exterior-diff-2-form-3d}), we have
+  \begin{equation}
+    \begin{aligned}
+      dd\alpha^1 &= \left( \frac{\pdiff (d\alpha^1)_{23}}{\pdiff x^1} + \frac{\pdiff
+          (d\alpha^1)_{31}}{\pdiff x^2} + \frac{\pdiff (d\alpha^1)_{12}}{\pdiff x^3}
+      \right) dx^1 \wedge dx^2 \wedge
+      dx^3 \\
+      &= \left( \frac{\pdiff^2 \alpha_3}{\pdiff x^2 \pdiff x^1} - \frac{\pdiff^2
+          \alpha_2}{\pdiff x^3 \pdiff x^1} + \frac{\pdiff^2 \alpha_1}{\pdiff x^3 \pdiff
+          x^2} - \frac{\pdiff^2 \alpha_3}{\pdiff x^1 \pdiff x^2} + \frac{\pdiff^2
+          \alpha_2}{\pdiff x^1 \pdiff x^3} - \frac{\pdiff^2 \alpha_1}{\pdiff x^2 \pdiff
+          x^3} \right) dx^1 \wedge dx^2 \wedge dx^3 \\
+      &= 0,
+    \end{aligned}
+  \end{equation}
+  which is consistent with $dd\alpha = 0$.
+\end{Example}
+
+\subsection{Interior product}
 
 \subsection{Hodge star}
 

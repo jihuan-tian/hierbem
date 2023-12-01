@@ -132,6 +132,38 @@
     #+ATTR_LATEX: :width 0.5\textwidth
     #+RESULTS:
     [[file:./figures/hmat-fine-partition.png]]
+*** Example partition in [[cite:&KriemannFancyscript2013]]
+    #+begin_src asymptote :exports both :results file :output-dir ./figures :file kriemann-fancyscript-2013-partition.png
+      import hierbem;
+
+      unitsize(1mm);
+      defaultpen(4);
+      draw(hmat_fine_std_partition_fixed_size((0, 0), 500, 4));
+
+    #+end_src
+
+    #+CAPTION: 
+    #+NAME: fig:kriemann-fancyscript-2013-partition
+    #+ATTR_HTML: :width 500px
+    #+ATTR_LATEX: :width 0.5\textwidth
+    #+RESULTS:
+    [[file:./figures/kriemann-fancyscript-2013-partition.png]]
+*** Regular grid
+    #+begin_src asymptote :exports both :results file :output-dir ./figures :file regular-grid-8x8.png
+      import hierbem;
+
+      unitsize(1mm);
+      defaultpen(4);
+
+      draw(regular_grid(grid_size=(500, 500), cell_num=(8, 8)));
+    #+end_src
+
+    #+CAPTION: 
+    #+NAME: fig:regular-grid-8x8
+    #+ATTR_HTML: :width 500px
+    #+ATTR_LATEX: :width 0.5\textwidth
+    #+RESULTS:
+    [[file:./figures/regular-grid-8x8.png]]
 ** Algebraic operations
 *** H-LU factorization
 * References
