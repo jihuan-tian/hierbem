@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-hmatrix-mTmult-level-conserving-fine-fine-coarse-ntp.output;
 
 M = M1 * M2';

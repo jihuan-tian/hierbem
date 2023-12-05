@@ -1,5 +1,7 @@
 clear all;
 
+load_packages;
+
 ## Plot the partition structure of all the agglomerations.
 ## N = 177;
 

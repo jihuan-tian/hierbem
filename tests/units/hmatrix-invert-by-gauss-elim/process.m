@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-invert-by-gauss-elim.output;
 
 M_inv = inv(M);

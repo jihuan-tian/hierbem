@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load L.dat;
 load Z.dat;
 load hmatrix-cholesky-transpose-forward-substitution-matrix-valued.output;

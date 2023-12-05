@@ -1,5 +1,7 @@
 clear all;
 
+load_packages;
+
 figure;
 subplot(2, 2, 1);
 plot_bct_struct("bct1.dat");

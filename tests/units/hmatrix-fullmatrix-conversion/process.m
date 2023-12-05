@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 format long;
 load "hmatrix-fullmatrix-conversion.output";
 

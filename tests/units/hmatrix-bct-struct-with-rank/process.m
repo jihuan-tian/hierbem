@@ -1,5 +1,7 @@
 clear all;
 
+load_packages;
+
 N = 10;
 
 for m = 1:N

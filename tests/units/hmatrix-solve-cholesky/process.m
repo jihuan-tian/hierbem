@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-solve-cholesky.output;
 load M.dat;
 load b.dat;

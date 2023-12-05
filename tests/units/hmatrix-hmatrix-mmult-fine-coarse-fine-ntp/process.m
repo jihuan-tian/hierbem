@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-hmatrix-mmult-fine-coarse-fine-ntp.output;
 
 norm(H_full - H1_mult_H2_full, 'fro') / norm(H_full, 'fro')

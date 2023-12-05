@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-solve-cholesky-in-situ-use-full-matrix-representation.output;
 load M.dat;
 load b.dat;

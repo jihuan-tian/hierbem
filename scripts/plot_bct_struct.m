@@ -23,10 +23,10 @@ function plot_bct_struct(varargin)
 
   p.parse(varargin{2:end});
 
-  pkg load matgeom;
   block_clusters = read_bct(filename);
 
   hold on;
+  axis off;
   
   for m = 1:length(block_clusters)
     yrange = [(block_clusters{m}.tau(1) - 0.5) * p.Results.unit_size, (block_clusters{m}.tau(end) - 1 + 0.5) * p.Results.unit_size] + 1;
@@ -66,8 +66,5 @@ function plot_bct_struct(varargin)
   endfor
 
   axis equal;
-  axis off;
   set(gca, "ydir", "reverse");
-
-  hold off;
 endfunction

@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-fine-ntp-to-tp.output;
 
 figure;

@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-coarsening.output;
 
 norm(hmat_fine_to_full - M, 'fro') / norm(M, 'fro')

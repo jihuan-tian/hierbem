@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load U.dat;
 load b.dat;
 load hmatrix-block-triangular-backward-substitution-unit-diag.output;

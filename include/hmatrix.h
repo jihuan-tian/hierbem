@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -91,23 +92,6 @@ namespace HierBEM
      */
     using TaskNode    = tbb::flow::continue_node<tbb::flow::continue_msg>;
     using TaskNodePtr = std::shared_ptr<TaskNode>;
-
-    /**
-     * Struct for holding the task node, which updates an \hmatnode during LU
-     * factorization.
-     */
-    struct UpdateTaskNodeForLU
-    {
-      /**
-       * Pointer to the diagonal \hmatnode, which is on a same row or column of
-       * the associated \hmatnode.
-       */
-      HMatrix<spacedim, Number> *diagonal_hmat_node;
-      /**
-       * Task node for updating an \hmatnode.
-       */
-      TaskNodePtr update;
-    };
 
     template <int spacedim1, typename Number1>
     friend void
@@ -904,6 +888,18 @@ namespace HierBEM
      */
     void
     clear_hmat_node();
+
+    /**
+     * Clear all LU factorization task nodes.
+     */
+    void
+    clear_lu_task_nodes();
+
+    /**
+     * Clear LU factorization task nodes associated with a \hmatnode.
+     */
+    void
+    clear_lu_task_nodes_in_hmat();
 
     /**
      * Destructor which releases the memory by recursion.
@@ -3123,7 +3119,9 @@ namespace HierBEM
      * @param fixed_rank
      */
     void
-    compute_lu_dag(tbb::flow::graph &dag, const unsigned int fixed_rank);
+    compute_lu_dag(tbb::flow::graph  &dag,
+                   const unsigned int fixed_rank,
+                   std::mutex        &lu_lock);
 
     /**
      * Create a task node for the LU factorization of the current diagonal
@@ -3131,36 +3129,82 @@ namespace HierBEM
      * to the leaf set.
      */
     void
-    lu_factorize_diagonal_block_task(tbb::flow::graph &dag);
+    lu_factorize_diagonal_block_task(tbb::flow::graph &dag,
+                                     std::mutex       &lu_lock);
 
     /**
-     * Solve the problem of \f$XU=Z\f$, which can be in situ.
+     * Solve the problem of \f$XU=Z\f$.
      *
      * @param dag
-     * @param X
      * @param Z
      * @param fixed_rank
      */
     void
     lu_solve_upper_task(tbb::flow::graph          &dag,
                         HMatrix<spacedim, Number> &Z,
-                        const unsigned int         fixed_rank);
+                        const unsigned int         fixed_rank,
+                        std::mutex                &lu_lock);
 
     /**
-     * Solve the problem of \f$LX=Z\f$, which can be in situ.
+     * Solve the problem of \f$LX=Z\f$.
      *
      * @param dag
-     * @param X
      * @param Z
      * @param fixed_rank
      */
     void
     lu_solve_lower_task(tbb::flow::graph          &dag,
                         HMatrix<spacedim, Number> &Z,
-                        const unsigned int         fixed_rank);
+                        const unsigned int         fixed_rank,
+                        std::mutex                &lu_lock);
 
+    /**
+     * Create the task node for updating the current \hmatnode. The task node
+     * will be added to the list of update nodes associated with the
+     * current \hmatnode.
+     *
+     * @param dag
+     * @param same_level_column_block It corresponds to the \hmatnode \f$L_{ri}\f$.
+     * @param same_level_row_block It corresponds to the \hmatnode \f$U_{is}\f$.
+     */
     void
-    lu_update_task();
+    lu_update_task(tbb::flow::graph          &dag,
+                   HMatrix<spacedim, Number> &diag_column_block,
+                   HMatrix<spacedim, Number> &diag_row_block,
+                   const unsigned int         fixed_rank,
+                   std::mutex                &lu_lock);
+
+    /**
+     * Create the task node dependencies from the @p solve_upper task or
+     * @p solve_lower task to the @p update task.
+     */
+    void
+    lu_build_solve_upper_or_lower_to_update_dependencies(
+      TaskNodePtr &update_node);
+
+    /**
+     * Create the task node dependencies from @p update task to @p factorize task.
+     *
+     * @param factorize_node
+     */
+    void
+    lu_build_update_to_factorize_dependencies(TaskNodePtr &factorize_node);
+
+    /**
+     * Create the task node dependencies from @p update task to @p solve_upper
+     * task or @p solve_lower task by starting from a \hmatnode which is itself
+     * associated with a @p solve_upper or @p solve_lower task node.
+     */
+    void
+    lu_build_update_to_solve_upper_or_lower_dependencies();
+
+    /**
+     * Build @p update task to @p solve_upper task or @p solve_lower task
+     * dependencies or transfer the @p update tasks of the current \hmatnode
+     * to its descendants.
+     */
+    void
+    lu_assign_update_to_solve_upper_or_lower_dependencies();
 
     /**
      * Internal recursive function to be called by
@@ -3340,7 +3384,8 @@ namespace HierBEM
     std::vector<LAPACKFullMatrixExt<Number> *> Sigma_F;
 
     /**
-     * Pointer to the task node for LU factorization of a diagonal \hmatnode.
+     * Pointer to the task node for LU factorization of a diagonal
+     * \hmatnode.
      */
     TaskNodePtr factorize_lu_graph_node;
 
@@ -3349,7 +3394,10 @@ namespace HierBEM
      */
     TaskNodePtr solve_upper_or_lower_lu_graph_node;
 
-    std::vector<UpdateTaskNodeForLU> update_lu_graph_nodes;
+    /**
+     * List of pointers to the task nodes for updating the current \hmatnode.
+     */
+    std::vector<TaskNodePtr> update_lu_graph_nodes;
   };
 
 
@@ -15422,6 +15470,29 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::clear_lu_task_nodes()
+  {
+    for (auto submatrix : submatrices)
+      {
+        submatrix->clear_lu_task_nodes();
+      }
+
+    clear_lu_task_nodes_in_hmat();
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::clear_lu_task_nodes_in_hmat()
+  {
+    factorize_lu_graph_node.reset();
+    update_lu_graph_nodes.clear();
+    solve_upper_or_lower_lu_graph_node.reset();
+  }
+
+
+  template <int spacedim, typename Number>
   HMatrix<spacedim, Number>::~HMatrix()
   {
     release();
@@ -25302,11 +25373,33 @@ namespace HierBEM
   HMatrix<spacedim, Number>::compute_lu_factorization_task_parallel(
     const unsigned int fixed_rank)
   {
+    /**
+     * Link same level \hmatnodes on the cross of each diagonal block.
+     */
+    this->link_hmat_nodes_on_cross_from_diagonal_blocks();
+
+    /**
+     * Mutex used for monitoring the parallel execution of H-LU factorization.
+     */
+    std::mutex lu_lock;
+
+    /**
+     * Build the DAG.
+     */
     tbb::flow::graph dag;
 
-    compute_lu_dag(dag, fixed_rank);
+    compute_lu_dag(dag, fixed_rank, lu_lock);
+    lu_assign_update_to_solve_upper_or_lower_dependencies();
+
+    /**
+     * Send a message to the starting task node, i.e. the first leaf node, and
+     * trigger the parallel execution of the factorization.
+     */
+    Assert(leaf_set[0]->factorize_lu_graph_node, ExcInternalError());
+    leaf_set[0]->factorize_lu_graph_node->try_put(tbb::flow::continue_msg());
 
     dag.wait_for_all();
+    clear_lu_task_nodes();
 
     /**
      * After LU factorization, set the state of the current matrix to be @p lu.
@@ -25318,7 +25411,8 @@ namespace HierBEM
   template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::compute_lu_dag(tbb::flow::graph  &dag,
-                                            const unsigned int fixed_rank)
+                                            const unsigned int fixed_rank,
+                                            std::mutex        &lu_lock)
   {
     const unsigned int n_row_blocks =
       bc_node->get_data_reference().get_tau_node()->get_child_num();
@@ -25342,30 +25436,29 @@ namespace HierBEM
           submatrices[i * n_col_blocks + i];
         const bool is_diag_block_leaf = current_diag_block->is_leaf();
 
-        current_diag_block->compute_lu_dag(dag, fixed_rank);
-        current_diag_block->lu_factorize_diagonal_block_task(dag);
+        current_diag_block->compute_lu_dag(dag, fixed_rank, lu_lock);
+        current_diag_block->lu_factorize_diagonal_block_task(dag, lu_lock);
 
         /**
-         * Iterate over each matrix blocks on a same level and on a same
-         * column from the diagonal block: solve_upper stage.
+         * Iterate over each matrix blocks on a same level and in a same
+         * column from the diagonal block, which corresponds to the
+         * @p solve_upper stage.
          */
-        for (HMatrix<spacedim, Number> *current_same_level_column_block =
+        for (HMatrix<spacedim, Number> *current_diag_column_block =
                current_diag_block->next_same_level_same_column_hmat_node;
-             current_same_level_column_block != nullptr;
-             current_same_level_column_block =
-               current_same_level_column_block
-                 ->next_same_level_same_column_hmat_node)
+             current_diag_column_block != nullptr;
+             current_diag_column_block =
+               current_diag_column_block->next_same_level_same_column_hmat_node)
           {
-            if (is_diag_block_leaf ||
-                current_same_level_column_block->is_leaf())
+            if (is_diag_block_leaf || current_diag_column_block->is_leaf())
               {
                 /**
                  * Since there is one \hmatnode belongs to the leaf set, the
-                 * following solving task has actual computation and is not
-                 * recursive.
+                 * following @p solve_upper task has actual computation and is
+                 * not recursive.
                  */
                 current_diag_block->lu_solve_upper_task(
-                  dag, *current_same_level_column_block, fixed_rank);
+                  dag, *current_diag_column_block, fixed_rank, lu_lock);
 
                 /**
                  * Create the dependency from factorization of the current
@@ -25374,30 +25467,33 @@ namespace HierBEM
                  */
                 tbb::flow::make_edge(
                   *(current_diag_block->factorize_lu_graph_node),
-                  *(current_same_level_column_block
+                  *(current_diag_column_block
                       ->solve_upper_or_lower_lu_graph_node));
               }
           }
 
         /**
-         * Iterate over each matrix blocks on a same level and on a same row
-         * from the diagonal block: solve_lower stage
+         * Iterate over each matrix blocks on a same level and in a same row
+         * from the diagonal block, which corresponds to the @p solve_lower
+         * stage.
          */
-        for (HMatrix<spacedim, Number> *current_same_level_row_block =
+        for (HMatrix<spacedim, Number> *current_diag_row_block =
                current_diag_block->next_same_level_same_row_hmat_node;
-             current_same_level_row_block != nullptr;
-             current_same_level_row_block =
-               current_same_level_row_block->next_same_level_same_row_hmat_node)
+             current_diag_row_block != nullptr;
+             current_diag_row_block =
+               current_diag_row_block->next_same_level_same_row_hmat_node)
           {
-            if (is_diag_block_leaf || current_same_level_row_block->is_leaf())
+            if (is_diag_block_leaf || current_diag_row_block->is_leaf())
               {
                 /**
                  * Since there is one \hmatnode belongs to the leaf set, the
                  * following solve task has actual computation and is not
                  * recursive.
                  */
-                current_diag_block->lu_solve_lower_task(
-                  dag, *current_same_level_row_block, fixed_rank);
+                current_diag_block->lu_solve_lower_task(dag,
+                                                        *current_diag_row_block,
+                                                        fixed_rank,
+                                                        lu_lock);
 
                 /**
                  * Create the dependency from factorization of the current
@@ -25406,118 +25502,166 @@ namespace HierBEM
                  */
                 tbb::flow::make_edge(
                   *(current_diag_block->factorize_lu_graph_node),
-                  *(current_same_level_row_block
+                  *(current_diag_row_block
                       ->solve_upper_or_lower_lu_graph_node));
               }
           }
 
         /**
-         * Iterate over each trailing matrix blocks on a same level from the
-         * diagonal block: update stage. Both the row and column index sets of
-         * the matrix block should be larger than that of the diagonal block.
+         * Iterate over each trailing matrix block on a same level from the
+         * diagonal block, which corresponds to the @p update stage. Both the
+         * row and column index sets of the matrix block should be larger than
+         * that of the diagonal block.
          */
         for (HMatrix<spacedim, Number> *
-               current_same_level_trailing_block =
+               current_trailing_block =
                 current_diag_block->next_same_level_hmat_node,
-              current_same_level_row_block =
+              *current_diag_row_block =
                 current_diag_block->next_same_level_same_row_hmat_node,
-              current_same_level_column_block =
+              *current_diag_column_block =
                 current_diag_block->next_same_level_same_column_hmat_node;
-             current_same_level_trailing_block != nullptr;
-             current_same_level_trailing_block =
-               current_same_level_trailing_block->next_same_level_hmat_node)
+             current_trailing_block != nullptr;
+             current_trailing_block =
+               current_trailing_block->next_same_level_hmat_node)
           {
             /**
              * Sift out the matrix blocks having larger row and column index
              * sets than the diagonal block.
              */
-            if (current_same_level_trailing_block->row_index_range[0] >=
-                  current_diag_block->row_index_range[1] &&
-                current_same_level_trailing_block->col_index_range[0] >=
-                  current_diag_block->col_index_range[1])
+            if ((*current_trailing_block->row_index_range)[0] >=
+                  (*current_diag_block->row_index_range)[1] &&
+                (*current_trailing_block->col_index_range)[0] >=
+                  (*current_diag_block->col_index_range)[1])
               {
                 /**
-                 * Move the pointer @p current_same_level_row_block, so that it
+                 * Move the pointer @p current_diag_row_block, so that it
                  * is in a same column with the current trailing block.
                  */
-                while (true)
+                while (current_diag_row_block != nullptr &&
+                       current_diag_row_block != current_diag_block)
                   {
-                    if (*(current_same_level_row_block->col_index_range) ==
-                        *(current_same_level_trailing_block->col_index_range))
+                    if (*(current_diag_row_block->col_index_range) ==
+                        *(current_trailing_block->col_index_range))
                       {
                         /**
                          * When the two column index ranges match.
                          */
                         break;
                       }
-                    else if (current_same_level_trailing_block
-                               ->col_index_range[0] >=
-                             current_same_level_row_block->col_index_range[1])
+                    else if ((*current_trailing_block->col_index_range)[0] >=
+                             (*current_diag_row_block->col_index_range)[1])
                       {
                         /**
-                         * Move forward @p current_same_level_row_block.
+                         * Move forward @p current_diag_row_block.
                          */
-                        current_same_level_row_block =
-                          current_same_level_row_block
+                        current_diag_row_block =
+                          current_diag_row_block
                             ->next_same_level_same_row_hmat_node;
                       }
-                    else if (current_same_level_row_block->col_index_range[0] >=
-                             current_same_level_trailing_block
-                               ->col_index_range[1])
+                    else if ((*current_diag_row_block->col_index_range)[0] >=
+                             (*current_trailing_block->col_index_range)[1])
                       {
                         /**
-                         * Move back @p current_same_level_row_block.
+                         * Move back @p current_diag_row_block.
                          */
-                        current_same_level_row_block =
-                          current_same_level_row_block
+                        current_diag_row_block =
+                          current_diag_row_block
                             ->previous_same_level_same_row_hmat_node;
                       }
                   }
 
+                if (current_diag_row_block == current_diag_block)
+                  {
+                    current_diag_row_block = nullptr;
+                  }
+
                 /**
-                 * Move the pointer @p current_same_level_column_block, so that it
+                 * Move the pointer @p current_diag_column_block, so that it
                  * is in a same row with the current trailing block.
                  */
-                while (true)
+                while (current_diag_column_block != nullptr &&
+                       current_diag_column_block != current_diag_block)
                   {
-                    if (*(current_same_level_column_block->row_index_range) ==
-                        *(current_same_level_trailing_block->row_index_range))
+                    if (*(current_diag_column_block->row_index_range) ==
+                        *(current_trailing_block->row_index_range))
                       {
                         /**
                          * When the two column index ranges match.
                          */
                         break;
                       }
-                    else if (current_same_level_trailing_block
-                               ->row_index_range[0] >=
-                             current_same_level_column_block
-                               ->row_index_range[1])
+                    else if ((*current_trailing_block->row_index_range)[0] >=
+                             (*current_diag_column_block->row_index_range)[1])
                       {
                         /**
-                         * Move forward @p current_same_level_column_block.
+                         * Move forward @p current_diag_column_block.
                          */
-                        current_same_level_column_block =
-                          current_same_level_column_block
+                        current_diag_column_block =
+                          current_diag_column_block
                             ->next_same_level_same_column_hmat_node;
                       }
-                    else if (current_same_level_column_block
-                               ->row_index_range[0] >=
-                             current_same_level_trailing_block
-                               ->row_index_range[1])
+                    else if ((*current_diag_column_block->row_index_range)[0] >=
+                             (*current_trailing_block->row_index_range)[1])
                       {
                         /**
-                         * Move back @p current_same_level_column_block.
+                         * Move back @p current_diag_column_block.
                          */
-                        current_same_level_column_block =
-                          current_same_level_column_block
+                        current_diag_column_block =
+                          current_diag_column_block
                             ->previous_same_level_same_column_hmat_node;
                       }
                   }
 
-                if (current_same_level_trailing_block->is_leaf() ||
-                    current_same_level_row_block->is_leaf() ||
-                    current_same_level_column_block->is_leaf())
-                  {}
+                if (current_diag_column_block == current_diag_block)
+                  {
+                    current_diag_column_block = nullptr;
+                  }
+
+                /**
+                 * Only when the corresponding same level row block and column
+                 * block are found, update task will be added.
+                 */
+                if (current_diag_row_block != nullptr &&
+                    current_diag_column_block != nullptr)
+                  {
+                    if (current_trailing_block->is_leaf() ||
+                        current_diag_row_block->is_leaf() ||
+                        current_diag_column_block->is_leaf())
+                      {
+                        /**
+                         * Add the update task to the current trailing
+                         * \hmatnode.
+                         */
+                        current_trailing_block->lu_update_task(
+                          dag,
+                          *current_diag_column_block,
+                          *current_diag_row_block,
+                          fixed_rank,
+                          lu_lock);
+
+                        /**
+                         * Iterative over the sub-block cluster tree associated
+                         * with @p current_diag_row_block and build the
+                         * edge from @p solve_upper or @p solve_lower node to
+                         * the current @p update node.
+                         */
+                        current_diag_row_block
+                          ->lu_build_solve_upper_or_lower_to_update_dependencies(
+                            current_trailing_block->update_lu_graph_nodes
+                              .back());
+
+                        /**
+                         * Iterative over the sub-block cluster tree associated
+                         * with @p current_diag_column_block and build the
+                         * edge from @p solve_upper or @p solve_lower node to
+                         * the current @p update node.
+                         */
+                        current_diag_column_block
+                          ->lu_build_solve_upper_or_lower_to_update_dependencies(
+                            current_trailing_block->update_lu_graph_nodes
+                              .back());
+                      }
+                  }
               }
           }
       }
@@ -25527,14 +25671,29 @@ namespace HierBEM
   template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::lu_factorize_diagonal_block_task(
-    tbb::flow::graph &dag)
+    tbb::flow::graph &dag,
+    std::mutex       &lu_lock)
   {
+    /**
+     * Only a diagonal block can be directly factorized.
+     */
     Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
            ExcInvalidHMatrixBlockType(block_type));
 
     this->factorize_lu_graph_node = std::make_shared<TaskNode>(
-      dag, [this](const tbb::flow::continue_msg &msg) {
-        if (this->type != HierarchicalMatrixType)
+      dag, [this, &lu_lock](const tbb::flow::continue_msg &msg) {
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+        {
+          std::lock_guard<std::mutex> lg(lu_lock);
+
+          std::cout << "lu_factorize: [" << (*this->row_index_range)[0] << ","
+                    << (*this->row_index_range)[1] << "), ["
+                    << (*this->col_index_range)[0] << ","
+                    << (*this->col_index_range)[1] << ")" << std::endl;
+        }
+#endif
+
+        if (this->is_leaf())
           {
             /**
              * When the current \hmatnode belongs to the leaf set, it must be a
@@ -25564,10 +25723,37 @@ namespace HierBEM
   void
   HMatrix<spacedim, Number>::lu_solve_upper_task(tbb::flow::graph          &dag,
                                                  HMatrix<spacedim, Number> &Z,
-                                                 const unsigned int fixed_rank)
+                                                 const unsigned int fixed_rank,
+                                                 std::mutex        &lu_lock)
   {
-    this->solve_upper_or_lower_lu_graph_node = std::make_shared<TaskNode>(
-      dag, [this, &Z, fixed_rank](const tbb::flow::continue_msg &msg) {
+    /**
+     * The current \hmatnode should be a diagonal block, while \f$Z\f$ is not.
+     */
+    Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
+           ExcInvalidHMatrixBlockType(block_type));
+    Assert(Z.block_type != HMatrixSupport::BlockType::diagonal_block,
+           ExcInvalidHMatrixBlockType(Z.block_type));
+
+    /**
+     * There should be no @p solve_upper or @p solve_lower task associated with
+     * the \hmatnode \f$Z\f$.
+     */
+    Assert(!Z.solve_upper_or_lower_lu_graph_node, ExcInternalError());
+
+    Z.solve_upper_or_lower_lu_graph_node = std::make_shared<TaskNode>(
+      dag,
+      [this, &Z, fixed_rank, &lu_lock](const tbb::flow::continue_msg &msg) {
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+        {
+          std::lock_guard<std::mutex> lg(lu_lock);
+
+          std::cout << "lu_solve_upper: [" << (*Z.row_index_range)[0] << ","
+                    << (*Z.row_index_range)[1] << "), ["
+                    << (*Z.col_index_range)[0] << "," << (*Z.col_index_range)[1]
+                    << ")" << std::endl;
+        }
+#endif
+
         this->solve_transpose_by_forward_substitution_matrix_valued(Z,
                                                                     fixed_rank);
         return msg;
@@ -25579,13 +25765,223 @@ namespace HierBEM
   void
   HMatrix<spacedim, Number>::lu_solve_lower_task(tbb::flow::graph          &dag,
                                                  HMatrix<spacedim, Number> &Z,
-                                                 const unsigned int fixed_rank)
+                                                 const unsigned int fixed_rank,
+                                                 std::mutex        &lu_lock)
   {
-    this->solve_upper_or_lower_lu_graph_node = std::make_shared<TaskNode>(
-      dag, [this, &Z, fixed_rank](const tbb::flow::continue_msg &msg) {
+    /**
+     * The current \hmatnode should be a diagonal block, while \f$Z\f$ is not.
+     */
+    Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
+           ExcInvalidHMatrixBlockType(block_type));
+    Assert(Z.block_type != HMatrixSupport::BlockType::diagonal_block,
+           ExcInvalidHMatrixBlockType(Z.block_type));
+
+    /**
+     * There should be no @p solve_upper or @p solve_lower task associated with
+     * the \hmatnode \f$Z\f$.
+     */
+    Assert(!Z.solve_upper_or_lower_lu_graph_node, ExcInternalError());
+
+    Z.solve_upper_or_lower_lu_graph_node = std::make_shared<TaskNode>(
+      dag,
+      [this, &Z, fixed_rank, &lu_lock](const tbb::flow::continue_msg &msg) {
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+        {
+          std::lock_guard<std::mutex> lg(lu_lock);
+
+          std::cout << "lu_solve_lower: [" << (*Z.row_index_range)[0] << ","
+                    << (*Z.row_index_range)[1] << "), ["
+                    << (*Z.col_index_range)[0] << "," << (*Z.col_index_range)[1]
+                    << ")" << std::endl;
+        }
+#endif
+
         this->solve_by_forward_substitution_matrix_valued(Z, fixed_rank);
         return msg;
       });
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::lu_update_task(
+    tbb::flow::graph          &dag,
+    HMatrix<spacedim, Number> &diag_column_block,
+    HMatrix<spacedim, Number> &diag_row_block,
+    const unsigned int         fixed_rank,
+    std::mutex                &lu_lock)
+  {
+    this->update_lu_graph_nodes.push_back(std::make_shared<TaskNode>(
+      dag,
+      [this, &diag_column_block, &diag_row_block, fixed_rank, &lu_lock](
+        const tbb::flow::continue_msg &msg) {
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+        {
+          std::lock_guard<std::mutex> lg(lu_lock);
+
+          std::cout << "lu_update: [" << (*diag_column_block.row_index_range)[0]
+                    << "," << (*diag_column_block.row_index_range)[1] << "), ["
+                    << (*diag_column_block.col_index_range)[0] << ","
+                    << (*diag_column_block.col_index_range)[1] << ") * ["
+                    << (*diag_row_block.row_index_range)[0] << ","
+                    << (*diag_row_block.row_index_range)[1] << "), ["
+                    << (*diag_row_block.col_index_range)[0] << ","
+                    << (*diag_row_block.col_index_range)[1] << ")"
+                    << " --> [" << (*this->row_index_range)[0] << ","
+                    << (*this->row_index_range)[1] << "), ["
+                    << (*this->col_index_range)[0] << ","
+                    << (*this->col_index_range)[1] << ")" << std::endl;
+        }
+#endif
+
+        diag_column_block.mmult_level_conserving(*this,
+                                                 -1.0,
+                                                 diag_row_block,
+                                                 fixed_rank);
+
+        return msg;
+      }));
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::
+    lu_build_solve_upper_or_lower_to_update_dependencies(
+      TaskNodePtr &update_node)
+  {
+    /**
+     * If the current \hmatnode has been associated with a @p solve_upper or
+     * @p solve_lower node, link it with the @p update_node.
+     */
+    if (solve_upper_or_lower_lu_graph_node)
+      {
+        tbb::flow::make_edge(*solve_upper_or_lower_lu_graph_node, *update_node);
+      }
+
+    /**
+     * Recursion into child matrices.
+     */
+    for (auto submatrix : submatrices)
+      {
+        submatrix->lu_build_solve_upper_or_lower_to_update_dependencies(
+          update_node);
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::lu_build_update_to_factorize_dependencies(
+    TaskNodePtr &factorize_node)
+  {
+    for (auto &update_node : update_lu_graph_nodes)
+      {
+        tbb::flow::make_edge(*update_node, *factorize_node);
+      }
+
+    /**
+     * Recursion into child matrices.
+     */
+    for (auto submatrix : submatrices)
+      {
+        submatrix->lu_build_update_to_factorize_dependencies(factorize_node);
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim,
+          Number>::lu_build_update_to_solve_upper_or_lower_dependencies()
+  {
+    for (auto &update_node : update_lu_graph_nodes)
+      {
+        if (block_type == HMatrixSupport::BlockType::upper_triangular_block ||
+            block_type == HMatrixSupport::BlockType::lower_triangular_block)
+          {
+            tbb::flow::make_edge(*update_node,
+                                 *solve_upper_or_lower_lu_graph_node);
+          }
+        else
+          {
+            Assert(false, ExcInternalError());
+          }
+      }
+
+    /**
+     * Recursion into child matrices.
+     */
+    for (auto submatrix : submatrices)
+      {
+        submatrix->lu_build_update_to_solve_upper_or_lower_dependencies();
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim,
+          Number>::lu_assign_update_to_solve_upper_or_lower_dependencies()
+  {
+    if (solve_upper_or_lower_lu_graph_node)
+      {
+        /**
+         * Collect @p update task nodes from child \hmatnodes and build the
+         * task edges from @p update to @p solve_upper or @p solve_lower.
+         */
+        lu_build_update_to_solve_upper_or_lower_dependencies();
+
+        /**
+         * In this case, the \hmatnode is either upper or lower triangular,
+         * which cannot be a diagonal block, nor of its descendants. Therefore,
+         * there will be no task edges from @p update to @p factorize anymore.
+         */
+      }
+    else
+      {
+        if (block_type == HMatrixSupport::BlockType::diagonal_block)
+          {
+            /**
+             * For the top level \hmatnode, it is a diagonal block but has no
+             * factorization task with it. Therefore, here we check if the
+             * factorization task node exists.
+             */
+            if (factorize_lu_graph_node)
+              {
+                lu_build_update_to_factorize_dependencies(
+                  factorize_lu_graph_node);
+
+                /**
+                 * Build the dependency between factorization task nodes on
+                 * successive levels, i.e. after all diagonal blocks on a deeper
+                 * level are factorized, their parent diagonal block can be
+                 * factorized.
+                 */
+                if (parent != nullptr && parent->factorize_lu_graph_node)
+                  {
+                    tbb::flow::make_edge(*factorize_lu_graph_node,
+                                         *parent->factorize_lu_graph_node);
+                  }
+              }
+          }
+
+        for (auto submatrix : submatrices)
+          {
+            /**
+             * Shift down the @p update task nodes.
+             */
+            if (update_lu_graph_nodes.size() > 0)
+              {
+                submatrix->update_lu_graph_nodes.insert(
+                  submatrix->update_lu_graph_nodes.end(),
+                  update_lu_graph_nodes.begin(),
+                  update_lu_graph_nodes.end());
+              }
+
+            submatrix->lu_assign_update_to_solve_upper_or_lower_dependencies();
+          }
+      }
   }
 
 

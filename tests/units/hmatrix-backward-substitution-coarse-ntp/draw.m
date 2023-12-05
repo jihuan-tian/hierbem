@@ -1,3 +1,5 @@
+load_packages;
+
 figure;
 hold on;
 plot(x_octave, 'b.');

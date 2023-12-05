@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-refinement.output;
 
 figure;

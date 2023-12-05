@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load hmatrix-hmatrix-Tmmult-level-conserving-all-coarse-ntp.output;
 
 M = M1' * M2;

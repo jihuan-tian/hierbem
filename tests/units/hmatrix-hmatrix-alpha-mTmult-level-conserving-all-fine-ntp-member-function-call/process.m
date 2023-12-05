@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load "hmatrix-hmatrix-alpha-mTmult-level-conserving-all-fine-ntp-member-function-call.output";
 
 alpha = 2.3;

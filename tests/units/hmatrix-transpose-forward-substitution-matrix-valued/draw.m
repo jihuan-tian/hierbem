@@ -1,3 +1,5 @@
+load_packages;
+
 ## Plot the error of the solution matrix.
 figure;
 show_matrix(X - X_octave);

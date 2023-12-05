@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load L.dat;
 load b.dat;
 load hmatrix-cholesky-backward-substitution.output;

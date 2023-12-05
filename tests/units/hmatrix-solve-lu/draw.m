@@ -1,3 +1,5 @@
+load_packages;
+
 figure();
 plot(x, 'r-', "marker", "+");
 hold on;

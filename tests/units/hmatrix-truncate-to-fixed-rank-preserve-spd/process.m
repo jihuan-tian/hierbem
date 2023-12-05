@@ -1,4 +1,6 @@
 clear all;
+
+load_packages;
 load "M.dat";
 load "hmatrix-truncate-to-fixed-rank-preserve-spd.output";
 
