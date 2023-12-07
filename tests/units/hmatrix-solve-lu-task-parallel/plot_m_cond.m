@@ -1,6 +1,6 @@
 ## Plot the condition numbers of the generated random matrices.
 
-total_trials = 10;
+total_trials = 5;
 cond_numbers = zeros(total_trials, 1);
 for m = 0:(total_trials - 1)
   load(cstrcat("M", num2str(m), ".dat"));

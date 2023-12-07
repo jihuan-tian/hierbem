@@ -1,5 +1,5 @@
 function gen_matrix(trial_no)
-  p = 5;
+  p = 6;
   n = 2^p;
   M = randn(n);
   M = M * M';

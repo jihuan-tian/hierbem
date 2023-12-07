@@ -25,10 +25,12 @@ using namespace HierBEM;
 extern void
 run_hmatrix_solve_lu_task_parallel(const unsigned int trial_no);
 
-static constexpr int FUZZING_TIMES = 10;
+extern void
+run_hmatrix_solve_lu_task_parallel_in_situ(const unsigned int trial_no);
+
+static constexpr int FUZZING_TIMES = 5;
 const unsigned int   REPEAT_TIMES  = 100;
-TEST_CASE("H-matrix solve equations by parallel LU decomposition in situ",
-          "[hmatrix]")
+TEST_CASE("H-matrix solve equations by parallel LU decomposition", "[hmatrix]")
 {
   tbb::task_scheduler_init init(1);
 
