@@ -132,6 +132,21 @@
     #+ATTR_LATEX: :width 0.5\textwidth
     #+RESULTS:
     [[file:./figures/hmat-fine-partition.png]]
+**** Level $p=6$
+     #+begin_src asymptote :exports both :results file :output-dir ./figures :file hmat-fine-partition-level=6.png
+       import hierbem;
+
+       unitsize(1mm);
+       defaultpen(4);
+       draw(hmat_fine_std_partition_fixed_size((0, 0), 500, 6));
+     #+end_src
+
+     #+CAPTION: 
+     #+NAME: fig:hmat-fine-partition-level=6
+     #+ATTR_HTML: :width 500px
+     #+ATTR_LATEX: :width 0.5\textwidth
+     #+RESULTS:
+     [[file:./figures/hmat-fine-partition-level=6.png]]
 *** Example partition in [[cite:&KriemannFancyscript2013]]
     #+begin_src asymptote :exports both :results file :output-dir ./figures :file kriemann-fancyscript-2013-partition.png
       import hierbem;

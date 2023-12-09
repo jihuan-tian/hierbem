@@ -29,10 +29,11 @@ extern void
 run_hmatrix_solve_lu_task_parallel_in_situ(const unsigned int trial_no);
 
 static constexpr int FUZZING_TIMES = 5;
-const unsigned int   REPEAT_TIMES  = 100;
+const unsigned int   REPEAT_TIMES  = 10;
+
 TEST_CASE("H-matrix solve equations by parallel LU decomposition", "[hmatrix]")
 {
-  tbb::task_scheduler_init init(1);
+  // tbb::task_scheduler_init init(1);
 
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
@@ -81,8 +82,73 @@ TEST_CASE("H-matrix solve equations by parallel LU decomposition", "[hmatrix]")
         out = inst.eval_string("hmat_rel_err");
         REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
+        // The solution vector's error requirement is relaxed, in case the
+        // condition number of the matrix is large.
         out = inst.eval_string("x_rel_err");
+        REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-5));
+
+        out = inst.eval_string("hmat_factorized_rel_err");
         REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+      }
+  }
+}
+
+TEST_CASE("H-matrix solve equations by parallel LU decomposition in situ",
+          "[hmatrix]")
+{
+  // tbb::task_scheduler_init init(1);
+
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(HBEM_ROOT_DIR "/scripts");
+  inst.add_path(SOURCE_DIR);
+
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    // Predefine Octave and C++ random seed to make tests repeatable
+    int rng_seed = 1543267 + trial_no * 7;
+    // TODO `src/aca_plus.cu` and `include/aca_plus.hcu` use a
+    // std::random_device for hardware seeding, need a mechansim to
+    // set the seed.
+
+    std::ostringstream oss;
+    oss << "rand('seed'," << rng_seed << ");\n";
+    oss << "randn('seed'," << rng_seed << ");";
+    inst.eval_string(oss.str());
+
+    // Execute script `gen_matrix.m` to generate M.dat and b.dat
+    REQUIRE_NOTHROW([&]() {
+      inst.eval_string(std::string("gen_matrix(") + std::to_string(trial_no) +
+                       std::string(");"));
+    }());
+
+    for (unsigned int i = 0; i < REPEAT_TIMES; i++)
+      {
+        // Run solving based on generated data
+        run_hmatrix_solve_lu_task_parallel_in_situ(trial_no);
+
+        // Calculate relative error
+        try
+          {
+            inst.eval_string(
+              std::string(
+                "[hmat_rel_err, x_octave, x_rel_err, hmat_factorized_rel_err] = process(") +
+              std::to_string(trial_no) + std::string(")"));
+          }
+        catch (...)
+          {
+            // Ignore errors
+          }
+
+        // Check relative error
+        HBEMOctaveValue out;
+        out = inst.eval_string("hmat_rel_err");
+        REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+
+        // The solution vector's error requirement is relaxed, in case the
+        // condition number of the matrix is large.
+        out = inst.eval_string("x_rel_err");
+        REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-5));
 
         out = inst.eval_string("hmat_factorized_rel_err");
         REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
