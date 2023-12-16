@@ -25858,10 +25858,17 @@ namespace HierBEM
   HMatrix<spacedim, Number>::compute_lu_factorization_task_parallel(
     const unsigned int fixed_rank)
   {
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+    Timer timer;
+#endif
     /**
      * Link same level \hmatnodes on the cross of each diagonal block.
      */
     this->link_hmat_nodes_on_cross_from_diagonal_blocks();
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+    timer.stop();
+    print_wall_time(std::cout, timer, "link h-matrix nodes");
+#endif
 
     /**
      * Mutex used for monitoring the parallel execution of H-LU factorization.
@@ -25873,17 +25880,40 @@ namespace HierBEM
      */
     tbb::flow::graph dag;
 
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+    timer.start();
+#endif
     compute_lu_dag(dag, fixed_rank, lu_lock);
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+    timer.stop();
+    print_wall_time(std::cout, timer, "compute dag");
+#endif
+
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+    timer.start();
+#endif
     lu_assign_update_to_solve_and_factorize_dependencies();
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+    timer.stop();
+    print_wall_time(std::cout, timer, "contribute update");
+#endif
 
     /**
      * Send a message to the starting task node, i.e. the first leaf node, and
      * trigger the parallel execution of the factorization.
      */
     Assert(leaf_set[0]->factorize_lu_graph_node, ExcInternalError());
+
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+    timer.start();
+#endif
     leaf_set[0]->factorize_lu_graph_node->try_put(tbb::flow::continue_msg());
 
     dag.wait_for_all();
+#if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
+    timer.stop();
+    print_wall_time(std::cout, timer, "compute lu");
+#endif
     clear_lu_task_nodes();
 
     /**
@@ -25968,7 +25998,7 @@ namespace HierBEM
                  * diagonal block to the @p solve_upper task with respect to the
                  * current column block.
                  */
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
                 std::cout << "factorize-to-solve-upper at level "
                           << current_diag_block->bc_node->get_level() << ": ["
                           << (*current_diag_block->row_index_range)[0] << ","
@@ -26027,7 +26057,7 @@ namespace HierBEM
                  * diagonal block to the @p solve_lower task with respect to the
                  * current row block.
                  */
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
                 std::cout << "factorize-to-solve-lower at level "
                           << current_diag_block->bc_node->get_level() << ": ["
                           << (*current_diag_block->row_index_range)[0] << ","
@@ -26085,6 +26115,9 @@ namespace HierBEM
                 (*current_LU_trailing_block->col_index_range)[0] >=
                   (*current_LU_diag_block->col_index_range)[1])
               {
+                bool is_diag_row_block_found    = false;
+                bool is_diag_column_block_found = false;
+
                 /**
                  * Move the pointer @p current_diag_row_block, so that it
                  * is in a same column with the current trailing block.
@@ -26098,6 +26131,8 @@ namespace HierBEM
                         /**
                          * When the two column index ranges match.
                          */
+                        is_diag_row_block_found = true;
+
                         break;
                       }
                     else if ((*current_LU_trailing_block->col_index_range)[0] >=
@@ -26112,6 +26147,19 @@ namespace HierBEM
                         current_diag_row_block =
                           current_diag_row_block
                             ->next_same_level_same_row_hmat_node;
+
+                        if (current_LU_diag_row_block != nullptr &&
+                            (*current_LU_diag_row_block->col_index_range)[0] >=
+                              (*current_LU_trailing_block->col_index_range)[1])
+                          {
+                            /**
+                             * There is no corresponding same column block for
+                             * the current trailing block. This is based on the
+                             * assumption/fact that the index ranges of the same
+                             * level same row H-matrix blocks are increasing.
+                             */
+                            break;
+                          }
                       }
                     else if ((*current_LU_diag_row_block->col_index_range)[0] >=
                              (*current_LU_trailing_block->col_index_range)[1])
@@ -26125,74 +26173,165 @@ namespace HierBEM
                         current_diag_row_block =
                           current_diag_row_block
                             ->previous_same_level_same_row_hmat_node;
+
+                        if (current_LU_diag_row_block != nullptr &&
+                            current_LU_diag_row_block !=
+                              current_LU_diag_block &&
+                            (*current_LU_trailing_block->col_index_range)[0] >=
+                              (*current_LU_diag_row_block->col_index_range)[1])
+                          {
+                            /**
+                             * There is no corresponding same column block for
+                             * the current trailing block. This is based on the
+                             * assumption/fact that the index ranges of the same
+                             * level same row H-matrix blocks are increasing.
+                             */
+                            break;
+                          }
                       }
                   }
 
-                if (current_LU_diag_row_block == current_LU_diag_block)
-                  {
-                    current_LU_diag_row_block = nullptr;
-                    current_diag_row_block    = nullptr;
-                  }
 
-                /**
-                 * Move the pointer @p current_diag_column_block, so that it
-                 * is in a same row with the current trailing block.
-                 */
-                while (current_LU_diag_column_block != nullptr &&
-                       current_LU_diag_column_block != current_LU_diag_block)
+                if (is_diag_row_block_found)
                   {
-                    if (*(current_LU_diag_column_block->row_index_range) ==
-                        *(current_LU_trailing_block->row_index_range))
+                    /**
+                     * Move the pointer @p current_diag_column_block, so that it
+                     * is in a same row with the current trailing block.
+                     */
+                    while (current_LU_diag_column_block != nullptr &&
+                           current_LU_diag_column_block !=
+                             current_LU_diag_block)
                       {
-                        /**
-                         * When the two column index ranges match.
-                         */
-                        break;
+                        if (*(current_LU_diag_column_block->row_index_range) ==
+                            *(current_LU_trailing_block->row_index_range))
+                          {
+                            /**
+                             * When the two column index ranges match.
+                             */
+                            is_diag_column_block_found = true;
+
+                            break;
+                          }
+                        else if ((*current_LU_trailing_block
+                                     ->row_index_range)[0] >=
+                                 (*current_LU_diag_column_block
+                                     ->row_index_range)[1])
+                          {
+                            /**
+                             * Move forward @p current_diag_column_block.
+                             */
+                            current_LU_diag_column_block =
+                              current_LU_diag_column_block
+                                ->next_same_level_same_column_hmat_node;
+                            current_diag_column_block =
+                              current_diag_column_block
+                                ->next_same_level_same_column_hmat_node;
+
+                            if (current_LU_diag_column_block != nullptr &&
+                                (*current_LU_diag_column_block
+                                    ->row_index_range)[0] >=
+                                  (*current_LU_trailing_block
+                                      ->row_index_range)[1])
+                              {
+                                /**
+                                 * There is no corresponding same row block for
+                                 * the current trailing block. This is based on
+                                 * the assumption/fact that the index ranges of
+                                 * the same level same column H-matrix blocks
+                                 * are increasing.
+                                 */
+                                break;
+                              }
+                          }
+                        else if ((*current_LU_diag_column_block
+                                     ->row_index_range)[0] >=
+                                 (*current_LU_trailing_block
+                                     ->row_index_range)[1])
+                          {
+                            /**
+                             * Move back @p current_diag_column_block.
+                             */
+                            current_LU_diag_column_block =
+                              current_LU_diag_column_block
+                                ->previous_same_level_same_column_hmat_node;
+                            current_diag_column_block =
+                              current_diag_column_block
+                                ->previous_same_level_same_column_hmat_node;
+
+                            if (current_LU_diag_column_block != nullptr &&
+                                current_LU_diag_column_block !=
+                                  current_LU_diag_block &&
+                                (*current_LU_trailing_block
+                                    ->row_index_range)[0] >=
+                                  (*current_LU_diag_column_block
+                                      ->row_index_range)[1])
+                              {
+                                /**
+                                 * There is no corresponding same row block for
+                                 * the current trailing block. This is based on
+                                 * the assumption/fact that the index ranges of
+                                 * the same level same column H-matrix blocks
+                                 * are increasing.
+                                 */
+                                break;
+                              }
+                          }
                       }
-                    else if ((*current_LU_trailing_block->row_index_range)[0] >=
-                             (*current_LU_diag_column_block
-                                 ->row_index_range)[1])
+
+                    if (!is_diag_column_block_found)
                       {
                         /**
-                         * Move forward @p current_diag_column_block.
+                         * Reset the pointer @p current_diag_column_block for
+                         * the next trailing block if it has touched either end
+                         * of the doubly linked list.
                          */
-                        current_LU_diag_column_block =
-                          current_LU_diag_column_block
-                            ->next_same_level_same_column_hmat_node;
-                        current_diag_column_block =
-                          current_diag_column_block
-                            ->next_same_level_same_column_hmat_node;
-                      }
-                    else if ((*current_LU_diag_column_block
-                                 ->row_index_range)[0] >=
-                             (*current_LU_trailing_block->row_index_range)[1])
-                      {
-                        /**
-                         * Move back @p current_diag_column_block.
-                         */
-                        current_LU_diag_column_block =
-                          current_LU_diag_column_block
-                            ->previous_same_level_same_column_hmat_node;
-                        current_diag_column_block =
-                          current_diag_column_block
-                            ->previous_same_level_same_column_hmat_node;
+                        if (current_LU_diag_column_block == nullptr ||
+                            current_LU_diag_column_block ==
+                              current_LU_diag_block)
+                          {
+                            current_LU_diag_column_block =
+                              current_LU_diag_block
+                                ->next_same_level_same_column_hmat_node;
+                          }
+
+                        if (current_diag_column_block == nullptr ||
+                            current_diag_column_block == current_diag_block)
+                          {
+                            current_diag_column_block =
+                              current_diag_block
+                                ->next_same_level_same_column_hmat_node;
+                          }
                       }
                   }
-
-                if (current_LU_diag_column_block == current_LU_diag_block)
+                else
                   {
-                    current_LU_diag_column_block = nullptr;
-                    current_diag_column_block    = nullptr;
+                    /**
+                     * Reset the pointer @p current_diag_row_block for the next
+                     * trailing block if it has touched either end of the doubly
+                     * linked list.
+                     */
+                    if (current_LU_diag_row_block == nullptr ||
+                        current_LU_diag_row_block == current_LU_diag_block)
+                      {
+                        current_LU_diag_row_block =
+                          current_LU_diag_block
+                            ->next_same_level_same_row_hmat_node;
+                      }
+
+                    if (current_diag_row_block == nullptr ||
+                        current_diag_row_block == current_diag_block)
+                      {
+                        current_diag_row_block =
+                          current_diag_block
+                            ->next_same_level_same_row_hmat_node;
+                      }
                   }
 
                 /**
                  * Only when the corresponding same level row block and column
                  * block are found, update task will be added.
                  */
-                if (current_diag_row_block != nullptr &&
-                    current_diag_column_block != nullptr &&
-                    current_LU_diag_row_block != nullptr &&
-                    current_LU_diag_column_block != nullptr)
+                if (is_diag_row_block_found && is_diag_column_block_found)
                   {
                     if (current_trailing_block->is_leaf() ||
                         current_LU_diag_row_block->is_leaf() ||
@@ -26292,7 +26431,7 @@ namespace HierBEM
                  * diagonal block to the @p solve_upper task with respect to the
                  * current column block.
                  */
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
                 std::cout << "factorize-to-solve-upper at level "
                           << current_diag_block->bc_node->get_level() << ": ["
                           << (*current_diag_block->row_index_range)[0] << ","
@@ -26344,7 +26483,7 @@ namespace HierBEM
                  * diagonal block to the @p solve_lower task with respect to the
                  * current row block.
                  */
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
                 std::cout << "factorize-to-solve-lower at level "
                           << current_diag_block->bc_node->get_level() << ": ["
                           << (*current_diag_block->row_index_range)[0] << ","
@@ -26394,6 +26533,9 @@ namespace HierBEM
                 (*current_trailing_block->col_index_range)[0] >=
                   (*current_diag_block->col_index_range)[1])
               {
+                bool is_diag_row_block_found    = false;
+                bool is_diag_column_block_found = false;
+
                 /**
                  * Move the pointer @p current_diag_row_block, so that it
                  * is in a same column with the current trailing block.
@@ -26407,6 +26549,8 @@ namespace HierBEM
                         /**
                          * When the two column index ranges match.
                          */
+                        is_diag_row_block_found = true;
+
                         break;
                       }
                     else if ((*current_trailing_block->col_index_range)[0] >=
@@ -26418,6 +26562,19 @@ namespace HierBEM
                         current_diag_row_block =
                           current_diag_row_block
                             ->next_same_level_same_row_hmat_node;
+
+                        if (current_diag_row_block != nullptr &&
+                            (*current_diag_row_block->col_index_range)[0] >=
+                              (*current_trailing_block->col_index_range)[1])
+                          {
+                            /**
+                             * There is no corresponding same column block for
+                             * the current trailing block. This is based on the
+                             * assumption/fact that the index ranges of the same
+                             * level same row H-matrix blocks are increasing.
+                             */
+                            break;
+                          }
                       }
                     else if ((*current_diag_row_block->col_index_range)[0] >=
                              (*current_trailing_block->col_index_range)[1])
@@ -26428,62 +26585,136 @@ namespace HierBEM
                         current_diag_row_block =
                           current_diag_row_block
                             ->previous_same_level_same_row_hmat_node;
+
+                        if (current_diag_row_block != nullptr &&
+                            current_diag_row_block != current_diag_block &&
+                            (*current_trailing_block->col_index_range)[0] >=
+                              (*current_diag_row_block->col_index_range)[1])
+                          {
+                            /**
+                             * There is no corresponding same column block for
+                             * the current trailing block. This is based on the
+                             * assumption/fact that the index ranges of the same
+                             * level same row H-matrix blocks are increasing.
+                             */
+                            break;
+                          }
                       }
                   }
 
-                if (current_diag_row_block == current_diag_block)
+                if (is_diag_row_block_found)
                   {
-                    current_diag_row_block = nullptr;
-                  }
+                    /**
+                     * Move the pointer @p current_diag_column_block, so that it
+                     * is in a same row with the current trailing block.
+                     */
+                    while (current_diag_column_block != nullptr &&
+                           current_diag_column_block != current_diag_block)
+                      {
+                        if (*(current_diag_column_block->row_index_range) ==
+                            *(current_trailing_block->row_index_range))
+                          {
+                            /**
+                             * When the two column index ranges match.
+                             */
+                            is_diag_column_block_found = true;
 
-                /**
-                 * Move the pointer @p current_diag_column_block, so that it
-                 * is in a same row with the current trailing block.
-                 */
-                while (current_diag_column_block != nullptr &&
-                       current_diag_column_block != current_diag_block)
-                  {
-                    if (*(current_diag_column_block->row_index_range) ==
-                        *(current_trailing_block->row_index_range))
-                      {
-                        /**
-                         * When the two column index ranges match.
-                         */
-                        break;
+                            break;
+                          }
+                        else if ((*current_trailing_block
+                                     ->row_index_range)[0] >=
+                                 (*current_diag_column_block
+                                     ->row_index_range)[1])
+                          {
+                            /**
+                             * Move forward @p current_diag_column_block.
+                             */
+                            current_diag_column_block =
+                              current_diag_column_block
+                                ->next_same_level_same_column_hmat_node;
+
+                            if (current_diag_column_block != nullptr &&
+                                (*current_diag_column_block
+                                    ->row_index_range)[0] >=
+                                  (*current_trailing_block->row_index_range)[1])
+                              {
+                                /**
+                                 * There is no corresponding same row block for
+                                 * the current trailing block. This is based on
+                                 * the assumption/fact that the index ranges of
+                                 * the same level same column H-matrix blocks
+                                 * are increasing.
+                                 */
+                                break;
+                              }
+                          }
+                        else if ((*current_diag_column_block
+                                     ->row_index_range)[0] >=
+                                 (*current_trailing_block->row_index_range)[1])
+                          {
+                            /**
+                             * Move back @p current_diag_column_block.
+                             */
+                            current_diag_column_block =
+                              current_diag_column_block
+                                ->previous_same_level_same_column_hmat_node;
+
+                            if (current_diag_column_block != nullptr &&
+                                current_diag_column_block !=
+                                  current_diag_block &&
+                                (*current_trailing_block->row_index_range)[0] >=
+                                  (*current_diag_column_block
+                                      ->row_index_range)[1])
+                              {
+                                /**
+                                 * There is no corresponding same row block for
+                                 * the current trailing block. This is based on
+                                 * the assumption/fact that the index ranges of
+                                 * the same level same column H-matrix blocks
+                                 * are increasing.
+                                 */
+                                break;
+                              }
+                          }
                       }
-                    else if ((*current_trailing_block->row_index_range)[0] >=
-                             (*current_diag_column_block->row_index_range)[1])
+
+                    if (!is_diag_column_block_found)
                       {
                         /**
-                         * Move forward @p current_diag_column_block.
+                         * Reset the pointer @p current_diag_column_block for
+                         * the next trailing block if it has touched either end
+                         * of the doubly linked list.
                          */
-                        current_diag_column_block =
-                          current_diag_column_block
-                            ->next_same_level_same_column_hmat_node;
-                      }
-                    else if ((*current_diag_column_block->row_index_range)[0] >=
-                             (*current_trailing_block->row_index_range)[1])
-                      {
-                        /**
-                         * Move back @p current_diag_column_block.
-                         */
-                        current_diag_column_block =
-                          current_diag_column_block
-                            ->previous_same_level_same_column_hmat_node;
+                        if (current_diag_column_block == nullptr ||
+                            current_diag_column_block == current_diag_block)
+                          {
+                            current_diag_column_block =
+                              current_diag_block
+                                ->next_same_level_same_column_hmat_node;
+                          }
                       }
                   }
-
-                if (current_diag_column_block == current_diag_block)
+                else
                   {
-                    current_diag_column_block = nullptr;
+                    /**
+                     * Reset the pointer @p current_diag_row_block for the next
+                     * trailing block if it has touched either end of the doubly
+                     * linked list.
+                     */
+                    if (current_diag_row_block == nullptr ||
+                        current_diag_row_block == current_diag_block)
+                      {
+                        current_diag_row_block =
+                          current_diag_block
+                            ->next_same_level_same_row_hmat_node;
+                      }
                   }
 
                 /**
                  * Only when the corresponding same level row block and column
                  * block are found, update task will be added.
                  */
-                if (current_diag_row_block != nullptr &&
-                    current_diag_column_block != nullptr)
+                if (is_diag_row_block_found && is_diag_column_block_found)
                   {
                     if (current_trailing_block->is_leaf() ||
                         current_diag_row_block->is_leaf() ||
@@ -26866,7 +27097,7 @@ namespace HierBEM
      */
     if (solve_upper_or_lower_lu_graph_node)
       {
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
         std::cout << "solve-upper-to-update at level ("
                   << this->bc_node->get_level() << ","
                   << update_block.bc_node->get_level() << "): ["
@@ -26905,7 +27136,7 @@ namespace HierBEM
      */
     if (solve_upper_or_lower_lu_graph_node)
       {
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
         std::cout << "solve-lower-to-update at level ("
                   << this->bc_node->get_level() << ","
                   << update_block.bc_node->get_level() << "): ["
@@ -26940,7 +27171,7 @@ namespace HierBEM
   {
     for (auto &update_node : update_lu_graph_nodes)
       {
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
         std::cout << "update-to-factorize at level ("
                   << this->bc_node->get_level() << ","
                   << factorize_block.bc_node->get_level() << "): ["
@@ -26980,7 +27211,7 @@ namespace HierBEM
 
     for (auto &update_node : update_lu_graph_nodes)
       {
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
         if (solve_upper_or_lower_block.block_type ==
             HMatrixSupport::BlockType::upper_triangular_block)
           {
@@ -27087,7 +27318,7 @@ namespace HierBEM
                  */
                 if (parent != nullptr && parent->factorize_lu_graph_node)
                   {
-#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
+#if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
                     std::cout << "factorize-to-factorize at level ("
                               << this->bc_node->get_level() << ","
                               << parent->bc_node->get_level() << "): ["
@@ -27802,16 +28033,6 @@ namespace HierBEM
                      (*(this->col_index_range))[1],
                    ExcInternalError());
 
-            /**
-             * Actually, since we are searching along a linked list of \hmatrix
-             * nodes on a same level, which has been constructed using breadth
-             * first iteration, the column index ranges of two consecutive
-             * matrix blocks on a same row should be continuous.
-             */
-            Assert((*(current_hmat_node_on_same_level->col_index_range))[0] ==
-                     (*(current_hmat_node_on_same_row->col_index_range))[1],
-                   ExcInternalError());
-
             current_hmat_node_on_same_row->next_same_level_same_row_hmat_node =
               current_hmat_node_on_same_level;
             current_hmat_node_on_same_level
@@ -27840,16 +28061,6 @@ namespace HierBEM
              */
             Assert((*(current_hmat_node_on_same_level->row_index_range))[0] >=
                      (*(this->row_index_range))[1],
-                   ExcInternalError());
-
-            /**
-             * Actually, since we are searching along a linked list of \hmatrix
-             * nodes on a same level, which has been constructed using breadth
-             * first iteration, the row index ranges of two consecutive matrix
-             * blocks on a same column should be continuous.
-             */
-            Assert((*(current_hmat_node_on_same_level->row_index_range))[0] ==
-                     (*(current_hmat_node_on_same_column->row_index_range))[1],
                    ExcInternalError());
 
             current_hmat_node_on_same_column

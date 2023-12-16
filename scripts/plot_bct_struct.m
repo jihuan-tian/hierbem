@@ -58,9 +58,9 @@ function plot_bct_struct(varargin)
       text_y_coord = (yrange(2) + yrange(1)) / 2;
 
       if (block_clusters{m}.is_near_field)
-	text(text_x_coord, text_y_coord, num2str(block_clusters{m}.rank), "fontsize", min(xlength * 4, xlength * 8), "horizontalalignment", "center", "verticalalignment", "middle", "color", p.Results.near_field_rank_color);
+	text(text_x_coord, text_y_coord, num2str(block_clusters{m}.rank), "fontsize", xlength / 2, "horizontalalignment", "center", "verticalalignment", "middle", "color", p.Results.near_field_rank_color);
       else
-	text(text_x_coord, text_y_coord, num2str(block_clusters{m}.rank), "fontsize", min(xlength * 4, xlength * 8), "horizontalalignment", "center", "verticalalignment", "middle", "color", p.Results.far_field_rank_color);
+	text(text_x_coord, text_y_coord, num2str(block_clusters{m}.rank), "fontsize", xlength / 2, "horizontalalignment", "center", "verticalalignment", "middle", "color", p.Results.far_field_rank_color);
       endif
     endif
   endfor

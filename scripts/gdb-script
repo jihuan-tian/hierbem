@@ -1,0 +1,45 @@
+define print_vector
+  set $i = 0
+  while $i < $arg1
+    print $arg0.operator[]($i)
+    set $i = $i + 1
+  end
+end
+
+define print_hmat_ptr_index_ranges
+  printf "[%d,%d), [%d,%d)\n", (*$arg0->row_index_range)[0], (*$arg0->row_index_range)[1], (*$arg0->col_index_range)[0], (*$arg0->col_index_range)[1]
+end
+
+define print_hmat_index_ranges
+  printf "[%d,%d), [%d,%d)\n", (*$arg0.row_index_range)[0], (*$arg0row_index_range)[1], (*$arg0.col_index_range)[0], (*$arg0.col_index_range)[1]
+end
+
+define print_same_level_hmat_ptr_index_ranges
+  set $current_hmat = $arg0
+  while $current_hmat != 0
+    print_hmat_ptr_index_ranges $current_hmat
+    set $current_hmat = $current_hmat->next_same_level_hmat_node
+  end
+end
+
+define print_same_level_same_row_hmat_ptr_index_ranges
+  set $initial_hmat = $arg0
+  set $current_hmat = $arg0
+  while $current_hmat != 0
+    if (*$current_hmat->row_index_range)[0] == (*$initial_hmat->row_index_range)[0] && (*$current_hmat->row_index_range)[1] == (*$initial_hmat->row_index_range)[1]
+      print_hmat_ptr_index_ranges $current_hmat
+    end
+    set $current_hmat = $current_hmat->next_same_level_hmat_node
+  end
+end
+
+define print_same_level_same_column_hmat_ptr_index_ranges
+  set $initial_hmat = $arg0
+  set $current_hmat = $arg0
+  while $current_hmat != 0
+    if ((*$current_hmat->col_index_range)[0] == (*$initial_hmat->col_index_range)[0] && (*$current_hmat->col_index_range)[1] == (*$initial_hmat->col_index_range)[1])
+      print_hmat_ptr_index_ranges $current_hmat
+    end
+    set $current_hmat = $current_hmat->next_same_level_hmat_node
+  end
+end

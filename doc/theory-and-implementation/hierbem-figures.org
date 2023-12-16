@@ -181,6 +181,38 @@
     [[file:./figures/regular-grid-8x8.png]]
 ** Algebraic operations
 *** H-LU factorization
+** Plot matrix block
+   #+begin_src asymptote :exports both :results file :output-dir ./figures :file matrix-blocks.png
+     import hierbem;
+
+     unitsize(1mm);
+     defaultpen(1);
+
+     int nrows = 100;
+
+     plot_matrix_block((0, 10), (0, 10), nrows);
+     plot_matrix_block((10, 30), (10, 20), nrows);
+     plot_matrix_block((0, 10), (20, 50), nrows);
+     plot_matrix_block((90, 100), (90, 100), nrows);
+   #+end_src
+
+   #+NAME: fig:matrix-blocks
+   #+ATTR_HTML: :width 500px
+   #+ATTR_LATEX: :width 0.5\textwidth
+   #+RESULTS:
+   [[file:./figures/matrix-blocks.png]]
+** Plot H-matrix bct structure
+   #+begin_src asymptote :exports both :results file :output-dir ./figures :file hmat-bct-struct.png
+     import hierbem;
+
+     plot_bct_struct("figures/hmat-bct.txt", 3072);
+   #+end_src
+
+   #+NAME: fig:hmat-bct-struct
+   #+ATTR_HTML: :width 500px
+   #+ATTR_LATEX: :width 0.5\textwidth
+   #+RESULTS:
+   [[file:./figures/hmat-bct-struct.png]]
 * References
 <<bibliography link>>
 bibliography:./hierbem.bib
