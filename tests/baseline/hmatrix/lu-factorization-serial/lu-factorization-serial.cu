@@ -34,6 +34,9 @@ generate_coarse_mesh_for_two_spheres(Triangulation<spacedim>      &tria,
                                      const double inter_distance,
                                      const double radius)
 {
+  // XXX
+  (void)surface_tria;
+
   Triangulation<spacedim> left_ball, right_ball;
 
   GridGenerator::hyper_ball(left_ball,
@@ -97,6 +100,9 @@ extract_surface_mesh_for_two_spheres(
            typename Triangulation<spacedim>::face_iterator>
     &map_from_surface_mesh_to_volume_mesh)
 {
+  // XXX
+  (void)radius;
+
   // Generate an empty surface triangulation object with manifold ids
   // configured.
   const SphericalManifold<dim, spacedim> left_ball_surface_manifold(
@@ -248,7 +254,7 @@ main()
       // Assemble the H-matrix using ACA.
       Timer timer;
       fill_hmatrix_with_aca_plus_smp(
-        MultithreadInfo::n_cores(),
+        MultithreadInfo::n_threads(),
         V,
         ACAConfig(max_rank, epsilon, eta),
         single_layer_kernel,
