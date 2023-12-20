@@ -2034,18 +2034,19 @@ the elements in $(1,\cdots,k)\backslash\{i_1\}$, the two Kronecker delta can be 
   \end{aligned},
 \end{equation}
 where $I$ is the tuple of indices $(i_1,\cdots,i_k)$ \emph{This is just the standard
-  definition of determinant \cite{ZeidlerOxford2004}}\footnote{Here the subscript $r$ of
+  definition of determinant \citep{ZeidlerOxford2004}}\footnote{Here the subscript $r$ of
   1-form $\alpha$ is used as the row index in the determinant, while the subscript $s$ of
   the tangent vector $v$ is used as the column index. This convention is different from
-  that adopted in \cite{FrankelGeometry2011}.}:
+  that adopted in \citep{FrankelGeometry2011}.}:
 \begin{equation}
+  \label{eq:determinant-definition}
   \det(\alpha_{(r)}(v_{s})) = \det \begin{pmatrix}
     \alpha_{(1)}(v_{1}) & \cdots & \alpha_{(1)}(v_k) \\
     \vdots & \vdots & \vdots \\
     \alpha_{(k)}(v_1) & \cdots & \alpha_{(k)}(v_k)
   \end{pmatrix} = \sum_I \varepsilon_I \alpha_{(1)}(v_{i_1})\cdots\alpha_{(k)}(v_{i_k}),
 \end{equation}
-where $\varepsilon_I$ is the Levi-Civita symbol \cite{LeviCivita2023}.
+where $\varepsilon_I$ is the Levi-Civita symbol \citep{LeviCivita2023}.
 
 In the above formulation, the subscripts adopted for the 1-forms $\alpha$ and tangent
 vectors $v$ are consecutively numbered by starting from 1. Actually, they can be
@@ -2060,6 +2061,7 @@ have
 \end{equation}
 which is equivalent to the determinant
 \begin{equation}
+  \label{eq:determinant-definition-with-general-indices}
   \det(\alpha_{(i_r)}(v_{j_s})) = \det \begin{pmatrix}
     \alpha_{(i_1)}(v_{j_1}) & \cdots & \alpha_{(i_1)}(v_{j_k}) \\
     \vdots & \vdots & \vdots \\
@@ -2134,6 +2136,7 @@ which is equivalent to the determinant
 \end{Example}
 
 \subsection{Expansion of a $k$-form}
+\label{sec:expansion-of-k-form}
 
 \begin{Proposition}
   \label{prop:k-form-expansion}
@@ -2275,7 +2278,7 @@ Exterior differentiation satisfies the following properties:
       \intertext{In a coordinate chart $(U,x)$:}
                &= d \left( \sum_{\underaccent{\rightharpoondown}{K}} \frac{\pdiff
                  \alpha_{K}(x)}{\pdiff x^i} dx^i \wedge dx^K \right) \\
-      \intertext{N.B. Einstein is adopted above and the summation with respect to $i$ is
+      \intertext{N.B. Einstein summation notation is adopted above and the summation with respect to $i$ is
       omitted.}
                &= \sum_{\underaccent{\rightharpoondown}{K}} d \left( \frac{\pdiff
                  \alpha_K(x)}{\pdiff x^i} \right) dx^i \wedge dx^K =
@@ -2335,6 +2338,7 @@ $j$ from $J$, there are altogether $k+1$ terms in $(d\alpha^k)_J$. Hence, we hav
 \end{equation}
 If $J$ is an increasing index set, the above expression can be explicitly written as
 \begin{equation}
+  \label{eq:eq:expansion-of-exterior-differential2}
   (d\alpha^k)_J = \frac{\pdiff \alpha_{J\backslash\{j_1\}}}{\pdiff x^{j_1}} - \frac{\pdiff
     \alpha_{J\backslash\{j_2\}}}{\pdiff x^{j_2}} + \frac{\pdiff
     \alpha_{J\backslash\{j_3\}}}{\pdiff x^{j_3}} - \cdots = \sum_{r=1}^{k+1} (-1)^{r-1}
@@ -2368,6 +2372,9 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
       \right) dx^3 \wedge dx^1
     \end{aligned}.
   \end{equation}
+  This formula reminds us of the curl of a vector once learned in classical calculus. In a
+  subsequent section we will establish the relationship between vector analysis and
+  $k$-forms operations.
 \end{Example}
 
 \begin{Example}[Exterior differential of a 2-form]
@@ -2387,15 +2394,89 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
 \end{Example}
 
 \begin{Example}[Exterior differential of a 2-form when the manifold dimension is 3]
+  \label{exam:exterior-diff-2-form-3d}
   Let
+  $\beta^2 = \beta_{12} dx^1 \wedge dx^2 + \beta_{23} dx^2 \wedge dx^3 + \beta_{13} dx^1
+  \wedge dx^3$. $d\beta^2$ is a 3-form. When the manifold dimension is 3, it has only one
+  term:
+  \begin{equation}
+    (d\beta^2)_{123} = \delta_{123}^{123} \frac{\pdiff \beta_{23}}{\pdiff x^1} +
+    \delta_{123}^{213} \frac{\pdiff \beta_{13}}{\pdiff x^2} + \delta_{123}^{312}
+    \frac{\pdiff \beta_{12}}{\pdiff x^3} = \frac{\pdiff \beta_{23}}{\pdiff x^1} -
+    \frac{\pdiff \beta_{13}}{\pdiff x^2} + \frac{\pdiff \beta_{12}}{\pdiff x^3}.
+  \end{equation}
+  If we let $\beta_{31} = -\beta_{13}$, $\beta^2$ can be written as
   $\beta^2 = \beta_{12} dx^1 \wedge dx^2 + \beta_{23} dx^2 \wedge dx^3 + \beta_{31} dx^3
-  \wedge dx^1$. $d\beta^2$ is a 3-form. When the manifold dimension is 3, it has only one
-  term.
+  \wedge dx^1$. Then its exterior differential becomes
+
+  \begin{equation}
+    d\beta^2 = \left( \frac{\pdiff \beta_{23}}{\pdiff x^1} + \frac{\pdiff \beta_{31}}{\pdiff
+        x^2} + \frac{\pdiff \beta_{12}}{\pdiff x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
+  \end{equation}
+  As a convention, we write $\beta^2$ as
+  $\beta^2 = b_1 dx^2 \wedge dx^3 + b_2 dx^3 \wedge dx^1 + b_3 dx^1 \wedge dx^2$, so that
+  the subscript of each coefficient $b_i$ and the superscripts of its associated wedge
+  product of two basis vectors in the cotangent space $dx^j \wedge dx^k$ form a
+  \href{https://en.wikipedia.org/wiki/Cyclic_permutation}{cyclic permutation} for the
+  three terms, i.e. $\{1,2,3\}$, $\{2,3,1\}$, $\{3,1,2\}$. Then its exterior differential
+  is
   \begin{equation}
     \label{eq:exterior-diff-2-form-3d}
-    (d\beta^2) = \left( \frac{\pdiff \beta_{23}}{\pdiff x^1} + \frac{\pdiff \beta_{31}}{\pdiff
-      x^2} + \frac{\pdiff \beta_{12}}{\pdiff x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
+    d\beta^2 = \left( \frac{\pdiff b_1}{\pdiff x^{1}} + \frac{\pdiff b_2}{\pdiff x^2} +
+      \frac{\pdiff b_3}{\pdiff x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
   \end{equation}
+  Obviously, this formula relates to the divergence of a vector in classical calculus.
+\end{Example}
+
+\begin{Example}[Exterior differential of a 3-form when the manifold dimension is 4]
+  \label{exam:exterior-diff-3-form-4d}
+  Let $\beta^3 = b_1 dx^2 \wedge dx^3 \wedge dx^4 + b_2 dx^3 \wedge dx^4 \wedge dx^1 + b_3
+  dx^4 \wedge dx^1 \wedge dx^2 + b_4 dx^1 \wedge dx^2 \wedge dx^3$. Its exterior
+  differential is
+  \begin{equation}
+    d\beta^3 = \left( \frac{\pdiff b_1}{\pdiff x^1} - \frac{\pdiff b_2}{\pdiff x^2} +
+      \frac{\pdiff b_3}{\pdiff x^3} - \frac{\pdiff b_4}{\pdiff x^4} \right) dx^1 \wedge dx^2
+    \wedge dx^3 \wedge dx^4.
+  \end{equation}
+\end{Example}
+
+\begin{Example}[Exterior differential of a $(n-1)$-form when the manifold dimension is $n$]
+  This is a generalization of Example \ref{exam:exterior-diff-2-form-3d} and Example
+  \ref{exam:exterior-diff-3-form-4d}. Let $\beta^{n-1}$ be an $(n-1)$-form which has the
+  following expansion
+  \begin{equation}
+    \beta^{n-1} = \beta_{(2, \cdots, n)} dx^{(2, \cdots, n)} +
+    \beta_{(1,3,\cdots,n)} dx^{(1,3,\cdots,n)} + \cdots + \beta_{(1,\cdots,n-1)}
+    dx^{(1,\cdots,n-1)}.
+  \end{equation}
+  If we use $(1,\cdots,\hat{i},\cdots,n)$ to represent the index set
+  $(1,\cdots,n)\backslash \{i\}$, the expansion of $\beta^{n-1}$ can be written in a
+  simple form
+  \begin{equation}
+    \beta^{n-1} = \sum_{i=1}^{n} \beta_{(1,\cdots,\hat{i},\cdots,n)} dx^{(1,\cdots,\hat{i},\cdots,n)}.
+  \end{equation}
+  Apply Equation (\ref{eq:eq:expansion-of-exterior-differential2}), its exterior
+  differential is
+  \begin{equation}
+    d\beta^{n-1} = \left( \sum_{r=1}^n (-1)^{r-1} \frac{\pdiff
+        \beta_{(1,\cdots,\hat{r},\cdots,n)}}{\pdiff x^r}
+    \right) dx^{(1,\cdots,n)}.
+  \end{equation}
+  Now we want to use the above cyclic permutation convention. For the $r$-th term in the
+  above sum, we should use the expansion coefficient $\beta_{(r+1,\cdots,n,1,\cdots,r-1)}$
+  instead of $\beta_{(1,\cdots,\hat{r},\cdots,n)}$. To transform the index set
+  $(r+1,\cdots,n,1,\cdots,r,\cdots,r-1)$ into $(1,\cdots,\hat{r},\cdots,n)$, we need
+  $(r-1)(n-2)$ times of index permutations. Hence, the exterior differential $d\beta^{n-1}$
+  becomes
+  \begin{equation}
+    d\beta^{n-1} = \left( \sum_{r=1}^n (-1)^{(r-1)(n-1)} \frac{\pdiff
+        \beta_{(r+1,\cdots,n,1,\cdots,r,\cdots,r-1)}}{\pdiff x^r}
+    \right) dx^{(1,\cdots,n)}.
+  \end{equation}
+  When the manifold dimension $n$ (assume it is larger than 2) is even, the sign of the
+  term $\pdiff \beta_{(r+1,\cdots,n,1,\cdots,r,\cdots,r-1)}/\pdiff x^r$ in the above sum,
+  i.e. $(-1)^{(r-1)(n-1)}$, is always positive. When $n$ is odd, this sign is alternating
+  with $r$.
 \end{Example}
 
 \begin{Example}[Exterior differential of $d\alpha^1$ when the manifold dimension is 3]
@@ -2419,11 +2500,366 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   which is consistent with $dd\alpha = 0$.
 \end{Example}
 
+\subsection{Pull-back of a $k$-form}
+
+\subsubsection{Definition of pull-back}
+
+The pull-back as well as push-forward of a $k$-form can be considered as a generalization
+of the concept of \emph{coordinate transformation}.
+
+When $\alpha$ is a 0-form, it is a map from the manifold $M^n$ to $\mathbb{R}$. Let $F$ be
+a map from another manifold $W^m$ to $M^n$. Then the composition of $F$ and $\alpha$ is
+defined as the pull-back of $\alpha$.
+\begin{center}
+\begin{tikzcd}
+  W^m \arrow{r}{F} \arrow[bend right]{rr}[swap]{F^{*}\alpha \coloneqq \alpha \circ F}
+  & M^n \arrow{r}{\alpha} & \mathbb{R}
+\end{tikzcd}
+\end{center}
+If we use $x$ as the coordinates for $W^m$ and $y$ for $M^n$, $F(x)=y$ can be simply
+written as $y(x)$. Then $\left( F^{*}\alpha \right)(x)$ is equivalent to
+$\alpha(F(x)) = \alpha(y(x))$. This is just the coordinate transformation from $y$ to $x$
+for the scalar function $\alpha$.
+
+On the other hand, if $\alpha$ is a 0-form from the manifold $W^m$ to $\mathbb{R}$, the
+push-forward of $\alpha$ from $W^m$ to $M^n$ is defined as the composition
+$\alpha \circ F^{-1}$. Push-forward of $\alpha$ with respect to $F$ requires the existence
+of the inverse $F^{-1}$.
+\begin{center}
+  \begin{tikzcd}
+    W^m \arrow{r}{F} \arrow[bend right]{rr}[swap]{\alpha}
+    & M^n \arrow{r}{\alpha \circ F^{-1}} & \mathbb{R}
+  \end{tikzcd}
+\end{center}
+
+When $\alpha$ is a 1-form at a point $p$ in $M^n$, it is a map from the tangent space
+$M_p^n$ to $\mathbb{R}$. Let $W_p^m$ be the tangent space at the same point $p$ of another
+manifold $W^m$. As above, $W^m$ is assigned the coordinates $x$ and $M^n$ is assigned the
+coordinates $y$. Then the point $p$ in $W^m$ is represented as $p(x)$ and its
+representation in $M^n$ is $p(y)$. Let $F_{*}$ be a map from the tangent space
+$W_{p(x)}^m$ to $M_{p(y)}^n$. According to Equation
+(\ref{eq:contravariant-transformation}), the transformation of a tangent vector in two
+different coordinate charts is contravariant and the matrix form of such transformation is
+the Jacobi matrix. Hence, $F_{*}$ here is just the Jacobi map. Then the push-back of the
+1-form $\alpha$ is the composition of $F_{*}$ and $\alpha$.
+
+\begin{center}
+  \begin{tikzcd}
+    W_{p(x)}^m \arrow{r}{F_{*}} \arrow[bend right]{rr}[swap]{\left( F^{*}\alpha \right)
+      \coloneqq \alpha\circ F_{*}}
+    & M_{p(y)}^n \arrow{r}{\alpha} & \mathbb{R}
+  \end{tikzcd}
+\end{center}
+
+Similarly, when $\alpha$ is a 1-from in $W_{p(x)}^{m*}$, its push-forward is the
+composition of $F_{*}^{-1}$ and $\alpha$.
+
+\begin{center}
+  \begin{tikzcd}
+    W_{p(x)}^m \arrow{r}{F_{*}} \arrow[bend right]{rr}[swap]{\alpha}
+    & M_{p(y)}^n \arrow{r}{\alpha\circ F_{*}^{-1}} & \mathbb{R}
+  \end{tikzcd}
+\end{center}
+
+\begin{Definition}[Pull-back of a $k$-form]
+  \label{def:pullback-k-form}
+  Let $\alpha^k$ be a $k$-form in $\bigwedge^k M_p^{n*}$. Let $v_1,\cdots,v_k$ be a tuple
+  of tangent vectors in $W_p^m$. The pull-back of $\alpha^k$ is a map
+  $F^{*}: \bigwedge^k W_p^{m*} \rightarrow \bigwedge^k M_p^{n*}$, which satisfies
+  \begin{equation}
+    \label{eq:pullback-k-form}
+    \left( F^{*}\alpha^k \right)(v_1,\cdots,v_k) = \alpha^k(F_{*}v_1,\cdots,F_{*}v_k),
+  \end{equation}
+  where $F_{*}$ is the Jacobi map from $W_p^m$ to $M_p^n$.
+\end{Definition}
+
+\subsubsection{Properties of pull-back}
+
+\begin{enumerate}
+\item $F^{*}$ is a linear operator.
+  \begin{Proof}
+    Let $\alpha^k$ and $\beta^k$ be two $k$-forms. For any tuple of tangent vectors
+    $v_1,\cdots,v_k$, we have
+    \begin{align*}
+      \left( F^{*} (\alpha^k + \beta^k) \right) (v_1,\cdots,v_k)
+      &= (\alpha^k+\beta^k)(F_{*}v_1,\cdots,F_{*}v_k) \\
+      &= \alpha^k(F_{*}v_1,\cdots,F_{*}v_k) + \beta^k(F_{*}v_1,\cdots,F_{*}v_k) \\
+      &= \left( F^{*}\alpha^k \right)(v_1,\cdots,v_k) + \left( F^{*}\beta^k \right)(v_1,\cdots,v_k).
+    \end{align*}
+    For any scalar value $\lambda \in \mathbb{R}$,
+    \begin{equation*}
+      F^{*}(\lambda\alpha^k)(v_1,\cdots,v_k) = \lambda\alpha^k(F_{*}v_1,\cdots,F_{*}v_k) =
+      \left[ \lambda \left( F^{*}\alpha^k \right) \right](v_1,\cdots,v_k).
+    \end{equation*}
+  \end{Proof}
+\item $F^{*}$ satisfies algebra homomorphism
+  \begin{equation}
+    F^{*} \left( \alpha^k \wedge \beta^l \right) = \left( F^{*}\alpha^k \right) \wedge \left( F^{*}\beta^l \right)
+  \end{equation}
+  \begin{Proof}
+    For any tuple of $k+l$ tangent vectors $v_1,\cdots,v_{k+l}$,
+    \begin{align*}
+      F^{*}(\alpha^k \wedge \beta^l)(v_1,\cdots,v_{k+l})
+      &= (\alpha^k \wedge \beta^l)(F_{*}v_1,\cdots,F_{*}v_{k+l}) \\
+      \intertext{Let $I = (i_1,\cdots,i_k)$ and $J = (j_1,\cdots,j_l)$. They satisfy $I
+      \cup J = (1,\cdots,k+l)$.}
+      &=
+        \sum_{\underaccent{\rightharpoondown}{I}}\sum_{\underaccent{\rightharpoondown}{J}}
+        \delta_{(1,\cdots,k+l)}^{IJ} \alpha^k(F_{*}v_{i_1},\cdots,F_{*}v_{i_k})
+        \beta^l(F_{*}v_{j_1},\cdots,F_{*}v_{j_l}) \\
+      &=
+        \sum_{\underaccent{\rightharpoondown}{I}}\sum_{\underaccent{\rightharpoondown}{J}}
+        \delta_{(1,\cdots,k+l)}^{IJ} \left( F^{*}\alpha^k \right)(v_{i_1},\cdots,v_{i_k})
+        \left( F^{*}\beta^l \right)(v_{j_1},\cdots,v_{j_l}) \\
+      &= \left[ \left( F^{*}\alpha^k \right) \wedge \left( F^{*}\beta^l \right)\right]
+        (v_1,\cdots,v_{k+l}).
+    \end{align*}
+  \end{Proof}
+\item Pull-back operator $F^{*}$ and exterior derivative $d$ are commutative.
+  \begin{equation}
+    d \left( F^{*}\alpha \right) = F^{*}(d\alpha).
+  \end{equation}
+
+  \begin{Proof}
+    Here we still use the convention that $\alpha$ is in the space
+    $\bigwedge M_{p(y)}^{n*}$, while its pull-back $F^{*}\alpha$ is in the space
+    $\bigwedge W_{p(x)}^{m*}$. $F$ represents the map from $W^m$ to $M^n$ and $F_{*}$ is the
+    corresponding Jacobi map.
+    \begin{itemize}
+    \item When $\alpha$ is a 0-form, $F^{*}\alpha$ is also a 0-form with respect to the
+      coordinate variable $x$, i.e. a scalar function $(F^{*}\alpha)(x)$. According to
+      Equation (\ref{eq:df-and-directional-derivative}), for any tangent vector $v$ in
+      $W_{p(x)}^m$, which is written as $v_x$ here to explicitly specify the coordinate
+      variable, apply the exterior differentiation of the pull-back of $\alpha$,
+      \begin{equation*}
+        d(F^{*}\alpha)(v_x) = \frac{\pdiff (F^{*}\alpha)(x)}{\pdiff x^i} v_x^i.
+      \end{equation*}
+      According to the definition of the pull-back of a 0-form
+      \begin{equation*}
+        (F^{*}\alpha)(x) = \alpha F(x) = \alpha(y(x)),
+      \end{equation*}
+      we have
+      \begin{equation*}
+        d(F^{*}\alpha)(v_x) = \frac{\pdiff \alpha(y(x))}{\pdiff x^i} v_x^i = \frac{\pdiff
+          \alpha(y)}{\pdiff y^j} \frac{\pdiff y^j}{\pdiff x^i} v_x^i.
+      \end{equation*}
+      Refer to the expression of contravariant transformation in Equation
+      (\ref{eq:contravariant-transformation}), $\frac{\pdiff y^j}{\pdiff x^i}v_x^i$ is the
+      $j$-th component of the tangent vector $v_y$ in $M_{p(y)}^n$, which is $dy^j(v_y)$.
+      Therefore,
+      \begin{equation*}
+        d(F^{*}\alpha)(v_x) = \frac{\pdiff \alpha(y)}{\pdiff y^j} dy^j(v_y) = \left(
+          \frac{\pdiff \alpha(y)}{\pdiff y^j} dy^j \right)(v_y).
+      \end{equation*}
+      The term in the first pair of brackets is just the exterior differential of $\alpha$
+      with the coordinate variable $y$ and $v_y$ can be obtained by applying the Jacobi
+      map $F_*$ to $v_x$. Using the definition of pull-back of 1-form, we have
+      \begin{equation*}
+        d(F^{*}\alpha)(v_x) = d\alpha(F_{*}v_x) = (F^{*} d\alpha)(v_x).
+      \end{equation*}
+      Since $v_x$ is arbitrary, $d$ commutes with $F^{*}$ when $\alpha$ is a 0-form.
+    \item When $\alpha$ is a general $k$-form, assume it can be expanded as
+      $\alpha = \sum_{\underaccent{\rightharpoondown}{I}} \alpha_I dy^{I}$, where
+      $I = (i_1,\cdots,i_k)$.
+      \begin{align*}
+        d(F^{*}\alpha)
+        &= d \left( F^{*}\sum_{\underaccent{\rightharpoondown}{I}}
+          \alpha_I dy^I \right) \\
+        \intertext{Use the linearity of $F^{*}$}
+        &= d \left[
+          \sum_{\underaccent{\rightharpoondown}{I}} F^{*} \left( \alpha_I \wedge dy^I
+          \right) \right] \\
+        \intertext{Use the algebra homomorphism of $F^{*}$}
+        &= d \left[ \sum_{\underaccent{\rightharpoondown}{I}} F^{*}(\alpha_I) \wedge
+          F^{*}(dy^{i_1}) \wedge \cdots \wedge F^{*}(dy^{i_k}) \right] \\
+        &= \sum_{\underaccent{\rightharpoondown}{I}} d F^{*}(\alpha_I) \wedge
+          F^{*}(dy^{i_1}) \wedge \cdots \wedge F^{*}(dy^{i_k}) \\
+        \intertext{$d$ commutes with $F^{*}$ for the 0-form $\alpha_I$}
+        &= \sum_{\underaccent{\rightharpoondown}{I}} F^{*}(d\alpha_I) \wedge
+          F^{*}(dy^{i_1}) \wedge \cdots \wedge F^{*}(dy^{i_k}) \\
+        \intertext{Reapply the algebra homomorphism of $F^{*}$}
+        &= F^{*} \left( \sum_{\underaccent{\rightharpoondown}{I}} d\alpha_I \wedge dy^I \right) =
+          F^{*} d \left( \sum_{\underaccent{\rightharpoondown}{I}} \alpha_I dy^I \right) =
+          F^{*} d\alpha.
+      \end{align*}
+    \end{itemize}
+  \end{Proof}
+\end{enumerate}
+
+\begin{Proposition}[Expression of the pull-back of a basis vector in $\bigwedge^k M_p^{n*}$]
+  \label{prop:pullback-of-base}
+  Let $dy^J$ be a basis vector in the space of $k$ forms $\bigwedge^k M_p^{n*}$, where $J$
+  is an index set $J=(j_1,\cdots,j_k)$. Let $L$ be an increasing index set. The pull-back
+  of $dy^J$ is
+  \begin{equation}
+    \label{eq:pullback-of-base}
+    F^{*}dy^J = \sum_{\underaccent{\rightharpoondown}{L}} \det \left\{
+      \frac{\pdiff y^J}{\pdiff x^L} \right\} dx^L.
+  \end{equation}
+\end{Proposition}
+
+\begin{Proof}
+  For the $l$-th term $dy^{j_{l}}$ in the wedge
+  product $dy^J = dy^{j_1} \wedge \cdots \wedge dy^{j_k}$, we examine its pull-back. Let
+  $v_x$ be any tangent vector in $W_{p(x)}^m$, we have
+  \begin{equation*}
+    \left( F^{*} dy^{j_l} \right)(v_x) = dy^{j_l}(F_{*} v_x) = \frac{\pdiff y^{j_l}}{\pdiff
+      x^i} v_x^i = \frac{\pdiff y^{j_l}}{\pdiff x^i} dx^i(v) = \left( \frac{\pdiff
+        y^{j_l}}{\pdiff x^i} dx^i \right)(v).
+  \end{equation*}
+  Replacing the summation index $i$ with $i_l$, we have
+  \begin{equation}
+    \label{eq:pullback-of-one-basis}
+    F^{*}dy^{j_l} = \frac{\pdiff y^{j_l}}{\pdiff x^{i_l}} dx^{i_l}.
+  \end{equation}
+  Then use the algebra homomorphism of pull-back,
+  \begin{align*}
+    F^{*}dy^J
+    &= F^{*}(dy^{j_1} \wedge \cdots \wedge dy^{j_k}) = \left( F^{*}dy^{j_1}
+      \right) \wedge \cdots \wedge \left( F^{*}dy^{j_k} \right) \\
+    &= \left(
+      \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} dx^{i_1} \right) \wedge \cdots \wedge \left(
+      \frac{\pdiff y^{j_k}}{\pdiff x^{i_k}} dx^{i_k} \right) \\
+    &= \sum_I \left( \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
+      y^{j_k}}{\pdiff x^{i_k}} \right) dx^I.
+  \end{align*}
+  N.B. At this moment, the index set $I$ in the above sum is not required to be
+  increasing. To get the canonical expansion of $F^{*}dy^J$ using increasing index set as
+  in Section \ref{sec:expansion-of-k-form}, we need to project the above representation to
+  the basis $\vect{\pdiff}x^L$ of the product tangent space, where $L=(l_1,\cdots,l_k)$ is
+  an increasing index set.
+  \begin{align*}
+    \left( F^{*}dy^J \right)(\vect{\pdiff}x^L)
+    &= \left[ \sum_I \left( \frac{\pdiff
+      y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
+      y^{j_k}}{\pdiff x^{i_k}} \right) dx^I \right](\vect{\pdiff}x^L) \\
+    &= \sum_I \left( \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
+      y^{j_k}}{\pdiff x^{i_k}} \right) dx^I(\vect{\pdiff}x^L) \\
+    \intertext{Apply Equation (\ref{eq:cotangent-base-appled-to-tangent-base})}
+    &= \sum_I \left( \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
+      y^{j_k}}{\pdiff x^{i_k}} \right) \delta_L^I.
+  \end{align*}
+  Compare this formula with Equation
+  (\ref{eq:1-form-exterior-product-applied-to-k-vector}) and
+  (\ref{eq:determinant-definition-with-general-indices}), this is just equal to the
+  determinant
+  \begin{equation*}
+    \det \left( \frac{\pdiff y^{j_r}}{\pdiff x^{i_s}} \right) = \det \left\{
+      \frac{\pdiff y^J}{\pdiff x^L} \right\}.
+  \end{equation*}
+  Then, the pull-back $F^{*}dy^J$ can be expanded as
+  \begin{equation*}
+    F^{*}dy^J = \sum_{\underaccent{\rightharpoondown}{L}} \det \left\{
+      \frac{\pdiff y^J}{\pdiff x^L} \right\} dx^L.
+  \end{equation*}
+\end{Proof}
+
+After knowing the form of the pull-back of a basis vector in $\bigwedge^k M_p^{n*}$, the
+expression of the pull-back of a $k$-form can be obtained.
+\begin{Proposition}[Expression of the pull-back of a $k$-form]
+  Let $\alpha^k$ be a $k$-form in $\bigwedge^k M_{p(y)}^{n*}$. It is expanded as
+  $\alpha^k = \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J dy^J$. The pull-back of
+  $\alpha^k$ is in the space $\bigwedge^k W_{p(x)}^{m*}$, which can be expanded as
+  $F^{*}\alpha^k = \sum_{\underaccent{\rightharpoondown}{L}} \alpha_L^{*} dx^L$. Then the
+  expansion coefficient $\alpha_L^{*}$ is
+  \begin{equation}
+    \alpha_L^{*} = \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x)) \det \left\{
+      \frac{\pdiff y^{J}}{\pdiff x^L} \right\}.
+  \end{equation}
+\end{Proposition}
+
+\begin{Proof}
+  \begin{align*}
+    F^{*}\alpha^k
+    &= F^{*} \left( \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J dy^J \right) =
+      \sum_{\underaccent{\rightharpoondown}{J}} \left( F^{*}\alpha_J \right) F^{*}(dy^J)
+    \\
+    &= \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x))
+      \sum_{\underaccent{\rightharpoondown}{L}} \det \left\{ \frac{\pdiff y^J}{\pdiff x^L}
+      \right\} dx^L \\
+    &= \sum_{\underaccent{\rightharpoondown}{L}} \left(
+      \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x)) \det \left\{ \frac{\pdiff
+      y^J}{\pdiff x^L} \right\} \right) dx^L.
+  \end{align*}
+  Therefore, the expansion coefficient $\alpha_L^{*} = (F^{*}\alpha^k)(\vect{\pdiff}x^L)$
+  is
+  \begin{equation*}
+    \alpha_L^{*} = \sum_{\underaccent{\rightharpoondown}{J}} \alpha_J(y(x)) \det \left\{
+      \frac{\pdiff y^{J}}{\pdiff x^L} \right\}.
+  \end{equation*}
+\end{Proof}
+
+\begin{Example}[Pull-back of the inclusion map]
+  Let $\vect{i}: M^2 \rightarrow \mathbb{R}^3$ be an inclusion map. In BEM, the map from a
+  reference cell $[0,1]^2$ to a quadrangle in the 3-d space is an example of such
+  inclusion map. Assign coordinate variables $u = (u^1,u^2)$ to $M^2$ and
+  $x = (x^1,x^2,x^3)$ to $\mathbb{R}^3$. Let $\beta^2$ be a 2-form with respect to
+  $\mathbb{R}^3$. It has the following form using the previous cyclic permutation
+  convention
+  \begin{equation*}
+    \beta^2 = b_1 dx^2 \wedge dx^3 + b_2 dx^3 \wedge dx^1 + b_1 dx^2 \wedge dx^3.
+  \end{equation*}
+  Its pull-back to $M^2$ via the inclusion map $\vect{i}^{*}\beta^2$ has only one term
+  which is related to the basis $du^1 \wedge du^2$. It has the following expression.
+  \begin{align*}
+    \vect{i}^{*}\beta^2
+    &= \left( b_1(x(u)) \det \left\{ \frac{\pdiff (x^2, x^3)}{\pdiff (u^1,u^2} \right\} -
+      b_2(x(u)) \det \left\{ \frac{\pdiff (x^1,x^3)}{\pdiff (u^1,u^2)} \right\} +
+      b_3(x(u)) \det \left\{ \frac{\pdiff (x^2,x^3)}{\pdiff (u^1,u^2)} \right\} \right)
+      du^1 \wedge du^2 \\
+    &= \left( b_1(x(u)) \det \left\{ \frac{\pdiff (x^2, x^3)}{\pdiff (u^1,u^2} \right\} +
+      b_2(x(u)) \det \left\{ \frac{\pdiff (x^3,x^1)}{\pdiff (u^1,u^2)} \right\} +
+      b_3(x(u)) \det \left\{ \frac{\pdiff (x^2,x^3)}{\pdiff (u^1,u^2)} \right\} \right)
+      du^1 \wedge du^2.
+  \end{align*}
+  This formulation reminds us of performing surface integral of a vector field
+  $\vect{b} = (b_1,b_2,b_3)^{\mathrm{T}}$ on a curved surface embedded in $\mathbb{R}^3$.
+  The 2-form $\beta^2$ can be considered as the infinitesimal element to be integrated,
+  $\beta^2 = \vect{b} \cdot d \vect{S}$. The pull-back $\vect{i}^{*}\beta^2$ is just the
+  infinitesimal element for integration represented in the coordinates $u$. This can be
+  clarified below.
+
+  At a point $p(u)$ in $M^2$, the pair of basis vectors
+  $\left\{ \vect{\pdiff}u^1, \vect{\pdiff}u^2 \right\}$ of the tangent space $M_{p(u)}^2$
+  define a normal vector $\vect{n}$ via the cross product of their representations using
+  the base $\left\{ \vect{\pdiff}x^1, \vect{\pdiff}x^2, \vect{\pdiff}x^3 \right\}$ of the
+  tangent space $\mathbb{R}_{p(x)}^3$ (N.B. When there is a raw operation on classical
+  vectors, for example the cross product here, it should be performed in the Cartesian
+  space but not in the local coordinate chart $(u^1,u^2)$, since
+  $\left\{ \vect{\pdiff}u^1,\vect{\pdiff}u^2 \right\}$ may not be an orthonormal base,
+  which invalidates the classical definition of cross product). Such representations have
+  been given in Equation (\ref{eq:tangent-vector-basis-relation}), which are just the
+  columns of the Jacobi map $\vect{i}_{*}$ in its matrix form. Then the normal vector is
+  \begin{equation*}
+    \vect{n} = \begin{pmatrix}
+      \frac{\pdiff x^1}{\pdiff u^1} \\ \frac{\pdiff x^2}{\pdiff u^1} \\ \frac{\pdiff
+        x^3}{\pdiff u^1}
+    \end{pmatrix}
+    \times \begin{pmatrix}
+      \frac{\pdiff x^1}{\pdiff u^2} \\ \frac{\pdiff x^2}{\pdiff u^2} \\ \frac{\pdiff
+        x^3}{\pdiff u^2}
+    \end{pmatrix}.
+  \end{equation*}
+  It can be checked that the above formula for $\vect{i}^{*}\beta^2$ is just the same as
+  $\vect{b}\cdot \vect{n} du^1 \wedge du^2$.
+\end{Example}
+
+\begin{Example}[Pull-back of the identity map in $M^3$]
+  Let $\vect{I}: M^3 \rightarrow M^3$ be an identity map. The two $M^3$ spaces are
+  assigned different coordinates $u = (u^1,u^2,u^3)$ and $x = (x^1,x^2,x^3)$ respectively.
+  Let $\alpha^3 = a(x) dx^1 \wedge dx^2 \wedge dx^3$ be a 3-form with respect to the range
+  space. Then its pull-back is
+  \begin{equation*}
+    \vect{I}^{*}\alpha^3 = a(x(u)) \det \left\{ \frac{\pdiff x}{\pdiff u} \right\} du^1
+    \wedge du^2 \wedge du^3.
+  \end{equation*}
+  This expression is also consistent with the coordinate transformation of volume
+  integration from $\mathbb{R}^3$ to a local three dimensional coordinate chart.
+\end{Example}
+
 \subsection{Interior product}
 
 \subsection{Hodge star}
-
-\subsection{Pullback of a $k$-form}
 
 \subsection{Some special forms}
 
@@ -3551,7 +3987,7 @@ The general workflow for $\mathcal{H}$-matrix construction is as follows.
 \section{$\mathcal{H}$-matrix construction parameter tuning and selection}
 
 \begin{itemize}
-\item According to \cite{KriemannParallel2005a}, the typical value of $n_{\min}$ is about
+\item According to \citep{KriemannParallel2005a}, the typical value of $n_{\min}$ is about
   30-60 in most practical applications.
 \end{itemize}
 
@@ -3572,7 +4008,7 @@ which directly overwrites the result vector $y$; the other is additive, $y \colo
 matrix-vector multiplication in $\mathcal{H}$-matrix algebra, there is only the additive version,
 since the operation is intrinsically accumulative.
 
-According to Equation (7.1) in \cite{HackbuschHierarchical2015}, $MVM(y, M, x, b)$
+According to Equation (7.1) in \citep{HackbuschHierarchical2015}, $MVM(y, M, x, b)$
 recursively calls $MVM(y, M, x, b')$, where $b'\in S(b)$. If $MVM$ is implemented as the
 ``overwriting'' version, $MVM(y, M, x, b')$ will clear the values in $y$ as well as any other
 recursive calls of $MVM$. This violates the accumulative behavior required by the matrix-vector
@@ -4689,11 +5125,11 @@ $col\_approx\_counters=0$.
       \If {$k\equiv 1$}
         \State{Select the row index $i_k$ whose support point has the closest distance to
 the centroid of $X_{\tau}$.} \Comment{This is the ACA-new method in
-\cite{BebendorfHierarchical2008}.}
+\citep{BebendorfHierarchical2008}.}
         \State{Or}
         \State{Select the row index $i_k$ whose support point has the closest distance to
 the centroid of $X_{\sigma}$.} \Comment{This is the ACA-old method in
-\cite{BebendorfHierarchical2008} or the method in \cite{HackbuschHierarchical2015}.}
+\citep{BebendorfHierarchical2008} or the method in \citep{HackbuschHierarchical2015}.}
       \Else
         \State{Select the row index $i_k$ such that $row\_approx\_counters[i_k]$ has the minimum value:
           \begin{equation*}
@@ -4789,7 +5225,7 @@ $k$ does not increase.}
 \end{breakablealgorithm}
 
 \begin{breakablealgorithm}
-  \caption{Reference row selection in ACA+ proposed in \cite{GrasedyckAdaptive2005}}
+  \caption{Reference row selection in ACA+ proposed in \citep{GrasedyckAdaptive2005}}
   \begin{algorithmic}[1]
     \Function{select\_ref\_row}{$A$, $\bar{Z}_{\rm r}$, $r$}
       \While {$\bar{Z}_{\rm r} \neq \Phi$}
@@ -4819,7 +5255,7 @@ $k$ does not increase.}
 \end{breakablealgorithm}
 
 \begin{breakablealgorithm}
-  \caption{Reference column selection in ACA+ proposed in \cite{GrasedyckAdaptive2005}}
+  \caption{Reference column selection in ACA+ proposed in \citep{GrasedyckAdaptive2005}}
   \begin{algorithmic}[1]
     \Function{select\_ref\_col}{$A$, $\bar{Z}_{\rm c}$, $c$}
       \While {$\bar{Z}_{\rm c} \neq \Phi$}
@@ -4848,7 +5284,7 @@ $k$ does not increase.}
 \end{breakablealgorithm}
 
 \begin{breakablealgorithm}
-  \caption{ACA+ proposed in \cite{GrasedyckAdaptive2005}}
+  \caption{ACA+ proposed in \citep{GrasedyckAdaptive2005}}
   \begin{algorithmic}[1]
     \State {Start with $k=1$, $\bar{Z}_{\rm r}=\{1:m\}$, $\bar{Z}_{\rm c}=\{1:n\}$,
 $S=0$.}
@@ -5215,9 +5651,9 @@ test cases for Laplace exterior problems are defined below.
 \end{itemize}
 
 \begin{mycomment}
-  In \cite{ErichsenEfficient1998}, the inward unit normal vector is adopted, hence the
+  In \citep{ErichsenEfficient1998}, the inward unit normal vector is adopted, hence the
   boundary condition $f$ of my version has a different sign. My formulation follows the
-  convention adopted by \cite{SteinbachNumerical2007}.
+  convention adopted by \citep{SteinbachNumerical2007}.
 \end{mycomment}
 
 \section{Integral on curved domain: spherical surface}
