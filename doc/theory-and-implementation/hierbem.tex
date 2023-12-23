@@ -176,8 +176,8 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   \begin{equation*}
     x^2 + y^2 + z^2 = 1.
   \end{equation*}
-  The Jacobi matrix of the equation is $(2x, 2y, 2z)$. Because the point $(0,0,0)$ does
-  not belong $S^2$, the rank of the Jacobi matrix is always 1, which means one coordinate
+  The Jacobian matrix of the equation is $(2x, 2y, 2z)$. Because the point $(0,0,0)$ does
+  not belong $S^2$, the rank of the Jacobian matrix is always 1, which means one coordinate
   component can be uniquely represented by the other two components. For example, for the
   upper hemisphere, we have
   \begin{equation*}
@@ -199,7 +199,7 @@ theorem in $\mathbb{R}^{n+r}$ can be obtained:
 \begin{Theorem}[Main submanifold theorem in $\mathbb{R}^{n+r}$]
   Let $F: \mathbb{R}^{n+r} \rightarrow \mathbb{R}^r$ and
   $F^{-1}(y_0) = \{x \in \mathbb{R}^{n+r} \vert F(x) = y_0\}$ is not empty. If
-  $\forall x_0 \in F^{-1}(y_0)$ the Jacobi map
+  $\forall x_0 \in F^{-1}(y_0)$ the Jacobian map
   $F_{*}: \mathbb{R}_{x_0}^{n+r} \rightarrow \mathbb{R}_{y_0}^r$ is surjective, then
   $F^{-1}(y_0)$ is a $n$-dimensional submanifold of
   $\mathbb{R}^{n+r}$.\footnote{$F^{-1}(y_0)$ is the level set of $F$ with respect to
@@ -207,7 +207,7 @@ theorem in $\mathbb{R}^{n+r}$ can be obtained:
 \end{Theorem}
 
 \begin{Proof}
-  The Jacobi map $\vect{F}_{*}$, which is a linear transformation, is
+  The Jacobian map $\vect{F}_{*}$, which is a linear transformation, is
   surjective, so its range is $\mathbb{R}^r$ and its rank is $r$.
   Then according to \thref{cor:implicit-func-local-full-rank},
   $\exists$ neighborhood $B$ of $x_0$ in $\mathbb{R}^{n+r}$ such that
@@ -270,7 +270,7 @@ theorem in $\mathbb{R}^{n+r}$ can be obtained:
   a coordinate chart $(U, \phi_U)$ such that $p \in U$ and $U$ is contained in $W$
   \footnote{Remember in the Definition \ref{def:manifold}, the image of a coordinate map
     $\phi_U$ is an open set in $\mathbb{R}^n$.}. If such induced topology is Hausdorff and
-  $M$ has a countable base, $M$ is called a $n$-dimensional differentiable manifold.
+  $M$ has a countable basis, $M$ is called a $n$-dimensional differentiable manifold.
 \end{Definition}
 
 Before we have another description of manifold when $M$ is given a topology, we
@@ -302,7 +302,7 @@ locally \textit{upgraded} to a diffeomorphism.
 \begin{Theorem}[Inverse function theorem]
   \label{theo:inv-func}
   Let $f: U \rightarrow V$ be a continuous and differentiable bijective map with
-  its inverse $f^{-1}$. Let $F_{*}$ be the Jacobi map of $f$. If $\det{F_{*}}
+  its inverse $f^{-1}$. Let $F_{*}$ be the Jacobian map of $f$. If $\det{F_{*}}
   \neq 0$ at $p \in U$, then $\exists$ $f(p)$'s neighborhood $W \subset V$
   such that $f^{-1}\big\vert_{W}$ is continuous and differentiable.
 \end{Theorem}
@@ -312,7 +312,7 @@ locally \textit{upgraded} to a diffeomorphism.
 \begin{Proposition}
   \label{prop:jacobi-and-diffeomorphism}
   Let $f: X \rightarrow Y$ be a differentiable homeomorphism between $X$ and
-  $Y$. Let $F_{*}$ be the Jacobi map of $f$. If $\forall p \in X$, $\det{F_{*}}
+  $Y$. Let $F_{*}$ be the Jacobian map of $f$. If $\forall p \in X$, $\det{F_{*}}
   \neq 0$, then $f$ is a diffeomorphism.
 \end{Proposition}
 
@@ -401,7 +401,7 @@ definition for the submanifold of a manifold.
 \begin{Theorem}[Main theorem of submanifold in manifold]
   Let $M^{n+r}$ and $V^r$ be two manifolds. Let $F: M^{n+r} \rightarrow V^r$ and the level
   set $F^{-1}(y_0) = \{x \in M^{n+r} \vert F(x) = y_0\}$ is not empty. If
-  $\forall x_0 \in F^{-1}(y_0)$ the Jacobi map
+  $\forall x_0 \in F^{-1}(y_0)$ the Jacobian map
   $F_{*}: M_{x_0}^{n+r} \rightarrow V_{y_0}^r$ is surjective\footnote{The rank of the
     Jacobian matrix is $r$.}, then $F^{-1}(y_0)$ is a $n$-dimensional submanifold of
   $M^{n+r}$.
@@ -455,12 +455,12 @@ If we use a column vector to represent $v$, the matrix form of (\ref{eq:contrava
   \label{eq:contravariant-transformation-matrix-form}
   v_V = \left[ \frac{\pdiff x_{V}}{\pdiff x_U} \right] \Bigg\vert_p v_U,
 \end{equation}
-where $\left[ \frac{\pdiff x_{V}}{\pdiff x_U} \right]\Big\vert_p$ is the Jacobi matrix of the transition
+where $\left[ \frac{\pdiff x_{V}}{\pdiff x_U} \right]\Big\vert_p$ is the Jacobian matrix of the transition
 map $\phi_{VU}$ evaluated at $p$. The transition map $\phi_{VU}$ is
 \begin{equation}
   x_V^i = x_V^i(x_U^1, \cdots, x_U^n) \quad (i=1,\cdots,n).
 \end{equation}
-The Jacobi matrix is
+The Jacobian matrix is
 \begin{equation}
   \begin{pmatrix}
     \frac{\pdiff x_V^1}{\pdiff x_U^1} & \cdots & \frac{\pdiff x_V^1}{\pdiff x_U^n} \\
@@ -521,7 +521,7 @@ independent.
 
 \begin{Proof}[Directional derivative of $f$ is coordinate independent]
   Since $v$ is a tangent vector. Its transformation from $(U,x_U)$ to $(V,x_V)$ requires
-  the Jacobi matrix of the transition map $\phi_{VU}$ as below:
+  the Jacobian matrix of the transition map $\phi_{VU}$ as below:
   \begin{equation}
     \label{eq:tangent-vector-transform}
     v_V^i = \sum_{j=1}^n \frac{\pdiff x_{V}^i}{\pdiff x_{U}^j} x_U^j \quad (i=1,\cdots,n).
@@ -598,7 +598,7 @@ treating a tangent vector as a differential operator.
 If a different coordinate chart $(V,y)$ containing $p$ is adopted, where
 $y = (y^1,\cdots,y^{n'})$ may have different number of components from $x$, the basis
 $\left\{ \vect{\pdiff}x^j \right\}_{j=1}^n$ in $(U,x)$ can be transformed to the new chart
-via the Jacobi matrix of the transition map $\phi_{VU}$, since each basis vector is also a
+via the Jacobian matrix of the transition map $\phi_{VU}$, since each basis vector is also a
 tangent vector, which should follow the same transformation rule as in
 (\ref{eq:tangent-vector-transform}). For the basis vector $\vect{\pdiff}x^j$, the $i$-th
 component in the transformed vector is
@@ -608,7 +608,7 @@ component in the transformed vector is
   \frac{\pdiff y^i}{\pdiff x^k} \delta_k^j = \frac{\pdiff y^{i}}{\pdiff x^{j}} \quad (i=1,\cdots,n').
 \end{equation}
 Hence, the transformed vector of $\vect{\pdiff}x^j$ is just the $j$-th column of the
-Jacobi matrix
+Jacobian matrix
 $$
 \begin{pmatrix}
   \frac{\pdiff y^{1}}{\pdiff x^j} \\
@@ -625,13 +625,14 @@ $$
   assign Cartesian coordinate chart $(x,y,z)$ to $U$. The transformation or transition map
   from $(\varphi,\theta)$ to $(x,y,z)$ is
   \begin{equation}
+    \label{eq:spherical-coordinate-transform}
     \begin{aligned}
       x &= r \cos\varphi \sin\theta \\
       y &= r \sin\varphi \sin\theta \\
       z &= r \cos\theta
     \end{aligned}.
   \end{equation}
-  The Jacobi matrix of this map is
+  The Jacobian matrix of this map is
   \begin{equation}
     \label{eq:spherical-coordinate-jacobi}
     \begin{pmatrix}
@@ -695,7 +696,7 @@ Note here we've transposed the basis vector $\vect{\pdiff}x_V^i$, because as a c
 a tangent vector in the matrix form is written as a column vector, while the matrix form
 of a basis vector in the tangent space is a row vector. Since $\vect{\pdiff}x_V^i$ is
 numerically equivalent to $\vect{e}_i$, the above expression extracts the $i$-th column of
-the Jacobi matrix of $\phi_{UV}$. Therefore, the expansion coefficient $a^{j}$ is just the
+the Jacobian matrix of $\phi_{UV}$. Therefore, the expansion coefficient $a^{j}$ is just the
 $j$-th component in this column vector, i.e.
 \begin{equation}
   a^j = \frac{\pdiff x_U^j}{\pdiff x_V^i}.
@@ -710,6 +711,7 @@ $(\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n)$ and
 $(\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n)$, the matrix form of the
 relationship between the two bases is
 \begin{equation}
+  \label{eq:tangent-space-bases-relation}
   (\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n) =
   (\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n) \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
 \end{equation}
@@ -988,7 +990,7 @@ Its matrix form is
   a^U = a^V \left[ \frac{\pdiff x_V}{\pdiff x_U} \right],
 \end{equation}
 where $a^U = (a_1^U,\cdots,a_n^U)$ and $a^V = (a_1^V,\cdots,a_n^V)$,
-$\left[ \frac{\pdiff x_V}{\pdiff x_U} \right]$ is the Jacobi matrix of the transition map
+$\left[ \frac{\pdiff x_V}{\pdiff x_U} \right]$ is the Jacobian matrix of the transition map
 $\phi_{VU}$. Similarly,
 \begin{equation}
 a^V = a^U \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
@@ -996,10 +998,10 @@ a^V = a^U \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
 
 The above coordinate transformation is called the \emph{covariant transformation}.
 
-\subsubsection{Relationship between Jacobi matrices}
+\subsubsection{Relationship between Jacobian matrices}
 
-We've already met two Jacobi matrices $\left[ \frac{\pdiff x_V}{\pdiff x_U} \right]$ and
-$\left[ \frac{\pdiff x_U}{\pdiff x_V} \right]$. The former is the Jacobi matrix of the
+We've already met two Jacobian matrices $\left[ \frac{\pdiff x_V}{\pdiff x_U} \right]$ and
+$\left[ \frac{\pdiff x_U}{\pdiff x_V} \right]$. The former is the Jacobian matrix of the
 transition map $\phi_{VU}$ and the latter is that of the map $\phi_{UV}$. Here we should
 emphasize that the number of coordinate components in the chart $(U,x_U)$ may be different
 from that of $(V,x_V)$. Moreover, neither of them is necessarily equal to the manifold
@@ -2070,7 +2072,8 @@ which is equivalent to the determinant
 \end{equation}
 
 \begin{Example}[Apply exterior product of cotangent space basis vectors to tangent
-  vectors]
+    vectors]
+    \label{exam:apply-exterior-product-of-cotangent-space-basis-to-k-vectors}
   Let the tuple of 1-forms $\left( \alpha_{(i_1)},\cdots,\alpha_{(i_k)} \right)$ be the
   basis vectors of the cotangent space $M_p^{n*}$: $(dx^{i_1},\cdots,dx^{i_k})$. Their
   exterior product is a $k$-form $dx^I \coloneqq dx^{i_1} \wedge\cdots\wedge dx^{i_k}$.
@@ -2130,7 +2133,7 @@ which is equivalent to the determinant
   \end{equation}
   It is obvious that only when $L=I$, the term in the sum is not zero. Therefore,
   \begin{equation}
-    \label{eq:cotangent-base-appled-to-tangent-base}
+    \label{eq:cotangent-basis-appled-to-tangent-basis}
     dx^I(\vect{\pdiff}x^J) = \delta_J^I.
   \end{equation}
 \end{Example}
@@ -2317,7 +2320,7 @@ According to Equation (\ref{eq:exterior-diff-k-form}),
   $\vect{\pdiff}x^{J\backslash\{j\}}$. For simplicity, let $L = J\backslash\{j\}$,}
                 &= \sum_{\underaccent{\rightharpoondown}{I}} \sum_j \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL}
                   d\alpha_I(\vect{\pdiff}x^j) dx^I(\vect{\pdiff}x^L) \\
-  \intertext{According to Equation (\ref{eq:cotangent-base-appled-to-tangent-base}):}
+  \intertext{According to Equation (\ref{eq:cotangent-basis-appled-to-tangent-basis}):}
                 &= \sum_{\underaccent{\rightharpoondown}{I}} \sum_j
                   \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL} \frac{\pdiff
                   \alpha_I(x)}{\pdiff x^j} \delta_L^I
@@ -2540,7 +2543,7 @@ representation in $M^n$ is $p(y)$. Let $F_{*}$ be a map from the tangent space
 $W_{p(x)}^m$ to $M_{p(y)}^n$. According to Equation
 (\ref{eq:contravariant-transformation}), the transformation of a tangent vector in two
 different coordinate charts is contravariant and the matrix form of such transformation is
-the Jacobi matrix. Hence, $F_{*}$ here is just the Jacobi map. Then the push-back of the
+the Jacobian matrix. Hence, $F_{*}$ here is just the Jacobian map. Then the push-back of the
 1-form $\alpha$ is the composition of $F_{*}$ and $\alpha$.
 
 \begin{center}
@@ -2570,7 +2573,7 @@ composition of $F_{*}^{-1}$ and $\alpha$.
     \label{eq:pullback-k-form}
     \left( F^{*}\alpha^k \right)(v_1,\cdots,v_k) = \alpha^k(F_{*}v_1,\cdots,F_{*}v_k),
   \end{equation}
-  where $F_{*}$ is the Jacobi map from $W_p^m$ to $M_p^n$.
+  where $F_{*}$ is the Jacobian map from $W_p^m$ to $M_p^n$.
 \end{Definition}
 
 \subsubsection{Properties of pull-back}
@@ -2624,7 +2627,7 @@ composition of $F_{*}^{-1}$ and $\alpha$.
     Here we still use the convention that $\alpha$ is in the space
     $\bigwedge M_{p(y)}^{n*}$, while its pull-back $F^{*}\alpha$ is in the space
     $\bigwedge W_{p(x)}^{m*}$. $F$ represents the map from $W^m$ to $M^n$ and $F_{*}$ is the
-    corresponding Jacobi map.
+    corresponding Jacobian map.
     \begin{itemize}
     \item When $\alpha$ is a 0-form, $F^{*}\alpha$ is also a 0-form with respect to the
       coordinate variable $x$, i.e. a scalar function $(F^{*}\alpha)(x)$. According to
@@ -2687,12 +2690,12 @@ composition of $F_{*}^{-1}$ and $\alpha$.
 \end{enumerate}
 
 \begin{Proposition}[Expression of the pull-back of a basis vector in $\bigwedge^k M_p^{n*}$]
-  \label{prop:pullback-of-base}
+  \label{prop:pullback-of-basis}
   Let $dy^J$ be a basis vector in the space of $k$ forms $\bigwedge^k M_p^{n*}$, where $J$
   is an index set $J=(j_1,\cdots,j_k)$. Let $L$ be an increasing index set. The pull-back
   of $dy^J$ is
   \begin{equation}
-    \label{eq:pullback-of-base}
+    \label{eq:pullback-of-basis}
     F^{*}dy^J = \sum_{\underaccent{\rightharpoondown}{L}} \det \left\{
       \frac{\pdiff y^J}{\pdiff x^L} \right\} dx^L.
   \end{equation}
@@ -2735,7 +2738,7 @@ composition of $F_{*}^{-1}$ and $\alpha$.
       y^{j_k}}{\pdiff x^{i_k}} \right) dx^I \right](\vect{\pdiff}x^L) \\
     &= \sum_I \left( \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
       y^{j_k}}{\pdiff x^{i_k}} \right) dx^I(\vect{\pdiff}x^L) \\
-    \intertext{Apply Equation (\ref{eq:cotangent-base-appled-to-tangent-base})}
+    \intertext{Apply Equation (\ref{eq:cotangent-basis-appled-to-tangent-basis})}
     &= \sum_I \left( \frac{\pdiff y^{j_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
       y^{j_k}}{\pdiff x^{i_k}} \right) \delta_L^I.
   \end{align*}
@@ -2822,14 +2825,14 @@ expression of the pull-back of a $k$-form can be obtained.
   At a point $p(u)$ in $M^2$, the pair of basis vectors
   $\left\{ \vect{\pdiff}u^1, \vect{\pdiff}u^2 \right\}$ of the tangent space $M_{p(u)}^2$
   define a normal vector $\vect{n}$ via the cross product of their representations using
-  the base $\left\{ \vect{\pdiff}x^1, \vect{\pdiff}x^2, \vect{\pdiff}x^3 \right\}$ of the
+  the basis $\left\{ \vect{\pdiff}x^1, \vect{\pdiff}x^2, \vect{\pdiff}x^3 \right\}$ of the
   tangent space $\mathbb{R}_{p(x)}^3$ (N.B. When there is a raw operation on classical
   vectors, for example the cross product here, it should be performed in the Cartesian
   space but not in the local coordinate chart $(u^1,u^2)$, since
-  $\left\{ \vect{\pdiff}u^1,\vect{\pdiff}u^2 \right\}$ may not be an orthonormal base,
+  $\left\{ \vect{\pdiff}u^1,\vect{\pdiff}u^2 \right\}$ may not be an orthonormal basis,
   which invalidates the classical definition of cross product). Such representations have
   been given in Equation (\ref{eq:tangent-vector-basis-relation}), which are just the
-  columns of the Jacobi map $\vect{i}_{*}$ in its matrix form. Then the normal vector is
+  columns of the Jacobian map $\vect{i}_{*}$ in its matrix form. Then the normal vector is
   \begin{equation*}
     \vect{n} = \begin{pmatrix}
       \frac{\pdiff x^1}{\pdiff u^1} \\ \frac{\pdiff x^2}{\pdiff u^1} \\ \frac{\pdiff
@@ -2845,6 +2848,7 @@ expression of the pull-back of a $k$-form can be obtained.
 \end{Example}
 
 \begin{Example}[Pull-back of the identity map in $M^3$]
+  \label{exam:pullback-of-identity-map}
   Let $\vect{I}: M^3 \rightarrow M^3$ be an identity map. The two $M^3$ spaces are
   assigned different coordinates $u = (u^1,u^2,u^3)$ and $x = (x^1,x^2,x^3)$ respectively.
   Let $\alpha^3 = a(x) dx^1 \wedge dx^2 \wedge dx^3$ be a 3-form with respect to the range
@@ -2857,17 +2861,210 @@ expression of the pull-back of a $k$-form can be obtained.
   integration from $\mathbb{R}^3$ to a local three dimensional coordinate chart.
 \end{Example}
 
+\subsection{Orientation, pseudo form and volume form}
+
+\begin{Definition}[Orientation of a vector space]
+  \label{defi:vector-space-orientation}
+  Different bases can be chosen for an $n$-dimensional vector space $E^n$. Any two of
+  these bases, $\vect{e} = (\vect{e}_1,\cdots,\vect{e}_n)$ and
+  $\vect{f} = (\vect{f}_1,\cdots,\vect{f}_n)$ for example, are linked by a unique
+  non-singular matrix $P$ as $\vect{f} = \vect{e} P$, which is actually
+  \begin{equation}
+    \label{eq:relation-between-vector-space-bases}
+    (\vect{f}_1,\cdots,\vect{f}_n) = (\vect{e}_1,\cdots,\vect{e}_n) P.
+  \end{equation}
+  Therefore, for any $i$ in the range $1,\cdots,n$, $\vect{f}_i = \vect{e}_i P^j_i$. If
+  the determinant of $P$ is positive, the two bases have a same orientation.
+
+  This defines an equivalence relation on the collection of all bases of $E^n$, which
+  categorizes them into two equivalence classes. One equivalence class is prescribed to
+  have the positive orientation and the other to have the negative orientation.
+\end{Definition}
+
+Apply the determinant operation on both sides of Equation
+(\ref{eq:relation-between-vector-space-bases}), we have
+\begin{equation*}
+  \det(\vect{f}_1,\cdots,\vect{f}_n) = \det(\vect{e}_1,\cdots,\vect{e}_n) \det(P),
+\end{equation*}
+where $\det(\vect{f}_1,\cdots,\vect{f}_n)$ and $\det(\vect{e}_1,\cdots,\vect{e}_n)$ are
+the signed volumes of the parallelograms spanned the two bases respectively. When the two
+bases have a same orientation, i.e. $\det(P)$ is positive, the volumes of the two
+parallelograms have a same sign. This means the sign of the volume spanned by a basis can
+be identified with the orientation of the vector space with respect to this basis.
+
+\begin{Example}[Orientation of a 2-dimensional vector space and direction of rotation]
+  For a 2-dimensional vector space $E^2$, there are only two elements in each of its
+  bases, i.e. $\vect{e} =(\vect{e}_1,\vect{e}_2)$. Then the sign of the volume spanned by
+  $\vect{e}$ is fully determined by the direction of rotation from $\vect{e}_1$ to
+  $\vect{e}_2$, i.e. counter-clockwise or clockwise. Therefore, the direction of rotation
+  can be identified with the orientation of $E^2$.
+\end{Example}
+
+An $n$-dimensional manifold $M^n$ can be covered by an atlas. For any coordinate chart
+$(U,x)$ in this atlas and for any point $p(x)$ in $U$, the tangent space $M_{p(x)}^n$
+associated with $p(x)$ is an $n$-dimensional vector space, which can be assigned an
+orientation that is determined from the basis
+$(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$. Even though all coordinate charts in the
+atlas covering $M^n$ can be given their own orientations in this way, these orientations
+are only locally valid. Whether $M^n$ as a whole can be given a global orientation depends
+on if all of these local orientations are compatible or consistent with each other.
+
+\begin{Definition}[Orientation of a manifold]
+  \label{defi:manifold-orientation}
+  For each coordinate chart $(U,x)$ in the atlas covering an $n$-dimensional manifold
+  $M^n$, its orientation is given by the tuple of basis vectors
+  $(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$. For any point $p$ in the overlap of two
+  charts $(U,x)$ and $(V,y)$, the orientation of the tangent space $M_p^n$ can also be
+  determined from the basis $(\vect{\pdiff}y^1,\cdots,\vect{\pdiff}y^n)$. According to the
+  relationship between $\vect{\pdiff}x$ and $\vect{\pdiff}y$ in Equation
+  (\ref{eq:tangent-space-bases-relation}), if the Jacobian map $\frac{\pdiff x}{\pdiff y}$
+  is non-singular, according to Definition \ref{defi:vector-space-orientation}, the two
+  orientations are equivalent. If all pairs of overlapping coordinate charts have
+  equivalent orientations, the manifold $M^n$ is orientable and has a definite
+  orientation.
+\end{Definition}
+
+\begin{Definition}[Orientation function]
+  For a coordinate chart $(U,x)$ of the manifold $M^n$, an orientation function
+  $o(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ is defined to operate on the basis of the
+  tangent space $M_{p(x)}^n$, which is simply written as $o(x)$. When the basis has a
+  positive orientation, $o(x) = 1$, otherwise, $o(x) = -1$.
+\end{Definition}
+
+\begin{Definition}[Pseudo $k$-form]
+  \label{defi:pseudo-form}
+  Let $\alpha^k$ be a pseudo $k$-form operating on the Cartesian product of $k$ tangent
+  spaces $\otimes^k M_p^n$. When the tangent space $M_p^n$ with the local basis
+  $(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ has the positive orientation, i.e.
+  $o(x) = 1$, $\alpha^k$ is a normal $k$-form $\alpha_o = \alpha^k$. When the basis has
+  the negative orientation, i.e. $o(x) = -1$, $\alpha^k$ changes its sign, i.e.
+  $\alpha_{-o} = -\alpha^k = -\alpha_o$.
+\end{Definition}
+
+We've already known from Example
+\ref{exam:apply-exterior-product-of-cotangent-space-basis-to-k-vectors} that the signed
+volume of the parallelogram spanned by a tuple of $n$ vectors $(v_1,\cdots,v_n)$ in the
+tangent space $M_{p}^n$ using the coordinate chart $(x)$ can be obtained by applying
+the special $n$-form $dx^1 \wedge \cdots \wedge dx^n$ to these vectors. N.B.
+$dx^1 \wedge \cdots \wedge dx^n$ is the only basis element for the space of $n$-forms. The
+returned value is just the determinant of these vectors, i.e. $\det(v_1,\cdots,v_n)$. The
+sign of this value depends on the orientation of the tangent space $M_p^n$, which can
+be explained as below.
+
+Assume we want to use a new coordinate chart $(y)$ for $M_{p}^n$ with the basis
+$\vect{\pdiff}y = (\vect{\pdiff}y^1,\cdots,\vect{\pdiff}y^n)$, where
+\begin{equation*}
+  \begin{cases}
+    \vect{\pdiff}y^{i_0} = \vect{\pdiff}x^{j_0}, \vect{\pdiff}y^{j_0} =
+    \vect{\pdiff}x^{i_0} \\
+    \vect{\pdiff}y^i = \vect{\pdiff}x^i & (i \neq i_0, i\neq j_0)
+  \end{cases}.
+\end{equation*}
+Hence, the new basis $\vect{\pdiff}y$ is obtained by swapping the $i_0$-th and $j_0$-th
+components in the original basis $\vect{\pdiff}x$. Since the tuple of vectors
+$(v_1,\cdots,v_n)$ are physical entities which maintain their lengths and directions in
+the tangent space $M_p^n$, when the new basis $\vect{\pdiff}y$ is adopted, their numerical
+representations must change accordingly, i.e. the $i_0$-th and $j_0$-th coordinate
+components in each $v_i$ should be swapped. Then we apply the new basis
+$dy^1 \wedge \cdots \wedge dy^n$ of the space of $n$-forms in the coordinate chart $(y)$
+to $v_1(y),\cdots,v_n(y)$. A new determinant can be obtained as
+$\det(v_1(y),\cdots,v_n(y))$, which is equivalent to swapping the $i_0$-th and $j_0$-th
+rows in $\det(v_1(x),\cdots,v_n(x))$. Therefore, the sign of the volume spanned by
+$(v_1,\cdots,v_n)$ changes when we use a basis of the tangent space with a different
+orientation.
+
+However, when we use the $n$-form $dx^1 \wedge \cdots \wedge dx^n$ or
+$dy^1 \wedge \cdots \wedge dy^n$ to measure volume, what we really want is an
+orientation-independent value. Therefore, the pseudo $n$-form given in Definition
+\ref{defi:pseudo-form} is needed here. Because it changes its own sign when the
+orientation of the tangent space changes, this will compensate the sign change caused by
+applying it to $(v_1,\cdots,v_n)$ as described above. Here comes the definition of
+volume form.
+
+\begin{Definition}[Volume $n$-form with respect to $n$-dimensional manifold $M^n$]
+  \label{defi:volume-form}
+  Let $(x)$ be a coordinate chart containing $p$ in $M^n$. Its corresponding basis
+  $\vect{\pdiff}x = (\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ of the tangent space
+  $M_p^n$ is orthonormal. Then the volume $n$-form is
+  \begin{equation}
+    \label{eq:volume-form}
+    \mathrm{vol}^n = o(x) dx^1 \wedge \cdots \wedge dx^n.
+  \end{equation}
+\end{Definition} 
+Apply this volume $n$-form to the basis $\vect{\pdiff}x$ and use Equation
+(\ref{eq:cotangent-basis-appled-to-tangent-basis}), we know that the volume spanned by the
+basis $\vect{\pdiff}x$ is $o(x)$, i.e. \emph{the volume spanned by a set of positively
+  oriented orthonormal basis vectors is 1.}
+
+Let $(y)$ be an arbitrary coordinate chart containing $p$. The basis $\vect{\pdiff}y$ for
+$M_{p}^n$ needs not be orthonormal. Let $\vect{I}$ be the identity map from $M_{p(y)}^n$
+to $M_{p(x)}^n$ and its Jacobian map be $\vect{I}_{*}$. The expression of the volume
+$n$-form using the chart $(y)$ can be obtained via pull-back according to Example
+\ref{exam:pullback-of-identity-map} as below.
+\begin{equation*}
+  \mathrm{vol}^n = o(x) dx^1 \wedge \cdots \wedge dx^n = o(x) \det \left\{  \frac{\pdiff x}{\pdiff
+      y} \right\} dy^1 \wedge \cdots \wedge dy^n.
+\end{equation*}
+When $M_{p(y)}^n$ has the positive orientation, $\mathrm{vol}_{(y)}^n(\vect{\pdiff}y)$
+should produce a positive value, while $M_{p(y)}^n$ has the negative orientation, a
+negative value should be returned. Hence, the volume $n$-form in the coordinate chart
+$(y)$ should be
+\begin{equation}
+  \label{eq:volume-form-in-y}
+  \mathrm{vol}^n = o(y) \Bigg\vert\det \left\{ \frac{\pdiff x}{\pdiff y}
+  \right\}\Bigg\vert dy^1 \wedge\cdots\wedge dy^n.
+\end{equation}
+
+If $M^n$ is a Riemannian manifold, the metric tensor in the orthonormal coordinate chart
+$(x)$ is $g^{(x)} = \delta_{ij} dx^i \otimes dx^j$ \footnote{N.B. The metric tensor is a
+  2nd rank covariant tensor not a 2-form.}. If the arbitrary coordinate chart $(y)$
+is adopted, the metric tensor is $g^{(y)} = g_{rs}^{(y)} dy^r \otimes dy^s$, where
+\begin{equation*}
+  g_{rs}^{(y)} = \frac{\pdiff x^i}{\pdiff y^r} \frac{\pdiff x^j}{\pdiff y^s} g_{ij}^{(x)}
+  = \frac{\pdiff x^i}{\pdiff y^r} \frac{\pdiff x^j}{\pdiff y^s} \delta_{ij} = \sum_i
+  \frac{\pdiff x^i}{\pdiff y^r} \frac{\pdiff x^i}{\pdiff y^s}.
+\end{equation*}
+Define $g(y) \coloneqq \det(g_{rs}^{(y)})$, we have
+\begin{equation*}
+  g(y) = \det \left\{ \sum_i
+    \frac{\pdiff x^i}{\pdiff y^r} \frac{\pdiff x^i}{\pdiff y^s} \right\} = \det \left\{
+    \left[ \frac{\pdiff x}{\pdiff y}^{\mathrm{T}} \right] \left[ \frac{\pdiff x}{\pdiff y}
+    \right] \right\} = \det \left\{ \frac{\pdiff x}{\pdiff y} \right\}^2.
+\end{equation*}
+Therefore, the volume $n$-form represented in the coordinate chart $(y)$ is
+\begin{equation}
+  \mathrm{vol}^n = o(y) \sqrt{g(y)} dy^1 \wedge\cdots\wedge dy^n.
+\end{equation}
+
+\begin{Example}[Volume 3-form using the spherical coordinates]
+  Let $(x,y,z)$ be the standard Cartesian coordinate chart and $(r, \phi, \theta)$ be the
+  spherical coordinate chart. The transformation from $(r, \phi, \theta)$ to $(x,y,z)$ has
+  been given in Equation (\ref{eq:spherical-coordinate-transform}). Its Jacobian matrix is
+  \begin{equation}
+    J = \begin{pmatrix}
+      \cos\phi\sin\theta & -r\sin\phi \sin\theta & r\cos\phi \cos\theta \\
+      \sin\phi\sin\theta & r\cos\phi \sin\theta & r \sin\phi \cos\theta \\
+      \cos\theta & 0 & -r\sin\theta
+    \end{pmatrix}.
+  \end{equation}
+  Then the volume 3-form in the spherical coordinate chart is
+  \begin{equation}
+    \begin{aligned}
+      \mathrm{vol}^3 &= o(r,\phi,\theta) \det \left\{ J^{\mathrm{T}} J
+      \right\}^{\frac{1}{2}} dr \wedge d\phi \wedge d\theta \\
+      &= o(r,\phi,\theta) \det \begin{pmatrix}
+        1 & 0 & 0 \\
+        0 & r^2 & 0 \\
+        0 & 0 & r^2\sin^2\theta
+      \end{pmatrix}^{\frac{1}{2}} dr \wedge d\phi \wedge d\theta \\
+      & = o(r,\phi,\theta) r^2\sin\theta dr \wedge d\phi \wedge d\theta.
+    \end{aligned}
+  \end{equation}
+\end{Example}
+
 \subsection{Interior product}
 
 \subsection{Hodge star}
-
-\subsection{Some special forms}
-
-\begin{itemize}
-\item 0,1,2,3-forms
-\item Area form
-\item Volume form
-\end{itemize}
 
 \subsection{Relationship between $k$-forms and vector analysis}
 
@@ -3222,7 +3419,7 @@ The scaling factor or surface metric is
 \end{equation}
 
 $\abs{J}$ can also be calculated from the Gramian matrix $G = J^TJ$, with $J$ being the
-Jacobi matrix of the map from unit cell to real cell:
+Jacobian matrix of the map from unit cell to real cell:
 \begin{equation}
   \label{eq:surface-metric-from-gramian-matrix}
   \abs{J} = \sqrt{\det(G)} = \sqrt{\det(J^TJ)}.
