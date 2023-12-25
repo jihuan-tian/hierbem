@@ -1600,7 +1600,7 @@ vector of the contravariant tensor space and the tensor $T$ can be represented a
   A mixed tensor $W$, which has contravariant rank $s$ and covariant rank $r$, is a
   multilinear real valued function on $s$ 1-forms and $r$ tangent vectors, i.e.
   $W:\left( \otimes^s M_p^{n*} \right) \otimes \left( \otimes^r M_p^n \right) \rightarrow
-  \mathbb{R}$. It is actually the tensor product of an $s$-rank contravariant tensor and
+  \mathbb{R}$. It is actually the tensor product of an $s$-th rank contravariant tensor and
   an $r$-th rank covariant tensor.
 \end{Definition}
 Hence $W$ belongs to the dual space of the product space
@@ -1671,6 +1671,120 @@ $i\cdots j$ and $k\cdots l$ for $(V,x_V)$.
     \right) \left( W^{c \cdots d}_{r \cdots s} \right)_U
   \end{equation}
 \end{itemize}
+
+\subsection{Contraction of a mixed tensor}
+
+\begin{Definition}[Contraction of a mixed tensor]
+  \label{defi:contraction-of-mixed-tensor}
+  Let
+  $W_U = \left( W^{i_1 \cdots i_p}_{j_1 \cdots j_q} \right)_U \vect{\pdiff}x^{i_1} \otimes
+  \cdots \otimes \vect{\pdiff}x^{i_p} \otimes dx^{j_1} \otimes \cdots \otimes dx^{j_q}$ be
+  a mixed tensor of contravariant rank $p$ and covariant rank $q$ using the coordinate
+  chart $(U,x)$. The contraction of its $k$-th contravariant index and the $l$-th
+  covariant index produces a $(p-1)$-th contravariant rank and $(q-1)$-th covariant rank
+  tensor, which is defined as
+  \begin{equation}
+    \label{eq:contraction-of-mixed-tensor}
+    \begin{aligned}
+      \overset{\circ}{W}_U &= \left( \overset{\circ}{W}^{i_1 \cdots \hat{i}_k \cdots
+          i_p}_{j_1 \cdots \hat{j}_l \cdots j_q} \right)_U \vect{\pdiff}x^{i_1} \otimes
+      \cdots \widehat{\vect{\pdiff}x^{i_k}} \cdots \otimes \vect{\pdiff}x^{i_p} \otimes
+      dx^{j_1}  \otimes \cdots \widehat{dx^{j_l}} \cdots \otimes dx^{j_q} \\
+      &= \sum_{m=1}^n \left( W^{i_1 \cdots i_{k-1}, m, i_{k+1} \cdots i_p}_{j_1 \cdots
+          j_{l-1}, m, j_{l+1} \cdots j_{q}} \right)_U \vect{\pdiff}x^{i_1} \otimes \cdots
+      \widehat{\vect{\pdiff}x^{i_k}} \cdots \otimes \vect{\pdiff}x^{i_p} \otimes dx^{j_1}
+      \otimes \cdots \widehat{dx^{j_l}} \cdots \otimes dx^{j_q}.
+    \end{aligned}
+  \end{equation}
+\end{Definition}
+It should be proved that Definition \ref{defi:contraction-of-mixed-tensor} really defines
+a mixed tensor, i.e. the resulted entity should satisfy the rule of coordinate
+transformation for a mixed tensor.
+\begin{Proof}
+  Let
+  $W_V = \left( W^{r_1 \cdots r_p}_{s_1 \cdots s_q} \right)_V \vect{\pdiff}y^{r_1} \otimes
+  \cdots \otimes \vect{\pdiff}y^{r_p} \otimes dy^{s_1} \otimes \cdots \otimes dy^{s_q}$ be
+  the same mixed tensor as $W_U$ but represented with the coordinate chart $(V,y)$. After
+  contracting its $k$-th contravariant index and $l$-th covariant index, it becomes
+  \begin{align*}
+    \overset{\circ}{W}_V
+    &= \left( \overset{\circ}{W}^{r_1 \cdots \hat{r}_k \cdots r_p}_{s_1 \cdots \hat{s}_l
+      \cdots s_q} \right)_{V} \vect{\pdiff}y^{r_1}
+      \otimes \cdots \widehat{\vect{\pdiff}y^{r_k}} \cdots \otimes \vect{\pdiff}y^{r_p}
+      \otimes dy^{s_1} \otimes \cdots \widehat{dy^{s_l}} \cdots \otimes dy^{s_q} \\
+    &= \sum_{m=1}^n \left( W^{r_1 \cdots r_{k-1}, m, r_{k+1} \cdots
+      r_p}_{s_1 \cdots s_{l-1}, m, s_{l+1} \cdots s_q} \right)_V \vect{\pdiff}y^{r_1}
+      \otimes \cdots \widehat{\vect{\pdiff}y^{r_k}} \cdots \otimes \vect{\pdiff}y^{r_p}
+      \otimes dy^{s_1} \otimes \cdots \widehat{dy^{s_l}} \cdots \otimes dy^{s_q},
+  \end{align*}
+  According to Equation (\ref{eq:mixed-tensor-transform}), the expansion coefficient can
+  be represented as
+  \begin{align*}
+    \left( \overset{\circ}{W}^{r_1 \cdots \hat{r}_k \cdots r_p}_{s_1 \cdots \hat{s}_l
+    \cdots s_q} \right)_{V}
+    &= \sum_{m=1}^n \left( W^{r_1 \cdots r_{k-1}, m, r_{k+1} \cdots
+      r_p}_{s_1 \cdots s_{l-1}, m, s_{l+1} \cdots s_q} \right)_V \\
+    &= \sum_{m=1}^n \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots \frac{\pdiff
+      y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{m}}{\pdiff x^{i_k}} \frac{\pdiff
+      y^{r_{k+1}}}{\pdiff x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}}
+      \right) \cdot \\
+    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
+      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff x^{j_l}}{\pdiff y^{m}} \frac{\pdiff
+      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+      \right) \left( W^{i_1 \cdots i_{k-1},
+      i_k, i_{k+1} \cdots i_p}_{j_1 \cdots j_{l-1}, j_l, j_{l+1} \cdots j_{q}} \right)_U
+    \\
+    &= \left( \sum_{m=1}^n \frac{\pdiff y^{m}}{\pdiff x^{i_k}} \frac{\pdiff
+      x^{j_l}}{\pdiff y^{m}} \right) \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots
+      \frac{\pdiff y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{r_{k+1}}}{\pdiff
+      x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}} \right) \cdot \\
+    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
+      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff
+      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+      \right) \left( W^{i_1 \cdots i_{k-1},
+      i_k, i_{k+1} \cdots i_p}_{j_1 \cdots j_{l-1}, j_l, j_{l+1} \cdots j_{q}} \right)_U,
+  \end{align*}
+  where
+  \begin{equation*}
+    \sum_{m=1}^n \frac{\pdiff y^{m}}{\pdiff x^{i_k}} \frac{\pdiff x^{j_l}}{\pdiff y^{m}} =
+    \frac{\pdiff x^{j_l}}{\pdiff x^{i_k}} = \delta^{j_l}_{i_k}.
+  \end{equation*}
+  Therefore, only when $j_l = i_k$, the term in the sum for the tensor coefficient is
+  non-zero. We finally have
+  \begin{align*}
+    \left( \overset{\circ}{W}^{r_1 \cdots \hat{r}_k \cdots r_p}_{s_1 \cdots \hat{s}_l
+    \cdots s_q} \right)_{V}
+    &= \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots
+      \frac{\pdiff y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{r_{k+1}}}{\pdiff
+      x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}} \right) \cdot \\
+    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
+      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff
+      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+      \right) \left( \sum_{j_l, i_k} \delta^{j_l}_{i_k} \left( W^{i_1 \cdots i_{k-1},
+      i_k, i_{k+1} \cdots i_p}_{j_1 \cdots j_{l-1}, j_l, j_{l+1} \cdots j_{q}} \right)_U
+      \right) \\
+    &= \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots
+      \frac{\pdiff y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{r_{k+1}}}{\pdiff
+      x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}} \right) \cdot \\
+    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
+      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff
+      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+      \right) \left( \sum_{m=1}^n \left( W^{i_1 \cdots i_{k-1},
+      m, i_{k+1} \cdots i_p}_{j_1 \cdots j_{l-1}, m, j_{l+1} \cdots j_{q}} \right)_U
+      \right) \\
+    &= \left( \frac{\pdiff y^{r_1}}{\pdiff x^{i_1}} \cdots
+      \frac{\pdiff y^{r_{k-1}}}{\pdiff x^{i_{k-1}}} \frac{\pdiff y^{r_{k+1}}}{\pdiff
+      x^{i_{k+1}}} \cdots \frac{\pdiff y^{r_p}}{\pdiff x^{i_p}} \right) \cdot \\
+    & \quad \quad \left( \frac{\pdiff x^{j_1}}{\pdiff y^{s_1}} \cdots \frac{\pdiff
+      x^{j_{l-1}}}{\pdiff y^{s_{l-1}}} \frac{\pdiff
+      x^{j_{l+1}}}{\pdiff y^{s_{l+1}}} \cdots \frac{\pdiff x^{j_q}}{\pdiff y^{s_q}}
+      \right) \left( \overset{\circ}{W}^{i_1 \cdots \hat{i_k} \cdots i_p}_{j_1 \cdots
+      \hat{j_l} \cdots j_q} \right)_U.
+  \end{align*}
+  Therefore, the contraction of a $p$-th contravariant rank and $q$-th covariant rank
+  mixed tensor is indeed a $(p-1)$-th contravariant rank and $(q-1)$-th covariant rank
+  mixed tensor.
+\end{Proof}
 
 \subsection{Exterior form and exterior algebra}
 
