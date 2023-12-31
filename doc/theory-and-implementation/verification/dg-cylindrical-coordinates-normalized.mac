@@ -1,0 +1,61 @@
+kill(all)$
+batch("linalg.mac")$
+
+/* Relationship between Cartesian and cylindrical coordinate frames */
+assume(r>0);
+x : r*cos(phi);
+y : r*sin(phi);
+z : w;
+
+/* Local coordinte chart $(u)=(r,phi,w)$ */
+u : [r, phi, w];
+
+Juv : matrix([diff(x,r), diff(x,phi), diff(x,w)], [diff(y,r), diff(y,phi), diff(y,w)], [diff(z,r), diff(z,phi), diff(z,w)]);
+G : trigsimp(transpose(Juv) . Juv);
+/* $\sqrt{g}$ appears in the volume form */
+g : determinant(G);
+
+/* Compute the gradient of a 0-form */
+depends(f, [u[1], u[2], u[3]]);
+df : matrix(
+  [diff(f, u[1])],
+  [diff(f, u[2])],
+  [diff(f, u[3])]
+  );
+nabla_f : G_inv . df;
+scale_tangent_vector_to_normalized_basis(nabla_f, Juv);
+expand(trigsimp(nabla_f));
+
+/* ****************************** */
+/* Compute the curl of a vector a */
+/* ****************************** */
+/* Define the tangent vector */
+A : matrix([a1], [a2], [a3]);
+/* Define the tangent vector, using the non-normalized ball coordinates */
+scale_tangent_vector_to_nonnormalized_basis(A, Juv);
+
+/* Transform the tangent vector to covector or 1-form */
+alpha : G . A;
+depends([a1, a2, a3], [u[1], u[2], u[3]]);
+/* Exterior differential of the 1-form $\alpha$ */
+dalpha : matrix(
+  [diff(alpha[3,1], u[2]) - diff(alpha[2,1], u[3])],
+  [diff(alpha[1,1], u[3]) - diff(alpha[3,1], u[1])],
+  [diff(alpha[2,1], u[1]) - diff(alpha[1,1], u[2])]);
+curl_A : expand(trigsimp(1 / sqrt(g) * dalpha));
+scale_tangent_vector_to_normalized_basis(curl_A, Juv);
+expand(trigsimp(curl_A));
+
+/* Compute the divergence of b */
+/* Define the tangent vector */
+B : matrix([b1], [b2], [b3]);
+/* Define the tangent vector, using the non-normalized ball coordinates */
+scale_tangent_vector_to_nonnormalized_basis(B, Juv);
+depends([b1, b2, b3], [u[1], u[2], u[3]]);
+div_B : expand(trigsimp(1 / sqrt(g) * (diff(sqrt(g) * B[1,1], u[1]) + diff(sqrt(g) * B[2,1], u[2]) + diff(sqrt(g) * B[3,1], u[3]))));
+
+/* Compute the Laplacian */
+G_inv : invert(G);
+nabla_f : G_inv . df;
+beta : nabla_f * sqrt(g);
+laplacian_f : expand(trigsimp(1 / sqrt(g) * (diff(beta[1,1], u[1]) + diff(beta[2,1], u[2]) + diff(beta[3,1], u[3]))));

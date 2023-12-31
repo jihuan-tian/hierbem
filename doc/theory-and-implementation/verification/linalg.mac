@@ -1,0 +1,46 @@
+typeoff : true$
+
+/* Verify passing a matrix to a function is by reference */
+test_matrix_arg_passing(mat) := block(
+  mat[1,1] : mat[1,1] * 10
+  )$
+
+normalize_mat_cols(mat) := block([i, j, mat_col, scale_factor],
+  /* Iterate over each column */
+  
+  for j:1 step 1 thru matrix_size(mat)[2]
+  do (
+    mat_col : col(mat, j),
+    scale_factor : mat_norm(mat_col, frobenius),
+    
+    /* Iterate over each row */
+    for i:1 step 1 thru matrix_size(mat)[1]
+    do (
+      mat[i,j] : mat[i,j] / scale_factor
+      )
+    )
+  )$
+
+scale_tangent_vector_to_nonnormalized_basis(vec, J) := block(
+  [j, mat_col, scale_factor],
+  for j:1 step 1 thru matrix_size(J)[2]
+  do (
+    mat_col : col(J, j),
+    scale_factor : mat_norm(mat_col, frobenius),
+
+    vec[j,1] : vec[j,1] / scale_factor
+    )
+  )$
+
+scale_tangent_vector_to_normalized_basis(vec, J) := block(
+  [j, mat_col, scale_factor],
+  for j:1 step 1 thru matrix_size(J)[2]
+  do (
+    mat_col : col(J, j),
+    scale_factor : mat_norm(mat_col, frobenius),
+
+    vec[j,1] : vec[j,1] * scale_factor
+    )
+  )$
+
+ttyoff : false$

@@ -617,43 +617,132 @@ $$
 \end{pmatrix}.
 $$
 
-\begin{Example}[Coordinate curves of a sphere parameterized by $(r, \varphi, \theta)$]
+\begin{Example}[Basis of tangent space for a sphere parameterized by $(\theta, \phi)$]
+  \label{exam:spherical-coordinate-basis}
   Select a neighborhood $U$ of the circle with a latitude $\frac{\pi}{4}$ on the sphere
   which has a radius $r$ and centered at the origin. For example, $U$ can be an open band
   between latitude $\frac{\pi}{5}$ and $\frac{\pi}{3}$. Assign a local coordinate chart
-  $(\varphi, \theta)$ to $U$, i.e. the spherical coordinates. Meanwhile, we can still
-  assign Cartesian coordinate chart $(x,y,z)$ to $U$. The transformation or transition map
-  from $(\varphi,\theta)$ to $(x,y,z)$ is
+  $(\theta, \phi)$ to $U$, i.e. the spherical coordinates, where $\theta$ is the polar
+  angle and $\phi$ is the azimuthal angle. Meanwhile, we can still assign Cartesian
+  coordinate chart $(x,y,z)$ to $U$. The transformation or transition map from
+  $(\theta, \phi)$ to $(x,y,z)$ is
   \begin{equation}
     \label{eq:spherical-coordinate-transform}
     \begin{aligned}
-      x &= r \cos\varphi \sin\theta \\
-      y &= r \sin\varphi \sin\theta \\
+      x &= r \cos\phi \sin\theta \\
+      y &= r \sin\phi \sin\theta \\
       z &= r \cos\theta
     \end{aligned}.
   \end{equation}
   The Jacobian matrix of this map is
   \begin{equation}
-    \label{eq:spherical-coordinate-jacobi}
+    \label{eq:spherical-coordinate-jacobian-matrix}
     \begin{pmatrix}
-      -r\sin\phi \sin\theta & r\cos\phi \cos\theta \\
-      r\cos\phi \sin\theta & r \sin\phi \cos\theta \\
-      0 & -r\sin\theta
+      r\cos\phi \cos\theta & -r\sin\phi \sin\theta \\
+      r \sin\phi \cos\theta & r\cos\phi \sin\theta \\
+      -r\sin\theta & 0
     \end{pmatrix}.
   \end{equation}
   Then for a point $p$ in $U$, the basis of the tangent space represented in the chart
-  $(\varphi, \theta)$ is $\left\{ \vect{\pdiff}\varphi, \vect{\pdiff}\theta \right\}$. In
-  the chart $(x,y,z)$, the basis is
-  $\left\{ (-r\sin\phi \sin\theta, r\cos\phi \sin\theta, 0)^{\mathrm{T}}, (r\cos\phi
-    \cos\theta, r\sin\phi \cos\theta, -r\sin\theta)^{\mathrm{T}} \right\}$. This can be
-  visualized in Figure \ref{fig:basis-on-sphere}, where a set of points are selected as
-  $p$ whose latitude is $\frac{\pi}{4}$.
+  $(\theta, \phi)$ is $\left\{ \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$. In the
+  chart $(x,y,z)$, the basis is
+  \begin{equation}
+    \begin{aligned}
+      \vect{\pdiff}\theta &= r\cos\phi \cos\theta \vect{\pdiff}x + r\sin\phi \cos\theta
+      \vect{\pdiff}y - r\sin\theta \vect{\pdiff}z \\
+      \vect{\pdiff}\phi &= -r\sin\phi \sin\theta \vect{\pdiff}x + r\cos\phi \sin\theta
+      \vect{\pdiff}y
+    \end{aligned}.
+  \end{equation}
+  This can be visualized in Figure \ref{fig:basis-on-sphere}, where a set of points are
+  selected as $p$ whose latitude is $\frac{\pi}{4}$.
   \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.7\textwidth, height=\textheight, keepaspectratio]{figures/basis-on-sphere}
     \caption{}
     \label{fig:basis-on-sphere}
   \end{figure}
+  We also notice that the basis vectors $\vect{\pdiff}\theta$ and $\vect{\pdiff}\phi$ are
+  not normalized:
+  \begin{equation*}
+    \begin{aligned}
+      \norm{\vect{\pdiff}\theta} &= \sqrt{r^2\cos^2\phi\cos^{2}\theta +
+        r^2\sin^2\phi\cos^2\theta + r^2\sin^2\theta} = \sqrt{r^2\cos^2\theta +
+        r^2\sin^2\theta} = r \\
+      \norm{\vect{\pdiff}\phi} &= \sqrt{r^2\sin^2\phi\sin^2\theta +
+        r^2\cos^2\phi\sin^2\theta} = \sqrt{r^2\sin^2\theta} = r\sin\theta
+    \end{aligned}.
+  \end{equation*}
+  Therefore, a normalized basis
+  $\left\{ \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi} \right\}$ of the spherical
+  coordinate chart is
+  $\left\{ \frac{1}{r} \vect{\pdiff}\theta, \frac{1}{r\sin\theta} \vect{\pdiff}\phi
+  \right\}$.
+\end{Example}
+
+\begin{Example}[Basis of tangent space for a ball parameterized by $(r, \theta, \phi)$
+  \footnote{Here we place the coordinate variable $\theta$ in front of $\phi$, so that the
+    local coordinate frame is right handed, which is consistent with our custom.}]
+  \label{exam:ball-coordinate-basis}
+  If the radius $r$ in Equation (\ref{eq:spherical-coordinate-transform}) is also a
+  coordinate component, the Jacobian matrix for the transition map from $(r,\theta,\phi)$
+  to $(x,y,z)$ is
+  \begin{equation}
+    \label{eq:ball-coordinate-jacobian-matrix}
+    \begin{pmatrix}
+      \cos\phi \sin\theta & r\cos\phi \cos\theta & -r\sin\phi \sin\theta \\
+      \sin\phi \sin\theta & r \sin\phi \cos\theta & r\cos\phi \sin\theta \\
+      \cos\theta & -r\sin\theta & 0
+    \end{pmatrix}.
+  \end{equation}
+  The columns of this matrix form the basis of the tangent space for a ball:
+  \begin{equation}
+    \begin{aligned}
+      \vect{\pdiff}r &= \cos\phi \sin\theta \vect{\pdiff}x + \sin\phi \sin\theta
+      \vect{\pdiff}y + \cos\theta \vect{\pdiff}z \\
+      \vect{\pdiff}\theta &= r\cos\phi\cos\theta \vect{\pdiff}x + r\sin\phi\cos\theta
+      \vect{\pdiff}y - r\sin\theta \vect{\pdiff}z \\
+      \vect{\pdiff}\phi &= -r\sin\phi \sin\theta \vect{\pdiff}x + r\cos\phi \sin\theta
+      \vect{\pdiff}y
+    \end{aligned}.
+  \end{equation}
+  The normalized basis
+  $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi}
+  \right\}$ is
+  $\left\{ \vect{\pdiff}r, \frac{1}{r} \vect{\pdiff}\theta, \frac{1}{r\sin\theta}
+    \vect{\pdiff}\phi \right\}$.
+\end{Example}
+
+\begin{Example}[Basis of tangent space for a cylinder parameterized by $(r, \varphi, z')$]
+  \label{exam:cylindrical-coordinate-basis}
+  The transition map from $(r,\varphi,z')$ to $(x,y,z)$ is
+  \begin{equation}
+    \label{eq:cylindrical-coordinate-transform}
+    \begin{aligned}
+      x &= r \cos\phi \\
+      y &= r \sin\phi \\
+      z &= z'
+    \end{aligned}.
+  \end{equation}
+  The Jacobian matrix of this map is
+  \begin{equation}
+    \label{eq:cylindrical-coordinate-jacobian-matrix}
+    \begin{pmatrix}
+      \cos\phi & -r\sin\phi & 0 \\
+      \sin\phi & r\cos\phi & 0 \\
+      0 & 0 & 1
+    \end{pmatrix}.
+  \end{equation}
+  The columns of this matrix form the basis of the tangent space:
+  \begin{equation}
+    \begin{aligned}
+      \vect{\pdiff}r &= \cos\phi \vect{\pdiff}x + \sin\phi \vect{\pdiff}y \\
+      \vect{\pdiff}\phi &= -r \sin\phi \vect{\pdiff}x + r \cos\phi \vect{\pdiff}y \\
+      \vect{\pdiff}z' &= \vect{\pdiff}z
+    \end{aligned}.
+  \end{equation}
+  The normalized basis is
+  $\left\{ \vect{\pdiff}r, \frac{1}{r}\vect{\pdiff}\phi, \vect{\pdiff}z' \right\}$.
 \end{Example}
 
 The above tangent and velocity vectors of a manifold $M$ can be visualized in an Euclidean
@@ -715,44 +804,6 @@ relationship between the two bases is
   (\vect{\pdiff}x_V^1,\cdots,\vect{\pdiff}x_V^n) =
   (\vect{\pdiff}x_U^1,\cdots,\vect{\pdiff}x_U^n) \left[ \frac{\pdiff x_U}{\pdiff x_V} \right].
 \end{equation}
-
-\begin{Example}[Basis of spherical coordinate chart]
-  \label{exam:spherical-coordinate-basis}
-  We still use the spherical coordinate system as an example. Let $(U,x_U)$ be a
-  coordinate chart using the Cartesian coordinate frame and $(V,x_V)$ be a coordinate
-  chart using the spherical coordinate frame. Then the basis of $(U,x_U)$ is
-  $\left\{ \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$ and the basis of
-  $(V,x_V)$ is $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$. We want to see
-  how $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$ is represented in $\left\{
-    \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$. According to Equation
-  (\ref{eq:spherical-coordinate-jacobi}),
-  \begin{equation}
-    \begin{aligned}
-      \vect{\pdiff}\phi &= -r\sin\phi \sin\theta \vect{\pdiff}x + r\cos\phi \sin\theta
-      \vect{\pdiff}y \\
-      \vect{\pdiff}\theta &= r\cos\phi\cos\theta \vect{\pdiff}x + r\sin\phi\cos\theta
-      \vect{\pdiff}y - r\sin\theta \vect{\pdiff}z,
-    \end{aligned}
-  \end{equation}
-  i.e. $\vect{\pdiff}\phi$ in the Cartesian frame is just the first column of the Jacobi
-  matrix and $\vect{\pdiff}\theta$ is the second column. We also notice that the basis
-  vectors $\vect{\pdiff}\phi$ and $\vect{\pdiff}\theta$ are not
-  normalized or unit vectors:
-  \begin{equation*}
-    \begin{aligned}
-      \norm{\vect{\pdiff}\phi} &= \sqrt{r^2\sin^2\phi\sin^2\theta +
-        r^2\cos^2\phi\sin^2\theta} = \sqrt{r^2\sin^2\theta} = r\sin\theta \\
-      \norm{\vect{\pdiff}\theta} &= \sqrt{r^2\cos^2\phi\cos^{2}\theta +
-        r^2\sin^2\phi\cos^2\theta + r^2\sin^2\theta} = \sqrt{r^2\cos^2\theta +
-        r^2\sin^2\theta} = r.
-    \end{aligned}
-  \end{equation*}
-  Therefore, a normalized basis
-  $\left\{ \vect{\pdiff}\hat{\phi}, \vect{\pdiff}\hat{\theta} \right\}$ of the spherical
-  coordinate chart is
-  $\left\{ \frac{1}{r\sin\theta} \vect{\pdiff}\phi, \frac{1}{r} \vect{\pdiff}\theta
-  \right\}$.
-\end{Example}
 
 \section{Covector and cotangent space}
 
@@ -869,6 +920,7 @@ vector $v$, i.e. it projects $v$ to the $i$-th coordinate axis.
 \label{sec:0-form}
 
 \begin{Definition}[0-form]
+  \label{def:0-form}
   Let $M^n$ be an $n$-dimensional manifold which contains the point $p$. A scalar function
   $f$ defined on a coordinate chart containing $p$ is called a 0-form.
 \end{Definition}
@@ -1098,7 +1150,7 @@ $a$ and $b$ in $M_p^n$ is
   Riemann metric and it is a Riemann manifold.
 \end{Definition}
 
-The inner product of two tangent vectors in matrix form is
+The inner product of two tangent vectors $a$ and $b$ in matrix form is
 \begin{equation}
   \left\langle a,b \right\rangle = a^T G b.
 \end{equation}
@@ -1109,6 +1161,7 @@ covector in $M_p^{n*}$ and define $\alpha(b) = \left\langle a, b \right\rangle$.
 means the tangent vector $a$ determines or defines a covector $\alpha$.
 
 \begin{Theorem}[Riesz representation theorem]
+  \label{theo:riesz-representation}
   Let $X$ be a Hilbert space and $f$ be a bounded linear functional on $X$, i.e.
   $f \in X'$. There exists a unique vector $a$ in $X$, such that for all $b$ in $X$,
   $f(b) = \left\langle a, b \right\rangle$ and $\norm{f} = \norm{a}$.
@@ -1162,20 +1215,56 @@ Its matrix form is
   Let $(U,x_U)$ be a coordinate chart using the Cartesian coordinate frame and $(V,x_V)$
   be a coordinate chart using the spherical coordinate frame. Then the basis of $(U,x_U)$
   is $\left\{ \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$ and the basis of
-  $(V,x_V)$ is $\left\{ \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$. The metric
+  $(V,x_V)$ is $\left\{ \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$. The metric
   tensor $G^U$ of $(U,x_U)$ is simply a $3\times 3$ identity matrix. Hence, the metric
   tensor $G^V$ of $(V,x_V)$ is
   \begin{equation}
     \label{eq:spherical-coordinate-metric-tensor}
-    G^V = J_{UV}^{\mathrm{T}} J_{UV} = \ifx\endpmatrix\undefined\pmatrix{\else\begin{pmatrix}\fi r^2\,
-        \sin ^2\theta&0\cr 0&r^2\cr 
-        \ifx\endpmatrix\undefined}\else\end{pmatrix}\fi.
+    G^V = J_{UV}^{\mathrm{T}} J_{UV} = \begin{pmatrix}
+      r^2 & 0 \\
+      0 & r^2\sin^2\theta
+    \end{pmatrix},
   \end{equation}
-  Because $G^V$ is a diagonal matrix but not an identity matrix, the spherical coordinate
-  frame is orthogonal but not normalized. When $r=1$, the basis vector
-  $\vect{\pdiff}\theta$ has unit length but $\vect{\pdiff}\phi$ usually does not.
-  $\vect{\pdiff}\phi$ only has unit length when $\theta=\frac{\pi}{2}$, i.e. at the
-  equator.
+  where the Jacobian matrix $J_{UV}$ is given in Equation
+  (\ref{eq:spherical-coordinate-jacobian-matrix}). Because $G^V$ is a diagonal matrix but
+  not an identity matrix, the spherical coordinate frame is orthogonal but not normalized.
+  When $r=1$, the basis vector $\vect{\pdiff}\theta$ has unit length but
+  $\vect{\pdiff}\phi$ usually does not. $\vect{\pdiff}\phi$ only has unit length when
+  $\theta=\frac{\pi}{2}$, i.e. at the equator.
+\end{Example}
+
+\begin{Example}[Metric tensor of ball coordinate chart]
+  \label{exam:ball-coordinate-metric-tensor}
+  If the basis of $(V,x_V)$ is
+  $\left\{ \vect{\pdiff}r, \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$, i.e. the
+  radius $r$ is also a coordinate component, using the Jacobian matrix in Equation
+  (\ref{eq:ball-coordinate-jacobian-matrix}), the metric tensor is
+  \begin{equation}
+    \label{eq:ball-coordinate-metric-tensor}
+    G^V = \begin{pmatrix}
+      1 & 0 & 0 \\
+      0 & r^2 & 0 \\
+      0 & 0 & r^2 \sin^2\theta
+    \end{pmatrix}
+  \end{equation}
+\end{Example}
+
+\begin{Example}[Metric tensor of cylindrical coordinate chart]
+  \label{exam:cylindrical-coordinate-metric-tensor}
+  Let $(U,x_U)$ be a coordinate chart using the Cartesian coordinate frame and $(V,x_V)$
+  be a coordinate chart using the cylindrical coordinate frame. The basis of $(U,x_U)$ is
+  $\left\{ \vect{\pdiff}x, \vect{\pdiff}y, \vect{\pdiff}z \right\}$ and the basis of
+  $(V,x_V)$ is $\left\{ \vect{\pdiff}r, \vect{\pdiff}\phi, \vect{\pdiff}z \right\}$. Using
+  the Jacobian matrix $J_{UV}$ in Equation (\ref{eq:cylindrical-coordinate-jacobian-matrix}), the metric
+  tensor of $(V,x_V)$ is
+  \begin{equation}
+    \label{eq:cylindrical-coordinate-metric-tensor}
+    G^V = J_{UV}^{\mathrm{T}}J_{UV} = \begin{pmatrix}
+      1 & 0 & 0 \\
+      0 & r^2 & 0 \\
+      0 & 0 & 1
+    \end{pmatrix}.
+  \end{equation}
 \end{Example}
 
 \subsection{Transformation between tangent vector and covector via metric tensor}
@@ -1290,6 +1379,7 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
 \end{equation}
 
 \begin{Example}[Gradient vector on sphere manifold $S^2$]
+  \label{exam:spherical-coordinate-gradient}
   According to Example \ref{exam:spherical-coordinate-metric-tensor}, the matrix form of
   the metric tensor $G$ in the spherical coordinate chart is Equation
   (\ref{eq:spherical-coordinate-metric-tensor}). If the basis
@@ -1297,88 +1387,98 @@ According to Definition \ref{def:flat-operator} and \ref{def:sharp-operator},
   $\nabla f$ is
   \begin{equation}
     \nabla f = \begin{pmatrix}
-      \frac{1}{r^2\sin^2\theta} & 0 \\
-      0 & \frac{1}{r^2}
+      \frac{1}{r^2} & 0 \\
+      0 & \frac{1}{r^2\sin^2\theta}
     \end{pmatrix}
     \cdot
     \begin{pmatrix}
-      \frac{\pdiff f}{\pdiff \phi} \\
-      \frac{\pdiff f}{\pdiff \theta}
+      \frac{\pdiff f}{\pdiff \theta} \\
+      \frac{\pdiff f}{\pdiff \phi}
     \end{pmatrix} = \begin{pmatrix}
-      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \\
-      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta}
+      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \\
+      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi}
     \end{pmatrix}.
   \end{equation}
   Its tangent vector form is
   \begin{equation}
-    \nabla f = \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\phi +
-    \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\theta.
+    \nabla f = \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\theta +
+    \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\phi.
   \end{equation}
   If the normalized basis
-  $\left\{ \vect{\pdiff}\hat{\phi}, \vect{\pdiff}\hat{\theta} \right\}$ as in Example
+  $\left\{ \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi} \right\}$ as in Example
   \ref{exam:spherical-coordinate-basis} is adopted, the tangent vector form is
   \begin{equation}
-    \nabla f = \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} r\sin\theta \vect{\pdiff}\hat{\phi} +
-    \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} r \vect{\pdiff}\hat{\theta} =
-    \frac{1}{r\sin\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\hat{\phi} +
-    \frac{1}{r} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\hat{\theta}.
+    \nabla f = \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} r \vect{\pdiff}\hat{\theta} +
+    \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} r\sin\theta
+    \vect{\pdiff}\hat{\phi} = \frac{1}{r} \frac{\pdiff f}{\pdiff \theta}
+    \vect{\pdiff}\hat{\theta} + \frac{1}{r\sin\theta} \frac{\pdiff f}{\pdiff \phi}
+    \vect{\pdiff}\hat{\phi}.
   \end{equation}
 \end{Example}
 
 \begin{Example}[Gradient vector on ball manifold]
-  Compared to the sphere manifold, now the basis of the tangent space in the local
-  spherical coordinate chart is
-  $\left\{ \vect{\pdiff}r, \vect{\pdiff}\phi, \vect{\pdiff}\theta \right\}$. The Jacobi
-  matrix from the spherical coordinate chart to the Cartesian coordinate chart is
-  \begin{equation}
-    \label{eq:ball-coordinate-jacobi}
-    J = \begin{pmatrix}
-      \cos\phi \sin\theta & -r\sin\phi \sin\theta & r\cos\phi \cos\theta \\
-      \sin\phi \sin\theta & r\cos\phi \sin\theta & r \sin\phi \cos\theta \\
-      \cos\theta & 0 & -r\sin\theta
-    \end{pmatrix}.
-  \end{equation}
-  The metric tensor is
-  \begin{equation}
-    \label{eq:ball-coordinate-metric-tensor}
-    G = J^{\mathrm{T}} J = \begin{pmatrix}
-      1&0&0 \\
-      0&r^2\,\sin ^2\theta&0 \\
-      0&0&r^2
-    \end{pmatrix}.
-  \end{equation}
-  The matrix form of $\nabla f$ is
+  \label{exam:ball-coordinate-gradient}
+  According to Example \ref{exam:ball-coordinate-metric-tensor}, the matrix form of
+  $\nabla f$ is
   \begin{equation}
     \nabla f = \begin{pmatrix}
       1 & 0 & 0\\
-      0 & \frac{1}{r^2\sin^2\theta} & 0 \\
-      0 & 0 & \frac{1}{r^2}
+      0 & \frac{1}{r^2} & 0 \\
+      0 & 0 & \frac{1}{r^2\sin^2\theta}
     \end{pmatrix}
     \cdot
     \begin{pmatrix}
       \frac{\pdiff f}{\pdiff r} \\
-      \frac{\pdiff f}{\pdiff \phi} \\
-      \frac{\pdiff f}{\pdiff \theta}
+      \frac{\pdiff f}{\pdiff \theta} \\
+      \frac{\pdiff f}{\pdiff \phi}
     \end{pmatrix} = \begin{pmatrix}
       \frac{\pdiff f}{\pdiff r} \\
-      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \\
-      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta}
+      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \\
+      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi}
     \end{pmatrix}.
   \end{equation}
   Its tangent vector form is
   \begin{equation}
-    \nabla f = \frac{\pdiff f}{\pdiff r}\vect{\pdiff}r + \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\phi +
-    \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\theta.
+    \nabla f = \frac{\pdiff f}{\pdiff r}\vect{\pdiff}r + \frac{1}{r^2} \frac{\pdiff
+      f}{\pdiff \theta} \vect{\pdiff}\theta + \frac{1}{r^2\sin^2\theta} \frac{\pdiff
+      f}{\pdiff \phi} \vect{\pdiff}\phi.
   \end{equation}
   Using the normalized basis
-  $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\phi}, \vect{\pdiff}\hat{\theta}
-  \right\}$, where $\vect{\pdiff}\hat{r} = \vect{\pdiff}r$, we have
+  $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi}
+  \right\}$, we have
   \begin{equation}
-    \nabla f = \frac{\pdiff f}{\pdiff r}\vect{\pdiff}\hat{r} + \frac{1}{r\sin\theta} \frac{\pdiff f}{\pdiff \phi} \vect{\pdiff}\hat{\phi} +
-    \frac{1}{r} \frac{\pdiff f}{\pdiff \theta} \vect{\pdiff}\hat{\theta}.
+    \nabla f = \frac{\pdiff f}{\pdiff r}\vect{\pdiff}\hat{r} + \frac{1}{r} \frac{\pdiff
+      f}{\pdiff \theta} \vect{\pdiff}\hat{\theta} + \frac{1}{r\sin\theta} \frac{\pdiff
+      f}{\pdiff \phi} \vect{\pdiff}\hat{\phi}.
   \end{equation}
   This is consistent with the result in a classical electrodynamics book such as
   \citep{GriffithsIntroduction1999}.
+\end{Example}
+
+\begin{Example}[Gradient vector on cylinder manifold]
+  According to Example \ref{exam:cylindrical-coordinate-metric-tensor}, the matrix form of
+  $\nabla f$ is
+  \begin{equation}
+    \nabla f = \begin{pmatrix}
+      1 & 0 & 0 \\
+      0 & \frac{1}{r^2} & 0\\
+      0 & 0 & 1
+    \end{pmatrix} \cdot \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff r} \\
+      \frac{\pdiff f}{\pdiff \phi} \\
+      \frac{\pdiff f}{\pdiff z}
+    \end{pmatrix} = \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff r} \\
+      \frac{1}{r^2}\frac{\pdiff f}{\pdiff \phi} \\
+      \frac{\pdiff f}{\pdiff z}
+    \end{pmatrix}.
+  \end{equation}
+  Using the normalized basis $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\phi},
+    \vect{\pdiff}\hat{z} \right\}$, we have
+  \begin{equation}
+    \nabla f = \frac{\pdiff f}{\pdiff r} \vect{\pdiff}\hat{r} + \frac{1}{r} \frac{\pdiff
+      f}{\pdiff \phi} \vect{\pdiff}\hat{\phi} + \frac{\pdiff f}{\pdiff z} \vect{\pdiff}\hat{z}.
+  \end{equation}
 \end{Example}
 
 \subsection{General definition of tensors}
@@ -1675,7 +1775,7 @@ $i\cdots j$ and $k\cdots l$ for $(V,x_V)$.
 \subsection{Contraction of a mixed tensor}
 
 \begin{Definition}[Contraction of a mixed tensor]
-  \label{defi:contraction-of-mixed-tensor}
+  \label{def:contraction-of-mixed-tensor}
   Let
   $W_U = \left( W^{i_1 \cdots i_p}_{j_1 \cdots j_q} \right)_U \vect{\pdiff}x^{i_1} \otimes
   \cdots \otimes \vect{\pdiff}x^{i_p} \otimes dx^{j_1} \otimes \cdots \otimes dx^{j_q}$ be
@@ -1697,7 +1797,7 @@ $i\cdots j$ and $k\cdots l$ for $(V,x_V)$.
     \end{aligned}
   \end{equation}
 \end{Definition}
-It should be proved that Definition \ref{defi:contraction-of-mixed-tensor} really defines
+It should be proved that Definition \ref{def:contraction-of-mixed-tensor} really defines
 a mixed tensor, i.e. the resulted entity should satisfy the rule of coordinate
 transformation for a mixed tensor.
 \begin{Proof}
@@ -1783,7 +1883,8 @@ transformation for a mixed tensor.
   \end{align*}
   Therefore, the contraction of a $p$-th contravariant rank and $q$-th covariant rank
   mixed tensor is indeed a $(p-1)$-th contravariant rank and $(q-1)$-th covariant rank
-  mixed tensor.
+  mixed tensor. \emph{This can be considered as an internal interaction in a mixed tensor
+    consumes or eliminates a pair of indices.}
 \end{Proof}
 
 \subsection{Exterior form and exterior algebra}
@@ -2335,8 +2436,9 @@ Exterior differentiation satisfies the following properties:
   \begin{equation}
     d(\alpha^k+\beta^k) = d\alpha^k + d\beta^k.
   \end{equation}
-\item Exterior differential of the wedge product of two forms:
+\item Antiderivation:
   \begin{equation}
+    \label{eq:exterior-differentiation-antiderivation}
     d(\alpha^k \wedge \beta^l) = d\alpha^k \wedge \beta^l + (-1)^k \alpha^k \wedge d\beta^l.
   \end{equation}
 
@@ -2440,7 +2542,7 @@ According to Equation (\ref{eq:exterior-diff-k-form}),
                   \alpha_I(x)}{\pdiff x^j} \delta_L^I
 \end{align*}
 Since $I$ is an increasing index set and $L = J\backslash\{j\}$ is also an increasing
-index set, only when $I = L$, the term in the above sum can be non-zero. Therefore,
+index set, only when $I = L$, the term in the above sum is non-zero. Therefore,
 \begin{equation}
   (d\alpha^k)_J = \sum_j \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL}
   \frac{\pdiff \alpha_L(x)}{\pdiff x^j}.
@@ -2489,9 +2591,9 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
       \right) dx^3 \wedge dx^1
     \end{aligned}.
   \end{equation}
-  This formula reminds us of the curl of a vector once learned in classical calculus. In a
-  subsequent section we will establish the relationship between vector analysis and
-  $k$-forms operations.
+  This formula reminds us of the curl of a vector in $\mathbb{R}^3$ once learned in
+  classical calculus. In a subsequent section we will establish the relationship between
+  vector analysis and $k$-forms operations.
 \end{Example}
 
 \begin{Example}[Exterior differential of a 2-form]
@@ -2542,7 +2644,8 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
     d\beta^2 = \left( \frac{\pdiff b_1}{\pdiff x^{1}} + \frac{\pdiff b_2}{\pdiff x^2} +
       \frac{\pdiff b_3}{\pdiff x^3} \right) dx^1 \wedge dx^2 \wedge dx^3.
   \end{equation}
-  Obviously, this formula relates to the divergence of a vector in classical calculus.
+  Obviously, this formula relates to the divergence of a vector in $\mathbb{R}^3$ in
+  classical calculus.
 \end{Example}
 
 \begin{Example}[Exterior differential of a 3-form when the manifold dimension is 4]
@@ -2975,10 +3078,12 @@ expression of the pull-back of a $k$-form can be obtained.
   integration from $\mathbb{R}^3$ to a local three dimensional coordinate chart.
 \end{Example}
 
-\subsection{Orientation, pseudo form and volume form}
+\subsection{Orientation, pseudo $k$-form and pseudo vector}
+
+\subsubsection{Orientation}
 
 \begin{Definition}[Orientation of a vector space]
-  \label{defi:vector-space-orientation}
+  \label{def:vector-space-orientation}
   Different bases can be chosen for an $n$-dimensional vector space $E^n$. Any two of
   these bases, $\vect{e} = (\vect{e}_1,\cdots,\vect{e}_n)$ and
   $\vect{f} = (\vect{f}_1,\cdots,\vect{f}_n)$ for example, are linked by a unique
@@ -3020,11 +3125,12 @@ associated with $p(x)$ is an $n$-dimensional vector space, which can be assigned
 orientation that is determined from the basis
 $(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$. Even though all coordinate charts in the
 atlas covering $M^n$ can be given their own orientations in this way, these orientations
-are only locally valid. Whether $M^n$ as a whole can be given a global orientation depends
-on if all of these local orientations are compatible or consistent with each other.
+are only locally valid. Whether $M^n$ as a whole can be given an unique global orientation
+depends on if all of these local orientations are compatible or consistent with each
+other.
 
 \begin{Definition}[Orientation of a manifold]
-  \label{defi:manifold-orientation}
+  \label{def:manifold-orientation}
   For each coordinate chart $(U,x)$ in the atlas covering an $n$-dimensional manifold
   $M^n$, its orientation is given by the tuple of basis vectors
   $(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$. For any point $p$ in the overlap of two
@@ -3032,7 +3138,7 @@ on if all of these local orientations are compatible or consistent with each oth
   determined from the basis $(\vect{\pdiff}y^1,\cdots,\vect{\pdiff}y^n)$. According to the
   relationship between $\vect{\pdiff}x$ and $\vect{\pdiff}y$ in Equation
   (\ref{eq:tangent-space-bases-relation}), if the Jacobian map $\frac{\pdiff x}{\pdiff y}$
-  is non-singular, according to Definition \ref{defi:vector-space-orientation}, the two
+  is non-singular, according to Definition \ref{def:vector-space-orientation}, the two
   orientations are equivalent. If all pairs of overlapping coordinate charts have
   equivalent orientations, the manifold $M^n$ is orientable and has a definite
   orientation.
@@ -3045,8 +3151,10 @@ on if all of these local orientations are compatible or consistent with each oth
   positive orientation, $o(x) = 1$, otherwise, $o(x) = -1$.
 \end{Definition}
 
+\subsubsection{Pseudo $k$-form}
+
 \begin{Definition}[Pseudo $k$-form]
-  \label{defi:pseudo-form}
+  \label{def:pseudo-form}
   Let $\alpha^k$ be a pseudo $k$-form operating on the Cartesian product of $k$ tangent
   spaces $\otimes^k M_p^n$. When the tangent space $M_p^n$ with the local basis
   $(\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ has the positive orientation, i.e.
@@ -3090,13 +3198,13 @@ orientation.
 However, when we use the $n$-form $dx^1 \wedge \cdots \wedge dx^n$ or
 $dy^1 \wedge \cdots \wedge dy^n$ to measure volume, what we really want is an
 orientation-independent value. Therefore, the pseudo $n$-form given in Definition
-\ref{defi:pseudo-form} is needed here. Because it changes its own sign when the
+\ref{def:pseudo-form} is needed here. Because it changes its own sign when the
 orientation of the tangent space changes, this will compensate the sign change caused by
 applying it to $(v_1,\cdots,v_n)$ as described above. Here comes the definition of
 volume form.
 
 \begin{Definition}[Volume $n$-form with respect to $n$-dimensional manifold $M^n$]
-  \label{defi:volume-form}
+  \label{def:volume-form}
   Let $(x)$ be a coordinate chart containing $p$ in $M^n$. Its corresponding basis
   $\vect{\pdiff}x = (\vect{\pdiff}x^1,\cdots,\vect{\pdiff}x^n)$ of the tangent space
   $M_p^n$ is orthonormal. Then the volume $n$-form is
@@ -3147,48 +3255,1002 @@ Define $g(y) \coloneqq \det(g_{rs}^{(y)})$, we have
 \end{equation*}
 Therefore, the volume $n$-form represented in the coordinate chart $(y)$ is
 \begin{equation}
+  \label{eq:volume-3-form}
   \mathrm{vol}^n = o(y) \sqrt{g(y)} dy^1 \wedge\cdots\wedge dy^n.
 \end{equation}
-
-\begin{Example}[Volume 3-form using the spherical coordinates]
-  Let $(x,y,z)$ be the standard Cartesian coordinate chart and $(r, \phi, \theta)$ be the
-  spherical coordinate chart. The transformation from $(r, \phi, \theta)$ to $(x,y,z)$ has
-  been given in Equation (\ref{eq:spherical-coordinate-transform}). Its Jacobian matrix is
+\begin{Remark}
+  The above definition of a volume $n$-form relies on the coordinate chart $(x)$ with a
+  orthonormal basis $\vect{\pdiff}x$. However, this is not mandatory. Generally, a volume
+  $n$-form is
   \begin{equation}
-    J = \begin{pmatrix}
-      \cos\phi\sin\theta & -r\sin\phi \sin\theta & r\cos\phi \cos\theta \\
-      \sin\phi\sin\theta & r\cos\phi \sin\theta & r \sin\phi \cos\theta \\
-      \cos\theta & 0 & -r\sin\theta
-    \end{pmatrix}.
+    \mathrm{vol}^n = o(u) \rho(u) du^1 \wedge \cdots \wedge du^n.
   \end{equation}
-  Then the volume 3-form in the spherical coordinate chart is
+\end{Remark}
+
+\begin{Example}[Pseudo volume 3-form for a ball]
+  Let $(x,y,z)$ be the standard Cartesian coordinate chart and $(r,\theta,\phi)$ be the
+  coordinate chart for a ball. The transformation from $(r,\theta,\phi)$ to $(x,y,z)$
+  has been given in Equation (\ref{eq:spherical-coordinate-transform}). Its Jacobian
+  matrix is Equation (\ref{eq:ball-coordinate-jacobian-matrix}). Then the volume 3-form is
   \begin{equation}
     \begin{aligned}
       \mathrm{vol}^3 &= o(r,\phi,\theta) \det \left\{ J^{\mathrm{T}} J
-      \right\}^{\frac{1}{2}} dr \wedge d\phi \wedge d\theta \\
-      &= o(r,\phi,\theta) \det \begin{pmatrix}
+      \right\}^{\frac{1}{2}} dr \wedge d\theta \wedge d\phi \\
+      &= o(r,\theta,\phi) \det \begin{pmatrix}
         1 & 0 & 0 \\
         0 & r^2 & 0 \\
         0 & 0 & r^2\sin^2\theta
-      \end{pmatrix}^{\frac{1}{2}} dr \wedge d\phi \wedge d\theta \\
-      & = o(r,\phi,\theta) r^2\sin\theta dr \wedge d\phi \wedge d\theta.
+      \end{pmatrix}^{\frac{1}{2}} dr \wedge d\theta \wedge d\phi \\
+      & = o(r,\theta,\phi) r^2\sin\theta dr \wedge d\theta \wedge d\phi.
     \end{aligned}
   \end{equation}
 \end{Example}
 
+\begin{Example}[Pseudo volume 3-form for a cylinder]
+  Let $(x,y,z)$ be the standard Cartesian coordinate chart and $(r, \phi, z)$ be the
+  coordinate chart for a cylinder. The transformation from $(r, \phi, z)$ to $(x,y,z)$ has
+  been given in Equation (\ref{eq:cylindrical-coordinate-transform}). Its Jacobian matrix
+  is Equation (\ref{eq:cylindrical-coordinate-jacobian-matrix}). Then the volume 3-form is
+  \begin{equation}
+    \begin{aligned}
+      \mathrm{vol}^3 &= o(r,\phi,z) \det \left\{ J^{\mathrm{T}} J
+      \right\}^{\frac{1}{2}} dr \wedge d\phi \wedge dz \\
+      &= o(r,\phi,z) \det \begin{pmatrix}
+        1 & 0 & 0 \\
+        0 & r^2 & 0 \\
+        0 & 0 & 1
+      \end{pmatrix}^{\frac{1}{2}} dr \wedge d\phi \wedge dz \\
+      & = o(r,\phi,z) r dr \wedge d\phi \wedge dz.
+    \end{aligned}
+  \end{equation}
+\end{Example}
+
+\subsubsection{Pseudo vector}
+\label{sec:pseudo-vector}
+
+After introducing the concept of pseudo $k$-form, we come to the concept of pseudo vector.
+For a given normal tangent vector $u$ (which is also called a \emph{polar vector}
+\citep{Pseudovector2023}), such as the linear velocity vector, it is an \emph{invariant}
+physical entity no matter which coordinate frame is selected. For example (see Figure
+\ref{fig:cross-product-under-inversion}), assume the given vector $u$ is represented as
+$(u^1,u^2,u^3)^{\mathrm{T}}$ in the local coordinate chart $(x)$. If a new coordinate
+chart $(y)$ is selected, which is an inversion of $(x)$ in this case, i.e.
+$\vect{\pdiff}y^i = -\vect{\pdiff}x^i$, the numerical representation of $u$ in this new
+frame changes into $(-u^1,-u^2,-u^3)^{\mathrm{T}}$. Similarly, for another vector
+$v = (v^1,v^2,v^3)^{\mathrm{T}}$ in the coordinate chart $(x)$, its representation in
+$(y)$ is $(-v^1,-v^2,-v^3)^{\mathrm{T}}$. Their cross product in the chart $(x)$ is
+\begin{equation*}
+  (u \times v)_{(x)} = (u^2v^3 - u^3v^2, u^3v^1 - u^1v^3, u^1v^2 - u^2v^1)^{\mathrm{T}}.
+\end{equation*}
+In the chart $(y)$, $(u \times v)_{(y)}$ has the same numerical representation as
+$(u \times v)_{(x)}$, because the negative signs are cancelled. However, since the
+coordinate frame has been inverted, $(u \times v)_{(y)}$ with a same numerical
+representation is actually a different physical entity or vector from
+$(u \times v)_{(x)}$. Therefore, the behavior of the vector resulted from the cross
+product is different from that of a polar vector, when the orientation of the coordinate
+frame changes. Such a vector is called a pseudo vector.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=\textheight, keepaspectratio]{figures/2023-12-27-cross-product-under-coordinate-frame-inversion}
+  \caption{Cross product under coordinate frame inversion}
+  \label{fig:cross-product-under-inversion}
+\end{figure}
+
+Another example is the magnetic flux density $\vect{B}$ generated by a line current.
+According to the Biot-Savart law \citep[see][page 215]{GriffithsIntroduction1999}
+\begin{equation}
+  \vect{B}(p) = \frac{\mu_0}{4\pi} \int \frac{\vect{I} \times \hat{\vect{r}}}{r^2} dl,
+\end{equation}
+the computation of the magnetic flux density $\vect{B}$ depends on the cross product of
+the current vector $\vect{I}$ and the direction vector $\hat{\vect{r}}$ which points from
+the infinitesimal line element $dl$ to the target point $p$. Therefore, when the
+orientation of the coordinate chart changes, $\vect{B}$ as a physical entity changes to
+the opposite direction. Therefore, $\vect{B}$ is a pseudo vector. This is illustrated in
+Figure \ref{fig:magnetic-flux-density-as-pseudo-vector}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=\textheight, keepaspectratio]{figures/2023-12-27-magnetic-flux-density-is-pseudo-vector}
+  \caption{Magnetic flux density $\vect{B}$ changes into the opposite direction, when the
+    orientation of the coordinate chart changes.}
+  \label{fig:magnetic-flux-density-as-pseudo-vector}
+\end{figure}
+
+From above, we can conclude that if we adopt the right-handed convention as the positive
+orientation, when a coordinate chart has such positive orientation, the definition of
+cross product follows the right-handed rule; when the coordinate chart has negative
+orientation, the cross product follows the left-handed rule. Therefore, the change of
+orientation indicates the change of handedness.
+
+Last but not the least, we should also clarify that for a pseudo $k$-form, there is an
+explicitly added orientation function $o(x)$, which is used to compensate the sign change
+due to the change of orientation. For a pseudo vector, if it is treated or manipulated via
+the raw cross product producing it, there is no need to add the orientation function,
+since the cross product operation itself includes such an effect. On the other hand, if we
+directly manipulate the pseudo vector itself without resorting to the cross product, such
+orientation function should be added so that its numerical form is invariant to the change
+of orientation, which actually implies a negated physical entity.
+
 \subsection{Interior product}
 
-\subsection{Hodge star}
+\begin{Definition}[Interior product]
+  \label{def:interior-product}
+  Let $v$ be tangent vector. The interior product operator with respect to this $v$ is
+  $i_v: \bigwedge^k W_p^{n*} \rightarrow \bigwedge^{k-1} W_p^{n*}$.
+  \begin{itemize}
+  \item When $k=0$, for any 0-form $\alpha^0$, $i_v\alpha^0 = 0$.
+  \item When $k=1$, for any 1-form $\alpha^1$, $i_v\alpha^1 = \alpha^1(v)$.
+  \item When $k>1$, let $v_2,\cdots,v_k$ be a tuple of tangent vectors, for any $k$-form
+    $\alpha^k$, $(i_v\alpha^k)(v_2,\cdots,v_k) = \alpha^k(v,v_2,\cdots,v_k)$.
+  \end{itemize}   
+\end{Definition}
+
+Properties of interior product
+\begin{enumerate}
+\item For two tangent vectors $u$ and $v$,
+  \begin{equation}
+    \label{eq:interior-product-linearity-summation}
+    i_{u+v}\alpha^k = i_u\alpha^k + i_v\alpha^k.
+  \end{equation}
+\item For a scalar value $a$ and a tangent vector $v$,
+  \begin{equation}
+    \label{eq:interior-product-linearity-scalar-product}
+    i_v(a\alpha^k) = i_{av}\alpha^k = ai_v\alpha^k.
+  \end{equation}
+\item Antiderivation:
+  \begin{equation}
+    \label{eq:interior-product-antiderivation}
+    i_v(\alpha^k \wedge \beta^l) = (i_v\alpha^k) \wedge \beta^l + (-1)^k \alpha^k \wedge
+    i_v\beta^k.
+  \end{equation}
+\end{enumerate}
+The first two properties can be easily proved based on the linearity of a $k$-form. The
+third property is proved below.
+\begin{Proof}
+  When either $\alpha^k$ or $\beta^l$ is a 0-form, the proposition can be directly proved
+  using the definition of interior product and the second property above.
+  
+  When $\alpha^k$ and $\beta^l$ are both non-trivial forms, let $v_1,\cdots,v_{k+l}$ be a
+  tuple of tangent vectors and the interior product operator is defined with respect to
+  $v=v_1$. Then
+  \begin{align*}
+    i_v(\alpha^k \wedge \beta^l)(v_2,\cdots,v_{k+l})
+    &= \alpha^k \wedge \beta^l(v_1,\cdots,v_{k+l}) =
+      \sum_{\underaccent{\rightharpoondown}{I}} \sum_{\underaccent{\rightharpoondown}{J}}
+      \delta_{1 \cdots (k+l)}^{IJ} \alpha^k(v_I) \beta^l(v_J) \\
+    \intertext{$I=(i_1,\cdots,i_k)$ and $J=(j_1,\cdots,j_l)$ are two disjoint increasing
+    index sets, which form a partition of $1,\cdots,(k+l)$. Then this sum can be split into two
+    parts. In the first part, the index 1 belongs to $I$, while in the second part, 1
+    belongs to $J$.}
+    &= \sum_{\underset{1 \in I}{\underaccent{\rightharpoondown}{I}}}
+      \sum_{\underaccent{\rightharpoondown}{J}} \delta_{1 \cdots (k+l)}^{IJ}
+      \alpha^k(v_I) \beta^l(v_J) + \sum_{\underaccent{\rightharpoondown}{I}}
+      \sum_{\underset{1 \in J}{\underaccent{\rightharpoondown}{J}}} \delta_{1 \cdots (k+l)}^{IJ}
+      \alpha^k(v_I) \beta^l(v_J).
+  \end{align*}
+  In the first term above, since $1 \in I$, 1 must be the first element in $I$, i.e.
+  $\underaccent{\rightharpoondown}{I} = (1,i_2,\cdots,i_k)$. Because the position of 1 is
+  fixed within $I$, it can be removed from the summation. Let
+  $\tilde{I} = I \backslash \{1\}$, the first term can be transformed as
+  \begin{align*}
+    \sum_{\underset{1 \in I}{\underaccent{\rightharpoondown}{I}}}
+    \sum_{\underaccent{\rightharpoondown}{J}} \delta_{1 \cdots (k+l)}^{IJ}
+    \alpha^k(v_I) \beta^l(v_J)
+    &= \sum_{\underaccent{\rightharpoondown}{\tilde{I}}} \sum_{\underaccent{\rightharpoondown}{J}} \delta_{1 \cdots
+      (k+l)}^{1,\tilde{I}J} \alpha^k(v_1, v_{\tilde{I}}) \beta^l(v_J) \\
+    &= \sum_{\underaccent{\rightharpoondown}{\tilde{I}}} \sum_{\underaccent{\rightharpoondown}{J}} \delta_{2 \cdots
+      (k+l)}^{\tilde{I}J} i_v\alpha^k(v_{\tilde{I}}) \beta^l(v_J) \\
+    &= (i_v\alpha^k \wedge \beta^l)(v_2,\cdots,v_{k+l}).
+  \end{align*}
+  Similarly, in the second term above, since $1 \in J$, $J=(1,j_2,\cdots,j_l)$. Let
+  $\tilde{J}=J\backslash\{1\}$, we have
+  \begin{align*}
+    \sum_{\underaccent{\rightharpoondown}{I}} \sum_{\underset{1 \in
+    J}{\underaccent{\rightharpoondown}{J}}} \delta_{1 \cdots (k+l)}^{IJ} \alpha^k(v_I)
+    \beta^l(v_J)
+    &= \sum_{\underaccent{\rightharpoondown}{I}}
+      \sum_{\underaccent{\rightharpoondown}{\tilde{J}}} \delta_{1 \cdots
+      (k+l)}^{I,1,\tilde{J}} \alpha^k(v_I) \beta^l(v_1, v_{\tilde{J}}) \\
+    \intertext{Move the superscript 1 in the Kronecker delta to the front, so that the
+    index sets $I$ and $\tilde{J}$ are juxtaposed:}
+    &= \sum_{\underaccent{\rightharpoondown}{I}}
+      \sum_{\underaccent{\rightharpoondown}{\tilde{J}}} (-1)^k \delta_{1 \cdots
+      (k+l)}^{1,I\tilde{J}} \alpha^k(v_I) \beta^l(v_1, v_{\tilde{J}}) \\
+    &= \sum_{\underaccent{\rightharpoondown}{I}}
+      \sum_{\underaccent{\rightharpoondown}{\tilde{J}}} (-1)^k \delta_{2 \cdots
+      (k+l)}^{I\tilde{J}} \alpha^k(v_I) i_v\beta^l(v_{\tilde{J}}) \\
+    &= (-1)^k \alpha^k \wedge i_v\beta^l(v_2,\cdots,v_{k+l}).
+  \end{align*}
+  Combining the two terms, the antiderivation property is proved.
+\end{Proof}
+
+\begin{Proposition}
+  The interior product of a $k$-form $\alpha^k$ with respect to a tangent vector $v$ is
+  equivalent to the contraction (see Definition \ref{def:contraction-of-mixed-tensor}) of
+  a mixed tensor, which is formed by this tangent viz. contravariant vector $v$ and
+  $k$-form $\alpha^k$. Let $J=(j_2,\cdots,j_k)$ be a tuple of $k-1$ indices, this
+  statement can be represented as
+  \begin{equation}
+    (i_v\alpha^k)_J = v^i\alpha^k_{i,J}.
+  \end{equation}
+\end{Proposition}
+
+\begin{Proof}
+  Assume the coordinate chart is $(x)$, let $v=v^i \vect{\pdiff}x^i$. Then
+  \begin{equation}
+    (i_v\alpha^k)_J = \alpha^k(v, \vect{\pdiff}x^{j_2},\cdots,\vect{\pdiff}x^{j_k}) =
+    \alpha^k(v^i \vect{\pdiff}x^i, \vect{\pdiff}x^{j_2},\cdots,\vect{\pdiff}x^{j_k}) = v^i
+    \alpha^k(\vect{\pdiff}x^i, \vect{\pdiff}x^{j_2},\cdots,\vect{\pdiff}x^{j_k}) = v^i\alpha^k_{i,J}.
+  \end{equation}
+  Here, $v^i\alpha^k_{i,I}$ is just the expansion coefficient of the contraction of the
+  mixed tensor $v^i \alpha_{j,J}$ for the first (and the only) contravariant index and the
+  first covariant index.
+\end{Proof}
 
 \subsection{Relationship between $k$-forms and vector analysis}
 
-\begin{itemize}
-\item Inner product
-\item Gradient
-\item Curl
-\item Divergence
-\item Laplace-Beltrami
-\end{itemize}
+\begin{enumerate}
+\item A 0-form $f$ is equivalent to a scalar function defined on the manifold $M^n$ according
+  to Definition \ref{def:0-form}
+\item A 1-form $\alpha$ is associated with a tangent vector $a$ in the sense that
+  applying the 1-form $\alpha$ to another tangent vector $b$ is equivalent to the inner
+  product of $a$ and $b$, i.e. $\left\langle a,b \right\rangle$. Such correspondence is
+  governed by the Riesz representation theorem (see Theorem \ref{theo:riesz-representation}).
+  \begin{equation}
+    \alpha(b) = \left\langle a,b \right\rangle.
+  \end{equation}
+  $\alpha$ and $a$ are transformed to each other via the $\flat$ (Definition
+  \ref{def:flat-operator}) and $\sharp$ (Definition \ref{def:sharp-operator}) operators,
+  which involve the 2nd rank covariant metric tensor and its inverse.
+  \begin{equation}
+    \alpha = \flat(a), \alpha_j = g_{ji}a^i, \alpha = a^{\mathrm{T}} G.
+  \end{equation}
+  
+  \begin{equation}
+    a = \sharp(\alpha), a^i = g^{ij}\alpha_j, a = G^{-1}(\alpha)^{\mathrm{T}}.
+  \end{equation}
+\item The exterior differential of a 0-form $f$, i.e.
+  $df = \frac{\pdiff f}{\pdiff x^j} dx^j$, is equivalent to the gradient of the scalar
+  function $f$ in vector analysis in the following sense
+  \begin{equation}
+    df(v) = \left\langle \nabla f, v \right\rangle.
+  \end{equation}
+  $df$ and $\nabla f$ are associated via the flat and sharp operators:
+  \begin{equation}
+    df = \flat(\nabla f), (df)_j = \frac{\pdiff f}{\pdiff x^j} = g_{ji} \left( \nabla f
+    \right)^i, df^{\mathrm{T}} = G\nabla f.
+  \end{equation}
+
+  \begin{equation}
+    \label{eq:1-form-to-gradient}
+    \nabla f = \sharp(df), (\nabla f)^i = g^{ij} (df)_j = g^{ij} \frac{\pdiff f}{\pdiff
+      x^{i}}, \nabla f = G^{-1} df^{\mathrm{T}}.
+  \end{equation}
+
+  From Equation (\ref{eq:ball-coordinate-metric-tensor}), the expression of
+  $\nabla f$ using the ball coordinate chart $(r,\theta,\phi)$ is
+  \begin{equation}
+    \label{eq:gradient-in-spherical-coordinate-chart}
+    \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff r} \\
+      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \theta} \\
+      \frac{1}{r^2\sin^2\theta} \frac{\pdiff f}{\pdiff \phi}
+    \end{pmatrix}.
+  \end{equation}
+  With the normalized basis, it is
+  \begin{equation}
+    \label{eq:gradient-in-spherical-coordinate-chart-normalized}
+    \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff r} \\
+      \frac{1}{r} \frac{\pdiff f}{\pdiff \theta} \\
+      \frac{1}{r\sin\theta} \frac{\pdiff f}{\pdiff \phi}
+    \end{pmatrix}.
+  \end{equation}
+  
+  From Equation (\ref{eq:cylindrical-coordinate-metric-tensor}), the expression of
+  $\nabla f$ using the cylindrical coordinate chart $(r,\phi,z)$ is
+  \begin{equation}
+    \label{eq:gradient-in-cylindrical-coordinate-chart}
+    \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff r} \\
+      \frac{1}{r^2} \frac{\pdiff f}{\pdiff \phi} \\
+      \frac{\pdiff f}{\pdiff z}
+    \end{pmatrix}.
+  \end{equation}
+  With the normalized basis, it is
+  \begin{equation}
+    \label{eq:gradient-in-cylindrical-coordinate-chart-normalized}
+    \begin{pmatrix}
+      \frac{\pdiff f}{\pdiff r} \\
+      \frac{1}{r} \frac{\pdiff f}{\pdiff \phi} \\
+      \frac{\pdiff f}{\pdiff z}
+    \end{pmatrix}.
+  \end{equation}
+  
+\item A tangent vector $v$ can be identified with a pseudo $(n-1)$-form, which is obtained
+  from the interior product of a pseudo volume $n$-form with respect to this vector $v$.
+  Specifically, when the space dimension $n=3$, this gives the associated vector $v$ with
+  respect to a pseudo 2-form.
+
+  Let the pseudo volume $n$-form be
+  $\mathrm{vol}^n = o(u) \rho(u) du^1 \wedge \cdots \wedge du^n$ using the coordinate
+  chart $(x)$. Let $v$ be a tangent vector $v = v^j \vect{\pdiff}u^j$. The interior
+  product of $\mathrm{vol}^n$ with respect to $v$ is
+  \begin{align*}
+    i_v \mathrm{vol}^n
+    &= i_v \left( o(u) \rho(u) du^1 \wedge \cdots \wedge du^n \right) \\
+    &= i_{v^j \vect{\pdiff}u^j} \left( o(u) \rho(u) du^1 \wedge \cdots \wedge du^n \right)
+    \\
+    \intertext{Apply the linearity property of interior product operator (see Equation
+    (\ref{eq:interior-product-linearity-summation}) and
+    (\ref{eq:interior-product-linearity-scalar-product})):}
+    &= o(u) \rho(u) v^j i_{\vect{\pdiff}u^j} \left( du^1 \wedge \cdots \wedge du^n \right)
+    \\
+    \intertext{Apply the antiderivation property of interior product operator repeatedly
+    (see Equation (\ref{eq:interior-product-antiderivation})):}
+    &= o(u) \rho(u) v^j \left( i_{\vect{\pdiff}u^j}(du^1) \wedge \cdots \wedge du^n - du^1
+      \wedge i_{\vect{\pdiff}u^j}\left( du^2 \wedge \cdots \wedge du^n \right) \right) \\
+    &= o(u) \rho(u) v^j \left( i_{\vect{\pdiff}u^j}(du^1) \wedge \cdots \wedge du^n -
+      du^1 \wedge i_{\vect{\pdiff}u^j}(du^2) \wedge \cdots \wedge du^n + du^1 \wedge du^2
+      \wedge i_{\vect{\pdiff}u^j}\left( du^3 \wedge \cdots \wedge du^n \right) \right) \\
+    &= o(u) \rho(u) v^j \left( \sum_{i=1}^n (-1)^{i-1} du^1 \wedge \cdots
+      \wedge i_{\vect{\pdiff}u^j}(du^i) \wedge \cdots \wedge du^n \right) \\
+    &= o(u) \rho(u) v^j \left( \sum_{i=1}^n \delta^i_j (-1)^{i-1} du^1 \wedge \cdots
+      \wedge \widehat{du^i} \wedge \cdots \wedge du^n \right) \\
+    \intertext{Remember that there is still a summation over the index $j$, which is not
+    explicitly written in the above expression. Therefore, only when $i=j$, the term in
+    the sum is not zero.}
+    &= o(u) \rho(u) \sum_{j=1}^n v^j (-1)^{j-1} du^1 \wedge \cdots \wedge \widehat{du^j}
+      \wedge \cdots \wedge du^n \\
+    \intertext{By permuting those $du$'s in the above wedge product, we can get the expression
+    in the cyclic permutation convention}
+    &= o(u) \rho(u) \sum_{j=1}^n v^j (-1)^{(j-1)+(j-1)(n-2)} du^{j+1} \wedge \cdots
+      \wedge du^n \wedge du^1 \wedge \cdots \wedge du^{j-1} \\
+    &= o(u) \rho(u) \sum_{j=1}^n v^j (-1)^{(j-1)(n-1)} du^{j+1} \wedge \cdots
+      \wedge du^n \wedge du^1 \wedge \cdots \wedge du^{j-1}.
+  \end{align*}
+  Therefore, the interior product of a pseudo volume $n$-form is
+  \begin{equation}
+    \label{eq:interior-product-of-volume-form}
+    i_v \mathrm{vol}^n = o(u) \rho(u) \sum_{j=1}^n v^j (-1)^{(j-1)(n-1)} du^{j+1} \wedge
+    \cdots \wedge du^n \wedge du^1 \wedge \cdots \wedge du^{j-1}.
+  \end{equation}
+  If the obtained pseudo $(n-1)$-form is represented as
+  \begin{equation}
+    i_v \mathrm{vol}^n = o(u) \sum_{j=1}^n b_j du^{j+1} \wedge \cdots \wedge du^n \wedge
+    du^1 \wedge \cdots \wedge du^{j-1},
+  \end{equation}
+  the $j$-th component of the corresponding tangent vector $v$ is
+  \begin{equation}
+    v^j = \frac{b_j}{(-1)^{(j-1)(n-1)} \rho(u)}.
+  \end{equation}
+  
+  With this general form obtained, we can get its specific form in $M^3$, which has
+  orthonormal basis $\vect{\pdiff}x$. In this space, the pseudo volume 3-form using the
+  coordinate chart $(y)$ has been given in Equation (\ref{eq:volume-3-form}). Then its
+  interior product with respect to $v$, which is a pseudo 2-form, is
+  \begin{equation}
+    \label{eq:interior-product-of-volume-form-in-3d}
+    \begin{aligned}
+      i_v \mathrm{vol}^3
+      &= o(y) \left( b_1 dy^2 \wedge dy^3 + b_2 dy^3 \wedge dy^1 + b_3 dy^1 \wedge dy^2
+      \right) \\
+      &= o(y) \sqrt{g(y)} \left( v^1 dy^2 \wedge dy^3 + v^2 dy^3 \wedge dy^1 + v^3 dy^1
+        \wedge dy^2 \right).
+    \end{aligned}
+  \end{equation}
+  Therefore,
+  \begin{equation}
+    \label{eq:coeff-relation-between-2-form-and-vector}
+    (v^1,v^2,v^3)^{\mathrm{T}} = \frac{1}{\sqrt{g(y)}} (b_1,b_2,b_3)^{\mathrm{T}}.
+  \end{equation}
+  
+\item The inner product of two tangent vectors $\left\langle u,v \right\rangle$ can be
+  understood in the following ways.
+  \begin{itemize}
+  \item Apply the sharp operator to one of the vectors and then apply it to the other
+    vector:
+    \begin{equation}
+      \left\langle u,v \right\rangle = \sharp(u)(v) = \sharp(v)(u).
+    \end{equation}
+  \item The 2nd rank covariant metric tensor $g$ is applied to these two vectors:
+    \begin{equation}
+      \left\langle u,v \right\rangle = g(u,v).
+    \end{equation}
+  \item Apply the sharp operator to one of the vectors and take its interior product with
+    respect to another vector:
+    \begin{equation}
+      \left\langle u,v \right\rangle = i_v \left( \sharp(u) \right) = i_u \left( \sharp(v) \right).
+    \end{equation}
+  \item When $n=3$, let $\alpha^1$ be a 1-form, $\beta^2$ be a pseudo 2-form,
+    $\mathrm{vol}^3 = o(u) \rho(u) du^1 \wedge du^2 \wedge du^3$ be a pseudo volume
+    3-form. Let $a$ be the tangent vector associated with $\alpha^1$, i.e.
+    $a = \sharp(\alpha^1)$. Let $b$ be the tangent vector associated with the pseudo
+    2-form $\beta^2$, such that $i_b \mathrm{vol}^3 = \beta^2$, hence
+    $(b_1,b_2,b_3)^{\mathrm{T}} = \frac{1}{\rho(u)}
+    (\beta_1,\beta_2,\beta_3)^{\mathrm{T}}$. Then the wedge product of $\alpha^1$
+    and $\beta^2$, which is also a pseudo 3-form, is equal to $\mathrm{vol}^3$ scaled by
+    the inner product of $a$ and $b$. This relation can be represented as
+    \begin{equation}
+      \alpha^1 \wedge \beta^2 = \left\langle a,b \right\rangle \mathrm{vol}^3.
+    \end{equation}
+    \begin{Proof}
+      Let $\alpha^1 = \alpha_1 du^1 + \alpha_2 du^2 + \alpha_3 du^3$ and
+      $\beta^2 = \beta_1 du^2 \wedge du^3 + \beta_2 du^3 \wedge du^1 + \beta_3 du^1 \wedge
+      du^2$. Then we have $\alpha_i = g_{ij} a^j$ and $\beta_i = \rho(u) b^i$.
+      \begin{align*}
+        \alpha^1 \wedge \beta^2
+        &= (\alpha_1 du^1 + \alpha_2 du^2 + \alpha_3 du^3) \wedge
+          o(u)(\beta_1 du^2 \wedge du^3 + \beta_2 du^3 \wedge du^1 + \beta_3 du^1 \wedge du^2)
+        \\
+        &= o(u)(\alpha_1 \beta_1 + \alpha_2 \beta_2 + \alpha_3 \beta_3) du^1 \wedge du^2
+          \wedge du^3 \\
+        &= o(u)(g_{1i}a^i \rho(u) b^1 + g_{2i}a^i \rho(u)b^2 + g_{3i}a^i \rho(u)b^3) du^1
+          \wedge du^2 \wedge du^3 \\
+        &= o(u) \rho(u) g_{ij} a^i b^j du^1 \wedge du^2 \wedge du^3 \\
+        &= o(u) \rho(u) \left\langle a,b \right\rangle du^1 \wedge du^2 \wedge du^3 \\
+        &= \left\langle a,b \right\rangle \mathrm{vol}^3.
+      \end{align*}
+    \end{Proof}
+  \end{itemize}
+  
+\item The cross product of two tangent vectors $u$ and $v$ in $M_p^3$
+  \begin{itemize}
+  \item It is defined as a pseudo vector (see Section \ref{sec:pseudo-vector}) which
+    satisfies
+    \begin{equation}
+      \label{eq:cross-product}
+      \left\langle u\times v, w \right\rangle = \mathrm{vol}^3(u,v,w),
+    \end{equation}
+    where $w$ is an arbitrary tangent vector. This is generalization of the mixed product
+    once learned in linear algebra, which is equal to the volume spanned by the three
+    vectors.
+
+    In the coordinate chart $(y)$,
+    \begin{equation*}
+      \left\langle u\times v, w \right\rangle = o(y) g_{ij} w^i (u\times v)^j.
+    \end{equation*}
+    N.B. Because this equation is a component-wise expression, the orientation function
+    $o(y)$ is added here for clarify. Its matrix form is
+    \begin{equation*}
+      \left\langle u\times v, w \right\rangle = w^{\mathrm{T}} G (u\times v),
+    \end{equation*}
+    where $G$ is the metric tensor. It is equal to
+    $\left[ \frac{\pdiff x}{\pdiff y} \right]^{\mathrm{T}} \left[ \frac{\pdiff x}{\pdiff y}
+    \right]$, where $(x)$ is an orthonormal coordinate chart. Now the orientation function
+    $o(y)$ is removed from this matrix form, since the cross product $u\times v$ as a whole
+    already includes or implies this factor.
+
+    On the other hand,
+    \begin{align*}
+      \mathrm{vol}^3(u,v,w)
+      &= o(y) \sqrt{g(y)} dy^1 \wedge dy^2 \wedge dy^3 (u,v,w) = o(y)
+        \sqrt{g(y)} \det{\begin{pmatrix}
+            u^1 & v^1 & w^1 \\
+            u^2 & v^2 & w^2 \\
+            u^3 & v^3 & w^3
+          \end{pmatrix}} \\
+      \intertext{Expand the determinant with respect to the last column:}
+      &= o(y) \sqrt{g(y)} \left[ w^1(u^2v^3-u^3v^2) + w^2(u^3v^1-u^1v^3) +
+        w^3(u^1v^2-u^2v^1) \right] \\
+      \intertext{The matrix form is}
+      &= o(y) \sqrt{g(y)} w^T \begin{pmatrix}
+        u^2v^3-u^3v^2 \\
+        u^3v^1-u^1v^3 \\
+        u^1v^2-u^2v^1
+      \end{pmatrix}.
+    \end{align*}
+    Since the two sides of the definition of cross product should be equal, we have
+    \begin{align*}
+      w^T G(u\times v) &= o(y) \sqrt{g(y)} w^T \begin{pmatrix}
+        u^2v^3-u^3v^2 \\
+        u^3v^1-u^1v^3 \\
+        u^1v^2-u^2v^1
+      \end{pmatrix} \\
+      G(u\times v) &= o(y) \sqrt{g(y)} \begin{pmatrix}
+        u^2v^3-u^3v^2 \\
+        u^3v^1-u^1v^3 \\
+        u^1v^2-u^2v^1
+      \end{pmatrix}.
+    \end{align*}
+    Therefore, the expression for the cross product of $u$ and $v$ is
+    \begin{equation}
+      \label{eq:cross-product-expr}
+      u\times v = o(y) \sqrt{g(y)} G^{-1} \begin{pmatrix}
+        u^2v^3-u^3v^2 \\
+        u^3v^1-u^1v^3 \\
+        u^1v^2-u^2v^1
+      \end{pmatrix}.
+    \end{equation}
+    When the coordinate chart $(y)$ is the same as the Cartesian coordinate chart $(x)$ used
+    for $\mathbb{R}^3$, $o(y)=1$, $\sqrt{g(y)}=1$ and $G^{-1}$ is an $3\times 3$ identity
+    matrix, then
+    \begin{equation}
+      \label{eq:cross-product-cartesian-expr}
+      u\times v = \begin{pmatrix}
+        u^2v^3-u^3v^2 \\
+        u^3v^1-u^1v^3 \\
+        u^1v^2-u^2v^1
+      \end{pmatrix},
+    \end{equation}
+    which is just what we've learned in linear algebra.
+  \item A pseudo tangent vector $w$, which is the cross product of two tangent vectors $u$
+    and $v$, can be identified with a 2-form, which is the interior product of the pseudo
+    volume 3-form with respect to $w$.
+    \begin{equation}
+      w \Longleftrightarrow i_w \mathrm{vol}^3 = i_{u\times v} \mathrm{vol}^3.
+    \end{equation}
+    N.B. Because both the tangent vector $w$ and the volume 3-form $\mathrm{vol}^3$ are
+    pseudo, their interior product produces a 2-form which is not pseudo. \emph{When there
+      are two or even number of pseudo entities in a multiplicative operation, their
+      orientation functions cancel with each other, which produces a real entity.}
+
+    If $\alpha^1$ and $\beta^1$ are the corresponding 1-forms of $u$ and $v$,
+    \begin{equation}
+      i_{u\times v} \mathrm{vol}^3 = \alpha^1 \wedge \beta^1.
+    \end{equation}
+    
+    \begin{Proof}
+      Let $(x)$ be the Cartesian coordinate chart and $(y)$ be the coordinate chart being
+      used. $\alpha^1 = \alpha_i dy^i$ and $\beta^1 = \beta_i dy^i$ can be obtained by
+      applying the $\flat$ operator to $u$ and $v$ (see Definition
+      \ref{def:flat-operator}),
+      \begin{equation*}
+        \alpha^1 = \flat(u) = g_{ij}u^j dy^i, \beta^1 = \flat(v) = g_{ij} v^j dy^i.
+      \end{equation*}
+      Hence, $\alpha_i = g_{ij}u^j$ and $\beta_i = g_{ij}v^j$.
+
+      The wedge product of $\alpha^1$ and $\beta^1$ is
+      \begin{align*}
+        \alpha^1 \wedge \beta^1
+        &= (\alpha_2\beta_3 - \alpha_3\beta_2) dy^2 \wedge dy^3 +
+          (\alpha_3\beta_1 - \alpha_1\beta_3) dy^3 \wedge dy^1 + (\alpha_1\beta_2 -
+          \alpha_2\beta_1) dy^1 \wedge dy^2 \\
+        &= (g_{2j}u^j g_{3k}v^k - g_{3j}u^j g_{2k}v^k) dy^2 \wedge dy^3 + (g_{3j}u^j
+          g_{1k}v^k - g_{1j}u^j g_{3k}v^k) dy^3 \wedge dy^1 + \\
+        &\quad (g_{1j}u^j g_{2k}v^k - g_{2j}u^j g_{1k}v^k) dy^1 \wedge dy^2.
+      \end{align*}
+      With the expression of cross product in Equation (\ref{eq:cross-product-expr}) and
+      the interior product of the pseudo volume 3-form in Equation
+      (\ref{eq:interior-product-of-volume-form-in-3d}), the matrix form of
+      $i_{u\times v} \mathrm{vol}^3$ is
+      \begin{equation*}
+        i_{u\times v} \mathrm{vol}^3 = \sqrt{g(y)} \sqrt{g(y)} G^{-1} \begin{pmatrix}
+          u^2v^3-u^3v^2 \\
+          u^3v^1-u^1v^3 \\
+          u^1v^2-u^2v^1
+        \end{pmatrix} = \det\left\{\left[ \frac{\pdiff x}{\pdiff y} \right]^{\mathrm{T}} \left[
+            \frac{\pdiff x}{\pdiff y} \right]\right\} G^{-1} \begin{pmatrix}
+          u^2v^3-u^3v^2 \\
+          u^3v^1-u^1v^3 \\
+          u^1v^2-u^2v^1
+        \end{pmatrix}.
+      \end{equation*}
+      N.B. Because $u\times v$ is a pseudo vector, its orientation function cancels with
+      the that in the volume form and $o(y)$ does not appear in the above expression.
+      $G^{-1}$ is the inverse of the matrix form of the metric tensor $g_{ij}$. Matrix
+      inverse can be computed via the adjugate of $G$
+      \begin{equation*}
+        \adj(G) = \begin{pmatrix}
+          g_{22}g_{33} - g_{32}g_{23} & g_{32}g_{13} - g_{12}g_{33} & g_{12}g_{23} -
+          g_{22}g_{13} \\
+          g_{31}g_{23} - g_{21}g_{33} & g_{11}g_{33} - g_{31}g_{13} & g_{21}g_{13} -
+          g_{11}g_{23} \\
+          g_{21}g_{32} - g_{31}g_{22} & g_{31}g_{12} - g_{11}g_{32} & g_{11}g_{22} -
+          g_{21}g_{12}
+        \end{pmatrix}
+      \end{equation*}
+      and
+      \begin{equation*}
+        G^{-1} = \frac{\adj(G)}{\det(G)} = \frac{\begin{pmatrix}
+          g_{22}g_{33} - g_{32}g_{23} & g_{32}g_{13} - g_{12}g_{33} & g_{12}g_{23} -
+          g_{22}g_{13} \\
+          g_{31}g_{23} - g_{21}g_{33} & g_{11}g_{33} - g_{31}g_{13} & g_{21}g_{13} -
+          g_{11}g_{23} \\
+          g_{21}g_{32} - g_{31}g_{22} & g_{31}g_{12} - g_{11}g_{32} & g_{11}g_{22} -
+          g_{21}g_{12}
+        \end{pmatrix}}{\det\left\{\left[ \frac{\pdiff x}{\pdiff y} \right]^{\mathrm{T}}
+          \left[ \frac{\pdiff x}{\pdiff y} \right]\right\}}.
+    \end{equation*}
+    Then
+    \begin{align*}
+      i_{u\times v}\mathrm{vol}^3
+      &= \adj(G) \begin{pmatrix}
+        u^2v^3-u^3v^2 \\
+        u^3v^1-u^1v^3 \\
+        u^1v^2-u^2v^1
+      \end{pmatrix} \\
+      &= \begin{pmatrix}
+        g_{22}g_{33} - g_{32}g_{23} & g_{32}g_{13} - g_{12}g_{33} & g_{12}g_{23} -
+        g_{22}g_{13} \\
+        g_{31}g_{23} - g_{21}g_{33} & g_{11}g_{33} - g_{31}g_{13} & g_{21}g_{13} -
+        g_{11}g_{23} \\
+        g_{21}g_{32} - g_{31}g_{22} & g_{31}g_{12} - g_{11}g_{32} & g_{11}g_{22} -
+        g_{21}g_{12}
+      \end{pmatrix} \begin{pmatrix}
+        u^2v^3-u^3v^2 \\
+        u^3v^1-u^1v^3 \\
+        u^1v^2-u^2v^1
+      \end{pmatrix}.
+    \end{align*}
+    Considering the fact that the metric tensor $g_{ij}$ is symmetric, by expanding the
+    above expressions for $\alpha^1 \wedge \beta^1$ and $i_{u\times v}\mathrm{vol}^3$, it
+    can be checked in Maxima that they are actually equivalent (see Listing
+    \ref{lst:wedge-product-equiv-interior-product}).
+    \begin{lstlisting}[caption={Verify the equivalence between the wedge product of two
+        1-forms and the interior product of the pseudo volume 3-form with respect to the
+        cross product of the two tangent vectors associated with the two 1-forms.},
+      label={lst:wedge-product-equiv-interior-product}, language=maxima]
+g[1,2] : g[2,1];
+g[1,3] : g[3,1];
+g[2,3] : g[3,2];
+
+interior_product : expand(
+  matrix(
+    [g[2,2]*g[3,3] - g[3,2]*g[2,3], g[3,2]*g[1,3] - g[1,2]*g[3,3], g[1,2]*g[2,3] - g[2,2]*g[1,3]],
+    [g[3,1]*g[2,3] - g[2,1]*g[3,3], g[1,1]*g[3,3] - g[3,1]*g[1,3], g[2,1]*g[1,3] - g[1,1]*g[2,3]],
+    [g[2,1]*g[3,2] - g[3,1]*g[2,2], g[3,1]*g[1,2] - g[1,1]*g[3,2], g[1,1]*g[2,2] - g[2,1]*g[1,2]])
+  . matrix([u[2]*v[3] - u[3]*v[2]], [u[3]*v[1] - u[1]*v[3]], [u[1]*v[2] - u[2]*v[1]]));
+
+alpha_wedge_beta : expand(
+  matrix(
+    [sum(g[2,j]*u[j],j, 1, 3) * sum(g[3,j]*v[j],j, 1, 3) - sum(g[2,j]*v[j],j, 1, 3) * sum(g[3,j]*u[j],j, 1, 3)],
+    [sum(g[3,j]*u[j],j, 1, 3) * sum(g[1,j]*v[j],j, 1, 3) - sum(g[3,j]*v[j],j, 1, 3) * sum(g[1,j]*u[j],j, 1, 3)],
+    [sum(g[1,j]*u[j],j, 1, 3) * sum(g[2,j]*v[j],j, 1, 3) - sum(g[1,j]*v[j],j, 1, 3) * sum(g[2,j]*u[j],j, 1, 3)]));
+
+is(interior_product = alpha_wedge_beta);
+    \end{lstlisting}
+    \end{Proof}
+  \item The cross product of two tangent vectors $u$ and $v$ has a corresponding pseudo
+    1-form:
+    \begin{equation}
+      w = u\times v \Longleftrightarrow -i_u(i_v \mathrm{vol}^3).
+    \end{equation}
+    This pseudo 1-form is obtained from the interior product of a pseudo 2-form with
+    respect to the first vector $u$. The pseudo 2-form is further obtained from the
+    interior product of the pseudo volume 3-form with respect to the second vector $v$.
+
+    \begin{Proof}
+      According to the definition of cross product in Equation (\ref{eq:cross-product}),
+      \begin{equation*}
+        \mathrm{vol}^3(u,v,w) = -\mathrm{vol}^3(v,u,w) = -i_v \mathrm{vol}^3(u,w) =
+        -i_u(i_v \mathrm{vol}^3)(w).
+      \end{equation*}
+      Let $\alpha^1$ be the corresponding pseudo 1-form associated with $u\times v$, i.e.
+      $\alpha^1 = \flat(u\times v)$. Then
+      \begin{equation*}
+        \left\langle u\times v, w \right\rangle = \alpha^1(w).
+      \end{equation*}
+      Because the tangent vector $w$ is arbitrary, we have
+      \begin{equation*}
+        \alpha^1 = -i_u(i_v \mathrm{vol}^3).
+      \end{equation*}
+    \end{Proof}
+  \end{itemize}
+\item Curl of a vector $a$: like the definition of cross product which depends on the
+  orientation of the coordinate chart, the curl operation also has such dependence.
+  Therefore, the curl of a vector $a$ is a pseudo vector. With the $\flat$ operator, the
+  tangent vector $a$ can be converted to a 1-form $\alpha^1$. Then the pseudo vector
+  $\curl a$ is associated with a 2-form $d\alpha^1$ such that
+  \begin{equation}
+    d\alpha^1 = i_{\curl a} \mathrm{vol}^3.
+  \end{equation}
+  N.B. The interior product of $\mathrm{vol}^3$ with respect to $\curl a$ produces a true
+  2-form. According to Equation (\ref{eq:exterior-diff-1-form-3d}) and
+  (\ref{eq:coeff-relation-between-2-form-and-vector}), assume
+  $a = (a^1,a^2,a^3)^{\mathrm{T}}$, the expression of $\curl a$ is
+  \begin{equation}
+    \label{eq:curl-expr-general}
+    \curl a = \frac{1}{\sqrt{g(y)}} \begin{pmatrix}
+      \frac{\pdiff \alpha_3}{\pdiff y^2} - \frac{\pdiff \alpha_2}{\pdiff y^3} \\
+      \frac{\pdiff \alpha_1}{\pdiff y^3} - \frac{\pdiff \alpha_3}{\pdiff y^1} \\
+      \frac{\pdiff \alpha_2}{\pdiff y^1} - \frac{\pdiff \alpha_1}{\pdiff y^2}
+    \end{pmatrix},
+  \end{equation}
+  where $(\alpha_1,\alpha_2,\alpha_3)^{\mathrm{T}} = G (a^1,a^2,a^3)^{\mathrm{T}}$.
+
+  In the Cartesian coordinate chart,
+  \begin{equation}
+    \label{eq:curl-expr-cartesian}
+    \curl a = \begin{pmatrix}
+      \frac{\pdiff a^3}{\pdiff x^2} - \frac{\pdiff a^2}{\pdiff x^3} \\
+      \frac{\pdiff a^1}{\pdiff x^3} - \frac{\pdiff a^3}{\pdiff x^1} \\
+      \frac{\pdiff a^2}{\pdiff x^1} - \frac{\pdiff a^1}{\pdiff x^2}
+    \end{pmatrix}.
+  \end{equation}
+  
+  In the ball coordinate chart $(r,\theta,\phi)$ with the non-normalized basis
+  $\left\{ \vect{\pdiff}r, \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$,
+  \begin{equation}
+    \label{eq:curl-expr-ball-coordinate-nonnormalized-basis}
+    \curl a = \begin{pmatrix}
+      \sin\theta \frac{\pdiff a^{3}}{\pdiff \theta} - \frac{1}{\sin\theta} \frac{\pdiff
+        a^{2}}{\pdiff \phi} + 2a^3\cos\theta \\
+      -\frac{2\sin\theta}{r}a^3 - \sin\theta \frac{\pdiff a^3}{\pdiff r} +
+      \frac{1}{r^2\sin\theta}\frac{\pdiff a^1}{\pdiff \phi}\\
+      \frac{2}{r\sin\theta}a^2 - \frac{1}{r^2\sin\theta}\frac{\pdiff a^1}{\pdiff \theta} +
+      \frac{1}{\sin\theta}\frac{\pdiff a^{2}}{\pdiff r}
+    \end{pmatrix}.
+  \end{equation}
+  If the normalized basis
+  $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\theta}, \vect{\pdiff}\hat{\phi}
+  \right\}$ is adopted,
+  \begin{equation}
+    \label{eq:curl-expr-ball-coordinate-normalized-basis}
+    \curl a = \begin{pmatrix}
+      \frac{\cos\theta}{r\sin\theta} a^3 - \frac{1}{r\sin\theta} \frac{\pdiff
+        a^{2}}{\pdiff \phi} + \frac{1}{r} \frac{\pdiff a^{3}}{\pdiff \theta} \\
+      \frac{1}{r\sin\theta} \frac{\pdiff a^{1}}{\pdiff \phi} - \frac{1}{r}a^3 -
+      \frac{\pdiff a^{3}}{\pdiff r} \\
+      \frac{1}{r}a^2 - \frac{1}{r} \frac{\pdiff a^{1}}{\pdiff \theta} + \frac{\pdiff
+        a^{2}}{\pdiff r}
+    \end{pmatrix}.
+  \end{equation}
+  
+  In the cylindrical coordinate chart $(r,\phi,z)$ with the non-normalized basis $\left\{
+    \vect{\pdiff}r, \vect{\pdiff}\phi, \vect{\pdiff}z \right\}$,
+  \begin{equation}
+    \label{eq:curl-expr-cylindrical-coordinate-nonnormalized-basis}
+    \curl a = \begin{pmatrix}
+      \frac{1}{r}\frac{\pdiff a^{3}}{\pdiff \phi} - r \frac{\pdiff a^{2}}{\pdiff z} \\
+      \frac{1}{r}\frac{\pdiff a^{1}}{\pdiff z} - \frac{1}{r}\frac{\pdiff a^{3}}{\pdiff r}
+      \\
+      r \frac{\pdiff a^{2}}{\pdiff r} - \frac{1}{r} \frac{\pdiff a^{1}}{\pdiff \phi} +
+      2a^2
+    \end{pmatrix}.
+  \end{equation}
+  If the normalized basis $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\phi},
+    \vect{\pdiff}\hat{z} \right\}$ is adopted,
+  \begin{equation}
+    \label{eq:curl-expr-cylindrical-coordinate-normalized-basis}
+    \curl a = \begin{pmatrix}
+      \frac{1}{r} \frac{\pdiff a^{3}}{\pdiff \phi} - \frac{\pdiff a^{2}}{\pdiff z} \\
+      \frac{\pdiff a^{1}}{\pdiff z} - \frac{\pdiff a^{3}}{\pdiff r} \\
+      \frac{\pdiff a^{2}}{\pdiff r} - \frac{1}{r} \frac{\pdiff a^{1}}{\pdiff \phi} +
+      \frac{1}{r}a^2
+    \end{pmatrix}.
+  \end{equation}
+  
+\item Divergence of a vector $b$: $\divergence b$ is a scalar value which satisfies
+  \begin{equation}
+    \label{eq:vector-divergence}
+    d\beta^2 = (\divergence b) \mathrm{vol}^3,
+  \end{equation}
+  where $\beta^2$ is the 2-form corresponding to $b$, which can be obtained from the
+  interior product of the pseudo volume 3-form with respect to $b$, i.e.
+  $i_b \mathrm{vol}^3$. If $b$ is a true vector, $\beta^2$ is a pseudo 2-form and
+  $\divergence b$ is a true scalar. On the contrary, if $b$ is a pseudo vector, $\beta^2$
+  is a true 2-form and $\divergence b$ is pseudo scalar. Assume
+  $b = (b^1,b^2,b^3)^{\mathrm{T}}$ is a true vector, according to Equation
+  (\ref{eq:coeff-relation-between-2-form-and-vector}), the pseudo 2-form $\beta^2$ is
+  \begin{equation}
+    \beta^2 = o(y) \left( \sqrt{g(y)} b^1 dy^2 \wedge dy^3 + \sqrt{g(y)} b^2 dy^3 \wedge dy^1 +
+      \sqrt{g(y)} b^3 dy^1 \wedge dy^2 \right).
+  \end{equation}
+  Then using Equation (\ref{eq:exterior-diff-2-form-3d}), the exterior differential of
+  $\beta^2$ is
+  \begin{equation}
+    d\beta^2 = o(y) \left( \frac{\pdiff}{\pdiff y^1} \left( \sqrt{g(y)}b^1 \right) +
+      \frac{\pdiff}{\pdiff y^2} \left( \sqrt{g(y)}b^2 \right) + \frac{\pdiff}{\pdiff y^3}
+      \left( \sqrt{g(y)}b^3 \right) \right) dy^1 \wedge dy^2 \wedge dy^3.
+  \end{equation}
+  Meanwhile, the right hand side of Equation \ref{eq:vector-divergence} is
+  \begin{equation}
+    (\divergence b) \mathrm{vol}^3 = (\divergence b) o(y) \sqrt{g(y)} dy^1 \wedge dy^2
+    \wedge dy^3.
+  \end{equation}
+  Therefore, the divergence of $b$ is
+  \begin{equation}
+    \label{eq:div-expr-general}
+    \divergence b = \frac{1}{\sqrt{g(y)}} \left( \frac{\pdiff}{\pdiff y^1} \left(
+        \sqrt{g(y)}b^1 \right) + \frac{\pdiff}{\pdiff y^2} \left( \sqrt{g(y)}b^2 \right) +
+      \frac{\pdiff}{\pdiff y^3} \left( \sqrt{g(y)}b^3 \right) \right).
+  \end{equation}
+
+  In the Cartesian coordinate chart,
+  \begin{equation}
+    \label{eq:div-expr-cartesian}
+    \divergence b = \frac{\pdiff b^1}{\pdiff x^1} + \frac{\pdiff b^{2}}{\pdiff x^{2}} +
+    \frac{\pdiff b^{3}}{\pdiff x^{3}}.
+  \end{equation}
+
+  In the ball coordinate chart $(r,\theta,\phi)$ with the non-normalized basis $\left\{
+    \vect{\pdiff}r, \vect{\pdiff}\theta, \vect{\pdiff}\phi \right\}$,
+  \begin{equation}
+    \label{eq:div-expr-ball-coordinate-nonnormalized-basis}
+    \divergence b = \frac{\pdiff b^{1}}{\pdiff r} + \frac{2}{r}b^1 + \frac{\pdiff
+      b^{2}}{\pdiff \theta} + \frac{\cos\theta}{\sin\theta}b^2 + \frac{\pdiff b^{3}}{\pdiff
+      \phi}. 
+  \end{equation}
+ If the normalized basis $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\theta},
+   \vect{\pdiff}\hat{\phi} \right\}$ is adopted,
+ \begin{equation}
+   \label{eq:div-expr-ball-coordinate-normalized-basis}
+   \divergence b = \frac{\pdiff b^{1}}{\pdiff r} + \frac{2}{r}b^1 +
+   \frac{1}{r}\frac{\pdiff b^{2}}{\pdiff \theta} + \frac{\cos\theta}{r\sin\theta}b^2 +
+   \frac{1}{r\sin\theta}\frac{\pdiff b^{3}}{\pdiff \phi}.
+ \end{equation}
+
+ In the cylindrical coordinate chart $(r,\phi,z)$ with the non-normalized basis $\left\{
+   \vect{\pdiff}r, \vect{\pdiff}\phi, \vect{\pdiff}z \right\}$,
+ \begin{equation}
+   \label{eq:div-expr-cylindrival-coordinate-nonnormalized-basis}
+   \divergence b = \frac{\pdiff b^{1}}{\pdiff r} + \frac{1}{r}b^1 + \frac{\pdiff
+     b^{2}}{\pdiff \phi} + \frac{\pdiff b^{3}}{\pdiff z}.
+ \end{equation}
+ If the normalized basis $\left\{ \vect{\pdiff}\hat{r}, \vect{\pdiff}\hat{\phi},
+   \vect{\pdiff}\hat{z} \right\}$ is adopted,
+ \begin{equation}
+   \label{eq:div-expr-cylindrival-coordinate-normalized-basis}
+   \divergence b = \frac{\pdiff b^{1}}{\pdiff r} + \frac{1}{r}b^1 +
+   \frac{1}{r}\frac{\pdiff b^{2}}{\pdiff \phi} + \frac{\pdiff b^{3}}{\pdiff z}.
+ \end{equation}
+\item Laplacian of a 0-form $f$: it is defined as the divergence of the gradient of $f$:
+  \begin{equation}
+    \label{eq:laplacian}
+    \triangle f = \divergence(\nabla f).
+  \end{equation}
+  First, the exterior differential of $f$ can be computed as
+  \begin{equation}
+    df = \frac{\pdiff f}{\pdiff y^{1}} dy^1 + \frac{\pdiff f}{\pdiff y^{2}} dy^2 +
+    \frac{\pdiff f}{\pdiff y^{3}} dy^3.
+  \end{equation}
+  Then its associated tangent vector $\nabla f$ can be obtained from Equation
+  (\ref{eq:1-form-to-gradient}). Then the corresponding 2-form $\beta^2$ of $\nabla f$ is
+  $i_{\nabla f} \mathrm{vol}^3$. Since $f$ is a true form and $\nabla f$ is a true vector,
+  $\beta^2$ is a pseudo 2-form. Finally, the Laplacian of $f$, which is a true scalar, can
+  be computed according to Equation (\ref{eq:vector-divergence}):
+  \begin{equation}
+    \label{eq:laplacian-expr-general}
+    \triangle f = \frac{1}{\sqrt{g(y)}} \left[ \frac{\pdiff}{\pdiff y^1} \left(
+        \sqrt{g(y)} g^{1j} \frac{\pdiff f}{\pdiff y^{j}} \right) + \frac{\pdiff}{\pdiff
+        y^2} \left( \sqrt{g(y)}g^{2j} \frac{\pdiff f}{\pdiff y^{j}} \right) +
+      \frac{\pdiff}{\pdiff y^3} \left( \sqrt{g(y)} g^{3j} \frac{\pdiff f}{\pdiff y^{j}}
+      \right) \right].
+  \end{equation}
+
+  In the Cartesian coordinate chart,
+  \begin{equation}
+    \label{eq:laplacian-expr-cartesian}
+    \triangle f = \frac{\pdiff^2 f}{\pdiff (x^1)^2} + \frac{\pdiff^2 f}{\pdiff (x^2)^2} +
+    \frac{\pdiff^2 f}{\pdiff (x^3)^2}.
+  \end{equation}
+
+  In the ball coordinate chart $(r,\theta,\phi)$, since the Laplacian is a scalar value,
+  there is no need to distinguish the non-normalized basis and normalized basis. The
+  expression of $\triangle f$ is
+  \begin{equation}
+    \label{eq:laplacian-expr-ball-coordinate}
+    \triangle f = \frac{\pdiff^2 f}{\pdiff r^2} + \frac{2}{r} \frac{\pdiff f}{\pdiff r} +
+    \frac{1}{r^2}\frac{\pdiff^2 f}{\pdiff \theta^2} +
+    \frac{\cos\theta}{r^2\sin\theta}\frac{\pdiff f}{\pdiff \theta} +
+    \frac{1}{r^2\sin\theta^2} \frac{\pdiff^2 f}{\pdiff \phi^2}.
+  \end{equation}
+
+  In the cylindrical coordinate chart $(r,\phi,z)$,
+  \begin{equation}
+    \label{eq:laplacian-expr-cylindrical-coordinate}
+    \triangle f = \frac{\pdiff^2 f}{\pdiff r^2} + \frac{1}{r}\frac{\pdiff f}{\pdiff r} +
+    \frac{1}{r^2} \frac{\pdiff^2 f}{\pdiff \phi^2} + \frac{\pdiff^2 f}{\pdiff z^2}.
+  \end{equation}
+\end{enumerate}
+
+The Maxima code in Listing \ref{lst:dg-ball-coordinates-normalized} is used to compute the
+gradient, curl, divergence and Laplacian in the ball coordinate chart with the normalized
+basis.
+\begin{lstlisting}[caption={Maxima code for computing gradient, curl, divergence and
+    Laplacian in the ball coordinate chart.}, label={lst:dg-ball-coordinates-normalized},
+  language=maxima]
+normalize_mat_cols(mat) := block([i, j, mat_col, scale_factor],
+  /* Iterate over each column */
+  for j:1 step 1 thru matrix_size(mat)[2]
+  do (
+    mat_col : col(mat, j),
+    scale_factor : mat_norm(mat_col, frobenius),
+
+    /* Iterate over each row */
+    for i:1 step 1 thru matrix_size(mat)[1]
+    do (
+      mat[i,j] : mat[i,j] / scale_factor
+      )
+    )
+  )$
+
+scale_tangent_vector_to_nonnormalized_basis(vec, J) := block(
+  [j, mat_col, scale_factor],
+  for j:1 step 1 thru matrix_size(J)[2]
+  do (
+    mat_col : col(J, j),
+    scale_factor : mat_norm(mat_col, frobenius),
+
+    vec[j,1] : vec[j,1] / scale_factor
+    )
+  )$
+
+scale_tangent_vector_to_normalized_basis(vec, J) := block(
+  [j, mat_col, scale_factor],
+  for j:1 step 1 thru matrix_size(J)[2]
+  do (
+    mat_col : col(J, j),
+    scale_factor : mat_norm(mat_col, frobenius),
+
+    vec[j,1] : vec[j,1] * scale_factor
+    )
+  )$
+
+/* Coordinate transformation between Cartesian and ball coordinate frames */
+assume(theta >= 0, theta <= %pi)$
+assume(r >= 0)$
+assume(sin(theta) >= 0);
+
+x : r*cos(phi)*sin(theta);
+y : r*sin(phi)*sin(theta);
+z : r*cos(theta);
+
+/* Symbols adopted for the local coordinte chart $(u)=(r,phi,theta)$ */
+u : [r, theta, phi];
+
+/* Jacobian matrix for the transition map from ball coordinte chart to the
+Cartesian coordinate chart */
+Juv : matrix(
+  [diff(x, r), diff(x,theta), diff(x,phi)],
+  [diff(y, r), diff(y,theta), diff(y,phi)],
+  [diff(z, r), diff(z,theta), diff(z,phi)]);
+
+/* Metric tensor */
+G : trigsimp(transpose(Juv) . Juv);
+/* $\sqrt{g}$ appears in the pseudo volume 3-form */
+g : determinant(G);
+
+/* Compute the gradient of a 0-form */
+depends(f, [u[1], u[2], u[3]]);
+df : matrix(
+  [diff(f, u[1])],
+  [diff(f, u[2])],
+  [diff(f, u[3])]
+  );
+nabla_f : G_inv . df;
+scale_tangent_vector_to_normalized_basis(nabla_f, Juv);
+expand(trigsimp(nabla_f));
+
+/* Compute the curl of a tangent vector A */
+A : matrix([a1], [a2], [a3]);
+/* Transform the tangent vector to the non-normalized ball coordinates */
+scale_tangent_vector_to_nonnormalized_basis(A, Juv);
+/* Transform the tangent vector to 1-form $\alpha$ */
+alpha : G . A;
+depends([a1, a2, a3], [u[1], u[2], u[3]]);
+/* Exterior differential of the 1-form $\alpha$ */
+dalpha : matrix(
+  [diff(alpha[3,1], u[2]) - diff(alpha[2,1], u[3])],
+  [diff(alpha[1,1], u[3]) - diff(alpha[3,1], u[1])],
+  [diff(alpha[2,1], u[1]) - diff(alpha[1,1], u[2])]);
+curl_A : expand(trigsimp(1 / sqrt(g) * dalpha));
+scale_tangent_vector_to_normalized_basis(curl_A, Juv);
+expand(trigsimp(curl_A));
+
+/* Compute the divergence of a tangent vector B */
+B : matrix([b1], [b2], [b3]);
+/* Transform the tangent vector to the non-normalized ball coordinates */
+scale_tangent_vector_to_nonnormalized_basis(B, Juv);
+depends([b1, b2, b3], [u[1], u[2], u[3]]);
+div_B : expand(
+  trigsimp(
+    1 / sqrt(g) * (
+      diff(sqrt(g) * B[1,1], u[1]) +
+      diff(sqrt(g) * B[2,1], u[2]) +
+      diff(sqrt(g) * B[3,1], u[3]))));
+
+/* Compute the Laplacian */
+G_inv : invert(G);
+nabla_f : G_inv . df;
+beta : nabla_f * sqrt(g);
+laplacian_f : expand(
+  trigsimp(
+    1 / sqrt(g) * (diff(beta[1,1], u[1]) + diff(beta[2,1], u[2]) +
+      diff(beta[3,1], u[3]))));
+\end{lstlisting}
+
+\subsection{Hodge star}
 
 \section{Maxwell equations}
 

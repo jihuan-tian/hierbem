@@ -50,6 +50,38 @@
    #+ATTR_LATEX: :width 0.5\textwidth
    #+RESULTS:
    [[file:./figures/basis-on-sphere.png]]
+** Metric tensor of cylindrical coordinate chart
+   #+begin_src maxima :exports both :results output
+     /* Relationship between Cartesian and cylindrical coordinate frames */
+     x:r*cos(phi);
+     y:r*sin(phi);
+     z:w;
+
+     Juv:matrix([diff(x,r), diff(x,phi), diff(x,w)], [diff(y,r), diff(y,phi), diff(y,w)], [diff(z,r), diff(z,phi), diff(z,w)]);
+     print("Juv=", Juv);
+     G:trigsimp(transpose(Juv) . Juv);
+     print("G=", G);
+
+     /* Coefficients of the 1-form of the vector A */
+     alpha:G . matrix([a[1]], [a[2]], [a[3]]);
+     1 / determinant(G);
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+        [ cos(phi)  - sin(phi) r  0 ]
+        [                           ]
+   Juv= [ sin(phi)   cos(phi) r   0 ] 
+        [                           ]
+        [    0           0        1 ]
+      [ 1  0   0 ]
+      [          ]
+   G= [     2    ] 
+      [ 0  r   0 ]
+      [          ]
+      [ 0  0   1 ]
+   #+end_example
+
 ** Metric tensor of spherical coordinate chart
    #+begin_src maxima :exports both :results output
      /* Relationship between Cartesian and spherical coordinate frames */
