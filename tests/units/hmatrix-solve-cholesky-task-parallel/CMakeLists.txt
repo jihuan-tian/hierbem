@@ -2,12 +2,10 @@ find_package(Octave REQUIRED)
 
 # Target should contains 'test' substring in any cases in order to be found by
 # Visual Studio Code's TestMate extension
-set(_target test-hmatrix-cholesky-transpose-forward-substitution-matrix-valued)
+set(_target test-hmatrix-solve-cholesky-task-parallel)
 
-add_executable(
-  ${_target}
-  hmatrix-cholesky-transpose-forward-substitution-matrix-valued.cc
-  run-hmatrix-cholesky-transpose-forward-substitution-matrix-valued.cu)
+add_executable(${_target} hmatrix-solve-cholesky-task-parallel.cc
+                          run-hmatrix-solve-cholesky-task-parallel.cu)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})
@@ -30,6 +28,12 @@ include(Catch)
 catch_discover_tests(${_target})
 
 # Copy plotting util to build directory to ease manually post-processing
+add_custom_command(
+  TARGET ${_target}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/draw.m
+          ${CMAKE_CURRENT_BINARY_DIR}/draw.m)
+
 add_custom_command(
   TARGET ${_target}
   POST_BUILD

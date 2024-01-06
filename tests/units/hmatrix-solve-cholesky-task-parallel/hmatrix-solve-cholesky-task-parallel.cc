@@ -1,14 +1,22 @@
 /**
- * \file hmatrix-solve-lu-task-parallel.cu
- * \brief Verify LU parallel factorization of an \hmatrix and solve this matrix
- * using forward and backward substitution.
+ * \file hmatrix-solve-cholesky-task-parallel.cc
+ * \brief Verify Cholesky parallel factorization of a positive definite and
+ * symmetric \hmatrix and solve this matrix using forward and backward
+ * substitution.
+ *
+ * \details In this tester, the property of the \hmatrix before factorization is
+ * set to @p symmetric and the property of the result \hmatrix is set to
+ * @p lower_triangular. \alert{If there is no special treatment as that proposed
+ * by Bebendorf, the approximation of the original full matrix using \hmatrix
+ * must be good enough so that the positive definiteness of the original matrix
+ * is preserved and Cholesky factorization is applicable.}
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
- * \date 2021-11-02
+ * \date 2024-01-06
  */
+
 #include <catch2/catch_all.hpp>
-#include <tbb/tbb.h>
 
 #include <fstream>
 #include <iostream>
@@ -23,15 +31,14 @@ using namespace HierBEM;
 // XXX Extracted all HierBEM logic into a standalone source to prevent
 // Matrix/SparseMatrix data type conflicts
 extern void
-run_hmatrix_solve_lu_task_parallel(const unsigned int trial_no);
+run_hmatrix_solve_cholesky_task_parallel(const unsigned int trial_no);
 
 static constexpr int FUZZING_TIMES = 5;
 const unsigned int   REPEAT_TIMES  = 10;
 
-TEST_CASE("H-matrix solve equations by parallel LU decomposition", "[hmatrix]")
+TEST_CASE("H-matrix solve equations by parallel Cholesky factorization",
+          "[hmatrix]")
 {
-  // tbb::task_scheduler_init init(1);
-
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
   inst.add_path(SOURCE_DIR);
@@ -59,14 +66,14 @@ TEST_CASE("H-matrix solve equations by parallel LU decomposition", "[hmatrix]")
     for (unsigned int i = 0; i < REPEAT_TIMES; i++)
       {
         // Run solving based on generated data
-        run_hmatrix_solve_lu_task_parallel(trial_no);
+        run_hmatrix_solve_cholesky_task_parallel(trial_no);
 
         // Calculate relative error
         try
           {
             inst.eval_string(
               std::string(
-                "[hmat_rel_err, x_octave, x_rel_err, hmat_factorized_rel_err] = process(") +
+                "[hmat_rel_err, product_hmat_rel_err, x_octave, x_rel_err, hmat_factorized_rel_err] = process(") +
               std::to_string(trial_no) + std::string(")"));
           }
         catch (...)
@@ -79,10 +86,11 @@ TEST_CASE("H-matrix solve equations by parallel LU decomposition", "[hmatrix]")
         out = inst.eval_string("hmat_rel_err");
         REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
-        // The solution vector's error requirement is relaxed, in case the
-        // condition number of the matrix is large.
+        out = inst.eval_string("product_hmat_rel_err");
+        REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+
         out = inst.eval_string("x_rel_err");
-        REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-5));
+        REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-6));
 
         out = inst.eval_string("hmat_factorized_rel_err");
         REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));

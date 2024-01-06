@@ -1,139 +1,1062 @@
 === Support point coordinates ===
 -0.422650 -0.422650 -0.422650
+0.00000 -0.422650 -0.422650
+-0.422650 0.00000 -0.422650
+0.00000 0.00000 -0.422650
+-0.422650 -0.422650 0.00000
+0.00000 -0.422650 0.00000
+-0.422650 0.00000 0.00000
+0.00000 0.00000 -2.77556e-17
 0.422650 -0.422650 -0.422650
+0.422650 0.00000 -0.422650
+0.422650 -0.422650 0.00000
+0.422650 0.00000 0.00000
 -0.422650 0.422650 -0.422650
+0.00000 0.422650 -0.422650
+-0.422650 0.422650 0.00000
+0.00000 0.422650 0.00000
 0.422650 0.422650 -0.422650
+0.422650 0.422650 0.00000
 -0.422650 -0.422650 0.422650
+0.00000 -0.422650 0.422650
+-0.422650 0.00000 0.422650
+0.00000 0.00000 0.422650
 0.422650 -0.422650 0.422650
+0.422650 0.00000 0.422650
 -0.422650 0.422650 0.422650
+0.00000 0.422650 0.422650
 0.422650 0.422650 0.422650
 -1.15470 -1.15470 -1.15470
+0.00000 -1.41421 -1.41421
+-1.41421 0.00000 -1.41421
+0.00000 0.00000 -2.00000
+-0.788675 -0.788675 -0.788675
+0.00000 -0.918432 -0.918432
+-0.918432 0.00000 -0.918432
+0.00000 0.00000 -1.21132
 1.15470 -1.15470 -1.15470
+1.41421 0.00000 -1.41421
+0.788675 -0.788675 -0.788675
+0.918432 0.00000 -0.918432
 -1.15470 1.15470 -1.15470
+0.00000 1.41421 -1.41421
+-0.788675 0.788675 -0.788675
+0.00000 0.918432 -0.918432
 1.15470 1.15470 -1.15470
+0.788675 0.788675 -0.788675
+1.41421 -1.41421 0.00000
+2.00000 0.00000 0.00000
+0.918432 -0.918432 0.00000
+1.21132 0.00000 -6.72420e-17
+1.41421 1.41421 0.00000
+0.918432 0.918432 0.00000
 1.15470 -1.15470 1.15470
+1.41421 0.00000 1.41421
+0.788675 -0.788675 0.788675
+0.918432 0.00000 0.918432
 1.15470 1.15470 1.15470
+0.788675 0.788675 0.788675
 -1.15470 -1.15470 1.15470
+0.00000 -1.41421 1.41421
+-0.788675 -0.788675 0.788675
+0.00000 -0.918432 0.918432
+-1.41421 0.00000 1.41421
+0.00000 0.00000 2.00000
+-0.918432 0.00000 0.918432
+0.00000 -6.72420e-17 1.21132
 -1.15470 1.15470 1.15470
+0.00000 1.41421 1.41421
+-0.788675 0.788675 0.788675
+0.00000 0.918432 0.918432
+-1.41421 -1.41421 0.00000
+-0.918432 -0.918432 0.00000
+-2.00000 0.00000 0.00000
+-1.21132 -6.72420e-17 0.00000
+-1.41421 1.41421 0.00000
+-0.918432 0.918432 0.00000
+0.00000 -2.00000 0.00000
+0.00000 -1.21132 -6.72420e-17
+0.00000 2.00000 0.00000
+-6.72420e-17 1.21132 0.00000
 === Cluster tree ===
-* Tree depth: 3
-* Tree max level: 2
-* Total number of cluster tree nodes obtained during partition: 7
-* Total number of cluster tree nodes by recursive tree traversal: 7
+* Tree depth: 10
+* Tree max level: 9
+* Total number of cluster tree nodes obtained during partition: 59
+* Total number of cluster tree nodes by recursive tree traversal: 59
 * Tree nodes:
 Level 0
 Number of children: 2
 Node data:
-Index set size: 16
-Index set (external numbering): [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 -1.15470 -1.15470], [1.15470 1.15470 1.15470]
+Index set size: 79
+Index set (external numbering): []
+Index range (internal numbering): [0 79)
+Bounding box: [-2.00000 -2.00000 -2.00000], [2.00000 2.00000 2.00000]
 Diameter: 4.00000
 Parent node data: none
 ------------------
 Level 1
 Number of children: 2
 Node data:
-Index set size: 8
-Index set (external numbering): [0 2 4 6 8 10 14 15 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 -1.15470 -1.15470], [-0.422650 1.15470 1.15470]
-Diameter: 3.26599
-Parent node data: Index set size: 16
-Index set (external numbering): [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 -1.15470 -1.15470], [1.15470 1.15470 1.15470]
+Index set size: 52
+Index set (external numbering): []
+Index range (internal numbering): [0 52)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 2.00000 2.00000]
+Diameter: 4.00000
+Parent node data: Index set size: 79
+Index set (external numbering): []
+Index range (internal numbering): [0 79)
+Bounding box: [-2.00000 -2.00000 -2.00000], [2.00000 2.00000 2.00000]
 Diameter: 4.00000
 ------------------
 Level 2
+Number of children: 2
+Node data:
+Index set size: 34
+Index set (external numbering): []
+Index range (internal numbering): [0 34)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 0.00000 2.00000]
+Diameter: 4.00000
+Parent node data: Index set size: 52
+Index set (external numbering): []
+Index range (internal numbering): [0 52)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 2.00000 2.00000]
+Diameter: 4.00000
+------------------
+Level 3
+Number of children: 2
+Node data:
+Index set size: 22
+Index set (external numbering): []
+Index range (internal numbering): [0 22)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.82843
+Parent node data: Index set size: 34
+Index set (external numbering): []
+Index range (internal numbering): [0 34)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 0.00000 2.00000]
+Diameter: 4.00000
+------------------
+Level 4
+Number of children: 2
+Node data:
+Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
+Bounding box: [-2.00000 -1.41421 -1.41421], [-1.15470 0.00000 0.00000]
+Diameter: 2.00000
+Parent node data: Index set size: 22
+Index set (external numbering): []
+Index range (internal numbering): [0 22)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.82843
+------------------
+Level 5
+Number of children: 0
+Node data:
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
+Bounding box: [-1.41421 -1.41421 -1.15470], [-1.15470 -1.15470 0.00000]
+Diameter: 1.21162
+Parent node data: Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
+Bounding box: [-2.00000 -1.41421 -1.41421], [-1.15470 0.00000 0.00000]
+Diameter: 2.00000
+------------------
+Level 5
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [2 5)
+Bounding box: [-2.00000 -6.72420e-17 -1.41421], [-1.21132 0.00000 0.00000]
+Diameter: 1.53073
+Parent node data: Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
+Bounding box: [-2.00000 -1.41421 -1.41421], [-1.15470 0.00000 0.00000]
+Diameter: 2.00000
+------------------
+Level 4
+Number of children: 2
+Node data:
+Index set size: 17
+Index set (external numbering): []
+Index range (internal numbering): [5 22)
+Bounding box: [-0.918432 -2.00000 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.82843
+Parent node data: Index set size: 22
+Index set (external numbering): []
+Index range (internal numbering): [0 22)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.82843
+------------------
+Level 5
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [5 8)
+Bounding box: [0.00000 -2.00000 -1.41421], [0.00000 -1.21132 0.00000]
+Diameter: 1.53073
+Parent node data: Index set size: 17
+Index set (external numbering): []
+Index range (internal numbering): [5 22)
+Bounding box: [-0.918432 -2.00000 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.82843
+------------------
+Level 5
+Number of children: 2
+Node data:
+Index set size: 14
+Index set (external numbering): []
+Index range (internal numbering): [8 22)
+Bounding box: [-0.918432 -0.918432 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.38475
+Parent node data: Index set size: 17
+Index set (external numbering): []
+Index range (internal numbering): [5 22)
+Bounding box: [-0.918432 -2.00000 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.82843
+------------------
+Level 6
+Number of children: 0
+Node data:
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [8 10)
+Bounding box: [0.00000 0.00000 -2.00000], [0.00000 0.00000 -1.21132]
+Diameter: 0.788675
+Parent node data: Index set size: 14
+Index set (external numbering): []
+Index range (internal numbering): [8 22)
+Bounding box: [-0.918432 -0.918432 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.38475
+------------------
+Level 6
+Number of children: 2
+Node data:
+Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [10 22)
+Bounding box: [-0.918432 -0.918432 -0.918432], [0.00000 0.00000 0.00000]
+Diameter: 1.36603
+Parent node data: Index set size: 14
+Index set (external numbering): []
+Index range (internal numbering): [8 22)
+Bounding box: [-0.918432 -0.918432 -2.00000], [0.00000 0.00000 0.00000]
+Diameter: 2.38475
+------------------
+Level 7
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [10 13)
+Bounding box: [-0.918432 -0.918432 -0.918432], [0.00000 -0.788675 0.00000]
+Diameter: 1.29886
+Parent node data: Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [10 22)
+Bounding box: [-0.918432 -0.918432 -0.918432], [0.00000 0.00000 0.00000]
+Diameter: 1.36603
+------------------
+Level 7
+Number of children: 2
+Node data:
+Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [13 22)
+Bounding box: [-0.918432 -0.422650 -0.918432], [0.00000 0.00000 0.00000]
+Diameter: 1.36589
+Parent node data: Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [10 22)
+Bounding box: [-0.918432 -0.918432 -0.918432], [0.00000 0.00000 0.00000]
+Diameter: 1.36603
+------------------
+Level 8
+Number of children: 0
+Node data:
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [13 14)
+Bounding box: [-0.918432 0.00000 -0.918432], [-0.918432 0.00000 -0.918432]
+Diameter: 0.00000
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [13 22)
+Bounding box: [-0.918432 -0.422650 -0.918432], [0.00000 0.00000 0.00000]
+Diameter: 1.36589
+------------------
+Level 8
+Number of children: 2
+Node data:
+Index set size: 8
+Index set (external numbering): []
+Index range (internal numbering): [14 22)
+Bounding box: [-0.422650 -0.422650 -0.422650], [0.00000 0.00000 0.00000]
+Diameter: 0.732051
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [13 22)
+Bounding box: [-0.918432 -0.422650 -0.918432], [0.00000 0.00000 0.00000]
+Diameter: 1.36589
+------------------
+Level 9
 Number of children: 0
 Node data:
 Index set size: 4
-Index set (external numbering): [0 4 8 14 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 -1.15470 -1.15470], [-0.422650 -0.422650 1.15470]
-Diameter: 2.30940
+Index set (external numbering): []
+Index range (internal numbering): [14 18)
+Bounding box: [-0.422650 -0.422650 -0.422650], [-0.422650 0.00000 0.00000]
+Diameter: 0.597717
 Parent node data: Index set size: 8
-Index set (external numbering): [0 2 4 6 8 10 14 15 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 -1.15470 -1.15470], [-0.422650 1.15470 1.15470]
-Diameter: 3.26599
+Index set (external numbering): []
+Index range (internal numbering): [14 22)
+Bounding box: [-0.422650 -0.422650 -0.422650], [0.00000 0.00000 0.00000]
+Diameter: 0.732051
+------------------
+Level 9
+Number of children: 0
+Node data:
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [18 22)
+Bounding box: [0.00000 -0.422650 -0.422650], [0.00000 0.00000 0.00000]
+Diameter: 0.597717
+Parent node data: Index set size: 8
+Index set (external numbering): []
+Index range (internal numbering): [14 22)
+Bounding box: [-0.422650 -0.422650 -0.422650], [0.00000 0.00000 0.00000]
+Diameter: 0.732051
+------------------
+Level 3
+Number of children: 2
+Node data:
+Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [22 34)
+Bounding box: [-1.41421 -1.41421 0.422650], [0.00000 0.00000 2.00000]
+Diameter: 2.00000
+Parent node data: Index set size: 34
+Index set (external numbering): []
+Index range (internal numbering): [0 34)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 0.00000 2.00000]
+Diameter: 4.00000
+------------------
+Level 4
+Number of children: 2
+Node data:
+Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [22 31)
+Bounding box: [-1.15470 -1.15470 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 1.78957
+Parent node data: Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [22 34)
+Bounding box: [-1.41421 -1.41421 0.422650], [0.00000 0.00000 2.00000]
+Diameter: 2.00000
+------------------
+Level 5
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [22 25)
+Bounding box: [-1.15470 -1.15470 0.788675], [-0.788675 0.00000 1.15470]
+Diameter: 1.20207
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [22 31)
+Bounding box: [-1.15470 -1.15470 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 1.78957
+------------------
+Level 5
+Number of children: 2
+Node data:
+Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [25 31)
+Bounding box: [-0.422650 -0.918432 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 1.12603
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [22 31)
+Bounding box: [-1.15470 -1.15470 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 1.78957
+------------------
+Level 6
+Number of children: 0
+Node data:
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [25 26)
+Bounding box: [0.00000 -0.918432 0.918432], [0.00000 -0.918432 0.918432]
+Diameter: 0.00000
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [25 31)
+Bounding box: [-0.422650 -0.918432 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 1.12603
+------------------
+Level 6
+Number of children: 2
+Node data:
+Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [26 31)
+Bounding box: [-0.422650 -0.422650 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 0.989583
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [25 31)
+Bounding box: [-0.422650 -0.918432 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 1.12603
+------------------
+Level 7
+Number of children: 0
+Node data:
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [26 30)
+Bounding box: [-0.422650 -0.422650 0.422650], [0.00000 0.00000 0.422650]
+Diameter: 0.597717
+Parent node data: Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [26 31)
+Bounding box: [-0.422650 -0.422650 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 0.989583
+------------------
+Level 7
+Number of children: 0
+Node data:
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [30 31)
+Bounding box: [0.00000 -6.72420e-17 1.21132], [0.00000 -6.72420e-17 1.21132]
+Diameter: 0.00000
+Parent node data: Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [26 31)
+Bounding box: [-0.422650 -0.422650 0.422650], [0.00000 0.00000 1.21132]
+Diameter: 0.989583
+------------------
+Level 4
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [31 34)
+Bounding box: [-1.41421 -1.41421 1.41421], [0.00000 0.00000 2.00000]
+Diameter: 2.00000
+Parent node data: Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [22 34)
+Bounding box: [-1.41421 -1.41421 0.422650], [0.00000 0.00000 2.00000]
+Diameter: 2.00000
 ------------------
 Level 2
+Number of children: 2
+Node data:
+Index set size: 18
+Index set (external numbering): []
+Index range (internal numbering): [34 52)
+Bounding box: [-1.41421 0.422650 -1.41421], [0.00000 2.00000 1.41421]
+Diameter: 2.82843
+Parent node data: Index set size: 52
+Index set (external numbering): []
+Index range (internal numbering): [0 52)
+Bounding box: [-2.00000 -2.00000 -2.00000], [0.00000 2.00000 2.00000]
+Diameter: 4.00000
+------------------
+Level 3
+Number of children: 2
+Node data:
+Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [34 46)
+Bounding box: [-1.41421 0.422650 -1.41421], [0.00000 2.00000 0.00000]
+Diameter: 2.00000
+Parent node data: Index set size: 18
+Index set (external numbering): []
+Index range (internal numbering): [34 52)
+Bounding box: [-1.41421 0.422650 -1.41421], [0.00000 2.00000 1.41421]
+Diameter: 2.82843
+------------------
+Level 4
+Number of children: 2
+Node data:
+Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [34 43)
+Bounding box: [-1.15470 0.422650 -1.15470], [0.00000 1.21132 0.00000]
+Diameter: 1.78957
+Parent node data: Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [34 46)
+Bounding box: [-1.41421 0.422650 -1.41421], [0.00000 2.00000 0.00000]
+Diameter: 2.00000
+------------------
+Level 5
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [34 37)
+Bounding box: [-1.15470 0.788675 -1.15470], [-0.788675 1.15470 0.00000]
+Diameter: 1.20207
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [34 43)
+Bounding box: [-1.15470 0.422650 -1.15470], [0.00000 1.21132 0.00000]
+Diameter: 1.78957
+------------------
+Level 5
+Number of children: 2
+Node data:
+Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [37 43)
+Bounding box: [-0.422650 0.422650 -0.918432], [0.00000 1.21132 0.00000]
+Diameter: 1.12603
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [34 43)
+Bounding box: [-1.15470 0.422650 -1.15470], [0.00000 1.21132 0.00000]
+Diameter: 1.78957
+------------------
+Level 6
+Number of children: 0
+Node data:
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [37 38)
+Bounding box: [0.00000 0.918432 -0.918432], [0.00000 0.918432 -0.918432]
+Diameter: 0.00000
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [37 43)
+Bounding box: [-0.422650 0.422650 -0.918432], [0.00000 1.21132 0.00000]
+Diameter: 1.12603
+------------------
+Level 6
+Number of children: 2
+Node data:
+Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [38 43)
+Bounding box: [-0.422650 0.422650 -0.422650], [0.00000 1.21132 0.00000]
+Diameter: 0.989583
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [37 43)
+Bounding box: [-0.422650 0.422650 -0.918432], [0.00000 1.21132 0.00000]
+Diameter: 1.12603
+------------------
+Level 7
 Number of children: 0
 Node data:
 Index set size: 4
-Index set (external numbering): [2 6 10 15 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 0.422650 -1.15470], [-0.422650 1.15470 1.15470]
-Diameter: 2.30940
-Parent node data: Index set size: 8
-Index set (external numbering): [0 2 4 6 8 10 14 15 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 -1.15470 -1.15470], [-0.422650 1.15470 1.15470]
-Diameter: 3.26599
+Index set (external numbering): []
+Index range (internal numbering): [38 42)
+Bounding box: [-0.422650 0.422650 -0.422650], [0.00000 0.422650 0.00000]
+Diameter: 0.597717
+Parent node data: Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [38 43)
+Bounding box: [-0.422650 0.422650 -0.422650], [0.00000 1.21132 0.00000]
+Diameter: 0.989583
+------------------
+Level 7
+Number of children: 0
+Node data:
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [42 43)
+Bounding box: [-6.72420e-17 1.21132 0.00000], [-6.72420e-17 1.21132 0.00000]
+Diameter: 0.00000
+Parent node data: Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [38 43)
+Bounding box: [-0.422650 0.422650 -0.422650], [0.00000 1.21132 0.00000]
+Diameter: 0.989583
+------------------
+Level 4
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [43 46)
+Bounding box: [-1.41421 1.41421 -1.41421], [0.00000 2.00000 0.00000]
+Diameter: 2.00000
+Parent node data: Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [34 46)
+Bounding box: [-1.41421 0.422650 -1.41421], [0.00000 2.00000 0.00000]
+Diameter: 2.00000
+------------------
+Level 3
+Number of children: 2
+Node data:
+Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [46 52)
+Bounding box: [-1.15470 0.422650 0.422650], [0.00000 1.41421 1.41421]
+Diameter: 1.55085
+Parent node data: Index set size: 18
+Index set (external numbering): []
+Index range (internal numbering): [34 52)
+Bounding box: [-1.41421 0.422650 -1.41421], [0.00000 2.00000 1.41421]
+Diameter: 2.82843
+------------------
+Level 4
+Number of children: 0
+Node data:
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [46 48)
+Bounding box: [-1.15470 0.788675 0.788675], [-0.788675 1.15470 1.15470]
+Diameter: 0.633975
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [46 52)
+Bounding box: [-1.15470 0.422650 0.422650], [0.00000 1.41421 1.41421]
+Diameter: 1.55085
+------------------
+Level 4
+Number of children: 0
+Node data:
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [48 52)
+Bounding box: [-0.422650 0.422650 0.422650], [0.00000 1.41421 1.41421]
+Diameter: 1.46459
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [46 52)
+Bounding box: [-1.15470 0.422650 0.422650], [0.00000 1.41421 1.41421]
+Diameter: 1.55085
 ------------------
 Level 1
 Number of children: 2
 Node data:
-Index set size: 8
-Index set (external numbering): [1 3 5 7 9 11 12 13 ]
-Index range (internal numbering): [0 0)
-Bounding box: [0.422650 -1.15470 -1.15470], [1.15470 1.15470 1.15470]
+Index set size: 27
+Index set (external numbering): []
+Index range (internal numbering): [52 79)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 1.41421 1.41421]
 Diameter: 3.26599
-Parent node data: Index set size: 16
-Index set (external numbering): [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 -1.15470 -1.15470], [1.15470 1.15470 1.15470]
+Parent node data: Index set size: 79
+Index set (external numbering): []
+Index range (internal numbering): [0 79)
+Bounding box: [-2.00000 -2.00000 -2.00000], [2.00000 2.00000 2.00000]
 Diameter: 4.00000
 ------------------
 Level 2
+Number of children: 2
+Node data:
+Index set size: 18
+Index set (external numbering): []
+Index range (internal numbering): [52 70)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 0.00000 1.41421]
+Diameter: 2.82843
+Parent node data: Index set size: 27
+Index set (external numbering): []
+Index range (internal numbering): [52 79)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 1.41421 1.41421]
+Diameter: 3.26599
+------------------
+Level 3
+Number of children: 2
+Node data:
+Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [52 64)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 0.00000 0.00000]
+Diameter: 2.00000
+Parent node data: Index set size: 18
+Index set (external numbering): []
+Index range (internal numbering): [52 70)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 0.00000 1.41421]
+Diameter: 2.82843
+------------------
+Level 4
+Number of children: 2
+Node data:
+Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [52 61)
+Bounding box: [0.422650 -1.15470 -1.15470], [1.21132 0.00000 0.00000]
+Diameter: 1.78957
+Parent node data: Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [52 64)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 0.00000 0.00000]
+Diameter: 2.00000
+------------------
+Level 5
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [52 55)
+Bounding box: [0.788675 -1.15470 -1.15470], [1.15470 -0.788675 0.00000]
+Diameter: 1.20207
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [52 61)
+Bounding box: [0.422650 -1.15470 -1.15470], [1.21132 0.00000 0.00000]
+Diameter: 1.78957
+------------------
+Level 5
+Number of children: 2
+Node data:
+Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [55 61)
+Bounding box: [0.422650 -0.422650 -0.918432], [1.21132 0.00000 0.00000]
+Diameter: 1.12603
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [52 61)
+Bounding box: [0.422650 -1.15470 -1.15470], [1.21132 0.00000 0.00000]
+Diameter: 1.78957
+------------------
+Level 6
+Number of children: 0
+Node data:
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [55 56)
+Bounding box: [0.918432 0.00000 -0.918432], [0.918432 0.00000 -0.918432]
+Diameter: 0.00000
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [55 61)
+Bounding box: [0.422650 -0.422650 -0.918432], [1.21132 0.00000 0.00000]
+Diameter: 1.12603
+------------------
+Level 6
+Number of children: 2
+Node data:
+Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [56 61)
+Bounding box: [0.422650 -0.422650 -0.422650], [1.21132 0.00000 0.00000]
+Diameter: 0.989583
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [55 61)
+Bounding box: [0.422650 -0.422650 -0.918432], [1.21132 0.00000 0.00000]
+Diameter: 1.12603
+------------------
+Level 7
 Number of children: 0
 Node data:
 Index set size: 4
-Index set (external numbering): [1 5 9 12 ]
-Index range (internal numbering): [0 0)
-Bounding box: [0.422650 -1.15470 -1.15470], [1.15470 -0.422650 1.15470]
-Diameter: 2.30940
-Parent node data: Index set size: 8
-Index set (external numbering): [1 3 5 7 9 11 12 13 ]
-Index range (internal numbering): [0 0)
-Bounding box: [0.422650 -1.15470 -1.15470], [1.15470 1.15470 1.15470]
-Diameter: 3.26599
+Index set (external numbering): []
+Index range (internal numbering): [56 60)
+Bounding box: [0.422650 -0.422650 -0.422650], [0.422650 0.00000 0.00000]
+Diameter: 0.597717
+Parent node data: Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [56 61)
+Bounding box: [0.422650 -0.422650 -0.422650], [1.21132 0.00000 0.00000]
+Diameter: 0.989583
+------------------
+Level 7
+Number of children: 0
+Node data:
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [60 61)
+Bounding box: [1.21132 0.00000 -6.72420e-17], [1.21132 0.00000 -6.72420e-17]
+Diameter: 0.00000
+Parent node data: Index set size: 5
+Index set (external numbering): []
+Index range (internal numbering): [56 61)
+Bounding box: [0.422650 -0.422650 -0.422650], [1.21132 0.00000 0.00000]
+Diameter: 0.989583
+------------------
+Level 4
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [61 64)
+Bounding box: [1.41421 -1.41421 -1.41421], [2.00000 0.00000 0.00000]
+Diameter: 2.00000
+Parent node data: Index set size: 12
+Index set (external numbering): []
+Index range (internal numbering): [52 64)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 0.00000 0.00000]
+Diameter: 2.00000
+------------------
+Level 3
+Number of children: 2
+Node data:
+Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [64 70)
+Bounding box: [0.422650 -1.15470 0.422650], [1.41421 0.00000 1.41421]
+Diameter: 1.55085
+Parent node data: Index set size: 18
+Index set (external numbering): []
+Index range (internal numbering): [52 70)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 0.00000 1.41421]
+Diameter: 2.82843
+------------------
+Level 4
+Number of children: 0
+Node data:
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [64 66)
+Bounding box: [0.788675 -1.15470 0.788675], [1.15470 -0.788675 1.15470]
+Diameter: 0.633975
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [64 70)
+Bounding box: [0.422650 -1.15470 0.422650], [1.41421 0.00000 1.41421]
+Diameter: 1.55085
+------------------
+Level 4
+Number of children: 0
+Node data:
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [66 70)
+Bounding box: [0.422650 -0.422650 0.422650], [1.41421 0.00000 1.41421]
+Diameter: 1.46459
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [64 70)
+Bounding box: [0.422650 -1.15470 0.422650], [1.41421 0.00000 1.41421]
+Diameter: 1.55085
 ------------------
 Level 2
+Number of children: 2
+Node data:
+Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [70 79)
+Bounding box: [0.422650 0.422650 -1.15470], [1.41421 1.41421 1.15470]
+Diameter: 2.30940
+Parent node data: Index set size: 27
+Index set (external numbering): []
+Index range (internal numbering): [52 79)
+Bounding box: [0.422650 -1.41421 -1.41421], [2.00000 1.41421 1.41421]
+Diameter: 3.26599
+------------------
+Level 3
+Number of children: 2
+Node data:
+Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [70 76)
+Bounding box: [0.422650 0.422650 -1.15470], [1.41421 1.41421 0.00000]
+Diameter: 1.55085
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [70 79)
+Bounding box: [0.422650 0.422650 -1.15470], [1.41421 1.41421 1.15470]
+Diameter: 2.30940
+------------------
+Level 4
+Number of children: 0
+Node data:
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [70 72)
+Bounding box: [0.788675 0.788675 -1.15470], [1.15470 1.15470 -0.788675]
+Diameter: 0.633975
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [70 76)
+Bounding box: [0.422650 0.422650 -1.15470], [1.41421 1.41421 0.00000]
+Diameter: 1.55085
+------------------
+Level 4
 Number of children: 0
 Node data:
 Index set size: 4
-Index set (external numbering): [3 7 11 13 ]
-Index range (internal numbering): [0 0)
-Bounding box: [0.422650 0.422650 -1.15470], [1.15470 1.15470 1.15470]
-Diameter: 2.30940
-Parent node data: Index set size: 8
-Index set (external numbering): [1 3 5 7 9 11 12 13 ]
-Index range (internal numbering): [0 0)
-Bounding box: [0.422650 -1.15470 -1.15470], [1.15470 1.15470 1.15470]
-Diameter: 3.26599
+Index set (external numbering): []
+Index range (internal numbering): [72 76)
+Bounding box: [0.422650 0.422650 -0.422650], [1.41421 1.41421 0.00000]
+Diameter: 1.46459
+Parent node data: Index set size: 6
+Index set (external numbering): []
+Index range (internal numbering): [70 76)
+Bounding box: [0.422650 0.422650 -1.15470], [1.41421 1.41421 0.00000]
+Diameter: 1.55085
 ------------------
-* Leaf set: 4 clusters
-Index set size: 4
-Index set (external numbering): [0 4 8 14 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 -1.15470 -1.15470], [-0.422650 -0.422650 1.15470]
+Level 3
+Number of children: 0
+Node data:
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [76 79)
+Bounding box: [0.422650 0.422650 0.422650], [1.15470 1.15470 1.15470]
+Diameter: 1.26795
+Parent node data: Index set size: 9
+Index set (external numbering): []
+Index range (internal numbering): [70 79)
+Bounding box: [0.422650 0.422650 -1.15470], [1.41421 1.41421 1.15470]
 Diameter: 2.30940
+------------------
+* Leaf set: 30 clusters
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
+Bounding box: [-1.41421 -1.41421 -1.15470], [-1.15470 -1.15470 0.00000]
+Diameter: 1.21162
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [2 5)
+Bounding box: [-2.00000 -6.72420e-17 -1.41421], [-1.21132 0.00000 0.00000]
+Diameter: 1.53073
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [5 8)
+Bounding box: [0.00000 -2.00000 -1.41421], [0.00000 -1.21132 0.00000]
+Diameter: 1.53073
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [8 10)
+Bounding box: [0.00000 0.00000 -2.00000], [0.00000 0.00000 -1.21132]
+Diameter: 0.788675
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [10 13)
+Bounding box: [-0.918432 -0.918432 -0.918432], [0.00000 -0.788675 0.00000]
+Diameter: 1.29886
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [13 14)
+Bounding box: [-0.918432 0.00000 -0.918432], [-0.918432 0.00000 -0.918432]
+Diameter: 0.00000
 Index set size: 4
-Index set (external numbering): [2 6 10 15 ]
-Index range (internal numbering): [0 0)
-Bounding box: [-1.15470 0.422650 -1.15470], [-0.422650 1.15470 1.15470]
-Diameter: 2.30940
+Index set (external numbering): []
+Index range (internal numbering): [14 18)
+Bounding box: [-0.422650 -0.422650 -0.422650], [-0.422650 0.00000 0.00000]
+Diameter: 0.597717
 Index set size: 4
-Index set (external numbering): [1 5 9 12 ]
-Index range (internal numbering): [0 0)
-Bounding box: [0.422650 -1.15470 -1.15470], [1.15470 -0.422650 1.15470]
-Diameter: 2.30940
+Index set (external numbering): []
+Index range (internal numbering): [18 22)
+Bounding box: [0.00000 -0.422650 -0.422650], [0.00000 0.00000 0.00000]
+Diameter: 0.597717
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [22 25)
+Bounding box: [-1.15470 -1.15470 0.788675], [-0.788675 0.00000 1.15470]
+Diameter: 1.20207
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [25 26)
+Bounding box: [0.00000 -0.918432 0.918432], [0.00000 -0.918432 0.918432]
+Diameter: 0.00000
 Index set size: 4
-Index set (external numbering): [3 7 11 13 ]
-Index range (internal numbering): [0 0)
-Bounding box: [0.422650 0.422650 -1.15470], [1.15470 1.15470 1.15470]
-Diameter: 2.30940
+Index set (external numbering): []
+Index range (internal numbering): [26 30)
+Bounding box: [-0.422650 -0.422650 0.422650], [0.00000 0.00000 0.422650]
+Diameter: 0.597717
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [30 31)
+Bounding box: [0.00000 -6.72420e-17 1.21132], [0.00000 -6.72420e-17 1.21132]
+Diameter: 0.00000
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [31 34)
+Bounding box: [-1.41421 -1.41421 1.41421], [0.00000 0.00000 2.00000]
+Diameter: 2.00000
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [34 37)
+Bounding box: [-1.15470 0.788675 -1.15470], [-0.788675 1.15470 0.00000]
+Diameter: 1.20207
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [37 38)
+Bounding box: [0.00000 0.918432 -0.918432], [0.00000 0.918432 -0.918432]
+Diameter: 0.00000
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [38 42)
+Bounding box: [-0.422650 0.422650 -0.422650], [0.00000 0.422650 0.00000]
+Diameter: 0.597717
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [42 43)
+Bounding box: [-6.72420e-17 1.21132 0.00000], [-6.72420e-17 1.21132 0.00000]
+Diameter: 0.00000
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [43 46)
+Bounding box: [-1.41421 1.41421 -1.41421], [0.00000 2.00000 0.00000]
+Diameter: 2.00000
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [46 48)
+Bounding box: [-1.15470 0.788675 0.788675], [-0.788675 1.15470 1.15470]
+Diameter: 0.633975
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [48 52)
+Bounding box: [-0.422650 0.422650 0.422650], [0.00000 1.41421 1.41421]
+Diameter: 1.46459
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [52 55)
+Bounding box: [0.788675 -1.15470 -1.15470], [1.15470 -0.788675 0.00000]
+Diameter: 1.20207
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [55 56)
+Bounding box: [0.918432 0.00000 -0.918432], [0.918432 0.00000 -0.918432]
+Diameter: 0.00000
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [56 60)
+Bounding box: [0.422650 -0.422650 -0.422650], [0.422650 0.00000 0.00000]
+Diameter: 0.597717
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [60 61)
+Bounding box: [1.21132 0.00000 -6.72420e-17], [1.21132 0.00000 -6.72420e-17]
+Diameter: 0.00000
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [61 64)
+Bounding box: [1.41421 -1.41421 -1.41421], [2.00000 0.00000 0.00000]
+Diameter: 2.00000
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [64 66)
+Bounding box: [0.788675 -1.15470 0.788675], [1.15470 -0.788675 1.15470]
+Diameter: 0.633975
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [66 70)
+Bounding box: [0.422650 -0.422650 0.422650], [1.41421 0.00000 1.41421]
+Diameter: 1.46459
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [70 72)
+Bounding box: [0.788675 0.788675 -1.15470], [1.15470 1.15470 -0.788675]
+Diameter: 0.633975
+Index set size: 4
+Index set (external numbering): []
+Index range (internal numbering): [72 76)
+Bounding box: [0.422650 0.422650 -0.422650], [1.41421 1.41421 0.00000]
+Diameter: 1.46459
+Index set size: 3
+Index set (external numbering): []
+Index range (internal numbering): [76 79)
+Bounding box: [0.422650 0.422650 0.422650], [1.15470 1.15470 1.15470]
+Diameter: 1.26795
+* Internal-to-external DoF numbering: [27 69 29 71 72 28 75 76 30 34 31 32 70 33 0 2 4 6 1 3 5 7 57 59 63 60 18 19 20 21 64 58 61 62 39 41 74 42 12 13 14 15 78 40 73 77 65 67 24 25 66 68 35 37 47 38 8 9 10 11 48 36 45 46 51 53 22 23 52 54 43 44 16 17 49 50 26 55 56]
+* External-to-internal DoF numbering: [14 18 15 19 16 20 17 21 56 57 58 59 38 39 40 41 72 73 26 27 28 29 66 67 48 49 76 0 5 2 8 10 11 13 9 52 61 53 55 34 43 35 37 70 71 62 63 54 60 74 75 64 68 65 69 77 78 22 31 23 25 32 33 24 30 46 50 47 51 1 12 3 4 44 36 6 7 45 42]
 

@@ -1,110 +1,128 @@
 Original tree:
 Level 0
 Number of children: 4
-Node data: 10
+Node data:
+10
 Split mode: 2
 Parent node data: none
 ------------------
 Level 1
 Number of children: 4
-Node data: 3
+Node data:
+3
 Split mode: 2
 Parent node data: 10
 ------------------
 Level 2
 Number of children: 0
-Node data: 2
+Node data:
+2
 Split mode: 3
 Parent node data: 3
 ------------------
 Level 2
 Number of children: 0
-Node data: 8
+Node data:
+8
 Split mode: 3
 Parent node data: 3
 ------------------
 Level 2
 Number of children: 0
-Node data: 7
+Node data:
+7
 Split mode: 3
 Parent node data: 3
 ------------------
 Level 2
 Number of children: 0
-Node data: 9
+Node data:
+9
 Split mode: 3
 Parent node data: 3
 ------------------
 Level 1
 Number of children: 0
-Node data: 4
+Node data:
+4
 Split mode: 3
 Parent node data: 10
 ------------------
 Level 1
 Number of children: 0
-Node data: 5
+Node data:
+5
 Split mode: 3
 Parent node data: 10
 ------------------
 Level 1
 Number of children: 0
-Node data: 6
+Node data:
+6
 Split mode: 3
 Parent node data: 10
 ------------------
 Copied tree:
 Level 0
 Number of children: 4
-Node data: 10
+Node data:
+10
 Split mode: 2
 Parent node data: none
 ------------------
 Level 1
 Number of children: 4
-Node data: 3
+Node data:
+3
 Split mode: 2
 Parent node data: 10
 ------------------
 Level 2
 Number of children: 0
-Node data: 2
+Node data:
+2
 Split mode: 3
 Parent node data: 3
 ------------------
 Level 2
 Number of children: 0
-Node data: 8
+Node data:
+8
 Split mode: 3
 Parent node data: 3
 ------------------
 Level 2
 Number of children: 0
-Node data: 7
+Node data:
+7
 Split mode: 3
 Parent node data: 3
 ------------------
 Level 2
 Number of children: 0
-Node data: 9
+Node data:
+9
 Split mode: 3
 Parent node data: 3
 ------------------
 Level 1
 Number of children: 0
-Node data: 4
+Node data:
+4
 Split mode: 3
 Parent node data: 10
 ------------------
 Level 1
 Number of children: 0
-Node data: 5
+Node data:
+5
 Split mode: 3
 Parent node data: 10
 ------------------
 Level 1
 Number of children: 0
-Node data: 6
+Node data:
+6
 Split mode: 3
 Parent node data: 10
 ------------------

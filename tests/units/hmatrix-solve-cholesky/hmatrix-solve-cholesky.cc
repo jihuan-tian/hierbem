@@ -15,147 +15,122 @@
  * \date 2021-11-13
  */
 
+#include <catch2/catch_all.hpp>
+
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
-#include "debug_tools.h"
-#include "hmatrix.h"
-#include "lapack_full_matrix_ext.h"
-#include "read_octave_data.h"
+#include "hbem_octave_wrapper.h"
+#include "hbem_test_config.h"
 
-int
-main()
+using namespace Catch::Matchers;
+using namespace HierBEM;
+
+// XXX Extracted all HierBEM logic into a standalone source to prevent
+// Matrix/SparseMatrix data type conflicts
+extern void
+run_hmatrix_solve_cholesky();
+
+extern void
+run_hmatrix_solve_cholesky_in_situ();
+
+static constexpr int FUZZING_TIMES = 5;
+TEST_CASE("H-matrix solve equations by Cholesky factorization", "[hmatrix]")
 {
-  /**
-   * Read a full matrix where only the lower triangular part (including the
-   * diagonal) is stored.
-   */
-  LAPACKFullMatrixExt<double> M;
-  std::ifstream               in("M.dat");
-  M.read_from_mat(in, "M");
-  in.close();
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(HBEM_ROOT_DIR "/scripts");
+  inst.add_path(SOURCE_DIR);
 
-  /**
-   * Set the property of the full matrix as @p symmetric.
-   */
-  M.set_property(LAPACKSupport::symmetric);
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    // Predefine Octave and C++ random seed to make tests repeatable
+    int rng_seed = 1234567 + trial_no * 7;
+    // TODO `src/aca_plus.cu` and `include/aca_plus.hcu` use a
+    // std::random_device for hardware seeding, need a mechansim to
+    // set the seed.
 
-  /**
-   * Read the RHS vector.
-   */
-  Vector<double> b;
-  in.open("b.dat");
-  read_vector_from_octave(in, "b", b);
-  in.close();
+    std::ostringstream oss;
+    oss << "rand('seed'," << rng_seed << ");\n";
+    oss << "randn('seed'," << rng_seed << ");";
+    inst.eval_string(oss.str());
 
-  /**
-   * Generate index set.
-   */
-  const unsigned int                   n = 32;
-  std::vector<types::global_dof_index> index_set(n);
+    // Execute script `gen_matrix.m` to generate M.dat and b.dat
+    REQUIRE_NOTHROW([&]() { inst.source_file(SOURCE_DIR "/gen_matrix.m"); }());
 
-  for (unsigned int i = 0; i < n; i++)
-    {
-      index_set.at(i) = i;
-    }
+    // Run solving based on generated data
+    run_hmatrix_solve_cholesky();
 
-  const unsigned int n_min = 2;
+    // Calculate relative error
+    try
+      {
+        inst.source_file(SOURCE_DIR "/process.m");
+      }
+    catch (...)
+      {
+        // Ignore errors
+      }
 
-  /**
-   * Generate cluster tree.
-   */
-  ClusterTree<3, double> cluster_tree(index_set, n_min);
-  cluster_tree.partition();
+    // Check relative error
+    HBEMOctaveValue out;
+    out = inst.eval_string("hmat_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
-  /**
-   * Generate block cluster tree with the two component cluster trees being the
-   * same.
-   */
-  BlockClusterTree<3, double> bct(cluster_tree, cluster_tree);
-  bct.partition_fine_non_tensor_product();
+    out = inst.eval_string("product_hmat_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
-  /**
-   * Create the \hmatrix from the source full matrix @p M, where only the lower
-   * triangular part is stored.
-   *
-   * N.B. Because the full matrix has been assigned the @p symmetric property,
-   * the created \hmatrix will be automatically set to @p symmetric, which is
-   * mandatory for the following Cholesky factorization.
-   */
-  const unsigned int fixed_rank = 8;
-  HMatrix<3, double> H(bct, M, fixed_rank, HMatrixSupport::diagonal_block);
+    out = inst.eval_string("x_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+  }
+}
 
-  std::ofstream H_bct("H_bct.dat");
-  H.write_leaf_set_by_iteration(H_bct);
-  H_bct.close();
+TEST_CASE("H-matrix solve equations by Cholesky factorization in situ",
+          "[hmatrix]")
+{
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(HBEM_ROOT_DIR "/scripts");
+  inst.add_path(SOURCE_DIR);
 
-  LAPACKFullMatrixExt<double> H_full;
-  H.convertToFullMatrix(H_full);
-  H_full.print_formatted_to_mat(std::cout, "H_full", 15, false, 25, "0");
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    // Predefine Octave and C++ random seed to make tests repeatable
+    int rng_seed = 1234567 + trial_no * 7;
+    // TODO `src/aca_plus.cu` and `include/aca_plus.hcu` use a
+    // std::random_device for hardware seeding, need a mechansim to
+    // set the seed.
 
-  /**
-   * Create the \hmatrix storing the result of Cholesky factorization, where
-   * only the lower triangular part is effective. The property of this matrix
-   * should be set to
-   * @p lower_triangular.
-   */
-  HMatrix<3, double> LLT(bct,
-                         fixed_rank,
-                         HMatrixSupport::lower_triangular,
-                         HMatrixSupport::diagonal_block);
-  std::cout << "LLT memory consumption before Cholesky factorization: "
-            << LLT.memory_consumption() << std::endl;
+    std::ostringstream oss;
+    oss << "rand('seed'," << rng_seed << ");\n";
+    oss << "randn('seed'," << rng_seed << ");";
+    inst.eval_string(oss.str());
 
-  /**
-   * Perform the Cholesky factorization.
-   */
-  H.compute_cholesky_factorization(LLT, fixed_rank);
+    // Execute script `gen_matrix.m` to generate M.dat and b.dat
+    REQUIRE_NOTHROW([&]() { inst.source_file(SOURCE_DIR "/gen_matrix.m"); }());
 
-  std::cout << "H's state after Cholesky factorization: "
-            << HMatrixSupport::state_name(H.get_state()) << "\n";
-  std::cout << "H's property after Cholesky factorization: "
-            << HMatrixSupport::property_name(H.get_property()) << "\n";
+    // Run solving based on generated data
+    run_hmatrix_solve_cholesky_in_situ();
 
-  std::cout << "LLT's state after Cholesky factorization: "
-            << HMatrixSupport::state_name(LLT.get_state()) << "\n";
-  std::cout << "LLT's property after Cholesky factorization: "
-            << HMatrixSupport::property_name(LLT.get_property()) << std::endl;
-  std::cout << "LLT memory consumption: " << LLT.memory_consumption() << "\n";
-  std::cout << "LLT coarse memory consumption: "
-            << LLT.memory_consumption_for_core_data() << std::endl;
+    // Calculate relative error
+    try
+      {
+        inst.source_file(SOURCE_DIR "/process.m");
+      }
+    catch (...)
+      {
+        // Ignore errors
+      }
 
-  /**
-   * Recalculate the rank values (upper bound only) for all rank-k matrices in
-   * the resulted \hmatrix \p LLT, which will be used in the plot of its
-   * \hmatrix structure.
-   */
-  LLT.calc_rank_upper_bound_for_rkmatrices();
+    // Check relative error
+    HBEMOctaveValue out;
+    out = inst.eval_string("hmat_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
-  /**
-   * Print the \bct structure of the Cholesky \hmatrix.
-   */
-  std::ofstream LLT_bct("LLT_bct.dat");
-  LLT.write_leaf_set_by_iteration(LLT_bct);
-  LLT_bct.close();
+    out = inst.eval_string("product_hmat_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
 
-  /**
-   * Convert the \Hcal-Cholesky factor to full matrix.
-   */
-  LAPACKFullMatrixExt<double> LLT_full;
-  LLT.convertToFullMatrix(LLT_full);
-  std::cout << "LLT_full's property: "
-            << LAPACKSupport::property_name(LLT_full.get_property())
-            << std::endl;
-  LLT_full.print_formatted_to_mat(std::cout, "LLT_full", 15, false, 25, "0");
-
-  /**
-   * Solve the matrix.
-   */
-  Vector<double> x;
-  LLT.solve_cholesky(x, b);
-
-  /**
-   * Print the result vector.
-   */
-  print_vector_to_mat(std::cout, "x", x);
+    out = inst.eval_string("x_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-10));
+  }
 }

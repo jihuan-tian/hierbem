@@ -11,15 +11,16 @@ using namespace HierBEM;
 using namespace Catch::Matchers;
 
 void
-run_hmatrix_solve_lu_task_parallel(const unsigned int trial_no)
+run_hmatrix_solve_cholesky_task_parallel(const unsigned int trial_no)
 {
-  std::ofstream ofs(std::string("hmatrix-solve-lu-task-parallel-") +
+  std::ofstream ofs(std::string("hmatrix-solve-cholesky-task-parallel-") +
                     std::to_string(trial_no) + std::string(".output"));
 
   LAPACKFullMatrixExt<double> M;
   std::ifstream               in(std::string("M") + std::to_string(trial_no) +
                    std::string(".dat"));
   M.read_from_mat(in, "M");
+  M.set_property(LAPACKSupport::symmetric);
   in.close();
   REQUIRE(M.size()[0] > 0);
   REQUIRE(M.size()[0] == M.size()[1]);
@@ -80,39 +81,39 @@ run_hmatrix_solve_lu_task_parallel(const unsigned int trial_no)
   H_full.print_formatted_to_mat(ofs, "H_full", 15, false, 25, "0");
 
   /**
-   * Perform LU factorization in serial.
+   * Perform Cholesky factorization in serial.
    */
-  H_serial.compute_lu_factorization(fixed_rank);
+  H_serial.compute_cholesky_factorization(fixed_rank);
 
   /**
-   * Perform LU factorization in task parallel.
+   * Perform Cholesky factorization in task parallel.
    */
-  H.compute_lu_factorization_task_parallel(fixed_rank);
-  ofs << "H's state after LU factorization: "
+  H.compute_cholesky_factorization_task_parallel(fixed_rank);
+  ofs << "H's state after Cholesky factorization: "
       << HMatrixSupport::state_name(H.get_state()) << std::endl;
 
   /**
-   * Convert the \Hcal-LU matrix to full matrix.
+   * Convert the \Hcal-Cholesky matrix to full matrix.
    */
-  LAPACKFullMatrixExt<double> LU_full_serial;
-  H_serial.convertToFullMatrix(LU_full_serial);
-  REQUIRE(LU_full_serial.size()[0] == M.size()[0]);
-  REQUIRE(LU_full_serial.size()[1] == M.size()[1]);
+  LAPACKFullMatrixExt<double> L_full_serial;
+  H_serial.convertToFullMatrix(L_full_serial);
+  REQUIRE(L_full_serial.size()[0] == M.size()[0]);
+  REQUIRE(L_full_serial.size()[1] == M.size()[1]);
 
-  LAPACKFullMatrixExt<double> LU_full;
-  H.convertToFullMatrix(LU_full);
-  REQUIRE(LU_full.size()[0] == M.size()[0]);
-  REQUIRE(LU_full.size()[1] == M.size()[1]);
+  LAPACKFullMatrixExt<double> L_full;
+  H.convertToFullMatrix(L_full);
+  REQUIRE(L_full.size()[0] == M.size()[0]);
+  REQUIRE(L_full.size()[1] == M.size()[1]);
 
-  LU_full.print_formatted_to_mat(ofs, "LU_full", 15, false, 25, "0");
-  LU_full_serial.print_formatted_to_mat(
-    ofs, "LU_full_serial", 15, false, 25, "0");
+  L_full.print_formatted_to_mat(ofs, "L_full", 15, false, 25, "0");
+  L_full_serial.print_formatted_to_mat(
+    ofs, "L_full_serial", 15, false, 25, "0");
 
   /**
    * Solve the matrix.
    */
   Vector<double> x;
-  H.solve_lu(x, b);
+  H.solve_cholesky(x, b);
   REQUIRE(x.size() == b.size());
 
   /**

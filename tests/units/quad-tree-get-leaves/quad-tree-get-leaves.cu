@@ -9,8 +9,10 @@
 #include <iostream>
 #include <vector>
 
-#include "debug_tools.h"
+#include "debug_tools.hcu"
 #include "tree.h"
+
+using namespace HierBEM;
 
 /**
  * Create an example tree containing integers as below. The tree will be

@@ -9,8 +9,10 @@
 
 #include <iostream>
 
-#include "debug_tools.h"
+#include "debug_tools.hcu"
 #include "rkmatrix.h"
+
+using namespace HierBEM;
 
 int
 main()

@@ -1,11 +1,10 @@
 /**
- * @file hmatrix-link-nodes-on-cross-from-diagonal-blocks.cu
- * @brief Link all \hmatrix nodes on a same level and on a same row as well as
- * on a same column with respect to a diagonal block.
+ * @file hmatrix-symmetric-link-nodes-on-same-levels.cu
+ * @brief Link all \hmatrix nodes on a same level. The \hmatrix is symmetric.
  *
- * @ingroup testers hierarchical_matrices
+ * @ingroup testers
  * @author Jihuan Tian
- * @date 2023-11-11
+ * @date 2024-01-04
  */
 
 #include <iostream>
@@ -14,20 +13,22 @@
 #include "hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 
-using namespace HierBEM;
 using namespace std;
+using namespace HierBEM;
 
 int
 main()
 {
-  HBEMOctaveWrapper  &inst    = HBEMOctaveWrapper::get_instance();
-  auto                oct_val = inst.eval_string("reshape(1:32*32, 32, 32)");
+  HBEMOctaveWrapper &inst    = HBEMOctaveWrapper::get_instance();
+  auto               oct_val = inst.eval_string(
+    "reshape((1:32*32) / 100, 32, 32) * reshape((1:32*32) / 100, 32, 32)'");
   std::vector<double> values;
   unsigned int        n;
   oct_val.matrix_value(values, n, n);
 
   LAPACKFullMatrixExt<double> M;
   LAPACKFullMatrixExt<double>::Reshape(n, n, values, M);
+  M.set_property(LAPACKSupport::Property::symmetric);
 
   /**
    * Generate index set.
@@ -60,7 +61,6 @@ main()
   const unsigned int fixed_rank = 2;
   HMatrix<3, double> H(bct, M, fixed_rank);
 
-  H.link_hmat_nodes_on_cross_from_diagonal_blocks(H.get_property());
   H.print_matrix_info_as_dot(std::cout);
 
   return 0;

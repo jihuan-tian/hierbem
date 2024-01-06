@@ -1,11 +1,11 @@
 /**
- * @file hmatrix-link-nodes-on-cross-from-diagonal-blocks.cu
- * @brief Link all \hmatrix nodes on a same level and on a same row as well as
- * on a same column with respect to a diagonal block.
+ * @file hmatrix-symmetric-link-nodes-on-cross-from-diagonal-blocks.cu
+ * @brief Link all \hmatrix nodes on a same level and on a same column with
+ * respect to a diagonal block. The \hmatrix is symmetric.
  *
- * @ingroup testers hierarchical_matrices
+ * @ingroup testers
  * @author Jihuan Tian
- * @date 2023-11-11
+ * @date 2024-01-05
  */
 
 #include <iostream>
@@ -20,14 +20,16 @@ using namespace std;
 int
 main()
 {
-  HBEMOctaveWrapper  &inst    = HBEMOctaveWrapper::get_instance();
-  auto                oct_val = inst.eval_string("reshape(1:32*32, 32, 32)");
+  HBEMOctaveWrapper &inst    = HBEMOctaveWrapper::get_instance();
+  auto               oct_val = inst.eval_string(
+    "reshape((1:32*32) / 100, 32, 32) * reshape((1:32*32) / 100, 32, 32)'");
   std::vector<double> values;
   unsigned int        n;
   oct_val.matrix_value(values, n, n);
 
   LAPACKFullMatrixExt<double> M;
   LAPACKFullMatrixExt<double>::Reshape(n, n, values, M);
+  M.set_property(LAPACKSupport::Property::symmetric);
 
   /**
    * Generate index set.

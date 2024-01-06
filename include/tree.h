@@ -1066,7 +1066,7 @@ namespace HierBEM
     out << "Level " << p->get_level() << "\n";
     out << "Number of children: " << p->get_child_num() << "\n";
 
-    out << "Node data:\n" << p->get_data_reference();
+    out << "Node data:\n" << p->get_data_reference() << "\n";
     out << "Split mode: " << p->get_split_mode() << "\n";
 
     if (p->Parent() != nullptr)

@@ -53,8 +53,7 @@ TEST_CASE(
     oss << "randn('seed'," << rng_seed << ");";
     inst.eval_string(oss.str());
 
-    REQUIRE_NOTHROW(
-      [&]() { inst.source_file(SOURCE_DIR "/gen_matrices.m"); }());
+    REQUIRE_NOTHROW([&]() { inst.source_file(SOURCE_DIR "/gen_matrix.m"); }());
 
     run_hmatrix_forward_substitution_matrix_valued();
 
@@ -99,8 +98,7 @@ TEST_CASE(
     oss << "randn('seed'," << rng_seed << ");";
     inst.eval_string(oss.str());
 
-    REQUIRE_NOTHROW(
-      [&]() { inst.source_file(SOURCE_DIR "/gen_matrices.m"); }());
+    REQUIRE_NOTHROW([&]() { inst.source_file(SOURCE_DIR "/gen_matrix.m"); }());
 
     run_hmatrix_forward_substitution_matrix_valued_in_situ();
 

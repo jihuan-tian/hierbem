@@ -32,6 +32,7 @@ TEST_CASE("H-matrix solve equations by LU decomposition", "[hmatrix]")
 {
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
+  inst.add_path(SOURCE_DIR);
 
   auto trial_no = GENERATE(range(0, FUZZING_TIMES));
   SECTION(std::string("trial #") + std::to_string(trial_no))
@@ -77,6 +78,7 @@ TEST_CASE("H-matrix solve equations by LU decomposition in situ", "[hmatrix]")
 {
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
+  inst.add_path(SOURCE_DIR);
 
   auto trial_no = GENERATE(range(0, FUZZING_TIMES));
   SECTION(std::string("trial #") + std::to_string(trial_no))
