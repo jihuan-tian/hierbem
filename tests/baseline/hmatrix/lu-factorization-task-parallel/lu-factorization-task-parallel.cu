@@ -19,16 +19,12 @@
 using namespace dealii;
 using namespace HierBEM;
 
-template <int dim, int spacedim>
+template <int spacedim>
 void
-generate_coarse_mesh_for_two_spheres(Triangulation<spacedim>      &tria,
-                                     Triangulation<dim, spacedim> &surface_tria,
-                                     const double inter_distance,
-                                     const double radius)
+generate_coarse_mesh_for_two_spheres(Triangulation<spacedim> &tria,
+                                     const double             inter_distance,
+                                     const double             radius)
 {
-  // XXX
-  (void)surface_tria;
-
   Triangulation<spacedim> left_ball, right_ball;
 
   GridGenerator::hyper_ball(left_ball,
@@ -87,14 +83,10 @@ extract_surface_mesh_for_two_spheres(
   Triangulation<spacedim>      &tria,
   Triangulation<dim, spacedim> &surface_tria,
   const double                  inter_distance,
-  const double                  radius,
   std::map<typename Triangulation<dim, spacedim>::cell_iterator,
            typename Triangulation<spacedim>::face_iterator>
     &map_from_surface_mesh_to_volume_mesh)
 {
-  // XXX
-  (void)radius;
-
   // Generate an empty surface triangulation object with manifold ids
   // configured.
   const SphericalManifold<dim, spacedim> left_ball_surface_manifold(
@@ -133,10 +125,7 @@ main()
 
   Triangulation<spacedim>      tria;
   Triangulation<dim, spacedim> surface_tria;
-  generate_coarse_mesh_for_two_spheres(tria,
-                                       surface_tria,
-                                       inter_distance,
-                                       radius);
+  generate_coarse_mesh_for_two_spheres(tria, inter_distance, radius);
 
   FE_DGQ<dim, spacedim>     fe(0);
   DoFHandler<dim, spacedim> dof_handler(surface_tria);
@@ -168,7 +157,7 @@ main()
   const double       max_rank = 5;
   const double       epsilon  = 0.01;
 
-  const unsigned int number_of_refinement = 6;
+  const unsigned int number_of_refinement = 5;
   TableHandler       table;
   for (unsigned int i = 0; i < number_of_refinement; i++)
     {
@@ -187,7 +176,6 @@ main()
         tria,
         surface_tria,
         inter_distance,
-        radius,
         map_from_surface_mesh_to_volume_mesh);
 
       std::ofstream out(std::string("two-spheres-refine-") +

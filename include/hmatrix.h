@@ -27389,13 +27389,6 @@ namespace HierBEM
             for (size_type j = 0; j <= i; j++)
               {
                 /**
-                 * Create a local \hmatrix \f$Z_{ij}\f$ as the new RHS
-                 * matrix.
-                 */
-                HMatrix<spacedim, Number> Z(
-                  *(submatrices[i * n_col_blocks + j]));
-
-                /**
                  * Iterate over each block column before the \f$j\f$-th
                  * column.
                  *
@@ -27413,7 +27406,7 @@ namespace HierBEM
                 for (size_type k = 0; k < j; k++)
                   {
                     submatrices[i * n_col_blocks + k]->mTmult_level_conserving(
-                      Z,
+                      *(submatrices[i * n_col_blocks + j]),
                       -1.0,
                       *(submatrices[j * n_col_blocks + k]),
                       fixed_rank,
@@ -27430,7 +27423,7 @@ namespace HierBEM
                      */
                     submatrices[j * n_col_blocks + j]
                       ->solve_cholesky_transpose_by_forward_substitution_matrix_valued(
-                        *(submatrices[i * n_col_blocks + j]), Z, fixed_rank);
+                        *(submatrices[i * n_col_blocks + j]), fixed_rank);
                   }
                 else if (j == i)
                   {
@@ -27438,8 +27431,8 @@ namespace HierBEM
                      * When coming to the diagonal block, go down one level
                      * of recursion for Cholesky factorization.
                      */
-                    Z._compute_cholesky_factorization(
-                      *(submatrices[i * n_col_blocks + i]), fixed_rank);
+                    submatrices[i * n_col_blocks + i]
+                      ->_compute_cholesky_factorization(fixed_rank);
                   }
                 else
                   {

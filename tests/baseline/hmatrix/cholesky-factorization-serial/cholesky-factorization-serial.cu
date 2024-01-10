@@ -1,9 +1,10 @@
 /**
- * @file lu-factorization-serial.cu
+ * @file cholesky-factorization-serial.cu
  * @brief
+ *
  * @ingroup testers
- * @author Jihuan Tian
- * @date 2022-09-23
+ * @author
+ * @date 2024-01-10
  */
 
 #include <deal.II/base/table_handler.h>
@@ -225,10 +226,10 @@ main()
                     support_points,
                     cell_size_at_support_points);
 
-      // Create an H-matrix with respect to the block cluster tree.
+      // Create a symmetric H-matrix with respect to the block cluster tree.
       HMatrix<spacedim> V(bct,
                           max_rank,
-                          HMatrixSupport::Property::general,
+                          HMatrixSupport::Property::symmetric,
                           HMatrixSupport::BlockType::diagonal_block);
 
       // Assemble the H-matrix using ACA.
@@ -255,7 +256,7 @@ main()
         map_from_surface_mesh_to_volume_mesh,
         map_from_surface_mesh_to_volume_mesh,
         HierBEM::BEMTools::DetectCellNeighboringTypeMethod::SameTriangulations,
-        false);
+        true);
       timer.stop();
       print_wall_time(std::cout, timer, "assemble H-matrix V");
 
@@ -264,20 +265,21 @@ main()
       V.write_leaf_set_by_iteration(bct_out);
       bct_out.close();
 
-      // Perform LU factorization.
+      // Perform Cholesky factorization.
       timer.start();
-      V.compute_lu_factorization(max_rank);
+      V.compute_cholesky_factorization(max_rank);
       timer.stop();
-      print_wall_time(std::cout, timer, "lu factorization");
+      print_wall_time(std::cout, timer, "cholesky factorization");
 
       const double elapsed_time = timer.last_wall_time();
       table.add_value("refinement", i + 1);
       table.add_value("time (s)", elapsed_time);
 
-      // // Write out the factorized matrix.
-      // std::ofstream V_out(std::string("V-") + std::to_string(i + 1) +
-      //                     std::string(".dat"));
-      // V.print_as_formatted_full_matrix(V_out, "V_lu_serial", 15, true, 25);
+      // Write out the factorized matrix.
+      std::ofstream V_out(std::string("V-") + std::to_string(i + 1) +
+                          std::string(".dat"));
+      V.print_as_formatted_full_matrix(
+        V_out, "V_cholesky_serial", 15, true, 25);
     }
 
   table.set_precision("time (s)", 3);
