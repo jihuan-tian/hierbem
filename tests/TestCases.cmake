@@ -294,3 +294,6 @@ add_subdirectory(units/hmatrix-cholesky-transpose-forward-substitution-matrix-va
 add_subdirectory(units/hmatrix-solve-cholesky-task-parallel)
 add_subdirectory(baseline/hmatrix/cholesky-factorization-serial)
 add_subdirectory(baseline/hmatrix/cholesky-factorization-task-parallel)
+add_subdirectory(baseline/laplace-bem/dirichlet-hmatrix-two-spheres)
+add_subdirectory(baseline/laplace-bem/dirichlet-hmatrix)
+add_subdirectory(baseline/laplace-bem/neumann-hmatrix)

@@ -1,6 +1,6 @@
-set(_target laplace-bem-mixed-spanner)
+set(_target laplace-bem-neumann-hmatrix)
 
-add_executable(${_target} laplace-bem-mixed-spanner.cu)
+add_executable(${_target} laplace-bem-neumann-hmatrix.cu)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

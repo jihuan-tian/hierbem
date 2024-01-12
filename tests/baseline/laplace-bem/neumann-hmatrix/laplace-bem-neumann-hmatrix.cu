@@ -1,10 +1,11 @@
 /**
- * @file laplace-bem-mixed-spanner-model.cu
- * @brief Verify solve Laplace mixed boundary value problem using \hmat.
+ * \file laplace-bem-neumann-hmatrix.cc
+ * \brief Verify solving the Laplace problem with Neumann boundary condition
+ * using H-matrix based BEM.
  *
- * @ingroup testers
- * @author Jihuan Tian
- * @date 2023-05-24
+ * \ingroup testers
+ * \author Jihuan Tian
+ * \date 2022-09-23
  */
 
 #include <deal.II/base/logstream.h>
@@ -14,51 +15,61 @@
 #include <fstream>
 #include <iostream>
 
+#include "cu_profile.hcu"
 #include "debug_tools.hcu"
 #include "hbem_test_config.h"
 #include "laplace_bem.h"
-
 
 using namespace dealii;
 using namespace HierBEM;
 
 /**
- * Function object for the Dirichlet boundary condition data.
- */
-class DirichletBC : public Function<3>
-{
-public:
-  double
-  value(const Point<3> &p, const unsigned int component = 0) const
-  {
-    (void)component;
-
-    if (p(0) < 0)
-      {
-        return 1;
-      }
-    else
-      {
-        return 0;
-      }
-  }
-};
-
-/**
- * Function object for the Neumann boundary condition data.
+ * Function object for the Neumann boundary condition data, which is also
+ * the solution of the Dirichlet problem. The analytical expression is
+ * \f[
+ * \frac{\pdiff u}{\pdiff n}\Big\vert_{\Gamma} = \frac{\langle x-x_c,x_0-x
+ * \rangle}{4\pi\norm{x_0-x}^3\rho}
+ * \f]
  */
 class NeumannBC : public Function<3>
 {
 public:
+  // N.B. This function should be defined outside class NeumannBC and
+  // class Example2, if not inline.
+  NeumannBC()
+    : Function<3>()
+    , x0(0.25, 0.25, 0.25)
+    , model_sphere_center(0.0, 0.0, 0.0)
+    , model_sphere_radius(1.0)
+  {}
+
+  NeumannBC(const Point<3> &x0, const Point<3> &center, double radius)
+    : Function<3>()
+    , x0(x0)
+    , model_sphere_center(center)
+    , model_sphere_radius(radius)
+  {}
+
   double
   value(const Point<3> &p, const unsigned int component = 0) const
   {
     (void)component;
-    (void)p;
 
-    return 0;
+    Tensor<1, 3> diff_vector = x0 - p;
+
+    return ((p - model_sphere_center) * diff_vector) / 4.0 / numbers::PI /
+           std::pow(diff_vector.norm(), 3) / model_sphere_radius;
   }
+
+private:
+  /**
+   * Location of the Dirac point source \f$\delta(x-x_0)\f$.
+   */
+  Point<3> x0;
+  Point<3> model_sphere_center;
+  double   model_sphere_radius;
 };
+
 
 namespace HierBEM
 {
@@ -75,13 +86,16 @@ main()
    * @internal Pop out the default "DEAL" prefix string.
    */
   // Write run-time logs to file
-  std::ofstream ofs("hierbem.log");
+  std::ofstream ofs("laplace-bem-neumann-hmatrix.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
   deallog.attach(ofs);
 
   LogStream::Prefix prefix_string("HierBEM");
+#if ENABLE_NVTX == 1
+  HierBEM::CUDAWrappers::NVTXRange nvtx_range("HierBEM");
+#endif
 
   /**
    * @internal Create and start the timer.
@@ -113,13 +127,13 @@ main()
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
 
-  const bool                is_interior_problem = true;
+  const bool                is_interior_problem = false;
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
     1, // mapping order for dirichlet domain
     1, // mapping order for neumann domain
-    LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
+    LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
     is_interior_problem,         // is interior problem
     64,                          // n_min for cluster tree
     64,                          // n_min for block cluster tree
@@ -127,31 +141,54 @@ main()
     5,                           // max rank for H-matrix
     0.01,                        // aca epsilon for H-matrix
     1.0,                         // eta for preconditioner
-    1,                           // max rank for preconditioner
+    2,                           // max rank for preconditioner
     0.1,                         // aca epsilon for preconditioner
     MultithreadInfo::n_threads() // Number of threads used for ACA
   );
-  bem.set_project_name("laplace-bem-mixed-spanner");
+  bem.set_project_name("laplace-bem-neumann-hmatrix");
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
 
   timer.start();
 
-  bem.set_dirichlet_boundary_ids({1, 2});
-  bem.set_neumann_boundary_ids({0});
+  /**
+   * @internal Set the Dirac source location according to interior or exterior
+   * problem.
+   */
+  Point<spacedim> source_loc;
 
-  bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "spanner.msh");
+  if (is_interior_problem)
+    {
+      source_loc = Point<spacedim>(1, 1, 1);
+    }
+  else
+    {
+      source_loc = Point<spacedim>(0.25, 0.25, 0.25);
+    }
+
+  const Point<spacedim> center(0, 0, 0);
+  const double          radius(1);
+
+  Triangulation<spacedim> tria;
+  // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
+  GridGenerator::hyper_ball(tria, center, radius);
+  tria.refine_global(5);
+
+  bem.assign_volume_triangulation(std::move(tria), true);
+
+  Triangulation<dim, spacedim>           surface_tria;
+  const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
+  surface_tria.set_manifold(0, ball_surface_manifold);
+
+  bem.assign_surface_triangulation(std::move(surface_tria), true);
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
 
   timer.start();
 
-  DirichletBC dirichlet_bc;
-  NeumannBC   neumann_bc;
-
-  bem.assign_dirichlet_bc(dirichlet_bc);
+  NeumannBC neumann_bc(source_loc, center, radius);
   bem.assign_neumann_bc(neumann_bc);
 
   timer.stop();
