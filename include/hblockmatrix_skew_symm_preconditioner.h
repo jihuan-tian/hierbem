@@ -128,19 +128,27 @@ namespace HierBEM
   {
     // Compute Cholesky factorization for \f$M_{11}\f$ in situ, which produces
     // \f$L_{11}\f$.
-    M11->compute_cholesky_factorization(fixed_rank);
-    // Solve \f$U_{12}\f$.
-    HMatrix<spacedim, Number> U12(*M12);
-    M11->solve_cholesky_by_forward_substitution_matrix_valued(U12,
-                                                              *M12,
-                                                              fixed_rank);
-    // Migrate the data in @p U12 to @p M12 via shallow copy.
-    *M12 = std::move(U12);
+    if (M11->get_type() == HMatrixType::HierarchicalMatrixType)
+      {
+        M11->compute_cholesky_factorization_task_parallel(fixed_rank);
+      }
+    else
+      {
+        M11->compute_cholesky_factorization(fixed_rank);
+      }
+    M11->solve_cholesky_by_forward_substitution_matrix_valued(*M12, fixed_rank);
     // Calculate \f$M_{22} = M_{22} + U_{12}^T U_{12}\f$
     M12->Tmmult_level_conserving(*M22, *M12, fixed_rank, true);
     // Apply Cholesky factorization to the new @p M22. After this operation,
     // @p M22 stores @p L22.
-    M22->compute_cholesky_factorization(fixed_rank);
+    if (M22->get_type() == HMatrixType::HierarchicalMatrixType)
+      {
+        M22->compute_cholesky_factorization_task_parallel(fixed_rank);
+      }
+    else
+      {
+        M22->compute_cholesky_factorization(fixed_rank);
+      }
   }
 
 

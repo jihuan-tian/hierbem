@@ -339,6 +339,10 @@ namespace HierBEM
     is_use_hmat() const;
     void
     set_use_hmat(bool useHmat);
+    const std::string &
+    get_project_name() const;
+    void
+    set_project_name(const std::string &projectName);
 
   private:
     void
@@ -356,6 +360,8 @@ namespace HierBEM
      */
     void
     solve_natural_density();
+
+    std::string project_name;
 
     /**
      * Finite element order for the Dirichlet space.
@@ -844,7 +850,8 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   LaplaceBEM<dim, spacedim>::LaplaceBEM()
-    : fe_order_for_dirichlet_space(0)
+    : project_name("default")
+    , fe_order_for_dirichlet_space(0)
     , fe_order_for_neumann_space(0)
     , problem_type(UndefinedProblem)
     , is_interior_problem(true)
@@ -894,7 +901,8 @@ namespace HierBEM
     ProblemType  problem_type,
     bool         is_interior_problem,
     unsigned int thread_num)
-    : fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
+    : project_name("default")
+    , fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_order_for_neumann_space(fe_order_for_neumann_space)
     , problem_type(problem_type)
     , is_interior_problem(is_interior_problem)
@@ -954,7 +962,8 @@ namespace HierBEM
     unsigned int max_hmat_rank_for_preconditioner,
     double       aca_relative_error_for_preconditioner,
     unsigned int thread_num)
-    : fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
+    : project_name("default")
+    , fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_order_for_neumann_space(fe_order_for_neumann_space)
     , problem_type(problem_type)
     , is_interior_problem(is_interior_problem)
@@ -3649,8 +3658,22 @@ namespace HierBEM
 
             timer.start();
 
-            V1_hmat_preconditioner.compute_cholesky_factorization(
-              max_hmat_rank_for_preconditioner);
+            // Only when the \hmat actually has a hierarchical structure, the
+            // task parallel Cholesky factorization will be performed. This
+            // excludes the case when @p V1 has a single root node, which is a
+            // full matrix.
+            if (V1_hmat_preconditioner.get_type() ==
+                HMatrixType::HierarchicalMatrixType)
+              {
+                V1_hmat_preconditioner
+                  .compute_cholesky_factorization_task_parallel(
+                    max_hmat_rank_for_preconditioner);
+              }
+            else
+              {
+                V1_hmat_preconditioner.compute_cholesky_factorization(
+                  max_hmat_rank_for_preconditioner);
+              }
 
             timer.stop();
             print_wall_time(deallog, timer, "Cholesky factorization of V");
@@ -3686,8 +3709,22 @@ namespace HierBEM
 
             timer.start();
 
-            D1_hmat_preconditioner.compute_cholesky_factorization(
-              max_hmat_rank_for_preconditioner);
+            // Only when the \hmat actually has a hierarchical structure, the
+            // task parallel Cholesky factorization will be performed. This
+            // excludes the case when @p D1 has a single root node, which is a
+            // full matrix.
+            if (D1_hmat_preconditioner.get_type() ==
+                HMatrixType::HierarchicalMatrixType)
+              {
+                D1_hmat_preconditioner
+                  .compute_cholesky_factorization_task_parallel(
+                    max_hmat_rank_for_preconditioner);
+              }
+            else
+              {
+                D1_hmat_preconditioner.compute_cholesky_factorization(
+                  max_hmat_rank_for_preconditioner);
+              }
 
             timer.stop();
             print_wall_time(deallog, timer, "Cholesky factorization of D");
@@ -3949,11 +3986,12 @@ namespace HierBEM
 
     std::ofstream          vtk_output;
     DataOut<dim, spacedim> data_out;
+    std::ofstream          data_file(project_name + std::string(".output"));
 
     switch (problem_type)
       {
           case DirichletBCProblem: {
-            vtk_output.open("solution_for_dirichlet_bc.vtk",
+            vtk_output.open(project_name + std::string(".vtk"),
                             std::ofstream::out);
 
             data_out.add_data_vector(dof_handler_for_neumann_space,
@@ -3966,12 +4004,13 @@ namespace HierBEM
             data_out.build_patches();
             data_out.write_vtk(vtk_output);
 
-            print_vector_to_mat(std::cout, "solution", neumann_data, false);
+            print_vector_to_mat(data_file, "solution", neumann_data, false);
 
             break;
           }
           case NeumannBCProblem: {
-            vtk_output.open("solution_for_neumann_bc.vtk", std::ofstream::out);
+            vtk_output.open(project_name + std::string(".vtk"),
+                            std::ofstream::out);
 
             data_out.add_data_vector(dof_handler_for_dirichlet_space,
                                      dirichlet_data,
@@ -3983,12 +4022,13 @@ namespace HierBEM
             data_out.build_patches();
             data_out.write_vtk(vtk_output);
 
-            print_vector_to_mat(std::cout, "solution", dirichlet_data, false);
+            print_vector_to_mat(data_file, "solution", dirichlet_data, false);
 
             break;
           }
           case MixedBCProblem: {
-            vtk_output.open("solution_for_mixed_bc.vtk", std::ofstream::out);
+            vtk_output.open(project_name + std::string(".vtk"),
+                            std::ofstream::out);
 
             data_out.add_data_vector(dof_handler_for_neumann_space,
                                      neumann_data,
@@ -4000,21 +4040,21 @@ namespace HierBEM
             data_out.write_vtk(vtk_output);
 
             print_vector_to_mat(
-              std::cout,
+              data_file,
               "solution_on_combined_domain_internal_dof_numbering",
               solution_on_combined_domain_internal_dof_numbering,
               false,
               15,
               25);
 
-            print_vector_to_mat(std::cout,
+            print_vector_to_mat(data_file,
                                 "solution_on_dirichlet_domain",
                                 neumann_data,
                                 false,
                                 15,
                                 25);
 
-            print_vector_to_mat(std::cout,
+            print_vector_to_mat(data_file,
                                 "solution_on_neumann_domain",
                                 dirichlet_data,
                                 false,
@@ -4029,6 +4069,7 @@ namespace HierBEM
       }
 
     vtk_output.close();
+    data_file.close();
   }
 
 
@@ -4490,6 +4531,20 @@ namespace HierBEM
   }
 
   template <int dim, int spacedim>
+  inline const std::string &
+  LaplaceBEM<dim, spacedim>::get_project_name() const
+  {
+    return project_name;
+  }
+
+  template <int dim, int spacedim>
+  inline void
+  LaplaceBEM<dim, spacedim>::set_project_name(const std::string &projectName)
+  {
+    project_name = projectName;
+  }
+
+  template <int dim, int spacedim>
   void
   LaplaceBEM<dim, spacedim>::solve_natural_density()
   {
@@ -4594,8 +4649,17 @@ namespace HierBEM
          * Perform Cholesky factorisation of the preconditioner.
          */
         std::cout << "=== Cholesky factorization of V ===" << std::endl;
-        V1_hmat_preconditioner.compute_cholesky_factorization(
-          max_hmat_rank_for_preconditioner);
+        if (V1_hmat_preconditioner.get_type() ==
+            HMatrixType::HierarchicalMatrixType)
+          {
+            V1_hmat_preconditioner.compute_cholesky_factorization_task_parallel(
+              max_hmat_rank_for_preconditioner);
+          }
+        else
+          {
+            V1_hmat_preconditioner.compute_cholesky_factorization(
+              max_hmat_rank_for_preconditioner);
+          }
 
         solver.solve(V1_hmat,
                      natural_density,

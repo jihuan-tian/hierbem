@@ -10,6 +10,7 @@
 #include <deal.II/base/table_handler.h>
 
 #include <cuda_runtime.h>
+#include <openblas-pthread/cblas.h>
 
 #include <fstream>
 #include <iostream>
@@ -105,6 +106,11 @@ extract_surface_mesh_for_two_spheres(
 int
 main()
 {
+  /**
+   * @internal Set number of threads used for OpenBLAS.
+   */
+  openblas_set_num_threads(1);
+
   /**
    * Initialize the CUDA device parameters.
    */
@@ -275,11 +281,11 @@ main()
       table.add_value("refinement", i + 1);
       table.add_value("time (s)", elapsed_time);
 
-      // Write out the factorized matrix.
-      std::ofstream V_out(std::string("V-") + std::to_string(i + 1) +
-                          std::string(".dat"));
-      V.print_as_formatted_full_matrix(
-        V_out, "V_cholesky_parallel", 15, true, 25);
+      // // Write out the factorized matrix.
+      // std::ofstream V_out(std::string("V-") + std::to_string(i + 1) +
+      //                     std::string(".dat"));
+      // V.print_as_formatted_full_matrix(
+      //   V_out, "V_cholesky_parallel", 15, true, 25);
     }
 
   table.set_precision("time (s)", 3);

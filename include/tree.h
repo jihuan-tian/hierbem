@@ -278,14 +278,14 @@ namespace HierBEM
 
 
   template <typename T>
-  BinaryTreeNode<T> *
+  inline BinaryTreeNode<T> *
   BinaryTreeNode<T>::Left() const
   {
     return left;
   }
 
   template <typename T>
-  BinaryTreeNode<T> *
+  inline BinaryTreeNode<T> *
   BinaryTreeNode<T>::Right() const
   {
     return right;
@@ -315,7 +315,7 @@ namespace HierBEM
 
 
   template <typename T>
-  unsigned int
+  inline unsigned int
   BinaryTreeNode<T>::get_child_num() const
   {
     return child_num;
@@ -323,7 +323,7 @@ namespace HierBEM
 
 
   template <typename T>
-  void
+  inline void
   BinaryTreeNode<T>::set_child_num(const unsigned int child_num)
   {
     this->child_num = child_num;
@@ -331,7 +331,7 @@ namespace HierBEM
 
 
   template <typename T>
-  void
+  inline void
   BinaryTreeNode<T>::increase_child_num(const unsigned int incr_num)
   {
     child_num += incr_num;
@@ -375,7 +375,7 @@ namespace HierBEM
 
 
   template <typename T>
-  BinaryTreeNode<T> *
+  inline BinaryTreeNode<T> *
   BinaryTreeNode<T>::Parent() const
   {
     return parent;
@@ -383,7 +383,7 @@ namespace HierBEM
 
 
   template <typename T>
-  void
+  inline void
   BinaryTreeNode<T>::Parent(const BinaryTreeNode *node_pointer)
   {
     parent = const_cast<BinaryTreeNode *>(node_pointer);
@@ -391,21 +391,21 @@ namespace HierBEM
 
 
   template <typename T>
-  void
+  inline void
   BinaryTreeNode<T>::Left(const BinaryTreeNode *node_pointer)
   {
     left = const_cast<BinaryTreeNode *>(node_pointer);
   }
 
   template <typename T>
-  void
+  inline void
   BinaryTreeNode<T>::Right(const BinaryTreeNode *node_pointer)
   {
     right = const_cast<BinaryTreeNode *>(node_pointer);
   }
 
   template <typename T>
-  T *
+  inline T *
   BinaryTreeNode<T>::get_data_pointer()
   {
     return &data;
@@ -413,7 +413,7 @@ namespace HierBEM
 
 
   template <typename T>
-  T &
+  inline T &
   BinaryTreeNode<T>::get_data_reference()
   {
     return data;
@@ -421,7 +421,7 @@ namespace HierBEM
 
 
   template <typename T>
-  const T &
+  inline const T &
   BinaryTreeNode<T>::get_data_reference() const
   {
     return data;
@@ -429,14 +429,14 @@ namespace HierBEM
 
 
   template <typename T>
-  const T *
+  inline const T *
   BinaryTreeNode<T>::get_data_pointer() const
   {
     return &data;
   }
 
   template <typename T>
-  unsigned int
+  inline unsigned int
   BinaryTreeNode<T>::get_level() const
   {
     return level;
@@ -444,7 +444,7 @@ namespace HierBEM
 
 
   template <typename T>
-  void
+  inline void
   BinaryTreeNode<T>::set_level(const unsigned int level)
   {
     this->level = level;
@@ -452,37 +452,23 @@ namespace HierBEM
 
 
   template <typename T>
-  bool
+  inline bool
   BinaryTreeNode<T>::is_leaf() const
   {
-    if (child_num == 0)
-      {
-        return true;
-      }
-    else
-      {
-        return false;
-      }
+    return child_num == 0;
   }
 
 
   template <typename T>
-  bool
+  inline bool
   BinaryTreeNode<T>::is_root() const
   {
-    if (parent == nullptr)
-      {
-        return true;
-      }
-    else
-      {
-        return false;
-      }
+    return parent == nullptr;
   }
 
 
   template <typename T>
-  bool
+  inline bool
   BinaryTreeNode<T>::operator==(const BinaryTreeNode<T> &node) const
   {
     return (this->data == node.data);
@@ -804,7 +790,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  unsigned int
+  inline unsigned int
   TreeNode<T, N>::get_child_num() const
   {
     return child_num;
@@ -812,7 +798,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  void
+  inline void
   TreeNode<T, N>::set_child_num(const unsigned int child_num)
   {
     this->child_num = child_num;
@@ -820,7 +806,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  void
+  inline void
   TreeNode<T, N>::increase_child_num(const unsigned int incr_num)
   {
     child_num += incr_num;
@@ -828,7 +814,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  void
+  inline void
   TreeNode<T, N>::decrease_child_num(const unsigned int decr_num)
   {
     if (child_num < decr_num)
@@ -843,28 +829,28 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  TreeNode<T, N> *
+  inline TreeNode<T, N> *
   TreeNode<T, N>::Parent() const
   {
     return parent;
   }
 
   template <typename T, std::size_t N>
-  void
+  inline void
   TreeNode<T, N>::Parent(const TreeNode *node_pointer)
   {
     parent = const_cast<TreeNode *>(node_pointer);
   }
 
   template <typename T, std::size_t N>
-  T *
+  inline T *
   TreeNode<T, N>::get_data_pointer()
   {
     return &data;
   }
 
   template <typename T, std::size_t N>
-  const T *
+  inline const T *
   TreeNode<T, N>::get_data_pointer() const
   {
     return &data;
@@ -872,7 +858,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  T &
+  inline T &
   TreeNode<T, N>::get_data_reference()
   {
     return data;
@@ -880,7 +866,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  const T &
+  inline const T &
   TreeNode<T, N>::get_data_reference() const
   {
     return data;
@@ -888,7 +874,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  unsigned int
+  inline unsigned int
   TreeNode<T, N>::get_level() const
   {
     return level;
@@ -896,7 +882,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  void
+  inline void
   TreeNode<T, N>::set_level(const unsigned int level)
   {
     this->level = level;
@@ -904,37 +890,23 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  bool
+  inline bool
   TreeNode<T, N>::is_leaf() const
   {
-    if (child_num == 0)
-      {
-        return true;
-      }
-    else
-      {
-        return false;
-      }
+    return child_num == 0;
   }
 
 
   template <typename T, std::size_t N>
-  bool
+  inline bool
   TreeNode<T, N>::is_root() const
   {
-    if (parent == nullptr)
-      {
-        return true;
-      }
-    else
-      {
-        return false;
-      }
+    return parent == nullptr;
   }
 
 
   template <typename T, std::size_t N>
-  TreeNodeSplitMode
+  inline TreeNodeSplitMode
   TreeNode<T, N>::get_split_mode() const
   {
     return split_mode;
@@ -942,7 +914,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  void
+  inline void
   TreeNode<T, N>::set_split_mode(TreeNodeSplitMode split_mode)
   {
     this->split_mode = split_mode;
@@ -950,7 +922,7 @@ namespace HierBEM
 
 
   template <typename T, std::size_t N>
-  bool
+  inline bool
   TreeNode<T, N>::operator==(const TreeNode<T, N> &node) const
   {
     return (this->data == node.data);

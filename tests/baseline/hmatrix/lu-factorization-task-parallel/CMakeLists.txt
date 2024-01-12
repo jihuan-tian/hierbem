@@ -1,5 +1,3 @@
-find_package(Octave REQUIRED)
-
 set(_target lu-factorization-task-parallel)
 
 add_executable(${_target} lu-factorization-task-parallel.cu)
@@ -11,5 +9,5 @@ deal_ii_setup_target(${_target})
 target_compile_definitions(${_target}
                            PUBLIC SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(${_target} hbem_octave_wrapper generic_tools
-                      boost_program_options dl ${OCTAVE_LIBRARIES})
+target_link_libraries(${_target} openblas generic_tools boost_program_options
+                      dl)

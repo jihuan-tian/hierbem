@@ -2109,7 +2109,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  typename BlockClusterTree<spacedim, Number>::node_pointer_type
+  inline typename BlockClusterTree<spacedim, Number>::node_pointer_type
   BlockClusterTree<spacedim, Number>::get_root() const
   {
     return root_node;
@@ -3737,7 +3737,8 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  std::vector<typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
+  inline std::vector<
+    typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
   BlockClusterTree<spacedim, Number>::get_leaf_set()
   {
     return leaf_set;
@@ -3745,7 +3746,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::vector<
+  inline const std::vector<
     typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
   BlockClusterTree<spacedim, Number>::get_leaf_set() const
   {
@@ -3906,7 +3907,8 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  std::vector<typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
+  inline std::vector<
+    typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
   BlockClusterTree<spacedim, Number>::get_near_field_set()
   {
     return near_field_set;
@@ -3914,7 +3916,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::vector<
+  inline const std::vector<
     typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
   BlockClusterTree<spacedim, Number>::get_near_field_set() const
   {
@@ -3923,7 +3925,8 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  std::vector<typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
+  inline std::vector<
+    typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
   BlockClusterTree<spacedim, Number>::get_far_field_set()
   {
     return far_field_set;
@@ -3931,7 +3934,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::vector<
+  inline const std::vector<
     typename BlockClusterTree<spacedim, Number>::node_pointer_type> &
   BlockClusterTree<spacedim, Number>::get_far_field_set() const
   {
@@ -3940,7 +3943,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  unsigned int
+  inline unsigned int
   BlockClusterTree<spacedim, Number>::get_depth() const
   {
     return depth;
@@ -3957,7 +3960,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  int
+  inline int
   BlockClusterTree<spacedim, Number>::get_max_level() const
   {
     return max_level;
@@ -3965,7 +3968,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  unsigned int
+  inline unsigned int
   BlockClusterTree<spacedim, Number>::get_node_num() const
   {
     return node_num;
@@ -3973,7 +3976,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  void
+  inline void
   BlockClusterTree<spacedim, Number>::set_node_num(unsigned int node_num)
   {
     this->node_num = node_num;
@@ -3981,7 +3984,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  unsigned int
+  inline unsigned int
   BlockClusterTree<spacedim, Number>::increase_node_num(
     unsigned int increased_node_num)
   {
@@ -3992,7 +3995,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  unsigned int
+  inline unsigned int
   BlockClusterTree<spacedim, Number>::decrease_node_num(
     unsigned int decreased_node_num)
   {
@@ -4005,7 +4008,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  unsigned int
+  inline unsigned int
   BlockClusterTree<spacedim, Number>::get_n_min() const
   {
     return n_min;
@@ -4013,7 +4016,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  Number
+  inline Number
   BlockClusterTree<spacedim, Number>::get_eta() const
   {
     return eta;

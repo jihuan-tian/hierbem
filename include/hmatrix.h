@@ -979,6 +979,20 @@ namespace HierBEM
     get_m() const;
 
     /**
+     * Get the number of row blocks of the current \hmatnode.
+     * @return
+     */
+    unsigned int
+    get_n_row_blocks() const;
+
+    /**
+     * Get the number of column blocks of the current \hmatnode.
+     * @return
+     */
+    unsigned int
+    get_n_col_blocks() const;
+
+    /**
      * Get the property of the current \hmatnode.
      * @return
      */
@@ -16022,7 +16036,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  HMatrixType
+  inline HMatrixType
   HMatrix<spacedim, Number>::get_type() const
   {
     return type;
@@ -16030,7 +16044,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  bool
+  inline bool
   HMatrix<spacedim, Number>::is_near_field() const
   {
     return (type == HMatrixType::FullMatrixType);
@@ -16038,7 +16052,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  bool
+  inline bool
   HMatrix<spacedim, Number>::is_far_field() const
   {
     return (type == HMatrixType::RkMatrixType);
@@ -16046,7 +16060,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  bool
+  inline bool
   HMatrix<spacedim, Number>::is_leaf() const
   {
     return (type == HMatrixType::FullMatrixType ||
@@ -16055,7 +16069,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  typename HMatrix<spacedim, Number>::size_type
+  inline typename HMatrix<spacedim, Number>::size_type
   HMatrix<spacedim, Number>::get_m() const
   {
     return m;
@@ -16063,7 +16077,27 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  HMatrixSupport::Property
+  inline unsigned int
+  HMatrix<spacedim, Number>::get_n_row_blocks() const
+  {
+    return type == HMatrixType::HierarchicalMatrixType ?
+             bc_node->get_data_reference().get_tau_node()->get_child_num() :
+             0;
+  }
+
+
+  template <int spacedim, typename Number>
+  inline unsigned int
+  HMatrix<spacedim, Number>::get_n_col_blocks() const
+  {
+    return type == HMatrixType::HierarchicalMatrixType ?
+             bc_node->get_data_reference().get_sigma_node()->get_child_num() :
+             0;
+  }
+
+
+  template <int spacedim, typename Number>
+  inline HMatrixSupport::Property
   HMatrix<spacedim, Number>::get_property() const
   {
     return property;
@@ -16071,7 +16105,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  void
+  inline void
   HMatrix<spacedim, Number>::set_current_matrix_property(
     const HMatrixSupport::Property property)
   {
@@ -16471,7 +16505,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  HMatrixSupport::State
+  inline HMatrixSupport::State
   HMatrix<spacedim, Number>::get_state() const
   {
     return state;
@@ -16495,7 +16529,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  HMatrixSupport::BlockType
+  inline HMatrixSupport::BlockType
   HMatrix<spacedim, Number>::get_block_type() const
   {
     return block_type;
@@ -16503,7 +16537,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  void
+  inline void
   HMatrix<spacedim, Number>::set_current_matrix_block_type(
     const HMatrixSupport::BlockType block_type)
   {
@@ -16601,7 +16635,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  typename HMatrix<spacedim, Number>::size_type
+  inline typename HMatrix<spacedim, Number>::size_type
   HMatrix<spacedim, Number>::get_n() const
   {
     return n;
@@ -16609,7 +16643,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  RkMatrix<Number> *
+  inline RkMatrix<Number> *
   HMatrix<spacedim, Number>::get_rkmatrix()
   {
     return rkmatrix;
@@ -16617,7 +16651,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const RkMatrix<Number> *
+  inline const RkMatrix<Number> *
   HMatrix<spacedim, Number>::get_rkmatrix() const
   {
     return rkmatrix;
@@ -16652,7 +16686,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  LAPACKFullMatrixExt<Number> *
+  inline LAPACKFullMatrixExt<Number> *
   HMatrix<spacedim, Number>::get_fullmatrix()
   {
     return fullmatrix;
@@ -16660,7 +16694,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const LAPACKFullMatrixExt<Number> *
+  inline const LAPACKFullMatrixExt<Number> *
   HMatrix<spacedim, Number>::get_fullmatrix() const
   {
     return fullmatrix;
@@ -16668,7 +16702,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  std::vector<HMatrix<spacedim, Number> *> &
+  inline std::vector<HMatrix<spacedim, Number> *> &
   HMatrix<spacedim, Number>::get_submatrices()
   {
     return submatrices;
@@ -16676,7 +16710,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::vector<HMatrix<spacedim, Number> *> &
+  inline const std::vector<HMatrix<spacedim, Number> *> &
   HMatrix<spacedim, Number>::get_submatrices() const
   {
     return submatrices;
@@ -23746,10 +23780,8 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -23851,10 +23883,8 @@ namespace HierBEM
         /**
          * Iterate over each block row of the matrix.
          */
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -23994,39 +24024,30 @@ namespace HierBEM
          * The number of row blocks and column blocks of
          * \f$L\vert_{\tau\times\tau}\f$ should be the same.
          */
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          this->bc_node->get_data_reference()
-            .get_sigma_node()
-            ->get_child_num());
+        AssertDimension(this->get_n_row_blocks(),
+                        this->bc_node->get_data_reference()
+                          .get_sigma_node()
+                          ->get_child_num());
 
         /**
          * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
          * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the
          * number of row or column blocks of \f$L\vert_{\tau\times\tau}\f$.
          */
-        const unsigned int n_row_blocks =
-          X.bc_node->get_data_reference().get_tau_node()->get_child_num();
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          n_row_blocks);
+        const unsigned int n_row_blocks = X.get_n_row_blocks();
+        AssertDimension(this->get_n_row_blocks(), n_row_blocks);
         /**
          * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
          * \f$Z\vert_{\tau\times\sigma}\f$.
          */
-        const unsigned int n_col_blocks =
-          X.bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_col_blocks = X.get_n_col_blocks();
 
         /**
          * \mynote{N.B. \p n_row_blocks does not have to be equal to \p n_col_blocks,
          * since \p X or \p Z may be rectangular.}
          */
-        AssertDimension(
-          n_row_blocks,
-          Z.bc_node->get_data_reference().get_tau_node()->get_child_num());
-        AssertDimension(
-          n_col_blocks,
-          Z.bc_node->get_data_reference().get_sigma_node()->get_child_num());
+        AssertDimension(n_row_blocks, Z.get_n_row_blocks());
+        AssertDimension(n_col_blocks, Z.get_n_col_blocks());
 
         /**
          * Iterate over each block row of \f$L\vert_{\tau\times\tau}\f$.
@@ -24157,28 +24178,23 @@ namespace HierBEM
          * The number of row blocks and column blocks of
          * \f$L\vert_{\tau\times\tau}\f$ should be the same.
          */
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          this->bc_node->get_data_reference()
-            .get_sigma_node()
-            ->get_child_num());
+        AssertDimension(this->get_n_row_blocks(),
+                        this->bc_node->get_data_reference()
+                          .get_sigma_node()
+                          ->get_child_num());
 
         /**
          * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
          * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the
          * number of row or column blocks of \f$L\vert_{\tau\times\tau}\f$.
          */
-        const unsigned int n_row_blocks =
-          Z.bc_node->get_data_reference().get_tau_node()->get_child_num();
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          n_row_blocks);
+        const unsigned int n_row_blocks = Z.get_n_row_blocks();
+        AssertDimension(this->get_n_row_blocks(), n_row_blocks);
         /**
          * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
          * \f$Z\vert_{\tau\times\sigma}\f$.
          */
-        const unsigned int n_col_blocks =
-          Z.bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_col_blocks = Z.get_n_col_blocks();
 
         /**
          * Iterate over each block row of \f$L\vert_{\tau\times\tau}\f$.
@@ -24291,12 +24307,9 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
-        AssertDimension(
-          bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          n_col_blocks);
+        AssertDimension(get_n_row_blocks(), n_col_blocks);
 
         /**
          * Iterate over each block column of the matrix, which is equivalent to
@@ -24384,12 +24397,9 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
-        AssertDimension(
-          bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          n_col_blocks);
+        AssertDimension(get_n_row_blocks(), n_col_blocks);
 
         /**
          * Iterate over each block column of the matrix, which is equivalent to
@@ -24522,29 +24532,24 @@ namespace HierBEM
          * The number of row blocks and column blocks of
          * \f$L\vert_{\tau\times\tau}\f$ should be the same.
          */
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          this->bc_node->get_data_reference()
-            .get_sigma_node()
-            ->get_child_num());
+        AssertDimension(this->get_n_row_blocks(),
+                        this->bc_node->get_data_reference()
+                          .get_sigma_node()
+                          ->get_child_num());
 
         /**
          * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
          * \f$Z\vert_{\tau\times\sigma}\f$.
          */
-        const unsigned int n_row_blocks =
-          X.bc_node->get_data_reference().get_tau_node()->get_child_num();
+        const unsigned int n_row_blocks = X.get_n_row_blocks();
         /**
          * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
          * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the
          * number of row or column blocks of
          * \f$U\vert_{\sigma\times\sigma}\f$.
          */
-        const unsigned int n_col_blocks =
-          X.bc_node->get_data_reference().get_sigma_node()->get_child_num();
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          n_col_blocks);
+        const unsigned int n_col_blocks = X.get_n_col_blocks();
+        AssertDimension(this->get_n_row_blocks(), n_col_blocks);
 
         /**
          * \mynote{N.B. The number of row and column blocks in \f$X\f$ and
@@ -24552,12 +24557,8 @@ namespace HierBEM
          * not have to be equal to \p n_col_blocks, since \p X or \p Z may be
          * rectangular.}
          */
-        AssertDimension(
-          n_row_blocks,
-          Z.bc_node->get_data_reference().get_tau_node()->get_child_num());
-        AssertDimension(
-          n_col_blocks,
-          Z.bc_node->get_data_reference().get_sigma_node()->get_child_num());
+        AssertDimension(n_row_blocks, Z.get_n_row_blocks());
+        AssertDimension(n_col_blocks, Z.get_n_col_blocks());
 
         /**
          * Iterate over each block column of \f$U\vert_{\sigma\times\sigma}\f$,
@@ -24678,27 +24679,22 @@ namespace HierBEM
          * The number of row blocks and column blocks of
          * \f$L\vert_{\tau\times\tau}\f$ should be the same.
          */
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          this->bc_node->get_data_reference()
-            .get_sigma_node()
-            ->get_child_num());
+        AssertDimension(this->get_n_row_blocks(),
+                        this->bc_node->get_data_reference()
+                          .get_sigma_node()
+                          ->get_child_num());
 
         /**
          * Number of row blocks of \f$Z\vert_{\tau\times\sigma}\f$.
          */
-        const unsigned int n_row_blocks =
-          Z.bc_node->get_data_reference().get_tau_node()->get_child_num();
+        const unsigned int n_row_blocks = Z.get_n_row_blocks();
         /**
          * Number of column blocks of \f$Z\vert_{\tau\times\sigma}\f$, which
          * should be the same as the number of row or column blocks of
          * \f$U\vert_{\sigma\times\sigma}\f$.
          */
-        const unsigned int n_col_blocks =
-          Z.bc_node->get_data_reference().get_sigma_node()->get_child_num();
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          n_col_blocks);
+        const unsigned int n_col_blocks = Z.get_n_col_blocks();
+        AssertDimension(this->get_n_row_blocks(), n_col_blocks);
 
         /**
          * Iterate over each block column of \f$U\vert_{\sigma\times\sigma}\f$,
@@ -24832,40 +24828,31 @@ namespace HierBEM
          * The number of row blocks and column blocks of
          * \f$L\vert_{\sigma\times\sigma}\f$ should be the same.
          */
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          this->bc_node->get_data_reference()
-            .get_sigma_node()
-            ->get_child_num());
+        AssertDimension(this->get_n_row_blocks(),
+                        this->bc_node->get_data_reference()
+                          .get_sigma_node()
+                          ->get_child_num());
 
         /**
          * Number of row blocks of \f$X\vert_{\tau\times\sigma}\f$ or
          * \f$Z\vert_{\tau\times\sigma}\f$.
          */
-        const unsigned int n_row_blocks =
-          X.bc_node->get_data_reference().get_tau_node()->get_child_num();
+        const unsigned int n_row_blocks = X.get_n_row_blocks();
         /**
          * Number of column blocks of \f$X\vert_{\tau\times\sigma}\f$ or
          * \f$Z\vert_{\tau\times\sigma}\f$, which should be the same as the
          * number of row or column blocks of
          * \f$L\vert_{\sigma\times\sigma}\f$.
          */
-        const unsigned int n_col_blocks =
-          X.bc_node->get_data_reference().get_sigma_node()->get_child_num();
-        AssertDimension(
-          this->bc_node->get_data_reference().get_sigma_node()->get_child_num(),
-          n_col_blocks);
+        const unsigned int n_col_blocks = X.get_n_col_blocks();
+        AssertDimension(this->get_n_col_blocks(), n_col_blocks);
 
         /**
          * \mynote{N.B. \p n_row_blocks does not have to be equal to \p n_col_blocks,
          * since \p X or \p Z may be rectangular.}
          */
-        AssertDimension(
-          n_row_blocks,
-          Z.bc_node->get_data_reference().get_tau_node()->get_child_num());
-        AssertDimension(
-          n_col_blocks,
-          Z.bc_node->get_data_reference().get_sigma_node()->get_child_num());
+        AssertDimension(n_row_blocks, Z.get_n_row_blocks());
+        AssertDimension(n_col_blocks, Z.get_n_col_blocks());
 
         /**
          * Iterate over each block row of \f$L\vert_{\sigma\times\sigma}\f$,
@@ -24998,27 +24985,22 @@ namespace HierBEM
          * The number of row blocks and column blocks of
          * \f$L\vert_{\sigma\times\sigma}\f$ should be the same.
          */
-        AssertDimension(
-          this->bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          this->bc_node->get_data_reference()
-            .get_sigma_node()
-            ->get_child_num());
+        AssertDimension(this->get_n_row_blocks(),
+                        this->bc_node->get_data_reference()
+                          .get_sigma_node()
+                          ->get_child_num());
 
         /**
          * Number of row blocks of \f$Z\vert_{\tau\times\sigma}\f$.
          */
-        const unsigned int n_row_blocks =
-          Z.bc_node->get_data_reference().get_tau_node()->get_child_num();
+        const unsigned int n_row_blocks = Z.get_n_row_blocks();
         /**
          * Number of column blocks of \f$Z\vert_{\tau\times\sigma}\f$, which
          * should be the same as the number of row or column blocks of
          * \f$L\vert_{\sigma\times\sigma}\f$.
          */
-        const unsigned int n_col_blocks =
-          Z.bc_node->get_data_reference().get_sigma_node()->get_child_num();
-        AssertDimension(
-          this->bc_node->get_data_reference().get_sigma_node()->get_child_num(),
-          n_col_blocks);
+        const unsigned int n_col_blocks = Z.get_n_col_blocks();
+        AssertDimension(this->get_n_col_blocks(), n_col_blocks);
 
         /**
          * Iterate over each block row of \f$L\vert_{\sigma\times\sigma}\f$,
@@ -25135,10 +25117,8 @@ namespace HierBEM
         /**
          * Iterate over each block row of the matrix.
          */
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -25247,10 +25227,8 @@ namespace HierBEM
         /**
          * Iterate over each block row of the matrix.
          */
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -25393,10 +25371,8 @@ namespace HierBEM
         /**
          * Iterate over each block row of the matrix.
          */
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -25493,10 +25469,8 @@ namespace HierBEM
         /**
          * Iterate over each block row of the matrix.
          */
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -25610,10 +25584,8 @@ namespace HierBEM
         /**
          * Iterate over each block row of the matrix.
          */
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -25727,10 +25699,8 @@ namespace HierBEM
         /**
          * Iterate over each block row of the matrix.
          */
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -25834,10 +25804,8 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -25934,10 +25902,8 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -26049,10 +26015,8 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         /**
          * At present, LU factorization is only to be applied to square
@@ -26157,10 +26121,8 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         /**
          * At present, LU factorization is only to be applied to square
@@ -26311,10 +26273,8 @@ namespace HierBEM
                                             const unsigned int fixed_rank,
                                             std::mutex        &log_stream_lock)
   {
-    const unsigned int n_row_blocks =
-      bc_node->get_data_reference().get_tau_node()->get_child_num();
-    const unsigned int n_col_blocks =
-      bc_node->get_data_reference().get_sigma_node()->get_child_num();
+    const unsigned int n_row_blocks = get_n_row_blocks();
+    const unsigned int n_col_blocks = get_n_col_blocks();
 
     /**
      * At present, LU factorization is only to be applied to square
@@ -27223,10 +27183,8 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         /**
          * At present, Cholesky factorization is only to be applied to
@@ -27365,10 +27323,8 @@ namespace HierBEM
       }
     else
       {
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         /**
          * At present, Cholesky factorization is only to be applied to
@@ -27466,10 +27422,8 @@ namespace HierBEM
                                                   const unsigned int fixed_rank,
                                                   std::mutex &log_stream_lock)
   {
-    const unsigned int n_row_blocks =
-      bc_node->get_data_reference().get_tau_node()->get_child_num();
-    const unsigned int n_col_blocks =
-      bc_node->get_data_reference().get_sigma_node()->get_child_num();
+    const unsigned int n_row_blocks = get_n_row_blocks();
+    const unsigned int n_col_blocks = get_n_col_blocks();
 
     AssertDimension(n_row_blocks, n_col_blocks);
 
@@ -28275,16 +28229,13 @@ namespace HierBEM
       }
     else
       {
-        AssertDimension(
-          bc_node->get_data_reference().get_tau_node()->get_child_num(),
-          bc_node->get_data_reference().get_sigma_node()->get_child_num());
+        AssertDimension(get_n_row_blocks(), get_n_col_blocks());
 
         /**
          * Number of matrix blocks in a row, which is also the number of
          * matrix blocks in a column.
          */
-        const size_type k =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const size_type k = get_n_col_blocks();
 
         /**
          * Stage 1: eliminate the lower triangular part of the matrix.
@@ -28693,10 +28644,8 @@ namespace HierBEM
      */
     if (submatrices.size() > 0)
       {
-        const unsigned int n_row_blocks =
-          bc_node->get_data_reference().get_tau_node()->get_child_num();
-        const unsigned int n_col_blocks =
-          bc_node->get_data_reference().get_sigma_node()->get_child_num();
+        const unsigned int n_row_blocks = get_n_row_blocks();
+        const unsigned int n_col_blocks = get_n_col_blocks();
 
         for (size_type i = 0; i < n_row_blocks; i++)
           {
@@ -28721,7 +28670,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  std::vector<HMatrix<spacedim, Number> *> &
+  inline std::vector<HMatrix<spacedim, Number> *> &
   HMatrix<spacedim, Number>::get_leaf_set()
   {
     return leaf_set;
@@ -28729,7 +28678,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::vector<HMatrix<spacedim, Number> *> &
+  inline const std::vector<HMatrix<spacedim, Number> *> &
   HMatrix<spacedim, Number>::get_leaf_set() const
   {
     return leaf_set;
@@ -28737,7 +28686,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  std::vector<HMatrix<spacedim, Number> *> &
+  inline std::vector<HMatrix<spacedim, Number> *> &
   HMatrix<spacedim, Number>::get_near_field_leaf_set()
   {
     return near_field_leaf_set;
@@ -28745,7 +28694,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::vector<HMatrix<spacedim, Number> *> &
+  inline const std::vector<HMatrix<spacedim, Number> *> &
   HMatrix<spacedim, Number>::get_near_field_leaf_set() const
   {
     return near_field_leaf_set;
@@ -28753,7 +28702,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  std::vector<HMatrix<spacedim, Number> *> &
+  inline std::vector<HMatrix<spacedim, Number> *> &
   HMatrix<spacedim, Number>::get_far_field_leaf_set()
   {
     return far_field_leaf_set;
@@ -28761,14 +28710,14 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::vector<HMatrix<spacedim, Number> *> &
+  inline const std::vector<HMatrix<spacedim, Number> *> &
   HMatrix<spacedim, Number>::get_far_field_leaf_set() const
   {
     return far_field_leaf_set;
   }
 
   template <int spacedim, typename Number>
-  std::array<types::global_dof_index, 2> *
+  inline std::array<types::global_dof_index, 2> *
   HMatrix<spacedim, Number>::get_row_index_range()
   {
     return row_index_range;
@@ -28776,7 +28725,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::array<types::global_dof_index, 2> *
+  inline const std::array<types::global_dof_index, 2> *
   HMatrix<spacedim, Number>::get_row_index_range() const
   {
     return row_index_range;
@@ -28784,7 +28733,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  std::array<types::global_dof_index, 2> *
+  inline std::array<types::global_dof_index, 2> *
   HMatrix<spacedim, Number>::get_col_index_range()
   {
     return col_index_range;
@@ -28792,7 +28741,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  const std::array<types::global_dof_index, 2> *
+  inline const std::array<types::global_dof_index, 2> *
   HMatrix<spacedim, Number>::get_col_index_range() const
   {
     return col_index_range;

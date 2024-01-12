@@ -1289,7 +1289,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  bool
+  inline bool
   BlockCluster<spacedim, Number>::get_is_near_field() const
   {
     return is_near_field;
@@ -1297,7 +1297,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  void
+  inline void
   BlockCluster<spacedim, Number>::set_is_near_field(const bool is_near_field)
   {
     this->is_near_field = is_near_field;
@@ -1305,7 +1305,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  bool
+  inline bool
   BlockCluster<spacedim, Number>::get_is_admissible() const
   {
     return is_admissible;
@@ -1313,7 +1313,7 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  void
+  inline void
   BlockCluster<spacedim, Number>::set_is_admissible(const bool is_admissible)
   {
     this->is_admissible = is_admissible;
@@ -1321,28 +1321,28 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
-  typename ClusterTree<spacedim, Number>::node_pointer_type
+  inline typename ClusterTree<spacedim, Number>::node_pointer_type
   BlockCluster<spacedim, Number>::get_tau_node()
   {
     return tau_node;
   }
 
   template <int spacedim, typename Number>
-  typename ClusterTree<spacedim, Number>::node_const_pointer_type
+  inline typename ClusterTree<spacedim, Number>::node_const_pointer_type
   BlockCluster<spacedim, Number>::get_tau_node() const
   {
     return tau_node;
   }
 
   template <int spacedim, typename Number>
-  typename ClusterTree<spacedim, Number>::node_pointer_type
+  inline typename ClusterTree<spacedim, Number>::node_pointer_type
   BlockCluster<spacedim, Number>::get_sigma_node()
   {
     return sigma_node;
   }
 
   template <int spacedim, typename Number>
-  typename ClusterTree<spacedim, Number>::node_const_pointer_type
+  inline typename ClusterTree<spacedim, Number>::node_const_pointer_type
   BlockCluster<spacedim, Number>::get_sigma_node() const
   {
     return sigma_node;

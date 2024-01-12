@@ -1,15 +1,7 @@
-/**
- * \file laplace-bem-mixed-hmatrix.cc
- * \brief Verify solve Laplace mixed boundary value problem using \hmat.
- *
- * \ingroup testers
- * \author Jihuan Tian
- * \date 2022-11-21
- */
-
 #include <deal.II/base/logstream.h>
 
 #include <cuda_runtime.h>
+#include <openblas-pthread/cblas.h>
 
 #include <fstream>
 #include <iostream>
@@ -21,12 +13,7 @@
 using namespace dealii;
 using namespace HierBEM;
 
-/**
- * Function object for the Dirichlet boundary condition data.
- *
- * On the surface at @p z=0, apply constant potential 1. On the surface at
- * @p z=6, apply constant potential 0.
- */
+// Dirichlet boundary conditions on the left and top surface of the L-shape
 class DirichletBC : public Function<3>
 {
 public:
@@ -35,23 +22,20 @@ public:
   {
     (void)component;
 
-    if (p(2) < 3)
+    if (p(0) <= 1e-6)
       {
-        return 1;
+        // left surface
+        return 0.0;
       }
     else
       {
-        return 0;
+        // top surface
+        return 10.0;
       }
   }
 };
 
-/**
- * Function object for the Neumann boundary condition data.
- *
- * For surfaces other than those at @p z=0 and @p z=6, apply homogeneous
- * Neumann boundary condition.
- */
+// Neumann boundary conditions on the other surfaces of the L-shape
 class NeumannBC : public Function<3>
 {
 public:
@@ -73,14 +57,11 @@ namespace HierBEM
   }
 } // namespace HierBEM
 
-int
-main(int argc, char *argv[])
+void
+run_mixed_l_shape()
 {
-  /**
-   * @internal Pop out the default "DEAL" prefix string.
-   */
   // Write run-time logs to file
-  std::ofstream ofs("hierbem.log");
+  std::ofstream ofs("mixed-l-shape.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -94,10 +75,9 @@ main(int argc, char *argv[])
   Timer timer;
 
   /**
-   * @internal Initialize the CUDA device parameters.
+   * @internal Set number of threads used for OpenBLAS.
    */
-  //  AssertCuda(cudaSetDevice(0));
-  //  AssertCuda(cudaSetDeviceFlags(cudaDeviceMapHost | cudaDeviceScheduleBlockingSync));
+  openblas_set_num_threads(1);
 
   const size_t stack_size = 1024 * 10;
   AssertCuda(cudaDeviceSetLimit(cudaLimitStackSize, stack_size));
@@ -109,47 +89,38 @@ main(int argc, char *argv[])
   AssertCuda(
     cudaGetDeviceProperties(&HierBEM::CUDAWrappers::device_properties, 0));
 
-  /**
-   * @internal Use 8-byte bank size in shared memory, since double value type is
-   * used.
-   */
-  // AssertCuda(cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte));
+  const unsigned int dim                 = 2;
+  const unsigned int spacedim            = 3;
+  const bool         is_interior_problem = true;
 
-  const unsigned int dim      = 2;
-  const unsigned int spacedim = 3;
-
-  const bool                is_interior_problem = true;
   LaplaceBEM<dim, spacedim> bem(
     1, // fe order for dirichlet space
     0, // fe order for neumann space
     1, // mapping order for dirichlet domain
     1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::MixedBCProblem,
-    is_interior_problem, // is interior problem
-    4,                   // n_min for cluster tree
-    4,                   // n_min for block cluster tree
-    0.8,                 // eta for H-matrix
-    5,                   // max rank for H-matrix
-    0.01,                // aca epsilon for H-matrix
-    1.0,                 // eta for preconditioner
-    2,                   // max rank for preconditioner
-    0.1,                 // aca epsilon for preconditioner
-    1);
+    is_interior_problem,         // is interior problem
+    4,                           // n_min for cluster tree
+    32,                          // n_min for block cluster tree
+    0.8,                         // eta for H-matrix
+    5,                           // max rank for H-matrix
+    0.01,                        // aca epsilon for H-matrix
+    1.0,                         // eta for preconditioner
+    2,                           // max rank for preconditioner
+    0.1,                         // aca epsilon for preconditioner
+    MultithreadInfo::n_threads() // Number of threads used for ACA
+  );
+  bem.set_project_name("mixed-l-shape");
 
   bem.set_dirichlet_boundary_ids({1, 2});
-  bem.set_neumann_boundary_ids({3, 4, 5, 6});
+  bem.set_neumann_boundary_ids({19, 20, 21, 22, 23, 24});
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
 
-  if (argc > 1)
-    {
-      bem.read_volume_mesh(argv[1]);
-    }
-  else
-    {
-      bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "bar.msh");
-    }
+  timer.start();
+
+  bem.read_volume_mesh(HBEM_TEST_MODEL_DIR "l-shape.msh");
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
@@ -174,6 +145,4 @@ main(int argc, char *argv[])
 
   deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
           << std::endl;
-
-  return 0;
 }

@@ -1,16 +1,7 @@
-/**
- * \file laplace-bem-dirichlet-hmatrix.cc
- * \brief Verify solving the Laplace problem with Dirichlet boundary condition
- * using H-matrix based BEM.
- *
- * \ingroup testers
- * \author Jihuan Tian
- * \date 2022-09-23
- */
-
 #include <deal.II/base/logstream.h>
 
 #include <cuda_runtime.h>
+#include <openblas-pthread/cblas.h>
 
 #include <fstream>
 #include <iostream>
@@ -68,14 +59,14 @@ namespace HierBEM
   }
 } // namespace HierBEM
 
-int
-main(int argc, char *argv[])
+void
+run_dirichlet_hmatrix()
 {
   /**
    * @internal Pop out the default "DEAL" prefix string.
    */
   // Write run-time logs to file
-  std::ofstream ofs("hierbem.log");
+  std::ofstream ofs("dirichlet-hmatrix.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -90,6 +81,11 @@ main(int argc, char *argv[])
    * @internal Create and start the timer.
    */
   Timer timer;
+
+  /**
+   * @internal Set number of threads used for OpenBLAS.
+   */
+  openblas_set_num_threads(1);
 
   /**
    * @internal Initialize the CUDA device parameters.
@@ -123,16 +119,18 @@ main(int argc, char *argv[])
     1, // mapping order for dirichlet domain
     1, // mapping order for neumann domain
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
-    is_interior_problem, // is interior problem
-    4,                   // n_min for cluster tree
-    4,                   // n_min for block cluster tree
-    0.8,                 // eta for H-matrix
-    5,                   // max rank for H-matrix
-    0.01,                // aca epsilon for H-matrix
-    1.0,                 // eta for preconditioner
-    2,                   // max rank for preconditioner
-    0.1,                 // aca epsilon for preconditioner
-    MultithreadInfo::n_cores());
+    is_interior_problem,         // is interior problem
+    4,                           // n_min for cluster tree
+    4,                           // n_min for block cluster tree
+    0.8,                         // eta for H-matrix
+    5,                           // max rank for H-matrix
+    0.01,                        // aca epsilon for H-matrix
+    1.0,                         // eta for preconditioner
+    2,                           // max rank for preconditioner
+    0.1,                         // aca epsilon for preconditioner
+    MultithreadInfo::n_threads() // Number of threads used for ACA
+  );
+  bem.set_project_name("dirichlet-hmatrix");
 
   timer.stop();
   print_wall_time(deallog, timer, "program preparation");
@@ -157,25 +155,18 @@ main(int argc, char *argv[])
   const Point<spacedim> center(0, 0, 0);
   const double          radius(1);
 
-  if (argc > 1)
-    {
-      bem.read_volume_mesh(argv[1]);
-    }
-  else
-    {
-      Triangulation<spacedim> tria;
-      // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
-      GridGenerator::hyper_ball(tria, center, radius);
-      tria.refine_global(1);
+  Triangulation<spacedim> tria;
+  // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
+  GridGenerator::hyper_ball(tria, center, radius);
+  tria.refine_global(1);
 
-      bem.assign_volume_triangulation(std::move(tria), true);
+  bem.assign_volume_triangulation(std::move(tria), true);
 
-      Triangulation<dim, spacedim>           surface_tria;
-      const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
-      surface_tria.set_manifold(0, ball_surface_manifold);
+  Triangulation<dim, spacedim>           surface_tria;
+  const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
+  surface_tria.set_manifold(0, ball_surface_manifold);
 
-      bem.assign_surface_triangulation(std::move(surface_tria), true);
-    }
+  bem.assign_surface_triangulation(std::move(surface_tria), true);
 
   timer.stop();
   print_wall_time(deallog, timer, "read mesh");
@@ -197,6 +188,4 @@ main(int argc, char *argv[])
 
   deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
           << std::endl;
-
-  return 0;
 }
