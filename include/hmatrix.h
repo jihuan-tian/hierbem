@@ -10983,17 +10983,15 @@ namespace HierBEM
     /**
      * When the flag @p is_result_matrix_store_tril_only is true, determine if
      * the \hmatrix property of the local product \hmatrix @p Z should be the
-     * same as that of @p M by checking if its \f$\tau\f$ node and \f$\sigma\f$
-     * are the same, since only when they are the same, @p Z or @p M's property
-     * can be symmetric or lower triangular. \mynote{This identity is checked
-     * via a shallow comparison of the two cluster nodes.}
+     * same as that of @p M by checking if the index ranges of its \f$\tau\f$
+     * node and \f$\sigma\f$ are the same, since only when they are the same,
+     * @p Z or @p M's property can be symmetric or lower triangular.
      */
     HMatrixSupport::Property Z_property = HMatrixSupport::general;
     bool                     is_result_matrix_Z_store_tril_only = false;
 
     if (is_result_matrix_store_tril_only &&
-        (current_product_bc_node.get_data_reference().get_tau_node() ==
-         current_product_bc_node.get_data_reference().get_sigma_node()))
+        (*M1.get_row_index_range() == *M2.get_col_index_range()))
       {
         /**
          * The local product \hmatrix @p Z inherits the property of @p M, which
@@ -11386,17 +11384,15 @@ namespace HierBEM
     /**
      * When the flag @p is_result_matrix_store_tril_only is true, determine if
      * the \hmatrix property of the local product \hmatrix @p Z should be the
-     * same as that of @p M by checking if its \f$\tau\f$ node and \f$\sigma\f$
-     * are the same, since only when they are the same, @p Z or @p M's property
-     * can be symmetric or lower triangular. \mynote{This identity is checked
-     * via a shallow comparison of the two cluster nodes.}
+     * same as that of @p M by checking if the index ranges of its \f$\tau\f$
+     * node and \f$\sigma\f$ are the same, since only when they are the same,
+     * @p Z or @p M's property can be symmetric or lower triangular.
      */
     HMatrixSupport::Property Z_property = HMatrixSupport::general;
     bool                     is_result_matrix_Z_store_tril_only = false;
 
     if (is_result_matrix_store_tril_only &&
-        (current_product_bc_node.get_data_reference().get_tau_node() ==
-         current_product_bc_node.get_data_reference().get_sigma_node()))
+        (*M1.get_row_index_range() == *M2.get_col_index_range()))
       {
         /**
          * The local product \hmatrix @p Z inherits the property of @p M, which
@@ -11769,17 +11765,15 @@ namespace HierBEM
     /**
      * When the flag @p is_result_matrix_store_tril_only is true, determine if
      * the \hmatrix property of the local product \hmatrix @p Z should be the
-     * same as that of @p M by checking if its \f$\tau\f$ node and \f$\sigma\f$
-     * are the same, since only when they are the same, @p Z or @p M's property
-     * can be symmetric or lower triangular. \mynote{This identity is checked
-     * via a shallow comparison of the two cluster nodes.}
+     * same as that of @p M by checking if the index ranges of its \f$\tau\f$
+     * node and \f$\sigma\f$ are the same, since only when they are the same,
+     * @p Z or @p M's property can be symmetric or lower triangular.
      */
     HMatrixSupport::Property Z_property = HMatrixSupport::general;
     bool                     is_result_matrix_Z_store_tril_only = false;
 
     if (is_result_matrix_store_tril_only &&
-        (current_product_bc_node.get_data_reference().get_tau_node() ==
-         current_product_bc_node.get_data_reference().get_sigma_node()))
+        (*M1.get_row_index_range() == *M2.get_col_index_range()))
       {
         /**
          * The local product \hmatrix @p Z inherits the property of @p M, which
@@ -12215,17 +12209,15 @@ namespace HierBEM
     /**
      * When the flag @p is_result_matrix_store_tril_only is true, determine if
      * the \hmatrix property of the local product \hmatrix @p Z should be the
-     * same as that of @p M by checking if its \f$\tau\f$ node and \f$\sigma\f$
-     * are the same, since only when they are the same, @p Z or @p M's property
-     * can be symmetric or lower triangular. \mynote{This identity is checked
-     * via a shallow comparison of the two cluster nodes.}
+     * same as that of @p M by checking if the index ranges of its \f$\tau\f$
+     * node and \f$\sigma\f$ are the same, since only when they are the same,
+     * @p Z or @p M's property can be symmetric or lower triangular.
      */
     HMatrixSupport::Property Z_property = HMatrixSupport::general;
     bool                     is_result_matrix_Z_store_tril_only = false;
 
     if (is_result_matrix_store_tril_only &&
-        (current_product_bc_node.get_data_reference().get_tau_node() ==
-         current_product_bc_node.get_data_reference().get_sigma_node()))
+        (*M1.get_row_index_range() == *M2.get_row_index_range()))
       {
         /**
          * The local product \hmatrix @p Z inherits the property of @p M, which
@@ -12622,17 +12614,15 @@ namespace HierBEM
     /**
      * When the flag @p is_result_matrix_store_tril_only is true, determine if
      * the \hmatrix property of the local product \hmatrix @p Z should be the
-     * same as that of @p M by checking if its \f$\tau\f$ node and \f$\sigma\f$
-     * are the same, since only when they are the same, @p Z or @p M's property
-     * can be symmetric or lower triangular. \mynote{This identity is checked
-     * via a shallow comparison of the two cluster nodes.}
+     * same as that of @p M by checking if the index ranges of its \f$\tau\f$
+     * node and \f$\sigma\f$ are the same, since only when they are the same,
+     * @p Z or @p M's property can be symmetric or lower triangular.
      */
     HMatrixSupport::Property Z_property = HMatrixSupport::general;
     bool                     is_result_matrix_Z_store_tril_only = false;
 
     if (is_result_matrix_store_tril_only &&
-        (current_product_bc_node.get_data_reference().get_tau_node() ==
-         current_product_bc_node.get_data_reference().get_sigma_node()))
+        (*M1.get_row_index_range() == *M2.get_row_index_range()))
       {
         /**
          * The local product \hmatrix @p Z inherits the property of @p M, which
@@ -13007,17 +12997,15 @@ namespace HierBEM
     /**
      * When the flag @p is_result_matrix_store_tril_only is true, determine if
      * the \hmatrix property of the local product \hmatrix @p Z should be the
-     * same as that of @p M by checking if its \f$\tau\f$ node and \f$\sigma\f$
-     * are the same, since only when they are the same, @p Z or @p M's property
-     * can be symmetric or lower triangular. \mynote{This identity is checked
-     * via a shallow comparison of the two cluster nodes.}
+     * same as that of @p M by checking if the index ranges of its \f$\tau\f$
+     * node and \f$\sigma\f$ are the same, since only when they are the same,
+     * @p Z or @p M's property can be symmetric or lower triangular.
      */
     HMatrixSupport::Property Z_property = HMatrixSupport::general;
     bool                     is_result_matrix_Z_store_tril_only = false;
 
     if (is_result_matrix_store_tril_only &&
-        (current_product_bc_node.get_data_reference().get_tau_node() ==
-         current_product_bc_node.get_data_reference().get_sigma_node()))
+        (*M1.get_row_index_range() == *M2.get_row_index_range()))
       {
         /**
          * The local product \hmatrix @p Z inherits the property of @p M, which
@@ -13436,17 +13424,15 @@ namespace HierBEM
     /**
      * When the flag @p is_result_matrix_store_tril_only is true, determine if
      * the \hmatrix property of the local product \hmatrix @p Z should be the
-     * same as that of @p M by checking if its \f$\tau\f$ node and \f$\sigma\f$
-     * are the same, since only when they are the same, @p Z or @p M's property
-     * can be symmetric or lower triangular. \mynote{This identity is checked
-     * via a shallow comparison of the two cluster nodes.}
+     * same as that of @p M by checking if the index ranges of its \f$\tau\f$
+     * node and \f$\sigma\f$ are the same, since only when they are the same,
+     * @p Z or @p M's property can be symmetric or lower triangular.
      */
     HMatrixSupport::Property Z_property = HMatrixSupport::general;
     bool                     is_result_matrix_Z_store_tril_only = false;
 
     if (is_result_matrix_store_tril_only &&
-        (current_product_bc_node.get_data_reference().get_tau_node() ==
-         current_product_bc_node.get_data_reference().get_sigma_node()))
+        (*M1.get_col_index_range() == *M2.get_col_index_range()))
       {
         /**
          * The local product \hmatrix @p Z inherits the property of @p M, which
@@ -13828,17 +13814,15 @@ namespace HierBEM
     /**
      * When the flag @p is_result_matrix_store_tril_only is true, determine if
      * the \hmatrix property of the local product \hmatrix @p Z should be the
-     * same as that of @p M by checking if its \f$\tau\f$ node and \f$\sigma\f$
-     * are the same, since only when they are the same, @p Z or @p M's property
-     * can be symmetric or lower triangular. \mynote{This identity is checked
-     * via a shallow comparison of the two cluster nodes.}
+     * same as that of @p M by checking if the index ranges of its \f$\tau\f$
+     * node and \f$\sigma\f$ are the same, since only when they are the same,
+     * @p Z or @p M's property can be symmetric or lower triangular.
      */
     HMatrixSupport::Property Z_property = HMatrixSupport::general;
     bool                     is_result_matrix_Z_store_tril_only = false;
 
     if (is_result_matrix_store_tril_only &&
-        (current_product_bc_node.get_data_reference().get_tau_node() ==
-         current_product_bc_node.get_data_reference().get_sigma_node()))
+        (*M1.get_col_index_range() == *M2.get_col_index_range()))
       {
         /**
          * The local product \hmatrix @p Z inherits the property of @p M, which
@@ -18191,9 +18175,7 @@ namespace HierBEM
                   case 1: {
                     /**
                      * Check if the first sibling of the current \hmatnode
-                     * is a diagonal block. Such checking is performed via
-                     * shallow comparison, i.e. compare the pointer
-                     * addresses of \f$\tau\f$ and \f$\sigma\f$ clusters.
+                     * is a diagonal block.
                      *
                      * \mynote{By default, the submatrices are organized in
                      * the following order. <code>
@@ -18203,11 +18185,8 @@ namespace HierBEM
                      * </code>}
                      */
                     if (current_hmat_during_recursion->parent->submatrices[0]
-                          ->bc_node->get_data_reference()
-                          .get_tau_node() ==
-                        current_hmat_during_recursion->parent->submatrices[0]
-                          ->bc_node->get_data_reference()
-                          .get_sigma_node())
+                          ->block_type ==
+                        HMatrixSupport::BlockType::diagonal_block)
                       {
                         current_hmat_during_recursion =
                           current_hmat_during_recursion->parent->submatrices[0];
@@ -18229,17 +18208,11 @@ namespace HierBEM
                   case 2: {
                     /**
                      * Check if the last (3rd) sibling of the current
-                     * \hmatnode is a diagonal block. Such checking is
-                     * performed via shallow comparison, i.e. compare the
-                     * pointer addresses of \f$\tau\f$ and \f$\sigma\f$
-                     * clusters.
+                     * \hmatnode is a diagonal block.
                      */
                     if (current_hmat_during_recursion->parent->submatrices[3]
-                          ->bc_node->get_data_reference()
-                          .get_tau_node() ==
-                        current_hmat_during_recursion->parent->submatrices[3]
-                          ->bc_node->get_data_reference()
-                          .get_sigma_node())
+                          ->block_type ==
+                        HMatrixSupport::BlockType::diagonal_block)
                       {
                         current_hmat_during_recursion =
                           current_hmat_during_recursion->parent->submatrices[3];
@@ -18260,12 +18233,8 @@ namespace HierBEM
                   }
                   default: {
                     Assert(
-                      current_hmat_during_recursion->bc_node
-                          ->get_data_reference()
-                          .get_tau_node() !=
-                        current_hmat_during_recursion->bc_node
-                          ->get_data_reference()
-                          .get_sigma_node(),
+                      current_hmat_during_recursion->block_type !=
+                        HMatrixSupport::BlockType::diagonal_block,
                       ExcMessage(
                         "The current H-matrix node should not be a diagonal block!"));
 
@@ -18369,10 +18338,7 @@ namespace HierBEM
                   case 1: {
                     /**
                      * Check if the last (3rd) sibling of the current
-                     * \hmatnode is a diagonal block. Such checking is
-                     * performed via shallow comparison, i.e. compare the
-                     * pointer addresses of \f$\tau\f$ and \f$\sigma\f$
-                     * clusters.
+                     * \hmatnode is a diagonal block.
                      *
                      * \mynote{By default, the submatrices are organized in
                      * the following order. <code>
@@ -18382,11 +18348,8 @@ namespace HierBEM
                      * </code>}
                      */
                     if (current_hmat_during_recursion->parent->submatrices[3]
-                          ->bc_node->get_data_reference()
-                          .get_tau_node() ==
-                        current_hmat_during_recursion->parent->submatrices[3]
-                          ->bc_node->get_data_reference()
-                          .get_sigma_node())
+                          ->block_type ==
+                        HMatrixSupport::BlockType::diagonal_block)
                       {
                         current_hmat_during_recursion =
                           current_hmat_during_recursion->parent->submatrices[3];
@@ -18408,16 +18371,11 @@ namespace HierBEM
                   case 2: {
                     /**
                      * Check if the first sibling of the current \hmatnode
-                     * is a diagonal block. Such checking is performed via
-                     * shallow comparison, i.e. compare the pointer
-                     * addresses of \f$\tau\f$ and \f$\sigma\f$ clusters.
+                     * is a diagonal block.
                      */
                     if (current_hmat_during_recursion->parent->submatrices[0]
-                          ->bc_node->get_data_reference()
-                          .get_tau_node() ==
-                        current_hmat_during_recursion->parent->submatrices[0]
-                          ->bc_node->get_data_reference()
-                          .get_sigma_node())
+                          ->block_type ==
+                        HMatrixSupport::BlockType::diagonal_block)
                       {
                         current_hmat_during_recursion =
                           current_hmat_during_recursion->parent->submatrices[0];
@@ -18438,12 +18396,8 @@ namespace HierBEM
                   }
                   default: {
                     Assert(
-                      current_hmat_during_recursion->bc_node
-                          ->get_data_reference()
-                          .get_tau_node() !=
-                        current_hmat_during_recursion->bc_node
-                          ->get_data_reference()
-                          .get_sigma_node(),
+                      current_hmat_during_recursion->block_type !=
+                        HMatrixSupport::BlockType::diagonal_block,
                       ExcMessage(
                         "The current H-matrix node should not be a diagonal block!"));
 
@@ -18553,18 +18507,14 @@ namespace HierBEM
 
     /**
      * Make an assertion that the first and last submatrices of the current
-     * \hmatnode are really diagonal blocks by comparing the <strong>pointer
-     * addresses</strong> of the \f$\tau\f$ cluster node and \f$\sigma\f$
-     * cluster node.
+     * \hmatnode are really diagonal blocks.
      */
     Assert(
-      submatrices[0]->bc_node->get_data_reference().get_tau_node() ==
-        submatrices[0]->bc_node->get_data_reference().get_sigma_node(),
+      submatrices[0]->block_type == HMatrixSupport::BlockType::diagonal_block,
       ExcMessage(
         "The first submatrix of the current H-matrix node is not a diagonal block!"));
     Assert(
-      submatrices[3]->bc_node->get_data_reference().get_tau_node() ==
-        submatrices[3]->bc_node->get_data_reference().get_sigma_node(),
+      submatrices[3]->block_type == HMatrixSupport::BlockType::diagonal_block,
       ExcMessage(
         "The last submatrix of the current H-matrix node is not a diagonal block!"));
 
@@ -24484,8 +24434,7 @@ namespace HierBEM
          * Make an assertion that the current \hmatnode should be a diagonal
          * block.
          */
-        Assert(bc_node->get_data_reference().get_tau_node() ==
-                 bc_node->get_data_reference().get_sigma_node(),
+        Assert(block_type == HMatrixSupport::BlockType::diagonal_block,
                ExcMessage(
                  "The current H-matrix node should be a diagonal block!"));
 
