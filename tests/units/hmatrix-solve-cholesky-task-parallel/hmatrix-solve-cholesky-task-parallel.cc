@@ -34,7 +34,7 @@ extern void
 run_hmatrix_solve_cholesky_task_parallel(const unsigned int trial_no);
 
 static constexpr int FUZZING_TIMES = 5;
-const unsigned int   REPEAT_TIMES  = 10;
+const unsigned int   REPEAT_TIMES  = 100;
 
 TEST_CASE("H-matrix solve equations by parallel Cholesky factorization",
           "[hmatrix]")

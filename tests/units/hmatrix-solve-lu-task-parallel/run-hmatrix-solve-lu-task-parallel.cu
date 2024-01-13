@@ -119,4 +119,6 @@ run_hmatrix_solve_lu_task_parallel(const unsigned int trial_no)
    * Print the result vector.
    */
   print_vector_to_mat(ofs, "x", x);
+
+  ofs.close();
 }
