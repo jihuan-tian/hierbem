@@ -106,6 +106,10 @@ extract_surface_mesh_for_two_spheres(
 int
 main(int argc, char *argv[])
 {
+  // Suppress compilation errors
+  (void)argc;
+  (void)argv;
+
   // Repetitions to run H-LU.
   const unsigned int REPEATS = atoi(argv[1]);
 
