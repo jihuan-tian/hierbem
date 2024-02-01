@@ -681,28 +681,26 @@ namespace HierBEM
     const Cluster<spacedim, Number>            &cluster2,
     const std::vector<Point<spacedim, Number>> &all_support_points)
   {
-    // Calculate the total number of point pairs.
-    const unsigned int point_pair_num =
-      cluster1.get_index_set().size() * cluster2.get_index_set().size();
+    Number cluster_distance =
+      all_support_points.at(cluster1.get_index_set().at(0))
+        .distance(all_support_points.at(cluster2.get_index_set().at(0)));
+    Number point_pair_distance;
 
-    // Create a linearized list storing all the distance values.
-    std::vector<Number> point_pair_distance(point_pair_num);
-
-    unsigned int counter = 0;
     for (const auto &index1 : cluster1.get_index_set())
       {
         for (const auto &index2 : cluster2.get_index_set())
           {
-            point_pair_distance.at(counter) =
-              all_support_points.at(index1).distance(
-                all_support_points.at(index2));
+            point_pair_distance = all_support_points.at(index1).distance(
+              all_support_points.at(index2));
 
-            counter++;
+            if (point_pair_distance < cluster_distance)
+              {
+                cluster_distance = point_pair_distance;
+              }
           }
       }
 
-    return (*std::min_element(point_pair_distance.cbegin(),
-                              point_pair_distance.cend()));
+    return cluster_distance;
   }
 
 
@@ -739,17 +737,13 @@ namespace HierBEM
     const std::array<types::global_dof_index, 2> &cluster2_index_range =
       cluster2.get_index_range();
 
-    // Calculate the total number of point pairs.
-    const unsigned int point_pair_num =
-      (cluster1_index_range[1] - cluster1_index_range[0]) *
-      (cluster2_index_range[1] - cluster2_index_range[0]);
+    Number cluster_distance =
+      all_support_points
+        .at(internal_to_external_dof_numbering[cluster1_index_range[0]])
+        .distance(all_support_points.at(
+          internal_to_external_dof_numbering[cluster2_index_range[0]]));
+    Number point_pair_distance;
 
-    Assert(point_pair_num >= 1, ExcLowerRange(point_pair_num, 1));
-
-    // Create a linearized list storing all the distance values.
-    std::vector<Number> point_pair_distance(point_pair_num);
-
-    unsigned int counter = 0;
     for (types::global_dof_index index1 = cluster1_index_range[0];
          index1 < cluster1_index_range[1];
          index1++)
@@ -758,17 +752,19 @@ namespace HierBEM
              index2 < cluster2_index_range[1];
              index2++)
           {
-            point_pair_distance.at(counter) =
+            point_pair_distance =
               all_support_points.at(internal_to_external_dof_numbering[index1])
                 .distance(all_support_points.at(
                   internal_to_external_dof_numbering[index2]));
 
-            counter++;
+            if (point_pair_distance < cluster_distance)
+              {
+                cluster_distance = point_pair_distance;
+              }
           }
       }
 
-    return (*std::min_element(point_pair_distance.cbegin(),
-                              point_pair_distance.cend()));
+    return cluster_distance;
   }
 
 
@@ -797,28 +793,26 @@ namespace HierBEM
     const std::vector<Point<spacedim, Number>> &all_support_points1,
     const std::vector<Point<spacedim, Number>> &all_support_points2)
   {
-    // Calculate the total number of point pairs.
-    const unsigned int point_pair_num =
-      cluster1.get_index_set().size() * cluster2.get_index_set().size();
+    Number cluster_distance =
+      all_support_points1.at(cluster1.get_index_set().at(0))
+        .distance(all_support_points2.at(cluster2.get_index_set().at(0)));
+    Number point_pair_distance;
 
-    // Create a linearized list storing all the distance values.
-    std::vector<Number> point_pair_distance(point_pair_num);
-
-    unsigned int counter = 0;
     for (const auto &index1 : cluster1.get_index_set())
       {
         for (const auto &index2 : cluster2.get_index_set())
           {
-            point_pair_distance.at(counter) =
-              all_support_points1.at(index1).distance(
-                all_support_points2.at(index2));
+            point_pair_distance = all_support_points1.at(index1).distance(
+              all_support_points2.at(index2));
 
-            counter++;
+            if (point_pair_distance < cluster_distance)
+              {
+                cluster_distance = point_pair_distance;
+              }
           }
       }
 
-    return (*std::min_element(point_pair_distance.cbegin(),
-                              point_pair_distance.cend()));
+    return cluster_distance;
   }
 
 
@@ -860,17 +854,13 @@ namespace HierBEM
     const std::array<types::global_dof_index, 2> &cluster2_index_range =
       cluster2.get_index_range();
 
-    // Calculate the total number of point pairs.
-    const unsigned int point_pair_num =
-      (cluster1_index_range[1] - cluster1_index_range[0]) *
-      (cluster2_index_range[1] - cluster2_index_range[0]);
+    Number cluster_distance =
+      all_support_points1
+        .at(internal_to_external_dof_numbering1[cluster1_index_range[0]])
+        .distance(all_support_points2.at(
+          internal_to_external_dof_numbering2[cluster2_index_range[0]]));
+    Number point_pair_distance;
 
-    Assert(point_pair_num >= 1, ExcLowerRange(point_pair_num, 1));
-
-    // Create a linearized list storing all the distance values.
-    std::vector<Number> point_pair_distance(point_pair_num);
-
-    unsigned int counter = 0;
     for (types::global_dof_index index1 = cluster1_index_range[0];
          index1 < cluster1_index_range[1];
          index1++)
@@ -879,18 +869,20 @@ namespace HierBEM
              index2 < cluster2_index_range[1];
              index2++)
           {
-            point_pair_distance.at(counter) =
+            point_pair_distance =
               all_support_points1
                 .at(internal_to_external_dof_numbering1[index1])
                 .distance(all_support_points2.at(
                   internal_to_external_dof_numbering2[index2]));
 
-            counter++;
+            if (point_pair_distance < cluster_distance)
+              {
+                cluster_distance = point_pair_distance;
+              }
           }
       }
 
-    return (*std::min_element(point_pair_distance.cbegin(),
-                              point_pair_distance.cend()));
+    return cluster_distance;
   }
 
 
@@ -1366,49 +1358,47 @@ namespace HierBEM
 
     Assert(n > 0, ExcLowerRange(n, 1));
 
-    /**
-     * Calculate the number of point pairs in the cluster. Let \f$[0, 1, 2, 3,
-     * 4, 5]\f$ be the indices of support points in the cluster, whose pairwise
-     * inter-distance will be calculated. The calculation is only needed for the
-     * marked pairs of points as shown below.
-     *
-     * \code
-     *   0 1 2 3 4 5
-     * 0   - - - - -
-     * 1     - - - -
-     * 2       - - -
-     * 3         - -
-     * 4           -
-     * 5
-     * \endcode
-     *
-     * Therefore, the total number of effective point pairs is \f$\frac{n^2 -
-     * n}{2}\f$.
-     */
-    const unsigned int point_pair_num = n * (n - 1) / 2;
-
-    std::vector<Number> point_pair_distance(point_pair_num);
-
-    unsigned int counter = 0;
-    for (unsigned int i = 0; i < (n - 1); i++)
-      {
-        for (unsigned int j = i + 1; j < n; j++)
-          {
-            point_pair_distance.at(counter) =
-              all_support_points.at(index_set.at(i))
-                .distance(all_support_points.at(index_set.at(j)));
-
-            counter++;
-          }
-      }
-
     if (n > 1)
       {
-        return (*std::max_element(point_pair_distance.cbegin(),
-                                  point_pair_distance.cend()));
+        /**
+         * Calculate the number of point pairs in the cluster. Let \f$[0, 1, 2,
+         * 3, 4, 5]\f$ be the indices of support points in the cluster, whose
+         * pairwise inter-distance will be calculated. The calculation is only
+         * needed for the marked pairs of points as shown below.
+         *
+         * \code
+         *   0 1 2 3 4 5
+         * 0   - - - - -
+         * 1     - - - -
+         * 2       - - -
+         * 3         - -
+         * 4           -
+         * 5
+         * \endcode
+         */
+        Number cluster_diameter = 0;
+        Number point_pair_distance;
+
+        for (unsigned int i = 0; i < (n - 1); i++)
+          {
+            for (unsigned int j = i + 1; j < n; j++)
+              {
+                point_pair_distance =
+                  all_support_points.at(index_set.at(i))
+                    .distance(all_support_points.at(index_set.at(j)));
+
+                if (point_pair_distance > cluster_diameter)
+                  {
+                    cluster_diameter = point_pair_distance;
+                  }
+              }
+          }
+
+        return cluster_diameter;
       }
     else
       {
+        // When there is only one point, the diameter is zero.
         return 0;
       }
   }
@@ -1424,51 +1414,51 @@ namespace HierBEM
     // Number of support points in the cluster.
     const unsigned int n = index_range[1] - index_range[0];
 
-    /**
-     * Calculate the number of point pairs in the cluster. Let \f$[0, 1, 2, 3,
-     * 4, 5]\f$ be the indices of support points in the cluster, whose pairwise
-     * inter-distance will be calculated. The calculation is only needed for the
-     * marked pairs of points as shown below.
-     *
-     * \code
-     *   0 1 2 3 4 5
-     * 0   - - - - -
-     * 1     - - - -
-     * 2       - - -
-     * 3         - -
-     * 4           -
-     * 5
-     * \endcode
-     *
-     * Therefore, the total number of effective point pairs is \f$\frac{n^2 -
-     * n}{2}\f$.
-     */
-    const unsigned int point_pair_num = n * (n - 1) / 2;
-
-    std::vector<Number> point_pair_distance(point_pair_num);
-
-    unsigned int counter = 0;
-    for (unsigned int i = 0; i < (n - 1); i++)
-      {
-        for (unsigned int j = i + 1; j < n; j++)
-          {
-            point_pair_distance.at(counter) =
-              all_support_points
-                .at(internal_to_external_dof_numbering[index_range[0] + i])
-                .distance(all_support_points.at(
-                  internal_to_external_dof_numbering[index_range[0] + j]));
-
-            counter++;
-          }
-      }
+    Assert(n > 0, ExcLowerRange(n, 1));
 
     if (n > 1)
       {
-        return (*std::max_element(point_pair_distance.cbegin(),
-                                  point_pair_distance.cend()));
+        /**
+         * Calculate the number of point pairs in the cluster. Let \f$[0, 1, 2,
+         * 3, 4, 5]\f$ be the indices of support points in the cluster, whose
+         * pairwise inter-distance will be calculated. The calculation is only
+         * needed for the marked pairs of points as shown below.
+         *
+         * \code
+         *   0 1 2 3 4 5
+         * 0   - - - - -
+         * 1     - - - -
+         * 2       - - -
+         * 3         - -
+         * 4           -
+         * 5
+         * \endcode
+         */
+        Number cluster_diameter = 0;
+        Number point_pair_distance;
+
+        for (unsigned int i = 0; i < (n - 1); i++)
+          {
+            for (unsigned int j = i + 1; j < n; j++)
+              {
+                point_pair_distance =
+                  all_support_points
+                    .at(internal_to_external_dof_numbering[index_range[0] + i])
+                    .distance(all_support_points.at(
+                      internal_to_external_dof_numbering[index_range[0] + j]));
+
+                if (point_pair_distance > cluster_diameter)
+                  {
+                    cluster_diameter = point_pair_distance;
+                  }
+              }
+          }
+
+        return cluster_diameter;
       }
     else
       {
+        // When there is only one point, the diameter is zero.
         return 0;
       }
   }

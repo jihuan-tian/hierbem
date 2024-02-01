@@ -2717,7 +2717,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;
@@ -2792,7 +2792,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;
@@ -2840,7 +2840,7 @@ namespace HierBEM
                  * maximum value, the @p rkmat should be truncated to its
                  * actual rank.
                  */
-                rkmat.truncate_to_rank(k);
+                rkmat.keep_first_n_columns(k);
               }
 
             return;
@@ -2857,7 +2857,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;
@@ -3383,7 +3383,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;
@@ -3460,7 +3460,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;
@@ -3508,7 +3508,7 @@ namespace HierBEM
                  * maximum value, the @p rkmat should be truncated to its
                  * actual rank.
                  */
-                rkmat.truncate_to_rank(k);
+                rkmat.keep_first_n_columns(k);
               }
 
             return;
@@ -3525,7 +3525,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;
@@ -4036,7 +4036,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 AssertCuda(cudaHostUnregister((void *)(vr.data())));
@@ -4116,7 +4116,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 AssertCuda(cudaHostUnregister((void *)(vr.data())));
@@ -4169,7 +4169,7 @@ namespace HierBEM
                  * maximum value, the @p rkmat should be truncated to its
                  * actual rank.
                  */
-                rkmat.truncate_to_rank(k);
+                rkmat.keep_first_n_columns(k);
               }
 
             AssertCuda(cudaHostUnregister((void *)(vr.data())));
@@ -4191,7 +4191,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 AssertCuda(cudaHostUnregister((void *)(vr.data())));
@@ -4729,7 +4729,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 AssertCuda(cudaHostUnregister((void *)(vr.data())));
@@ -4811,7 +4811,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 AssertCuda(cudaHostUnregister((void *)(vr.data())));
@@ -4864,7 +4864,7 @@ namespace HierBEM
                  * maximum value, the @p rkmat should be truncated to its
                  * actual rank.
                  */
-                rkmat.truncate_to_rank(k);
+                rkmat.keep_first_n_columns(k);
               }
 
             AssertCuda(cudaHostUnregister((void *)(vr.data())));
@@ -4886,7 +4886,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 AssertCuda(cudaHostUnregister((void *)(vr.data())));
@@ -5206,7 +5206,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;
@@ -5262,7 +5262,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;
@@ -5335,7 +5335,7 @@ namespace HierBEM
                  * maximum value, the @p rkmat should be truncated to its
                  * actual rank.
                  */
-                rkmat.truncate_to_rank(k);
+                rkmat.keep_first_n_columns(k);
                 // DEBUG
                 deallog << "Early successful return from ACA+!" << std::endl;
               }
@@ -5354,7 +5354,7 @@ namespace HierBEM
                      * maximum value, the @p rkmat should be truncated to its
                      * actual rank.
                      */
-                    rkmat.truncate_to_rank(k);
+                    rkmat.keep_first_n_columns(k);
                   }
 
                 return;

@@ -781,6 +781,15 @@ namespace HierBEM
                            const double       threshold   = 0.) const;
 
     /**
+     * Keep the first n columns in both two component matrices by resizing.
+     * @pre
+     * @post
+     * @param n
+     */
+    void
+    keep_first_n_columns(const size_type n);
+
+    /**
      * Truncate the RkMatrix to \p new_rank.
      *
      * <dl class="section note">
@@ -2587,6 +2596,27 @@ namespace HierBEM
         << n << "\n";
 
     out << "\n\n";
+  }
+
+
+  template <typename Number>
+  void
+  RkMatrix<Number>::keep_first_n_columns(const size_type n)
+  {
+    AssertIndexRange(n, formal_rank + 1);
+
+    if (n < formal_rank)
+      {
+        A.keep_first_n_columns(n, true);
+        B.keep_first_n_columns(n, true);
+
+        formal_rank = n;
+        rank        = n;
+      }
+    else
+      {
+        // When n == formal_rank, do nothing.
+      }
   }
 
 

@@ -8,6 +8,8 @@
 #ifndef INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 #define INCLUDE_LAPACK_FULL_MATRIX_EXT_H_
 
+#include <deal.II/base/memory_consumption.h>
+
 #include <fstream>
 #include <limits>
 #include <regex>
@@ -2735,42 +2737,53 @@ namespace HierBEM
   {
     AssertIndexRange(n, this->n() + 1);
 
-    const size_type nrows = this->m();
-    const size_type ncols = this->n();
-
-    if (n > 0)
+    if (n == this->n())
       {
-        if (other_columns_removed)
-          {
-            // Make a shallow copy of the current matrix via rvalue reference by
-            // using std::move.
-            TransposeTable<Number> copy(std::move(*this));
-            // Allocate memory and reinitialize the current matrix with several
-            // columns deleted.
-            this->TransposeTable<Number>::reinit(nrows, n);
+        // Do nothing
+      }
+    else
+      {
+        const size_type nrows = this->m();
+        const size_type ncols = this->n();
 
-            for (size_type j = 0; j < n; j++)
+        if (n > 0)
+          {
+            if (other_columns_removed)
               {
-                for (size_type i = 0; i < nrows; i++)
-                  {
-                    (*this)(i, j) = copy(i, j);
-                  }
+                // Make a shallow copy of the current matrix via rvalue
+                // reference by using std::move.
+                TransposeTable<Number> copy(std::move(*this));
+                // Allocate memory and reinitialize the current matrix.
+                this->TransposeTable<Number>::reinit(nrows, n);
+
+                // Copy the first n columns.
+                std::memcpy((void *)this->values.data(),
+                            (void *)&copy(0, 0),
+                            n * nrows * sizeof(Number));
+              }
+            else
+              {
+                // Clear remaining columns.
+                std::memset(this->values.data() + n * nrows,
+                            0,
+                            (ncols - n) * nrows * sizeof(Number));
               }
           }
         else
           {
-            for (size_type j = n; j < ncols; j++)
+            if (other_columns_removed)
               {
-                for (size_type i = 0; i < nrows; i++)
-                  {
-                    (*this)(i, j) = Number();
-                  }
+                // When n==0, the matrix degenerates to a null matrix.
+                this->reinit(0, 0);
+              }
+            else
+              {
+                // Clear all columns.
+                std::memset(this->values.data(),
+                            0,
+                            ncols * nrows * sizeof(Number));
               }
           }
-      }
-    else
-      {
-        this->reinit(0, 0);
       }
   }
 
@@ -5009,13 +5022,12 @@ namespace HierBEM
   std::size_t
   LAPACKFullMatrixExt<Number>::memory_consumption() const
   {
-    return TransposeTable<Number>::memory_consumption() +
-           this->ipiv.capacity() * sizeof(types::blas_int) +
-           this->iwork.capacity() * sizeof(types::blas_int) +
-           this->work.capacity() * sizeof(Number) +
-           this->tau.capacity() *
-             sizeof(typename numbers::NumberTraits<Number>::real_type) +
-           sizeof(LAPACKSupport::State) + sizeof(LAPACKSupport::Property);
+    return sizeof(*this) - sizeof(LAPACKFullMatrix<Number>) +
+           LAPACKFullMatrix<Number>::memory_consumption() + sizeof(state) +
+           sizeof(property) + MemoryConsumption::memory_consumption(tau) +
+           MemoryConsumption::memory_consumption(work) +
+           MemoryConsumption::memory_consumption(iwork) +
+           MemoryConsumption::memory_consumption(ipiv);
   }
 
 
