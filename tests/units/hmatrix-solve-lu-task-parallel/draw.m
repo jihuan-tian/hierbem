@@ -1,7 +1,7 @@
 function draw(trial_no)
   load_packages;
   load(cstrcat("hmatrix-solve-lu-task-parallel-", num2str(trial_no), ".output"));
-  [hmat_rel_err, x_octave, x_rel_err, hmat_factorized_rel_err] = process(trial_no);
+  [M_cond, hmat_rel_err, x_octave, x_rel_err, hmat_factorized_rel_err] = process(trial_no);
 
   figure;
   hold on;

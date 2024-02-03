@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <openblas-pthread/cblas.h>
 
 #include <fstream>
 
@@ -15,6 +16,11 @@ run_hmatrix_solve_cholesky_task_parallel(const unsigned int trial_no)
 {
   std::ofstream ofs(std::string("hmatrix-solve-cholesky-task-parallel-") +
                     std::to_string(trial_no) + std::string(".output"));
+
+  /**
+   * @internal Set number of threads used for OpenBLAS.
+   */
+  openblas_set_num_threads(1);
 
   LAPACKFullMatrixExt<double> M;
   std::ifstream               in(std::string("M") + std::to_string(trial_no) +

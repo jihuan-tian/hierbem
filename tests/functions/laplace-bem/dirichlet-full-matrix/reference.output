@@ -1,27 +1,3 @@
-=== Volume mesh information ===
-Manifold dimension: 3
-Space dimension: 3
-No. of cells: 63
-No. of active cells: 56
-No. of faces: 204
-No. of active faces: 180
-No. of vertices: 79
-=== Surface mesh information ===
-Manifold dimension: 2
-Space dimension: 3
-No. of cells: 30
-No. of active cells: 24
-No. of faces: 60
-No. of active faces: 48
-No. of vertices: 26
-=== DoF information ===
-Number of DoFs in Dirichlet space: 26
-Number of DoFs in Neumann space: 24
-=== Assemble scaled mass matrix ===
-=== Assemble DLP matrix ===
-=== Assemble SLP matrix ===
-=== Solve problem ===
-=== Output results ===
 # name: solution
 # type: matrix
 # rows: 24

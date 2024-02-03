@@ -1,0 +1,12 @@
+sizeof(Table<2, int>): 152
+sizeof(Table<2, double>): 152
+sizeof(FullMatrix<int>): 152
+sizeof(FullMatrix<double>): 152
+sizeof(LAPACKFullMatrix<int>): 408
+sizeof(LAPACKFullMatrix<double>): 408
+t1: 192
+t2: 192
+m1: 192
+m2: 992
+l1: 192
+l2: 992

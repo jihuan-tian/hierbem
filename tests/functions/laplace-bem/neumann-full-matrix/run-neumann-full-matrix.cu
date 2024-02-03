@@ -1,13 +1,3 @@
-/**
- * \file laplace-bem-neumann-full-matrix.cc
- * \brief Verify solving the Laplace problem with Neumann boundary condition
- * using full matrix based BEM.
- *
- * \ingroup testers
- * \author Jihuan Tian
- * \date 2022-09-19
- */
-
 #include <deal.II/base/logstream.h>
 
 #include <fstream>
@@ -66,17 +56,15 @@ private:
   double   model_sphere_radius;
 };
 
-int
-main(int argc, char *argv[])
+void
+run_neumann_full_matrix()
 {
   // Write run-time logs to file
-  std::ofstream ofs("hierbem.log");
+  std::ofstream ofs("neumann-full-matrix.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
   deallog.attach(ofs);
-
-  LogStream::Prefix prefix_string("HierBEM");
 
   const unsigned int dim      = 2;
   const unsigned int spacedim = 3;
@@ -89,7 +77,8 @@ main(int argc, char *argv[])
     1,
     LaplaceBEM<dim, spacedim>::ProblemType::NeumannBCProblem,
     is_interior_problem,
-    MultithreadInfo::n_cores());
+    MultithreadInfo::n_threads());
+  bem.set_project_name("neumann-full-matrix");
 
   /**
    * @internal Set the Dirac source location according to interior or exterior
@@ -109,30 +98,21 @@ main(int argc, char *argv[])
   const Point<spacedim> center(0, 0, 0);
   const double          radius(1);
 
-  if (argc > 1)
-    {
-      bem.read_volume_mesh(argv[1]);
-    }
-  else
-    {
-      Triangulation<spacedim> tria;
-      // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
-      GridGenerator::hyper_ball(tria, center, radius);
-      tria.refine_global(1);
+  Triangulation<spacedim> tria;
+  // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
+  GridGenerator::hyper_ball(tria, center, radius);
+  tria.refine_global(1);
 
-      bem.assign_volume_triangulation(std::move(tria), true);
+  bem.assign_volume_triangulation(std::move(tria), true);
 
-      Triangulation<dim, spacedim>           surface_tria;
-      const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
-      surface_tria.set_manifold(0, ball_surface_manifold);
+  Triangulation<dim, spacedim>           surface_tria;
+  const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
+  surface_tria.set_manifold(0, ball_surface_manifold);
 
-      bem.assign_surface_triangulation(std::move(surface_tria), true);
-    }
+  bem.assign_surface_triangulation(std::move(surface_tria), true);
 
   NeumannBC neumann_bc(source_loc, center, radius);
   bem.assign_neumann_bc(neumann_bc);
 
   bem.run();
-
-  return 0;
 }

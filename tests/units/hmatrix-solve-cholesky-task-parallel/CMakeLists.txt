@@ -16,6 +16,7 @@ target_compile_definitions(${_target}
 
 target_link_libraries(
   ${_target}
+  openblas
   hbem_octave_wrapper
   generic_tools
   boost_program_options
@@ -39,3 +40,9 @@ add_custom_command(
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/process.m
           ${CMAKE_CURRENT_BINARY_DIR}/process.m)
+
+add_custom_command(
+  TARGET ${_target}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/plot_m_cond.m
+          ${CMAKE_CURRENT_BINARY_DIR}/plot_m_cond.m)

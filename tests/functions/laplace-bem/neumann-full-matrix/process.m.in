@@ -1,0 +1,9 @@
+clear all;
+## Load reference solution.
+load "@CMAKE_CURRENT_SOURCE_DIR@/reference.output";
+solution_ref = solution;
+## Load computation solution
+load "neumann-full-matrix.output";
+
+solution_l2_rel_err = norm(solution - solution_ref) / norm(solution_ref)
+solution_inf_rel_err = norm(solution - solution_ref, Inf) / norm(solution_ref, Inf)

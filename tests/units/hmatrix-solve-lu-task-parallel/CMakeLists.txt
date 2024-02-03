@@ -16,6 +16,7 @@ target_compile_definitions(${_target}
 
 target_link_libraries(
   ${_target}
+  openblas
   hbem_octave_wrapper
   generic_tools
   boost_program_options

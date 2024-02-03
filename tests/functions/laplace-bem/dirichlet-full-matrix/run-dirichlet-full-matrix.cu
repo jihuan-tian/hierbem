@@ -1,12 +1,4 @@
-/**
- * \file laplace-bem-dirichlet-full-matrix.cc
- * \brief Verify solving the Laplace problem with Dirichlet boundary condition
- * using full matrix based BEM.
- *
- * \ingroup testers
- * \author Jihuan Tian
- * \date 2022-06-22
- */
+#include <deal.II/base/logstream.h>
 
 #include <fstream>
 #include <iostream>
@@ -53,11 +45,11 @@ private:
   Point<3> x0;
 };
 
-int
-main(int argc, char *argv[])
+void
+run_dirichlet_full_matrix()
 {
   // Write run-time logs to file
-  std::ofstream ofs("hierbem.log");
+  std::ofstream ofs("dirichlet-full-matrix.log");
   deallog.pop();
   deallog.depth_console(0);
   deallog.depth_file(5);
@@ -74,7 +66,8 @@ main(int argc, char *argv[])
     1,
     LaplaceBEM<dim, spacedim>::ProblemType::DirichletBCProblem,
     is_interior_problem,
-    MultithreadInfo::n_cores());
+    MultithreadInfo::n_threads());
+  bem.set_project_name("dirichlet-full-matrix");
 
   // When the problem type is interior, the source point charge should be placed
   // outside the sphere.
@@ -92,30 +85,21 @@ main(int argc, char *argv[])
   const Point<spacedim> center(0, 0, 0);
   const double          radius(1);
 
-  if (argc > 1)
-    {
-      bem.read_volume_mesh(argv[1]);
-    }
-  else
-    {
-      Triangulation<spacedim> tria;
-      // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
-      GridGenerator::hyper_ball(tria, center, radius);
-      tria.refine_global(1);
+  Triangulation<spacedim> tria;
+  // The manifold_id is set to 0 on the boundary faces in @p hyper_ball.
+  GridGenerator::hyper_ball(tria, center, radius);
+  tria.refine_global(1);
 
-      bem.assign_volume_triangulation(std::move(tria), true);
+  bem.assign_volume_triangulation(std::move(tria), true);
 
-      Triangulation<dim, spacedim>           surface_tria;
-      const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
-      surface_tria.set_manifold(0, ball_surface_manifold);
+  Triangulation<dim, spacedim>           surface_tria;
+  const SphericalManifold<dim, spacedim> ball_surface_manifold(center);
+  surface_tria.set_manifold(0, ball_surface_manifold);
 
-      bem.assign_surface_triangulation(std::move(surface_tria), true);
-    }
+  bem.assign_surface_triangulation(std::move(surface_tria), true);
 
   DirichletBC dirichlet_bc(source_loc);
   bem.assign_dirichlet_bc(dirichlet_bc);
 
   bem.run();
-
-  return 0;
 }
