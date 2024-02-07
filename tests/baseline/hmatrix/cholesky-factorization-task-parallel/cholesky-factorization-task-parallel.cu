@@ -35,6 +35,8 @@ struct CmdOpts
   RefineType   refine_type;
   unsigned int min_refines;
   unsigned int max_refines;
+  double boundary_rtol;
+  bool export_mesh;
 };
 
 CmdOpts
@@ -48,7 +50,9 @@ parse_cmdline(int argc, char *argv[])
     ("help,h", "show help message")
     ("refine-type,T", po::value<std::string>()->default_value("boundary"), "refinement type (global or boundary)")
     ("min-refines,f", po::value<unsigned int>()->default_value(1), "minimum number of refinements")
-    ("max-refines,t", po::value<unsigned int>()->default_value(5), "maximum number of refinements");
+    ("max-refines,t", po::value<unsigned int>()->default_value(5), "maximum number of refinements")
+    ("boundary-rtol,r", po::value<double>()->default_value(1e-6), "relative tolerance for boundary refinement")
+    ("export-mesh,e", po::value<bool>()->default_value(false), "export mesh to VTK file");
   // clang-format on
 
   po::variables_map vm;
@@ -78,8 +82,21 @@ parse_cmdline(int argc, char *argv[])
 
   opts.min_refines = vm["min-refines"].as<unsigned int>();
   opts.max_refines = vm["max-refines"].as<unsigned int>();
+  opts.boundary_rtol = vm["boundary-rtol"].as<double>();
+  opts.export_mesh = vm["export-mesh"].as<bool>();
 
   return opts;
+}
+
+template <int spacedim>
+void
+export_mesh_to_vtk(Triangulation<spacedim> &tria, const std::string &filename)
+{
+  GridOut       grid_out;
+  std::ofstream out(filename);
+  grid_out.write_vtk(tria, out);
+  std::cout << "Volume grid written to " << filename << " ("
+            << tria.n_active_cells() << " cells)" << std::endl;
 }
 
 template <int spacedim>
@@ -87,7 +104,6 @@ void
 refine_boundary_mesh_for_two_spheres(Triangulation<spacedim> &tria,
                                      const double             inter_distance,
                                      const double             radius,
-                                     const std::string       &vtk_filename = "",
                                      const double             rtol = 1e-6)
 {
   const auto left_ball_center  = Point<spacedim>(-inter_distance / 2.0, 0, 0);
@@ -111,20 +127,6 @@ refine_boundary_mesh_for_two_spheres(Triangulation<spacedim> &tria,
         }
     }
   tria.execute_coarsening_and_refinement();
-
-  // Write out the refined mesh
-  if (vtk_filename.size() > 0)
-    {
-      auto flags = GridOutFlags::Vtk();
-
-      GridOut grid_out;
-      grid_out.set_flags(flags);
-
-      std::ofstream out(vtk_filename);
-      grid_out.write_vtk(tria, out);
-      std::cout << "Volume grid written to " << vtk_filename << " ("
-                << tria.n_active_cells() << " cells)" << std::endl;
-    }
 }
 
 template <int spacedim>
@@ -282,7 +284,14 @@ main(int argc, char *argv[])
         }
       else
         {
-          refine_boundary_mesh_for_two_spheres(tria, inter_distance, radius);
+          refine_boundary_mesh_for_two_spheres(tria, inter_distance, radius, opts.boundary_rtol);
+        }
+
+      if(opts.export_mesh)
+        {
+          auto filename = std::string("two-spheres-refine-") +
+                            std::to_string(i + 1) + std::string(".vtk");
+          export_mesh_to_vtk(tria, filename);
         }
 
       if (i + 1 < opts.min_refines)
