@@ -3137,11 +3137,11 @@ other.
   charts $(U,x)$ and $(V,y)$, the orientation of the tangent space $M_p^n$ can also be
   determined from the basis $(\vect{\pdiff}y^1,\cdots,\vect{\pdiff}y^n)$. According to the
   relationship between $\vect{\pdiff}x$ and $\vect{\pdiff}y$ in Equation
-  (\ref{eq:tangent-space-bases-relation}), if the Jacobian map $\frac{\pdiff x}{\pdiff y}$
-  is non-singular, according to Definition \ref{def:vector-space-orientation}, the two
-  orientations are equivalent. If all pairs of overlapping coordinate charts have
-  equivalent orientations, the manifold $M^n$ is orientable and has a definite
-  orientation.
+  (\ref{eq:tangent-space-bases-relation}), if the Jacobian determinant
+  $\abs{\frac{\pdiff x}{\pdiff y}}$ is positive, according to Definition
+  \ref{def:vector-space-orientation}, the two orientations are equivalent. If all pairs of
+  overlapping coordinate charts have equivalent orientations, the manifold $M^n$ is
+  orientable and has a definite orientation.
 \end{Definition}
 
 \begin{Definition}[Orientation function]
@@ -4262,13 +4262,16 @@ laplacian_f : expand(
 Sauter quadrature is used to compute the singular double surface integral in Galerkin BEM.
 Let $k(x,y)$ be the kernel function associated with a boundary integral operator $A$. Let
 $\psi(x)$ be a function in the test space and $\varphi(y)$ be a function in the ansatz
-space. The bilinear form with respect to $A$ is $b_A$:
+space \footnote{As a convention, the test space is related to the field point and its
+  independent variable is represented as $x$; the ansatz space is related to the source
+  point and its independent variable is represented as $y$.}. The bilinear form with
+respect to $A$ is $b_A$:
 \begin{equation}
   \label{eq:bem-bilinear-form-general}
   b_A(\psi, \varphi) = \int_{\Gamma}\psi(x)\int_{\Gamma}k(x,y)\varphi(y) \intd s_y \intd s_x,
 \end{equation}
 which appears in the variational formulation of boundary integral equations. $\varphi(y)$
-can either be the unknown function to be solved or a given distribution of boundary data.
+can be either the unknown function to be solved or a given distribution of boundary data.
 
 We use finite dimensional functional spaces to approximate the original test and ansatz
 spaces of infinite dimensions. Let $\left\{ \psi_i(x) \right\}_{i=1}^m$ be the basis of
@@ -4326,9 +4329,11 @@ equation is discretized into $m$ independent equations.
 \section{Basis functions and shape functions}
 
 Usually, functions with small compact support, i.e. the pre-image of non-zero function
-values is confined in a bounded and closed domain, are adopted as basis functions for both
-test and ansatz spaces. This means a basis function only span a few cells in the mesh (see
-Figure \ref{fig:basis-function-with-compact-support}).
+values is confined in a \emph{bounded and closed} domain \footnote{According to functional
+  analysis, the bounded and closed property of a set in a finite dimensional space is
+  equivalent to compactness.}, are adopted as basis functions for both test and ansatz
+spaces. This means a basis function only span a few cells in the mesh (see Figure
+\ref{fig:basis-function-with-compact-support}).
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.5\textwidth, height=\textheight,
@@ -4339,12 +4344,12 @@ Figure \ref{fig:basis-function-with-compact-support}).
 Taking Lagrange finite element \texttt{FE\_Q} as example, the construction of a basis
 function needs the following steps:
 \begin{enumerate}
-\item Define a bunch of polynomials $\left\{ \hat{P}_k(\hat{x}) \right\}_{k=1}^N$ on a
-  standard cell $\hat{\tau}=[0,1]^2$. $\hat{\tau}$ is called the reference cell and the
-  polynomials are called shape functions. Each shape function $\hat{P}_k$ is associated
-  with a support point $\hat{p}_k$ in the reference cell, at which $\hat{P}_k$ is
-  evaluated to 1. At the support points of the other shape functions, $\hat{P}_k$ is zero,
-  i.e. $\hat{P}_k(\hat{p}_{l}) = \delta_k^l$.
+\item Define $N$ polynomials $\left\{ \hat{P}_k(\hat{x}) \right\}_{k=1}^N$ on a standard
+  cell $\hat{\tau}=[0,1]^2$. $\hat{\tau}$ is called the reference cell and the polynomials
+  are called shape functions. Each shape function $\hat{P}_k$ is associated with a support
+  point $\hat{p}_k$ in the reference cell, at which $\hat{P}_k$ is evaluated to 1. At the
+  support points of the other shape functions, $\hat{P}_k$ is zero, i.e.
+  $\hat{P}_k(\hat{p}_{l}) = \delta_k^l$.
 \item For each real cell $\tau$ in the mesh, there is a map
   $\chi_{\tau}: \hat{\tau} \rightarrow \tau$ and its inverse
   $\chi_{\tau}^{-1}: \tau \rightarrow \hat{\tau}$. Therefore, the shape functions
