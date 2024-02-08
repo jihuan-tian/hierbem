@@ -8,6 +8,8 @@
 
 #include <deal.II/base/table_handler.h>
 
+#include <boost/program_options.hpp>
+
 #include <cuda_runtime.h>
 #include <openblas-pthread/cblas.h>
 
@@ -19,6 +21,110 @@
 
 using namespace dealii;
 using namespace HierBEM;
+namespace po = boost::program_options;
+
+enum RefineType
+{
+  GLOBAL,
+  BOUNDARY
+};
+
+struct CmdOpts
+{
+  RefineType   refine_type;
+  unsigned int min_refines;
+  unsigned int max_refines;
+};
+
+CmdOpts
+parse_cmdline(int argc, char *argv[])
+{
+  CmdOpts                 opts;
+  po::options_description desc("Allowed options");
+
+  // clang-format off
+  desc.add_options()
+    ("help,h", "show help message")
+    ("refine-type,T", po::value<std::string>()->default_value("boundary"), "refinement type (global or boundary)")
+    ("min-refines,f", po::value<unsigned int>()->default_value(1), "minimum number of refinements")
+    ("max-refines,t", po::value<unsigned int>()->default_value(5), "maximum number of refinements");
+  // clang-format on
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help"))
+    {
+      std::cout << desc << std::endl;
+      std::exit(EXIT_SUCCESS);
+    }
+
+  const std::string refine_type = vm["refine-type"].as<std::string>();
+  if (refine_type == "global")
+    {
+      opts.refine_type = RefineType::GLOBAL;
+    }
+  else if (refine_type == "boundary")
+    {
+      opts.refine_type = RefineType::BOUNDARY;
+    }
+  else
+    {
+      std::cerr << "Invalid refinement type: " << refine_type << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+
+  opts.min_refines = vm["min-refines"].as<unsigned int>();
+  opts.max_refines = vm["max-refines"].as<unsigned int>();
+
+  return opts;
+}
+
+template <int spacedim>
+void
+refine_boundary_mesh_for_two_spheres(Triangulation<spacedim> &tria,
+                                     const double             inter_distance,
+                                     const double             radius,
+                                     const std::string       &vtk_filename = "",
+                                     const double             rtol = 1e-6)
+{
+  const auto left_ball_center  = Point<spacedim>(-inter_distance / 2.0, 0, 0);
+  const auto right_ball_center = Point<spacedim>(inter_distance / 2.0, 0, 0);
+
+  // Mark the cells near the boundary of two spheres and refine them only
+  for (const auto &cell : tria.active_cell_iterators())
+    {
+      for (const auto &v : cell->vertex_indices())
+        {
+          const double distance_to_left_ball =
+            left_ball_center.distance(cell->vertex(v));
+          const double distance_to_right_ball =
+            right_ball_center.distance(cell->vertex(v));
+          if (fabs(distance_to_left_ball - radius) <= rtol * radius ||
+              fabs(distance_to_right_ball - radius) <= rtol * radius)
+            {
+              cell->set_refine_flag();
+              break;
+            }
+        }
+    }
+  tria.execute_coarsening_and_refinement();
+
+  // Write out the refined mesh
+  if (vtk_filename.size() > 0)
+    {
+      auto flags = GridOutFlags::Vtk();
+
+      GridOut grid_out;
+      grid_out.set_flags(flags);
+
+      std::ofstream out(vtk_filename);
+      grid_out.write_vtk(tria, out);
+      std::cout << "Volume grid written to " << vtk_filename << " ("
+                << tria.n_active_cells() << " cells)" << std::endl;
+    }
+}
 
 template <int spacedim>
 void
@@ -103,8 +209,10 @@ extract_surface_mesh_for_two_spheres(
 }
 
 int
-main()
+main(int argc, char *argv[])
 {
+  CmdOpts opts = parse_cmdline(argc, argv);
+
   /**
    * @internal Set number of threads used for OpenBLAS.
    */
@@ -163,14 +271,25 @@ main()
   const double       max_rank = 5;
   const double       epsilon  = 0.01;
 
-  const unsigned int number_of_refinement = 5;
-  TableHandler       table;
-  for (unsigned int i = 0; i < number_of_refinement; i++)
+  TableHandler table;
+  for (unsigned int i = 0; i < opts.max_refines; i++)
     {
-      std::cout << "=== Mesh refinement #" << i + 1 << std::endl;
-
       // Refine the volume mesh.
-      tria.refine_global(1);
+      if (opts.refine_type == RefineType::GLOBAL)
+        {
+          tria.refine_global(1);
+        }
+      else
+        {
+          refine_boundary_mesh_for_two_spheres(tria, inter_distance, radius);
+        }
+
+      if (i + 1 < opts.min_refines)
+        {
+          continue;
+        }
+
+      std::cout << "=== Mesh refinement #" << i + 1 << std::endl;
 
       // Generate surface mesh from the volume mesh. N.B. Before the extraction,
       // the surface mesh generated from previous refinement should be cleared.
