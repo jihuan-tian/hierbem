@@ -134,7 +134,7 @@ private:
   /**
    * 2D memorizing matrix to underlying storage index mapping.
    *
-   * As the algorithm traverse memorizing matrix primarily in partition-wise
+   * As the algorithm traverse memorizing matrix primarily in starting index
    * order, the column-wise storage is more cache-friendly than the row-wise
    * (~10x faster).
    *
