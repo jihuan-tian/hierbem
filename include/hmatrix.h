@@ -3618,7 +3618,7 @@ namespace HierBEM
      * Lock to prevent simultaneous execution of update tasks on a same
      * \hmatnode.
      */
-    std::mutex update_lock;
+    std::recursive_mutex update_lock;
   };
 
 
@@ -12046,7 +12046,8 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
+            std::unique_lock<std::recursive_mutex> ul(M0.update_lock,
+                                                      std::defer_lock);
             if (&M0 == &M)
               {
                 ul.lock();
@@ -12084,7 +12085,8 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
+            std::unique_lock<std::recursive_mutex> ul(M0.update_lock,
+                                                      std::defer_lock);
             if (&M0 == &M)
               {
                 ul.lock();
@@ -13276,7 +13278,8 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
+            std::unique_lock<std::recursive_mutex> ul(M0.update_lock,
+                                                      std::defer_lock);
             if (&M0 == &M)
               {
                 ul.lock();
@@ -13314,7 +13317,8 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
+            std::unique_lock<std::recursive_mutex> ul(M0.update_lock,
+                                                      std::defer_lock);
             if (&M0 == &M)
               {
                 ul.lock();
@@ -24185,20 +24189,22 @@ namespace HierBEM
                                    *(row_index_range),
                                    *(col_index_range));
 
-            /**
-             * When we come to the addition into a leaf \hmatnode, the mutex
-             * should be locked.
-             */
-            std::lock_guard<std::mutex> lg(update_lock);
-            /**
-             * \alert{2022-05-06 The explicit type cast here for
-             * @p fullmatrix_from_rk is mandatory, otherwise the compiler will
-             * complain about the ambiguity during looking for a matched
-             * overloaded function of @p LAPACKFullMatrixExt::add.}
-             */
-            fullmatrix->add((const LAPACKFullMatrixExt<Number> &)
-                              fullmatrix_from_rk,
-                            is_result_matrix_store_tril_only);
+            {
+              /**
+               * When we come to the addition into a leaf \hmatnode, the mutex
+               * should be locked.
+               */
+              std::lock_guard<std::recursive_mutex> lg(update_lock);
+              /**
+               * \alert{2022-05-06 The explicit type cast here for
+               * @p fullmatrix_from_rk is mandatory, otherwise the compiler will
+               * complain about the ambiguity during looking for a matched
+               * overloaded function of @p LAPACKFullMatrixExt::add.}
+               */
+              fullmatrix->add((const LAPACKFullMatrixExt<Number> &)
+                                fullmatrix_from_rk,
+                              is_result_matrix_store_tril_only);
+            }
 
             break;
           }
@@ -24225,12 +24231,14 @@ namespace HierBEM
                                                      B_row_index_range,
                                                      B_col_index_range);
 
-            /**
-             * When we come to the addition into a leaf \hmatnode, the mutex
-             * should be locked.
-             */
-            std::lock_guard<std::mutex> lg(update_lock);
-            this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
+            {
+              /**
+               * When we come to the addition into a leaf \hmatnode, the mutex
+               * should be locked.
+               */
+              std::lock_guard<std::recursive_mutex> lg(update_lock);
+              this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
+            }
 
             break;
           }
