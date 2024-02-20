@@ -10,6 +10,8 @@
 
 #include "cluster_tree.h"
 
+using namespace HierBEM;
+
 int
 main()
 {

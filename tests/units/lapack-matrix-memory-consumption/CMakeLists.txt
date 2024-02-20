@@ -1,6 +1,6 @@
-SET(TEST_TARGET lapack-matrix-memory-consumption)
+set(TEST_TARGET lapack-matrix-memory-consumption)
 
 # Link TEST_TARGET to my generic_tools library.
-SET(TEST_LIBRARIES generic_tools boost_program_options)
+set(TEST_LIBRARIES generic_tools)
 
-DEAL_II_PICKUP_TESTS()
+deal_ii_pickup_tests()

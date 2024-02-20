@@ -223,14 +223,6 @@ namespace HierBEM
   }
 
 
-  template <typename T>
-  std::size_t
-  memory_consumption_of_vector(const std::vector<T> &v)
-  {
-    return v.capacity() * sizeof(T);
-  }
-
-
   /**
    * Check the equality of the two points using raw comparison instead of
    * numerical comparison.

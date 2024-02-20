@@ -14,6 +14,7 @@
  * @{
  */
 
+#include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/types.h>
 
 #include <algorithm>
@@ -616,6 +617,12 @@ namespace HierBEM
      */
     bool
     is_large(unsigned int n_min) const;
+
+    /**
+     * Estimate the memory consumption of the cluster.
+     */
+    std::size_t
+    memory_consumption() const;
 
   private:
     /**
@@ -1840,6 +1847,19 @@ namespace HierBEM
       {
         return false;
       }
+  }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  Cluster<spacedim, Number>::memory_consumption() const
+  {
+    return sizeof(*this) +
+           (dealii::MemoryConsumption::memory_consumption(index_set) -
+            sizeof(index_set)) +
+           (dealii::MemoryConsumption::memory_consumption(index_range) -
+            sizeof(index_range)) +
+           (bbox.memory_consumption() - sizeof(bbox));
   }
 
 

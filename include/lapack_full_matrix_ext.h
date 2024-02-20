@@ -1224,16 +1224,6 @@ namespace HierBEM
     std::size_t
     memory_consumption() const;
 
-    /**
-     * Determine the memory consumption for the core data stored in this object,
-     * which is calculated by counting the number of data values then multiplied
-     * by the size of the value type.
-     *
-     * @return
-     */
-    std::size_t
-    memory_consumption_for_core_data() const;
-
   private:
     LAPACKSupport::State    state;
     LAPACKSupport::Property property;
@@ -5022,20 +5012,13 @@ namespace HierBEM
   std::size_t
   LAPACKFullMatrixExt<Number>::memory_consumption() const
   {
-    return sizeof(*this) - sizeof(LAPACKFullMatrix<Number>) +
-           LAPACKFullMatrix<Number>::memory_consumption() + sizeof(state) +
-           sizeof(property) + MemoryConsumption::memory_consumption(tau) +
-           MemoryConsumption::memory_consumption(work) +
-           MemoryConsumption::memory_consumption(iwork) +
-           MemoryConsumption::memory_consumption(ipiv);
-  }
-
-
-  template <typename Number>
-  std::size_t
-  LAPACKFullMatrixExt<Number>::memory_consumption_for_core_data() const
-  {
-    return this->m() * this->n() * sizeof(Number);
+    return sizeof(*this) +
+           (LAPACKFullMatrix<Number>::memory_consumption() -
+            sizeof(LAPACKFullMatrix<Number>)) +
+           (MemoryConsumption::memory_consumption(tau) - sizeof(tau)) +
+           (MemoryConsumption::memory_consumption(work) - sizeof(work)) +
+           (MemoryConsumption::memory_consumption(iwork) - sizeof(iwork)) +
+           (MemoryConsumption::memory_consumption(ipiv) - sizeof(ipiv));
   }
 } // namespace HierBEM
 

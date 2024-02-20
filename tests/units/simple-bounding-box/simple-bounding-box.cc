@@ -14,11 +14,11 @@
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
 
-#include <simple_bounding_box.h>
-
 #include <fstream>
 
+#include "simple_bounding_box.h"
 
+using namespace HierBEM;
 using namespace dealii;
 
 template <int dim>
@@ -37,8 +37,8 @@ print_bbox_info(const SimpleBoundingBox<dim> &bbox)
   deallog << "Point (" << p1 << ") is "
           << (bbox.point_inside(p1) ? "inside" : "outside") << " the box\n";
   deallog << "Point (" << p2 << ") is "
-          << (bbox.point_inside(p2) ? "inside" : "outside") << " the box"
-          << std::endl;
+          << (bbox.point_inside(p2) ? "inside" : "outside") << " the box\n";
+  deallog << "Memory consumption: " << bbox.memory_consumption() << std::endl;
 }
 
 int

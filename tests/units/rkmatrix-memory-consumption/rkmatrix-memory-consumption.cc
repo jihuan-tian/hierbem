@@ -11,6 +11,8 @@
 
 #include "rkmatrix.h"
 
+using namespace HierBEM;
+
 int
 main()
 {
@@ -20,8 +22,8 @@ main()
   std::cout << "M=\n";
   M.print_formatted(std::cout, 5, false, 10, "0");
 
-  std::vector<unsigned int> tau{0, 2};
-  std::vector<unsigned int> sigma{1, 2, 3};
+  std::array<types::global_dof_index, 2> tau{{0, 2}};
+  std::array<types::global_dof_index, 2> sigma{{1, 4}};
 
   RkMatrix<double> A(tau, sigma, 2, M);
   std::cout << "Rank-2 matrix:\n";
@@ -33,9 +35,6 @@ main()
             << "\n";
   std::cout << "Memory consumption of rank-k matrix A: "
             << A.memory_consumption() << std::endl;
-
-  std::cout << "Coarse memory consumption of rank-k matrix A: "
-            << A.memory_consumption_for_core_data() << std::endl;
 
   return 0;
 }

@@ -3,6 +3,8 @@
 
 #include "tree.h"
 
+using namespace HierBEM;
+
 /**
  * Create an example tree containing integers as below. The tree will be
  * constructed in a bottom-up approach.

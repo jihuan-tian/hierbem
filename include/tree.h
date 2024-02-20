@@ -16,6 +16,7 @@
  */
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/memory_consumption.h>
 
 #include <algorithm>
 #include <array>
@@ -207,6 +208,13 @@ namespace HierBEM
      */
     bool
     operator==(const BinaryTreeNode<T> &node) const;
+
+    /**
+     * Estimate the memory consumption of the node itself and its contained
+     * data.
+     */
+    std::size_t
+    memory_consumption() const;
 
   private:
     T            data;
@@ -474,6 +482,16 @@ namespace HierBEM
     return (this->data == node.data);
   }
 
+
+  template <typename T>
+  std::size_t
+  BinaryTreeNode<T>::memory_consumption() const
+  {
+    return sizeof(*this) +
+           (dealii::MemoryConsumption::memory_consumption(data) - sizeof(data));
+  }
+
+
   /**
    * The splitting mode for a tree node, which can be cross split (\p
    * CrossSplitMode), horizontal split (\p HorizontalSplitMode), vertical split
@@ -678,6 +696,13 @@ namespace HierBEM
      */
     bool
     operator==(const TreeNode<T, N> &node) const;
+
+    /**
+     * Estimate the memory consumption of the node itself and its contained
+     * data.
+     */
+    std::size_t
+    memory_consumption() const;
 
   private:
     T            data;
@@ -929,6 +954,18 @@ namespace HierBEM
   }
 
 
+  template <typename T, std::size_t N>
+  std::size_t
+  TreeNode<T, N>::memory_consumption() const
+  {
+    return sizeof(*this) +
+           (dealii::MemoryConsumption::memory_consumption(data) -
+            sizeof(data)) +
+           (dealii::MemoryConsumption::memory_consumption(children) -
+            sizeof(children));
+  }
+
+
   /**
    * Create a new binary tree node from the provided data.
    */
@@ -1098,6 +1135,7 @@ namespace HierBEM
       }
   }
 
+
   /**
    * Pre-order traverse of a binary tree.
    */
@@ -1129,6 +1167,25 @@ namespace HierBEM
         Preorder(p->Right(), operate);
       }
   }
+
+
+  /**
+   * Pre-order traverse of a binary tree and accumulate the memory consumption
+   * from each node.
+   */
+  template <typename T, typename Number>
+  void
+  Preorder_for_memory_consumption(const BinaryTreeNode<T> *p,
+                                  Number                  &accumulated_results)
+  {
+    if (p != nullptr)
+      {
+        accumulated_results += p->memory_consumption();
+        Preorder_for_memory_consumption(p->Left(), accumulated_results);
+        Preorder_for_memory_consumption(p->Right(), accumulated_results);
+      }
+  }
+
 
   /**
    * Pre-order traverse of a tree.
@@ -1172,6 +1229,32 @@ namespace HierBEM
           }
       }
   }
+
+
+  /**
+   * Pre-order traverse of a tree and accumulate the memory consumption from
+   * each node.
+   */
+  template <typename T, std::size_t N, typename Number>
+  void
+  Preorder_for_memory_consumption(TreeNode<T, N> *p,
+                                  Number         &accumulated_results)
+  {
+    if (p != nullptr)
+      {
+        accumulated_results += p->memory_consumption();
+
+        /**
+         * Recursively call the function itself on each child.
+         */
+        for (std::size_t i = 0; i < N; i++)
+          {
+            Preorder_for_memory_consumption(p->get_child_pointer(i),
+                                            accumulated_results);
+          }
+      }
+  }
+
 
   /**
    * In-order traverse of a binary tree.

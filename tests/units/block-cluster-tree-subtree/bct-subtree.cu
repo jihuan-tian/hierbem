@@ -11,7 +11,9 @@
 #include <iostream>
 
 #include "block_cluster_tree.h"
-#include "debug_tools.h"
+#include "debug_tools.hcu"
+
+using namespace HierBEM;
 
 int
 main()
@@ -60,6 +62,10 @@ main()
   std::ofstream out2("bct2.dat");
   block_cluster_tree2.write_leaf_set(out2);
   out2.close();
+
+  // Print out leaf sets for comparison.
+  block_cluster_tree1.write_leaf_set(std::cout);
+  block_cluster_tree2.write_leaf_set(std::cout);
 
   return 0;
 }

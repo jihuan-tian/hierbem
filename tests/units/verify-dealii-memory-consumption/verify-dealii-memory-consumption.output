@@ -1,0 +1,3 @@
+| Type                                     | sizeof | Capacity | Memory consumption | Data size | 
+| std::vector<int, std::allocator<int> >   | 24     | 10       | 64                 | 40        | 
+| std::vector<int*, std::allocator<int*> > | 24     | 16       | 152                | 128       | 

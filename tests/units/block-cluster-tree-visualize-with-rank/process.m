@@ -1,5 +1,7 @@
+clear all;
+
 load_packages;
 
-plot_bct_struct("bct-visualize-with-rank.output");
+plot_bct_struct("bct.dat");
 title("Hierachical matrix structure with rank displayed");
-PrintGCF("bct-struct-with-ranks");
+

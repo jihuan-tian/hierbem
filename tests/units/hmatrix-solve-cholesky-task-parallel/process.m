@@ -1,5 +1,5 @@
 function [MM_cond, hmat_rel_err, product_hmat_rel_err, x_octave, x_rel_err, hmat_factorized_rel_err] = process(trial_no)
-  load (cstrcat("hmatrix-solve-cholesky-task-parallel-", num2str(trial_no), ".output"));
+  load(cstrcat("hmatrix-solve-cholesky-task-parallel-", num2str(trial_no), ".output"));
   load(cstrcat("M", num2str(trial_no), ".dat"));
   load(cstrcat("b", num2str(trial_no), ".dat"));
 

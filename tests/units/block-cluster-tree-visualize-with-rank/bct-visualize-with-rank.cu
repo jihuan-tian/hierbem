@@ -7,10 +7,13 @@
  * \date 2021-07-04
  */
 
+#include <fstream>
 #include <iostream>
 
 #include "block_cluster_tree.h"
 #include "lapack_full_matrix_ext.h"
+
+using namespace HierBEM;
 
 int
 main()
@@ -51,6 +54,11 @@ main()
       counter += 1.0;
     }
 
+  std::ofstream out("bct.dat");
+  block_cluster_tree.write_leaf_set(out, M);
+  out.close();
+
+  // Print out the leaf set for comparison.
   block_cluster_tree.write_leaf_set(std::cout, M);
 
   return 0;

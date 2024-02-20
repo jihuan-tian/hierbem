@@ -28,11 +28,14 @@
 
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
-#include "debug_tools.h"
+#include "debug_tools.hcu"
+#include "dof_tools_ext.h"
 #include "simple_bounding_box.h"
 
+using namespace HierBEM;
+
 int
-main()
+main(int argc, char *argv[])
 {
   /**
    * Initialize deal.ii log stream.
@@ -46,26 +49,33 @@ main()
   const unsigned int           spacedim = 3;
   const unsigned int           dim      = 2;
   Triangulation<dim, spacedim> triangulation;
-  std::vector<unsigned int>    n_subdivisions{10, 10};
-  GridGenerator::subdivided_hyper_rectangle(triangulation,
-                                            n_subdivisions,
-                                            Point<dim>(0, 0),
-                                            Point<dim>(1, 1));
 
-  /**
-   * Save the mesh to a file for visualization.
-   */
-  GridOut       grid_out;
-  std::ofstream mesh_file("square.msh");
-  grid_out.write_msh(triangulation, mesh_file);
+  if (argc > 1)
+    {
+      /**
+       * Read the mesh from a file.
+       */
+      GridIn<dim, spacedim> grid_in;
+      grid_in.attach_triangulation(triangulation);
+      std::fstream mesh_file(argv[1]);
+      grid_in.read_msh(mesh_file);
+    }
+  else
+    {
+      std::vector<unsigned int> n_subdivisions{10, 10};
+      GridGenerator::subdivided_hyper_rectangle(triangulation,
+                                                n_subdivisions,
+                                                Point<dim>(0, 0),
+                                                Point<dim>(1, 1));
 
-  //  /**
-  //   * Read the mesh from a file.
-  //   */
-  //  GridIn<dim, spacedim> grid_in;
-  //  grid_in.attach_triangulation(triangulation);
-  //  std::fstream mesh_file("input.msh");
-  //  grid_in.read_msh(mesh_file);
+      /**
+       * Save the mesh to a file for visualization.
+       */
+      GridOut       grid_out;
+      std::ofstream mesh_file("square.msh");
+      grid_out.write_msh(triangulation, mesh_file);
+    }
+
 
   /**
    * Create the Lagrangian finite element.
@@ -111,7 +121,8 @@ main()
    * Calculate the average mesh cell size at each support point.
    */
   std::vector<double> dof_average_cell_size(dof_handler.n_dofs(), 0);
-  map_dofs_to_average_cell_size(dof_handler, dof_average_cell_size);
+  DoFToolsExt::map_dofs_to_average_cell_size(dof_handler,
+                                             dof_average_cell_size);
 
   /**
    * Initialize the cluster tree \f$T(I)\f$ and \f$T(J)\f$ for all the DoF
@@ -153,13 +164,19 @@ main()
   /**
    * Perform admissible partition on the block cluster tree.
    */
-  block_cluster_tree.partition(all_support_points);
+  block_cluster_tree.partition(TI.get_external_to_internal_dof_numbering(),
+                               all_support_points);
 
   /**
    * Print the block cluster tree, even though there is only a root node.
    */
   deallog << "=== Block cluster tree ===\n";
-  deallog << block_cluster_tree << std::endl;
+  deallog << block_cluster_tree << "\n";
+  deallog << "Memory consumption of all block clusters: "
+          << block_cluster_tree.memory_consumption_of_all_block_clusters()
+          << "\n";
+  deallog << "Memory consumption: " << block_cluster_tree.memory_consumption()
+          << std::endl;
 
   //  /**
   //   * Create a deal.ii vector storing the block cluster levels for all DoFs.

@@ -11,18 +11,21 @@ Node data:
 ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: none
 ------------------
@@ -32,29 +35,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -68,29 +76,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -104,29 +117,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -140,29 +158,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -176,29 +199,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -212,29 +240,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -248,29 +281,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -284,29 +322,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -320,29 +363,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -356,29 +404,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -392,29 +445,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -428,29 +486,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -464,29 +527,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -500,29 +568,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -536,29 +609,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -572,29 +650,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -608,29 +691,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -644,29 +732,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -680,29 +773,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -716,29 +814,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -750,13 +853,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -766,13 +871,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -782,13 +889,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -798,13 +907,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -814,13 +925,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -830,13 +943,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -846,13 +961,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -862,13 +979,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -878,13 +997,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -894,13 +1015,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -910,13 +1033,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -926,13 +1051,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -942,13 +1069,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -958,13 +1087,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -974,13 +1105,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -990,13 +1123,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1007,13 +1142,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1023,13 +1160,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1039,13 +1178,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1055,13 +1196,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1071,13 +1214,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1087,13 +1232,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1103,13 +1250,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1119,13 +1268,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1135,13 +1286,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1151,13 +1304,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1167,13 +1322,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1183,13 +1340,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1199,13 +1358,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1215,13 +1376,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1231,13 +1394,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1247,13 +1412,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1275,18 +1442,21 @@ Node data:
 ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: none
 ------------------
@@ -1296,29 +1466,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1332,29 +1507,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1368,29 +1548,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1404,29 +1589,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 4
 Index set size: 4
-Index set: [1 2 3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1438,13 +1628,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1454,13 +1646,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1470,13 +1664,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1486,13 +1682,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1503,13 +1701,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1519,13 +1719,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1535,13 +1737,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1551,13 +1755,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [3 4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1579,18 +1785,21 @@ Node data:
 ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: none
 ------------------
@@ -1600,29 +1809,34 @@ Node data:
 ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1636,29 +1850,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1672,29 +1891,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1708,29 +1932,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1744,29 +1973,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1780,29 +2014,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1816,29 +2055,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1852,29 +2096,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1888,29 +2137,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1924,29 +2178,34 @@ Node data:
 ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1960,29 +2219,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -1996,29 +2260,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2032,29 +2301,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2068,29 +2342,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2104,29 +2383,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2140,29 +2424,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2176,29 +2465,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2212,29 +2506,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2248,29 +2547,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2284,29 +2588,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2320,29 +2629,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2356,29 +2670,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2392,29 +2711,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2428,29 +2752,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2462,13 +2791,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2478,13 +2809,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2494,13 +2827,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2510,61 +2845,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Distance between tau and sigma: 0.00000
-** Is near field: 1
-** Admissible state: inadmissible
-
-** Component tau
-size: 2
-Index set size: 2
-Index set: [1 2 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Component sigma
-size: 1
-Index set size: 1
-Index set: [3 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Distance between tau and sigma: 0.00000
-** Is near field: 1
-** Admissible state: inadmissible
-
-** Component tau
-size: 1
-Index set size: 1
-Index set: [3 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Component sigma
-size: 2
-Index set size: 2
-Index set: [1 2 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Distance between tau and sigma: 0.00000
-** Is near field: 1
-** Admissible state: inadmissible
-
-** Component tau
-size: 1
-Index set size: 1
-Index set: [3 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Component sigma
-size: 1
-Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2574,13 +2863,51 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Distance between tau and sigma: 0.00000
+** Is near field: 1
+** Admissible state: inadmissible
+
+** Component tau
+size: 1
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Component sigma
+size: 2
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Distance between tau and sigma: 0.00000
+** Is near field: 1
+** Admissible state: inadmissible
+
+** Component tau
+size: 1
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Component sigma
+size: 1
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2590,13 +2917,33 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Distance between tau and sigma: 0.00000
+** Is near field: 1
+** Admissible state: inadmissible
+
+** Component tau
+size: 2
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Component sigma
+size: 1
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2606,13 +2953,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2622,13 +2971,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2638,13 +2989,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2654,13 +3007,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2670,13 +3025,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2686,13 +3043,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2702,13 +3061,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2718,13 +3079,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2734,13 +3097,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2750,13 +3115,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2767,13 +3134,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2783,13 +3152,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2799,13 +3170,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [1 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 1)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2815,61 +3188,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [2 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [2 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Distance between tau and sigma: 0.00000
-** Is near field: 1
-** Admissible state: inadmissible
-
-** Component tau
-size: 2
-Index set size: 2
-Index set: [1 2 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Component sigma
-size: 1
-Index set size: 1
-Index set: [3 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Distance between tau and sigma: 0.00000
-** Is near field: 1
-** Admissible state: inadmissible
-
-** Component tau
-size: 1
-Index set size: 1
-Index set: [3 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Component sigma
-size: 2
-Index set size: 2
-Index set: [1 2 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Distance between tau and sigma: 0.00000
-** Is near field: 1
-** Admissible state: inadmissible
-
-** Component tau
-size: 1
-Index set size: 1
-Index set: [3 ]
-Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
-Diameter: 0.00000
-** Component sigma
-size: 1
-Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [1 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2879,13 +3206,51 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Distance between tau and sigma: 0.00000
+** Is near field: 1
+** Admissible state: inadmissible
+
+** Component tau
+size: 1
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Component sigma
+size: 2
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Distance between tau and sigma: 0.00000
+** Is near field: 1
+** Admissible state: inadmissible
+
+** Component tau
+size: 1
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Component sigma
+size: 1
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2895,13 +3260,33 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Distance between tau and sigma: 0.00000
+** Is near field: 1
+** Admissible state: inadmissible
+
+** Component tau
+size: 2
+Index set size: 2
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
+Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
+Diameter: 0.00000
+** Component sigma
+size: 1
+Index set size: 1
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2911,13 +3296,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2927,13 +3314,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2943,13 +3332,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2959,13 +3350,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2975,13 +3368,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -2991,13 +3386,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3007,13 +3404,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3023,13 +3422,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3039,13 +3440,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [4 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 4)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3055,13 +3458,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [5 ]
+Index set (external numbering): []
+Index range (internal numbering): [4 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3083,18 +3488,21 @@ Node data:
 ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: none
 ------------------
@@ -3104,29 +3512,34 @@ Node data:
 ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 0
 ** Admissible state: inadmissible
+
 Split mode: 2
 Parent node data: ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3140,29 +3553,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3176,29 +3594,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3212,29 +3635,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3248,29 +3676,34 @@ Node data:
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3284,29 +3717,34 @@ Node data:
 ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3320,29 +3758,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3356,29 +3799,34 @@ Node data:
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
 ** Is near field: 1
 ** Admissible state: inadmissible
+
 Split mode: 3
 Parent node data: ** Component tau
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 5
 Index set size: 5
-Index set: [1 2 3 4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3390,13 +3838,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3406,13 +3856,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3422,13 +3874,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3438,13 +3892,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3454,13 +3910,15 @@ Diameter: 0.00000
 ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3470,13 +3928,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3486,13 +3946,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3503,13 +3965,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3519,13 +3983,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3535,13 +4001,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [1 2 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 2)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3551,13 +4019,15 @@ Diameter: 0.00000
 ** Component tau
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 1
 Index set size: 1
-Index set: [3 ]
+Index set (external numbering): []
+Index range (internal numbering): [2 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3567,13 +4037,15 @@ Diameter: 0.00000
 ** Component tau
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3583,13 +4055,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 3
 Index set size: 3
-Index set: [1 2 3 ]
+Index set (external numbering): []
+Index range (internal numbering): [0 3)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000
@@ -3599,13 +4073,15 @@ Diameter: 0.00000
 ** Component tau
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Component sigma
 size: 2
 Index set size: 2
-Index set: [4 5 ]
+Index set (external numbering): []
+Index range (internal numbering): [3 5)
 Bounding box: [0.00000 0.00000 0.00000], [0.00000 0.00000 0.00000]
 Diameter: 0.00000
 ** Distance between tau and sigma: 0.00000

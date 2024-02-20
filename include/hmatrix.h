@@ -102,6 +102,17 @@ namespace HierBEM
         , update(node)
       {}
 
+      /**
+       * Estimate of the memory consumption.
+       *
+       * N.B. This is not accurate.
+       */
+      std::size_t
+      memory_consumption() const
+      {
+        return sizeof(*this);
+      }
+
       HMatrix    *diagonal_hmat_node;
       TaskNodePtr update;
     };
@@ -3117,16 +3128,6 @@ namespace HierBEM
     memory_consumption_of_current_hmat_node() const;
 
     /**
-     * Determine the memory consumption for the core data stored in the current
-     * \hmatnode, which is calculated by counting the number of data values then
-     * multiplied by the size of the value type.
-     *
-     * @return
-     */
-    std::size_t
-    memory_consumption_of_current_hmat_node_for_core_data() const;
-
-    /**
      * Determine an estimate for the memory consumption (in bytes) of the whole
      * \hmatrix hierarchy.
      *
@@ -3136,13 +3137,25 @@ namespace HierBEM
     memory_consumption() const;
 
     /**
-     * Determine the memory consumption for the core data stored in the whole
-     * \hmatrix hierarchy.
-     *
-     * @return
+     * Determine an estimate for the memory consumption (in bytes) of H-matrices
+     * in the leaf set.
      */
     std::size_t
-    memory_consumption_for_core_data() const;
+    memory_consumption_of_leaf_set() const;
+
+    /**
+     * Determine an estimate for the memory consumption (in bytes) of H-matrices
+     * in the near field leaf set.
+     */
+    std::size_t
+    memory_consumption_of_near_field_leaf_set() const;
+
+    /**
+     * Determine an estimate for the memory consumption (in bytes) of H-matrices
+     * in the far field leaf set.
+     */
+    std::size_t
+    memory_consumption_of_far_field_leaf_set() const;
 
   private:
     /**
@@ -29940,42 +29953,18 @@ namespace HierBEM
      * Count the memory for other members in the current \hmatnode.
      */
     memory_for_hmat_node +=
-      sizeof(bc_node) + sizeof(block_type) + sizeof(col_index_range) +
-      sizeof(fullmatrix) + memory_consumption_of_vector(leaf_set) +
-      memory_consumption_of_vector(near_field_leaf_set) +
-      memory_consumption_of_vector(far_field_leaf_set) + sizeof(m) + sizeof(n) +
-      sizeof(parent) + sizeof(property) + sizeof(rkmatrix) +
-      sizeof(row_index_range) + memory_consumption_of_vector(Sigma_F) +
-      memory_consumption_of_vector(Sigma_P) +
-      memory_consumption_of_vector(Sigma_R) + sizeof(state) +
-      memory_consumption_of_vector(submatrices) + sizeof(submatrix_index) +
-      sizeof(type);
-
-    return memory_for_hmat_node;
-  }
-
-
-  template <int spacedim, typename Number>
-  std::size_t
-  HMatrix<spacedim,
-          Number>::memory_consumption_of_current_hmat_node_for_core_data() const
-  {
-    std::size_t memory_for_hmat_node = 0;
-
-    /**
-     * If the current \hmatnode is a leaf node, get the memory for the
-     * associated matrix.
-     */
-    if (type == FullMatrixType)
-      {
-        memory_for_hmat_node +=
-          this->fullmatrix->memory_consumption_for_core_data();
-      }
-    else if (type == RkMatrixType)
-      {
-        memory_for_hmat_node +=
-          this->rkmatrix->memory_consumption_for_core_data();
-      }
+      sizeof(*this) +
+      (MemoryConsumption::memory_consumption(leaf_set) - sizeof(leaf_set)) +
+      (MemoryConsumption::memory_consumption(submatrices) -
+       sizeof(submatrices)) +
+      (MemoryConsumption::memory_consumption(near_field_leaf_set) -
+       sizeof(near_field_leaf_set)) +
+      (MemoryConsumption::memory_consumption(far_field_leaf_set) -
+       sizeof(far_field_leaf_set)) +
+      (Tind.memory_consumption() - sizeof(Tind)) +
+      (MemoryConsumption::memory_consumption(Sigma_P) - sizeof(Sigma_P)) +
+      (MemoryConsumption::memory_consumption(Sigma_R) - sizeof(Sigma_R)) +
+      (MemoryConsumption::memory_consumption(Sigma_F) - sizeof(Sigma_F));
 
     return memory_for_hmat_node;
   }
@@ -30000,15 +29989,43 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   std::size_t
-  HMatrix<spacedim, Number>::memory_consumption_for_core_data() const
+  HMatrix<spacedim, Number>::memory_consumption_of_leaf_set() const
   {
     std::size_t total_memory = 0;
 
-    total_memory += memory_consumption_of_current_hmat_node_for_core_data();
-
-    for (auto submatrix : submatrices)
+    for (auto hmat : leaf_set)
       {
-        total_memory += submatrix->memory_consumption_for_core_data();
+        total_memory += hmat->memory_consumption();
+      }
+
+    return total_memory;
+  }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  HMatrix<spacedim, Number>::memory_consumption_of_near_field_leaf_set() const
+  {
+    std::size_t total_memory = 0;
+
+    for (auto hmat : near_field_leaf_set)
+      {
+        total_memory += hmat->memory_consumption();
+      }
+
+    return total_memory;
+  }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  HMatrix<spacedim, Number>::memory_consumption_of_far_field_leaf_set() const
+  {
+    std::size_t total_memory = 0;
+
+    for (auto hmat : far_field_leaf_set)
+      {
+        total_memory += hmat->memory_consumption();
       }
 
     return total_memory;

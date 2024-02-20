@@ -1,6 +1,7 @@
 #ifndef SIMPLE_BOUNDING_BOX_H
 #define SIMPLE_BOUNDING_BOX_H
 
+#include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/point.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -129,6 +130,12 @@ namespace HierBEM
     std::pair<SimpleBoundingBox<spacedim, Number>,
               SimpleBoundingBox<spacedim, Number>>
     divide_geometrically() const;
+
+    /**
+     * Estimate the memory consumption of the bounding box.
+     */
+    std::size_t
+    memory_consumption() const;
 
   private:
     /**
@@ -366,6 +373,17 @@ namespace HierBEM
                      SimpleBoundingBox<spacedim, Number>>(first_bbox,
                                                           second_bbox);
   }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  SimpleBoundingBox<spacedim, Number>::memory_consumption() const
+  {
+    return sizeof(*this) +
+           (MemoryConsumption::memory_consumption(boundary_points) -
+            sizeof(boundary_points));
+  }
+
 
   template <int spacedim, typename Number>
   std::pair<Point<spacedim, Number>, Point<spacedim, Number>> &

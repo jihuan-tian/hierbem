@@ -1091,16 +1091,6 @@ namespace HierBEM
     std::size_t
     memory_consumption() const;
 
-    /**
-     * Determine the memory consumption for the core data stored in this object,
-     * which is calculated by counting the number of data values then multiplied
-     * by the size of the value type.
-     *
-     * @return
-     */
-    std::size_t
-    memory_consumption_for_core_data() const;
-
   private:
     LAPACKFullMatrixExt<Number> A;
     LAPACKFullMatrixExt<Number> B;
@@ -3233,18 +3223,8 @@ namespace HierBEM
   std::size_t
   RkMatrix<Number>::memory_consumption() const
   {
-    return A.memory_consumption() + B.memory_consumption() +
-           sizeof(this->formal_rank) + sizeof(this->m) + sizeof(this->n) +
-           sizeof(this->rank);
-  }
-
-
-  template <typename Number>
-  std::size_t
-  RkMatrix<Number>::memory_consumption_for_core_data() const
-  {
-    return A.memory_consumption_for_core_data() +
-           B.memory_consumption_for_core_data();
+    return sizeof(*this) + (A.memory_consumption() - sizeof(A)) +
+           (B.memory_consumption() - sizeof(B));
   }
 
 

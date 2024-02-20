@@ -1,17 +1,18 @@
 /**
- * \file bct-overloaded-assignment.cc
- * \brief Verify the deep and shallow overloaded assignment operators for \p
- * BlockClusterTree.
- * \ingroup testers
+ * \file bct-copy-constructor.cc
+ * \brief Verify the copy constructor of block cluster tree.
+ * \ingroup
  * \author Jihuan Tian
- * \date 2021-08-23
+ * \date 2021-07-21
  */
 
 #include <fstream>
 #include <iostream>
 
 #include "block_cluster_tree.h"
-#include "debug_tools.h"
+#include "debug_tools.hcu"
+
+using namespace HierBEM;
 
 int
 main()
@@ -52,28 +53,27 @@ main()
   block_cluster_tree1.write_leaf_set(out1);
   out1.close();
 
-  BlockClusterTree<3, double> block_cluster_tree2, block_cluster_tree3;
-
   /**
-   * Deep assignment
+   * Deep copy
    */
-  block_cluster_tree2 = block_cluster_tree1;
+  BlockClusterTree<3, double> block_cluster_tree2(block_cluster_tree1);
   std::cout << "=== BCT2 ===\n" << block_cluster_tree2;
   std::ofstream out2("bct2.dat");
   block_cluster_tree2.write_leaf_set(out2);
   out2.close();
 
   /**
-   * Shallow assignment
+   * Shallow copy
    */
-  block_cluster_tree3 = std::move(block_cluster_tree1);
+  BlockClusterTree<3, double> block_cluster_tree3(
+    std::move(block_cluster_tree1));
   std::cout << "=== BCT3 ===\n" << block_cluster_tree3;
   std::ofstream out3("bct3.dat");
   block_cluster_tree3.write_leaf_set(out3);
   out3.close();
 
   /**
-   * After shallow assignment, try to print BCT1.
+   * After shallow copy, try to print BCT1.
    */
   std::cout << "=== BCT1 after shallow copy ===\n" << block_cluster_tree1;
 

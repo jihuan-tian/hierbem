@@ -1,6 +1,8 @@
 #ifndef INCLUDE_CLUSTER_TREE_H_
 #define INCLUDE_CLUSTER_TREE_H_
 
+#include <deal.II/base/memory_consumption.h>
+
 #include "cluster.h"
 #include "debug_tools.hcu"
 #include "tree.h"
@@ -342,6 +344,19 @@ namespace HierBEM
     {
       return index_sets_cleared;
     }
+
+    /**
+     * Estimate the memory consumption of the cluster tree, including all its
+     * nodes and contained data.
+     */
+    std::size_t
+    memory_consumption() const;
+
+    /**
+     * Estimate the memory consumption of all clusters in the tree.
+     */
+    std::size_t
+    memory_consumption_of_all_clusters() const;
 
   private:
     /**
@@ -1567,6 +1582,35 @@ namespace HierBEM
      */
     out << "}\n";
     out << "#@enddot" << std::endl;
+  }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  ClusterTree<spacedim, Number>::memory_consumption() const
+  {
+    return sizeof(*this) +
+           (dealii::MemoryConsumption::memory_consumption(leaf_set) -
+            sizeof(leaf_set)) +
+           (dealii::MemoryConsumption::memory_consumption(
+              internal_to_external_dof_numbering) -
+            sizeof(internal_to_external_dof_numbering)) +
+           (dealii::MemoryConsumption::memory_consumption(
+              external_to_internal_dof_numbering) -
+            sizeof(external_to_internal_dof_numbering)) +
+           memory_consumption_of_all_clusters();
+  }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  ClusterTree<spacedim, Number>::memory_consumption_of_all_clusters() const
+  {
+    std::size_t memory_size = 0;
+
+    Preorder_for_memory_consumption(root_node, memory_size);
+
+    return memory_size;
   }
 
 

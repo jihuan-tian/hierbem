@@ -554,6 +554,16 @@ namespace HierBEM
     typename ClusterTree<spacedim, Number>::node_const_pointer_type
     get_sigma_node() const;
 
+    /**
+     * Estimate the memory consumption of a block cluster.
+     *
+     * N.B. Because the memory consumption for the contained clusters @p tau and
+     * @p sigma have already been included in the memory consumption for the
+     * associated cluster trees, they will not be considered here.
+     */
+    std::size_t
+    memory_consumption() const;
+
   private:
     /**
      * Pointer to a node in the binary tree which holds the cluster \f$\tau\f$.
@@ -1346,6 +1356,14 @@ namespace HierBEM
   BlockCluster<spacedim, Number>::get_sigma_node() const
   {
     return sigma_node;
+  }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  BlockCluster<spacedim, Number>::memory_consumption() const
+  {
+    return sizeof(*this);
   }
 
 

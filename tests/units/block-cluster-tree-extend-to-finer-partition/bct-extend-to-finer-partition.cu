@@ -11,6 +11,8 @@
 
 #include "block_cluster_tree.h"
 
+using namespace HierBEM;
+
 int
 main()
 {
@@ -84,6 +86,12 @@ main()
   std::ofstream out4("bct2_ext.dat");
   bct2_ext.write_leaf_set(out4);
   out4.close();
+
+  // Print the leaf sets for comparison.
+  bct1.write_leaf_set(std::cout);
+  bct2.write_leaf_set(std::cout);
+  bct1_ext.write_leaf_set(std::cout);
+  bct2_ext.write_leaf_set(std::cout);
 
   return 0;
 }

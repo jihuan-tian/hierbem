@@ -14,6 +14,8 @@
  * @{
  */
 
+#include <deal.II/base/memory_consumption.h>
+
 #include "block_cluster.h"
 #include "cluster_tree.h"
 #include "debug_tools.hcu"
@@ -611,6 +613,20 @@ namespace HierBEM
      */
     void
     categorize_near_and_far_field_sets();
+
+    /**
+     * Estimate the memory consumption of the block cluster tree with all nodes
+     * and contained data.
+     */
+    std::size_t
+    memory_consumption() const;
+
+    /**
+     * Estimate the memory consumption of all nodes in the cluster tree and
+     * their contained data.
+     */
+    std::size_t
+    memory_consumption_of_all_block_clusters() const;
 
   private:
     /**
@@ -3733,6 +3749,34 @@ namespace HierBEM
             far_field_set.push_back(node);
           }
       }
+  }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  BlockClusterTree<spacedim, Number>::memory_consumption() const
+  {
+    return sizeof(*this) +
+           (dealii::MemoryConsumption::memory_consumption(leaf_set) -
+            sizeof(leaf_set)) +
+           (dealii::MemoryConsumption::memory_consumption(near_field_set) -
+            sizeof(near_field_set)) +
+           (dealii::MemoryConsumption::memory_consumption(far_field_set) -
+            sizeof(far_field_set)) +
+           memory_consumption_of_all_block_clusters();
+  }
+
+
+  template <int spacedim, typename Number>
+  std::size_t
+  BlockClusterTree<spacedim, Number>::memory_consumption_of_all_block_clusters()
+    const
+  {
+    std::size_t memory_size = 0;
+
+    Preorder_for_memory_consumption(root_node, memory_size);
+
+    return memory_size;
   }
 
 

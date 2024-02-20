@@ -13,6 +13,8 @@
 #include "block_cluster_tree.h"
 #include "cluster_tree.h"
 
+using namespace HierBEM;
+
 int
 main()
 {

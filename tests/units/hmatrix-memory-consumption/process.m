@@ -10,5 +10,3 @@ xlabel("Matrix size");
 ylabel("Memory consumption (MB)");
 ## title("Linear storage complexity of H-matrix for BEM");
 title("Linear storage complexity achieved by compressed matrix\nfor boundary element method");
-
-PrintGCF("h-matrix-memory-consumption.png");

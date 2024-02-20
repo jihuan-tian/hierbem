@@ -120,6 +120,14 @@ main()
   deallog << cluster_tree << std::endl;
 
   /**
+   * Compute the memory consumption.
+   */
+  deallog << "Memory consumption of all clusters: "
+          << cluster_tree.memory_consumption_of_all_clusters() << "\n";
+  deallog << "Memory consumption: " << cluster_tree.memory_consumption()
+          << std::endl;
+
+  /**
    * Export the cluster tree as a directional graph.
    */
   std::ofstream graph("cluster-tree.puml");

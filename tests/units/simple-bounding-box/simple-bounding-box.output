@@ -1,12 +1,37 @@
 Total number of vertices: 517
 Volume:	64.0000
+Longest dimension: 0
 Bottom corner:	-2.00000 -2.00000 -2.00000
 Top corner:	2.00000 2.00000 2.00000
 Point (1.00000 1.00000 1.00000) is inside the box
 Point (5.00000 9.00000 10.0000) is outside the box
-Total number of DoFs: 3817
+Memory consumption: 48
+Volume:	32.0000
+Longest dimension: 1
+Bottom corner:	-2.00000 -2.00000 -2.00000
+Top corner:	0.00000 2.00000 2.00000
+Point (1.00000 1.00000 1.00000) is outside the box
+Point (5.00000 9.00000 10.0000) is outside the box
+Memory consumption: 48
+Volume:	32.0000
+Longest dimension: 1
+Bottom corner:	0.00000 -2.00000 -2.00000
+Top corner:	2.00000 2.00000 2.00000
+Point (1.00000 1.00000 1.00000) is inside the box
+Point (5.00000 9.00000 10.0000) is outside the box
+Memory consumption: 48
 Volume:	64.0000
+Longest dimension: 0
 Bottom corner:	-2.00000 -2.00000 -2.00000
 Top corner:	2.00000 2.00000 2.00000
 Point (1.00000 1.00000 1.00000) is inside the box
 Point (5.00000 9.00000 10.0000) is outside the box
+Memory consumption: 48
+Total number of DoFs: 3817
+Volume:	0.00471869
+Longest dimension: 0
+Bottom corner:	-0.422650 -0.422650 -0.422650
+Top corner:	-0.211325 -0.316987 -0.211325
+Point (1.00000 1.00000 1.00000) is outside the box
+Point (5.00000 9.00000 10.0000) is outside the box
+Memory consumption: 48
