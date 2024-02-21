@@ -2,6 +2,9 @@
  * @file hmatrix-related-memory-consumption.cu
  * @brief Estimate the memory consumption of H-matrix, cluster tree and block cluster tree, etc.
  *
+ * The parameters are selected to be the same as Bebendorf "Hierarchical
+ * matrices" P155.
+ *
  * @ingroup testers
  * @author Jihuan Tian
  * @date 2024-02-20
@@ -34,6 +37,10 @@ struct CmdOpts
   RefineType   refine_type;
   unsigned int min_refines;
   unsigned int max_refines;
+  unsigned int n_min;
+  double       eta;
+  unsigned int max_rank;
+  double       epsilon;
 };
 
 CmdOpts
@@ -47,7 +54,11 @@ parse_cmdline(int argc, char *argv[])
     ("help,h", "show help message")
     ("refine-type,T", po::value<std::string>()->default_value("boundary"), "refinement type (global or boundary)")
     ("min-refines,f", po::value<unsigned int>()->default_value(1), "minimum number of refinements")
-    ("max-refines,t", po::value<unsigned int>()->default_value(5), "maximum number of refinements");
+    ("max-refines,t", po::value<unsigned int>()->default_value(5), "maximum number of refinements")
+    ("n-min,n", po::value<unsigned int>()->default_value(32), "n_min criteria for small cluster")
+    ("eta,e", po::value<double>()->default_value(0.8), "Admissibility constant eta")
+    ("max-rank,r", po::value<unsigned int>()->default_value(5), "Maximum rank allowed for a rank-k matrix")
+    ("epsilon,E", po::value<double>()->default_value(0.01), "Relative error of ACA for building a rank-k matrix");
   // clang-format on
 
   po::variables_map vm;
@@ -77,6 +88,10 @@ parse_cmdline(int argc, char *argv[])
 
   opts.min_refines = vm["min-refines"].as<unsigned int>();
   opts.max_refines = vm["max-refines"].as<unsigned int>();
+  opts.n_min       = vm["n-min"].as<unsigned int>();
+  opts.eta         = vm["eta"].as<double>();
+  opts.max_rank    = vm["max-rank"].as<unsigned int>();
+  opts.epsilon     = vm["epsilon"].as<double>();
 
   return opts;
 }
@@ -261,11 +276,6 @@ main(int argc, char *argv[])
   HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<spacedim>
     single_layer_kernel;
 
-  const unsigned int n_min    = 32;
-  const double       eta      = 0.8;
-  const double       max_rank = 5;
-  const double       epsilon  = 0.01;
-
   TableHandler table;
 
   for (unsigned int i = 0; i < opts.max_refines; i++)
@@ -340,7 +350,7 @@ main(int argc, char *argv[])
       ClusterTree<spacedim> ct(dof_indices,
                                support_points,
                                cell_size_at_support_points,
-                               n_min);
+                               opts.n_min);
       ct.partition(support_points, cell_size_at_support_points);
 
       table.start_new_row();
@@ -349,7 +359,7 @@ main(int argc, char *argv[])
       table.add_value("Memory", ct.memory_consumption());
 
       // Create and partition the block cluster tree.
-      BlockClusterTree<spacedim> bct(ct, ct, eta, n_min);
+      BlockClusterTree<spacedim> bct(ct, ct, opts.eta, opts.n_min);
       bct.partition(ct.get_internal_to_external_dof_numbering(),
                     support_points,
                     cell_size_at_support_points);
@@ -361,7 +371,7 @@ main(int argc, char *argv[])
 
       // Create a symmetric H-matrix with respect to the block cluster tree.
       HMatrix<spacedim> V(bct,
-                          max_rank,
+                          opts.max_rank,
                           HMatrixSupport::Property::symmetric,
                           HMatrixSupport::BlockType::diagonal_block);
 
@@ -369,7 +379,7 @@ main(int argc, char *argv[])
       fill_hmatrix_with_aca_plus_smp(
         MultithreadInfo::n_threads(),
         V,
-        ACAConfig(max_rank, epsilon, eta),
+        ACAConfig(opts.max_rank, opts.epsilon, opts.eta),
         single_layer_kernel,
         1.0,
         dof_to_cell_topo,
