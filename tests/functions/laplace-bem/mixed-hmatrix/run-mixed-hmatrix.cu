@@ -168,4 +168,6 @@ run_mixed_hmatrix()
 
   deallog << "Program exits with a total wall time " << timer.wall_time() << "s"
           << std::endl;
+
+  bem.print_memory_consumption_table(deallog.get_file_stream());
 }

@@ -102,4 +102,6 @@ run_dirichlet_full_matrix()
   bem.assign_dirichlet_bc(dirichlet_bc);
 
   bem.run();
+
+  bem.print_memory_consumption_table(deallog.get_file_stream());
 }

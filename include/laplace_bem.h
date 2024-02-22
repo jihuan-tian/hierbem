@@ -12,8 +12,10 @@
 
 #include <deal.II/base/function.h>
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/memory_consumption.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/subscriptor.h>
+#include <deal.II/base/table_handler.h>
 #include <deal.II/base/timer.h>
 
 #include <deal.II/dofs/dof_accessor.h>
@@ -344,6 +346,12 @@ namespace HierBEM
     void
     set_project_name(const std::string &projectName);
 
+    /**
+     * Print out the memory consumption table.
+     */
+    void
+    print_memory_consumption_table(std::ostream &out) const;
+
   private:
     void
     generate_cell_iterators();
@@ -360,6 +368,26 @@ namespace HierBEM
      */
     void
     solve_natural_density();
+
+    /**
+     * Initialize the header string for each column.
+     */
+    void
+    initialize_memory_consumption_table_headers();
+
+    /**
+     * Add a row to the memory consumption table.
+     *
+     * Memory consumption is measured in MB.
+     *
+     * @param name
+     * @param obj
+     */
+    template <typename T>
+    void
+    add_memory_consumption_row(const std::string &name,
+                               const T           &obj,
+                               const std::string &comment = std::string(""));
 
     std::string project_name;
 
@@ -845,6 +873,11 @@ namespace HierBEM
      * Analytical solution on the Neumann domain.
      */
     Vector<double> analytical_solution_on_neumann_domain;
+
+    /**
+     * Memory consumption table
+     */
+    TableHandler memory_consumption_table;
   };
 
 
@@ -889,7 +922,9 @@ namespace HierBEM
     , neumann_bc_functor_ptr(nullptr)
     , alpha_for_neumann(1.0)
     , dirichlet_bc_functor_ptr(nullptr)
-  {}
+  {
+    initialize_memory_consumption_table_headers();
+  }
 
 
   template <int dim, int spacedim>
@@ -941,6 +976,7 @@ namespace HierBEM
     , alpha_for_neumann(1.0)
     , dirichlet_bc_functor_ptr(nullptr)
   {
+    initialize_memory_consumption_table_headers();
     initialize_mapping_data();
   }
 
@@ -1003,6 +1039,7 @@ namespace HierBEM
     , alpha_for_neumann(1.0)
     , dirichlet_bc_functor_ptr(nullptr)
   {
+    initialize_memory_consumption_table_headers();
     initialize_mapping_data();
   }
 
@@ -1076,6 +1113,9 @@ namespace HierBEM
           mesh_file.substr(0, mesh_file.find_last_of('.')) + "-surface.msh");
         write_msh_correct(surface_triangulation, surface_mesh_file);
       }
+
+    add_memory_consumption_row("Volume mesh", volume_triangulation);
+    add_memory_consumption_row("Surface mesh", surface_triangulation);
   }
 
 
@@ -1092,6 +1132,8 @@ namespace HierBEM
         std::cout << "=== Volume mesh information ===" << std::endl;
         print_mesh_info(std::cout, volume_triangulation);
       }
+
+    add_memory_consumption_row("Volume mesh", volume_triangulation);
   }
 
 
@@ -1112,6 +1154,8 @@ namespace HierBEM
         std::cout << "=== Surface mesh information ===" << std::endl;
         print_mesh_info(std::cout, surface_triangulation);
       }
+
+    add_memory_consumption_row("Surface mesh", surface_triangulation);
   }
 
 
@@ -1197,6 +1241,10 @@ namespace HierBEM
                                  n_dofs_for_neumann_space);
                 K2_matrix_with_mass_matrix.reinit(n_dofs_for_neumann_space,
                                                   n_dofs_for_dirichlet_space);
+
+                add_memory_consumption_row("V1 full matrix", V1_matrix);
+                add_memory_consumption_row("K2 with mass full matrix",
+                                           K2_matrix_with_mass_matrix);
               }
             else
               {
@@ -1436,6 +1484,13 @@ namespace HierBEM
                 timer.stop();
                 print_wall_time(deallog, timer, "build cluster trees");
 
+                add_memory_consumption_row(
+                  "Cluster tree for Dirichlet space on Dirichlet domain",
+                  ct_for_dirichlet_space_on_dirichlet_domain);
+                add_memory_consumption_row(
+                  "Cluster tree for Neumann space on Dirichlet domain",
+                  ct_for_neumann_space_on_dirichlet_domain);
+
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 3
                 {
                   /**
@@ -1491,6 +1546,12 @@ namespace HierBEM
                 timer.stop();
                 print_wall_time(deallog, timer, "build block cluster trees");
 
+                add_memory_consumption_row("Block cluster tree for V1",
+                                           bct_for_bilinear_form_V1);
+                add_memory_consumption_row(
+                  "Block cluster tree for K2 with mass",
+                  bct_for_bilinear_form_K2);
+
                 /**
                  * Initialize \hmatrices.
                  */
@@ -1516,6 +1577,15 @@ namespace HierBEM
 
                 timer.stop();
                 print_wall_time(deallog, timer, "initialize H-matrices");
+
+                add_memory_consumption_row(
+                  "V1 H-matrix",
+                  V1_hmat,
+                  "After initialization and before assembly");
+                add_memory_consumption_row(
+                  "K2 with mass H-matrix",
+                  K2_hmat_with_mass_matrix,
+                  "After initialization and before assembly");
               }
 
             /**
@@ -1598,6 +1668,11 @@ namespace HierBEM
                  */
                 V1_matrix.reinit(n_dofs_for_neumann_space,
                                  n_dofs_for_neumann_space);
+
+                add_memory_consumption_row("D1 full matrix", D1_matrix);
+                add_memory_consumption_row("K'2 with mass full matrix",
+                                           K_prime2_matrix_with_mass_matrix);
+                add_memory_consumption_row("V1 full matrix", V1_matrix);
               }
             else
               {
@@ -1713,6 +1788,13 @@ namespace HierBEM
                 timer.stop();
                 print_wall_time(deallog, timer, "build cluster trees");
 
+                add_memory_consumption_row(
+                  "Cluster tree for Dirichlet space on Neumann domain",
+                  ct_for_dirichlet_space_on_neumann_domain);
+                add_memory_consumption_row(
+                  "Cluster tree for Neumann space on Neumann domain",
+                  ct_for_neumann_space_on_neumann_domain);
+
                 /**
                  * Create the block cluster trees.
                  */
@@ -1756,6 +1838,14 @@ namespace HierBEM
                 timer.stop();
                 print_wall_time(deallog, timer, "build block cluster trees");
 
+                add_memory_consumption_row("Block cluster tree for D1",
+                                           bct_for_bilinear_form_D1);
+                add_memory_consumption_row(
+                  "Block cluster tree for K'2 with mass",
+                  bct_for_bilinear_form_K_prime2);
+                add_memory_consumption_row("Block cluster tree for V1",
+                                           bct_for_bilinear_form_V1);
+
                 /**
                  * Initialize \hmatrices.
                  */
@@ -1791,6 +1881,19 @@ namespace HierBEM
 
                 timer.stop();
                 print_wall_time(deallog, timer, "initialize H-matrices");
+
+                add_memory_consumption_row(
+                  "D1 H-matrix",
+                  D1_hmat,
+                  "After initialization and before assembly");
+                add_memory_consumption_row(
+                  "K'2 with mass H-matrix",
+                  K_prime2_hmat_with_mass_matrix,
+                  "After initialization and before assembly");
+                add_memory_consumption_row(
+                  "V1 H-matrix",
+                  V1_hmat,
+                  "After initialization and before assembly");
               }
 
             /**
@@ -2143,6 +2246,19 @@ namespace HierBEM
             timer.stop();
             print_wall_time(deallog, timer, "build cluster trees");
 
+            add_memory_consumption_row(
+              "Cluster tree for Dirichlet space on Dirichlet domain",
+              ct_for_dirichlet_space_on_dirichlet_domain);
+            add_memory_consumption_row(
+              "Cluster tree for Dirichlet space on Neumann domain",
+              ct_for_dirichlet_space_on_neumann_domain);
+            add_memory_consumption_row(
+              "Cluster tree for Neumann space on Dirichlet domain",
+              ct_for_neumann_space_on_dirichlet_domain);
+            add_memory_consumption_row(
+              "Cluster tree for Neumann space on Neumann domain",
+              ct_for_neumann_space_on_neumann_domain);
+
             /**
              * Create the block cluster trees.
              */
@@ -2234,6 +2350,21 @@ namespace HierBEM
             timer.stop();
             print_wall_time(deallog, timer, "build block cluster trees");
 
+            add_memory_consumption_row("Block cluster tree for V1",
+                                       bct_for_bilinear_form_V1);
+            add_memory_consumption_row("Block cluster tree for K1",
+                                       bct_for_bilinear_form_K1);
+            add_memory_consumption_row("Block cluster tree for D1",
+                                       bct_for_bilinear_form_D1);
+            add_memory_consumption_row("Block cluster tree for K2 with mass",
+                                       bct_for_bilinear_form_K2);
+            add_memory_consumption_row("Block cluster tree for V2",
+                                       bct_for_bilinear_form_V2);
+            add_memory_consumption_row("Block cluster tree for D2",
+                                       bct_for_bilinear_form_D2);
+            add_memory_consumption_row("Block cluster tree for K'2 with mass",
+                                       bct_for_bilinear_form_K_prime2);
+
             /**
              * Initialize \hmatrices.
              */
@@ -2302,6 +2433,35 @@ namespace HierBEM
 
             timer.stop();
             print_wall_time(deallog, timer, "initialize H-matrices");
+
+            add_memory_consumption_row(
+              "V1 H-matrix",
+              V1_hmat,
+              "After initialization and before assembly");
+            add_memory_consumption_row(
+              "K1 H-matrix",
+              K1_hmat,
+              "After initialization and before assembly");
+            add_memory_consumption_row(
+              "D1 H-matrix",
+              D1_hmat,
+              "After initialization and before assembly");
+            add_memory_consumption_row(
+              "K2 with mass H-matrix",
+              K2_hmat_with_mass_matrix,
+              "After initialization and before assembly");
+            add_memory_consumption_row(
+              "V2 H-matrix",
+              V2_hmat,
+              "After initialization and before assembly");
+            add_memory_consumption_row(
+              "D2 H-matrix",
+              D2_hmat,
+              "After initialization and before assembly");
+            add_memory_consumption_row(
+              "K'2 with mass H-matrix",
+              K_prime2_hmat_with_mass_matrix,
+              "After initialization and before assembly");
 
             /**
              * Interpolate the Dirichlet boundary data on the extended Dirichlet
@@ -2872,6 +3032,10 @@ namespace HierBEM
                 print_wall_time(deallog, timer, "assemble (sigma-1)*I+K");
               }
 
+            add_memory_consumption_row("K2 with mass H-matrix",
+                                       K2_hmat_with_mass_matrix,
+                                       "After assembly");
+
 #if ENABLE_MATRIX_EXPORT == 1
             // Print the RHS matrix.
             out_mat.open("matrices.dat");
@@ -2947,6 +3111,10 @@ namespace HierBEM
               timer.stop();
               print_wall_time(deallog, timer, "assemble V");
             }
+
+            add_memory_consumption_row("V1 H-matrix",
+                                       V1_hmat,
+                                       "After assembly");
 
 #if ENABLE_MATRIX_EXPORT == 1
             V1_hmat.print_as_formatted_full_matrix(out_mat, "V", 15, true, 25);
@@ -3036,6 +3204,10 @@ namespace HierBEM
                 timer.stop();
                 print_wall_time(deallog, timer, "assemble -sigma*I-K'");
               }
+
+            add_memory_consumption_row("K'2 with mass H-matrix",
+                                       K_prime2_hmat_with_mass_matrix,
+                                       "After assembly");
 
 #if ENABLE_MATRIX_EXPORT == 1
             // Print the RHS matrix.
@@ -3148,6 +3320,10 @@ namespace HierBEM
 
             timer.stop();
             print_wall_time(deallog, timer, "assemble D");
+
+            add_memory_consumption_row("D1 H-matrix",
+                                       D1_hmat,
+                                       "After assembly");
 
 #if ENABLE_MATRIX_EXPORT == 1
             D1_hmat.print_as_formatted_full_matrix(out_mat, "D", 15, true, 25);
@@ -3312,6 +3488,13 @@ namespace HierBEM
                 print_wall_time(deallog, timer, "assemble -sigma*I-K'");
               }
 
+            add_memory_consumption_row("K2 with mass H-matrix",
+                                       K2_hmat_with_mass_matrix,
+                                       "After assembly");
+            add_memory_consumption_row("K'2 with mass H-matrix",
+                                       K_prime2_hmat_with_mass_matrix,
+                                       "After assembly");
+
             std::cout << "=== Assemble -V2 ===" << std::endl;
 
             timer.start();
@@ -3344,6 +3527,10 @@ namespace HierBEM
             timer.stop();
             print_wall_time(deallog, timer, "assemble -V2");
 
+            add_memory_consumption_row("V2 H-matrix",
+                                       V2_hmat,
+                                       "After assembly");
+
             std::cout << "=== Assemble -D2 ===" << std::endl;
 
             timer.start();
@@ -3375,6 +3562,10 @@ namespace HierBEM
 
             timer.stop();
             print_wall_time(deallog, timer, "assemble -D2");
+
+            add_memory_consumption_row("D2 H-matrix",
+                                       D2_hmat,
+                                       "After assembly");
 
 #if ENABLE_MATRIX_EXPORT == 1
             // Print RHS matrices.
@@ -3514,6 +3705,10 @@ namespace HierBEM
             timer.stop();
             print_wall_time(deallog, timer, "assemble V1");
 
+            add_memory_consumption_row("V1 H-matrix",
+                                       V1_hmat,
+                                       "After assembly");
+
             std::cout << "=== Assemble -K1 ===" << std::endl;
 
             timer.start();
@@ -3546,6 +3741,10 @@ namespace HierBEM
             timer.stop();
             print_wall_time(deallog, timer, "assemble -K1");
 
+            add_memory_consumption_row("K1 H-matrix",
+                                       K1_hmat,
+                                       "After assembly");
+
             std::cout << "=== Assemble D1 ===" << std::endl;
 
             timer.start();
@@ -3577,6 +3776,10 @@ namespace HierBEM
 
             timer.stop();
             print_wall_time(deallog, timer, "assemble D1");
+
+            add_memory_consumption_row("D1 H-matrix",
+                                       D1_hmat,
+                                       "After assembly");
 
             // Assemble the block matrix.
             std::cout << "=== Assemble system block matrix ===" << std::endl;
@@ -3649,6 +3852,10 @@ namespace HierBEM
             timer.stop();
             print_wall_time(deallog, timer, "truncate V");
 
+            add_memory_consumption_row("V1 H-matrix preconditioner",
+                                       V1_hmat_preconditioner,
+                                       "After assembly");
+
             /**
              * Perform Cholesky factorization of the preconditioner.
              */
@@ -3701,6 +3908,10 @@ namespace HierBEM
 
             timer.stop();
             print_wall_time(deallog, timer, "truncate D");
+
+            add_memory_consumption_row("D1 H-matrix preconditioner",
+                                       D1_hmat_preconditioner,
+                                       "After assembly");
 
             /**
              * Perform Cholesky factorization of the preconditioner.
@@ -3758,6 +3969,10 @@ namespace HierBEM
             timer.stop();
             print_wall_time(deallog, timer, "truncate M11(==V1)");
 
+            add_memory_consumption_row("M11(V1) H-matrix preconditioner",
+                                       M11_in_preconditioner,
+                                       "After assembly");
+
             timer.start();
 
             // Only when the \hmat actually has a hierarchical structure, the
@@ -3773,6 +3988,10 @@ namespace HierBEM
 
             timer.stop();
             print_wall_time(deallog, timer, "truncate M12(==K1)");
+
+            add_memory_consumption_row("M12(K1) H-matrix preconditioner",
+                                       M12_in_preconditioner,
+                                       "After assembly");
 
             timer.start();
 
@@ -3790,6 +4009,10 @@ namespace HierBEM
 
             timer.stop();
             print_wall_time(deallog, timer, "truncate M22(==D1)");
+
+            add_memory_consumption_row("M22(D1) H-matrix preconditioner",
+                                       M22_in_preconditioner,
+                                       "After assembly");
 
             M_hmat_preconditioner =
               HBlockMatrixSkewSymmPreconditioner<spacedim>(
@@ -4609,6 +4832,8 @@ namespace HierBEM
           HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
             SameTriangulations,
           true);
+
+        add_memory_consumption_row("V1 H-matrix", V1_hmat, "After assembly");
       }
 
     /**
@@ -4644,6 +4869,10 @@ namespace HierBEM
         V1_hmat_preconditioner = V1_hmat;
         V1_hmat_preconditioner.truncate_to_rank_preserve_positive_definite(
           max_hmat_rank_for_preconditioner);
+
+        add_memory_consumption_row("V1 H-matrix preconditioner",
+                                   V1_hmat_preconditioner,
+                                   "After assembly");
 
         /**
          * Perform Cholesky factorisation of the preconditioner.
@@ -4684,6 +4913,47 @@ namespace HierBEM
     std::cout << "=== Release the RHS vector for solving natural density ==="
               << std::endl;
     system_rhs_for_natural_density.reinit(0);
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::initialize_memory_consumption_table_headers()
+  {
+    memory_consumption_table.declare_column("Object");
+    memory_consumption_table.declare_column("Memory (MB)");
+    memory_consumption_table.declare_column("Comment");
+  }
+
+
+  template <int dim, int spacedim>
+  template <typename T>
+  void
+  LaplaceBEM<dim, spacedim>::add_memory_consumption_row(
+    const std::string &name,
+    const T           &obj,
+    const std::string &comment)
+  {
+    memory_consumption_table.start_new_row();
+    memory_consumption_table.add_value("Object", name);
+    memory_consumption_table.add_value(
+      "Memory (MB)",
+      MemoryConsumption::memory_consumption(obj) / 1024.0 / 1024.0);
+
+    if (comment.size() > 0)
+      {
+        memory_consumption_table.add_value("Comment", comment);
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::print_memory_consumption_table(
+    std::ostream &out) const
+  {
+    memory_consumption_table.write_text(
+      out, TableHandler::TextOutputFormat::org_mode_table);
   }
 } // namespace HierBEM
 

@@ -115,4 +115,6 @@ run_neumann_full_matrix()
   bem.assign_neumann_bc(neumann_bc);
 
   bem.run();
+
+  bem.print_memory_consumption_table(deallog.get_file_stream());
 }
