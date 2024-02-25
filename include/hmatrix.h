@@ -27,6 +27,7 @@
 
 #include "block_cluster.h"
 #include "block_cluster_tree.h"
+#include "config.h"
 #include "generic_functors.h"
 #include "hmatrix_support.h"
 #include "lapack_full_matrix_ext.h"
@@ -3649,7 +3650,7 @@ namespace HierBEM
      * Lock to prevent simultaneous execution of update tasks on a same
      * \hmatnode.
      */
-    std::recursive_mutex update_lock;
+    std::mutex update_lock;
   };
 
 
@@ -12077,8 +12078,7 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::recursive_mutex> ul(M0.update_lock,
-                                                      std::defer_lock);
+            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
             if (&M0 == &M)
               {
                 ul.lock();
@@ -12116,19 +12116,47 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::recursive_mutex> ul(M0.update_lock,
-                                                      std::defer_lock);
+            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
             if (&M0 == &M)
               {
                 ul.lock();
-              }
 
-            M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
-                                               *M.col_index_range,
-                                               *(Z.rkmatrix),
-                                               *(Z.row_index_range),
-                                               *(Z.col_index_range),
-                                               fixed_rank);
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 1
+                tbb::task_arena ta{1};
+                ta.execute([&M, &Z, fixed_rank] {
+                  M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                                     *M.col_index_range,
+                                                     *(Z.rkmatrix),
+                                                     *(Z.row_index_range),
+                                                     *(Z.col_index_range),
+                                                     fixed_rank);
+                });
+#endif
+
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 2
+                /**
+                 * There will be nested parallelism from deal.ii library in the
+                 * following function call. Hence, it should be isolated.
+                 */
+                tbb::this_task_arena::isolate([&M, &Z, fixed_rank] {
+                  M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                                     *M.col_index_range,
+                                                     *(Z.rkmatrix),
+                                                     *(Z.row_index_range),
+                                                     *(Z.col_index_range),
+                                                     fixed_rank);
+                });
+#endif
+              }
+            else
+              {
+                M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                                   *M.col_index_range,
+                                                   *(Z.rkmatrix),
+                                                   *(Z.row_index_range),
+                                                   *(Z.col_index_range),
+                                                   fixed_rank);
+              }
           }
       }
   }
@@ -13309,8 +13337,7 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::recursive_mutex> ul(M0.update_lock,
-                                                      std::defer_lock);
+            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
             if (&M0 == &M)
               {
                 ul.lock();
@@ -13348,19 +13375,47 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::recursive_mutex> ul(M0.update_lock,
-                                                      std::defer_lock);
+            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
             if (&M0 == &M)
               {
                 ul.lock();
-              }
 
-            M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
-                                               *M.col_index_range,
-                                               *(Z.rkmatrix),
-                                               *(Z.row_index_range),
-                                               *(Z.col_index_range),
-                                               fixed_rank);
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 1
+                tbb::task_arena ta{1};
+                ta.execute([&M, &Z, fixed_rank] {
+                  M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                                     *M.col_index_range,
+                                                     *(Z.rkmatrix),
+                                                     *(Z.row_index_range),
+                                                     *(Z.col_index_range),
+                                                     fixed_rank);
+                });
+#endif
+
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 2
+                /**
+                 * There will be nested parallelism from deal.ii library in the
+                 * following function call. Hence, it should be isolated.
+                 */
+                tbb::this_task_arena::isolate([&M, &Z, fixed_rank] {
+                  M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                                     *M.col_index_range,
+                                                     *(Z.rkmatrix),
+                                                     *(Z.row_index_range),
+                                                     *(Z.col_index_range),
+                                                     fixed_rank);
+                });
+#endif
+              }
+            else
+              {
+                M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                                   *M.col_index_range,
+                                                   *(Z.rkmatrix),
+                                                   *(Z.row_index_range),
+                                                   *(Z.col_index_range),
+                                                   fixed_rank);
+              }
           }
       }
   }
@@ -24225,7 +24280,7 @@ namespace HierBEM
                * When we come to the addition into a leaf \hmatnode, the mutex
                * should be locked.
                */
-              std::lock_guard<std::recursive_mutex> lg(update_lock);
+              std::lock_guard<std::mutex> lg(update_lock);
               /**
                * \alert{2022-05-06 The explicit type cast here for
                * @p fullmatrix_from_rk is mandatory, otherwise the compiler will
@@ -24267,8 +24322,25 @@ namespace HierBEM
                * When we come to the addition into a leaf \hmatnode, the mutex
                * should be locked.
                */
-              std::lock_guard<std::recursive_mutex> lg(update_lock);
-              this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
+              std::lock_guard<std::mutex> lg(update_lock);
+
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 1
+              tbb::task_arena ta{1};
+              ta.execute([this, &rkmatrix_by_restriction, fixed_rank_k] {
+                this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
+              });
+#endif
+
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 2
+              /**
+               * There will be nested parallelism from deal.ii library in the
+               * following function call. Hence, it should be isolated.
+               */
+              tbb::this_task_arena::isolate(
+                [this, &rkmatrix_by_restriction, fixed_rank_k] {
+                  this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
+                });
+#endif
             }
 
             break;

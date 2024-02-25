@@ -17,5 +17,7 @@
 #define ENABLE_MATRIX_EXPORT @HBEM_ENABLE_MATRIX_EXPORT@
 #define ENABLE_NVTX @HBEM_ENABLE_NVTX@
 #define RANDOM_ACA @HBEM_RANDOM_ACA@
+/* 1 for using TBB arena and 2 for using tbb isolate in update tasks for H-LU and H-Cholesky  */
+#define ARENA_OR_ISOLATE_IN_LU_AND_CHOL @HBEM_ARENA_OR_ISOLATE_IN_LU_AND_CHOL@
 
 #endif /* INCLUDE_CONFIG_H_ */
