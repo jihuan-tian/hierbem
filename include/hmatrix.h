@@ -3352,9 +3352,18 @@ namespace HierBEM
       HMatrix<spacedim, Number> &solve_upper_or_lower_block);
 
     /**
-     * Build @p update task to @p solve_upper task or @p solve_lower task
-     * dependencies or transfer the @p update tasks of the current \hmatnode
-     * to its descendants.
+     * Build task dependencies between @p update tasks, @p solve_upper tasks
+     * @p solve_lower tasks and @p factorize tasks.
+     *
+     * The following operations will be prformed:
+     *
+     * 1. Build @p update task to @p solve_upper or @p solve_lower task
+     * dependencies.
+     * 2. Transfer the @p update tasks of the current \hmatnode to its
+     * descendants.
+     * 3. Build @p update task to @p factorize task dependencies.
+     * 4. Build task dependencies between @p factorize tasks on successive
+     * H-matrix levels.
      */
     void
     lu_assign_update_to_solve_and_factorize_dependencies();
@@ -3452,8 +3461,17 @@ namespace HierBEM
       HMatrix<spacedim, Number> &solve_upper_block);
 
     /**
-     * Build @p update task to @p solve_upper task dependencies or transfer the
-     * @p update tasks of the current \hmatnode to its descendants.
+     * Build task dependencies between @p update tasks, @p solve_upper tasks and
+     * @p factorize tasks.
+     *
+     * The following operations will be prformed:
+     *
+     * 1. Build @p update task to @p solve_upper task dependencies.
+     * 2. Transfer the @p update tasks of the current \hmatnode to its
+     * descendants.
+     * 3. Build @p update task to @p factorize task dependencies.
+     * 4. Build task dependencies between @p factorize tasks on successive
+     * H-matrix levels.
      */
     void
     cholesky_assign_update_to_solve_and_factorize_dependencies();
@@ -27915,7 +27933,13 @@ namespace HierBEM
                  * factorized.
                  */
                 if (parent != nullptr &&
-                    parent->factorize_lu_or_cholesky_graph_node)
+                    parent->factorize_lu_or_cholesky_graph_node &&
+                    // Only when the current matrix block is the last diagonal
+                    // block within its parent matrix, the
+                    // factorization-to-factorization task dependency will be
+                    // created.
+                    submatrix_index == (parent->get_n_row_blocks() - 1) *
+                                         (parent->get_n_col_blocks() + 1))
                   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
                     std::cout << "factorize-to-factorize at level ("
@@ -28880,7 +28904,13 @@ namespace HierBEM
                  * factorized.
                  */
                 if (parent != nullptr &&
-                    parent->factorize_lu_or_cholesky_graph_node)
+                    parent->factorize_lu_or_cholesky_graph_node &&
+                    // Only when the current matrix block is the last diagonal
+                    // block within its parent matrix, the
+                    // factorization-to-factorization task dependency will be
+                    // created.
+                    submatrix_index == (parent->get_n_row_blocks() - 1) *
+                                         (parent->get_n_col_blocks() + 1))
                   {
 #if ENABLE_DEBUG == 1 && MESSAGE_LEVEL >= 2
                     std::cout << "factorize-to-factorize at level ("
