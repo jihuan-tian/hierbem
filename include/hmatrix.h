@@ -12121,8 +12121,17 @@ namespace HierBEM
               {
                 ul.lock();
 
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
+                M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                                   *M.col_index_range,
+                                                   *(Z.rkmatrix),
+                                                   *(Z.row_index_range),
+                                                   *(Z.col_index_range),
+                                                   fixed_rank);
+#endif
+
 #if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 1
-                tbb::task_arena ta{1};
+                tbb::task_arena ta{ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL};
                 ta.execute([&M, &Z, fixed_rank] {
                   M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                                      *M.col_index_range,
@@ -13380,8 +13389,17 @@ namespace HierBEM
               {
                 ul.lock();
 
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
+                M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
+                                                   *M.col_index_range,
+                                                   *(Z.rkmatrix),
+                                                   *(Z.row_index_range),
+                                                   *(Z.col_index_range),
+                                                   fixed_rank);
+#endif
+
 #if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 1
-                tbb::task_arena ta{1};
+                tbb::task_arena ta{ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL};
                 ta.execute([&M, &Z, fixed_rank] {
                   M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                                      *M.col_index_range,
@@ -24324,8 +24342,13 @@ namespace HierBEM
                */
               std::lock_guard<std::mutex> lg(update_lock);
 
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
+              this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
+#endif
+
+
 #if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 1
-              tbb::task_arena ta{1};
+              tbb::task_arena ta{ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL};
               ta.execute([this, &rkmatrix_by_restriction, fixed_rank_k] {
                 this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
               });
