@@ -3650,7 +3650,7 @@ namespace HierBEM
      * Lock to prevent simultaneous execution of update tasks on a same
      * \hmatnode.
      */
-    std::mutex update_lock;
+    tbb::mutex update_lock;
   };
 
 
@@ -12078,10 +12078,10 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
+            tbb::mutex::scoped_lock ul;
             if (&M0 == &M)
               {
-                ul.lock();
+                ul.acquire(M0.update_lock);
               }
 
             M.fullmatrix->fill(*(Z.fullmatrix),
@@ -12116,10 +12116,10 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
+            tbb::mutex::scoped_lock ul;
             if (&M0 == &M)
               {
-                ul.lock();
+                ul.acquire(M0.update_lock);
 
 #if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
                 M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
@@ -13346,10 +13346,10 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
+            tbb::mutex::scoped_lock ul;
             if (&M0 == &M)
               {
-                ul.lock();
+                ul.acquire(M0.update_lock);
               }
 
             M.fullmatrix->fill(*(Z.fullmatrix),
@@ -13384,10 +13384,10 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            std::unique_lock<std::mutex> ul(M0.update_lock, std::defer_lock);
+            tbb::mutex::scoped_lock ul;
             if (&M0 == &M)
               {
-                ul.lock();
+                ul.acquire(M0.update_lock);
 
 #if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
                 M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
@@ -24298,7 +24298,7 @@ namespace HierBEM
                * When we come to the addition into a leaf \hmatnode, the mutex
                * should be locked.
                */
-              std::lock_guard<std::mutex> lg(update_lock);
+              tbb::mutex::scoped_lock lg(update_lock);
               /**
                * \alert{2022-05-06 The explicit type cast here for
                * @p fullmatrix_from_rk is mandatory, otherwise the compiler will
@@ -24340,7 +24340,7 @@ namespace HierBEM
                * When we come to the addition into a leaf \hmatnode, the mutex
                * should be locked.
                */
-              std::lock_guard<std::mutex> lg(update_lock);
+              tbb::mutex::scoped_lock lg(update_lock);
 
 #if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
               this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
