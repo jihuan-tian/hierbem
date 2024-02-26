@@ -3650,7 +3650,7 @@ namespace HierBEM
      * Lock to prevent simultaneous execution of update tasks on a same
      * \hmatnode.
      */
-    tbb::mutex update_lock;
+    tbb::spin_mutex update_lock;
   };
 
 
@@ -12078,7 +12078,7 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            tbb::mutex::scoped_lock ul;
+            tbb::spin_mutex::scoped_lock ul;
             if (&M0 == &M)
               {
                 ul.acquire(M0.update_lock);
@@ -12116,7 +12116,7 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            tbb::mutex::scoped_lock ul;
+            tbb::spin_mutex::scoped_lock ul;
             if (&M0 == &M)
               {
                 ul.acquire(M0.update_lock);
@@ -13346,7 +13346,7 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            tbb::mutex::scoped_lock ul;
+            tbb::spin_mutex::scoped_lock ul;
             if (&M0 == &M)
               {
                 ul.acquire(M0.update_lock);
@@ -13384,7 +13384,7 @@ namespace HierBEM
              * @p M0, the mutex will be locked. Otherwise, the result matrix
              * @p M is only a temporary object, which needs not be locked.
              */
-            tbb::mutex::scoped_lock ul;
+            tbb::spin_mutex::scoped_lock ul;
             if (&M0 == &M)
               {
                 ul.acquire(M0.update_lock);
@@ -24298,7 +24298,7 @@ namespace HierBEM
                * When we come to the addition into a leaf \hmatnode, the mutex
                * should be locked.
                */
-              tbb::mutex::scoped_lock lg(update_lock);
+              tbb::spin_mutex::scoped_lock lg(update_lock);
               /**
                * \alert{2022-05-06 The explicit type cast here for
                * @p fullmatrix_from_rk is mandatory, otherwise the compiler will
@@ -24340,7 +24340,7 @@ namespace HierBEM
                * When we come to the addition into a leaf \hmatnode, the mutex
                * should be locked.
                */
-              tbb::mutex::scoped_lock lg(update_lock);
+              tbb::spin_mutex::scoped_lock lg(update_lock);
 
 #if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
               this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
