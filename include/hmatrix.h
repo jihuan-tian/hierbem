@@ -12121,7 +12121,7 @@ namespace HierBEM
               {
                 ul.lock();
 
-#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 3
                 M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                                    *M.col_index_range,
                                                    *(Z.rkmatrix),
@@ -13389,7 +13389,7 @@ namespace HierBEM
               {
                 ul.lock();
 
-#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 3
                 M.rkmatrix->assemble_from_rkmatrix(*M.row_index_range,
                                                    *M.col_index_range,
                                                    *(Z.rkmatrix),
@@ -24342,7 +24342,7 @@ namespace HierBEM
                */
               std::lock_guard<std::mutex> lg(update_lock);
 
-#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 0
+#if ARENA_OR_ISOLATE_IN_LU_AND_CHOL == 3
               this->rkmatrix->add(rkmatrix_by_restriction, fixed_rank_k);
 #endif
 

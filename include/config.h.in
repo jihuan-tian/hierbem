@@ -19,9 +19,9 @@
 #define RANDOM_ACA @HBEM_RANDOM_ACA@
 /**
  * In @p update tasks in H-LU and H-Cholesky for restricting work stealing:
- * - 0: disable TBB arena and isolate
  * - 1: use TBB arena 
  * - 2: use TBB isolate
+ * - 3: disable TBB arena and isolate
  */
 #define ARENA_OR_ISOLATE_IN_LU_AND_CHOL @HBEM_ARENA_OR_ISOLATE_IN_LU_AND_CHOL@
 /**
