@@ -1,0 +1,494 @@
+/*
+** Copyright (C) 2020 Jihuan Tian <jihuan_tian@hotmail.com>
+**  
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**  
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**  
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+**  
+*/
+
+ttyoff : true$
+
+fem_loaded : true$
+
+/* Load required packages */
+load("vect")$
+load("interpol")$
+load("facexp")$
+load("data_conversion.mac")$
+load("fem_symbols.mac")$
+
+/* Generate a list of 1D points in a range with equal distance.
+   @param start_val Starting value of the range.
+   @param end_val End value of the range.
+   @param n Number of points
+*/
+linspace(start_val, end_val, n) :=
+  block([],
+        if (n <= 0)
+        then
+          return([])
+        else
+          if (n = 1)
+          then
+            return((start_val + end_val) / 2)
+          else
+            block([subdiv_length, i],
+                  subdiv_length : (end_val - start_val) / (n - 1),
+                  return(makelist(start_val + i * subdiv_length, i, 0, (n - 1)))
+                 )
+       )$
+
+/* ***************************************************** */
+/* #region Generate nodes and basis functions on 1D line */
+/* ***************************************************** */
+
+/* Calculate the number of nodes in a 1D reference cell with the specified orders.
+   @param order Polynomial order on the 1D cell.
+*/
+LineNumOfNodes(order) := order + 1;
+
+/* Generate Lagrange nodes on 1D reference cell.
+   @param order Order of the Lagrange polynomial.
+   @param cell1d A two element list representing the 1D cell.
+ */
+GenLagrangeNodes1D(order, cell1d) :=
+  block([],
+        if (order < 0)
+        then
+          return([])
+        else
+          return(linspace(cell1d[1], cell1d[2], LineNumOfNodes(order)))
+       )$
+
+/* Generate a Lagrange polynomial which concentrates on the node specified by
+   the index on the 1D reference cell.
+   @param order Order of the Lagrange polynomial.
+   @param node_index Index of the node on which the Lagrange polynomial
+   concentrates. The index value  starts from \f$0\f$.
+   @param cell1d A two element list representing the 1D cell.
+   @param varname Variable name in noun form for the Lagrange polynomial.
+*/
+GenLagrangeBase1DAtNode(order, node_index, cell1d, varname) := 
+  block([node_list, i, poly],
+        if (order < 0)
+        then
+          return([])
+        else
+          block([],
+                /* Start from 0th order polynomial. */
+                poly : 1,
+
+                if (order > 0)
+                then
+                  /* Generate a list of Lagrange nodes. */
+                  (node_list : GenLagrangeNodes1D(order, cell1d),
+
+                   /* Iterate through each node */
+                   for i : 0 step 1 thru order
+                     do
+                       if (i # node_index)
+                       then
+                         poly : poly * (varname - node_list[i+1]) / (node_list[node_index+1] - node_list[i+1])),
+
+                return(poly)
+               )
+       )$
+
+/* Generate a list of Lagrange polynomials with specified order on the 1D
+   reference cell.
+   @param order Order of the Lagrange polynomial.
+   @param cell1d A two element list representing the 1D cell.
+   @param varname Variable name in noun form for the Lagrange polynomial.
+*/
+GenLagrangeBases1D(order, cell1d, varname) :=
+  block(makelist(GenLagrangeBase1DAtNode(order, i, cell1d, varname), i, 0, order))$
+
+/* #region Generate nodes and basis functions on 2D rectangle using
+tensor product */
+
+/* Calculate the number of nodes in a rectangle with the specified orders.
+   @param orders Two element list specifying polynomial orders in two directions.
+*/
+RectNumOfNodes(orders) := (orders[1] + 1) * (orders[2] + 1)$
+
+/* \brief Generate Lagrange nodes on 2D reference cell.
+   Tensor product is used for generating the 2D nodes from 1D cells.
+   @param orders Two element list specifying polynomial orders in two directions.
+   @param cell1d_var1 A two element list representing the 1D cell in the direction
+   of the first variable.
+   @param cell1d_var2 A two element list representing the 1D cell in the direction
+   of the second variable.
+ */
+GenLagrangeNodes2D(orders, cell1d_var1, cell1d_var2) :=
+  block([nodes_var1, nodes_var2, node_list_2d, i, j],
+        node_list_2d : matrix(),
+        
+        nodes_var1 : GenLagrangeNodes1D(orders[1], cell1d_var1),
+        nodes_var2 : GenLagrangeNodes1D(orders[2], cell1d_var2),
+        
+        for j : 0 step 1 thru orders[2]
+          do
+            for i : 0 step 1 thru orders[1]
+            do
+              node_list_2d : addrow(node_list_2d, [nodes_var1[i + 1], nodes_var2[j + 1]]),
+
+        return(node_list_2d)
+       )$
+
+/* Generate a 2D Lagrange polynomial with a specified order at a node on the 2D
+   reference cell. The node is specified by a 2D index.
+   @param orders Two element list specifying polynomial orders in two directions.
+   @param indices Two element list specifying the 2D node index.
+   @param cell1d_var1 A two element list representing the 1D cell in the direction
+   of the first variable.
+   @param cell1d_var2 A two element list representing the 1D cell in the direction
+   of the second variable.
+   @param varnames Variable name in noun form of the function.
+*/
+GenLagrangeBase2DAtNode(orders, indices, cell1d_var1, cell1d_var2, varnames) :=
+  block(GenLagrangeBase1DAtNode(orders[1], indices[1], cell1d_var1, varnames[1]) * GenLagrangeBase1DAtNode(orders[2], indices[2], cell1d_var2, varnames[2]))$
+
+/* Generate all the 2D Lagrange polynomials on the 2D reference cell with
+   specified order.
+   @param orders Two element list specifying polynomial orders in two directions.
+   @param cell1d_var1 A two element list representing the 1D cell in the direction
+   of the first variable.
+   @param cell1d_var2 A two element list representing the 1D cell in the direction
+   of the second variable.
+   @param varnames Variable name in noun form of the function.
+*/
+GenLagrangeBases2D(orders, cell1d_var1, cell1d_var2, varnames) :=
+  block([i, j],
+        flatten(makelist(makelist(GenLagrangeBase2DAtNode(orders, [i, j], cell1d_var1, cell1d_var2, varnames), i, 0, orders[1]), j, 0, orders[2]))
+       )$
+
+/* #region Generate nodes and basis functions on 3D cube using tensor
+product. */
+
+/* Calculate the number of nodes in a cube with the specified orders.
+   @param orders Three element list specifying polynomial orders in three directions.
+*/
+CubeNumOfNodes(orders) := (orders[1] + 1) * (orders[2] + 1) * (orders[3] + 1)$
+
+/* \brief Generate Lagrange nodes on 3D reference cell.
+   Tensor product is used for generating the 3D nodes from 1D cells.
+   @param orders Three element list specifying polynomial orders in three directions.
+   @param cell1d_var1 A two element list representing the 1D cell in the direction
+   of the first variable.
+   @param cell1d_var2 A two element list representing the 1D cell in the direction
+   of the second variable.
+   @param cell1d_var3 A two element list representing the 1D cell in the direction
+   of the third variable.
+ */
+GenLagrangeNodes3D(orders, cell1d_var1, cell1d_var2, cell1d_var3) :=
+  block([nodes_var1, nodes_var2, nodes_var3, node_list_3d, i, j, k],
+        node_list_3d : matrix(),
+        
+        nodes_var1 : GenLagrangeNodes1D(orders[1], cell1d_var1),
+        nodes_var2 : GenLagrangeNodes1D(orders[2], cell1d_var2),
+        nodes_var3 : GenLagrangeNodes1D(orders[3], cell1d_var3),
+        
+        for i : 0 step 1 thru orders[1]
+          do
+            for j : 0 step 1 thru orders[2]
+            do
+              for k : 0 step 1 thru orders[3]
+              do
+                node_list_3d : addrow(node_list_3d, [nodes_var1[i + 1], nodes_var2[j + 1], nodes_var3[k + 1]]),
+
+        return(node_list_3d)
+       )$
+
+/* Generate a 3D Lagrange polynomial with a specified order at a node on the 3D
+   reference cell. The node is specified by a 3D index.
+   @param orders Three element list specifying polynomial orders in three directions.
+   @param indices Three element list specifying the 3D node index.
+   @param cell1d_var1 A two element list representing the 1D cell in the direction
+   of the first variable.
+   @param cell1d_var2 A two element list representing the 1D cell in the direction
+   of the second variable.
+   @param cell1d_var3 A two element list representing the 1D cell in the direction
+   of the third variable.
+   @param varnames Variable name in noun form of the function.
+*/
+GenLagrangeBase3DAtNode(orders, indices, cell1d_var1, cell1d_var2, cell1d_var3, varnames) :=
+  block(GenLagrangeBase1DAtNode(orders[1], indices[1], cell1d_var1, varnames[1]) * GenLagrangeBase1DAtNode(orders[2], indices[2], cell1d_var2, varnames[2]) * GenLagrangeBase1DAtNode(orders[3], indices[3], cell1d_var3, varnames[3]))$
+
+/* Generate all the 3D Lagrange polynomials on the 3D reference cell with
+   specified order.
+   @param orders Three element list specifying polynomial orders in three directions.
+   @param cell1d_var1 A two element list representing the 1D cell in the direction
+   of the first variable.
+   @param cell1d_var2 A two element list representing the 1D cell in the direction
+   of the second variable.
+   @param cell1d_var3 A two element list representing the 1D cell in the direction
+   of the third variable.
+   @param varnames Variable name in noun form of the function.
+*/
+GenLagrangeBases3D(orders, cell1d_var1, cell1d_var2, cell1d_var3, varnames) :=
+  block([i, j, k],
+        flatten(makelist(makelist(makelist(GenLagrangeBase3DAtNode(orders, [i, j, k], cell1d_var1, cell1d_var2, cell1d_var3, varnames), k, 0, orders[3]), j, 0, orders[2]), i, 0, orders[1]))
+       )$
+
+/* #region Generate nodes and basis functions on ND cube */
+
+/* Calculate the number of nodes in a N-dimensional cube with the specified orders.
+   @param orders List specifying polynomial orders in all directions.
+*/
+NDCubeNumOfNodes(orders) :=
+  block([space_dim, num_of_nodes, i],
+        space_dim : length(orders),
+        
+        if (space_dim <= 0)
+        then
+          return(0)
+        else
+          block([],
+                num_of_nodes : 1,
+                for i : 1 step 1 thru space_dim
+                  do
+                    num_of_nodes : num_of_nodes * (orders[i] + 1),
+
+                return(num_of_nodes)
+               )
+       )$
+
+/* #region Generate nodes and basis functions on 2D triangle */
+
+/* Calculate the number of nodes in a triangle with the specified order. */
+TriNumOfNodes(order) := (order + 2) * (order + 1) / 2$
+
+/* Generate the area coordinates for the list of supporting nodes with
+a specified order in a triangle. */
+GenTriaNodes(order) :=
+  block([area_coord_matrix, i, j, subdiv_length],
+        area_coord_matrix : matrix(),
+
+        if (order = 0)
+        then
+          area_coord_matrix : addrow(area_coord_matrix, [1/4, 1/4, 1/2])
+        else
+          block(subdiv_length : 1 / order,
+                for i : 0 step subdiv_length thru 1
+                  do
+                    for j : 0 step subdiv_length thru (1 - i)
+                    do
+                      area_coord_matrix : addrow(area_coord_matrix, [i, j, 1 - i - j])
+               ),
+
+        return(area_coord_matrix)
+       )$
+
+/* Generate the homogeneous polynomial with two DOFs with the specified order.
+   @param order Polynomial order.
+   @param coeff_noun Noun form of the polynomial coefficient.
+   @param dofs_noun Noun forms of the DOFs.
+*/
+HomoPoly2DOFs(coeff_noun, dofs_noun, order) :=
+  block([poly, /* generated polynomial */
+         /* Loop variables for the two DOFs */
+         i, j,
+         /* Counter for the polynomial terms */
+         c
+        ],
+        poly : 0,
+        c : 0,
+        for i : 0 step 1 thru order
+          do
+            block(c : c + 1,
+                  j : order - i,
+                  poly : poly + coeff_noun[c] * dofs_noun[1]^i * dofs_noun[2]^j
+                 ),
+        poly
+       )$
+
+/* Generate the homogeneous polynomial with three DOFs with the specified order.
+   @param order Polynomial order.
+   @param coeff_noun Noun form of the polynomial coefficient.
+   @param dofs_noun Noun forms of the DOFs.
+*/
+HomoPoly3DOFs(coeff_noun, dofs_noun, order) :=
+  block([poly, /* generated polynomial */
+         /* Loop variables for the three DOFs */
+         i, j, k,
+         /* Counter for the polynomial terms */
+         c
+        ],
+        poly : 0,
+        c : 0,
+        for i : 0 step 1 thru order
+          do
+            for j : 0 step 1 thru order - i
+            do
+              block(c : c + 1,
+                    k : order - i - j,
+                    poly : poly + coeff_noun[c] * dofs_noun[1]^i * dofs_noun[2]^j * dofs_noun[3]^k),
+        poly
+       )$
+
+/* Generate shape functions for triangle with the specified order */
+TriShapeFuncs(dofs_noun, order) :=
+  block([/* Formal coefficients of the distribution function phi, which is represented as a homogeneous polynomial. */
+         a,
+         /* Coefficients of the distribution function represented in
+            homogeneous polynomial. */
+         homo_poly_coeffs,
+         /* Number of shape functions */
+         shape_func_num,
+         /* Distribution function values at supporting nodes */
+         phi,
+         /* Equations established by evaluting the distribution function at
+            each vertex. */
+         func_val_at_nodes_eqns,
+         /* Area coordinates for all the vertces in the triangle. */
+         area_coords,
+         i
+        ],
+
+        if (order = 0)
+        then
+          return([1])
+        else
+          block(shape_func_num : TriNumOfNodes(order),
+                /* General form of the distibution function phi on the triangle. */
+                func_form : HomoPoly3DOFs('a, dofs_noun, order),
+
+                /* Area coordinates for all nodes in the cell */
+                area_coords : GenTriaNodes(order),
+
+                /* Establish equations by substituting area coordinates of the supporting nodes into the
+                   function phi's homogeneous polynomial representation. */
+                func_val_at_nodes_eqns : makelist(phi[i] = subst([dofs_noun[1] = area_coords[i,1], dofs_noun[2] = area_coords[i,2], dofs_noun[3] = area_coords[i,3]], func_form), i, 1, shape_func_num),
+
+                /* Symboliccally solve the coefficients of the
+                homogeneous polynomial representation of phi, which
+                are dependent on {phi[i]}. */
+                homo_poly_coeffs : linsolve(func_val_at_nodes_eqns, makelist(a[i], i, 1, shape_func_num)),
+                
+                /* Collect the terms about function value at each
+                   vertex, i.e. phi[i]. The coefficient of phi[i] is
+                   just the corresponding shape function associated
+                   with the i'th supporting node. */
+                for i : 1 step 1 thru shape_func_num
+                  do
+                    func_form : collectterms(expand(subst(homo_poly_coeffs, func_form)), phi[i]),
+
+                /* Extract the coefficient of each phi[i] as the shape
+                function for the i'th supporting node. Then return all
+                of them in a list. */
+                return(makelist(factor(ratcoeff(func_form, phi[i])), i, 1, shape_func_num))
+               )
+       )$
+
+/* Map from the area coordinate to global coordinate. */
+AreaToGlobalMap(node_list, shape_funcs) :=
+  block([node_num, space_dim, global_coord, i],
+        node_num : length(node_list),
+        space_dim : length(node_list[1]),
+        global_coord : makelist(0, i, 1, space_dim),
+        
+        for i : 1 step 1 thru node_num
+          do
+            global_coord : global_coord + node_list[i] * shape_funcs[i],
+
+        return(global_coord)
+       )$
+  
+
+/* Transform area coordinates to global coordinates using the map. */
+AreaToGlobalCoord(area_coord, area_coord_noun, area_to_global_map) :=
+  block([i],
+        return(subst(makelist(area_coord_noun[i] = area_coord[i], i, 1, length(area_coord_noun)), area_to_global_map))
+       )$
+
+/* ********************************* */
+/* #region Jacobi matrix calculation */
+/* ********************************* */
+
+/* Calculate the Jacobi matrix element with the specified indices for the
+function and the variable respectively. */
+JacobiElem(func_list, var_list, func_index, var_index) := diff(func_list[func_index], var_list[var_index])$
+
+/* Generate the Jacobia matrix for a list of functions and a list of variables.
+*/
+JacobiMat(func_list, var_list) := genmatrix(lambda([i, j], JacobiElem(func_list, var_list, i, j)), length(func_list), length(var_list));
+
+
+/* Generate the Jacobi matrix for shape functions in a cubic cell with respect
+to area coordinates */
+CubeShapeFunctionJacobiMat(shape_functions, area_coord_noun) := JacobiMat(shape_functions, area_coord_noun)$
+
+/* Generate the global Jacobi matrix, i.e. from area coordinates to global
+coordinates, for a cubic cell, which has the same dimension as the space.
+   @param shape_functions A list of shape functions depending on area
+   coordinates for the cell.
+   @param area_coord_noun A list of variables in noun form representing the area
+   coordinates in the cell.
+   @param node_global_coords A list of global coordinates for the nodes in the
+   cell, which is stored as a list of lists.
+*/
+CubicAreaToGlobalJacobiMat(shape_functions, area_coord_noun, node_global_coords) := transpose(ListToMatrix(node_global_coords)) . CubeShapeFunctionJacobiMat(shape_functions, area_coord_noun)$
+
+/* Generate the Jacobi matrix for shape functions in a simplex cell with respect
+to area coordinates */
+SimplexShapeFunctionJacobiMat(shape_functions, area_coord_noun) :=
+  block([effective_area_coord_noun, /* The effective area coordinate variables in noun form which are used in calculation of Jacobi matrix. It is assumed that the first (M-1) area coordinate components are independent. */
+         jacobi_wrt_last_area_coord_col, /* The Jacobi column vector with respect to the last area coordinate variable */
+         jacobi_wrt_last_area_coord_matrix, /* Replication of the Jacobi column vector with respect to the last area coordinate variable. */
+         M, /* The number of area coordinate variables */
+         i /* Loop variable */
+        ],
+        M : length(area_coord_noun),
+        effective_area_coord_noun : firstn(area_coord_noun, M - 1),
+        jacobi_wrt_last_area_coord_col : JacobiMat(shape_functions, [area_coord_noun[M]]),
+        jacobi_wrt_last_area_coord_matrix : matrix(),
+        for i : 1 step 1 thru (M - 1)
+          do
+            /* Assemble the matrix from the vector of shape function derivatives with respect to the last area coordinate variable. */
+            jacobi_wrt_last_area_coord_matrix : addcol(jacobi_wrt_last_area_coord_matrix, jacobi_wrt_last_area_coord_col),
+        /* Calculate the final Jacobi matrix for shape functions. */
+        JacobiMat(shape_functions, effective_area_coord_noun) - jacobi_wrt_last_area_coord_matrix
+       )$
+
+/* Generate the global Jacobi matrix, i.e. from area coordinates to global
+coordinates, for a simplex cell (triangle in 2D, tetrahedron in 3D, etc.)
+embedded in the higher dimensional space.
+   @param shape_functions A list of shape functions for each node in the cell.
+   @param area_coord_noun Noun form of the area coordinates, on which the shape functions depend.
+   @param node_global_coords A list of node global coordinates.
+   @param effective_node_coord_indices Indices of the node coordinates to be used.
+*/
+SimplexGlobalJacobiMat(shape_functions, area_coord_noun, node_global_coords, effective_node_coord_indices) :=
+  block([node_global_coord_matrix, /* The matrix storing global node coordinates */
+         effective_node_global_coord_matrix, /* The related node coordinate components  to be used */
+         N, /* The number of effective area coordinate variables */
+         M, /* The number of area coordinate variables */
+         i /* Loop variable */
+        ],
+        N : length(effective_node_coord_indices),
+        M : length(area_coord_noun),
+        if is(M = (N + 1))
+        then
+          block([],
+                node_global_coord_matrix : transpose(ListToMatrix(node_global_coords)),
+                effective_node_global_coord_matrix : matrix(),
+                for i : 1 step 1 thru N
+                  do
+                    /* Extract the effective node coordinates based on the specified indices. */
+                    effective_node_global_coord_matrix : addrow(effective_node_global_coord_matrix, row(node_global_coord_matrix, effective_node_coord_indices[i])),
+                /* Calculate the final Jacobi matrix. */
+                effective_node_global_coord_matrix . SimplexShapeFunctionJacobiMat(shape_functions, area_coord_noun))
+       )$
+
+ttyoff : false$

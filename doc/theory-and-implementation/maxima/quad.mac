@@ -1,0 +1,31 @@
+kill(all)$
+load("draw")$
+load("f90")$
+load("./color_map.mac")$
+load(stringproc)$
+load("./fem.mac")$
+load("./tex_format.mac")$
+load("./gauss_quadrature.mac")$
+
+f90_output_line_length_max : 1e9;
+
+/* Declaration of the noun form of global coordinates. */
+X : ['x, 'y, 'z]$
+/* Declaration of the noun form of local coordinates. */
+chi : ['xi, 'eta]$
+
+/* ***************************************************** */
+/* Generate Lagrange polynomials on 2D rectangle */
+/* ***************************************************** */
+lagrange_2D_x_range : [0, 1]$
+lagrange_2D_y_range : [0, 1]$
+max_basis_order : 3$
+
+display2d : false$
+
+/* Generate basis functions. */
+quad_shape_functions : makelist(GenLagrangeBases2D([i, i], lagrange_2D_x_range, lagrange_2D_y_range, chi), i, 1, max_basis_order);
+
+/* Generate Jacobi matrix of basis functions with respect to area
+coordinates. */
+quad_shape_func_jacobi_matrices : makelist(CubeShapeFunctionJacobiMat(quad_shape_functions[i], chi), i, 1, max_basis_order);

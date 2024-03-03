@@ -1,0 +1,66 @@
+/*
+** Copyright (C) 2020 Jihuan Tian <jihuan_tian@hotmail.com>
+**  
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**  
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**  
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+**  
+*/
+
+/* N.B. When displaying a string, set display2d to false. */
+
+ttyoff : true$
+
+tex_format_loaded : true$
+
+/* Automatic break long TeX equation using aligned environment */
+BreakTex(tex_str) :=
+  block([tex_str_break],
+        tex_str_break : striml("\\left[ ", tex_str),
+        tex_str_break : strimr("\\right]", tex_str_break),
+        sconcat("\\begin{equation}", newline, "\\begin{aligned}", newline,
+                tex_str, newline,
+                "\\end{aligned}", newline, "\\end{equation}"
+          )
+    )$
+
+/* Remove conditionals for typesetting pmatrix in TeX source code. */
+RemoveTexPMatrixIfx(tex_str) :=
+  block([cleaned_tex_str],
+        cleaned_tex_str : ssubst("\\begin{pmatrix}", "\\ifx\\endpmatrix\\undefined\\pmatrix{\\else\\begin{pmatrix}\\fi ", tex_str),
+        cleaned_tex_str : ssubst("\\end{pmatrix}", "\\ifx\\endpmatrix\\undefined}\\else\\end{pmatrix}\\fi ", cleaned_tex_str)
+    )$
+
+/* Wrap the TeX string with $...$ */
+WrapInlineTex(tex_str) := concat("$", tex_str, "$")$
+
+/* Wrap the TeX string with $$...$$ */
+WrapDisplayTex(tex_str) := concat("$$", newline, tex_str, newline, "$$")$
+
+
+/* Generate inline TeX string for the input expression. */
+GenInlineTex(expr) := printf(true, WrapInlineTex(tex1(expr)))$
+
+/* Generate display TeX string for the input expression. */
+GenDisplayTex(expr) := 
+  block([cleaned_tex_str],
+        if (matrixp(expr))
+        then
+          cleaned_tex_str : RemoveTexPMatrixIfx(tex1(expr))
+        else
+          cleaned_tex_str : tex1(expr),
+        
+        printf(true, WrapDisplayTex(cleaned_tex_str))
+       )$
+
+ttyoff : false$
