@@ -20,6 +20,10 @@ function plot_bct_struct(varargin)
   p.addParameter("border_width", 1, val_float);
   p.addParameter("near_field_rank_color", "k", @ischar);
   p.addParameter("far_field_rank_color", "k", @ischar);
+  p.addParameter("connect_blocks", false, @isbool);
+  p.addParameter("connection_arrow_length", 0.5, val_float);
+  p.addParameter("connection_arrow_width", 0.25, val_float);
+  p.addParameter("connection_arrow_type", 1, val_float);
 
   p.parse(varargin{2:end});
 
@@ -27,16 +31,19 @@ function plot_bct_struct(varargin)
 
   hold on;
   axis off;
-  
-  for m = 1:length(block_clusters)
+
+  number_of_blocks = length(block_clusters);
+  block_list = cell(number_of_blocks, 1);
+  for m = 1:number_of_blocks
     yrange = [(block_clusters{m}.tau(1) - 0.5) * p.Results.unit_size, (block_clusters{m}.tau(end) - 1 + 0.5) * p.Results.unit_size] + 1;
     xrange = [(block_clusters{m}.sigma(1) - 0.5) * p.Results.unit_size, (block_clusters{m}.sigma(end) - 1 + 0.5) * p.Results.unit_size] + 1;
     xlength = xrange(2) - xrange(1);
 
-    block_shape = [xrange(1), yrange(1);
+    current_block_shape = [xrange(1), yrange(1);
 		   xrange(1), yrange(2);
 		   xrange(2), yrange(2);
 		   xrange(2), yrange(1)];
+    block_list{m} = current_block_shape;
 
     ## Draw the block.
     if (p.Results.fill_block)
@@ -46,11 +53,11 @@ function plot_bct_struct(varargin)
 	block_color = p.Results.far_field_block_color;
       end
       
-      fillPolygon(block_shape, block_color);
+      fillPolygon(current_block_shape, block_color);
     endif
     
     ## Draw the block border.
-    drawPolygon(block_shape, "color", p.Results.border_color, "linewidth", p.Results.border_width);
+    drawPolygon(current_block_shape, "color", p.Results.border_color, "linewidth", p.Results.border_width);
 
     if (isfield(block_clusters{m}, "rank") && p.Results.show_rank)
       ## Label the rank of the matrix block.
@@ -64,6 +71,13 @@ function plot_bct_struct(varargin)
       endif
     endif
   endfor
+
+  ## Connect successive blocks to show the traversal path.
+  if (p.Results.connect_blocks)
+    for m = 2:number_of_blocks
+      plot_connecting_edge(block_list{m-1}, block_list{m}, p.Results.connection_arrow_length, p.Results.connection_arrow_width, p.Results.connection_arrow_type);
+    endfor
+  endif
 
   axis equal;
   set(gca, "ydir", "reverse");

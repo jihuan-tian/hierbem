@@ -1,15 +1,19 @@
 /**
- * \file hmatrix-write-leaf-set-by-iteration.cc
+ * \file hmatrix-write-leaf-set-by-iteration.cu
  * \brief Verify the method for write out leaf set by iteration over the
- * constructed leaf set instead of recursion.
+ * constructed leaf set instead of recursion. The traversal follows the Hilbert
+ * curve.
+ *
  * \ingroup
  * \author Jihuan Tian
- * \date 2021-07-28
+ * \date 2024-03-09
  */
 
 #include <iostream>
 
 #include "hmatrix.h"
+
+using namespace HierBEM;
 
 int
 main()
@@ -17,7 +21,7 @@ main()
   /**
    * Create the global index set.
    */
-  const unsigned int                   p = 5;
+  const unsigned int                   p = 4;
   const unsigned int                   n = std::pow(2, p);
   std::vector<types::global_dof_index> index_set(n);
 
@@ -54,6 +58,8 @@ main()
    * Create a rank-1 HMatrix.
    */
   const unsigned int fixed_rank_k = 1;
+  HMatrix<3, double>::set_leaf_set_traversal_method(
+    HMatrix<3, double>::SpaceFillingCurveType::Hilbert);
   HMatrix<3, double> hmat(block_cluster_tree, M, fixed_rank_k);
 
   /**

@@ -1,4 +1,4 @@
-set(TEST_TARGET hmatrix-write-leaf-set-by-iteration)
+set(TEST_TARGET hmatrix-write-leaf-set-by-iteration-hilbert-curve)
 
 # Link TEST_TARGET to my generic_tools library.
 set(TEST_LIBRARIES generic_tools)

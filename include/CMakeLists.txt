@@ -25,8 +25,9 @@ if(NOT HBEM_RANDOM_ACA)
   set(HBEM_RANDOM_ACA 0)
 endif()
 
+# Do not use TBB task arena or isolate in H-LU or H-Cholesky by default.
 if(NOT HBEM_ARENA_OR_ISOLATE_IN_LU_AND_CHOL)
-  set(HBEM_ARENA_OR_ISOLATE_IN_LU_AND_CHOL 2)
+  set(HBEM_ARENA_OR_ISOLATE_IN_LU_AND_CHOL 3)
 endif()
 
 if(NOT HBEM_ARENA_MAX_CONCURRENCY_IN_LU_AND_CHOL)

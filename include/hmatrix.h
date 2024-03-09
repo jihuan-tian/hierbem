@@ -89,11 +89,52 @@ namespace HierBEM
     using size_type = std::make_unsigned<types::blas_int>::type;
 
     /**
+     * Space-filling curve used for traversing the leaf nodes of the H-matrix.
+     */
+    enum SpaceFillingCurveType
+    {
+      /**
+       * Z curve, which is obtained from a depth-first-search (DFS).
+       */
+      Z,
+      /**
+       * Hilbert curve
+       */
+      Hilbert
+    };
+
+    /**
+     * BLock type during leaf node traversal by following the Hilbert curve.
+     */
+    enum HilbertBlockType
+    {
+      A,
+      B,
+      C,
+      D
+    };
+
+    static void
+    set_leaf_set_traversal_method(const SpaceFillingCurveType type)
+    {
+      leaf_set_traversal_method = type;
+    }
+
+    /**
      * Declare the type for TBB flow graph node.
      */
     using TaskNode    = tbb::flow::continue_node<tbb::flow::continue_msg>;
     using TaskNodePtr = std::shared_ptr<TaskNode>;
 
+    /**
+     * Class for the task node storing an @p update task which is used H-LU or
+     * H-Cholesky factorization.
+     *
+     * N.B. An @p update task is performed with respect to a diagonal block on
+     * a specific level. For a H-matrix node, there may be several such
+     * @p update tasks on different levels. Therefore, this class also stores
+     * the pointer to the said diagonal block.
+     */
     class UpdateTaskNodeForLUOrCholesky
     {
     public:
@@ -3197,13 +3238,22 @@ namespace HierBEM
                            HMatrixSupport::general) const;
 
     /**
-     * Collect \hmatnodes in the leaf set into a vector.
+     * Collect \hmatnodes in the leaf set into a vector using Z-curve traversal.
+     *
      * @param total_leaf_set
      */
     void
-    _build_leaf_set(std::vector<HMatrix *> &total_leaf_set,
-                    std::vector<HMatrix *> &total_near_field_leaf_set,
-                    std::vector<HMatrix *> &total_far_field_leaf_set) const;
+    _build_leaf_set_z_traversal(
+      std::vector<HMatrix *> &total_leaf_set,
+      std::vector<HMatrix *> &total_near_field_leaf_set,
+      std::vector<HMatrix *> &total_far_field_leaf_set) const;
+
+    void
+    _build_leaf_set_hilbert_traversal(
+      std::vector<HMatrix *> &total_leaf_set,
+      std::vector<HMatrix *> &total_near_field_leaf_set,
+      std::vector<HMatrix *> &total_far_field_leaf_set,
+      HilbertBlockType        current_hilbert_block_type) const;
 
     void
     distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves(
@@ -3478,6 +3528,12 @@ namespace HierBEM
     cholesky_assign_update_to_solve_and_factorize_dependencies();
 
     /**
+     * Method used for traversing the leaf set by following a space-filling
+     * curve.
+     */
+    static SpaceFillingCurveType leaf_set_traversal_method;
+
+    /**
      * Matrix type, which is one of @p FullMatrixType, @p RkMatrixType and
      * @p HierarchicalMatrixType.
      */
@@ -3653,6 +3709,11 @@ namespace HierBEM
     std::mutex update_lock;
   };
 
+  // Initialization of the static member of H-matrix to Z curve.
+  template <int spacedim, typename Number>
+  typename HMatrix<spacedim, Number>::SpaceFillingCurveType
+    HMatrix<spacedim, Number>::leaf_set_traversal_method =
+      HMatrix<spacedim, Number>::SpaceFillingCurveType::Z;
 
   /**
    * Initialize an \hmatnode with respect to a block cluster
@@ -16573,7 +16634,7 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
-  HMatrix<spacedim, Number>::_build_leaf_set(
+  HMatrix<spacedim, Number>::_build_leaf_set_z_traversal(
     std::vector<HMatrix *> &total_leaf_set,
     std::vector<HMatrix *> &total_near_field_leaf_set,
     std::vector<HMatrix *> &total_far_field_leaf_set) const
@@ -16595,9 +16656,161 @@ namespace HierBEM
           case HierarchicalMatrixType: {
             for (HMatrix *submatrix : submatrices)
               {
-                submatrix->_build_leaf_set(total_leaf_set,
-                                           total_near_field_leaf_set,
-                                           total_far_field_leaf_set);
+                submatrix->_build_leaf_set_z_traversal(
+                  total_leaf_set,
+                  total_near_field_leaf_set,
+                  total_far_field_leaf_set);
+              }
+
+            break;
+          }
+          default: {
+            Assert(false, ExcInvalidHMatrixType(type));
+
+            break;
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::_build_leaf_set_hilbert_traversal(
+    std::vector<HMatrix *> &total_leaf_set,
+    std::vector<HMatrix *> &total_near_field_leaf_set,
+    std::vector<HMatrix *> &total_far_field_leaf_set,
+    HilbertBlockType        current_hilbert_block_type) const
+  {
+    switch (type)
+      {
+          case FullMatrixType: {
+            total_leaf_set.push_back(const_cast<HMatrix *>(this));
+            total_near_field_leaf_set.push_back(const_cast<HMatrix *>(this));
+
+            break;
+          }
+          case RkMatrixType: {
+            total_leaf_set.push_back(const_cast<HMatrix *>(this));
+            total_far_field_leaf_set.push_back(const_cast<HMatrix *>(this));
+
+            break;
+          }
+          case HierarchicalMatrixType: {
+            /**
+             * The H-matrix should be a quad-tree in this scenario.
+             */
+            AssertDimension(submatrices.size(), 4);
+
+            switch (current_hilbert_block_type)
+              {
+                  case HilbertBlockType::A: {
+                    submatrices[2]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::B);
+
+                    submatrices[0]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::A);
+
+                    submatrices[1]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::A);
+
+                    submatrices[3]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::C);
+
+                    break;
+                  }
+                  case HilbertBlockType::B: {
+                    submatrices[2]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::A);
+
+                    submatrices[3]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::B);
+
+                    submatrices[1]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::B);
+
+                    submatrices[0]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::D);
+
+                    break;
+                  }
+                  case HilbertBlockType::C: {
+                    submatrices[1]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::D);
+
+                    submatrices[0]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::C);
+
+                    submatrices[2]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::C);
+
+                    submatrices[3]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::A);
+
+                    break;
+                  }
+                  case HilbertBlockType::D: {
+                    submatrices[1]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::C);
+
+                    submatrices[3]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::D);
+
+                    submatrices[2]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::D);
+
+                    submatrices[0]->_build_leaf_set_hilbert_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      HilbertBlockType::B);
+
+                    break;
+                  }
               }
 
             break;
@@ -29628,7 +29841,27 @@ namespace HierBEM
     near_field_leaf_set.clear();
     far_field_leaf_set.clear();
 
-    _build_leaf_set(leaf_set, near_field_leaf_set, far_field_leaf_set);
+    switch (HMatrix<spacedim, Number>::leaf_set_traversal_method)
+      {
+          case SpaceFillingCurveType::Z: {
+            _build_leaf_set_z_traversal(leaf_set,
+                                        near_field_leaf_set,
+                                        far_field_leaf_set);
+
+            break;
+          }
+          case SpaceFillingCurveType::Hilbert: {
+            /**
+             * The top level H-matrix is type A.
+             */
+            _build_leaf_set_hilbert_traversal(leaf_set,
+                                              near_field_leaf_set,
+                                              far_field_leaf_set,
+                                              HilbertBlockType::A);
+
+            break;
+          }
+      }
   }
 
 
