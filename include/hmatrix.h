@@ -32,6 +32,7 @@
 #include "hmatrix_support.h"
 #include "lapack_full_matrix_ext.h"
 #include "rkmatrix.h"
+#include "sequence_partition/sequence_partition.h"
 
 namespace HierBEM
 {
@@ -89,7 +90,7 @@ namespace HierBEM
     using size_type = std::make_unsigned<types::blas_int>::type;
 
     /**
-     * Space-filling curve used for traversing the leaf nodes of the H-matrix.
+     * Space-filling curve used for traversing the leaf nodes of the \hmatrix.
      */
     enum SpaceFillingCurveType
     {
@@ -131,7 +132,7 @@ namespace HierBEM
      * H-Cholesky factorization.
      *
      * N.B. An @p update task is performed with respect to a diagonal block on
-     * a specific level. For a H-matrix node, there may be several such
+     * a specific level. For a \hmatrix node, there may be several such
      * @p update tasks on different levels. Therefore, this class also stores
      * the pointer to the said diagonal block.
      */
@@ -884,9 +885,9 @@ namespace HierBEM
      * Construct from the root node of a BlockClusterTree while moving the data
      * from the leaf set of the \hmatrix \p H.
      *
-     * \mynote{Since this \hmatrix is the global matrix because it is construct
-     * with respect to the root node of the \bct, its block type is set to
-     * @p HMatrixSupport::diagonal_block.}
+     * \mynote{Since this \hmatrix is the global matrix because it is
+     * constructed with respect to the root node of the \bct, its block type is
+     * set to @p HMatrixSupport::diagonal_block.}
      *
      * @param bct
      * @param H
@@ -1477,27 +1478,28 @@ namespace HierBEM
       const bool is_compensate_diag_blocks = true);
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y + M \cdot x\f$.
+     * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$.
      *
      * \mynote{
-     * 1. The recursive algorithm for \hmatrix-vector
-     * multiplication needs to collect the results from different components in
-     * the leaf set and corresponding vector block in \f$x\f$. More importantly,
-     * there will be a series of such results contributing to a same block in
-     * the result vector \f$y\f$. Therefore, if the interface of this function
-     * is
-     * designed with the parameter \p add as that in the \p vmult function of \p
-     * LAPACKFullMatrix in deal.ii, in all recursive calls of \p vmult except the
-     * first one, this \p add flag should be set to \p true, irrespective of the
-     * original flag value passed into the first call of \p vmult. Hence, we do
-     * not include the \p add flag in the \p vmult function.
-     * 2. The input vectors \p x and \p y are with respect to root cluster nodes
-     * and should be directly accessed via **global** DoF indices.}
+     * 1. The recursive algorithm for \hmatrix/vector multiplication needs to
+     * collect the results from different components in the leaf set and
+     * corresponding vector block in \f$x\f$. More importantly, there will be a
+     * series of such results contributing to a same block in the result vector
+     * \f$y\f$. Therefore, if the interface of this function is designed with
+     * the parameter \p add as that in the \p vmult function of
+     * \p LAPACKFullMatrix in deal.ii, in all recursive calls of \p vmult except
+     * the first one, this \p add flag should be set to \p true, irrespective of
+     * the original flag value passed into the first call of \p vmult. Hence, we
+     * do not include the \p add flag in the \p vmult function.
+     * 2. The input vector \p x and result vector \p y are built with respect to
+     * corresponding root cluster nodes and should be directly accessed via
+     * **global** DoF indices.}
      *
-     * @param y
-     * @param x
-     * @param top_hmat_property When the \hmatnode on the top level is symmetric
-     * for example, there will be special internal treatment.
+     * @param y Result vector
+     * @param x Input vector
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
+     * @p general, @p symmetric and @p lower_triangular.
      */
     void
     vmult(Vector<Number>                &y,
@@ -1506,27 +1508,52 @@ namespace HierBEM
             HMatrixSupport::general) const;
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y + \alpha \cdot M \cdot
-     * x\f$.
+     * Perform task parallel \hmatrix/vector multiplication as \f$y = y + M
+     * \cdot x\f$.
      *
      * \mynote{
-     * 1. The recursive algorithm for \hmatrix-vector
-     * multiplication needs to collect the results from different components in
-     * the leaf set and corresponding vector block in \f$x\f$. More importantly,
-     * there will be a series of such results contributing to a same block in
-     * the result vector \f$y\f$. Therefore, if the interface of this function
-     * is
-     * designed with the parameter \p add as that in the \p vmult function of \p
-     * LAPACKFullMatrix in deal.ii, in all recursive calls of \p vmult except the
-     * first one, this \p add flag should be set to \p true, irrespective of the
-     * original flag value passed into the first call of \p vmult. Hence, we do
-     * not include the \p add flag in the \p vmult function.
-     * 2. The input vectors \p x and \p y are with respect to root cluster nodes
-     * and should be directly accessed via **global** DoF indices.}
+     * 1. The algorithm iterates over each \hmatrix node in the leaf set.
+     * 2. The input vector \p x and result vector \p y are built with respect to
+     * corresponding root cluster nodes and should be directly accessed via
+     * **global** DoF indices.}
      *
-     * @param y
-     * @param alpha
-     * @param x
+     * @param y Result vector
+     * @param x Input vector
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+     * @p general, @p symmetric or @p lower_triangular.
+     */
+    void
+    vmult_task_parallel(Vector<Number>                &y,
+                        const Vector<Number>          &x,
+                        const HMatrixSupport::Property top_hmat_property =
+                          HMatrixSupport::general) const;
+
+    /**
+     * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M
+     * \cdot x\f$.
+     *
+     * \mynote{
+     * 1. The recursive algorithm for \hmatrix/vector multiplication needs to
+     * collect the results from different components in the leaf set and
+     * corresponding vector block in \f$x\f$. More importantly, there will be a
+     * series of such results contributing to a same block in the result vector
+     * \f$y\f$. Therefore, if the interface of this function is designed with
+     * the parameter \p add as that in the \p vmult function of
+     * \p LAPACKFullMatrix in deal.ii, in all recursive calls of \p vmult except
+     * the first one, this \p add flag should be set to \p true, irrespective of
+     * the original flag value passed into the first call of \p vmult. Hence, we
+     * do not include the \p add flag in the \p vmult function.
+     * 2. The input vector \p x and result vector \p y are built with respect to
+     * corresponding root cluster nodes and should be directly accessed via
+     * **global** DoF indices.}
+     *
+     * @param y Result vector
+     * @param alpha Scalar factor before \f$x\f$
+     * @param x Input vector
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+     * @p general, @p symmetric or @p lower_triangular.
      */
     void
     vmult(Vector<Number>                &y,
@@ -1536,14 +1563,40 @@ namespace HierBEM
             HMatrixSupport::general) const;
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y + M \cdot x\f$ by
+     * Perform task parallel \hmatrix/vector multiplication as \f$y = y + \alpha
+     * \cdot M \cdot x\f$.
+     *
+     * \mynote{
+     * 1. The algorithm iterates over each \hmatrix node in the leaf set.
+     * 2. The input vector \p x and result vector \p y are built with respect to
+     * corresponding root cluster nodes and should be directly accessed via
+     * **global** DoF indices.}
+     *
+     * @param y Result vector
+     * @param Scalar factor before \f$x\f$
+     * @param x Input vector
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+     * @p general, @p symmetric or @p lower_triangular.
+     */
+    void
+    vmult_task_parallel(Vector<Number>                &y,
+                        const Number                   alpha,
+                        const Vector<Number>          &x,
+                        const HMatrixSupport::Property top_hmat_property =
+                          HMatrixSupport::general) const;
+
+    /**
+     * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$ by
      * starting from a block in the matrix and vector. Therefore, the starting
      * \hmat should be explicitly specified.
      *
-     * @param y
-     * @param x
-     * @param starting_hmat
-     * @param top_hmat_property
+     * @param y Result vector as a section of the corresponding global vector
+     * @param x Input vector as a section of the corresponding global vector
+     * @param starting_hmat Top level \hmatrix
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+     * @p general, @p symmetric or @p lower_triangular.
      */
     void
     vmult(Vector<Number>                  &y,
@@ -1553,15 +1606,17 @@ namespace HierBEM
             HMatrixSupport::general) const;
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y + \alpha \cdot M \cdot
-     * x\f$ by starting from a block in the matrix and vector. Therefore, the
-     * starting should be explicitly specified.
+     * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M
+     * \cdot x\f$ by starting from a block in the matrix and vector. Therefore,
+     * the starting should be explicitly specified.
      *
-     * @param y
-     * @param alpha
-     * @param x
-     * @param starting_hmat
-     * @param top_hmat_property
+     * @param y Result vector as a section of the corresponding global vector
+     * @param alpha Scalar factor before \f$x\f$
+     * @param x Input vector as a section of the corresponding global vector
+     * @param starting_hmat Top level \hmatrix
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+     * @p general, @p symmetric or @p lower_triangular.
      */
     void
     vmult(Vector<Number>                  &y,
@@ -1572,17 +1627,21 @@ namespace HierBEM
             HMatrixSupport::general) const;
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y +
-     * M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+     * Calculate \hmatrix/vector multiplication as \f$y = y + M^T \cdot x\f$,
+     * i.e. the matrix \f$M\f$ is transposed.
      *
-     * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
-     * \p col_index_range should be swapped. Also refer to HMatrix::vmult.
+     * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range
+     * and \p col_index_range should be swapped. Also refer to HMatrix::vmult.
      *
-     * \mynote{The input vectors \p x and \p y are with respect to root cluster
-     * nodes and should be directly accessed via **global** DoF indices.}
+     * \mynote{The input vector \p x and result vector \p y are built with respect
+     * to corresponding root cluster nodes and should be directly accessed via
+     * **global** DoF indices.}
      *
-     * @param y
-     * @param x
+     * @param y Result vector
+     * @param x Input vector
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
+     * @p general, @p symmetric or @p lower_triangular.
      */
     void
     Tvmult(Vector<Number>                &y,
@@ -1591,18 +1650,47 @@ namespace HierBEM
              HMatrixSupport::Property::general) const;
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y +
-     * \alpha \cdot M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+     * Perform task parallel \hmatrix/vector multiplication as \f$y = y + M^T
+     * \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+     *
+     * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range
+     * and \p col_index_range should be swapped. Also refer to HMatrix::vmult.
+     *
+     * \mynote{
+     * 1. The algorithm iterates over each \hmatrix node in the leaf set.
+     * 2. The input vector \p x and result vector \p y are built with respect to
+     * corresponding root cluster nodes and should be directly accessed via
+     * **global** DoF indices.}
+     *
+     * @param y Result vector
+     * @param x Input vector
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
+     * @p general, @p symmetric or @p lower_triangular.
+     */
+    void
+    Tvmult_task_parallel(Vector<Number>                &y,
+                         const Vector<Number>          &x,
+                         const HMatrixSupport::Property top_hmat_property =
+                           HMatrixSupport::Property::general) const;
+
+    /**
+     * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M^T
+     * \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
      *
      * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
      * \p col_index_range should be swapped. Also refer to HMatrix::vmult.
      *
-     * \mynote{The input vectors \p x and \p y are with respect to root cluster
-     * nodes and should be directly accessed via **global** DoF indices.}
+     * \mynote{The input vector \p x and result vector \p y are built with respect
+     * to corresponding root cluster nodes and should be directly accessed via
+     * **global** DoF indices.}
      *
-     * @param y
-     * @param alpha
-     * @param x
+     * @param y Result vector
+     * @param alpha Scalar factor before \f$x\f$
+     * @param x Input vector
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
+     * @p general, @p symmetric or @p lower_triangular.
      */
     void
     Tvmult(Vector<Number>                &y,
@@ -1612,14 +1700,43 @@ namespace HierBEM
              HMatrixSupport::Property::general) const;
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y + M^T \cdot x\f$ by
+     * Perform task parallel \hmatrix/vector multiplication as \f$y = y + \alpha
+     * \cdot M^T \cdot x\f$, i.e. the matrix \f$M\f$ is transposed.
+     *
+     * Because the matrix \f$M\f$ is transposed, the roles for \p row_index_range and
+     * \p col_index_range should be swapped. Also refer to HMatrix::vmult.
+     *
+     * \mynote{
+     * 1. The algorithm iterates over each \hmatrix node in the leaf set.
+     * 2. The input vector \p x and result vector \p y are built with respect to
+     * corresponding root cluster nodes and should be directly accessed via
+     * **global** DoF indices.}
+     *
+     * @param y Result vector
+     * @param alpha Scalar factor before \f$x\f$
+     * @param x Input vector
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
+     * @p general, @p symmetric or @p lower_triangular.
+     */
+    void
+    Tvmult_task_parallel(Vector<Number>                &y,
+                         const Number                   alpha,
+                         const Vector<Number>          &x,
+                         const HMatrixSupport::Property top_hmat_property =
+                           HMatrixSupport::Property::general) const;
+
+    /**
+     * Calculate \hmatrix/vector multiplication as \f$y = y + M^T \cdot x\f$ by
      * starting from a block in the matrix and vector. Therefore, the starting
      * \hmat is specified.
      *
-     * @param y
-     * @param x
-     * @param starting_hmat
-     * @param top_hmat_property
+     * @param y Result vector as a section of the corresponding global vector
+     * @param x Input vector as a section of the corresponding global vector
+     * @param starting_hmat Top level \hmatrix
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+     * @p general, @p symmetric or @p lower_triangular.
      */
     void
     Tvmult(Vector<Number>                  &y,
@@ -1629,15 +1746,17 @@ namespace HierBEM
              HMatrixSupport::Property::general) const;
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y + \alpha \cdot M^T
+     * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M^T
      * \cdot x\f$ by starting from a block in the matrix and vector. Therefore,
      * the starting \hmat is specified.
      *
-     * @param y
-     * @param alpha
-     * @param x
-     * @param starting_hmat
-     * @param top_hmat_property
+     * @param y Result vector as a section of the corresponding global vector
+     * @param alpha Scalar factor before \f$x\f$
+     * @param x Input vector as a section of the corresponding global vector
+     * @param starting_hmat Top level \hmatrix
+     * @param top_hmat_property The \hmatrix property (of type
+     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
+     * @p general, @p symmetric or @p lower_triangular.
      */
     void
     Tvmult(Vector<Number>                  &y,
@@ -2848,7 +2967,7 @@ namespace HierBEM
      * The matrix \f$L\f$ should have the same hierarchical structure as the
      * original matrix.
      *
-     * \mynote{1. The result H-matrix @p L should have be constructed and
+     * \mynote{1. The result \hmatrix @p L should have be constructed and
      * allocated with memory.
      * 2. After calling this function, the state of the original \hmatrix is
      * set to @p unusable, while the result matrix @p L has @p cholesky state and
@@ -2960,7 +3079,7 @@ namespace HierBEM
       const unsigned int fixed_rank_k);
 
     /**
-     * Link \hmatrix nodes on a same level according to the top level H-matrix
+     * Link \hmatrix nodes on a same level according to the top level \hmatrix
      * property.
      */
     void
@@ -3238,22 +3357,44 @@ namespace HierBEM
                            HMatrixSupport::general) const;
 
     /**
+     * Check if the current \hmatrix node is non-emtpy.
+     *
+     * A \hmatrix node is empty, i.e. it contains no actual data but only matrix
+     * block properties, under the following cases:
+     * 1. When the top level \hmatrix node has the @p symmetric property, only
+     * the diagonal and lower triangular blocks are stored. Hence, the upper
+     * triangular blocks are empty.
+     * 2. When the top level \hmatrix node has the @p upper_triangular property,
+     * the lower triangular blocks are empty.
+     * 3. When the top level \hmatrix node has the @p lower_triangular property,
+     * the upper triangular blocks are empty.
+     *
+     * @return Whether the current \hmatrix node is non-empty.
+     */
+    bool
+    is_current_hmat_node_nonemtpy(
+      const HMatrixSupport::Property top_hmat_property =
+        HMatrixSupport::general) const;
+
+    /**
      * Collect \hmatnodes in the leaf set into a vector using Z-curve traversal.
      *
      * @param total_leaf_set
      */
     void
     _build_leaf_set_z_traversal(
-      std::vector<HMatrix *> &total_leaf_set,
-      std::vector<HMatrix *> &total_near_field_leaf_set,
-      std::vector<HMatrix *> &total_far_field_leaf_set) const;
+      std::vector<HMatrix *>        &total_leaf_set,
+      std::vector<HMatrix *>        &total_near_field_leaf_set,
+      std::vector<HMatrix *>        &total_far_field_leaf_set,
+      const HMatrixSupport::Property top_hmat_property) const;
 
     void
     _build_leaf_set_hilbert_traversal(
-      std::vector<HMatrix *> &total_leaf_set,
-      std::vector<HMatrix *> &total_near_field_leaf_set,
-      std::vector<HMatrix *> &total_far_field_leaf_set,
-      HilbertBlockType        current_hilbert_block_type) const;
+      std::vector<HMatrix *>        &total_leaf_set,
+      std::vector<HMatrix *>        &total_near_field_leaf_set,
+      std::vector<HMatrix *>        &total_far_field_leaf_set,
+      HilbertBlockType               current_hilbert_block_type,
+      const HMatrixSupport::Property top_hmat_property) const;
 
     void
     distribute_all_non_leaf_nodes_sigma_r_and_f_to_leaves(
@@ -3414,7 +3555,7 @@ namespace HierBEM
      * descendants.
      * 3. Build @p update task to @p factorize task dependencies.
      * 4. Build task dependencies between @p factorize tasks on successive
-     * H-matrix levels.
+     * \hmatrix levels.
      */
     void
     lu_assign_update_to_solve_and_factorize_dependencies();
@@ -3522,10 +3663,46 @@ namespace HierBEM
      * descendants.
      * 3. Build @p update task to @p factorize task dependencies.
      * 4. Build task dependencies between @p factorize tasks on successive
-     * H-matrix levels.
+     * \hmatrix levels.
      */
     void
     cholesky_assign_update_to_solve_and_factorize_dependencies();
+
+    /**
+     * Compute the \hmatrix/vector multiplication as well as transposed
+     * \hmatrix/vector multiplication task costs for all matrix blocks in the
+     * leaf set.
+     *
+     * @param task_costs Vector of task costs for all matrix blocks in the leaf
+     * set. N.B. Its memory should be allocated before calling this function.
+     */
+    void
+    compute_leaf_set_vmult_or_Tvmult_task_costs(
+      std::vector<double> &task_costs) const;
+
+    /**
+     * Compute the tasks costs for assembling matrix blocks in the near field
+     * leaf set.
+     *
+     * @param task_costs Vector of task costs for all matrix blocks in the near
+     * field leaf set. N.B. Its memory should be allocated before calling this
+     * function.
+     */
+    void
+    compute_near_field_leaf_set_assembly_task_costs(
+      std::vector<double> &task_costs) const;
+
+    /**
+     * Compute the tasks costs for assembling matrix blocks in the far field
+     * leaf set.
+     *
+     * @param task_costs Vector of task costs for all matrix blocks in the far
+     * field leaf set. N.B. Its memory should be allocated before calling this
+     * function.
+     */
+    void
+    compute_far_field_leaf_set_assembly_task_costs(
+      std::vector<double> &task_costs) const;
 
     /**
      * Method used for traversing the leaf set by following a space-filling
@@ -3546,7 +3723,7 @@ namespace HierBEM
 
     /**
      * Property of the \hmatrix, such as @p general, @p symmetric,
-     * @p lower triangular, etc.
+     * @p lower_triangular, @p upper_triangular, etc.
      */
     HMatrixSupport::Property property;
 
@@ -3709,7 +3886,7 @@ namespace HierBEM
     std::mutex update_lock;
   };
 
-  // Initialization of the static member of H-matrix to Z curve.
+  // Initialization of the static member of \hmatrix to Z curve.
   template <int spacedim, typename Number>
   typename HMatrix<spacedim, Number>::SpaceFillingCurveType
     HMatrix<spacedim, Number>::leaf_set_traversal_method =
@@ -4480,7 +4657,7 @@ namespace HierBEM
                 /**
                  * When the top level \hmatnode has the @p symmetric property,
                  * only those \hmatnodes in the leaf set that belong to the
-                 * diagonal or lower triangular part of the original H-matrix
+                 * diagonal or lower triangular part of the original \hmatrix
                  * will be created with allocated memory.
                  */
                 switch (hmat->block_type)
@@ -5113,7 +5290,7 @@ namespace HierBEM
                 /**
                  * When the top level \hmatnode has the @p symmetric property,
                  * only those \hmatnodes in the leaf set that belong to the
-                 * diagonal or lower triangular part of the original H-matrix
+                 * diagonal or lower triangular part of the original \hmatrix
                  * will be created with allocated memory.
                  */
                 switch (hmat->block_type)
@@ -5832,7 +6009,7 @@ namespace HierBEM
                 /**
                  * When the top level \hmatnode has the @p symmetric property,
                  * only those \hmatnodes in the leaf set that belong to the
-                 * diagonal or lower triangular part of the original H-matrix
+                 * diagonal or lower triangular part of the original \hmatrix
                  * will be created with allocated memory.
                  */
                 switch (hmat->block_type)
@@ -6522,7 +6699,7 @@ namespace HierBEM
                 /**
                  * When the top level \hmatnode has the @p symmetric property,
                  * only those \hmatnodes in the leaf set that belong to the
-                 * diagonal or lower triangular part of the original H-matrix
+                 * diagonal or lower triangular part of the original \hmatrix
                  * will be created with allocated memory.
                  */
                 switch (hmat->block_type)
@@ -7240,7 +7417,7 @@ namespace HierBEM
                 /**
                  * When the top level \hmatnode has the @p symmetric property,
                  * only those \hmatnodes in the leaf set that belong to the
-                 * diagonal or lower triangular part of the original H-matrix
+                 * diagonal or lower triangular part of the original \hmatrix
                  * will be created with allocated memory.
                  */
                 switch (hmat->block_type)
@@ -8838,7 +9015,7 @@ namespace HierBEM
    * M = M_1 \cdot M_2 = M_1 (A B^T) = (M_1 A) B^T = A' B^T,
    * \f]
    * where \f$A' = M_1 A\f$ is calculated as a series of
-   * \hmatrix-vector multiplications. For details,
+   * \hmatrix/vector multiplications. For details,
    * \f[
    * M_1 A = M_1
    * \begin{bmatrix}
@@ -8871,7 +9048,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
          * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
-         * matrix-vector product \f$M_1 \cdot a_{\sigma,j}\f$.
+         * \hmatrix/vector product \f$M_1 \cdot a_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_A(M2.A.m());
         Vector<Number> result_vect(M1.m);
@@ -8915,7 +9092,7 @@ namespace HierBEM
    * \f[
    * M = \alpha \cdot M_1 \cdot M_2 = \alpha \cdot M_1 (A B^T) = \alpha \cdot
    * (M_1 A) B^T = \alpha \cdot A' B^T, \f] where \f$A' = M_1 A\f$ is calculated
-   * as a series of \hmatrix-vector multiplications. For details, \f[ M_1 A =
+   * as a series of \hmatrix/vector multiplications. For details, \f[ M_1 A =
    * M_1 \begin{bmatrix} a_{\sigma,1} & \cdots & a_{\sigma,r} \end{bmatrix} =
    * \begin{bmatrix}
    * M_1 a_{\sigma,1} & \cdots & M_1 a_{\sigma,r}
@@ -8946,7 +9123,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
          * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
-         * matrix-vector product \f$M_1 \cdot a_{\sigma,j}\f$.
+         * \hmatrix/vector product \f$M_1 \cdot a_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_A(M2.A.m());
         Vector<Number> result_vect(M1.m);
@@ -8995,7 +9172,7 @@ namespace HierBEM
    * M = M_1 \cdot M_2^T = M_1 (A B^T)^T = (M_1 B) A^T = A' B'^T,
    * \f]
    * where \f$A' = M_1 B\f$ is calculated as a series of
-   * \hmatrix-vector multiplications, and \f$B' = A\f$. For details,
+   * \hmatrix/vector multiplications, and \f$B' = A\f$. For details,
    * \f[
    * M_1 B = M_1
    * \begin{bmatrix}
@@ -9028,7 +9205,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
          * B component of \p M2 and another \p Vector \f$b'_{\tau,j}\f$ storing the
-         * matrix-vector product \f$M_1 \cdot b_{\sigma,j}\f$.
+         * \hmatrix/vector product \f$M_1 \cdot b_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_B(M2.B.m());
         Vector<Number> result_vect(M1.m);
@@ -9073,7 +9250,7 @@ namespace HierBEM
    * \f[
    * M = \alpha \cdot M_1 \cdot M_2^T = \alpha \cdot M_1 (A B^T)^T = \alpha
    * \cdot (M_1 B) A^T = \alpha \cdot A' B'^T, \f] where \f$A' = M_1 B\f$ is
-   * calculated as a series of \hmatrix-vector multiplications, and \f$B' =
+   * calculated as a series of \hmatrix/vector multiplications, and \f$B' =
    * A\f$. For details, \f[ M_1 B = M_1 \begin{bmatrix} b_{\sigma,1} & \cdots &
    * b_{\sigma,r} \end{bmatrix} = \begin{bmatrix} M_1 b_{\sigma,1} & \cdots &
    * M_1 b_{\sigma,r} \end{bmatrix} = \begin{bmatrix} b'_{\tau,1} & \cdots &
@@ -9100,7 +9277,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
          * B component of \p M2 and another \p Vector \f$b'_{\tau,j}\f$ storing the
-         * matrix-vector product \f$M_1 \cdot b_{\sigma,j}\f$.
+         * \hmatrix/vector product \f$M_1 \cdot b_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_B(M2.B.m());
         Vector<Number> result_vect(M1.m);
@@ -9145,7 +9322,7 @@ namespace HierBEM
    * M = M_1^T \cdot M_2 = M_1^T (A B^T) = (M_1^T A) B^T = A' B^T,
    * \f]
    * where \f$A' = M_1^T A\f$ is calculated as a series of
-   * transposed-\hmatrix-vector multiplications. For details,
+   * transposed-\hmatrix/vector multiplications. For details,
    * \f[
    * M_1^T A = M_1^T
    * \begin{bmatrix}
@@ -9178,7 +9355,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
          * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
-         * transposed-matrix-vector product \f$M_1^T \cdot a_{\sigma,j}\f$.
+         * transposed-\hmatrix/vector product \f$M_1^T \cdot a_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_A(M2.A.m());
         Vector<Number> result_vect(M1.n);
@@ -9225,7 +9402,7 @@ namespace HierBEM
    * \alpha A' B^T, \f]
    *
    * where \f$A' = M_1^T A\f$ is calculated as a series of
-   * transposed-\hmatrix-vector multiplications. For details,
+   * transposed-\hmatrix/vector multiplications. For details,
    * \f[
    * M_1^T A = M_1^T
    * \begin{bmatrix}
@@ -9260,7 +9437,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
          * A component of \p M2 and another \p Vector \f$a'_{\tau,j}\f$ storing the
-         * transposed-matrix-vector product \f$M_1^T \cdot a_{\sigma,j}\f$.
+         * transposed-\hmatrix/vector product \f$M_1^T \cdot a_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_A(M2.A.m());
         Vector<Number> result_vect(M1.n);
@@ -9353,7 +9530,7 @@ namespace HierBEM
    * M = M_1 \cdot M_2 = (A B^T) M_2 = A (B^T M_2) = A B'^T,
    * \f]
    * where \f$B' = M_2^T B\f$ is calculated as a series of
-   * transposed \hmatrix-vector multiplications. For details,
+   * transposed \hmatrix/vector multiplications. For details,
    * \f[
    * M_2^T B = M_2^T
    * \begin{bmatrix}
@@ -9386,7 +9563,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
          * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
-         * matrix-vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
+         * \hmatrix/vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_B(M1.B.m());
         Vector<Number> result_vect(M2.n);
@@ -9431,7 +9608,7 @@ namespace HierBEM
    * M = \alpha \cdot M_1 \cdot M_2 = \alpha \cdot  (A B^T) M_2 = \alpha \cdot A
    * (B^T M_2) = \alpha \cdot  A B'^T, \f]
    * where \f$B' = M_2^T B\f$ is calculated as a series of
-   * transposed \hmatrix-vector multiplications. For details,
+   * transposed \hmatrix/vector multiplications. For details,
    * \f[
    * M_2^T B = M_2^T
    * \begin{bmatrix}
@@ -9466,7 +9643,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
          * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
-         * matrix-vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
+         * \hmatrix/vector product \f$M_2^T \cdot b_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_B(M1.B.m());
         Vector<Number> result_vect(M2.n);
@@ -9514,7 +9691,7 @@ namespace HierBEM
    * \f[
    * M = M_1 \cdot M_2^T = (A B^T) M_2^T = A (B^T M_2^T) = A B'^T,
    * \f]
-   * where \f$B' = M_2 B\f$ is calculated as a series of \hmatrix-vector
+   * where \f$B' = M_2 B\f$ is calculated as a series of \hmatrix/vector
    * multiplications. For details,
    * \f[ M_2 B = M_2 \begin{bmatrix}
    * b_{\sigma,1} & \cdots & b_{\sigma,r}
@@ -9546,7 +9723,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
          * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
-         * matrix-vector product \f$M_2 \cdot b_{\sigma,j}\f$.
+         * \hmatrix/vector product \f$M_2 \cdot b_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_B(M1.B.m());
         Vector<Number> result_vect(M2.m);
@@ -9590,7 +9767,7 @@ namespace HierBEM
    * \f[
    * M = \alpha \cdot M_1 \cdot M_2^T = \alpha \cdot (A B^T) M_2^T = \alpha
    * \cdot A (B^T M_2^T) = \alpha \cdot A B'^T, \f] where \f$B' = M_2 B\f$ is
-   * calculated as a series of \hmatrix-vector multiplications. For details, \f[
+   * calculated as a series of \hmatrix/vector multiplications. For details, \f[
    * M_2 B = M_2 \begin{bmatrix} b_{\sigma,1} & \cdots & b_{\sigma,r}
    * \end{bmatrix} =
    * \begin{bmatrix}
@@ -9622,7 +9799,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$b_{\sigma,j}\f$ in the \p
          * B component of \p M1 and another \p Vector \f$b'_{\rho,j}\f$ storing the
-         * matrix-vector product \f$M_2 \cdot b_{\sigma,j}\f$.
+         * \hmatrix/vector product \f$M_2 \cdot b_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_B(M1.B.m());
         Vector<Number> result_vect(M2.m);
@@ -9667,7 +9844,7 @@ namespace HierBEM
    * M = M_1^T \cdot M_2 = (A B^T)^T M_2 = B (A^T M_2) = B A'^T,
    * \f]
    * where \f$A' = M_2^T A\f$ is calculated as a series of
-   * transposed \hmatrix-vector multiplications. For details,
+   * transposed \hmatrix/vector multiplications. For details,
    * \f[
    * M_2^T A = M_2^T
    * \begin{bmatrix}
@@ -9700,7 +9877,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
          * A component of \p M1 and another \p Vector \f$a'_{\rho,j}\f$ storing the
-         * transposed matrix-vector product \f$M_2^T \cdot a_{\sigma,j}\f$.
+         * transposed \hmatrix/vector product \f$M_2^T \cdot a_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_A(M1.A.m());
         Vector<Number> result_vect(M2.n);
@@ -9747,7 +9924,7 @@ namespace HierBEM
    * \alpha B A'^T, \f]
    *
    * where \f$A' = M_2^T A\f$ is calculated as a series of
-   * transposed \hmatrix-vector multiplications. For details,
+   * transposed \hmatrix/vector multiplications. For details,
    * \f[
    * M_2^T A = M_2^T
    * \begin{bmatrix}
@@ -9782,7 +9959,7 @@ namespace HierBEM
         /**
          * Create a temporary \p Vector storing a column \f$a_{\sigma,j}\f$ in the \p
          * A component of \p M1 and another \p Vector \f$a'_{\rho,j}\f$ storing the
-         * transposed matrix-vector product \f$M_2^T \cdot a_{\sigma,j}\f$.
+         * transposed \hmatrix/vector product \f$M_2^T \cdot a_{\sigma,j}\f$.
          */
         Vector<Number> col_vect_in_A(M1.A.m());
         Vector<Number> result_vect(M2.n);
@@ -16633,41 +16810,96 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
+  bool
+  HMatrix<spacedim, Number>::is_current_hmat_node_nonemtpy(
+    const HMatrixSupport::Property top_hmat_property) const
+  {
+    switch (top_hmat_property)
+      {
+        case HMatrixSupport::Property::general:
+          return true;
+
+        case HMatrixSupport::Property::symmetric:
+          if (block_type == HMatrixSupport::BlockType::diagonal_block ||
+              block_type == HMatrixSupport::BlockType::lower_triangular_block)
+            {
+              return true;
+            }
+          else
+            {
+              return false;
+            }
+
+        case HMatrixSupport::Property::upper_triangular:
+          if (block_type == HMatrixSupport::BlockType::diagonal_block ||
+              block_type == HMatrixSupport::BlockType::upper_triangular_block)
+            {
+              return true;
+            }
+          else
+            {
+              return false;
+            }
+
+        case HMatrixSupport::Property::lower_triangular:
+          if (block_type == HMatrixSupport::BlockType::diagonal_block ||
+              block_type == HMatrixSupport::BlockType::lower_triangular_block)
+            {
+              return true;
+            }
+          else
+            {
+              return false;
+            }
+
+        default:
+          return false;
+      }
+  }
+
+
+  template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::_build_leaf_set_z_traversal(
-    std::vector<HMatrix *> &total_leaf_set,
-    std::vector<HMatrix *> &total_near_field_leaf_set,
-    std::vector<HMatrix *> &total_far_field_leaf_set) const
+    std::vector<HMatrix *>        &total_leaf_set,
+    std::vector<HMatrix *>        &total_near_field_leaf_set,
+    std::vector<HMatrix *>        &total_far_field_leaf_set,
+    const HMatrixSupport::Property top_hmat_property) const
   {
-    switch (type)
+    if (is_current_hmat_node_nonemtpy(top_hmat_property))
       {
-          case FullMatrixType: {
-            total_leaf_set.push_back(const_cast<HMatrix *>(this));
-            total_near_field_leaf_set.push_back(const_cast<HMatrix *>(this));
+        switch (type)
+          {
+              case FullMatrixType: {
+                total_leaf_set.push_back(const_cast<HMatrix *>(this));
+                total_near_field_leaf_set.push_back(
+                  const_cast<HMatrix *>(this));
 
-            break;
-          }
-          case RkMatrixType: {
-            total_leaf_set.push_back(const_cast<HMatrix *>(this));
-            total_far_field_leaf_set.push_back(const_cast<HMatrix *>(this));
-
-            break;
-          }
-          case HierarchicalMatrixType: {
-            for (HMatrix *submatrix : submatrices)
-              {
-                submatrix->_build_leaf_set_z_traversal(
-                  total_leaf_set,
-                  total_near_field_leaf_set,
-                  total_far_field_leaf_set);
+                break;
               }
+              case RkMatrixType: {
+                total_leaf_set.push_back(const_cast<HMatrix *>(this));
+                total_far_field_leaf_set.push_back(const_cast<HMatrix *>(this));
 
-            break;
-          }
-          default: {
-            Assert(false, ExcInvalidHMatrixType(type));
+                break;
+              }
+              case HierarchicalMatrixType: {
+                for (HMatrix *submatrix : submatrices)
+                  {
+                    submatrix->_build_leaf_set_z_traversal(
+                      total_leaf_set,
+                      total_near_field_leaf_set,
+                      total_far_field_leaf_set,
+                      top_hmat_property);
+                  }
 
-            break;
+                break;
+              }
+              default: {
+                Assert(false, ExcInvalidHMatrixType(type));
+
+                break;
+              }
           }
       }
   }
@@ -16676,149 +16908,170 @@ namespace HierBEM
   template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::_build_leaf_set_hilbert_traversal(
-    std::vector<HMatrix *> &total_leaf_set,
-    std::vector<HMatrix *> &total_near_field_leaf_set,
-    std::vector<HMatrix *> &total_far_field_leaf_set,
-    HilbertBlockType        current_hilbert_block_type) const
+    std::vector<HMatrix *>        &total_leaf_set,
+    std::vector<HMatrix *>        &total_near_field_leaf_set,
+    std::vector<HMatrix *>        &total_far_field_leaf_set,
+    HilbertBlockType               current_hilbert_block_type,
+    const HMatrixSupport::Property top_hmat_property) const
   {
-    switch (type)
+    if (is_current_hmat_node_nonemtpy(top_hmat_property))
       {
-          case FullMatrixType: {
-            total_leaf_set.push_back(const_cast<HMatrix *>(this));
-            total_near_field_leaf_set.push_back(const_cast<HMatrix *>(this));
+        switch (type)
+          {
+              case FullMatrixType: {
+                total_leaf_set.push_back(const_cast<HMatrix *>(this));
+                total_near_field_leaf_set.push_back(
+                  const_cast<HMatrix *>(this));
 
-            break;
-          }
-          case RkMatrixType: {
-            total_leaf_set.push_back(const_cast<HMatrix *>(this));
-            total_far_field_leaf_set.push_back(const_cast<HMatrix *>(this));
-
-            break;
-          }
-          case HierarchicalMatrixType: {
-            /**
-             * The H-matrix should be a quad-tree in this scenario.
-             */
-            AssertDimension(submatrices.size(), 4);
-
-            switch (current_hilbert_block_type)
-              {
-                  case HilbertBlockType::A: {
-                    submatrices[2]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::B);
-
-                    submatrices[0]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::A);
-
-                    submatrices[1]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::A);
-
-                    submatrices[3]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::C);
-
-                    break;
-                  }
-                  case HilbertBlockType::B: {
-                    submatrices[2]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::A);
-
-                    submatrices[3]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::B);
-
-                    submatrices[1]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::B);
-
-                    submatrices[0]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::D);
-
-                    break;
-                  }
-                  case HilbertBlockType::C: {
-                    submatrices[1]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::D);
-
-                    submatrices[0]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::C);
-
-                    submatrices[2]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::C);
-
-                    submatrices[3]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::A);
-
-                    break;
-                  }
-                  case HilbertBlockType::D: {
-                    submatrices[1]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::C);
-
-                    submatrices[3]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::D);
-
-                    submatrices[2]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::D);
-
-                    submatrices[0]->_build_leaf_set_hilbert_traversal(
-                      total_leaf_set,
-                      total_near_field_leaf_set,
-                      total_far_field_leaf_set,
-                      HilbertBlockType::B);
-
-                    break;
-                  }
+                break;
               }
+              case RkMatrixType: {
+                total_leaf_set.push_back(const_cast<HMatrix *>(this));
+                total_far_field_leaf_set.push_back(const_cast<HMatrix *>(this));
 
-            break;
-          }
-          default: {
-            Assert(false, ExcInvalidHMatrixType(type));
+                break;
+              }
+              case HierarchicalMatrixType: {
+                /**
+                 * The \hmatrix should be a quad-tree in this scenario.
+                 */
+                AssertDimension(submatrices.size(), 4);
 
-            break;
+                switch (current_hilbert_block_type)
+                  {
+                      case HilbertBlockType::A: {
+                        submatrices[2]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::B,
+                          top_hmat_property);
+
+                        submatrices[0]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::A,
+                          top_hmat_property);
+
+                        submatrices[1]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::A,
+                          top_hmat_property);
+
+                        submatrices[3]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::C,
+                          top_hmat_property);
+
+                        break;
+                      }
+                      case HilbertBlockType::B: {
+                        submatrices[2]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::A,
+                          top_hmat_property);
+
+                        submatrices[3]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::B,
+                          top_hmat_property);
+
+                        submatrices[1]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::B,
+                          top_hmat_property);
+
+                        submatrices[0]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::D,
+                          top_hmat_property);
+
+                        break;
+                      }
+                      case HilbertBlockType::C: {
+                        submatrices[1]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::D,
+                          top_hmat_property);
+
+                        submatrices[0]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::C,
+                          top_hmat_property);
+
+                        submatrices[2]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::C,
+                          top_hmat_property);
+
+                        submatrices[3]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::A,
+                          top_hmat_property);
+
+                        break;
+                      }
+                      case HilbertBlockType::D: {
+                        submatrices[1]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::C,
+                          top_hmat_property);
+
+                        submatrices[3]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::D,
+                          top_hmat_property);
+
+                        submatrices[2]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::D,
+                          top_hmat_property);
+
+                        submatrices[0]->_build_leaf_set_hilbert_traversal(
+                          total_leaf_set,
+                          total_near_field_leaf_set,
+                          total_far_field_leaf_set,
+                          HilbertBlockType::B,
+                          top_hmat_property);
+
+                        break;
+                      }
+                  }
+
+                break;
+              }
+              default: {
+                Assert(false, ExcInvalidHMatrixType(type));
+
+                break;
+              }
           }
       }
   }
@@ -18311,7 +18564,7 @@ namespace HierBEM
     /**
      * Make a copy of the matrix block and calculate its rank using
      * SVD. The state of the matrix should be @p matrix for further @p svd
-     * operation used in the rank caluclation. Therefore, we make a check here
+     * operation used in the rank calculation. Therefore, we make a check here
      * and enforce it if necessary.
      */
     LAPACKFullMatrixExt<Number> copy(*fullmatrix);
@@ -19577,6 +19830,15 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
+  HMatrix<spacedim, Number>::vmult_task_parallel(
+    Vector<Number>                &y,
+    const Vector<Number>          &x,
+    const HMatrixSupport::Property top_hmat_property) const
+  {}
+
+
+  template <int spacedim, typename Number>
+  void
   HMatrix<spacedim, Number>::vmult(
     Vector<Number>                &y,
     const Number                   alpha,
@@ -20102,6 +20364,16 @@ namespace HierBEM
           }
       }
   }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::vmult_task_parallel(
+    Vector<Number>                &y,
+    const Number                   alpha,
+    const Vector<Number>          &x,
+    const HMatrixSupport::Property top_hmat_property) const
+  {}
 
 
   template <int spacedim, typename Number>
@@ -21735,6 +22007,15 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
+  HMatrix<spacedim, Number>::Tvmult_task_parallel(
+    Vector<Number>                &y,
+    const Vector<Number>          &x,
+    const HMatrixSupport::Property top_hmat_property) const
+  {}
+
+
+  template <int spacedim, typename Number>
+  void
   HMatrix<spacedim, Number>::Tvmult(
     Vector<Number>                &y,
     const Number                   alpha,
@@ -22252,6 +22533,16 @@ namespace HierBEM
           }
       }
   }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::Tvmult_task_parallel(
+    Vector<Number>                &y,
+    const Number                   alpha,
+    const Vector<Number>          &x,
+    const HMatrixSupport::Property top_hmat_property) const
+  {}
 
 
   template <int spacedim, typename Number>
@@ -23412,12 +23703,12 @@ namespace HierBEM
         else
           {
             /**
-             * Migrate the current H-matrix node pair to the list \p
+             * Migrate the current \hmatrix node pair to the list \p
              * Sigma_P_cannot_reduced.
              */
             Sigma_P_cannot_reduced.push_back(hmat_pair);
             /**
-             * Remove the current H-matrix node pair from the original list
+             * Remove the current \hmatrix node pair from the original list
              * in
              * \p M.
              */
@@ -27373,7 +27664,7 @@ namespace HierBEM
     this->link_hmat_nodes_on_cross_from_diagonal_blocks(this->property);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
     timer.stop();
-    print_wall_time(std::cout, timer, "link h-matrix nodes");
+    print_wall_time(std::cout, timer, "link H-matrix nodes");
 #endif
 
     /**
@@ -27627,7 +27918,7 @@ namespace HierBEM
                              * There is no corresponding same column block for
                              * the current trailing block. This is based on the
                              * assumption/fact that the index ranges of the same
-                             * level same row H-matrix blocks are increasing.
+                             * level same row \hmatrix blocks are increasing.
                              */
                             break;
                           }
@@ -27651,7 +27942,7 @@ namespace HierBEM
                              * There is no corresponding same column block for
                              * the current trailing block. This is based on the
                              * assumption/fact that the index ranges of the same
-                             * level same row H-matrix blocks are increasing.
+                             * level same row \hmatrix blocks are increasing.
                              */
                             break;
                           }
@@ -27698,7 +27989,7 @@ namespace HierBEM
                                  * There is no corresponding same row block for
                                  * the current trailing block. This is based on
                                  * the assumption/fact that the index ranges of
-                                 * the same level same column H-matrix blocks
+                                 * the same level same column \hmatrix blocks
                                  * are increasing.
                                  */
                                 break;
@@ -27726,7 +28017,7 @@ namespace HierBEM
                                  * There is no corresponding same row block for
                                  * the current trailing block. This is based on
                                  * the assumption/fact that the index ranges of
-                                 * the same level same column H-matrix blocks
+                                 * the same level same column \hmatrix blocks
                                  * are increasing.
                                  */
                                 break;
@@ -28670,9 +28961,9 @@ namespace HierBEM
          * row and column index sets of the matrix block should be larger than
          * that of the diagonal block.
          *
-         * @p current_diag_column_block1 points to the H-matrix node, which is
+         * @p current_diag_column_block1 points to the \hmatrix node, which is
          * on a same row with the current trailing matrix node.
-         * @p current_diag_column_block2 points to the H-matrix node, the
+         * @p current_diag_column_block2 points to the \hmatrix node, the
          * transpose of which is on a same column with the current trailing
          * matrix node.
          *
@@ -28737,7 +29028,7 @@ namespace HierBEM
                              * There is no corresponding same row block for
                              * the current trailing block. This is based on
                              * the assumption/fact that the index ranges of
-                             * the same level same column H-matrix blocks
+                             * the same level same column \hmatrix blocks
                              * are increasing.
                              */
                             break;
@@ -28763,7 +29054,7 @@ namespace HierBEM
                              * There is no corresponding same row block for
                              * the current trailing block. This is based on
                              * the assumption/fact that the index ranges of
-                             * the same level same column H-matrix blocks
+                             * the same level same column \hmatrix blocks
                              * are increasing.
                              */
                             break;
@@ -28812,7 +29103,7 @@ namespace HierBEM
                                  * There is no corresponding same column block
                                  * for the current trailing block. This is based
                                  * on the assumption/fact that the index ranges
-                                 * of the same level same column H-matrix blocks
+                                 * of the same level same column \hmatrix blocks
                                  * are increasing.
                                  */
                                 break;
@@ -28840,7 +29131,7 @@ namespace HierBEM
                                  * There is no corresponding same column block
                                  * for the current trailing block. This is based
                                  * on the assumption/fact that the index ranges
-                                 * of the same level same column H-matrix blocks
+                                 * of the same level same column \hmatrix blocks
                                  * are increasing.
                                  */
                                 break;
@@ -29273,6 +29564,27 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
+  HMatrix<spacedim, Number>::compute_leaf_set_vmult_or_Tvmult_task_costs(
+    std::vector<double> &task_costs) const
+  {}
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::compute_near_field_leaf_set_assembly_task_costs(
+    std::vector<double> &task_costs) const
+  {}
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::compute_far_field_leaf_set_assembly_task_costs(
+    std::vector<double> &task_costs) const
+  {}
+
+
+  template <int spacedim, typename Number>
+  void
   HMatrix<spacedim, Number>::compute_cholesky_factorization_task_parallel(
     const unsigned int fixed_rank)
   {
@@ -29285,7 +29597,7 @@ namespace HierBEM
     this->link_hmat_nodes_on_cross_from_diagonal_blocks(this->property);
 #if ENABLE_DEBUG == 1 && ENABLE_TIMER == 1
     timer.stop();
-    print_wall_time(std::cout, timer, "link h-matrix nodes");
+    print_wall_time(std::cout, timer, "link H-matrix nodes");
 #endif
 
     /**
@@ -29728,8 +30040,8 @@ namespace HierBEM
     while (current_hmat_node_on_same_level != nullptr)
       {
         /**
-         * Link same level H-matrix blocks on a same row with respect to the
-         * diagonal block, when the top level H-matrix is a general or upper
+         * Link same level \hmatrix blocks on a same row with respect to the
+         * diagonal block, when the top level \hmatrix is a general or upper
          * triangular matrix.
          */
         if (top_hmat_property == HMatrixSupport::Property::general ||
@@ -29768,8 +30080,8 @@ namespace HierBEM
           }
 
         /**
-         * Link same level H-matrix blocks on a same column with respect to the
-         * diagonal block, when the top level H-matrix is a general, symmetric
+         * Link same level \hmatrix blocks on a same column with respect to the
+         * diagonal block, when the top level \hmatrix is a general, symmetric
          * or lower triangular matrix.
          */
         if (top_hmat_property == HMatrixSupport::Property::general ||
@@ -29846,18 +30158,20 @@ namespace HierBEM
           case SpaceFillingCurveType::Z: {
             _build_leaf_set_z_traversal(leaf_set,
                                         near_field_leaf_set,
-                                        far_field_leaf_set);
+                                        far_field_leaf_set,
+                                        property);
 
             break;
           }
           case SpaceFillingCurveType::Hilbert: {
             /**
-             * The top level H-matrix is type A.
+             * The top level \hmatrix is type A.
              */
             _build_leaf_set_hilbert_traversal(leaf_set,
                                               near_field_leaf_set,
                                               far_field_leaf_set,
-                                              HilbertBlockType::A);
+                                              HilbertBlockType::A,
+                                              property);
 
             break;
           }

@@ -7930,7 +7930,7 @@ namespace HierBEM
             const bool)>(
             HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
-          std::cref(hmat.get_near_field_leaf_set()),
+          std::cref(near_field_leaf_set),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
             near_field_set_size :
@@ -8450,7 +8450,7 @@ namespace HierBEM
             const bool)>(
             HierBEM::CUDAWrappers::
               sauter_quadrature_for_near_field_matrix_entries_producer),
-          std::cref(hmat.get_near_field_leaf_set()),
+          std::cref(near_field_leaf_set),
           i * number_of_hmat_nodes_per_thread,
           (i + 1) * number_of_hmat_nodes_per_thread > near_field_set_size ?
             near_field_set_size :
@@ -8623,7 +8623,7 @@ namespace HierBEM
     /**
      * @internal Perform regularization to the kernel.
      */
-    unsigned int grain_size = near_field_leaf_set.size() / thread_num;
+    unsigned int grain_size = near_field_set_size / thread_num;
     if (grain_size == 0)
       {
         grain_size = 1;

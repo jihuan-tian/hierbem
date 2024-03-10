@@ -1,18 +1,23 @@
 /**
- * \file hmatrix-write-leaf-set-by-iteration-hilbert-curve.cu
- * \brief Verify the method for write out leaf set by iteration over the
- * constructed leaf set instead of recursion. The traversal follows the Hilbert
- * curve.
+ * \file hmatrix-symm-write-leaf-set-by-iteration.cu
+ * \brief Verify the method for writing out leaf set by iteration over the
+ * constructed leaf set instead of recursion. By default, the traversal follows
+ * the Z curve.
+ *
+ * The \hmatrix in this test case is symmetric.
  *
  * \ingroup
  * \author Jihuan Tian
- * \date 2024-03-09
+ * \date 2024-03-11
  */
 
+#include <fstream>
 #include <iostream>
 
+#include "hbem_octave_wrapper.h"
 #include "hmatrix.h"
 
+using namespace std;
 using namespace HierBEM;
 
 int
@@ -46,20 +51,25 @@ main()
   /**
    * Create a full matrix with data.
    */
-  LAPACKFullMatrixExt<double> M(n, n);
-  double                      counter = 1.0;
-  for (auto it = M.begin(); it != M.end(); it++)
-    {
-      (*it) = counter;
-      counter += 1.0;
-    }
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(SOURCE_DIR);
+  // Execute script `gen_symmetric_matrix.m` to generate M.dat
+  inst.source_file(SOURCE_DIR "/gen_symmetric_matrix.m");
+
+  LAPACKFullMatrixExt<double> M;
+  ifstream                    in("M.dat");
+  M.read_from_mat(in, "M");
+  in.close();
 
   /**
-   * Create a rank-1 HMatrix.
+   * Set the property of the full matrix as @p symmetric.
+   */
+  M.set_property(LAPACKSupport::symmetric);
+
+  /**
+   * Create a rank-1 HMatrix, whose property is automatically set to @p symmetric.
    */
   const unsigned int fixed_rank_k = 1;
-  HMatrix<3, double>::set_leaf_set_traversal_method(
-    HMatrix<3, double>::SpaceFillingCurveType::Hilbert);
   HMatrix<3, double> hmat(block_cluster_tree, M, fixed_rank_k);
 
   /**

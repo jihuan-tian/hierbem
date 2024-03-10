@@ -1206,8 +1206,7 @@ namespace HierBEM
 
     /**
      * Read the data of a full matrix with the specified variable name from a
-     * file
-     * saved by Octave using the option \p -text.
+     * file saved by Octave using the option \p -text.
      *
      * @param in Input file stream
      * @param name Variable name

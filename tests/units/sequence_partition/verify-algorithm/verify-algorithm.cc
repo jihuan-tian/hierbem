@@ -14,6 +14,7 @@
 #include "sequence_partition/sequence_partition.h"
 
 using namespace Catch::Matchers;
+using namespace HierBEM;
 
 static constexpr int FUZZING_TIMES = 5;
 static constexpr int FIXED_SEED    = 123456;

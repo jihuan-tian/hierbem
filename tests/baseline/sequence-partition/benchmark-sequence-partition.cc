@@ -8,6 +8,8 @@
 
 #include "sequence_partition/sequence_partition.h"
 
+using namespace HierBEM;
+
 int
 main()
 {
