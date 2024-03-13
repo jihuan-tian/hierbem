@@ -137,13 +137,24 @@ namespace HierBEM
     operator=(HMatrixSymm<spacedim, Number> &&H) noexcept;
 
     /**
-     * Calculate matrix-vector multiplication as \f$y = y + M \cdot x\f$.
+     * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$.
      *
-     * @param y
-     * @param x
+     * @param y Result vector
+     * @param x Input vector
      */
     void
     vmult(Vector<Number> &y, const Vector<Number> &x) const;
+
+    /**
+     * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M
+     * \cdot x\f$.
+     *
+     * @param y Result vector
+     * @param alpha Scalar factor before \f$x\f$
+     * @param x Input vector
+     */
+    void
+    vmult(Vector<Number> &y, const Number alpha, const Vector<Number> &x) const;
   };
 
 
@@ -286,6 +297,27 @@ namespace HierBEM
      * Call the member function @p vmult in the parent class.
      */
     this->HMatrix<spacedim, Number>::vmult(y,
+                                           x,
+                                           HMatrixSupport::Property::symmetric);
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrixSymm<spacedim, Number>::vmult(Vector<Number>       &y,
+                                       const Number          alpha,
+                                       const Vector<Number> &x) const
+  {
+    /**
+     * Clear the result vector before the multiplication.
+     */
+    y = 0.;
+
+    /**
+     * Call the member function @p vmult in the parent class.
+     */
+    this->HMatrix<spacedim, Number>::vmult(y,
+                                           alpha,
                                            x,
                                            HMatrixSupport::Property::symmetric);
   }

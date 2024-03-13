@@ -112,6 +112,8 @@ run_hmatrix_solve_lu()
    * Print the result vector.
    */
   print_vector_to_mat(ofs, "x", x);
+
+  ofs.close();
 }
 
 void
@@ -205,4 +207,6 @@ run_hmatrix_solve_lu_in_situ()
    * Print the result vector.
    */
   print_vector_to_mat(ofs, "x", x);
+
+  ofs.close();
 }

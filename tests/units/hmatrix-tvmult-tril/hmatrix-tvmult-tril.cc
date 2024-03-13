@@ -1,94 +1,86 @@
 /**
- * @file hmatrix-tvmult-tril.cc
- * @brief Verify \hmatrix transposed matrix-vector multiplication. The \hmatrix
- * is lower triangular.
+ * \file hmatrix-tvmult-tril.cc
+ * \brief Verify transposed lower triangular \hmatrix/vector multiplication.
  *
- * @ingroup testers hierarchical_matrices
- * @author Jihuan Tian
- * @date 2022-12-01
+ * \ingroup testers hierarchical_matrices
+ * \author Jihuan Tian
+ * \date 2022-12-01
  */
+
+#include <catch2/catch_all.hpp>
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
-#include "hmatrix.h"
-#include "lapack_full_matrix_ext.h"
-#include "read_octave_data.h"
+#include "hbem_octave_wrapper.h"
+#include "hbem_test_config.h"
 
-using namespace std;
+using namespace Catch::Matchers;
+using namespace HierBEM;
 
-int
-main()
+// XXX Extracted all HierBEM logic into a standalone source to prevent
+// Matrix/SparseMatrix data type conflicts
+extern void
+run_hmatrix_tvmult_tril();
+
+static constexpr int FUZZING_TIMES = 5;
+TEST_CASE("Transposed lower triangular H-matrix/vector multiplication",
+          "[hmatrix]")
 {
-  LAPACKFullMatrixExt<double> M;
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(HBEM_ROOT_DIR "/scripts");
+  inst.add_path(SOURCE_DIR);
 
-  ifstream in("M.dat");
-  M.read_from_mat(in, "M");
-  in.close();
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    // Predefine Octave and C++ random seed to make tests repeatable
+    int rng_seed = 1234567 + trial_no * 7;
+    // TODO `src/aca_plus.cu` and `include/aca_plus.hcu` use a
+    // std::random_device for hardware seeding, need a mechansim to
+    // set the seed.
 
-  /**
-   * Set the property of the full matrix as lower_triangular.
-   */
-  M.set_property(LAPACKSupport::Property::lower_triangular);
+    std::ostringstream oss;
+    oss << "rand('seed'," << rng_seed << ");\n";
+    oss << "randn('seed'," << rng_seed << ");";
+    inst.eval_string(oss.str());
 
-  /**
-   * Read the vector \f$x\f$.
-   */
-  Vector<double> x;
-  in.open("x.dat");
-  read_vector_from_octave(in, "x", x);
-  in.close();
+    // Execute script `gen_matrix.m` to generate M.dat and b.dat
+    REQUIRE_NOTHROW([&]() { inst.source_file(SOURCE_DIR "/gen_matrix.m"); }());
 
-  const unsigned int p = 6;
-  const unsigned int n = std::pow(2, p);
+    run_hmatrix_tvmult_tril();
 
-  AssertDimension(M.m(), n);
-  AssertDimension(M.m(), M.n());
-  AssertDimension(M.n(), x.size());
+    // Calculate relative error
+    try
+      {
+        inst.source_file(SOURCE_DIR "/process.m");
+      }
+    catch (...)
+      {
+        // Ignore errors
+      }
 
-  std::vector<types::global_dof_index> index_set(n);
+    // Check relative error
+    //
+    // N.B. The \hmatrix converted from the full matrix uses full rank in low
+    // rank matrix blocks, therefore the relative error between the \hmatrix and
+    // the original full matrix should be very small.
+    //
+    // On the other hand, \hmatrix/vector multiplication involves multiple
+    // additions from \hmatrix leaf nodes into the result vector, during which
+    // there will be round-off errors.
+    //
+    // Therefore, the error limit for \hmatrix is 1e-14 and that for the result
+    // vector from \hmatrix/vector multiplication is loosened a bit, i.e. 1e-12.
+    HBEMOctaveValue out;
+    out = inst.eval_string("hmat_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
 
-  for (unsigned int i = 0; i < n; i++)
-    {
-      index_set.at(i) = i;
-    }
+    out = inst.eval_string("y1_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
 
-  /**
-   * Generate the \hmatrix from the lower triangular full matrix. Its property
-   * will
-   * automatically be set to @p HMatrixSupport::Property::lower_triangular.
-   */
-  const unsigned int n_min        = 2;
-  const unsigned int fixed_rank_k = 10;
-
-  ClusterTree<3> cluster_tree(index_set, n_min);
-  cluster_tree.partition();
-
-  BlockClusterTree<3, double> block_cluster_tree(cluster_tree, cluster_tree);
-  block_cluster_tree.partition_fine_non_tensor_product();
-
-  HMatrix<3, double> H(block_cluster_tree,
-                       M,
-                       fixed_rank_k,
-                       HMatrixSupport::diagonal_block);
-
-  LAPACKFullMatrixExt<double> H_full;
-  H.convertToFullMatrix(H_full);
-  H_full.print_formatted_to_mat(std::cout, "H_full", 15, false, 25, "0");
-
-  /**
-   * Perform transposed matrix-vector multiplication.
-   */
-  Vector<double> y(n);
-  H.Tvmult(y, x, H.get_property());
-  print_vector_to_mat(std::cout, "y1", y, false);
-
-  /**
-   * Perform transposed matrix-vector multiplication with factor.
-   */
-  y = 0.;
-  H.Tvmult(y, 0.5, x, H.get_property());
-  print_vector_to_mat(std::cout, "y2", y, false);
-
-  return 0;
+    out = inst.eval_string("y2_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+  }
 }

@@ -1,5 +1,4 @@
-## Generate the lower triangular part of the positive definite and
-## symmetric matrix.
+## Generate the lower triangular part of the symmetric positive definite matrix.
 p = 6;
 n = 2^p;
 M = randn(n);

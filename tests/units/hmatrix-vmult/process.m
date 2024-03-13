@@ -1,5 +1,11 @@
 clear all;
+
+load "M.dat";
+load "x.dat";
 load "hmatrix-vmult.output";
-y_tilde = M * x;
-norm(y_tilde - y1, 2) / norm(y1)
-y1 ./ y2
+
+hmat_rel_err = norm(H_full - M, 'fro') / norm(M, 'fro')
+y = M * x;
+y1_rel_err = norm(y1 - y, 2) / norm(y, 2)
+y2_rel_err = norm(y2 - 0.5 * y, 2) / norm(0.5 * y, 2)
+

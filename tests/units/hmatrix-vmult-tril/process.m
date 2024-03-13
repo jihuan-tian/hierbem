@@ -1,15 +1,10 @@
 clear all;
-load M.dat;
-load x.dat;
-load hmatrix-vmult-tril.output;
 
-printout_var("norm(H_full-M,'fro')/norm(M,'fro')");
-printout_var("norm(M*x-y1,2)/norm(M*x,2)");
-printout_var("norm(H_full*x-y1,2)/norm(H_full*x,2)");
-y1 ./ y2
+load "M.dat";
+load "x.dat";
+load "hmatrix-vmult-tril.output";
 
-figure;
-hold on;
-plot(y1, 'ro');
-plot(M*x, 'b+');
-plot(H_full*x,'kx');
+hmat_rel_err = norm(H_full - M, 'fro') / norm(M, 'fro')
+y = M * x;
+y1_rel_err = norm(y1 - y, 2) / norm(y, 2)
+y2_rel_err = norm(y2 - 0.5 * y, 2) / norm(0.5 * y, 2)

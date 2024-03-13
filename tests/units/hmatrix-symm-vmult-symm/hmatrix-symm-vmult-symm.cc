@@ -1,86 +1,90 @@
 /**
- * \file hmatrix-symm-vmult-symm.cc
- * \brief Verify \hmatrix matrix-vector multiplication. The \hmatrix is
- * symmetric and only its lower triangular part is stored. In this version, the
- * \hmatrix type is @p HMatrixSymm.
+ * \file run-hmatrix-symm-vmult-symm.cc
+ * \brief Verify \hmatrix/vector multiplication. The \hmatrix is
+ * symmetric and only its lower triangular part is stored.
  *
- * \ingroup testers
+ * In this test case, the type of the \hmatrix is @p HMatrixSymm.
+ *
+ * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
- * \date 2022-10-27
+ * \date 2022-05-14
  */
+
+#include <catch2/catch_all.hpp>
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
-#include "hmatrix_symm.h"
-#include "lapack_full_matrix_ext.h"
-#include "read_octave_data.h"
+#include "hbem_octave_wrapper.h"
+#include "hbem_test_config.h"
 
-using namespace std;
+using namespace Catch::Matchers;
+using namespace HierBEM;
 
-int
-main()
+// XXX Extracted all HierBEM logic into a standalone source to prevent
+// Matrix/SparseMatrix data type conflicts
+extern void
+run_hmatrix_symm_vmult_symm();
+
+static constexpr int FUZZING_TIMES = 5;
+TEST_CASE("Symmetric H-matrix/vector multiplication using HMatrixSymm",
+          "[hmatrix]")
 {
-  LAPACKFullMatrixExt<double> M;
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(HBEM_ROOT_DIR "/scripts");
+  inst.add_path(SOURCE_DIR);
 
-  ifstream in("M.dat");
-  M.read_from_mat(in, "M");
-  in.close();
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    // Predefine Octave and C++ random seed to make tests repeatable
+    int rng_seed = 1234567 + trial_no * 7;
+    // TODO `src/aca_plus.cu` and `include/aca_plus.hcu` use a
+    // std::random_device for hardware seeding, need a mechansim to
+    // set the seed.
 
-  /**
-   * Set the property of the full matrix as @p symmetric.
-   */
-  M.set_property(LAPACKSupport::symmetric);
+    std::ostringstream oss;
+    oss << "rand('seed'," << rng_seed << ");\n";
+    oss << "randn('seed'," << rng_seed << ");";
+    inst.eval_string(oss.str());
 
-  /**
-   * Read the vector \f$x\f$.
-   */
-  Vector<double> x;
-  in.open("x.dat");
-  read_vector_from_octave(in, "x", x);
-  in.close();
+    // Execute script `gen_matrix.m` to generate M.dat and x.dat
+    REQUIRE_NOTHROW([&]() { inst.source_file(SOURCE_DIR "/gen_matrix.m"); }());
 
-  const unsigned int p = 6;
-  const unsigned int n = std::pow(2, p);
+    // Run solving based on generated data
+    run_hmatrix_symm_vmult_symm();
 
-  AssertDimension(M.m(), n);
-  AssertDimension(M.m(), M.n());
-  AssertDimension(M.n(), x.size());
+    // Calculate relative error
+    try
+      {
+        inst.source_file(SOURCE_DIR "/process.m");
+      }
+    catch (...)
+      {
+        // Ignore errors
+      }
 
-  std::vector<types::global_dof_index> index_set(n);
+    // Check relative error
+    //
+    // N.B. The \hmatrix converted from the full matrix uses full rank in low
+    // rank matrix blocks, therefore the relative error between the \hmatrix and
+    // the original full matrix should be very small.
+    //
+    // On the other hand, \hmatrix/vector multiplication involves multiple
+    // additions from \hmatrix leaf nodes into the result vector, during which
+    // there will be round-off errors.
+    //
+    // Therefore, the error limit for \hmatrix is 1e-14 and that for the result
+    // vector from \hmatrix/vector multiplication is loosened a bit, i.e. 1e-12.
+    HBEMOctaveValue out;
+    out = inst.eval_string("hmat_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
 
-  for (unsigned int i = 0; i < n; i++)
-    {
-      index_set.at(i) = i;
-    }
+    out = inst.eval_string("y1_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
 
-  /**
-   * Generate the \hmatrix from the symmetric full matrix. Its property will
-   * automatically be set to @p HMatrixSupport::Property::symmetric.
-   */
-  const unsigned int n_min        = 2;
-  const unsigned int fixed_rank_k = 10;
-
-  ClusterTree<3> cluster_tree(index_set, n_min);
-  cluster_tree.partition();
-
-  BlockClusterTree<3, double> block_cluster_tree(cluster_tree, cluster_tree);
-  block_cluster_tree.partition_fine_non_tensor_product();
-
-  HMatrixSymm<3, double> H(block_cluster_tree, M, fixed_rank_k);
-
-  LAPACKFullMatrixExt<double> H_full;
-  H.convertToFullMatrix(H_full);
-  H_full.print_formatted_to_mat(std::cout, "H_full", 15, false, 25, "0");
-
-  /**
-   * Perform matrix-vector multiplication. \alert{When the \hmatrix is
-   * symmetric, its symmetry property should be passed as the third argument
-   * to @p vmult.}
-   */
-  Vector<double> y(n);
-  H.vmult(y, x);
-  print_vector_to_mat(std::cout, "y", y, false);
-
-  return 0;
+    out = inst.eval_string("y2_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+  }
 }

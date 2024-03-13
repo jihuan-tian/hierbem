@@ -1,71 +1,85 @@
 /**
  * \file hmatrix-vmult.cc
- * \brief Verify \hmatrix matrix-vector multiplication.
+ * \brief Verify \hmatrix/vector multiplication.
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
  * \date 2021-06-23
  */
 
-#include "debug_tools.h"
-#include "hmatrix.h"
+#include <catch2/catch_all.hpp>
 
-int
-main()
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
+#include "hbem_octave_wrapper.h"
+#include "hbem_test_config.h"
+
+using namespace Catch::Matchers;
+using namespace HierBEM;
+
+// XXX Extracted all HierBEM logic into a standalone source to prevent
+// Matrix/SparseMatrix data type conflicts
+extern void
+run_hmatrix_vmult();
+
+static constexpr int FUZZING_TIMES = 5;
+TEST_CASE("H-matrix/vector multiplication", "[hmatrix]")
 {
-  const unsigned int                   p = 5;
-  const unsigned int                   n = std::pow(2, p);
-  std::vector<types::global_dof_index> index_set(n);
+  HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
+  inst.add_path(HBEM_ROOT_DIR "/scripts");
+  inst.add_path(SOURCE_DIR);
 
-  for (unsigned int i = 0; i < n; i++)
-    {
-      index_set.at(i) = i;
-    }
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    // Predefine Octave and C++ random seed to make tests repeatable
+    int rng_seed = 1234567 + trial_no * 7;
+    // TODO `src/aca_plus.cu` and `include/aca_plus.hcu` use a
+    // std::random_device for hardware seeding, need a mechansim to
+    // set the seed.
 
-  const unsigned int n_min        = 1;
-  const unsigned int fixed_rank_k = 1;
+    std::ostringstream oss;
+    oss << "rand('seed'," << rng_seed << ");\n";
+    oss << "randn('seed'," << rng_seed << ");";
+    inst.eval_string(oss.str());
 
-  ClusterTree<3> cluster_tree(index_set, n_min);
-  cluster_tree.partition();
+    // Execute script `gen_matrix.m` to generate M.dat and b.dat
+    REQUIRE_NOTHROW([&]() { inst.source_file(SOURCE_DIR "/gen_matrix.m"); }());
 
-  BlockClusterTree<3, double> block_cluster_tree(cluster_tree, cluster_tree);
-  block_cluster_tree.partition_fine_non_tensor_product();
+    run_hmatrix_vmult();
 
-  /**
-   * Create a full matrix with data.
-   */
-  LAPACKFullMatrixExt<double> M(n, n);
-  double                      counter = 1.0;
-  for (auto it = M.begin(); it != M.end(); it++)
-    {
-      (*it) = counter;
-      counter += 1.0;
-    }
-  M.print_formatted_to_mat(std::cout, "M");
+    // Calculate relative error
+    try
+      {
+        inst.source_file(SOURCE_DIR "/process.m");
+      }
+    catch (...)
+      {
+        // Ignore errors
+      }
 
-  /**
-   * Create a rank-1 HMatrix.
-   */
-  HMatrix<3, double> hmat(block_cluster_tree, M, fixed_rank_k);
+    // Check relative error
+    //
+    // N.B. The \hmatrix converted from the full matrix uses full rank in low
+    // rank matrix blocks, therefore the relative error between the \hmatrix and
+    // the original full matrix should be very small.
+    //
+    // On the other hand, \hmatrix/vector multiplication involves multiple
+    // additions from \hmatrix leaf nodes into the result vector, during which
+    // there will be round-off errors.
+    //
+    // Therefore, the error limit for \hmatrix is 1e-14 and that for the result
+    // vector from \hmatrix/vector multiplication is loosened a bit, i.e. 1e-12.
+    HBEMOctaveValue out;
+    out = inst.eval_string("hmat_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-14));
 
-  /**
-   * Create the vector x.
-   */
-  Vector<double> x(n);
-  for (unsigned int i = 0; i < n; i++)
-    {
-      x(i) = std::sin(static_cast<double>(n));
-    }
-  print_vector_to_mat(std::cout, "x", x);
+    out = inst.eval_string("y1_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
 
-  /**
-   * Perform matrix-vector multiplication.
-   */
-  Vector<double> y(n);
-  hmat.vmult(y, x);
-  print_vector_to_mat(std::cout, "y1", y);
-
-  y = 0.;
-  hmat.vmult(y, 0.5, x);
-  print_vector_to_mat(std::cout, "y2", y);
+    out = inst.eval_string("y2_rel_err");
+    REQUIRE_THAT(out.double_value(), WithinAbs(0.0, 1e-12));
+  }
 }
