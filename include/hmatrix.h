@@ -3318,6 +3318,43 @@ namespace HierBEM
     std::size_t
     memory_consumption_of_far_field_leaf_set() const;
 
+    /**
+     * Compute the \hmatrix/vector multiplication or transposed \hmatrix/vector
+     * multiplication task costs for all matrix blocks in the leaf set.
+     *
+     * The current \hmatrix node should be at the top level.
+     *
+     * @param task_costs Vector of task costs for all matrix blocks in the leaf
+     * set. N.B. Its memory should be allocated before calling this function.
+     */
+    void
+    compute_leaf_set_vmult_or_Tvmult_task_costs(
+      std::vector<double> &task_costs) const;
+
+    /**
+     * Compute the tasks costs for assembling matrix blocks in the near field
+     * leaf set.
+     *
+     * @param task_costs Vector of task costs for all matrix blocks in the near
+     * field leaf set. N.B. Its memory should be allocated before calling this
+     * function.
+     */
+    void
+    compute_near_field_leaf_set_assembly_task_costs(
+      std::vector<double> &task_costs) const;
+
+    /**
+     * Compute the tasks costs for assembling matrix blocks in the far field
+     * leaf set.
+     *
+     * @param task_costs Vector of task costs for all matrix blocks in the far
+     * field leaf set. N.B. Its memory should be allocated before calling this
+     * function.
+     */
+    void
+    compute_far_field_leaf_set_assembly_task_costs(
+      std::vector<double> &task_costs) const;
+
   private:
     /**
      * Assign IDs to \hmatnodes, which will be used to generate the dot
@@ -3669,40 +3706,47 @@ namespace HierBEM
     cholesky_assign_update_to_solve_and_factorize_dependencies();
 
     /**
-     * Compute the \hmatrix/vector multiplication as well as transposed
-     * \hmatrix/vector multiplication task costs for all matrix blocks in the
-     * leaf set.
+     * Compute the \hmatrix/vector multiplication or transposed \hmatrix/vector
+     * multiplication task cost for the current near field \hmatrix node.
      *
-     * @param task_costs Vector of task costs for all matrix blocks in the leaf
-     * set. N.B. Its memory should be allocated before calling this function.
+     * @param top_hmat_property \hmatrix property of the top level \hmatrix node.
+     * @return Task cost
      */
-    void
-    compute_leaf_set_vmult_or_Tvmult_task_costs(
-      std::vector<double> &task_costs) const;
+    double
+    compute_near_field_hmat_vmult_or_Tvmult_task_cost(
+      const HMatrixSupport::Property top_hmat_property) const;
 
     /**
-     * Compute the tasks costs for assembling matrix blocks in the near field
-     * leaf set.
+     * Compute the \hmatrix/vector multiplication or transposed \hmatrix/vector
+     * multiplication task cost for the current far field \hmatrix node.
      *
-     * @param task_costs Vector of task costs for all matrix blocks in the near
-     * field leaf set. N.B. Its memory should be allocated before calling this
-     * function.
+     * @param top_hmat_property \hmatrix property of the top level \hmatrix node.
+     * @return Task cost
      */
-    void
-    compute_near_field_leaf_set_assembly_task_costs(
-      std::vector<double> &task_costs) const;
+    double
+    compute_far_field_hmat_vmult_or_Tvmult_task_cost(
+      const HMatrixSupport::Property top_hmat_property) const;
 
     /**
-     * Compute the tasks costs for assembling matrix blocks in the far field
-     * leaf set.
+     * Compute the task cost for assembling the current near field \hmatrix
+     * node.
      *
-     * @param task_costs Vector of task costs for all matrix blocks in the far
-     * field leaf set. N.B. Its memory should be allocated before calling this
-     * function.
+     * @param top_hmat_property \hmatrix property of the top level \hmatrix node.
+     * @return Task cost
      */
-    void
-    compute_far_field_leaf_set_assembly_task_costs(
-      std::vector<double> &task_costs) const;
+    double
+    compute_near_field_hmat_assembly_task_cost(
+      const HMatrixSupport::Property top_hmat_property) const;
+
+    /**
+     * Compute the task cost for assembling the current far field \hmatrix node.
+     *
+     * @param top_hmat_property \hmatrix property of the top level \hmatrix node.
+     * @return Task cost
+     */
+    double
+    compute_far_field_hmat_assembly_task_cost(
+      const HMatrixSupport::Property top_hmat_property) const;
 
     /**
      * Method used for traversing the leaf set by following a space-filling
@@ -29563,24 +29607,393 @@ namespace HierBEM
 
 
   template <int spacedim, typename Number>
+  double
+  HMatrix<spacedim, Number>::compute_near_field_hmat_vmult_or_Tvmult_task_cost(
+    const HMatrixSupport::Property top_hmat_property) const
+  {
+    Assert(type == HMatrixType::FullMatrixType, ExcInvalidHMatrixType(type));
+    Assert(fullmatrix != nullptr, ExcInternalError());
+
+    switch (top_hmat_property)
+      {
+          case HMatrixSupport::Property::general: {
+            return m * n;
+          }
+
+          case HMatrixSupport::Property::symmetric: {
+            switch (block_type)
+              {
+                  case HMatrixSupport::BlockType::diagonal_block: {
+                    return m * n;
+                  }
+
+                  case HMatrixSupport::BlockType::lower_triangular_block: {
+                    return 2 * m * n;
+                  }
+
+                  default: {
+                    Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                    return 0;
+                  }
+              }
+          }
+
+          case HMatrixSupport::Property::lower_triangular: {
+            switch (block_type)
+              {
+                  case HMatrixSupport::BlockType::diagonal_block: {
+                    return m * n / 2.0;
+                  }
+
+                  case HMatrixSupport::BlockType::lower_triangular_block: {
+                    return m * n;
+                  }
+
+                  default: {
+                    Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                    return 0;
+                  }
+              }
+          }
+
+          case HMatrixSupport::Property::upper_triangular: {
+            switch (block_type)
+              {
+                  case HMatrixSupport::BlockType::diagonal_block: {
+                    return m * n / 2.0;
+                  }
+
+                  case HMatrixSupport::BlockType::upper_triangular_block: {
+                    return m * n;
+                  }
+
+                  default: {
+                    Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                    return 0;
+                  }
+              }
+          }
+
+          default: {
+            Assert(false, ExcInvalidHMatrixProperty(top_hmat_property));
+
+            return 0;
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  double
+  HMatrix<spacedim, Number>::compute_far_field_hmat_vmult_or_Tvmult_task_cost(
+    const HMatrixSupport::Property top_hmat_property) const
+  {
+    Assert(type == HMatrixType::RkMatrixType, ExcInvalidHMatrixType(type));
+    Assert(rkmatrix != nullptr, ExcInternalError());
+
+    switch (top_hmat_property)
+      {
+          case HMatrixSupport::Property::general: {
+            return rkmatrix->get_formal_rank() * (m + n);
+          }
+
+          case HMatrixSupport::Property::symmetric: {
+            if (block_type == HMatrixSupport::BlockType::lower_triangular_block)
+              {
+                return 2 * rkmatrix->get_formal_rank() * (m + n);
+              }
+            else
+              {
+                Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                return 0;
+              }
+          }
+
+          case HMatrixSupport::Property::lower_triangular: {
+            if (block_type == HMatrixSupport::BlockType::lower_triangular_block)
+              {
+                return rkmatrix->get_formal_rank() * (m + n);
+              }
+            else
+              {
+                Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                return 0;
+              }
+          }
+
+          case HMatrixSupport::Property::upper_triangular: {
+            if (block_type == HMatrixSupport::BlockType::upper_triangular_block)
+              {
+                return rkmatrix->get_formal_rank() * (m + n);
+              }
+            else
+              {
+                Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                return 0;
+              }
+          }
+
+          default: {
+            Assert(false, ExcInvalidHMatrixProperty(top_hmat_property));
+
+            return 0;
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::compute_leaf_set_vmult_or_Tvmult_task_costs(
     std::vector<double> &task_costs) const
-  {}
+  {
+    AssertDimension(leaf_set.size(), task_costs.size());
+    /**
+     * The current \hmatrix node should be at the top level.
+     */
+    Assert(parent == nullptr, ExcInternalError());
+
+    unsigned int i = 0;
+    for (const auto hmat : leaf_set)
+      {
+        switch (hmat->type)
+          {
+              case HMatrixType::FullMatrixType: {
+                task_costs[i] =
+                  hmat->compute_near_field_hmat_vmult_or_Tvmult_task_cost(
+                    property);
+
+                break;
+              }
+              case HMatrixType::RkMatrixType: {
+                task_costs[i] =
+                  hmat->compute_far_field_hmat_vmult_or_Tvmult_task_cost(
+                    property);
+
+                break;
+              }
+              default: {
+                Assert(false, ExcInvalidHMatrixType(hmat->type));
+                task_costs[i] = 0;
+
+                break;
+              }
+          }
+
+        i++;
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  double
+  HMatrix<spacedim, Number>::compute_near_field_hmat_assembly_task_cost(
+    const HMatrixSupport::Property top_hmat_property) const
+  {
+    Assert(type == HMatrixType::FullMatrixType, ExcInvalidHMatrixType(type));
+    Assert(fullmatrix != nullptr, ExcInternalError());
+
+    switch (top_hmat_property)
+      {
+          case HMatrixSupport::Property::general: {
+            return m * n;
+          }
+
+          case HMatrixSupport::Property::symmetric: {
+            switch (block_type)
+              {
+                  case HMatrixSupport::BlockType::diagonal_block: {
+                    return m * n / 2.0;
+                  }
+
+                  case HMatrixSupport::BlockType::lower_triangular_block: {
+                    return m * n;
+                  }
+
+                  default: {
+                    Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                    return 0;
+                  }
+              }
+          }
+
+          case HMatrixSupport::Property::lower_triangular: {
+            switch (block_type)
+              {
+                  case HMatrixSupport::BlockType::diagonal_block: {
+                    return m * n / 2.0;
+                  }
+
+                  case HMatrixSupport::BlockType::lower_triangular_block: {
+                    return m * n;
+                  }
+
+                  default: {
+                    Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                    return 0;
+                  }
+              }
+          }
+
+          case HMatrixSupport::Property::upper_triangular: {
+            switch (block_type)
+              {
+                  case HMatrixSupport::BlockType::diagonal_block: {
+                    return m * n / 2.0;
+                  }
+
+                  case HMatrixSupport::BlockType::upper_triangular_block: {
+                    return m * n;
+                  }
+
+                  default: {
+                    Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                    return 0;
+                  }
+              }
+          }
+
+          default: {
+            Assert(false, ExcInvalidHMatrixProperty(top_hmat_property));
+
+            return 0;
+          }
+      }
+  }
 
 
   template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::compute_near_field_leaf_set_assembly_task_costs(
     std::vector<double> &task_costs) const
-  {}
+  {
+    AssertDimension(near_field_leaf_set.size(), task_costs.size());
+    /**
+     * The current \hmatrix node should be at the top level.
+     */
+    Assert(parent == nullptr, ExcInternalError());
+
+    unsigned int i = 0;
+    for (const auto hmat : near_field_leaf_set)
+      {
+        Assert(hmat->type == HMatrixType::FullMatrixType,
+               ExcInvalidHMatrixType(hmat->type));
+        task_costs[i] =
+          hmat->compute_near_field_hmat_assembly_task_cost(property);
+
+        i++;
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  double
+  HMatrix<spacedim, Number>::compute_far_field_hmat_assembly_task_cost(
+    const HMatrixSupport::Property top_hmat_property) const
+  {
+    Assert(type == HMatrixType::RkMatrixType, ExcInvalidHMatrixType(type));
+    Assert(rkmatrix != nullptr, ExcInternalError());
+
+    /**
+     * The block type of a far field \hmatrix node can only be
+     * @p lower_triangular_block or @p upper_triangular_block.
+     */
+    switch (top_hmat_property)
+      {
+          case HMatrixSupport::Property::general: {
+            if (block_type ==
+                  HMatrixSupport::BlockType::lower_triangular_block ||
+                block_type == HMatrixSupport::BlockType::upper_triangular_block)
+              {
+                return rkmatrix->get_formal_rank() * (m + n);
+              }
+            else
+              {
+                Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                return 0;
+              }
+          }
+
+          case HMatrixSupport::Property::symmetric: {
+            if (block_type == HMatrixSupport::BlockType::lower_triangular_block)
+              {
+                return rkmatrix->get_formal_rank() * (m + n);
+              }
+            else
+              {
+                Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                return 0;
+              }
+          }
+
+          case HMatrixSupport::Property::lower_triangular: {
+            if (block_type == HMatrixSupport::BlockType::lower_triangular_block)
+              {
+                return rkmatrix->get_formal_rank() * (m + n);
+              }
+            else
+              {
+                Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                return 0;
+              }
+          }
+
+          case HMatrixSupport::Property::upper_triangular: {
+            if (block_type == HMatrixSupport::BlockType::upper_triangular_block)
+              {
+                return rkmatrix->get_formal_rank() * (m + n);
+              }
+            else
+              {
+                Assert(false, ExcInvalidHMatrixBlockType(block_type));
+
+                return 0;
+              }
+          }
+
+          default: {
+            Assert(false, ExcInvalidHMatrixProperty(top_hmat_property));
+
+            return 0;
+          }
+      }
+  }
 
 
   template <int spacedim, typename Number>
   void
   HMatrix<spacedim, Number>::compute_far_field_leaf_set_assembly_task_costs(
     std::vector<double> &task_costs) const
-  {}
+  {
+    AssertDimension(far_field_leaf_set.size(), task_costs.size());
+    /**
+     * The current \hmatrix node should be at the top level.
+     */
+    Assert(parent == nullptr, ExcInternalError());
+
+    unsigned int i = 0;
+    for (const auto hmat : far_field_leaf_set)
+      {
+        Assert(hmat->type == HMatrixType::RkMatrixType,
+               ExcInvalidHMatrixType(hmat->type));
+        task_costs[i] =
+          hmat->compute_far_field_hmat_assembly_task_cost(property);
+
+        i++;
+      }
+  }
 
 
   template <int spacedim, typename Number>
