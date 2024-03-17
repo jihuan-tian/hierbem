@@ -269,11 +269,11 @@ TAB_SIZE               = 4
 # commands \{ and \} for these it is advised to use the version @{ and @} or use
 # a double escape (\\{ and \\})
 
-ALIASES                = "mynote{1}=<dl class=\"section note\">\n<dt>Note</dt>\n<dd>\1</dd>\n</dl>" \
-                         "comment{1}=<dl class=\"section note\">\n<dt>Comment</dt>\n<dd>\1</dd>\n</dl>" \
-                         "mycomment{1}=<dl class=\"section note\">\n<dt>Comment</dt>\n<dd>\1</dd>\n</dl>" \
-                         "ref{1}=<dl class=\"section note\">\n<dt>References</dt>\n<dd>\1</dd>\n</dl>" \
-                         "workflow_start=<dl class=\"section\">\n<dt>Work flow</dt>\n<dd>" \
+ALIASES                = "mynote{1}=<dl class=\"section note\"><dt>Note</dt><dd>\1</dd></dl>" \
+                         "comment{1}=<dl class=\"section note\"><dt>Comment</dt><dd>\1</dd></dl>" \
+                         "mycomment{1}=<dl class=\"section note\"><dt>Comment</dt><dd>\1</dd></dl>" \
+                         "myref{1}=<dl class=\"section note\"><dt>References</dt><dd>\1</dd></dl>" \
+                         "workflow_start=<dl class=\"section\"><dt>Work flow</dt><dd>" \
                          workflow_end=</dd>\n</dl> \
                          alert{1}=<strong>\1</strong> \
                          Hcal=\f$\mathcal{H}\f$ \
@@ -946,7 +946,7 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                =
+EXCLUDE                = ../extern/
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

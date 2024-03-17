@@ -20,7 +20,8 @@ namespace HierBEM
    * NOTE: For large sequence the code compiled by Clang 12 with -O3/-Ofast
    * optimization can be ~50% faster than GCC 9.4 with the same flags.
    *
-   * @ref Olstad and Manne (1995), "Efficient Partitioning of Sequences" (Fig. 1)
+   * \myref{Olstad and Manne (1995), "Efficient Partitioning of Sequences" (Fig.
+   * 1)}
    */
   template <typename IntervalCostFunc>
   class SequencePartitioner
