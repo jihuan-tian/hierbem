@@ -14,12 +14,11 @@ run_hmatrix_tvmult_tril()
 {
   std::ofstream ofs("hmatrix-tvmult-tril.output");
 
-  LAPACKFullMatrixExt<double> M;
-
   /**
-   * Load a matrix where only the lower triangular part is stored.
+   * Load a matrix where only the lower triangular and diagonal part is stored.
    */
-  std::ifstream in("M.dat");
+  LAPACKFullMatrixExt<double> M;
+  std::ifstream               in("M.dat");
   M.read_from_mat(in, "M");
   in.close();
   REQUIRE(M.size()[0] > 0);
@@ -51,12 +50,11 @@ run_hmatrix_tvmult_tril()
       index_set.at(i) = i;
     }
 
-  const unsigned int n_min = 2;
-
   /**
    * Generate cluster tree.
    */
-  ClusterTree<3> cluster_tree(index_set, n_min);
+  const unsigned int n_min = 2;
+  ClusterTree<3>     cluster_tree(index_set, n_min);
   cluster_tree.partition();
 
   /**
@@ -71,13 +69,14 @@ run_hmatrix_tvmult_tril()
    * will automatically be set to @p HMatrixSupport::Property::lower_triangular.
    */
   const unsigned int fixed_rank_k = n / 4;
-  HMatrix<3, double> H(block_cluster_tree,
-                       M,
-                       fixed_rank_k,
-                       HMatrixSupport::diagonal_block);
+  HMatrix<3, double> H(block_cluster_tree, M, fixed_rank_k);
   REQUIRE(H.get_m() == M.size()[0]);
   REQUIRE(H.get_n() == M.size()[1]);
 
+  /**
+   * Convert the \hmatrix back to full matrix for comparison with the original
+   * full matrix.
+   */
   LAPACKFullMatrixExt<double> H_full;
   H.convertToFullMatrix(H_full);
   REQUIRE(H_full.size()[0] == M.size()[0]);
@@ -86,7 +85,7 @@ run_hmatrix_tvmult_tril()
   H_full.print_formatted_to_mat(ofs, "H_full", 15, false, 25, "0");
 
   /**
-   * Perform matrix-vector multiplication.
+   * Perform transposed \hmatrix/vector multiplication.
    */
   Vector<double> y(n);
   H.Tvmult(y, x, H.get_property());

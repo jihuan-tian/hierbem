@@ -14,17 +14,19 @@ run_hmatrix_vmult()
 {
   std::ofstream ofs("hmatrix-vmult.output");
 
-  LAPACKFullMatrixExt<double> M;
-
   /**
    * Load a general matrix.
    */
-  std::ifstream in("M.dat");
+  LAPACKFullMatrixExt<double> M;
+  std::ifstream               in("M.dat");
   M.read_from_mat(in, "M");
   in.close();
   REQUIRE(M.size()[0] > 0);
   REQUIRE(M.size()[0] == M.size()[1]);
 
+  /**
+   * Generate index set.
+   */
   const unsigned int                   p = 6;
   const unsigned int                   n = std::pow(2, p);
   std::vector<types::global_dof_index> index_set(n);
@@ -34,11 +36,17 @@ run_hmatrix_vmult()
       index_set.at(i) = i;
     }
 
+  /**
+   * Generate cluster tree.
+   */
   const unsigned int n_min = 2;
-
-  ClusterTree<3> cluster_tree(index_set, n_min);
+  ClusterTree<3>     cluster_tree(index_set, n_min);
   cluster_tree.partition();
 
+  /**
+   * Generate block cluster tree with the two component cluster trees being the
+   * same.
+   */
   BlockClusterTree<3, double> block_cluster_tree(cluster_tree, cluster_tree);
   block_cluster_tree.partition_fine_non_tensor_product();
 
@@ -50,6 +58,10 @@ run_hmatrix_vmult()
   REQUIRE(H.get_m() == M.size()[0]);
   REQUIRE(H.get_n() == M.size()[1]);
 
+  /**
+   * Convert the \hmatrix back to full matrix for comparison with the original
+   * full matrix.
+   */
   LAPACKFullMatrixExt<double> H_full;
   H.convertToFullMatrix(H_full);
   REQUIRE(H_full.size()[0] == M.size()[0]);
@@ -64,10 +76,10 @@ run_hmatrix_vmult()
   in.open("x.dat");
   read_vector_from_octave(in, "x", x);
   in.close();
-  REQUIRE(x.size() == M.size()[0]);
+  REQUIRE(x.size() == M.size()[1]);
 
   /**
-   * Perform matrix-vector multiplication.
+   * Perform \hmatrix/vector multiplication.
    */
   Vector<double> y(n);
   H.vmult(y, x);

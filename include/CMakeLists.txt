@@ -21,6 +21,9 @@ if(NOT HBEM_ENABLE_NVTX)
   set(HBEM_ENABLE_NVTX 0)
 endif()
 
+# If ACA runs in multiple threads, setting this flag to 0 will not make it
+# really deterministic. To fully remove the randomness in ACA, TBB thread number
+# should be set to 1 by calling `dealii::MultithreadInfo::set_thread_limit(1)`.
 if(NOT HBEM_RANDOM_ACA)
   set(HBEM_RANDOM_ACA 0)
 endif()

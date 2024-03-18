@@ -14,6 +14,10 @@ run_hmatrix_tvmult_symm()
 {
   std::ofstream ofs("hmatrix-tvmult-symm.output");
 
+  /**
+   * Load a symmetric matrix, where only diagonal and lower triangular parts are
+   * stored.
+   */
   LAPACKFullMatrixExt<double> M;
   std::ifstream               in("M.dat");
   M.read_from_mat(in, "M");
@@ -47,12 +51,11 @@ run_hmatrix_tvmult_symm()
       index_set.at(i) = i;
     }
 
-  const unsigned int n_min = 2;
-
   /**
    * Generate cluster tree.
    */
-  ClusterTree<3> cluster_tree(index_set, n_min);
+  const unsigned int n_min = 2;
+  ClusterTree<3>     cluster_tree(index_set, n_min);
   cluster_tree.partition();
 
   /**
@@ -71,6 +74,10 @@ run_hmatrix_tvmult_symm()
   REQUIRE(H.get_m() == M.size()[0]);
   REQUIRE(H.get_n() == M.size()[1]);
 
+  /**
+   * Convert the \hmatrix back to full matrix for comparison with the original
+   * full matrix.
+   */
   LAPACKFullMatrixExt<double> H_full;
   H.convertToFullMatrix(H_full);
   REQUIRE(H_full.size()[0] == M.size()[0]);
@@ -79,7 +86,7 @@ run_hmatrix_tvmult_symm()
   H_full.print_formatted_to_mat(ofs, "H_full", 15, false, 25, "0");
 
   /**
-   * Perform matrix/vector multiplication.
+   * Perform transposed \hmatrix/vector multiplication.
 
    * \alert{When the \hmatrix is symmetric, its symmetry property should be
    * passed as the third argument to @p Tvmult.}

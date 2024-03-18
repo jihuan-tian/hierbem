@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <openblas-pthread/cblas.h>
 
 #include <fstream>
 
@@ -10,9 +11,9 @@ using namespace HierBEM;
 using namespace Catch::Matchers;
 
 void
-run_hmatrix_tvmult()
+run_hmatrix_vmult_parallel()
 {
-  std::ofstream ofs("hmatrix-tvmult.output");
+  std::ofstream ofs("hmatrix-vmult-parallel.output");
 
   /**
    * Load a general matrix.
@@ -51,9 +52,14 @@ run_hmatrix_tvmult()
   block_cluster_tree.partition_fine_non_tensor_product();
 
   /**
-   * Create a rank-k HMatrix.
+   * Create a rank-k HMatrix. The leaf set traversal method should be set to
+   * Hilbert, so that the row and column index sets of leaf \hmatrix nodes in a
+   * same interval obtained from sequence partition are contiguous respectively.
+   * This will reduce the size of the local result vector on each thread.
    */
   const unsigned int fixed_rank_k = n / 4;
+  HMatrix<3, double>::set_leaf_set_traversal_method(
+    HMatrix<3, double>::SpaceFillingCurveType::Hilbert);
   HMatrix<3, double> H(block_cluster_tree, M, fixed_rank_k);
   REQUIRE(H.get_m() == M.size()[0]);
   REQUIRE(H.get_n() == M.size()[1]);
@@ -73,21 +79,34 @@ run_hmatrix_tvmult()
    * Read the vector \f$x\f$.
    */
   Vector<double> x;
-  in.open("x.dat");
+  in.open("xy.dat");
   read_vector_from_octave(in, "x", x);
   in.close();
-  REQUIRE(x.size() == M.size()[0]);
+  REQUIRE(x.size() == M.size()[1]);
 
   /**
-   * Perform transposed \hmatrix/vector multiplication.
+   * Read the initial values of the vector \f$y\f$.
    */
-  Vector<double> y(n);
-  H.Tvmult(y, x);
-  print_vector_to_mat(ofs, "y1", y);
+  Vector<double> y;
+  in.open("xy.dat");
+  read_vector_from_octave(in, "y0", y);
+  in.close();
+  REQUIRE(y.size() == M.size()[0]);
 
-  y = 0.;
-  H.Tvmult(y, 0.5, x);
-  print_vector_to_mat(ofs, "y2", y);
+  /**
+   * Limit the number of OpenBLAS threads.
+   */
+  openblas_set_num_threads(1);
+
+  /**
+   * Perform \hmatrix/vector multiplication.
+   */
+  H.prepare_for_vmult_or_tvmult(true, false);
+  H.vmult_task_parallel(0.3, y, 1.5, x);
+  print_vector_to_mat(ofs, "y1_cpp", y);
+
+  H.vmult_task_parallel(3.7, y, 8.2, x);
+  print_vector_to_mat(ofs, "y2_cpp", y);
 
   ofs.close();
 }

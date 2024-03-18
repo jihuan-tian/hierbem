@@ -10,6 +10,7 @@
 #define INCLUDE_HMATRIX_H_
 
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/thread_management.h>
 
 #include <deal.II/lac/full_matrix.h>
 
@@ -120,6 +121,126 @@ namespace HierBEM
     {
       leaf_set_traversal_method = type;
     }
+
+    /**
+     * Data on a single thread to be used in a parallel (transposed)
+     * \hmatrix/vector multiplication.
+     *
+     * \alert{The index ranges used in this class are half-closed and
+     * half-open, which is different from the closed interval adopted in
+     * sequence partition.}
+     */
+    struct VmultOrTvmultThreadData
+    {
+      /**
+       * The interval in the leaf set obtained from sequence partition, which is
+       * assigned to this thread. It is a closed interval with respect to the
+       * leaf set.
+       */
+      std::pair<int64_t, int64_t> leaf_set_interval;
+
+      /**
+       * Row index range of a block in the global @p vmult result vector.
+       * This restricted block vector is assigned to this thread.
+       *
+       * N.B. The result vector is evenly distributed among all threads.
+       */
+      std::array<types::global_dof_index, 2> vmult_result_index_range;
+
+      /**
+       * Column index range of a block in the global @p Tvmult result vector
+       * This restricted block vector is assigned to this thread.
+       *
+       * N.B. The result vector is evenly distributed among all threads.
+       */
+      std::array<types::global_dof_index, 2> tvmult_result_index_range;
+
+      /**
+       * The index range of the local @p vmult result vector.
+       *
+       * It is a continuous index range which covers the row indices of all leaf
+       * \hmatrix blocks assigned to the thread. This is \f$I(q)\f$ in
+       * Definition 2.11 in (Bebendorf 2008).
+       *
+       * \myref{Bebendorf, Mario. 2008. Hierarchical Matrices: A Means to
+       * Efficiently Solve Elliptic Boundary Value Problems, page 56. Lecture
+       * Notes in Computational Science and Engineering. Berlin, Heidelberg:
+       * Springer.}
+       *
+       * If the Z curve is used for traversing the leaf set, this index range is
+       * not same as the union of all row index sets from the leaf \hmatrix
+       * blocks, because they may not be contiguous. When the Hilbert curve is
+       * used, their union is the same as the index range said above.
+       *
+       * \mynote{This index range is usually different from
+       * VmultOrTvmultThreadData::vmult_result_index_range.}
+       */
+      std::array<types::global_dof_index, 2> local_vmult_result_index_range;
+
+      /**
+       * The index range of the local @p Tvmult result vector.
+       *
+       * It is a continuous index range which covers the column indices of all
+       * leaf \hmatrix blocks assigned to the thread. This is \f$J(q)\f$ in
+       * Definition 2.11 in (Bebendorf 2008).
+       *
+       * \myref{Bebendorf, Mario. 2008. Hierarchical Matrices: A Means to
+       * Efficiently Solve Elliptic Boundary Value Problems, page 56. Lecture
+       * Notes in Computational Science and Engineering. Berlin, Heidelberg:
+       * Springer.}
+       *
+       * If the Z curve is used for traversing the leaf set, this index range is
+       * not same as the union of all row index sets from the leaf \hmatrix
+       * blocks, because they may not be contiguous. When the Hilbert curve is
+       * used, their union is the same as the index range said above.
+       *
+       * \mynote{This index range is usually different from
+       * VmultOrTvmultThreadData::tvmult_result_index_range.}
+       */
+      std::array<types::global_dof_index, 2> local_tvmult_result_index_range;
+
+      /**
+       * The local result vector for @p vmult computed on this thread.
+       *
+       * The index range associated with this vector is
+       * VmultOrTvmultThreadData::local_vmult_result_index_range.
+       */
+      Vector<Number> local_vmult_result;
+
+      /**
+       * The local result vector for @p Tvmult computed on this thread.
+       *
+       * The index range associated with this vector is
+       * VmultOrTvmultThreadData::local_tvmult_result_index_range.
+       */
+      Vector<Number> local_tvmult_result;
+
+      /**
+       * This map holds the row index ranges, the values of which should be
+       * contributed from other threads to this thread.
+       *
+       * For each key-value pair in the map, the key is the No. of another
+       * thread and the value is the index range contributed from the above
+       * thread to the current thread.
+       *
+       * This is only used in @p vmult.
+       */
+      std::map<unsigned int, std::array<types::global_dof_index, 2>>
+        vmult_result_index_ranges_contributed_from_other_threads;
+
+      /**
+       * This map holds the column index ranges, the values of which should be
+       * contributed from other threads to this thread.
+       *
+       * For each key-value pair in the map, the key is the No. of another
+       * thread and the value is the index range contributed from the above
+       * thread to the current thread.
+       *
+       * This is only used in @p Tvmult.
+       */
+      std::map<unsigned int, std::array<types::global_dof_index, 2>>
+        tvmult_result_index_ranges_contributed_from_other_threads;
+    };
 
     /**
      * Declare the type for TBB flow graph node.
@@ -1519,15 +1640,9 @@ namespace HierBEM
      *
      * @param y Result vector
      * @param x Input vector
-     * @param top_hmat_property The \hmatrix property (of type
-     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
-     * @p general, @p symmetric or @p lower_triangular.
      */
     void
-    vmult_task_parallel(Vector<Number>                &y,
-                        const Vector<Number>          &x,
-                        const HMatrixSupport::Property top_hmat_property =
-                          HMatrixSupport::general) const;
+    vmult_task_parallel(Vector<Number> &y, const Vector<Number> &x);
 
     /**
      * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M
@@ -1563,8 +1678,8 @@ namespace HierBEM
             HMatrixSupport::general) const;
 
     /**
-     * Perform task parallel \hmatrix/vector multiplication as \f$y = y + \alpha
-     * \cdot M \cdot x\f$.
+     * Perform task parallel \hmatrix/vector multiplication as \f$y = \beta y +
+     * \alpha \cdot M \cdot x\f$.
      *
      * \mynote{
      * 1. The algorithm iterates over each \hmatrix node in the leaf set.
@@ -1575,16 +1690,12 @@ namespace HierBEM
      * @param y Result vector
      * @param Scalar factor before \f$x\f$
      * @param x Input vector
-     * @param top_hmat_property The \hmatrix property (of type
-     * @p HMatrixSupport::Property) of the top level \hmatrix node, which can be
-     * @p general, @p symmetric or @p lower_triangular.
      */
     void
-    vmult_task_parallel(Vector<Number>                &y,
-                        const Number                   alpha,
-                        const Vector<Number>          &x,
-                        const HMatrixSupport::Property top_hmat_property =
-                          HMatrixSupport::general) const;
+    vmult_task_parallel(const Number          beta,
+                        Vector<Number>       &y,
+                        const Number          alpha,
+                        const Vector<Number> &x);
 
     /**
      * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$ by
@@ -1669,10 +1780,7 @@ namespace HierBEM
      * @p general, @p symmetric or @p lower_triangular.
      */
     void
-    Tvmult_task_parallel(Vector<Number>                &y,
-                         const Vector<Number>          &x,
-                         const HMatrixSupport::Property top_hmat_property =
-                           HMatrixSupport::Property::general) const;
+    Tvmult_task_parallel(Vector<Number> &y, const Vector<Number> &x);
 
     /**
      * Calculate \hmatrix/vector multiplication as \f$y = y + \alpha \cdot M^T
@@ -1720,11 +1828,10 @@ namespace HierBEM
      * @p general, @p symmetric or @p lower_triangular.
      */
     void
-    Tvmult_task_parallel(Vector<Number>                &y,
-                         const Number                   alpha,
-                         const Vector<Number>          &x,
-                         const HMatrixSupport::Property top_hmat_property =
-                           HMatrixSupport::Property::general) const;
+    Tvmult_task_parallel(const Number          beta,
+                         Vector<Number>       &y,
+                         const Number          alpha,
+                         const Vector<Number> &x);
 
     /**
      * Calculate \hmatrix/vector multiplication as \f$y = y + M^T \cdot x\f$ by
@@ -3355,6 +3462,27 @@ namespace HierBEM
     compute_far_field_leaf_set_assembly_task_costs(
       std::vector<double> &task_costs) const;
 
+    /**
+     * Prepare thread data for (transposed) \hmatrix/vector multiplication.
+     *
+     * This function is called once before multiple calls of @p vmult or
+     * @p Tvmult by an iterative solver.
+     *
+     * The \hmatrix calling this function should be at the top level. When this
+     * \hmatrix is symmetric, both @p is_vmult and @p is_tvmult should be set to
+     * @p true, since each lower triangular matrix block as well as its counterpart
+     * upper triangular matrix block should be multiplied with the vector.
+     *
+     * When the \hmatrix is not symmetric, @p vmult and @p Tvmult may be
+     * performed consecutively. This scenario appears in the problem with mixed
+     * boundary condition. Then, the two flags should also be set to @p true.
+     *
+     * @param is_vmult Flag for enabling @p vmult.
+     * @param is_tvmult Flag for enabling @p Tvmult.
+     */
+    void
+    prepare_for_vmult_or_tvmult(const bool is_vmult, const bool is_tvmult);
+
   private:
     /**
      * Assign IDs to \hmatnodes, which will be used to generate the dot
@@ -3749,6 +3877,44 @@ namespace HierBEM
       const HMatrixSupport::Property top_hmat_property) const;
 
     /**
+     * Get the minimum row index range which contains the row index sets of all
+     * \hmatrix nodes in the leaf set interval.
+     *
+     * @param interval Closed interval in the leaf set
+     */
+    void
+    get_row_index_range_for_leaf_set_interval(
+      const std::pair<int64_t, int64_t> &interval,
+      const unsigned int                 thread_no);
+
+    /**
+     * Get the minimum column index range which contains the column index sets
+     * of all \hmatrix nodes in the leaf set interval.
+     *
+     * @param interval Closed interval in the leaf set
+     */
+    void
+    get_column_index_range_for_leaf_set_interval(
+      const std::pair<int64_t, int64_t> &interval,
+      const unsigned int                 thread_no);
+
+    /**
+     * Compute the intersection of row index ranges for each pair of leaf set
+     * intervals.
+     */
+    void
+    compute_vmult_contributing_index_ranges_from_all_threads(
+      const unsigned int thread_no);
+
+    /**
+     * Compute the intersection of column index ranges for each pair of leaf set
+     * intervals.
+     */
+    void
+    compute_tvmult_contributing_index_ranges_from_all_threads(
+      const unsigned int thread_no);
+
+    /**
      * Method used for traversing the leaf set by following a space-filling
      * curve.
      */
@@ -3928,6 +4094,12 @@ namespace HierBEM
      * \hmatnode.
      */
     std::mutex update_lock;
+
+    /**
+     * The data for each thread which are used in (transposed) \hmatrix/vector
+     * multiplication.
+     */
+    std::vector<VmultOrTvmultThreadData> data_for_vmult_or_tvmult_threads;
   };
 
   // Initialization of the static member of \hmatrix to Z curve.
@@ -19648,6 +19820,107 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A leaf \hmatnode belonging to the diagonal block
+                             * should also be upper triangular, when the top
+                             * level \hmatnode is upper triangular.
+                             */
+                            Assert(property ==
+                                     HMatrixSupport::Property::upper_triangular,
+                                   ExcInvalidHMatrixProperty(property));
+                            /**
+                             * The full matrix associated with the current
+                             * \hmatnode should also be upper triangular.
+                             */
+                            Assert(fullmatrix->get_property() ==
+                                     LAPACKSupport::Property::upper_triangular,
+                                   ExcInvalidLAPACKFullMatrixProperty(
+                                     fullmatrix->get_property()));
+
+                            /**
+                             * Perform the matrix-vector multiplication using
+                             * the LAPACK function @p trmv internally.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) = x((*col_index_range)[0] + j);
+                              }
+
+                            fullmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] + i) += local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, we do nothing.
+                             */
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we simply perform the
+                             * multiplication \f$Mx\f$ by treating the current
+                             * matrix as general.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) = x((*col_index_range)[0] + j);
+                              }
+
+                            fullmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] + i) += local_y(i);
+                              }
+
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -19854,6 +20127,71 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A rank-k matrix node can never belong to the
+                             * diagonal part.
+                             */
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, do nothing.
+                             */
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we simply perform the
+                             * multiplication \f$Mx\f$ as that for a general
+                             * matrix.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) = x((*col_index_range)[0] + j);
+                              }
+
+                            rkmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] + i) += local_y(i);
+                              }
+
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -19874,11 +20212,11 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
-  HMatrix<spacedim, Number>::vmult_task_parallel(
-    Vector<Number>                &y,
-    const Vector<Number>          &x,
-    const HMatrixSupport::Property top_hmat_property) const
-  {}
+  HMatrix<spacedim, Number>::vmult_task_parallel(Vector<Number>       &y,
+                                                 const Vector<Number> &x)
+  {
+    vmult_task_parallel(1., y, 1.0, x);
+  }
 
 
   template <int spacedim, typename Number>
@@ -20183,6 +20521,109 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A leaf \hmatnode belonging to the diagonal block
+                             * should also be upper triangular, when the top
+                             * level \hmatnode is upper triangular.
+                             */
+                            Assert(property ==
+                                     HMatrixSupport::Property::upper_triangular,
+                                   ExcInvalidHMatrixProperty(property));
+                            /**
+                             * The full matrix associated with the current
+                             * \hmatnode should also be upper triangular.
+                             */
+                            Assert(fullmatrix->get_property() ==
+                                     LAPACKSupport::Property::upper_triangular,
+                                   ExcInvalidLAPACKFullMatrixProperty(
+                                     fullmatrix->get_property()));
+
+                            /**
+                             * Perform the matrix-vector multiplication using
+                             * the LAPACK function @p trmv internally.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) = x((*col_index_range)[0] + j);
+                              }
+
+                            fullmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, we do nothing.
+                             */
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we simply perform the
+                             * multiplication \f$Mx\f$ by treating the current
+                             * matrix as general.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) = x((*col_index_range)[0] + j);
+                              }
+
+                            fullmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -20392,6 +20833,72 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A rank-k matrix node can never belong to the
+                             * diagonal part.
+                             */
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, do nothing.
+                             */
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we simply perform the
+                             * multiplication \f$Mx\f$ as that for a general
+                             * matrix.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) = x((*col_index_range)[0] + j);
+                              }
+
+                            rkmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -20412,12 +20919,229 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
-  HMatrix<spacedim, Number>::vmult_task_parallel(
-    Vector<Number>                &y,
-    const Number                   alpha,
-    const Vector<Number>          &x,
-    const HMatrixSupport::Property top_hmat_property) const
-  {}
+  HMatrix<spacedim, Number>::vmult_task_parallel(const Number          beta,
+                                                 Vector<Number>       &y,
+                                                 const Number          alpha,
+                                                 const Vector<Number> &x)
+  {
+    /**
+     * The current \hmatrix node should be at the top level.
+     */
+    Assert(parent == nullptr, ExcInternalError());
+
+    const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
+    Assert(thread_num > 0, ExcInternalError());
+
+    /**
+     * Perform thread local scaling of the result vector and multiplications.
+     * The multiplication results are stored locally in each thread.
+     */
+    auto local_scale_and_multiplication =
+      [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
+      /**
+       * Local scaling: \f$y_q = \beta y_q\f$.
+       */
+      for (size_type i = this->data_for_vmult_or_tvmult_threads[thread_no]
+                           .vmult_result_index_range[0];
+           i < this->data_for_vmult_or_tvmult_threads[thread_no]
+                 .vmult_result_index_range[1];
+           i++)
+        {
+          y[i] *= beta;
+        }
+
+      /**
+       * Clear the local result vector before the multiplication begins.
+       */
+      this->data_for_vmult_or_tvmult_threads[thread_no].local_vmult_result = 0.;
+      if (this->property == HMatrixSupport::Property::symmetric)
+        this->data_for_vmult_or_tvmult_threads[thread_no].local_tvmult_result =
+          0.;
+
+      /**
+       * Iterate over each \hmatrix node in the interval of the leaf set for
+       * local multiplication: \f$y_q' = \alpha \sum_i A_{q,i} x\f$.
+       */
+      for (size_type l = this->data_for_vmult_or_tvmult_threads[thread_no]
+                           .leaf_set_interval.first;
+           l <= this->data_for_vmult_or_tvmult_threads[thread_no]
+                  .leaf_set_interval.second;
+           l++)
+        {
+          const size_type m = this->leaf_set[l]->m;
+          const size_type n = this->leaf_set[l]->n;
+
+          /**
+           * Result vector and input vector with respect to the current
+           * matrix node.
+           */
+          Vector<Number> local_y(m);
+          Vector<Number> local_x(n);
+
+          /**
+           * Restrict the global vector @p x to the local vector.
+           */
+          for (size_type j = 0; j < n; j++)
+            {
+              local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
+            }
+
+          switch (this->leaf_set[l]->type)
+            {
+                case HMatrixType::FullMatrixType: {
+                  this->leaf_set[l]->fullmatrix->vmult(local_y, local_x);
+
+                  break;
+                }
+                case HMatrixType::RkMatrixType: {
+                  this->leaf_set[l]->rkmatrix->vmult(local_y, local_x);
+
+                  break;
+                }
+                default: {
+                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                  break;
+                }
+            }
+
+          /**
+           * Merge back the result vector @p local_y obtained from the
+           * current leaf set matrix node to the thread local result
+           * vector.
+           */
+          for (size_type i = 0; i < m; i++)
+            {
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_vmult_result(
+                  (*this->leaf_set[l]->row_index_range)[0] -
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .local_vmult_result_index_range[0] +
+                  i) += alpha * local_y(i);
+            }
+
+          if (this->property == HMatrixSupport::Property::symmetric &&
+              this->leaf_set[l]->block_type ==
+                HMatrixSupport::BlockType::lower_triangular_block)
+            {
+              /**
+               * When the top level \hmatrix is symmetric and the current leaf
+               * \hmatrix block type is @p lower_triangular_block, @p Tvmult
+               * should also be performed.
+               */
+              Vector<Number> local_y_for_Tvmult(n);
+              Vector<Number> local_x_for_Tvmult(m);
+
+              /**
+               * Restrict the global vector @p x to the local vector.
+               */
+              for (size_type i = 0; i < m; i++)
+                {
+                  local_x_for_Tvmult(i) =
+                    x((*this->leaf_set[l]->row_index_range)[0] + i);
+                }
+
+              switch (this->leaf_set[l]->type)
+                {
+                    case HMatrixType::FullMatrixType: {
+                      this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
+                                                            local_x_for_Tvmult);
+
+                      break;
+                    }
+                    case HMatrixType::RkMatrixType: {
+                      this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+                                                          local_x_for_Tvmult);
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                      break;
+                    }
+                }
+
+              /**
+               * Merge back the result vector @p local_y_for_Tvmult obtained
+               * from the current leaf set matrix node to the thread local
+               * result vector.
+               */
+              for (size_type j = 0; j < n; j++)
+                {
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .local_tvmult_result(
+                      (*this->leaf_set[l]->col_index_range)[0] -
+                      this->data_for_vmult_or_tvmult_threads[thread_no]
+                        .local_tvmult_result_index_range[0] +
+                      j) += alpha * local_y_for_Tvmult(j);
+                }
+            }
+        }
+    };
+
+    Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
+    for (unsigned int i = 0; i < thread_num; i++)
+      {
+        local_scaling_and_multiplication_tasks +=
+          Threads::new_task(std::bind(local_scale_and_multiplication, i));
+      }
+
+    local_scaling_and_multiplication_tasks.join_all();
+
+    auto assemble_contribution_from_all_threads =
+      [this, &y](const unsigned int thread_no) -> void {
+      for (const auto &item :
+           this->data_for_vmult_or_tvmult_threads[thread_no]
+             .vmult_result_index_ranges_contributed_from_other_threads)
+        {
+          const unsigned int other_thread_no = item.first;
+
+          for (size_type i = item.second[0]; i < item.second[1]; i++)
+            {
+              y(i) +=
+                this->data_for_vmult_or_tvmult_threads[other_thread_no]
+                  .local_vmult_result(
+                    i - this->data_for_vmult_or_tvmult_threads[other_thread_no]
+                          .local_vmult_result_index_range[0]);
+            }
+        }
+
+      if (this->property == HMatrixSupport::Property::symmetric)
+        {
+          /**
+           * When the top level \hmatrix is symmetric, also merge the @p Tvmult
+           * results from other threads.
+           */
+          for (const auto &item :
+               this->data_for_vmult_or_tvmult_threads[thread_no]
+                 .tvmult_result_index_ranges_contributed_from_other_threads)
+            {
+              const unsigned int other_thread_no = item.first;
+
+              for (size_type i = item.second[0]; i < item.second[1]; i++)
+                {
+                  y(i) +=
+                    this->data_for_vmult_or_tvmult_threads[other_thread_no]
+                      .local_tvmult_result(
+                        i -
+                        this->data_for_vmult_or_tvmult_threads[other_thread_no]
+                          .local_tvmult_result_index_range[0]);
+                }
+            }
+        }
+    };
+
+    Threads::TaskGroup<void> assembly_tasks;
+    for (unsigned int i = 0; i < thread_num; i++)
+      {
+        assembly_tasks += Threads::new_task(
+          std::bind(assemble_contribution_from_all_threads, i));
+      }
+
+    assembly_tasks.join_all();
+  }
 
 
   template <int spacedim, typename Number>
@@ -20737,6 +21461,115 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A leaf \hmatnode belonging to the diagonal block
+                             * should also be upper triangular, when the top
+                             * level \hmatnode is upper triangular.
+                             */
+                            Assert(property ==
+                                     HMatrixSupport::Property::upper_triangular,
+                                   ExcInvalidHMatrixProperty(property));
+                            /**
+                             * The full matrix associated with the current
+                             * \hmatnode should also be upper triangular.
+                             */
+                            Assert(fullmatrix->get_property() ==
+                                     LAPACKSupport::Property::upper_triangular,
+                                   ExcInvalidLAPACKFullMatrixProperty(
+                                     fullmatrix->get_property()));
+
+                            /**
+                             * Perform the matrix-vector multiplication using
+                             * the LAPACK function @p trmv internally.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) =
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
+                              }
+
+                            fullmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
+                                  local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, we do nothing.
+                             */
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we simply perform the
+                             * multiplication \f$Mx\f$ by treating the current
+                             * matrix as general.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) =
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
+                              }
+
+                            fullmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
+                                  local_y(i);
+                              }
+
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -20946,6 +21779,75 @@ namespace HierBEM
                              * When the current \hmatnode belongs to the upper
                              * triangular part, do nothing.
                              */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A rank-k matrix node can never belong to the
+                             * diagonal part.
+                             */
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, do nothing.
+                             */
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we simply perform the
+                             * multiplication \f$Mx\f$ as that for a general
+                             * matrix.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) =
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
+                              }
+
+                            rkmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
+                                  local_y(i);
+                              }
+
                             break;
                           }
                           default: {
@@ -21295,6 +22197,115 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A leaf \hmatnode belonging to the diagonal block
+                             * should also be upper triangular, when the top
+                             * level \hmatnode is upper triangular.
+                             */
+                            Assert(property ==
+                                     HMatrixSupport::Property::upper_triangular,
+                                   ExcInvalidHMatrixProperty(property));
+                            /**
+                             * The full matrix associated with the current
+                             * \hmatnode should also be upper triangular.
+                             */
+                            Assert(fullmatrix->get_property() ==
+                                     LAPACKSupport::Property::upper_triangular,
+                                   ExcInvalidLAPACKFullMatrixProperty(
+                                     fullmatrix->get_property()));
+
+                            /**
+                             * Perform the matrix-vector multiplication using
+                             * the LAPACK function @p trmv internally.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) =
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
+                              }
+
+                            fullmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, we do nothing.
+                             */
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we simply perform the
+                             * multiplication \f$Mx\f$ by treating the current
+                             * matrix as general.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) =
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
+                              }
+
+                            fullmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -21506,6 +22517,75 @@ namespace HierBEM
                              * When the current \hmatnode belongs to the upper
                              * triangular part, do nothing.
                              */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A rank-k matrix node can never belong to the
+                             * diagonal part.
+                             */
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, do nothing.
+                             */
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we simply perform the
+                             * multiplication \f$Mx\f$ as that for a general
+                             * matrix.
+                             */
+                            Vector<Number> local_y(m);
+                            Vector<Number> local_x(n);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < n; j++)
+                              {
+                                local_x(j) =
+                                  x((*col_index_range)[0] -
+                                    (*starting_hmat.col_index_range)[0] + j);
+                              }
+
+                            rkmatrix->vmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < m; i++)
+                              {
+                                y((*row_index_range)[0] -
+                                  (*starting_hmat.row_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
                             break;
                           }
                           default: {
@@ -21827,6 +22907,106 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A leaf \hmatnode belonging to the diagonal block
+                             * should also be upper triangular, when the top
+                             * level \hmatnode is upper triangular.
+                             */
+                            Assert(property ==
+                                     HMatrixSupport::Property::upper_triangular,
+                                   ExcInvalidHMatrixProperty(property));
+                            /**
+                             * The full matrix associated with the current
+                             * \hmatnode should also be upper triangular.
+                             */
+                            Assert(fullmatrix->get_property() ==
+                                     LAPACKSupport::Property::upper_triangular,
+                                   ExcInvalidLAPACKFullMatrixProperty(
+                                     fullmatrix->get_property()));
+
+                            /**
+                             * Perform the transposed-matrix-vector
+                             * multiplication.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the transposed matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) = x((*row_index_range)[0] + j);
+                              }
+
+                            fullmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] + i) += local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we perform the multiplication
+                             * \f$M^Tx\f$ as that for a general matrix.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the transposed matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) = x((*row_index_range)[0] + j);
+                              }
+
+                            fullmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] + i) += local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, we do nothing.
+                             */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -22031,6 +23211,71 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * When the current \hmatnode is rank-k matrix, it
+                             * can never belong to the diagonal part.
+                             */
+                            Assert(false,
+                                   ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we perform the multiplication
+                             * \f$M^Tx\f$.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) = x((*row_index_range)[0] + j);
+                              }
+
+                            rkmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] + i) += local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, do nothing.
+                             */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -22051,11 +23296,11 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
-  HMatrix<spacedim, Number>::Tvmult_task_parallel(
-    Vector<Number>                &y,
-    const Vector<Number>          &x,
-    const HMatrixSupport::Property top_hmat_property) const
-  {}
+  HMatrix<spacedim, Number>::Tvmult_task_parallel(Vector<Number>       &y,
+                                                  const Vector<Number> &x)
+  {
+    Tvmult_task_parallel(1.0, y, 1.0, x);
+  }
 
 
   template <int spacedim, typename Number>
@@ -22355,6 +23600,108 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A leaf \hmatnode belonging to the diagonal block
+                             * should also be upper triangular, when the top
+                             * level \hmatnode is upper triangular.
+                             */
+                            Assert(property ==
+                                     HMatrixSupport::Property::upper_triangular,
+                                   ExcInvalidHMatrixProperty(property));
+                            /**
+                             * The full matrix associated with the current
+                             * \hmatnode should also be upper triangular.
+                             */
+                            Assert(fullmatrix->get_property() ==
+                                     LAPACKSupport::Property::upper_triangular,
+                                   ExcInvalidLAPACKFullMatrixProperty(
+                                     fullmatrix->get_property()));
+
+                            /**
+                             * Perform the transposed-matrix-vector
+                             * multiplication.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the transposed matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) = x((*row_index_range)[0] + j);
+                              }
+
+                            fullmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we perform the multiplication
+                             * \f$M^Tx\f$ as that for a general matrix.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the transposed matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) = x((*row_index_range)[0] + j);
+                              }
+
+                            fullmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, we do nothing.
+                             */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -22561,6 +23908,72 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * When the current \hmatnode is rank-k matrix, it
+                             * can never belong to the diagonal part.
+                             */
+                            Assert(false,
+                                   ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we perform the multiplication
+                             * \f$M^Tx\f$.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) = x((*row_index_range)[0] + j);
+                              }
+
+                            rkmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, do nothing.
+                             */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     Assert(false, ExcNotImplemented());
 
@@ -22581,12 +23994,153 @@ namespace HierBEM
 
   template <int spacedim, typename Number>
   void
-  HMatrix<spacedim, Number>::Tvmult_task_parallel(
-    Vector<Number>                &y,
-    const Number                   alpha,
-    const Vector<Number>          &x,
-    const HMatrixSupport::Property top_hmat_property) const
-  {}
+  HMatrix<spacedim, Number>::Tvmult_task_parallel(const Number          beta,
+                                                  Vector<Number>       &y,
+                                                  const Number          alpha,
+                                                  const Vector<Number> &x)
+  {
+    /**
+     * The current \hmatrix node should be at the top level.
+     */
+    Assert(parent == nullptr, ExcInternalError());
+
+    if (property == HMatrixSupport::Property::symmetric)
+      {
+        vmult_task_parallel(beta, y, alpha, x);
+      }
+    else
+      {
+        const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
+        Assert(thread_num > 0, ExcInternalError());
+
+        /**
+         * Perform thread local scaling of the result vector and
+         * multiplications. The multiplication results are stored locally in
+         * each thread.
+         */
+        auto local_scale_and_multiplication =
+          [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
+          /**
+           * Local scaling: \f$y_q = \beta y_q\f$.
+           */
+          for (size_type i = this->data_for_vmult_or_tvmult_threads[thread_no]
+                               .tvmult_result_index_range[0];
+               i < this->data_for_vmult_or_tvmult_threads[thread_no]
+                     .tvmult_result_index_range[1];
+               i++)
+            {
+              y[i] *= beta;
+            }
+
+          /**
+           * Clear the local result vector before the multiplication begins.
+           */
+          this->data_for_vmult_or_tvmult_threads[thread_no]
+            .local_tvmult_result = 0.;
+
+          /**
+           * Iterate over each \hmatrix node in the interval of the leaf set.
+           */
+          for (unsigned int l =
+                 this->data_for_vmult_or_tvmult_threads[thread_no]
+                   .leaf_set_interval.first;
+               l <= this->data_for_vmult_or_tvmult_threads[thread_no]
+                      .leaf_set_interval.second;
+               l++)
+            {
+              const size_type m = this->leaf_set[l]->m;
+              const size_type n = this->leaf_set[l]->n;
+
+              Vector<Number> local_y_for_Tvmult(n);
+              Vector<Number> local_x_for_Tvmult(m);
+
+              /**
+               * Restrict the global vector @p x to the local vector.
+               */
+              for (size_type i = 0; i < m; i++)
+                {
+                  local_x_for_Tvmult(i) =
+                    x((*this->leaf_set[l]->row_index_range)[0] + i);
+                }
+
+              switch (this->leaf_set[l]->type)
+                {
+                    case HMatrixType::FullMatrixType: {
+                      this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
+                                                            local_x_for_Tvmult);
+
+                      break;
+                    }
+                    case HMatrixType::RkMatrixType: {
+                      this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+                                                          local_x_for_Tvmult);
+
+                      break;
+                    }
+                    default: {
+                      Assert(false,
+                             ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                      break;
+                    }
+                }
+
+              /**
+               * Merge back the result vector @p local_y_for_Tvmult obtained
+               * from the current leaf set matrix block to the thread local
+               * result vector.
+               */
+              for (size_type j = 0; j < n; j++)
+                {
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .local_tvmult_result(
+                      (*this->leaf_set[l]->col_index_range)[0] -
+                      this->data_for_vmult_or_tvmult_threads[thread_no]
+                        .local_tvmult_result_index_range[0] +
+                      j) += alpha * local_y_for_Tvmult(j);
+                }
+            }
+        };
+
+        Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
+        for (unsigned int i = 0; i < thread_num; i++)
+          {
+            local_scaling_and_multiplication_tasks +=
+              Threads::new_task(std::bind(local_scale_and_multiplication, i));
+          }
+
+        local_scaling_and_multiplication_tasks.join_all();
+
+        auto assemble_contribution_from_all_threads =
+          [this, &y](const unsigned int thread_no) -> void {
+          for (const auto &item :
+               this->data_for_vmult_or_tvmult_threads[thread_no]
+                 .tvmult_result_index_ranges_contributed_from_other_threads)
+            {
+              const unsigned int other_thread_no = item.first;
+
+              for (size_type i = item.second[0]; i < item.second[1]; i++)
+                {
+                  y(i) +=
+                    this->data_for_vmult_or_tvmult_threads[other_thread_no]
+                      .local_tvmult_result(
+                        i -
+                        this->data_for_vmult_or_tvmult_threads[other_thread_no]
+                          .local_tvmult_result_index_range[0]);
+                }
+            }
+        };
+
+        Threads::TaskGroup<void> assembly_tasks;
+        for (unsigned int i = 0; i < thread_num; i++)
+          {
+            assembly_tasks += Threads::new_task(
+              std::bind(assemble_contribution_from_all_threads, i));
+          }
+
+        assembly_tasks.join_all();
+      }
+  }
 
 
   template <int spacedim, typename Number>
@@ -22903,6 +24457,114 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A leaf \hmatnode belonging to the diagonal block
+                             * should also be upper triangular, when the top
+                             * level \hmatnode is upper triangular.
+                             */
+                            Assert(property ==
+                                     HMatrixSupport::Property::upper_triangular,
+                                   ExcInvalidHMatrixProperty(property));
+                            /**
+                             * The full matrix associated with the current
+                             * \hmatnode should also be upper triangular.
+                             */
+                            Assert(fullmatrix->get_property() ==
+                                     LAPACKSupport::Property::upper_triangular,
+                                   ExcInvalidLAPACKFullMatrixProperty(
+                                     fullmatrix->get_property()));
+
+                            /**
+                             * Perform the transposed-matrix-vector
+                             * multiplication.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the transposed matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) =
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
+                              }
+
+                            fullmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
+                                  local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we perform the multiplication
+                             * \f$M^Tx\f$ as that for a general matrix.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the transposed matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) =
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
+                              }
+
+                            fullmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
+                                  local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, we do nothing.
+                             */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -23107,6 +24769,75 @@ namespace HierBEM
                             upper_triangular_block: {
                             /**
                              * When the current \hmatnode belongs to the upper
+                             * triangular part, do nothing.
+                             */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * When the current \hmatnode is rank-k matrix, it
+                             * can never belong to the diagonal part.
+                             */
+                            Assert(false,
+                                   ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we perform the multiplication
+                             * \f$M^Tx\f$.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) =
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
+                              }
+
+                            rkmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
+                                  local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
                              * triangular part, do nothing.
                              */
                             break;
@@ -23454,6 +25185,114 @@ namespace HierBEM
 
                     break;
                   }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * A leaf \hmatnode belonging to the diagonal block
+                             * should also be upper triangular, when the top
+                             * level \hmatnode is upper triangular.
+                             */
+                            Assert(property ==
+                                     HMatrixSupport::Property::upper_triangular,
+                                   ExcInvalidHMatrixProperty(property));
+                            /**
+                             * The full matrix associated with the current
+                             * \hmatnode should also be upper triangular.
+                             */
+                            Assert(fullmatrix->get_property() ==
+                                     LAPACKSupport::Property::upper_triangular,
+                                   ExcInvalidLAPACKFullMatrixProperty(
+                                     fullmatrix->get_property()));
+
+                            /**
+                             * Perform the transposed-matrix-vector
+                             * multiplication.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the transposed matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) =
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
+                              }
+
+                            fullmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we perform the multiplication
+                             * \f$M^Tx\f$ as that for a general matrix.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the transposed matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) =
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
+                              }
+
+                            fullmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
+                             * triangular part, we do nothing.
+                             */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
                   default: {
                     throw(ExcInvalidHMatrixProperty(top_hmat_property));
 
@@ -23657,6 +25496,75 @@ namespace HierBEM
                             upper_triangular_block: {
                             /**
                              * When the current \hmatnode belongs to the upper
+                             * triangular part, do nothing.
+                             */
+                            break;
+                          }
+                          default: {
+                            throw(ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                      }
+
+                    break;
+                  }
+                  case HMatrixSupport::Property::upper_triangular: {
+                    /**
+                     * When the top level \hmatnode is upper triangular, the
+                     * operation depends on the block type of the current leaf
+                     * \hmatnode.
+                     */
+                    switch (block_type)
+                      {
+                          case HMatrixSupport::BlockType::diagonal_block: {
+                            /**
+                             * When the current \hmatnode is rank-k matrix, it
+                             * can never belong to the diagonal part.
+                             */
+                            Assert(false,
+                                   ExcInvalidHMatrixBlockType(block_type));
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            upper_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the upper
+                             * triangular part, we perform the multiplication
+                             * \f$M^Tx\f$.
+                             */
+                            Vector<Number> local_y(n);
+                            Vector<Number> local_x(m);
+
+                            /**
+                             * Restrict vector x to the current matrix block.
+                             */
+                            for (size_type j = 0; j < m; j++)
+                              {
+                                local_x(j) =
+                                  x((*row_index_range)[0] -
+                                    (*starting_hmat.row_index_range)[0] + j);
+                              }
+
+                            rkmatrix->Tvmult(local_y, local_x);
+
+                            /**
+                             * Merge back the result vector \p local_y to \p y.
+                             */
+                            for (size_type i = 0; i < n; i++)
+                              {
+                                y((*col_index_range)[0] -
+                                  (*starting_hmat.col_index_range)[0] + i) +=
+                                  alpha * local_y(i);
+                              }
+
+                            break;
+                          }
+                          case HMatrixSupport::BlockType::
+                            lower_triangular_block: {
+                            /**
+                             * When the current \hmatnode belongs to the lower
                              * triangular part, do nothing.
                              */
                             break;
@@ -29754,10 +31662,6 @@ namespace HierBEM
     std::vector<double> &task_costs) const
   {
     AssertDimension(leaf_set.size(), task_costs.size());
-    /**
-     * The current \hmatrix node should be at the top level.
-     */
-    Assert(parent == nullptr, ExcInternalError());
 
     unsigned int i = 0;
     for (const auto hmat : leaf_set)
@@ -29877,10 +31781,6 @@ namespace HierBEM
     std::vector<double> &task_costs) const
   {
     AssertDimension(near_field_leaf_set.size(), task_costs.size());
-    /**
-     * The current \hmatrix node should be at the top level.
-     */
-    Assert(parent == nullptr, ExcInternalError());
 
     unsigned int i = 0;
     for (const auto hmat : near_field_leaf_set)
@@ -29978,10 +31878,6 @@ namespace HierBEM
     std::vector<double> &task_costs) const
   {
     AssertDimension(far_field_leaf_set.size(), task_costs.size());
-    /**
-     * The current \hmatrix node should be at the top level.
-     */
-    Assert(parent == nullptr, ExcInternalError());
 
     unsigned int i = 0;
     for (const auto hmat : far_field_leaf_set)
@@ -29993,6 +31889,310 @@ namespace HierBEM
 
         i++;
       }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::get_row_index_range_for_leaf_set_interval(
+    const std::pair<int64_t, int64_t> &interval,
+    const unsigned int                 thread_no)
+  {
+    Assert(interval.second >= interval.first, ExcInternalError());
+
+    const unsigned int hmat_num = interval.second - interval.first + 1;
+    std::vector<types::global_dof_index> index_range_lower_bound(hmat_num);
+    std::vector<types::global_dof_index> index_range_upper_bound(hmat_num);
+
+    for (unsigned int i = interval.first; i <= interval.second; i++)
+      {
+        index_range_lower_bound[i - interval.first] =
+          (*leaf_set[i]->row_index_range)[0];
+        index_range_upper_bound[i - interval.first] =
+          (*leaf_set[i]->row_index_range)[1];
+      }
+
+    /**
+     * Use the minimum of lower bound indices and maximum of upper bound indices
+     * to form the covering index range.
+     */
+    typename std::vector<types::global_dof_index>::iterator min_it =
+      std::min_element(index_range_lower_bound.begin(),
+                       index_range_lower_bound.end());
+    typename std::vector<types::global_dof_index>::iterator max_it =
+      std::max_element(index_range_upper_bound.begin(),
+                       index_range_upper_bound.end());
+
+    data_for_vmult_or_tvmult_threads[thread_no]
+      .local_vmult_result_index_range[0] = *min_it;
+    data_for_vmult_or_tvmult_threads[thread_no]
+      .local_vmult_result_index_range[1] = *max_it;
+
+    Assert(data_for_vmult_or_tvmult_threads[thread_no]
+               .local_vmult_result_index_range[1] >
+             data_for_vmult_or_tvmult_threads[thread_no]
+               .local_vmult_result_index_range[0],
+           ExcInternalError());
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::get_column_index_range_for_leaf_set_interval(
+    const std::pair<int64_t, int64_t> &interval,
+    const unsigned int                 thread_no)
+  {
+    Assert(interval.second >= interval.first, ExcInternalError());
+
+    const unsigned int hmat_num = interval.second - interval.first + 1;
+    std::vector<types::global_dof_index> index_range_lower_bound(hmat_num);
+    std::vector<types::global_dof_index> index_range_upper_bound(hmat_num);
+
+    for (unsigned int i = interval.first; i <= interval.second; i++)
+      {
+        index_range_lower_bound[i - interval.first] =
+          (*leaf_set[i]->col_index_range)[0];
+        index_range_upper_bound[i - interval.first] =
+          (*leaf_set[i]->col_index_range)[1];
+      }
+
+    /**
+     * Use the minimum of lower bound indices and maximum of upper bound indices
+     * to form the covering index range.
+     */
+    typename std::vector<types::global_dof_index>::iterator min_it =
+      std::min_element(index_range_lower_bound.begin(),
+                       index_range_lower_bound.end());
+    typename std::vector<types::global_dof_index>::iterator max_it =
+      std::max_element(index_range_upper_bound.begin(),
+                       index_range_upper_bound.end());
+
+    data_for_vmult_or_tvmult_threads[thread_no]
+      .local_tvmult_result_index_range[0] = *min_it;
+    data_for_vmult_or_tvmult_threads[thread_no]
+      .local_tvmult_result_index_range[1] = *max_it;
+
+    Assert(data_for_vmult_or_tvmult_threads[thread_no]
+               .local_tvmult_result_index_range[1] >
+             data_for_vmult_or_tvmult_threads[thread_no]
+               .local_tvmult_result_index_range[0],
+           ExcInternalError());
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::
+    compute_vmult_contributing_index_ranges_from_all_threads(
+      const unsigned int thread_no)
+  {
+    const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
+    std::array<types::global_dof_index, 2> range_intersection;
+
+    for (unsigned int i = 0; i < thread_num; i++)
+      {
+        intersect(
+          data_for_vmult_or_tvmult_threads[thread_no].vmult_result_index_range,
+          data_for_vmult_or_tvmult_threads[i].local_vmult_result_index_range,
+          range_intersection);
+
+        if (range_intersection[0] != range_intersection[1])
+          {
+            data_for_vmult_or_tvmult_threads[thread_no]
+              .vmult_result_index_ranges_contributed_from_other_threads.insert(
+                {i, range_intersection});
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::
+    compute_tvmult_contributing_index_ranges_from_all_threads(
+      const unsigned int thread_no)
+  {
+    const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
+    std::array<types::global_dof_index, 2> range_intersection;
+
+    for (unsigned int i = 0; i < thread_num; i++)
+      {
+        intersect(
+          data_for_vmult_or_tvmult_threads[thread_no].tvmult_result_index_range,
+          data_for_vmult_or_tvmult_threads[i].local_tvmult_result_index_range,
+          range_intersection);
+
+        if (range_intersection[0] != range_intersection[1])
+          {
+            data_for_vmult_or_tvmult_threads[thread_no]
+              .tvmult_result_index_ranges_contributed_from_other_threads.insert(
+                {i, range_intersection});
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::prepare_for_vmult_or_tvmult(const bool is_vmult,
+                                                         const bool is_tvmult)
+  {
+    /**
+     * The current \hmatrix node should be at the top level.
+     */
+    Assert(parent == nullptr, ExcInternalError());
+
+    const unsigned int thread_num = MultithreadInfo::n_threads();
+    data_for_vmult_or_tvmult_threads.resize(thread_num);
+
+    /**
+     * Compute the task costs for all leaf \hmatrix nodes.
+     */
+    std::vector<double> task_costs(leaf_set.size());
+    this->compute_leaf_set_vmult_or_Tvmult_task_costs(task_costs);
+
+    /**
+     * Generate the cost function for sequence partition.
+     */
+    auto cost_func = [&task_costs](int i, int j) -> double {
+      double sum = 0.0;
+
+      for (int k = i; k <= j; k++)
+        {
+          sum += task_costs[k];
+        }
+
+      return sum;
+    };
+
+    SequencePartitioner<decltype(cost_func)> sp(task_costs.size(),
+                                                thread_num,
+                                                cost_func);
+    sp.partition();
+
+    std::vector<std::pair<int64_t, int64_t>> leaf_set_intervals;
+    sp.get_partitions(leaf_set_intervals);
+
+    auto prepare_thread_self_data =
+      [this,
+       thread_num,
+       is_vmult,
+       is_tvmult](const std::pair<int64_t, int64_t> &interval,
+                  const unsigned int                 thread_no) -> void {
+      this->data_for_vmult_or_tvmult_threads[thread_no].leaf_set_interval =
+        interval;
+
+      if (is_vmult)
+        {
+          /**
+           * Compute the index range of the local result vector.
+           */
+          this->get_row_index_range_for_leaf_set_interval(interval, thread_no);
+
+          /**
+           * Initialize local result vector.
+           */
+          this->data_for_vmult_or_tvmult_threads[thread_no]
+            .local_vmult_result.reinit(
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_vmult_result_index_range[1] -
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_vmult_result_index_range[0]);
+
+          /**
+           * Compute the index range related to the result vector on this
+           * thread.
+           */
+          types::global_dof_index vmult_result_vector_size =
+            this->m / thread_num;
+          Assert(vmult_result_vector_size > 0, ExcInternalError());
+
+          this->data_for_vmult_or_tvmult_threads[thread_no]
+            .vmult_result_index_range[0] = thread_no * vmult_result_vector_size;
+          this->data_for_vmult_or_tvmult_threads[thread_no]
+            .vmult_result_index_range[1] =
+            thread_no == thread_num - 1 ?
+              m :
+              (thread_no + 1) * vmult_result_vector_size;
+        }
+
+      if (is_tvmult)
+        {
+          /**
+           * Compute the index range of the local result vector.
+           */
+          this->get_column_index_range_for_leaf_set_interval(interval,
+                                                             thread_no);
+
+          /**
+           * Initialize local result vector.
+           */
+          this->data_for_vmult_or_tvmult_threads[thread_no]
+            .local_tvmult_result.reinit(
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_tvmult_result_index_range[1] -
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_tvmult_result_index_range[0]);
+
+          /**
+           * Compute the index range related to the result vector on this
+           * thread.
+           */
+          types::global_dof_index tvmult_result_vector_size =
+            this->n / thread_num;
+          Assert(tvmult_result_vector_size > 0, ExcInternalError());
+
+          this->data_for_vmult_or_tvmult_threads[thread_no]
+            .tvmult_result_index_range[0] =
+            thread_no * tvmult_result_vector_size;
+          this->data_for_vmult_or_tvmult_threads[thread_no]
+            .tvmult_result_index_range[1] =
+            thread_no == thread_num - 1 ?
+              n :
+              (thread_no + 1) * tvmult_result_vector_size;
+        }
+    };
+
+    Threads::TaskGroup<void> thread_self_preparation_tasks;
+    for (unsigned int i = 0; i < thread_num; i++)
+      {
+        thread_self_preparation_tasks += Threads::new_task(
+          std::bind(prepare_thread_self_data, leaf_set_intervals[i], i));
+      }
+
+    thread_self_preparation_tasks.join_all();
+
+    auto prepare_thread_mutual_data =
+      [this, is_vmult, is_tvmult](const unsigned int thread_no) -> void {
+      if (is_vmult)
+        {
+          /**
+           * Compute the index ranges within result vector, which have
+           * contributions from other threads.
+           */
+          this->compute_vmult_contributing_index_ranges_from_all_threads(
+            thread_no);
+        }
+
+      if (is_tvmult)
+        {
+          /**
+           * Compute the index ranges within result vector, which have
+           * contributions from other threads.
+           */
+          this->compute_tvmult_contributing_index_ranges_from_all_threads(
+            thread_no);
+        }
+    };
+
+    Threads::TaskGroup<void> thread_mutual_preparation_tasks;
+    for (unsigned int i = 0; i < thread_num; i++)
+      {
+        thread_mutual_preparation_tasks +=
+          Threads::new_task(std::bind(prepare_thread_mutual_data, i));
+      }
+
+    thread_mutual_preparation_tasks.join_all();
   }
 
 

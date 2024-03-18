@@ -1,11 +1,11 @@
 /**
- * \file hmatrix-tvmult-symm.cc
- * \brief Verify transposed \hmatrix/vector multiplication. The \hmatrix
- * is symmetric and only its lower triangular part is stored.
+ * \file hmatrix-tvmult-tril-parallel.cc
+ * \brief Verify parallel transposed lower triangular \hmatrix/vector
+ * multiplication.
  *
  * \ingroup testers hierarchical_matrices
  * \author Jihuan Tian
- * \date 2022-11-28
+ * \date 2024-03-18
  */
 
 #include <catch2/catch_all.hpp>
@@ -23,10 +23,12 @@ using namespace HierBEM;
 // XXX Extracted all HierBEM logic into a standalone source to prevent
 // Matrix/SparseMatrix data type conflicts
 extern void
-run_hmatrix_tvmult_symm();
+run_hmatrix_tvmult_tril_parallel();
 
-static constexpr int FUZZING_TIMES = 5;
-TEST_CASE("Transposed symmetric H-matrix/vector multiplication", "[hmatrix]")
+static constexpr int FUZZING_TIMES = 50;
+TEST_CASE(
+  "Transposed lower triangular H-matrix/vector multiplication in parallel",
+  "[hmatrix]")
 {
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
@@ -46,11 +48,10 @@ TEST_CASE("Transposed symmetric H-matrix/vector multiplication", "[hmatrix]")
     oss << "randn('seed'," << rng_seed << ");";
     inst.eval_string(oss.str());
 
-    // Execute script `gen_matrix.m` to generate M.dat and x.dat
+    // Execute script `gen_matrix.m` to generate M.dat and b.dat
     REQUIRE_NOTHROW([&]() { inst.source_file(SOURCE_DIR "/gen_matrix.m"); }());
 
-    // Run solving based on generated data
-    run_hmatrix_tvmult_symm();
+    run_hmatrix_tvmult_tril_parallel();
 
     // Calculate relative error
     try
