@@ -132,6 +132,16 @@ namespace HierBEM
      */
     struct VmultOrTvmultThreadData
     {
+      std::size_t
+      memory_consumption() const
+      {
+        return sizeof(VmultOrTvmultThreadData) +
+               (MemoryConsumption::memory_consumption(local_vmult_result) -
+                sizeof(local_vmult_result)) +
+               (MemoryConsumption::memory_consumption(local_tvmult_result) -
+                sizeof(local_tvmult_result));
+      }
+
       /**
        * The interval in the leaf set obtained from sequence partition, which is
        * assigned to this thread. It is a closed interval with respect to the
@@ -33249,7 +33259,9 @@ namespace HierBEM
       (Tind.memory_consumption() - sizeof(Tind)) +
       (MemoryConsumption::memory_consumption(Sigma_P) - sizeof(Sigma_P)) +
       (MemoryConsumption::memory_consumption(Sigma_R) - sizeof(Sigma_R)) +
-      (MemoryConsumption::memory_consumption(Sigma_F) - sizeof(Sigma_F));
+      (MemoryConsumption::memory_consumption(Sigma_F) - sizeof(Sigma_F)) +
+      (MemoryConsumption::memory_consumption(data_for_vmult_or_tvmult_threads) -
+       sizeof(data_for_vmult_or_tvmult_threads));
 
     return memory_for_hmat_node;
   }
