@@ -94,3 +94,12 @@ tests/sauter-quad-same-panel/quadrature-i=0-j=0.txt
 tests/sauter-quad-same-panel/quadrature-i=0-j=2.txt
 tests/sauter-quad-same-panel/sauter-quad-same-panel-with-bem-values.txt
 tests/sauter-quad-same-panel/sauter-quad-same-panel-with-precalculation.txt
+
+# Other auto-generated files to be ignored
+tests/functions/laplace-bem/dirichlet-hmatrix-two-spheres/process.m
+tests/functions/laplace-bem/dirichlet-hmatrix/process.m
+tests/functions/laplace-bem/mixed-hmatrix/process.m
+tests/functions/laplace-bem/mixed-l-shape/process.m
+tests/functions/laplace-bem/neumann-hmatrix/process.m
+tests/functions/laplace-bem/dirichlet-full-matrix/process.m
+tests/functions/laplace-bem/neumann-full-matrix/process.m
