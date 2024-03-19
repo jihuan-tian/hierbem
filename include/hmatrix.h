@@ -32052,7 +32052,13 @@ namespace HierBEM
      */
     Assert(parent == nullptr, ExcInternalError());
 
-    const unsigned int thread_num = MultithreadInfo::n_threads();
+    /**
+     * Use the smaller value of TBB thread number and leaf set size, in case the
+     * leaf set is very small.
+     */
+    const unsigned int thread_num =
+      std::min(static_cast<size_t>(MultithreadInfo::n_threads()),
+               leaf_set.size());
     data_for_vmult_or_tvmult_threads.resize(thread_num);
 
     /**
