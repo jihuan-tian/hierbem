@@ -10,10 +10,11 @@
 
 usage_exit() {
     cat <<EOF
-Usage: $0 [-h] [-j <THREAD_NUM>] [<TARGET_PATTERN>]
+Usage: $0 [-h] [-l] [-j <THREAD_NUM>] [<TARGET_PATTERN>]
 Make all targets matched by the regular expression pattern in parallel.
 
     -h	 	 	 Show this message.
+    -l                   List matched targets.
     -j <THREAD_NUM> 	 Number of threads for the compilation. Default to 1.
 
 The <TARGET_PATTERN> specifies the Perl-compatible regular expression used for
