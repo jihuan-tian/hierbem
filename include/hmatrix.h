@@ -226,29 +226,21 @@ namespace HierBEM
       Vector<Number> local_tvmult_result;
 
       /**
-       * This map holds the row index ranges, the values of which should be
-       * contributed from other threads to this thread.
-       *
-       * For each key-value pair in the map, the key is the No. of another
-       * thread and the value is the index range contributed from the above
-       * thread to the current thread.
+       * Vector of row index ranges, the local multiplication values at which
+       * should be contributed from other threads to this thread.
        *
        * This is only used in @p vmult.
        */
-      std::map<unsigned int, std::array<types::global_dof_index, 2>>
+      std::vector<std::array<types::global_dof_index, 2>>
         vmult_result_index_ranges_contributed_from_other_threads;
 
       /**
-       * This map holds the column index ranges, the values of which should be
-       * contributed from other threads to this thread.
-       *
-       * For each key-value pair in the map, the key is the No. of another
-       * thread and the value is the index range contributed from the above
-       * thread to the current thread.
+       * Vector of column index ranges, the local multiplication values at which
+       * should be contributed from other threads to this thread.
        *
        * This is only used in @p Tvmult.
        */
-      std::map<unsigned int, std::array<types::global_dof_index, 2>>
+      std::vector<std::array<types::global_dof_index, 2>>
         tvmult_result_index_ranges_contributed_from_other_threads;
     };
 
@@ -1697,8 +1689,9 @@ namespace HierBEM
      * corresponding root cluster nodes and should be directly accessed via
      * **global** DoF indices.}
      *
+     * @param beta Scalar factor before \f$y\f$
      * @param y Result vector
-     * @param Scalar factor before \f$x\f$
+     * @param alpha Scalar factor before \f$x\f$
      * @param x Input vector
      */
     void
@@ -1706,6 +1699,21 @@ namespace HierBEM
                         Vector<Number>       &y,
                         const Number          alpha,
                         const Vector<Number> &x);
+
+    /**
+     * Perform serial \hmatrix/vector multiplication as \f$y = \beta y +
+     * \alpha \cdot M \cdot x\f$ by iterating over the leaf set.
+     *
+     * @param beta Scalar factor before \f$y\f$
+     * @param y Result vector
+     * @param alpha Scalar factor before \f$x\f$
+     * @param x Input vector
+     */
+    void
+    vmult_serial_iterative(const Number          beta,
+                           Vector<Number>       &y,
+                           const Number          alpha,
+                           const Vector<Number> &x);
 
     /**
      * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$ by
@@ -1830,18 +1838,31 @@ namespace HierBEM
      * corresponding root cluster nodes and should be directly accessed via
      * **global** DoF indices.}
      *
+     * @param beta Scalar factor before \f$y\f$
      * @param y Result vector
      * @param alpha Scalar factor before \f$x\f$
      * @param x Input vector
-     * @param top_hmat_property The \hmatrix property (of type
-     * @p HMatrixSupport::Property) of the top level \hmatrix, which can be
-     * @p general, @p symmetric or @p lower_triangular.
      */
     void
     Tvmult_task_parallel(const Number          beta,
                          Vector<Number>       &y,
                          const Number          alpha,
                          const Vector<Number> &x);
+
+    /**
+     * Perform serial \hmatrix/vector multiplication as \f$y = y + \alpha
+     * \cdot M^T \cdot x\f$ by iterating over the leaf set.
+     *
+     * @param beta Scalar factor before \f$y\f$
+     * @param y Result vector
+     * @param alpha Scalar factor before \f$x\f$
+     * @param x Input vector
+     */
+    void
+    Tvmult_serial_iterative(const Number          beta,
+                            Vector<Number>       &y,
+                            const Number          alpha,
+                            const Vector<Number> &x);
 
     /**
      * Calculate \hmatrix/vector multiplication as \f$y = y + M^T \cdot x\f$ by
@@ -3471,6 +3492,16 @@ namespace HierBEM
     void
     compute_far_field_leaf_set_assembly_task_costs(
       std::vector<double> &task_costs) const;
+
+    /**
+     * Compute the number of threads to be used in HMatrix::vmult or
+     * HMatrix::Tvmult.
+     *
+     * @return Number of threads
+     */
+    unsigned int
+    compute_vmult_or_tvmult_thread_num(const bool is_vmult,
+                                       const bool is_tvmult) const;
 
     /**
      * Prepare thread data for (transposed) \hmatrix/vector multiplication.
@@ -20940,128 +20971,78 @@ namespace HierBEM
     Assert(parent == nullptr, ExcInternalError());
 
     const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
-    Assert(thread_num > 0, ExcInternalError());
 
     /**
-     * Perform thread local scaling of the result vector and multiplications.
-     * The multiplication results are stored locally in each thread.
+     * Only perform parallel multiplication when the thread number is larger
+     * than 1. Otherwise, switch to the iterative serial version.
      */
-    auto local_scale_and_multiplication =
-      [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
-      /**
-       * Local scaling: \f$y_q = \beta y_q\f$.
-       */
-      for (size_type i = this->data_for_vmult_or_tvmult_threads[thread_no]
-                           .vmult_result_index_range[0];
-           i < this->data_for_vmult_or_tvmult_threads[thread_no]
-                 .vmult_result_index_range[1];
-           i++)
-        {
-          y[i] *= beta;
-        }
-
-      /**
-       * Clear the local result vector before the multiplication begins.
-       */
-      this->data_for_vmult_or_tvmult_threads[thread_no].local_vmult_result = 0.;
-      if (this->property == HMatrixSupport::Property::symmetric)
-        this->data_for_vmult_or_tvmult_threads[thread_no].local_tvmult_result =
-          0.;
-
-      /**
-       * Iterate over each \hmatrix node in the interval of the leaf set for
-       * local multiplication: \f$y_q' = \alpha \sum_i A_{q,i} x\f$.
-       */
-      for (size_type l = this->data_for_vmult_or_tvmult_threads[thread_no]
-                           .leaf_set_interval.first;
-           l <= this->data_for_vmult_or_tvmult_threads[thread_no]
-                  .leaf_set_interval.second;
-           l++)
-        {
-          const size_type m = this->leaf_set[l]->m;
-          const size_type n = this->leaf_set[l]->n;
-
+    if (thread_num > 1)
+      {
+        /**
+         * Perform thread local scaling of the result vector and
+         * multiplications. The multiplication results are stored locally in
+         * each thread.
+         */
+        auto local_scale_and_multiplication =
+          [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
           /**
-           * Result vector and input vector with respect to the current
-           * matrix node.
+           * Local scaling: \f$y_q = \beta y_q\f$.
            */
-          Vector<Number> local_y(m);
-          Vector<Number> local_x(n);
-
-          /**
-           * Restrict the global vector @p x to the local vector.
-           */
-          for (size_type j = 0; j < n; j++)
+          for (size_type i = this->data_for_vmult_or_tvmult_threads[thread_no]
+                               .vmult_result_index_range[0];
+               i < this->data_for_vmult_or_tvmult_threads[thread_no]
+                     .vmult_result_index_range[1];
+               i++)
             {
-              local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
-            }
-
-          switch (this->leaf_set[l]->type)
-            {
-                case HMatrixType::FullMatrixType: {
-                  this->leaf_set[l]->fullmatrix->vmult(local_y, local_x);
-
-                  break;
-                }
-                case HMatrixType::RkMatrixType: {
-                  this->leaf_set[l]->rkmatrix->vmult(local_y, local_x);
-
-                  break;
-                }
-                default: {
-                  Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
-
-                  break;
-                }
+              y[i] *= beta;
             }
 
           /**
-           * Merge back the result vector @p local_y obtained from the
-           * current leaf set matrix node to the thread local result
-           * vector.
+           * Clear the local result vector before the multiplication begins.
            */
-          for (size_type i = 0; i < m; i++)
-            {
-              this->data_for_vmult_or_tvmult_threads[thread_no]
-                .local_vmult_result(
-                  (*this->leaf_set[l]->row_index_range)[0] -
-                  this->data_for_vmult_or_tvmult_threads[thread_no]
-                    .local_vmult_result_index_range[0] +
-                  i) += alpha * local_y(i);
-            }
+          this->data_for_vmult_or_tvmult_threads[thread_no].local_vmult_result =
+            0.;
+          if (this->property == HMatrixSupport::Property::symmetric)
+            this->data_for_vmult_or_tvmult_threads[thread_no]
+              .local_tvmult_result = 0.;
 
-          if (this->property == HMatrixSupport::Property::symmetric &&
-              this->leaf_set[l]->block_type ==
-                HMatrixSupport::BlockType::lower_triangular_block)
+          /**
+           * Iterate over each \hmatrix node in the interval of the leaf set for
+           * local multiplication: \f$y_q' = \alpha \sum_i A_{q,i} x\f$.
+           */
+          for (size_type l = this->data_for_vmult_or_tvmult_threads[thread_no]
+                               .leaf_set_interval.first;
+               l <= this->data_for_vmult_or_tvmult_threads[thread_no]
+                      .leaf_set_interval.second;
+               l++)
             {
+              const size_type m = this->leaf_set[l]->m;
+              const size_type n = this->leaf_set[l]->n;
+
               /**
-               * When the top level \hmatrix is symmetric and the current leaf
-               * \hmatrix block type is @p lower_triangular_block, @p Tvmult
-               * should also be performed.
+               * Result vector and input vector with respect to the current
+               * matrix node.
                */
-              Vector<Number> local_y_for_Tvmult(n);
-              Vector<Number> local_x_for_Tvmult(m);
+              Vector<Number> local_y(m);
+              Vector<Number> local_x(n);
 
               /**
                * Restrict the global vector @p x to the local vector.
                */
-              for (size_type i = 0; i < m; i++)
+              for (size_type j = 0; j < n; j++)
                 {
-                  local_x_for_Tvmult(i) =
-                    x((*this->leaf_set[l]->row_index_range)[0] + i);
+                  local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
                 }
 
               switch (this->leaf_set[l]->type)
                 {
                     case HMatrixType::FullMatrixType: {
-                      this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
-                                                            local_x_for_Tvmult);
+                      this->leaf_set[l]->fullmatrix->vmult(local_y, local_x);
 
                       break;
                     }
                     case HMatrixType::RkMatrixType: {
-                      this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
-                                                          local_x_for_Tvmult);
+                      this->leaf_set[l]->rkmatrix->vmult(local_y, local_x);
 
                       break;
                     }
@@ -21074,83 +21055,283 @@ namespace HierBEM
                 }
 
               /**
-               * Merge back the result vector @p local_y_for_Tvmult obtained
-               * from the current leaf set matrix node to the thread local
-               * result vector.
+               * Merge back the result vector @p local_y obtained from the
+               * current leaf set matrix node to the thread local result
+               * vector.
                */
-              for (size_type j = 0; j < n; j++)
+              for (size_type i = 0; i < m; i++)
                 {
                   this->data_for_vmult_or_tvmult_threads[thread_no]
-                    .local_tvmult_result(
-                      (*this->leaf_set[l]->col_index_range)[0] -
+                    .local_vmult_result(
+                      (*this->leaf_set[l]->row_index_range)[0] -
                       this->data_for_vmult_or_tvmult_threads[thread_no]
-                        .local_tvmult_result_index_range[0] +
-                      j) += alpha * local_y_for_Tvmult(j);
+                        .local_vmult_result_index_range[0] +
+                      i) += alpha * local_y(i);
+                }
+
+              if (this->property == HMatrixSupport::Property::symmetric &&
+                  this->leaf_set[l]->block_type ==
+                    HMatrixSupport::BlockType::lower_triangular_block)
+                {
+                  /**
+                   * When the top level \hmatrix is symmetric and the current
+                   * leaf
+                   * \hmatrix block type is @p lower_triangular_block, @p Tvmult
+                   * should also be performed.
+                   */
+                  Vector<Number> local_y_for_Tvmult(n);
+                  Vector<Number> local_x_for_Tvmult(m);
+
+                  /**
+                   * Restrict the global vector @p x to the local vector.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      local_x_for_Tvmult(i) =
+                        x((*this->leaf_set[l]->row_index_range)[0] + i);
+                    }
+
+                  switch (this->leaf_set[l]->type)
+                    {
+                        case HMatrixType::FullMatrixType: {
+                          this->leaf_set[l]->fullmatrix->Tvmult(
+                            local_y_for_Tvmult, local_x_for_Tvmult);
+
+                          break;
+                        }
+                        case HMatrixType::RkMatrixType: {
+                          this->leaf_set[l]->rkmatrix->Tvmult(
+                            local_y_for_Tvmult, local_x_for_Tvmult);
+
+                          break;
+                        }
+                        default: {
+                          Assert(false,
+                                 ExcInvalidHMatrixType(
+                                   this->leaf_set[l]->type));
+
+                          break;
+                        }
+                    }
+
+                  /**
+                   * Merge back the result vector @p local_y_for_Tvmult obtained
+                   * from the current leaf set matrix node to the thread local
+                   * result vector.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      this->data_for_vmult_or_tvmult_threads[thread_no]
+                        .local_tvmult_result(
+                          (*this->leaf_set[l]->col_index_range)[0] -
+                          this->data_for_vmult_or_tvmult_threads[thread_no]
+                            .local_tvmult_result_index_range[0] +
+                          j) += alpha * local_y_for_Tvmult(j);
+                    }
                 }
             }
-        }
-    };
+        };
 
-    Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
-    for (unsigned int i = 0; i < thread_num; i++)
-      {
-        local_scaling_and_multiplication_tasks +=
-          Threads::new_task(std::bind(local_scale_and_multiplication, i));
-      }
+        Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
+        for (unsigned int i = 0; i < thread_num; i++)
+          {
+            local_scaling_and_multiplication_tasks +=
+              Threads::new_task(std::bind(local_scale_and_multiplication, i));
+          }
 
-    local_scaling_and_multiplication_tasks.join_all();
+        local_scaling_and_multiplication_tasks.join_all();
 
-    auto assemble_contribution_from_all_threads =
-      [this, &y](const unsigned int thread_no) -> void {
-      for (const auto &item :
-           this->data_for_vmult_or_tvmult_threads[thread_no]
-             .vmult_result_index_ranges_contributed_from_other_threads)
-        {
-          const unsigned int other_thread_no = item.first;
-
-          for (size_type i = item.second[0]; i < item.second[1]; i++)
-            {
-              y(i) +=
-                this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                  .local_vmult_result(
-                    i - this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                          .local_vmult_result_index_range[0]);
-            }
-        }
-
-      if (this->property == HMatrixSupport::Property::symmetric)
-        {
-          /**
-           * When the top level \hmatrix is symmetric, also merge the @p Tvmult
-           * results from other threads.
-           */
-          for (const auto &item :
+        auto assemble_contribution_from_all_threads =
+          [this, &y](const unsigned int thread_no) -> void {
+          unsigned int other_thread_no = 0;
+          for (const auto &range_intersection :
                this->data_for_vmult_or_tvmult_threads[thread_no]
-                 .tvmult_result_index_ranges_contributed_from_other_threads)
+                 .vmult_result_index_ranges_contributed_from_other_threads)
             {
-              const unsigned int other_thread_no = item.first;
-
-              for (size_type i = item.second[0]; i < item.second[1]; i++)
+              for (size_type i = range_intersection[0];
+                   i < range_intersection[1];
+                   i++)
                 {
                   y(i) +=
                     this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                      .local_tvmult_result(
+                      .local_vmult_result(
                         i -
                         this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                          .local_tvmult_result_index_range[0]);
+                          .local_vmult_result_index_range[0]);
+                }
+
+              other_thread_no++;
+            }
+
+          if (this->property == HMatrixSupport::Property::symmetric)
+            {
+              /**
+               * When the top level \hmatrix is symmetric, also merge the @p Tvmult
+               * results from other threads.
+               */
+              unsigned int other_thread_no = 0;
+              for (const auto &range_intersection :
+                   this->data_for_vmult_or_tvmult_threads[thread_no]
+                     .tvmult_result_index_ranges_contributed_from_other_threads)
+                {
+                  for (size_type i = range_intersection[0];
+                       i < range_intersection[1];
+                       i++)
+                    {
+                      y(i) +=
+                        this->data_for_vmult_or_tvmult_threads[other_thread_no]
+                          .local_tvmult_result(
+                            i - this
+                                  ->data_for_vmult_or_tvmult_threads
+                                    [other_thread_no]
+                                  .local_tvmult_result_index_range[0]);
+                    }
+
+                  other_thread_no++;
                 }
             }
-        }
-    };
+        };
 
-    Threads::TaskGroup<void> assembly_tasks;
-    for (unsigned int i = 0; i < thread_num; i++)
-      {
-        assembly_tasks += Threads::new_task(
-          std::bind(assemble_contribution_from_all_threads, i));
+        Threads::TaskGroup<void> assembly_tasks;
+        for (unsigned int i = 0; i < thread_num; i++)
+          {
+            assembly_tasks += Threads::new_task(
+              std::bind(assemble_contribution_from_all_threads, i));
+          }
+
+        assembly_tasks.join_all();
       }
+    else
+      {
+        vmult_serial_iterative(beta, y, alpha, x);
+      }
+  }
 
-    assembly_tasks.join_all();
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::vmult_serial_iterative(const Number          beta,
+                                                    Vector<Number>       &y,
+                                                    const Number          alpha,
+                                                    const Vector<Number> &x)
+  {
+    /**
+     * The current \hmatrix node should be at the top level.
+     */
+    Assert(parent == nullptr, ExcInternalError());
+
+    /**
+     * Scale \f$y\f$.
+     */
+    y *= beta;
+
+    /**
+     * Iterate over each \hmatrix node in the leaf set.
+     */
+    for (size_type l = 0; l < leaf_set.size(); l++)
+      {
+        const size_type m = this->leaf_set[l]->m;
+        const size_type n = this->leaf_set[l]->n;
+
+        /**
+         * Result vector and input vector with respect to the current
+         * matrix node.
+         */
+        Vector<Number> local_y(m);
+        Vector<Number> local_x(n);
+
+        /**
+         * Restrict the global vector @p x to the current matrix block.
+         */
+        for (size_type j = 0; j < n; j++)
+          {
+            local_x(j) = x((*this->leaf_set[l]->col_index_range)[0] + j);
+          }
+
+        switch (this->leaf_set[l]->type)
+          {
+              case HMatrixType::FullMatrixType: {
+                this->leaf_set[l]->fullmatrix->vmult(local_y, local_x);
+
+                break;
+              }
+              case HMatrixType::RkMatrixType: {
+                this->leaf_set[l]->rkmatrix->vmult(local_y, local_x);
+
+                break;
+              }
+              default: {
+                Assert(false, ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                break;
+              }
+          }
+
+        /**
+         * Merge back the result vector @p local_y to the global vector @p y.
+         */
+        for (size_type i = 0; i < m; i++)
+          {
+            y((*this->leaf_set[l]->row_index_range)[0] + i) +=
+              alpha * local_y(i);
+          }
+
+        if (this->property == HMatrixSupport::Property::symmetric &&
+            this->leaf_set[l]->block_type ==
+              HMatrixSupport::BlockType::lower_triangular_block)
+          {
+            /**
+             * When the top level \hmatrix is symmetric and the current
+             * leaf
+             * \hmatrix block type is @p lower_triangular_block, @p Tvmult
+             * should also be performed.
+             */
+            Vector<Number> local_y_for_Tvmult(n);
+            Vector<Number> local_x_for_Tvmult(m);
+
+            /**
+             * Restrict the global vector @p x to the local vector with respect
+             * to the transposed matrix block.
+             */
+            for (size_type i = 0; i < m; i++)
+              {
+                local_x_for_Tvmult(i) =
+                  x((*this->leaf_set[l]->row_index_range)[0] + i);
+              }
+
+            switch (this->leaf_set[l]->type)
+              {
+                  case HMatrixType::FullMatrixType: {
+                    this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
+                                                          local_x_for_Tvmult);
+
+                    break;
+                  }
+                  case HMatrixType::RkMatrixType: {
+                    this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+                                                        local_x_for_Tvmult);
+
+                    break;
+                  }
+                  default: {
+                    Assert(false,
+                           ExcInvalidHMatrixType(this->leaf_set[l]->type));
+
+                    break;
+                  }
+              }
+
+            /**
+             * Merge back the result vector @p local_y_for_Tvmult to the global
+             * vector @p y.
+             */
+            for (size_type j = 0; j < n; j++)
+              {
+                y((*this->leaf_set[l]->col_index_range)[0] + j) +=
+                  alpha * local_y_for_Tvmult(j);
+              }
+          }
+      }
   }
 
 
@@ -24021,134 +24202,232 @@ namespace HierBEM
     else
       {
         const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
-        Assert(thread_num > 0, ExcInternalError());
 
         /**
-         * Perform thread local scaling of the result vector and
-         * multiplications. The multiplication results are stored locally in
-         * each thread.
+         * Only perform parallel multiplication when the thread number is larger
+         * than 1. Otherwise, switch to the iterative serial version.
          */
-        auto local_scale_and_multiplication =
-          [this, beta, alpha, &y, &x](const unsigned int thread_no) -> void {
-          /**
-           * Local scaling: \f$y_q = \beta y_q\f$.
-           */
-          for (size_type i = this->data_for_vmult_or_tvmult_threads[thread_no]
-                               .tvmult_result_index_range[0];
-               i < this->data_for_vmult_or_tvmult_threads[thread_no]
-                     .tvmult_result_index_range[1];
-               i++)
-            {
-              y[i] *= beta;
-            }
-
-          /**
-           * Clear the local result vector before the multiplication begins.
-           */
-          this->data_for_vmult_or_tvmult_threads[thread_no]
-            .local_tvmult_result = 0.;
-
-          /**
-           * Iterate over each \hmatrix node in the interval of the leaf set.
-           */
-          for (unsigned int l =
-                 this->data_for_vmult_or_tvmult_threads[thread_no]
-                   .leaf_set_interval.first;
-               l <= this->data_for_vmult_or_tvmult_threads[thread_no]
-                      .leaf_set_interval.second;
-               l++)
-            {
-              const size_type m = this->leaf_set[l]->m;
-              const size_type n = this->leaf_set[l]->n;
-
-              Vector<Number> local_y_for_Tvmult(n);
-              Vector<Number> local_x_for_Tvmult(m);
-
+        if (thread_num > 1)
+          {
+            /**
+             * Perform thread local scaling of the result vector and
+             * multiplications. The multiplication results are stored locally in
+             * each thread.
+             */
+            auto local_scale_and_multiplication =
+              [this, beta, alpha, &y, &x](
+                const unsigned int thread_no) -> void {
               /**
-               * Restrict the global vector @p x to the local vector.
+               * Local scaling: \f$y_q = \beta y_q\f$.
                */
-              for (size_type i = 0; i < m; i++)
+              for (size_type i =
+                     this->data_for_vmult_or_tvmult_threads[thread_no]
+                       .tvmult_result_index_range[0];
+                   i < this->data_for_vmult_or_tvmult_threads[thread_no]
+                         .tvmult_result_index_range[1];
+                   i++)
                 {
-                  local_x_for_Tvmult(i) =
-                    x((*this->leaf_set[l]->row_index_range)[0] + i);
+                  y[i] *= beta;
                 }
 
-              switch (this->leaf_set[l]->type)
-                {
-                    case HMatrixType::FullMatrixType: {
-                      this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
-                                                            local_x_for_Tvmult);
+              /**
+               * Clear the local result vector before the multiplication begins.
+               */
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_tvmult_result = 0.;
 
-                      break;
+              /**
+               * Iterate over each \hmatrix node in the interval of the leaf
+               * set.
+               */
+              for (unsigned int l =
+                     this->data_for_vmult_or_tvmult_threads[thread_no]
+                       .leaf_set_interval.first;
+                   l <= this->data_for_vmult_or_tvmult_threads[thread_no]
+                          .leaf_set_interval.second;
+                   l++)
+                {
+                  const size_type m = this->leaf_set[l]->m;
+                  const size_type n = this->leaf_set[l]->n;
+
+                  Vector<Number> local_y_for_Tvmult(n);
+                  Vector<Number> local_x_for_Tvmult(m);
+
+                  /**
+                   * Restrict the global vector @p x to the local vector.
+                   */
+                  for (size_type i = 0; i < m; i++)
+                    {
+                      local_x_for_Tvmult(i) =
+                        x((*this->leaf_set[l]->row_index_range)[0] + i);
                     }
-                    case HMatrixType::RkMatrixType: {
-                      this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+
+                  switch (this->leaf_set[l]->type)
+                    {
+                        case HMatrixType::FullMatrixType: {
+                          this->leaf_set[l]->fullmatrix->Tvmult(
+                            local_y_for_Tvmult, local_x_for_Tvmult);
+
+                          break;
+                        }
+                        case HMatrixType::RkMatrixType: {
+                          this->leaf_set[l]->rkmatrix->Tvmult(
+                            local_y_for_Tvmult, local_x_for_Tvmult);
+
+                          break;
+                        }
+                        default: {
+                          Assert(false,
+                                 ExcInvalidHMatrixType(
+                                   this->leaf_set[l]->type));
+
+                          break;
+                        }
+                    }
+
+                  /**
+                   * Merge back the result vector @p local_y_for_Tvmult obtained
+                   * from the current leaf set matrix block to the thread local
+                   * result vector.
+                   */
+                  for (size_type j = 0; j < n; j++)
+                    {
+                      this->data_for_vmult_or_tvmult_threads[thread_no]
+                        .local_tvmult_result(
+                          (*this->leaf_set[l]->col_index_range)[0] -
+                          this->data_for_vmult_or_tvmult_threads[thread_no]
+                            .local_tvmult_result_index_range[0] +
+                          j) += alpha * local_y_for_Tvmult(j);
+                    }
+                }
+            };
+
+            Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
+            for (unsigned int i = 0; i < thread_num; i++)
+              {
+                local_scaling_and_multiplication_tasks += Threads::new_task(
+                  std::bind(local_scale_and_multiplication, i));
+              }
+
+            local_scaling_and_multiplication_tasks.join_all();
+
+            auto assemble_contribution_from_all_threads =
+              [this, &y](const unsigned int thread_no) -> void {
+              unsigned int other_thread_no = 0;
+              for (const auto &range_intersection :
+                   this->data_for_vmult_or_tvmult_threads[thread_no]
+                     .tvmult_result_index_ranges_contributed_from_other_threads)
+                {
+                  for (size_type i = range_intersection[0];
+                       i < range_intersection[1];
+                       i++)
+                    {
+                      y(i) +=
+                        this->data_for_vmult_or_tvmult_threads[other_thread_no]
+                          .local_tvmult_result(
+                            i - this
+                                  ->data_for_vmult_or_tvmult_threads
+                                    [other_thread_no]
+                                  .local_tvmult_result_index_range[0]);
+                    }
+
+                  other_thread_no++;
+                }
+            };
+
+            Threads::TaskGroup<void> assembly_tasks;
+            for (unsigned int i = 0; i < thread_num; i++)
+              {
+                assembly_tasks += Threads::new_task(
+                  std::bind(assemble_contribution_from_all_threads, i));
+              }
+
+            assembly_tasks.join_all();
+          }
+        else
+          {
+            Tvmult_serial_iterative(beta, y, alpha, x);
+          }
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  void
+  HMatrix<spacedim, Number>::Tvmult_serial_iterative(const Number    beta,
+                                                     Vector<Number> &y,
+                                                     const Number    alpha,
+                                                     const Vector<Number> &x)
+  {
+    /**
+     * The current \hmatrix node should be at the top level.
+     */
+    Assert(parent == nullptr, ExcInternalError());
+
+    if (property == HMatrixSupport::Property::symmetric)
+      {
+        vmult_serial_iterative(beta, y, alpha, x);
+      }
+    else
+      {
+        /**
+         * Scale \f$y\f$.
+         */
+        y *= beta;
+
+        /**
+         * Iterate over each \hmatrix node in the leaf set.
+         */
+        for (size_type l = 0; l < leaf_set.size(); l++)
+          {
+            const size_type m = this->leaf_set[l]->m;
+            const size_type n = this->leaf_set[l]->n;
+
+            Vector<Number> local_y_for_Tvmult(n);
+            Vector<Number> local_x_for_Tvmult(m);
+
+            /**
+             * Restrict the global vector @p x to the local vector with respect
+             * to the transposed matrix block..
+             */
+            for (size_type i = 0; i < m; i++)
+              {
+                local_x_for_Tvmult(i) =
+                  x((*this->leaf_set[l]->row_index_range)[0] + i);
+              }
+
+            switch (this->leaf_set[l]->type)
+              {
+                  case HMatrixType::FullMatrixType: {
+                    this->leaf_set[l]->fullmatrix->Tvmult(local_y_for_Tvmult,
                                                           local_x_for_Tvmult);
 
-                      break;
-                    }
-                    default: {
-                      Assert(false,
-                             ExcInvalidHMatrixType(this->leaf_set[l]->type));
+                    break;
+                  }
+                  case HMatrixType::RkMatrixType: {
+                    this->leaf_set[l]->rkmatrix->Tvmult(local_y_for_Tvmult,
+                                                        local_x_for_Tvmult);
 
-                      break;
-                    }
-                }
+                    break;
+                  }
+                  default: {
+                    Assert(false,
+                           ExcInvalidHMatrixType(this->leaf_set[l]->type));
 
-              /**
-               * Merge back the result vector @p local_y_for_Tvmult obtained
-               * from the current leaf set matrix block to the thread local
-               * result vector.
-               */
-              for (size_type j = 0; j < n; j++)
-                {
-                  this->data_for_vmult_or_tvmult_threads[thread_no]
-                    .local_tvmult_result(
-                      (*this->leaf_set[l]->col_index_range)[0] -
-                      this->data_for_vmult_or_tvmult_threads[thread_no]
-                        .local_tvmult_result_index_range[0] +
-                      j) += alpha * local_y_for_Tvmult(j);
-                }
-            }
-        };
+                    break;
+                  }
+              }
 
-        Threads::TaskGroup<void> local_scaling_and_multiplication_tasks;
-        for (unsigned int i = 0; i < thread_num; i++)
-          {
-            local_scaling_and_multiplication_tasks +=
-              Threads::new_task(std::bind(local_scale_and_multiplication, i));
+            /**
+             * Merge back the result vector @p local_y_for_Tvmult to the global
+             * vector @p y.
+             */
+            for (size_type j = 0; j < n; j++)
+              {
+                y((*this->leaf_set[l]->col_index_range)[0] + j) +=
+                  alpha * local_y_for_Tvmult(j);
+              }
           }
-
-        local_scaling_and_multiplication_tasks.join_all();
-
-        auto assemble_contribution_from_all_threads =
-          [this, &y](const unsigned int thread_no) -> void {
-          for (const auto &item :
-               this->data_for_vmult_or_tvmult_threads[thread_no]
-                 .tvmult_result_index_ranges_contributed_from_other_threads)
-            {
-              const unsigned int other_thread_no = item.first;
-
-              for (size_type i = item.second[0]; i < item.second[1]; i++)
-                {
-                  y(i) +=
-                    this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                      .local_tvmult_result(
-                        i -
-                        this->data_for_vmult_or_tvmult_threads[other_thread_no]
-                          .local_tvmult_result_index_range[0]);
-                }
-            }
-        };
-
-        Threads::TaskGroup<void> assembly_tasks;
-        for (unsigned int i = 0; i < thread_num; i++)
-          {
-            assembly_tasks += Threads::new_task(
-              std::bind(assemble_contribution_from_all_threads, i));
-          }
-
-        assembly_tasks.join_all();
       }
   }
 
@@ -31997,6 +32276,13 @@ namespace HierBEM
       const unsigned int thread_no)
   {
     const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
+
+    data_for_vmult_or_tvmult_threads[thread_no]
+      .vmult_result_index_ranges_contributed_from_other_threads.clear();
+    data_for_vmult_or_tvmult_threads[thread_no]
+      .vmult_result_index_ranges_contributed_from_other_threads.resize(
+        thread_num);
+
     std::array<types::global_dof_index, 2> range_intersection;
 
     for (unsigned int i = 0; i < thread_num; i++)
@@ -32006,12 +32292,9 @@ namespace HierBEM
           data_for_vmult_or_tvmult_threads[i].local_vmult_result_index_range,
           range_intersection);
 
-        if (range_intersection[0] != range_intersection[1])
-          {
-            data_for_vmult_or_tvmult_threads[thread_no]
-              .vmult_result_index_ranges_contributed_from_other_threads.insert(
-                {i, range_intersection});
-          }
+        data_for_vmult_or_tvmult_threads[thread_no]
+          .vmult_result_index_ranges_contributed_from_other_threads[i] =
+          range_intersection;
       }
   }
 
@@ -32023,6 +32306,13 @@ namespace HierBEM
       const unsigned int thread_no)
   {
     const unsigned int thread_num = data_for_vmult_or_tvmult_threads.size();
+
+    data_for_vmult_or_tvmult_threads[thread_no]
+      .tvmult_result_index_ranges_contributed_from_other_threads.clear();
+    data_for_vmult_or_tvmult_threads[thread_no]
+      .tvmult_result_index_ranges_contributed_from_other_threads.resize(
+        thread_num);
+
     std::array<types::global_dof_index, 2> range_intersection;
 
     for (unsigned int i = 0; i < thread_num; i++)
@@ -32032,13 +32322,54 @@ namespace HierBEM
           data_for_vmult_or_tvmult_threads[i].local_tvmult_result_index_range,
           range_intersection);
 
-        if (range_intersection[0] != range_intersection[1])
+        data_for_vmult_or_tvmult_threads[thread_no]
+          .tvmult_result_index_ranges_contributed_from_other_threads[i] =
+          range_intersection;
+      }
+  }
+
+
+  template <int spacedim, typename Number>
+  unsigned int
+  HMatrix<spacedim, Number>::compute_vmult_or_tvmult_thread_num(
+    const bool is_vmult,
+    const bool is_tvmult) const
+  {
+    /**
+     * Use the smaller value of TBB thread number and leaf set size, in case the
+     * leaf set size is very small.
+     */
+    unsigned int thread_num =
+      std::min(static_cast<size_t>(MultithreadInfo::n_threads()),
+               leaf_set.size());
+
+    /**
+     * During HMatrix::vmult, it is possible that the total number of rows in
+     * the \hmatrix is smaller than the thread number. In this case, the thread
+     * number is set to the number of rows.
+     */
+    if (is_vmult)
+      {
+        if (this->m < thread_num)
           {
-            data_for_vmult_or_tvmult_threads[thread_no]
-              .tvmult_result_index_ranges_contributed_from_other_threads.insert(
-                {i, range_intersection});
+            thread_num = this->m;
           }
       }
+
+    /**
+     * During HMatrix::Tvmult, it is possible that the total number of columns
+     * in the \hmatrix is smaller than the thread number. In this case, the
+     * thread number is set to the number of columns.
+     */
+    if (is_tvmult)
+      {
+        if (this->n < thread_num)
+          {
+            thread_num = this->n;
+          }
+      }
+
+    return thread_num;
   }
 
 
@@ -32052,163 +32383,172 @@ namespace HierBEM
      */
     Assert(parent == nullptr, ExcInternalError());
 
-    /**
-     * Use the smaller value of TBB thread number and leaf set size, in case the
-     * leaf set is very small.
-     */
     const unsigned int thread_num =
-      std::min(static_cast<size_t>(MultithreadInfo::n_threads()),
-               leaf_set.size());
-    data_for_vmult_or_tvmult_threads.resize(thread_num);
+      compute_vmult_or_tvmult_thread_num(is_vmult, is_tvmult);
 
     /**
-     * Compute the task costs for all leaf \hmatrix nodes.
+     * Only when the thread number is larger than 1, there will be actual data
+     * preparation.
      */
-    std::vector<double> task_costs(leaf_set.size());
-    this->compute_leaf_set_vmult_or_Tvmult_task_costs(task_costs);
-
-    /**
-     * Generate the cost function for sequence partition.
-     */
-    auto cost_func = [&task_costs](int i, int j) -> double {
-      double sum = 0.0;
-
-      for (int k = i; k <= j; k++)
-        {
-          sum += task_costs[k];
-        }
-
-      return sum;
-    };
-
-    SequencePartitioner<decltype(cost_func)> sp(task_costs.size(),
-                                                thread_num,
-                                                cost_func);
-    sp.partition();
-
-    std::vector<std::pair<int64_t, int64_t>> leaf_set_intervals;
-    sp.get_partitions(leaf_set_intervals);
-
-    auto prepare_thread_self_data =
-      [this,
-       thread_num,
-       is_vmult,
-       is_tvmult](const std::pair<int64_t, int64_t> &interval,
-                  const unsigned int                 thread_no) -> void {
-      this->data_for_vmult_or_tvmult_threads[thread_no].leaf_set_interval =
-        interval;
-
-      if (is_vmult)
-        {
-          /**
-           * Compute the index range of the local result vector.
-           */
-          this->get_row_index_range_for_leaf_set_interval(interval, thread_no);
-
-          /**
-           * Initialize local result vector.
-           */
-          this->data_for_vmult_or_tvmult_threads[thread_no]
-            .local_vmult_result.reinit(
-              this->data_for_vmult_or_tvmult_threads[thread_no]
-                .local_vmult_result_index_range[1] -
-              this->data_for_vmult_or_tvmult_threads[thread_no]
-                .local_vmult_result_index_range[0]);
-
-          /**
-           * Compute the index range related to the result vector on this
-           * thread.
-           */
-          types::global_dof_index vmult_result_vector_size =
-            this->m / thread_num;
-          Assert(vmult_result_vector_size > 0, ExcInternalError());
-
-          this->data_for_vmult_or_tvmult_threads[thread_no]
-            .vmult_result_index_range[0] = thread_no * vmult_result_vector_size;
-          this->data_for_vmult_or_tvmult_threads[thread_no]
-            .vmult_result_index_range[1] =
-            thread_no == thread_num - 1 ?
-              m :
-              (thread_no + 1) * vmult_result_vector_size;
-        }
-
-      if (is_tvmult)
-        {
-          /**
-           * Compute the index range of the local result vector.
-           */
-          this->get_column_index_range_for_leaf_set_interval(interval,
-                                                             thread_no);
-
-          /**
-           * Initialize local result vector.
-           */
-          this->data_for_vmult_or_tvmult_threads[thread_no]
-            .local_tvmult_result.reinit(
-              this->data_for_vmult_or_tvmult_threads[thread_no]
-                .local_tvmult_result_index_range[1] -
-              this->data_for_vmult_or_tvmult_threads[thread_no]
-                .local_tvmult_result_index_range[0]);
-
-          /**
-           * Compute the index range related to the result vector on this
-           * thread.
-           */
-          types::global_dof_index tvmult_result_vector_size =
-            this->n / thread_num;
-          Assert(tvmult_result_vector_size > 0, ExcInternalError());
-
-          this->data_for_vmult_or_tvmult_threads[thread_no]
-            .tvmult_result_index_range[0] =
-            thread_no * tvmult_result_vector_size;
-          this->data_for_vmult_or_tvmult_threads[thread_no]
-            .tvmult_result_index_range[1] =
-            thread_no == thread_num - 1 ?
-              n :
-              (thread_no + 1) * tvmult_result_vector_size;
-        }
-    };
-
-    Threads::TaskGroup<void> thread_self_preparation_tasks;
-    for (unsigned int i = 0; i < thread_num; i++)
+    if (thread_num > 1)
       {
-        thread_self_preparation_tasks += Threads::new_task(
-          std::bind(prepare_thread_self_data, leaf_set_intervals[i], i));
+        data_for_vmult_or_tvmult_threads.resize(thread_num);
+
+        /**
+         * Compute the task costs for all leaf \hmatrix nodes.
+         */
+        std::vector<double> task_costs(leaf_set.size());
+        this->compute_leaf_set_vmult_or_Tvmult_task_costs(task_costs);
+
+        /**
+         * Generate the cost function for sequence partition.
+         */
+        auto cost_func = [&task_costs](int i, int j) -> double {
+          double sum = 0.0;
+
+          for (int k = i; k <= j; k++)
+            {
+              sum += task_costs[k];
+            }
+
+          return sum;
+        };
+
+        SequencePartitioner<decltype(cost_func)> sp(task_costs.size(),
+                                                    thread_num,
+                                                    cost_func);
+        sp.partition();
+
+        std::vector<std::pair<int64_t, int64_t>> leaf_set_intervals;
+        sp.get_partitions(leaf_set_intervals);
+
+        auto prepare_thread_self_data =
+          [this,
+           thread_num,
+           is_vmult,
+           is_tvmult](const std::pair<int64_t, int64_t> &interval,
+                      const unsigned int                 thread_no) -> void {
+          this->data_for_vmult_or_tvmult_threads[thread_no].leaf_set_interval =
+            interval;
+
+          if (is_vmult)
+            {
+              /**
+               * Compute the index range of the local result vector.
+               */
+              this->get_row_index_range_for_leaf_set_interval(interval,
+                                                              thread_no);
+
+              /**
+               * Initialize local result vector.
+               */
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_vmult_result.reinit(
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .local_vmult_result_index_range[1] -
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .local_vmult_result_index_range[0]);
+
+              /**
+               * Compute the index range related to the result vector on this
+               * thread.
+               */
+              types::global_dof_index vmult_result_vector_size =
+                this->m / thread_num;
+              Assert(vmult_result_vector_size > 0, ExcInternalError());
+
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .vmult_result_index_range[0] =
+                thread_no * vmult_result_vector_size;
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .vmult_result_index_range[1] =
+                thread_no == thread_num - 1 ?
+                  m :
+                  (thread_no + 1) * vmult_result_vector_size;
+            }
+
+          if (is_tvmult)
+            {
+              /**
+               * Compute the index range of the local result vector.
+               */
+              this->get_column_index_range_for_leaf_set_interval(interval,
+                                                                 thread_no);
+
+              /**
+               * Initialize local result vector.
+               */
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .local_tvmult_result.reinit(
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .local_tvmult_result_index_range[1] -
+                  this->data_for_vmult_or_tvmult_threads[thread_no]
+                    .local_tvmult_result_index_range[0]);
+
+              /**
+               * Compute the index range related to the result vector on this
+               * thread.
+               */
+              types::global_dof_index tvmult_result_vector_size =
+                this->n / thread_num;
+              Assert(tvmult_result_vector_size > 0, ExcInternalError());
+
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .tvmult_result_index_range[0] =
+                thread_no * tvmult_result_vector_size;
+              this->data_for_vmult_or_tvmult_threads[thread_no]
+                .tvmult_result_index_range[1] =
+                thread_no == thread_num - 1 ?
+                  n :
+                  (thread_no + 1) * tvmult_result_vector_size;
+            }
+        };
+
+        Threads::TaskGroup<void> thread_self_preparation_tasks;
+        for (unsigned int i = 0; i < thread_num; i++)
+          {
+            thread_self_preparation_tasks += Threads::new_task(
+              std::bind(prepare_thread_self_data, leaf_set_intervals[i], i));
+          }
+
+        thread_self_preparation_tasks.join_all();
+
+        auto prepare_thread_mutual_data =
+          [this, is_vmult, is_tvmult](const unsigned int thread_no) -> void {
+          if (is_vmult)
+            {
+              /**
+               * Compute the index ranges within result vector, which have
+               * contributions from other threads.
+               */
+              this->compute_vmult_contributing_index_ranges_from_all_threads(
+                thread_no);
+            }
+
+          if (is_tvmult)
+            {
+              /**
+               * Compute the index ranges within result vector, which have
+               * contributions from other threads.
+               */
+              this->compute_tvmult_contributing_index_ranges_from_all_threads(
+                thread_no);
+            }
+        };
+
+        Threads::TaskGroup<void> thread_mutual_preparation_tasks;
+        for (unsigned int i = 0; i < thread_num; i++)
+          {
+            thread_mutual_preparation_tasks +=
+              Threads::new_task(std::bind(prepare_thread_mutual_data, i));
+          }
+
+        thread_mutual_preparation_tasks.join_all();
       }
-
-    thread_self_preparation_tasks.join_all();
-
-    auto prepare_thread_mutual_data =
-      [this, is_vmult, is_tvmult](const unsigned int thread_no) -> void {
-      if (is_vmult)
-        {
-          /**
-           * Compute the index ranges within result vector, which have
-           * contributions from other threads.
-           */
-          this->compute_vmult_contributing_index_ranges_from_all_threads(
-            thread_no);
-        }
-
-      if (is_tvmult)
-        {
-          /**
-           * Compute the index ranges within result vector, which have
-           * contributions from other threads.
-           */
-          this->compute_tvmult_contributing_index_ranges_from_all_threads(
-            thread_no);
-        }
-    };
-
-    Threads::TaskGroup<void> thread_mutual_preparation_tasks;
-    for (unsigned int i = 0; i < thread_num; i++)
+    else
       {
-        thread_mutual_preparation_tasks +=
-          Threads::new_task(std::bind(prepare_thread_mutual_data, i));
+        data_for_vmult_or_tvmult_threads.clear();
       }
-
-    thread_mutual_preparation_tasks.join_all();
   }
 
 
