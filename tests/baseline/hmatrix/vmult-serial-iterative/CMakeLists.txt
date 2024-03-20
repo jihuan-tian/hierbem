@@ -1,6 +1,6 @@
-set(_target vmult-serial)
+set(_target vmult-serial-iterative)
 
-add_executable(${_target} vmult-serial.cu)
+add_executable(${_target} vmult-serial-iterative.cu)
 
 # Allow target to include deal.ii header files
 deal_ii_setup_target(${_target})

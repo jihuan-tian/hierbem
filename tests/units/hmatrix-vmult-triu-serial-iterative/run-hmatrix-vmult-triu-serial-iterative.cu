@@ -1,5 +1,4 @@
 #include <catch2/catch_all.hpp>
-#include <openblas-pthread/cblas.h>
 
 #include <fstream>
 
@@ -11,9 +10,9 @@ using namespace HierBEM;
 using namespace Catch::Matchers;
 
 void
-run_hmatrix_vmult_triu_parallel()
+run_hmatrix_vmult_triu_serial_iterative()
 {
-  std::ofstream ofs("hmatrix-vmult-triu-parallel.output");
+  std::ofstream ofs("hmatrix-vmult-triu-serial-iterative.output");
 
   /**
    * Load a matrix where only the upper triangular and diagonal parts are
@@ -76,12 +75,7 @@ run_hmatrix_vmult_triu_parallel()
   block_cluster_tree.partition_fine_non_tensor_product();
 
   /**
-   * Generate the \hmatrix from the upper triangular full matrix. Its property
-   * will automatically be set to @p HMatrixSupport::Property::upper_triangular.
-   * The leaf set traversal method should be set to Hilbert, so that the row and
-   * column index sets of leaf \hmatrix nodes in a same interval obtained from
-   * sequence partition are contiguous respectively. This will reduce the size
-   * of the local result vector on each thread.
+   * Generate the \hmatrix from the upper triangular full matrix.
    */
   const unsigned int fixed_rank_k = n / 4;
   HMatrix<3, double>::set_leaf_set_traversal_method(
@@ -102,18 +96,12 @@ run_hmatrix_vmult_triu_parallel()
   H_full.print_formatted_to_mat(ofs, "H_full", 15, false, 25, "0");
 
   /**
-   * Limit the number of OpenBLAS threads.
-   */
-  openblas_set_num_threads(1);
-
-  /**
    * Perform \hmatrix/vector multiplication.
    */
-  H.prepare_for_vmult_or_tvmult(true, false);
-  H.vmult_task_parallel(0.3, y, 1.5, x);
+  H.vmult_serial_iterative(0.3, y, 1.5, x);
   print_vector_to_mat(ofs, "y1_cpp", y);
 
-  H.vmult_task_parallel(3.7, y, 8.2, x);
+  H.vmult_serial_iterative(3.7, y, 8.2, x);
   print_vector_to_mat(ofs, "y2_cpp", y);
 
   ofs.close();

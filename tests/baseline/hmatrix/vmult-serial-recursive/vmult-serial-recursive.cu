@@ -1,6 +1,6 @@
 /**
- * @file vmult-parallel.cu
- * @brief Verify the performance of parallel \hmatrix/vector multiplication.
+ * @file vmult-serial-recursive.cu
+ * @brief Verify the performance of serial \hmatrix/vector multiplication by recursion.
  *
  * @ingroup hmatrix
  * @author Jihuan Tian
@@ -10,9 +10,7 @@
 #include <boost/program_options.hpp>
 
 #include <cuda_runtime.h>
-#include <openblas-pthread/cblas.h>
 
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -220,11 +218,6 @@ main(int argc, char *argv[])
   CmdOpts opts = parse_cmdline(argc, argv);
 
   /**
-   * @internal Set number of threads used for OpenBLAS.
-   */
-  openblas_set_num_threads(1);
-
-  /**
    * Initialize the CUDA device parameters.
    */
   const size_t stack_size = 1024 * 10;
@@ -407,26 +400,12 @@ main(int argc, char *argv[])
           x(i) = uniform_distribution(rand_engine);
         }
 
-      /**
-       * Limit the number of OpenBLAS threads.
-       */
-      openblas_set_num_threads(1);
-
-      Timer timer;
-      V.prepare_for_vmult_or_tvmult(true, true);
-      timer.stop();
-      print_wall_time(std::cout,
-                      timer,
-                      std::string("prepare vmult with thread num=") +
-                        std::to_string(
-                          V.compute_vmult_or_tvmult_thread_num(true, true)));
-
       // Perform \hmatrix/vector multiplication.
-      timer.start();
+      Timer timer;
       for (unsigned int i = 0; i < opts.repeats; i++)
         {
           Vector<double> y(V.get_m());
-          V.vmult_task_parallel(1.0, y, 0.3, x);
+          V.vmult(y, 0.3, x, V.get_property());
         }
       timer.stop();
       const double elapsed_time = timer.last_wall_time();

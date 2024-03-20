@@ -1,10 +1,10 @@
 /**
- * @file vmult-serial.cu
- * @brief Verify the performance of serial \hmatrix/vector multiplication.
+ * @file vmult-serial-iterative.cu
+ * @brief Verify the performance of serial \hmatrix/vector multiplication by iterating over the leaf set.
  *
  * @ingroup hmatrix
  * @author Jihuan Tian
- * @date 2024-03-19
+ * @date 2024-03-20
  */
 
 #include <boost/program_options.hpp>
@@ -405,7 +405,7 @@ main(int argc, char *argv[])
       for (unsigned int i = 0; i < opts.repeats; i++)
         {
           Vector<double> y(V.get_m());
-          V.vmult(y, 0.3, x, V.get_property());
+          V.vmult_serial_iterative(1.0, y, 0.3, x);
         }
       timer.stop();
       const double elapsed_time = timer.last_wall_time();
