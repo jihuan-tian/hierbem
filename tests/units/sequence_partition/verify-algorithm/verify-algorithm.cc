@@ -33,6 +33,14 @@ generate_random_task_costs(int seed, int n)
   return task_costs;
 }
 
+int
+generate_randint(int seed, int a, int b)
+{
+  std::mt19937                    gen(seed);
+  std::uniform_int_distribution<> dis(a, b);
+  return dis(gen);
+}
+
 TEST_CASE("Sequence Partition Basic Test", "[seq_part]")
 {
   int  n            = 40;
@@ -40,7 +48,7 @@ TEST_CASE("Sequence Partition Basic Test", "[seq_part]")
   auto trial_no     = GENERATE(range(0, FUZZING_TIMES));
   SECTION(std::string("trial #") + std::to_string(trial_no))
   {
-    auto task_costs = generate_random_task_costs(FIXED_SEED, n);
+    auto task_costs = generate_random_task_costs(FIXED_SEED + trial_no, n);
     auto cost_func  = [&task_costs](int i, int j) -> double {
       double sum = 0.0;
       for (int k = i; k <= j; k++)
@@ -99,14 +107,16 @@ TEST_CASE("Partition minmax cost non-increasing to the number of partitions",
 
 TEST_CASE("Non-empty partition and correct minmax cost test", "[seq_part]")
 {
-  int  n        = 40;
-  int  p        = 10;
   auto trial_no = GENERATE(range(0, FUZZING_TIMES));
 
   SECTION(std::string("trial #") + std::to_string(trial_no))
   {
-    auto task_costs = generate_random_task_costs(FIXED_SEED, n);
-    auto cost_func  = [&task_costs](int i, int j) -> double {
+    int n = (trial_no + 1) * 10;
+    int p = generate_randint(FIXED_SEED + trial_no, 1, n);
+    INFO("n=" << n << ", p=" << p);
+
+    auto task_costs = generate_random_task_costs(FIXED_SEED + trial_no, n);
+    auto cost_func = [&task_costs](int i, int j) -> double {
       double sum = 0.0;
       for (int k = i; k <= j; k++)
         {
@@ -136,16 +146,18 @@ TEST_CASE("Non-empty partition and correct minmax cost test", "[seq_part]")
   }
 }
 
-TEST_CASE("Non-empty partition and correct minmax cost test (n == p)",
+TEST_CASE("Non-empty partition and correct minmax cost test (p == n)",
           "[seq_part]")
 {
-  int  n        = 40;
-  int  p        = 40;
   auto trial_no = GENERATE(range(0, FUZZING_TIMES));
 
   SECTION(std::string("trial #") + std::to_string(trial_no))
   {
-    auto task_costs = generate_random_task_costs(FIXED_SEED, n);
+    int n = (trial_no + 1) * 10;
+    int p = n;
+    INFO("n=" << n << ", p=" << p);
+
+    auto task_costs = generate_random_task_costs(FIXED_SEED + trial_no, n);
     auto cost_func  = [&task_costs](int i, int j) -> double {
       double sum = 0.0;
       for (int k = i; k <= j; k++)
@@ -179,13 +191,15 @@ TEST_CASE("Non-empty partition and correct minmax cost test (n == p)",
 TEST_CASE("Non-empty partition and correct minmax cost test (p == 1)",
           "[seq_part]")
 {
-  int  n        = 40;
-  int  p        = 1;
   auto trial_no = GENERATE(range(0, FUZZING_TIMES));
 
   SECTION(std::string("trial #") + std::to_string(trial_no))
   {
-    auto task_costs = generate_random_task_costs(FIXED_SEED, n);
+    int n = (trial_no + 1) * 10;
+    int p = 1;
+    INFO("n=" << n << ", p=" << p);
+
+    auto task_costs = generate_random_task_costs(FIXED_SEED + trial_no, n);
     auto cost_func  = [&task_costs](int i, int j) -> double {
       double sum = 0.0;
       for (int k = i; k <= j; k++)
@@ -213,5 +227,40 @@ TEST_CASE("Non-empty partition and correct minmax cost test (p == 1)",
 
     // Make sure the actual cost is the same as the predicted cost
     REQUIRE_THAT(actual_cost, WithinAbs(pred_cost, 1e-6));
+  }
+}
+
+TEST_CASE("Invalid arguments", "[seq_part]")
+{
+  int  n        = 10;
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    auto task_costs = generate_random_task_costs(FIXED_SEED + trial_no, n);
+    auto cost_func  = [&task_costs](int i, int j) -> double {
+      double sum = 0.0;
+      for (int k = i; k <= j; k++)
+        {
+          sum += task_costs[k];
+        }
+      return sum;
+    };
+
+    // invalid sequence length (<=0)
+    REQUIRE_THROWS([&]() {
+      SequencePartitioner<decltype(cost_func)> sp(-trial_no, 1, cost_func);
+    }());
+
+    // invalid partition number (<=0)
+    REQUIRE_THROWS([&]() {
+      SequencePartitioner<decltype(cost_func)> sp(n, -trial_no, cost_func);
+    }());
+
+    // invalid partition number (>n)
+    REQUIRE_THROWS([&]() {
+      SequencePartitioner<decltype(cost_func)> sp(n,
+                                                  n + trial_no + 1,
+                                                  cost_func);
+    }());
   }
 }
