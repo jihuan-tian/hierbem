@@ -175,3 +175,43 @@ TEST_CASE("Non-empty partition and correct minmax cost test (n == p)",
     REQUIRE_THAT(actual_cost, WithinAbs(pred_cost, 1e-6));
   }
 }
+
+TEST_CASE("Non-empty partition and correct minmax cost test (p == 1)",
+          "[seq_part]")
+{
+  int  n        = 40;
+  int  p        = 1;
+  auto trial_no = GENERATE(range(0, FUZZING_TIMES));
+
+  SECTION(std::string("trial #") + std::to_string(trial_no))
+  {
+    auto task_costs = generate_random_task_costs(FIXED_SEED, n);
+    auto cost_func  = [&task_costs](int i, int j) -> double {
+      double sum = 0.0;
+      for (int k = i; k <= j; k++)
+        {
+          sum += task_costs[k];
+        }
+      return sum;
+    };
+
+    SequencePartitioner<decltype(cost_func)> sp(n, p, cost_func);
+    sp.partition();
+
+    double pred_cost   = sp.get_minmax_cost();
+    double actual_cost = 0.0;
+
+    std::vector<std::pair<int64_t, int64_t>> parts;
+    sp.get_partitions(parts);
+
+    for (auto &part : parts)
+      {
+        // Make sure each partition is not empty
+        CHECK(part.first <= part.second);
+        actual_cost = std::max(actual_cost, cost_func(part.first, part.second));
+      }
+
+    // Make sure the actual cost is the same as the predicted cost
+    REQUIRE_THAT(actual_cost, WithinAbs(pred_cost, 1e-6));
+  }
+}
