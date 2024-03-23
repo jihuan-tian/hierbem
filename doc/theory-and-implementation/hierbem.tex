@@ -2060,12 +2060,12 @@ property.
     can be assigned arbitrary indices. However, when $v_I$ are specifically selected as a
     set of basis vectors of the tangent space $M_p^n$, such as
     $\vect{\pdiff}x^I = \left( \vect{\pdiff}x^{i_1},\cdots,\vect{\pdiff}x^{i_{l+m}}
-    \right)$, the component indices within $I$ should be in the range $1,\cdots,n$, since
-    there are only $n$ basis vectors in $M_p^n$ which are indexed by starting from
-    1.\label{fn:index-value-range-in-exterior-form}}. The multi-summation index sets
-  $\underaccent{\rightharpoondown}{J}$ and $\underaccent{\rightharpoondown}{K}$ mean that
-  only strictly increasing indices are allowed in $J$ and $K$ during the summation, i.e.
-  $j_1 < \cdots < j_{l}$ and $k_1 < \cdots < k_m$.
+    \right)$ with $l + m = n$, the component indices within $I$ should be in the range
+    $1,\cdots,n$, since there are only $n$ basis vectors in $M_p^n$ which are indexed by
+    starting from 1.\label{fn:index-value-range-in-exterior-form}}. The multi-summation
+  index sets $\underaccent{\rightharpoondown}{J}$ and $\underaccent{\rightharpoondown}{K}$
+  mean that only strictly increasing indices are allowed in $J$ and $K$ during the
+  summation, i.e. $j_1 < \cdots < j_{l}$ and $k_1 < \cdots < k_m$.
 \end{Definition}
 
 \begin{Remark}
@@ -2250,7 +2250,7 @@ the elements in $(1,\cdots,k)\backslash\{i_1\}$, the two Kronecker delta can be 
     &=\sum_I \delta_{1,\cdots,k}^I \alpha_{(1)}(v_{i_1})\cdots\alpha_{(k)}(v_{i_k})
   \end{aligned},
 \end{equation}
-where $I$ is the tuple of indices $(i_1,\cdots,i_k)$ \emph{This is just the standard
+where $I$ is the tuple of indices $(i_1,\cdots,i_k)$. \emph{This is just the standard
   definition of determinant \citep{ZeidlerOxford2004}}\footnote{Here the subscript $r$ of
   1-form $\alpha$ is used as the row index in the determinant, while the subscript $s$ of
   the tangent vector $v$ is used as the column index. This convention is different from
@@ -2268,7 +2268,7 @@ where $\varepsilon_I$ is the Levi-Civita symbol \citep{LeviCivita2023}.
 In the above formulation, the subscripts adopted for the 1-forms $\alpha$ and tangent
 vectors $v$ are consecutively numbered by starting from 1. Actually, they can be
 arbitrarily indexed. Let $I = (i_1,\cdots,i_k)$ and $J = (j_1,\cdots,j_k)$ be two index
-sets. Let $L$ be a permutation of $J$. Let
+sets. Let $L = (l_1,\cdots,l_k)$ be a permutation of $J$. Let
 $\alpha_{(I)} = \alpha_{(i_1)}\wedge\cdots\wedge\alpha_{(i_k)}$ be the wedge product of
 $k$ 1-forms and $v_J = (v_{j_1},\cdots,v_{j_k})$ be a tuple of tangent vectors. Then we
 have
@@ -2729,13 +2729,16 @@ of the concept of \emph{coordinate transformation}.
 
 When $\alpha$ is a 0-form, it is a map from the manifold $M^n$ to $\mathbb{R}$. Let $F$ be
 a map from another manifold $W^m$ to $M^n$. Then the composition of $F$ and $\alpha$ is
-defined as the pull-back of $\alpha$.
-\begin{center}
-\begin{tikzcd}
-  W^m \arrow{r}{F} \arrow[bend right]{rr}[swap]{F^{*}\alpha \coloneqq \alpha \circ F}
-  & M^n \arrow{r}{\alpha} & \mathbb{R}
-\end{tikzcd}
-\end{center}
+defined as the pull-back of $\alpha$ (see Figure \ref{fig:push-back-0-form}).
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzcd}
+    W^m \arrow{r}{F} \arrow[bend right]{rr}[swap]{F^{*}\alpha \coloneqq \alpha \circ F}
+    & M^n \arrow{r}{\alpha} & \mathbb{R}
+  \end{tikzcd}
+  \caption{Push-back of a 0-form}
+  \label{fig:push-back-0-form}
+\end{figure}
 If we use $x$ as the coordinates for $W^m$ and $y$ for $M^n$, $F(x)=y$ can be simply
 written as $y(x)$. Then $\left( F^{*}\alpha \right)(x)$ is equivalent to
 $\alpha(F(x)) = \alpha(y(x))$. This is just the coordinate transformation from $y$ to $x$
@@ -2743,49 +2746,60 @@ for the scalar function $\alpha$.
 
 On the other hand, if $\alpha$ is a 0-form from the manifold $W^m$ to $\mathbb{R}$, the
 push-forward of $\alpha$ from $W^m$ to $M^n$ is defined as the composition
-$\alpha \circ F^{-1}$. Push-forward of $\alpha$ with respect to $F$ requires the existence
-of the inverse $F^{-1}$.
-\begin{center}
-  \begin{tikzcd}
+$\alpha \circ F^{-1}$ (see Figure \ref{fig:push-forward-0-form}). Push-forward of $\alpha$
+with respect to $F$ requires the existence of the inverse $F^{-1}$.
+\begin{figure}[htbp]
+  \centering
+   \begin{tikzcd}
     W^m \arrow{r}{F} \arrow[bend right]{rr}[swap]{\alpha}
     & M^n \arrow{r}{\alpha \circ F^{-1}} & \mathbb{R}
   \end{tikzcd}
-\end{center}
+  \caption{Push-forward of a 0-form}
+  \label{fig:push-forward-0-form}
+\end{figure}
 
 When $\alpha$ is a 1-form at a point $p$ in $M^n$, it is a map from the tangent space
-$M_p^n$ to $\mathbb{R}$. Let $W_p^m$ be the tangent space at the same point $p$ of another
-manifold $W^m$. As above, $W^m$ is assigned the coordinates $x$ and $M^n$ is assigned the
-coordinates $y$. Then the point $p$ in $W^m$ is represented as $p(x)$ and its
-representation in $M^n$ is $p(y)$. Let $F_{*}$ be a map from the tangent space
-$W_{p(x)}^m$ to $M_{p(y)}^n$. According to Equation
+$M_p^n$ to $\mathbb{R}$, which belongs to the dual space $M_p^{n*}$. Let $W_p^m$ be the
+tangent space at the same point $p$ of another manifold $W^m$. As above, $W^m$ is assigned
+the coordinates $x$ and $M^n$ is assigned the coordinates $y$. Then the point $p$ in $W^m$
+is represented as $p(x)$ and its representation in $M^n$ is $p(y)$. Let $F_{*}$ be a map
+from the tangent space $W_{p(x)}^m$ to $M_{p(y)}^n$. According to Equation
 (\ref{eq:contravariant-transformation}), the transformation of a tangent vector in two
 different coordinate charts is contravariant and the matrix form of such transformation is
-the Jacobian matrix. Hence, $F_{*}$ here is just the Jacobian map. Then the push-back of the
-1-form $\alpha$ is the composition of $F_{*}$ and $\alpha$.
+the Jacobian matrix. Hence, $F_{*}$ here is just the Jacobian map. Then the push-back of
+the 1-form $\alpha$ is the composition of $F_{*}$ and $\alpha$ (see Figure
+\ref{fig:push-back-1-form}). The push-back of $\alpha$ is a map between two cotangent
+spaces: $F^{*}: M_p^{n*} \rightarrow W_p^{m*}$.
 
-\begin{center}
+\begin{figure}[htbp]
+  \centering
   \begin{tikzcd}
     W_{p(x)}^m \arrow{r}{F_{*}} \arrow[bend right]{rr}[swap]{\left( F^{*}\alpha \right)
       \coloneqq \alpha\circ F_{*}}
     & M_{p(y)}^n \arrow{r}{\alpha} & \mathbb{R}
   \end{tikzcd}
-\end{center}
+  \caption{Push-back of a 1-form}
+  \label{fig:push-back-1-form}
+\end{figure}
 
 Similarly, when $\alpha$ is a 1-from in $W_{p(x)}^{m*}$, its push-forward is the
-composition of $F_{*}^{-1}$ and $\alpha$.
+composition of $F_{*}^{-1}$ and $\alpha$ (see Figure \ref{fig:push-forward-1-form}).
 
-\begin{center}
+\begin{figure}[htbp]
+  \centering
   \begin{tikzcd}
     W_{p(x)}^m \arrow{r}{F_{*}} \arrow[bend right]{rr}[swap]{\alpha}
     & M_{p(y)}^n \arrow{r}{\alpha\circ F_{*}^{-1}} & \mathbb{R}
   \end{tikzcd}
-\end{center}
+  \caption{Push-forward of a 1-form}
+  \label{fig:push-forward-1-form}
+\end{figure}
 
 \begin{Definition}[Pull-back of a $k$-form]
   \label{def:pullback-k-form}
   Let $\alpha^k$ be a $k$-form in $\bigwedge^k M_p^{n*}$. Let $v_1,\cdots,v_k$ be a tuple
   of tangent vectors in $W_p^m$. The pull-back of $\alpha^k$ is a map
-  $F^{*}: \bigwedge^k W_p^{m*} \rightarrow \bigwedge^k M_p^{n*}$, which satisfies
+  $F^{*}: \bigwedge^k M_p^{n*} \rightarrow \bigwedge^k W_p^{m*}$, which satisfies
   \begin{equation}
     \label{eq:pullback-k-form}
     \left( F^{*}\alpha^k \right)(v_1,\cdots,v_k) = \alpha^k(F_{*}v_1,\cdots,F_{*}v_k),
@@ -2804,7 +2818,10 @@ composition of $F_{*}^{-1}$ and $\alpha$.
       \left( F^{*} (\alpha^k + \beta^k) \right) (v_1,\cdots,v_k)
       &= (\alpha^k+\beta^k)(F_{*}v_1,\cdots,F_{*}v_k) \\
       &= \alpha^k(F_{*}v_1,\cdots,F_{*}v_k) + \beta^k(F_{*}v_1,\cdots,F_{*}v_k) \\
-      &= \left( F^{*}\alpha^k \right)(v_1,\cdots,v_k) + \left( F^{*}\beta^k \right)(v_1,\cdots,v_k).
+      &= \left( F^{*}\alpha^k \right)(v_1,\cdots,v_k) + \left( F^{*}\beta^k
+        \right)(v_1,\cdots,v_k) \\
+      &= \left[ \left( F^{*}\alpha^k \right) + \left( F^{*}\beta^k \right) \right]
+        (v_1,\cdots,v_k).
     \end{align*}
     For any scalar value $\lambda \in \mathbb{R}$,
     \begin{equation*}
@@ -2812,7 +2829,7 @@ composition of $F_{*}^{-1}$ and $\alpha$.
       \left[ \lambda \left( F^{*}\alpha^k \right) \right](v_1,\cdots,v_k).
     \end{equation*}
   \end{Proof}
-\item $F^{*}$ satisfies algebra homomorphism
+\item $F^{*}$ satisfies algebra homomorphism with respect to the wedge product
   \begin{equation}
     F^{*} \left( \alpha^k \wedge \beta^l \right) = \left( F^{*}\alpha^k \right) \wedge \left( F^{*}\beta^l \right)
   \end{equation}
@@ -2842,8 +2859,8 @@ composition of $F_{*}^{-1}$ and $\alpha$.
 
   \begin{Proof}
     Here we still use the convention that $\alpha$ is in the space
-    $\bigwedge M_{p(y)}^{n*}$, while its pull-back $F^{*}\alpha$ is in the space
-    $\bigwedge W_{p(x)}^{m*}$. $F$ represents the map from $W^m$ to $M^n$ and $F_{*}$ is the
+    $\bigwedge^k M_{p(y)}^{n*}$, while its pull-back $F^{*}\alpha$ is in the space
+    $\bigwedge^k W_{p(x)}^{m*}$. $F$ represents the map from $W^m$ to $M^n$ and $F_{*}$ is the
     corresponding Jacobian map.
     \begin{itemize}
     \item When $\alpha$ is a 0-form, $F^{*}\alpha$ is also a 0-form with respect to the
@@ -2908,7 +2925,7 @@ composition of $F_{*}^{-1}$ and $\alpha$.
 
 \begin{Proposition}[Expression of the pull-back of a basis vector in $\bigwedge^k M_p^{n*}$]
   \label{prop:pullback-of-basis}
-  Let $dy^J$ be a basis vector in the space of $k$ forms $\bigwedge^k M_p^{n*}$, where $J$
+  Let $dy^J$ be a basis vector in the space of $k$-forms $\bigwedge^k M_p^{n*}$, where $J$
   is an index set $J=(j_1,\cdots,j_k)$. Let $L$ be an increasing index set. The pull-back
   of $dy^J$ is
   \begin{equation}
@@ -2924,10 +2941,11 @@ composition of $F_{*}^{-1}$ and $\alpha$.
   $v_x$ be any tangent vector in $W_{p(x)}^m$, we have
   \begin{equation*}
     \left( F^{*} dy^{j_l} \right)(v_x) = dy^{j_l}(F_{*} v_x) = \frac{\pdiff y^{j_l}}{\pdiff
-      x^i} v_x^i = \frac{\pdiff y^{j_l}}{\pdiff x^i} dx^i(v) = \left( \frac{\pdiff
-        y^{j_l}}{\pdiff x^i} dx^i \right)(v).
+      x^i} v_x^i = \frac{\pdiff y^{j_l}}{\pdiff x^i} dx^i(v_x) = \left( \frac{\pdiff
+        y^{j_l}}{\pdiff x^i} dx^i \right)(v_x).
   \end{equation*}
-  Replacing the summation index $i$ with $i_l$, we have
+  Replacing the summation index $i$ with $i_l$ just to indicate this summation is with
+  respect to the term $dy^{j_l}$, we have
   \begin{equation}
     \label{eq:pullback-of-one-basis}
     F^{*}dy^{j_l} = \frac{\pdiff y^{j_l}}{\pdiff x^{i_l}} dx^{i_l}.
@@ -2964,7 +2982,7 @@ composition of $F_{*}^{-1}$ and $\alpha$.
   (\ref{eq:determinant-definition-with-general-indices}), this is just equal to the
   determinant
   \begin{equation*}
-    \det \left( \frac{\pdiff y^{j_r}}{\pdiff x^{i_s}} \right) = \det \left\{
+    \det \left( \frac{\pdiff y^{j_r}}{\pdiff x^{l_s}} \right) = \det \left\{
       \frac{\pdiff y^J}{\pdiff x^L} \right\}.
   \end{equation*}
   Then, the pull-back $F^{*}dy^J$ can be expanded as
@@ -3017,19 +3035,19 @@ expression of the pull-back of a $k$-form can be obtained.
   $\mathbb{R}^3$. It has the following form using the previous cyclic permutation
   convention
   \begin{equation*}
-    \beta^2 = b_1 dx^2 \wedge dx^3 + b_2 dx^3 \wedge dx^1 + b_1 dx^2 \wedge dx^3.
+    \beta^2 = b_1 dx^2 \wedge dx^3 + b_2 dx^3 \wedge dx^1 + b_3 dx^1 \wedge dx^2.
   \end{equation*}
   Its pull-back to $M^2$ via the inclusion map $\vect{i}^{*}\beta^2$ has only one term
   which is related to the basis $du^1 \wedge du^2$. It has the following expression.
   \begin{align*}
     \vect{i}^{*}\beta^2
-    &= \left( b_1(x(u)) \det \left\{ \frac{\pdiff (x^2, x^3)}{\pdiff (u^1,u^2} \right\} -
+    &= \left( b_1(x(u)) \det \left\{ \frac{\pdiff (x^2, x^3)}{\pdiff (u^1,u^2)} \right\} -
       b_2(x(u)) \det \left\{ \frac{\pdiff (x^1,x^3)}{\pdiff (u^1,u^2)} \right\} +
-      b_3(x(u)) \det \left\{ \frac{\pdiff (x^2,x^3)}{\pdiff (u^1,u^2)} \right\} \right)
+      b_3(x(u)) \det \left\{ \frac{\pdiff (x^1,x^2)}{\pdiff (u^1,u^2)} \right\} \right)
       du^1 \wedge du^2 \\
-    &= \left( b_1(x(u)) \det \left\{ \frac{\pdiff (x^2, x^3)}{\pdiff (u^1,u^2} \right\} +
+    &= \left( b_1(x(u)) \det \left\{ \frac{\pdiff (x^2, x^3)}{\pdiff (u^1,u^2)} \right\} +
       b_2(x(u)) \det \left\{ \frac{\pdiff (x^3,x^1)}{\pdiff (u^1,u^2)} \right\} +
-      b_3(x(u)) \det \left\{ \frac{\pdiff (x^2,x^3)}{\pdiff (u^1,u^2)} \right\} \right)
+      b_3(x(u)) \det \left\{ \frac{\pdiff (x^1,x^2)}{\pdiff (u^1,u^2)} \right\} \right)
       du^1 \wedge du^2.
   \end{align*}
   This formulation reminds us of performing surface integral of a vector field
