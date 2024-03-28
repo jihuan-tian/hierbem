@@ -770,7 +770,7 @@ coefficients $a_j$ in the following expression
 \begin{Remark}
   It should be emphasized that unlike a tangent vector $v$ in $M_p^n$ which is a fixed physical
   entity having multiple representations in different coordinate charts, the basis vectors
-  in different coordinate charts like $\vect{\pdiff}x_U^j$ and $\vect{\pdiff}x_V^i$ are
+  of different coordinate charts like $\vect{\pdiff}x_U^j$ and $\vect{\pdiff}x_V^i$ are
   two different physical entities, i.e. they are usually two different tangent vectors in
   $M_p^n$.
 \end{Remark}
@@ -925,6 +925,12 @@ vector $v$, i.e. it projects $v$ to the $i$-th coordinate axis.
   $f$ defined on a coordinate chart containing $p$ is called a 0-form.
 \end{Definition}
 
+\begin{mycomment}
+  The value of the scalar function $f$ at $p$ can also be considered as applying the
+  0-form to a tangent vector in a 0-dimensional tangent space, which of course degenerates
+  to the point $p$.
+\end{mycomment}
+
 \begin{Definition}[Differential 0-form]
   If the values of a 0-form can be differentiably assigned to each point in all coordinate
   charts covering $M^n$, it is called a differential 0-form.
@@ -966,7 +972,7 @@ obtain the $i$-th expansion coefficient of $\alpha$:
 
 \subsubsection{Differential of 0-form is 1-form}
 
-Let $f: M^n \rightarrow \mathbb{R}$ be a 0-form on $M^n$. At point $p$, the basis of the
+Let $f: M^n \rightarrow \mathbb{R}$ be a 0-form on $M^n$. At a point $p$, the basis of the
 tangent space $M_p^n$ is $\left\{ \vect{\pdiff}x^j \right\}$ and the basis of the
 cotangent space $M_p^{n*}$ is $\left\{ \sigma^i \right\}$.
 $df: M_p^n \rightarrow \mathbb{R}$ is the differential of $f$, which is a linear
@@ -3329,7 +3335,7 @@ Therefore, the volume $n$-form represented in the coordinate chart $(y)$ is
 After introducing the concept of pseudo $k$-form, we come to the concept of pseudo vector.
 For a given normal tangent vector $u$ (which is also called a \emph{polar vector}
 \citep{Pseudovector2023}), such as the linear velocity vector, it is an \emph{invariant}
-physical entity no matter which coordinate frame is selected. For example (see Figure
+physical entity no matter which coordinate frame is adopted. For example (see Figure
 \ref{fig:cross-product-under-inversion}), assume the given vector $u$ is represented as
 $(u^1,u^2,u^3)^{\mathrm{T}}$ in the local coordinate chart $(x)$. If a new coordinate
 chart $(y)$ is selected, which is an inversion of $(x)$ in this case, i.e.
