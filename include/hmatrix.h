@@ -3862,7 +3862,7 @@ namespace HierBEM
      * Build task dependencies between @p update tasks, @p solve_upper tasks and
      * @p factorize tasks.
      *
-     * The following operations will be prformed:
+     * The following operations will be performed:
      *
      * 1. Build @p update task to @p solve_upper task dependencies.
      * 2. Transfer the @p update tasks of the current \hmatnode to its

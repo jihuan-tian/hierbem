@@ -2385,11 +2385,12 @@ which is equivalent to the determinant
   It is obvious that only when the index set $I$ is a permutation of $J$, the term in the
   sum is not zero. Since $I$ is ensured to be increasing, there is only one non-zero term.
 
-  When $I$ is an even permutation of $J$, $\delta_J^I=1$ and
-  $\alpha^k(\vect{\pdiff}x^I) = \alpha^k(\vect{\pdiff}x^J)$. Hence, the right hand side is
-  equal to $\alpha^k(\vect{\pdiff}x^J)$. When $I$ is an odd permutation of $J$,
-  $\delta_J^I=-1$ and $\alpha^k(\vect{\pdiff}x^I) = -\alpha^k(\vect{\pdiff}x^J)$. Hence,
-  the right hand side is still equal to $\alpha^k(\vect{\pdiff}x^J)$. Therefore, this
+  Let $I_0$ be the index set for this non-zero term. When $I_0$ is an even permutation of
+  $J$, $\delta_J^{I_0}=1$ and
+  $\alpha^k(\vect{\pdiff}x^{I_0}) = \alpha^k(\vect{\pdiff}x^J)$. Hence, the right hand
+  side is equal to the left hand side. When $I_0$ is an odd permutation of $J$,
+  $\delta_J^{I_0}=-1$ and $\alpha^k(\vect{\pdiff}x^{I_0}) = -\alpha^k(\vect{\pdiff}x^J)$.
+  Hence, the right hand side is still equal to the left hand side. Therefore, this
   proposition is valid.
 \end{Proof}
 
@@ -2399,12 +2400,11 @@ $dx^I = dx^{i_1}\wedge\cdots\wedge dx^{i_k}$, forms a basis vector in the space 
 $k$-forms. Meanwhile, the space of $k$-forms can be considered as an exterior product of
 $k$ cotangent spaces. A $k$-form can be expanded by a set of basis vectors like $dx^I$,
 each of which is indexed by an increasing index set $\underaccent{\rightharpoondown}{I}$.
-The expansion coefficient associated with $dx^I$ is the scalar value obtained from
-applying $\alpha^k$ to the set of basis vectors $\vect{\pdiff}x^I$ in the tangent space
-$M_p^n$ with the same index set $I$. This concept is similar to the expansion of a
-covariant tensor, which is given in Equation
-(\ref{eq:covariant-tensor-expanded-as-tensor-product}) in Section
-\ref{sec:covariant-tensor}.
+The expansion coefficient associated with $dx^I$ is the scalar value obtained by applying
+$\alpha^k$ to the set of basis vectors $\vect{\pdiff}x^I$ in the tangent space $M_p^n$
+with the same index set $I$. This concept is similar to the expansion of a covariant
+tensor, which is given in Equation (\ref{eq:covariant-tensor-expanded-as-tensor-product})
+in Section \ref{sec:covariant-tensor}.
 
 \subsection{Exterior differentiation}
 
@@ -2522,14 +2522,14 @@ Exterior differentiation satisfies the following properties:
 
 Let $\alpha^k$ be a $k$-form which is expanded as
 $\alpha^k = \sum_{\underaccent{\rightharpoondown}{I}} \alpha_I dx^I$, where $I$ is an
-index set with $k$ components $(i_1,\cdots,i_k)$. Its exterior differential $d\alpha^k$ is
-a $(k+1)$-form, which can be similarly expanded as
+increasing index set with $k$ components $(i_1,\cdots,i_k)$. Its exterior differential
+$d\alpha^k$ is a $(k+1)$-form, which can be similarly expanded as
 $d\alpha^k = \sum_{\underaccent{\rightharpoondown}{J}} (d\alpha^k)_J dx^J =
 \sum_{\underaccent{\rightharpoondown}{J}} d\alpha^k(\vect{\pdiff}x^J) dx^J$, where $J$ is
-an index set with $k+1$ components $(j_1,\cdots,j_{k+1})$. Here we would like to know the
-expression for the expansion coefficient $(d\alpha^k)_{J}$. N.B. In the expansion of
-$d\alpha^k$, the index set $J$ is increasing, but in the following derivation, $J$ is not
-required to be increasing.
+an increasing index set with $k+1$ components $(j_1,\cdots,j_{k+1})$. Here we would like
+to know the expression for the expansion coefficient $(d\alpha^k)_{J}$. N.B. In the
+expansion of $d\alpha^k$, the index set $J$ is increasing, but in the following
+derivation, $J$ is not required to be increasing.
 
 According to Equation (\ref{eq:exterior-diff-k-form}),
 \begin{align*}
@@ -2537,9 +2537,10 @@ According to Equation (\ref{eq:exterior-diff-k-form}),
                   \right)_{J} = \sum_{\underaccent{\rightharpoondown}{I}} \left( d\alpha_I
                   \wedge dx^I\right)_J \\
   \intertext{Apply Equation (\ref{eq:exterior-product-applied-to-basis-vectors}). Because
-  $d\alpha_I$ is a 1-form, we arbitrarily select a single index $j$ from $J$, then let
-  $d\alpha_I$ apply to $\vect{\pdiff}x^j$ and let $dx^I$ apply to
-  $\vect{\pdiff}x^{J\backslash\{j\}}$. For simplicity, let $L = J\backslash\{j\}$,}
+  $d\alpha_I$ is a 1-form, we need to select an arbitrary index $j$ from $J$, then apply
+  $d\alpha_I$ to $\vect{\pdiff}x^j$ and $dx^I$ apply to
+  $\vect{\pdiff}x^L$, where $L$ is an increasing index set $L =
+  \underaccent{\rightharpoondown}{J\backslash\{j\}}$. Hence,}
                 &= \sum_{\underaccent{\rightharpoondown}{I}} \sum_j \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL}
                   d\alpha_I(\vect{\pdiff}x^j) dx^I(\vect{\pdiff}x^L) \\
   \intertext{According to Equation (\ref{eq:cotangent-basis-appled-to-tangent-basis}):}
@@ -2547,8 +2548,9 @@ According to Equation (\ref{eq:exterior-diff-k-form}),
                   \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL} \frac{\pdiff
                   \alpha_I(x)}{\pdiff x^j} \delta_L^I
 \end{align*}
-Since $I$ is an increasing index set and $L = J\backslash\{j\}$ is also an increasing
-index set, only when $I = L$, the term in the above sum is non-zero. Therefore,
+Since $I$ is an increasing index set and
+$L = \underaccent{\rightharpoondown}{J\backslash\{j\}}$ is also an increasing index set,
+only when $I = L$, the term in the above sum is non-zero. Therefore,
 \begin{equation}
   (d\alpha^k)_J = \sum_j \sum_{\underaccent{\rightharpoondown}{L}} \delta_J^{jL}
   \frac{\pdiff \alpha_L(x)}{\pdiff x^j}.
@@ -2564,10 +2566,13 @@ $j$ from $J$, there are altogether $k+1$ terms in $(d\alpha^k)_J$. Hence, we hav
 If $J$ is an increasing index set, the above expression can be explicitly written as
 \begin{equation}
   \label{eq:eq:expansion-of-exterior-differential2}
-  (d\alpha^k)_J = \frac{\pdiff \alpha_{J\backslash\{j_1\}}}{\pdiff x^{j_1}} - \frac{\pdiff
-    \alpha_{J\backslash\{j_2\}}}{\pdiff x^{j_2}} + \frac{\pdiff
-    \alpha_{J\backslash\{j_3\}}}{\pdiff x^{j_3}} - \cdots = \sum_{r=1}^{k+1} (-1)^{r-1}
-  \frac{\pdiff \alpha_{J\backslash\{j_r\}}}{\pdiff x^{j_r}}.
+  (d\alpha^k)_J = \frac{\pdiff
+    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_1\}}}}{\pdiff x^{j_1}} -
+  \frac{\pdiff \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_2\}}}}{\pdiff
+    x^{j_2}} + \frac{\pdiff
+    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_3\}}}}{\pdiff x^{j_3}} - \cdots
+  = \sum_{r=1}^{k+1} (-1)^{r-1} \frac{\pdiff
+    \alpha_{\underaccent{\rightharpoondown}{J\backslash\{j_r\}}}}{\pdiff x^{j_r}}.
 \end{equation}
 
 \begin{Example}[Exterior differential of a 1-form]
@@ -2594,12 +2599,12 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
           \alpha_1}{\pdiff x^2} \right) dx^1 \wedge dx^2 + \left( \frac{\pdiff
           \alpha_3}{\pdiff x^2} - \frac{\pdiff \alpha_2}{\pdiff x^3} \right) dx^2 \wedge
       dx^3 + \left( \frac{\pdiff \alpha_1}{\pdiff x^3} - \frac{\pdiff \alpha_3}{\pdiff x^1}
-      \right) dx^3 \wedge dx^1
-    \end{aligned}.
+      \right) dx^3 \wedge dx^1.
+    \end{aligned}
   \end{equation}
   This formula reminds us of the curl of a vector in $\mathbb{R}^3$ once learned in
   classical calculus. In a subsequent section we will establish the relationship between
-  vector analysis and $k$-forms operations.
+  vector analysis and $k$-form operations.
 \end{Example}
 
 \begin{Example}[Exterior differential of a 2-form]
@@ -2613,8 +2618,8 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
         \beta_{ij}(x)}{\pdiff x^k} \\
       &= \frac{\pdiff \beta_{jk}(x)}{\pdiff x^i} - \frac{\pdiff \beta_{ik}(x)}{\pdiff x^j}
       + \frac{\pdiff \beta_{ij}(x)}{\pdiff x^k} = \frac{\pdiff \beta_{jk}(x)}{\pdiff x^i}
-      + \frac{\pdiff \beta_{ki}(x)}{\pdiff x^j} + \frac{\pdiff \beta_{ij}(x)}{\pdiff x^k}
-    \end{aligned}.
+      + \frac{\pdiff \beta_{ki}(x)}{\pdiff x^j} + \frac{\pdiff \beta_{ij}(x)}{\pdiff x^k}.
+    \end{aligned}
   \end{equation}
 \end{Example}
 
@@ -2691,18 +2696,17 @@ If $J$ is an increasing index set, the above expression can be explicitly writte
   Now we want to use the above cyclic permutation convention. For the $r$-th term in the
   above sum, we should use the expansion coefficient $\beta_{(r+1,\cdots,n,1,\cdots,r-1)}$
   instead of $\beta_{(1,\cdots,\hat{r},\cdots,n)}$. To transform the index set
-  $(r+1,\cdots,n,1,\cdots,r,\cdots,r-1)$ into $(1,\cdots,\hat{r},\cdots,n)$, we need
-  $(r-1)(n-2)$ times of index permutations. Hence, the exterior differential $d\beta^{n-1}$
-  becomes
+  $(1,\cdots,\hat{r},\cdots,n)$ into $(r+1,\cdots,n,1,\cdots,r-1)$, we need $(r-1)(n-2)$
+  times of index permutations. Hence, the exterior differential $d\beta^{n-1}$ becomes
   \begin{equation}
     d\beta^{n-1} = \left( \sum_{r=1}^n (-1)^{(r-1)(n-1)} \frac{\pdiff
-        \beta_{(r+1,\cdots,n,1,\cdots,r,\cdots,r-1)}}{\pdiff x^r}
+        \beta_{(r+1,\cdots,n,1,\cdots,r-1)}}{\pdiff x^r}
     \right) dx^{(1,\cdots,n)}.
   \end{equation}
-  When the manifold dimension $n$ (assume it is larger than 2) is even, the sign of the
-  term $\pdiff \beta_{(r+1,\cdots,n,1,\cdots,r,\cdots,r-1)}/\pdiff x^r$ in the above sum,
-  i.e. $(-1)^{(r-1)(n-1)}$, is always positive. When $n$ is odd, this sign is alternating
-  with $r$.
+  When the manifold dimension $n$ (assume it is larger than 2) is odd, the sign of the
+  term $\pdiff \beta_{(r+1,\cdots,n,1,\cdots,r-1)}/\pdiff x^r$ in the above sum, i.e.
+  $(-1)^{(r-1)(n-1)}$, is always positive. When $n$ is even, this sign is alternating with
+  $r$.
 \end{Example}
 
 \begin{Example}[Exterior differential of $d\alpha^1$ when the manifold dimension is 3]
@@ -3119,9 +3123,9 @@ expression of the pull-back of a $k$-form can be obtained.
   Therefore, for any $i$ in the range $1,\cdots,n$, $\vect{f}_i = \vect{e}_i P^j_i$. If
   the determinant of $P$ is positive, the two bases have a same orientation.
 
-  This defines an equivalence relation on the collection of all bases of $E^n$, which
-  categorizes them into two equivalence classes. One equivalence class is prescribed to
-  have the positive orientation and the other to have the negative orientation.
+  This defines an equivalence relation on the collection of all possible bases of $E^n$,
+  which categorizes them into two equivalence classes. One equivalence class is prescribed
+  to have the positive orientation and the other to have the negative orientation.
 \end{Definition}
 
 Apply the determinant operation on both sides of Equation
@@ -3190,12 +3194,12 @@ other.
 We've already known from Example
 \ref{exam:apply-exterior-product-of-cotangent-space-basis-to-k-vectors} that the signed
 volume of the parallelogram spanned by a tuple of $n$ vectors $(v_1,\cdots,v_n)$ in the
-tangent space $M_{p}^n$ using the coordinate chart $(x)$ can be obtained by applying
-the special $n$-form $dx^1 \wedge \cdots \wedge dx^n$ to these vectors. N.B.
-$dx^1 \wedge \cdots \wedge dx^n$ is the only basis element for the space of $n$-forms. The
-returned value is just the determinant of these vectors, i.e. $\det(v_1,\cdots,v_n)$. The
-sign of this value depends on the orientation of the tangent space $M_p^n$, which can
-be explained as below.
+tangent space $M_{p}^n$ using the coordinate chart $(x)$ can be obtained by applying the
+specific $n$-form $dx^1 \wedge \cdots \wedge dx^n$ to these vectors. N.B.
+$dx^1 \wedge \cdots \wedge dx^n$ is the only basis element for the space of $n$-forms,
+because the $n$-form has the maximum degree. The returned value is just the determinant of
+these vectors, i.e. $\det(v_1,\cdots,v_n)$. The sign of this value depends on the
+orientation of the tangent space $M_p^n$, which can be explained as below.
 
 Assume we want to use a new coordinate chart $(y)$ for $M_{p}^n$ with the basis
 $\vect{\pdiff}y = (\vect{\pdiff}y^1,\cdots,\vect{\pdiff}y^n)$, where
@@ -3211,21 +3215,24 @@ components in the original basis $\vect{\pdiff}x$. Since the tuple of vectors
 $(v_1,\cdots,v_n)$ are physical entities which maintain their lengths and directions in
 the tangent space $M_p^n$, when the new basis $\vect{\pdiff}y$ is adopted, their numerical
 representations must change accordingly, i.e. the $i_0$-th and $j_0$-th coordinate
-components in each $v_i$ should be swapped. Then we apply the new basis
+components in each $v_i$ ($i=1,\cdots,n$) should be swapped. Then we apply the new basis
 $dy^1 \wedge \cdots \wedge dy^n$ of the space of $n$-forms in the coordinate chart $(y)$
 to $v_1(y),\cdots,v_n(y)$. A new determinant can be obtained as
 $\det(v_1(y),\cdots,v_n(y))$, which is equivalent to swapping the $i_0$-th and $j_0$-th
 rows in $\det(v_1(x),\cdots,v_n(x))$. Therefore, the sign of the volume spanned by
 $(v_1,\cdots,v_n)$ changes when we use a basis of the tangent space with a different
-orientation.
+orientation\footnote{Once the coordinate chart of a neighborhood of the point $p$ in the
+  manifold $M^n$ is settled, such as $(x) = (x^1,\cdots,x^n)$, the basis of the tangent
+  space $M_p^n$ rooted at $p$ is settled, which is $(\pdiff x^1, \cdots, \pdiff x^n)$, and
+  the basis of the space of $n$-forms is also settled, which is $(dx^1, )$}.
 
-However, when we use the $n$-form $dx^1 \wedge \cdots \wedge dx^n$ or
-$dy^1 \wedge \cdots \wedge dy^n$ to measure volume, what we really want is an
-orientation-independent value. Therefore, the pseudo $n$-form given in Definition
-\ref{def:pseudo-form} is needed here. Because it changes its own sign when the
-orientation of the tangent space changes, this will compensate the sign change caused by
-applying it to $(v_1,\cdots,v_n)$ as described above. Here comes the definition of
-volume form.
+However, when we use the above $n$-form, either $dx^1 \wedge \cdots \wedge dx^n$ or
+$dy^1 \wedge \cdots \wedge dy^n$, to measure the volume spanned by the tuple of $n$
+tangent vectors, what we really want is an orientation-independent value. Therefore, the
+pseudo $n$-form given in Definition \ref{def:pseudo-form} is needed here. Because it
+changes the sign of its expansion coefficient when the orientation of the tangent space
+changes, this will compensate the sign change caused by applying it to $(v_1,\cdots,v_n)$
+as described above. Here comes the definition of volume form.
 
 \begin{Definition}[Volume $n$-form with respect to $n$-dimensional manifold $M^n$]
   \label{def:volume-form}
@@ -3333,7 +3340,7 @@ Therefore, the volume $n$-form represented in the coordinate chart $(y)$ is
 \label{sec:pseudo-vector}
 
 After introducing the concept of pseudo $k$-form, we come to the concept of pseudo vector.
-For a given normal tangent vector $u$ (which is also called a \emph{polar vector}
+For a given ordinary tangent vector $u$ (which is also called a \emph{polar vector}
 \citep{Pseudovector2023}), such as the linear velocity vector, it is an \emph{invariant}
 physical entity no matter which coordinate frame is adopted. For example (see Figure
 \ref{fig:cross-product-under-inversion}), assume the given vector $u$ is represented as
@@ -3368,9 +3375,9 @@ According to the Biot-Savart law \citep[see][page 215]{GriffithsIntroduction1999
 the computation of the magnetic flux density $\vect{B}$ depends on the cross product of
 the current vector $\vect{I}$ and the direction vector $\hat{\vect{r}}$ which points from
 the infinitesimal line element $dl$ to the target point $p$. Therefore, when the
-orientation of the coordinate chart changes, $\vect{B}$ as a physical entity changes to
-the opposite direction. Therefore, $\vect{B}$ is a pseudo vector. This is illustrated in
-Figure \ref{fig:magnetic-flux-density-as-pseudo-vector}.
+orientation of the coordinate chart changes, $\vect{B}$ also changes into a new physical
+entity with the opposite direction. Therefore, $\vect{B}$ is a pseudo vector. This is
+illustrated in Figure \ref{fig:magnetic-flux-density-as-pseudo-vector}.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.8\textwidth, height=\textheight, keepaspectratio]{figures/2023-12-27-magnetic-flux-density-is-pseudo-vector}
@@ -3950,6 +3957,12 @@ is(interior_product = alpha_wedge_beta);
       \end{equation*}
     \end{Proof}
   \end{itemize}
+\item The cross product of a true tangent vector $u$ and a pseudo vector $v$ has a
+  corresponding true 1-form:
+  \begin{equation}
+    w = u \times v \Longleftrightarrow -i_u(i_v \mathrm{vol}^3),
+  \end{equation}
+  where $i_v \mathrm{vol}^3$ is a true 2-form and the result is a true 1-form.
 \item Curl of a vector $a$: like the definition of cross product which depends on the
   orientation of the coordinate chart, the curl operation also has such dependence.
   Therefore, the curl of a vector $a$ is a pseudo vector. With the $\flat$ operator, the
