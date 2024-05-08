@@ -1,5 +1,5 @@
 #
-# Set syntax standard to C++17 and enable more strict compilation for C++ and
+# Set syntax standard to C++20 and enable more strict compilation for C++ and
 # CUDA
 #
 # Usage: HBEM_STD_COMPILE_FLAGS()
@@ -11,10 +11,12 @@
 # HBEM_CHECK_RELAXED 1)
 #
 macro(HBEM_STD_COMPILE_FLAGS)
-  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD 20)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CUDA_STANDARD 17)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(CMAKE_CUDA_STANDARD 20)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+  set(CMAKE_CUDA_EXTENSIONS OFF)
 
   set(_common_flags -Wall -Wextra)
   set(_is_cxx "$<COMPILE_LANGUAGE:CXX>")
@@ -29,6 +31,9 @@ macro(HBEM_STD_COMPILE_FLAGS)
   # Do not report pedantic errors if relaxed (such as trailing extra semicolon,
   # etc.)
   set(_pedantic_if_not_relaxed "$<IF:${_is_relaxed},,-pedantic-errors>")
+  # Do not report deprecated warnings if relaxed, for example, implicit capture
+  # of 'this' via [=] that is used in Octave.
+  set(_disable_deprecated_warning "$<IF:${_is_relaxed},-Wno-deprecated,>")
   # ptxas in CUDA 11.4 has a bug that it will not honor stack size warning opts
   set(_is_buggy_ptxas "$<VERSION_LESS:${CUDAToolkit_VERSION},11.8>")
   # Suppress all warnings for buggy ptxas instead of just stack size warning
@@ -38,6 +43,6 @@ macro(HBEM_STD_COMPILE_FLAGS)
 
   add_compile_options(
     "${_common_flags}"
-    "$<${_is_cxx}:-Werror;${_pedantic_if_not_relaxed};${_pch_if_gcc}>"
+    "$<${_is_cxx}:-Werror;${_pedantic_if_not_relaxed};${_disable_deprecated_warning};${_pch_if_gcc}>"
     "$<${_is_cuda}:-Werror=all-warnings;${_stack_size_opts}>")
 endmacro()

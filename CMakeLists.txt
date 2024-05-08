@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.18.0)
+# Older CMake versions do not support nvcc with c++20 standard.
+cmake_minimum_required(VERSION 3.25.2)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
   # Keep compatible with FindCUDA() macros used in dealii
   cmake_policy(SET CMP0146 OLD)
@@ -88,6 +89,11 @@ endif()
 # Set CUDA compiler flags.
 set(DEAL_II_CUDA_FLAGS_DEBUG "-g -G --default-stream per-thread")
 set(DEAL_II_CUDA_FLAGS_RELEASE "--default-stream per-thread")
+
+# Remove the language standard in DEAL_II_* related variables and hand over the
+# control to the macro HBEM_STD_COMPILE_FLAGS.
+string(REGEX REPLACE "(-+std +|-std=)c\\+\\+[0-9][0-9]" "" DEAL_II_CXX_FLAGS ${DEAL_II_CXX_FLAGS})
+string(REGEX REPLACE "(-+std +|-std=)c\\+\\+[0-9][0-9]" "" DEAL_II_CUDA_FLAGS ${DEAL_II_CUDA_FLAGS})
 
 # Remove unknown flag from Clang compiler flags
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

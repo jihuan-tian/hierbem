@@ -17,7 +17,7 @@
 #include <deal.II/fe/fe_data.h>
 #include <deal.II/fe/fe_tools.h>
 
-#include <tbb/tbb_thread.h>
+#include <tbb/tbb.h>
 
 #include <fstream>
 #include <iostream>

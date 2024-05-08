@@ -17,7 +17,7 @@
 #include <deal.II/lac/vector.h>
 
 #include <cuda_runtime.h>
-#include <tbb/tbb_thread.h>
+#include <tbb/tbb.h>
 
 #include <algorithm>
 #include <chrono>
