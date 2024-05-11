@@ -52,8 +52,8 @@ TEST_CASE("H-matrix solve equations by parallel LU decomposition", "[hmatrix]")
 
     // Execute script `gen_matrix.m` to generate M.dat and b.dat
     REQUIRE_NOTHROW([&]() {
-      inst.eval_string(std::string("gen_matrix(") + std::to_string(trial_no) +
-                       std::string(");"));
+      inst.eval_function_void(std::string("gen_matrix(") +
+                              std::to_string(trial_no) + std::string(");"));
     }());
 
     for (unsigned int i = 0; i < REPEAT_TIMES; i++)

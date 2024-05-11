@@ -48,6 +48,8 @@ namespace HierBEM
     HBEMOctaveValueImpl *m_impl;
   };
 
+  using HBEMOctaveValueList = std::vector<HBEMOctaveValue>;
+
   struct HBEMOctaveWrapperImpl;
   class HBEMOctaveWrapper
   {
@@ -62,8 +64,21 @@ namespace HierBEM
 
     ~HBEMOctaveWrapper();
 
+    // Evaluate a string, which can be either an expression or a function with
+    // return value(s).
     HBEMOctaveValue
     eval_string(const std::string &eval_str);
+    // Evaluate a function which has no return value.
+    void
+    eval_function_void(const std::string &eval_str);
+    // Evaluate a function which return a scalar value.
+    HBEMOctaveValue
+    eval_function_scalar(const std::string &eval_str);
+    // Evaluate a function which can have any number of value.
+    void
+    eval_function(const std::string   &eval_str,
+                  int                  nargout,
+                  HBEMOctaveValueList &value_list);
     void
     source_file(const std::string &file_name);
     void

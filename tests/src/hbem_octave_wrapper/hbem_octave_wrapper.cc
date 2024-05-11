@@ -17,6 +17,7 @@
 #include <octave/parse.h>
 
 #include <cstring>
+#include <iostream>
 
 namespace HierBEM
 {
@@ -113,6 +114,44 @@ namespace HierBEM
         throw std::runtime_error("parse error");
       }
     return HBEMOctaveValue(ret);
+  }
+
+  void
+  HBEMOctaveWrapper::eval_function_void(const std::string &eval_str)
+  {
+    int  parse_status;
+    auto ret = m_impl->interp.eval_string(eval_str, true, parse_status, 0);
+    if (parse_status != 0)
+      {
+        throw std::runtime_error("parse error");
+      }
+  }
+
+  HBEMOctaveValue
+  HBEMOctaveWrapper::eval_function_scalar(const std::string &eval_str)
+  {
+    return eval_string(eval_str);
+  }
+
+  void
+  HBEMOctaveWrapper::eval_function(const std::string   &eval_str,
+                                   int                  nargout,
+                                   HBEMOctaveValueList &value_list)
+  {
+    int  parse_status;
+    auto ret =
+      m_impl->interp.eval_string(eval_str, true, parse_status, nargout);
+    if (parse_status != 0)
+      {
+        throw std::runtime_error("parse error");
+      }
+
+    const unsigned int n = ret.length();
+    value_list.resize(n);
+    for (unsigned int i = 0; i < n; i++)
+      {
+        value_list[i] = HBEMOctaveValue(ret(i));
+      }
   }
 
   void
