@@ -38,7 +38,7 @@ call_builtins_directly()
     octave_value_list in;
     in(0) = a_mat;
 
-#if OCTAVE_MAJOR_VERSION < 8
+#if OCTAVE_MAJOR_VERSION < 7
     octave_value_list out = Fnorm(in, 1 /*n_ret*/);
 #else
     octave_value_list out = octave::Fnorm(in, 1 /*n_ret*/);
@@ -55,7 +55,7 @@ call_builtins_directly()
     for (octave_idx_type i = 0; i < n; i++)
       in(i) = octave_value(5 * (i + 2));
 
-#if OCTAVE_MAJOR_VERSION < 8
+#if OCTAVE_MAJOR_VERSION < 7
     octave_value_list out = Fgcd(in, 1 /*n_ret*/);
 #else
     octave_value_list out = octave::Fgcd(in, 1 /*n_ret*/);
