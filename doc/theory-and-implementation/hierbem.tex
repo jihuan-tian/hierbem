@@ -133,11 +133,11 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
 \end{Remark}
 
 \begin{Corollary}
-  If the function $f(a, b) = 0$ in \thref{theo:implicit-func} is $f(a, b) = t$,
-  where $t$ is a constant in $\mathbb{R}^r$, while the other conditions are the
-  same, then $\exists$ neighborhood $B$ of $a$ in $\mathbb{R}^n$ and a unique
-  $\mathbb{C}^r$ function $g: B \rightarrow \mathbb{R}^r$ such that $g(a) = b$
-  and $f(x, g(x)) = t \; (\forall x \in B)$.
+  If the function $f(a, b) = 0$ in Theorem \ref{theo:implicit-func} is $f(a, b) = t$,
+  where $t$ is a constant in $\mathbb{R}^r$, while the other conditions are the same, then
+  $\exists$ neighborhood $B$ of $a$ in $\mathbb{R}^n$ and a unique $\mathbb{C}^r$ function
+  $g: B \rightarrow \mathbb{R}^r$ such that $g(a) = b$ and
+  $f(x, g(x)) = t \; (\forall x \in B)$.
 \end{Corollary}
 
 \begin{Proof}
@@ -145,11 +145,10 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   $$
   \frac{\pdiff f'}{\pdiff y} = \frac{\pdiff f}{\pdiff y}
   $$
-  Therefore, $\abs{\frac{\pdiff f'}{\pdiff y}}_{x=a, y=b} \neq 0$. According to
-  \thref{theo:implicit-func}, $\exists$ neighborhood $B$ of $a$ in
-  $\mathbb{R}^n$ and a unique $\mathbb{C}^r$ function $g: B \rightarrow
-  \mathbb{R}^r$ such that $g(a) = b$ and $f'(x, g(x)) = 0 \; (\forall x \in B)$,
-  which is equivalent to $f(x, g(x)) = t$.
+  Therefore, $\abs{\frac{\pdiff f'}{\pdiff y}}_{x=a, y=b} \neq 0$. According to Theorem
+  \ref{theo:implicit-func}, $\exists$ neighborhood $B$ of $a$ in $\mathbb{R}^n$ and a
+  unique $\mathbb{C}^r$ function $g: B \rightarrow \mathbb{R}^r$ such that $g(a) = b$ and
+  $f'(x, g(x)) = 0 \; (\forall x \in B)$, which is equivalent to $f(x, g(x)) = t$.
 \end{Proof}
 
 \begin{Corollary}
@@ -193,7 +192,7 @@ $(i_0, \cdots, i_{d-1})$. Let the linear index be $I$.
   the equator is an open set where $z$ can be differentiably represented by $x$ and $y$.
 \end{Example}
 
-According to \thref{cor:implicit-func-local-full-rank}, the main submanifold
+According to Corollary \ref{cor:implicit-func-local-full-rank}, the main submanifold
 theorem in $\mathbb{R}^{n+r}$ can be obtained:
 
 \begin{Theorem}[Main submanifold theorem in $\mathbb{R}^{n+r}$]
@@ -207,14 +206,12 @@ theorem in $\mathbb{R}^{n+r}$ can be obtained:
 \end{Theorem}
 
 \begin{Proof}
-  The Jacobian map $\vect{F}_{*}$, which is a linear transformation, is
-  surjective, so its range is $\mathbb{R}^r$ and its rank is $r$.
-  Then according to \thref{cor:implicit-func-local-full-rank},
-  $\exists$ neighborhood $B$ of $x_0$ in $\mathbb{R}^{n+r}$ such that
-  $r$ components of any point in $B$ can be represented by the
-  remaining $n$ components, and this holds
-  $\forall x_0 \in \vect{F}^{-1}(y_0)$. Therefore,
-  $\vect{F}^{-1}(y_0)$ is a submanifold of $\mathbb{R}^{n+r}$.
+  The Jacobian map $\vect{F}_{*}$, which is a linear transformation, is surjective, so its
+  range is $\mathbb{R}^r$ and its rank is $r$. Then according to Corollary
+  \ref{cor:implicit-func-local-full-rank}, $\exists$ neighborhood $B$ of $x_0$ in
+  $\mathbb{R}^{n+r}$ such that $r$ components of any point in $B$ can be represented by
+  the remaining $n$ components, and this holds $\forall x_0 \in \vect{F}^{-1}(y_0)$.
+  Therefore, $\vect{F}^{-1}(y_0)$ is a submanifold of $\mathbb{R}^{n+r}$.
 \end{Proof}
 
 \comment{The implicit function theorem, its corollaries and main submanifold
@@ -358,9 +355,8 @@ conditions are satisfied, $M$ is also a manifold.
 \end{Proposition}
 
 \begin{Proof}
-  This can be proved according to
-  \thref{prop:jacobi-and-diffeomorphism} and
-  \thref{prop:local-diffeomorphism-and-manifold}.
+  This can be proved according to Proposition \ref{prop:jacobi-and-diffeomorphism} and
+  Proposition \ref{prop:local-diffeomorphism-and-manifold}.
 \end{Proof}
 
 \comment{This is equivalent to say that if there is a differentiable

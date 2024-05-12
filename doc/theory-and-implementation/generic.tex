@@ -3,6 +3,7 @@
 % in the document preamble
 \usepackage[stable]{footmisc}
 
+% Configuration for hyperref
 \usepackage{ifthen}
 \makeatletter
 \@ifclassloaded{beamer}{
@@ -67,6 +68,8 @@
 
 % Typesetting source code
 \usepackage{listings}
+% Automatically detect indentation in the source code
+% \usepackage{lstautogobble}
 \lstset{
   basicstyle=\ttfamily\small,
   keywordstyle=\color{blue}\bfseries,
@@ -74,6 +77,7 @@
   stringstyle=\color{magenta},
   columns=fullflexible,
   frame=single,
+  %autogobble=true,
   breaklines=true
 }
 
