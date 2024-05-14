@@ -20,6 +20,38 @@
 
 using namespace Catch::Matchers;
 
+class OctaveTestFixture
+{
+public:
+  OctaveTestFixture()
+    : interp_()
+  {}
+
+  ~OctaveTestFixture()
+  {
+#if OCTAVE_MAJOR_VERSION == 6
+    // need call interpreter's shutdown() method explicitly to prevent segfault
+    // on exit
+    this->interp_.shutdown();
+#endif
+  }
+
+  octave::interpreter *
+  get_interpreter()
+  {
+    return &(this->interp_);
+  }
+
+private:
+  octave::interpreter interp_;
+};
+
+// Create interpreter
+// NOTE: There can be only one Octave interpeter active per thread.
+// As each testcase is executed in a freshly new thread in Catch2,
+// we must ensure that only one interpreter is created per testcase.
+thread_local OctaveTestFixture test_fixture;
+
 TEST_CASE("Call builtins directly from C++", "[octave][demo]")
 {
   // No interpreter instance needed for directly calling builtins
@@ -69,14 +101,10 @@ TEST_CASE("Call builtins directly from C++", "[octave][demo]")
 
 TEST_CASE("Call functions through interpreter from C++", "[octave][demo]")
 {
-  // Create interpreter
-  // NOTE: There can be only one Octave interpeter active per thread.
-  // As each testcase is executed in a freshly new thread in Catch2,
-  // we must ensure that only one interpreter is created per testcase.
-  octave::interpreter interpreter;
-
   // Initialize and start Octave interpreter instance
-  int status = interpreter.execute();
+  octave::interpreter *interpreter = test_fixture.get_interpreter();
+
+  int status = interpreter->execute();
   REQUIRE(status == 0);
 
   {
@@ -124,23 +152,14 @@ TEST_CASE("Call functions through interpreter from C++", "[octave][demo]")
     REQUIRE_THAT(out(0).double_value(),
                  WithinAbs(expected, 1e-6) || WithinRel(expected, 1e-8));
   }
-
-#if OCTAVE_MAJOR_VERSION == 6
-  // need call interpreter's shutdown() method explicitly to prevent segfault on
-  // exit
-  interpreter.shutdown();
-#endif
 }
 
 TEST_CASE("Source external M-file from C++", "[octave][demo]")
 {
   // Create interpreter
-  // NOTE: There can be only one Octave interpeter active per thread.
-  // As each testcase is executed in a freshly new thread in Catch2,
-  // we must ensure that only one interpreter is created per testcase.
-  octave::interpreter interpreter;
+  octave::interpreter *interpreter = test_fixture.get_interpreter();
 
-  int status = interpreter.execute();
+  int status = interpreter->execute();
   REQUIRE(status == 0);
 
   {
@@ -154,15 +173,9 @@ TEST_CASE("Source external M-file from C++", "[octave][demo]")
 
     int               parse_status;
     octave_value_list out =
-      interpreter.eval_string("mat2str(a)", true, parse_status);
+      interpreter->eval_string("mat2str(a)", true, parse_status);
     REQUIRE(parse_status == 0);
     REQUIRE(out.length() > 0);
     REQUIRE(out(0).string_value() == "[11 22;33 44]");
   }
-
-#if OCTAVE_MAJOR_VERSION == 6
-  // need call interpreter's shutdown() method explicitly to prevent segfault on
-  // exit
-  interpreter.shutdown();
-#endif
 }
