@@ -19,6 +19,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "hbem_test_config.h"
+
 namespace HierBEM
 {
   struct HBEMOctaveValueImpl
@@ -92,6 +94,7 @@ namespace HierBEM
       {
         throw std::runtime_error("failed to startup Octave interpreter");
       }
+    this->add_path(HBEM_ROOT_DIR "/scripts");
   }
 
   HBEMOctaveWrapper::~HBEMOctaveWrapper()
