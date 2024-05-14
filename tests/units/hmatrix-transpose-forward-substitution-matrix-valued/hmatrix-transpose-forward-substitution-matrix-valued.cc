@@ -21,6 +21,7 @@
 
 #include "hbem_octave_wrapper.h"
 #include "hbem_test_config.h"
+#include "hbem_test_utils.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
@@ -38,6 +39,9 @@ TEST_CASE(
   "Solve transposed upper triangular H-matrix using matrix-valued forward substitution",
   "[hmatrix]")
 {
+  // Create a unique working directory for each test case
+  volatile HBEMTestScopedDirectory scoped_dir;
+
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
 
@@ -84,6 +88,9 @@ TEST_CASE(
   "Solve transposed upper triangular H-matrix using matrix-valued forward substitution in situ",
   "[hmatrix]")
 {
+  // Create a unique working directory for each test case
+  volatile HBEMTestScopedDirectory scoped_dir;
+
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
 

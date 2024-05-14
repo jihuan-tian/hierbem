@@ -16,11 +16,13 @@
 #include <catch2/catch_all.hpp>
 
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <sstream>
 
 #include "hbem_octave_wrapper.h"
 #include "hbem_test_config.h"
+#include "hbem_test_utils.h"
 
 using namespace Catch::Matchers;
 using namespace HierBEM;
@@ -35,6 +37,9 @@ static constexpr int FUZZING_TIMES = 5;
 
 TEST_CASE("Solve XL^T=Z", "[hmatrix]")
 {
+  // Create a unique working directory for each test case
+  volatile HBEMTestScopedDirectory scoped_dir;
+
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
 
@@ -72,6 +77,9 @@ TEST_CASE("Solve XL^T=Z", "[hmatrix]")
 
 TEST_CASE("Solve XL^T=Z in situ", "[hmatrix]")
 {
+  // Create a unique working directory for each test case
+  volatile HBEMTestScopedDirectory scoped_dir;
+
   HBEMOctaveWrapper &inst = HBEMOctaveWrapper::get_instance();
   inst.add_path(HBEM_ROOT_DIR "/scripts");
 
