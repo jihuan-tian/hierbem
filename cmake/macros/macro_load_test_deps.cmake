@@ -13,4 +13,5 @@ macro(LOAD_TEST_DEPS)
                               "${CMAKE_SOURCE_DIR}/extern/Catch2-3.4.0/")
   FetchContent_MakeAvailable(Catch2)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/extern/Catch2-3.4.0/extras)
+
 endmacro()

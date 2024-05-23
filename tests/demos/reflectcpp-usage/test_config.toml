@@ -1,0 +1,10 @@
+[project]
+name = 'test'
+working_dir = 'output'
+
+[bem]
+is_interior_problem = true
+mapping_order_dirichlet = 1
+# mapping_order_neumann = 1
+# order_dirichlet = 1
+# order_neumann = 0

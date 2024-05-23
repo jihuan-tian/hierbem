@@ -201,7 +201,13 @@ git add ${src_filename}
 echo -e "\n* Rerun make in the build directory ...\n"
 compilation_mode=`echo @CMAKE_BUILD_TYPE@ | tr '[:upper:]' '[:lower:]'`
 pushd "@CMAKE_BINARY_DIR@" > /dev/null
-make $compilation_mode > /dev/null
+# Check if Ninja is used for building
+if [ -e build.ninja ]; then
+    make_cmd="ninja"
+else
+    make_cmd="make"
+fi
+$make_cmd $compilation_mode > /dev/null
 popd > /dev/null
 # NOTE Bash script were executed in a child process. Any changes to the
 # working directory won't affect parent session. So we can only prompt
