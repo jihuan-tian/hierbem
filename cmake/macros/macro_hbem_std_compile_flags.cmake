@@ -45,4 +45,10 @@ macro(HBEM_STD_COMPILE_FLAGS)
     "${_common_flags}"
     "$<${_is_cxx}:-Werror;${_pedantic_if_not_relaxed};${_disable_deprecated_warning};${_pch_if_gcc}>"
     "$<${_is_cuda}:-Werror=all-warnings;${_stack_size_opts}>")
+
+  #
+  # Add bundled reflect-cpp library
+  #
+  include_directories("${CMAKE_SOURCE_DIR}/extern/reflect-cpp-0.9.0/include")
+
 endmacro()

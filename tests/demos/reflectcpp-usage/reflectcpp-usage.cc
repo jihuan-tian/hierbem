@@ -1,0 +1,79 @@
+/**
+ * @file reflectcpp-usage.cc
+ * @brief
+ *
+ * @ingroup testers
+ * @author
+ * @date 2024-05-23
+ */
+#include <catch2/catch_all.hpp>
+#include <rfl.hpp>
+#include <rfl/toml.hpp>
+
+#include <cstdint>
+#include <optional>
+#include <string>
+
+#include "hbem_test_config.h"
+#include "hbem_test_utils.h"
+
+using namespace Catch::Matchers;
+
+struct ConfigProject
+{
+  std::string                name        = "";
+  std::optional<std::string> working_dir = ".";
+};
+
+struct ConfigBEM
+{
+  std::optional<std::uint32_t> order_dirichlet         = 1;
+  std::optional<std::uint32_t> order_neumann           = 0;
+  std::optional<std::uint32_t> mapping_order_dirichlet = 1;
+  std::optional<std::uint32_t> mapping_order_neumann   = 1;
+  std::optional<bool>          is_interior_problem     = false;
+};
+
+struct ConfigHierBEM
+{
+  ConfigProject            project = ConfigProject{};
+  std::optional<ConfigBEM> bem     = ConfigBEM{};
+};
+
+TEST_CASE("TOML serialize", "[toml][demo]")
+{
+  const auto config = ConfigHierBEM{
+    .project = ConfigProject{.name = "test", .working_dir = "output"}};
+  const std::string toml_str = rfl::toml::write(config);
+  rfl::toml::save("serialized.toml", config);
+
+  REQUIRE_THAT(toml_str, ContainsSubstring("name = 'test'"));
+  REQUIRE_THAT(toml_str, ContainsSubstring("working_dir = 'output'"));
+  REQUIRE_THAT(toml_str, ContainsSubstring("order_dirichlet = 1"));
+  REQUIRE_THAT(toml_str, ContainsSubstring("order_neumann = 0"));
+  REQUIRE_THAT(toml_str, ContainsSubstring("mapping_order_dirichlet = 1"));
+  REQUIRE_THAT(toml_str, ContainsSubstring("mapping_order_neumann = 1"));
+  REQUIRE_THAT(toml_str, ContainsSubstring("is_interior_problem = false"));
+}
+
+TEST_CASE("TOML deserialize", "[toml][demo]")
+{
+  const auto default_conf = ConfigHierBEM{};
+  const auto extern_conf =
+    rfl::toml::load<ConfigHierBEM>(SOURCE_DIR "/test_config.toml").value();
+
+  const auto actual_conf = extern_conf;
+  // rfl::replace<ConfigHierBEM>(default_conf, extern_conf);
+
+  REQUIRE(actual_conf.project.name == "test");
+  REQUIRE(actual_conf.project.working_dir.value_or(".") == "output");
+
+  if (actual_conf.bem)
+    {
+      REQUIRE(actual_conf.bem->order_dirichlet.value_or(1) == 1);
+      REQUIRE(actual_conf.bem->order_neumann.value_or(0) == 0);
+      REQUIRE(actual_conf.bem->mapping_order_dirichlet.value_or(1) == 1);
+      REQUIRE(actual_conf.bem->mapping_order_neumann.value_or(1) == 1);
+      REQUIRE(actual_conf.bem->is_interior_problem.value_or(false) == true);
+    }
+}
