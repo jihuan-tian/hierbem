@@ -46,8 +46,9 @@ namespace HierBEM
       // preset all values by false
       std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), false);
 
-      std::vector<types::global_dof_index> local_dof_indices;
-      local_dof_indices.reserve(
+      // Global DoF indices for the current cell.
+      std::vector<types::global_dof_index> cell_dof_indices;
+      cell_dof_indices.reserve(
         dof_handler.get_fe_collection().max_dofs_per_cell());
 
       // this function is similar to the make_sparsity_pattern function, see
@@ -63,10 +64,10 @@ namespace HierBEM
           if (found_iter != subdomain_ids.end())
             {
               const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
-              local_dof_indices.resize(dofs_per_cell);
-              cell->get_dof_indices(local_dof_indices);
+              cell_dof_indices.resize(dofs_per_cell);
+              cell->get_dof_indices(cell_dof_indices);
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                selected_dofs[local_dof_indices[i]] = true;
+                selected_dofs[cell_dof_indices[i]] = true;
             }
         }
     }
@@ -93,8 +94,9 @@ namespace HierBEM
       // preset all values by false
       std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), false);
 
-      std::vector<types::global_dof_index> local_dof_indices;
-      local_dof_indices.reserve(
+      // Global DoF indices for the current cell.
+      std::vector<types::global_dof_index> cell_dof_indices;
+      cell_dof_indices.reserve(
         dof_handler.get_fe_collection().max_dofs_per_cell());
 
       // this function is similar to the make_sparsity_pattern function, see
@@ -110,11 +112,11 @@ namespace HierBEM
           if (found_iter != material_ids.end())
             {
               const unsigned int dofs_per_cell = cell->get_fe().dofs_per_cell;
-              local_dof_indices.resize(dofs_per_cell);
-              cell->get_dof_indices(local_dof_indices);
+              cell_dof_indices.resize(dofs_per_cell);
+              cell->get_dof_indices(cell_dof_indices);
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 {
-                  selected_dofs[local_dof_indices[i]] = true;
+                  selected_dofs[cell_dof_indices[i]] = true;
                 }
             }
         }
