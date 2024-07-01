@@ -36,9 +36,9 @@ namespace HierBEM
      */
     template <int dim, int spacedim>
     void
-    extract_subdomain_dofs(const DoFHandler<dim, spacedim> &    dof_handler,
+    extract_subdomain_dofs(const DoFHandler<dim, spacedim>     &dof_handler,
                            const std::set<types::subdomain_id> &subdomain_ids,
-                           std::vector<bool> &                  selected_dofs)
+                           std::vector<bool>                   &selected_dofs)
     {
       Assert(selected_dofs.size() == dof_handler.n_dofs(),
              ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
@@ -83,9 +83,9 @@ namespace HierBEM
     template <int dim, int spacedim>
     void
     extract_material_domain_dofs(
-      const DoFHandler<dim, spacedim> &   dof_handler,
+      const DoFHandler<dim, spacedim>    &dof_handler,
       const std::set<types::material_id> &material_ids,
-      std::vector<bool> &                 selected_dofs)
+      std::vector<bool>                  &selected_dofs)
     {
       Assert(selected_dofs.size() == dof_handler.n_dofs(),
              ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
@@ -124,9 +124,9 @@ namespace HierBEM
     template <int dim, int spacedim>
     void
     extract_material_domain_dofs_excluding_boundary_dofs(
-      const DoFHandler<dim, spacedim> &   dof_handler,
+      const DoFHandler<dim, spacedim>    &dof_handler,
       const std::set<types::material_id> &boundary_cell_material_ids,
-      std::vector<bool> &                 selected_dofs)
+      std::vector<bool>                  &selected_dofs)
     {
       Assert(selected_dofs.size() == dof_handler.n_dofs(),
              ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
@@ -175,9 +175,32 @@ namespace HierBEM
     }
 
 
+    /**
+     * Return a list of support points for the local DoFs selected from the full
+     * list of DoFs handled by the DoF handler.
+     *
+     * @pre
+     * @post
+     * @tparam dim
+     * @tparam spacedim
+     * @param mapping The mapping from the reference cell to the real cell on
+     * which DoFs are defined.
+     * @param dof_handler The DoF handler object, in which the finite element
+     * object should provide support points.
+     * @param map_from_local_to_full_dof_indices This is a vector which stores
+     * a list of global DoF indices corresponding to the DoFs held in the
+     * @p dof_handler, while the element indices of this vector play the role
+     * of local DoF indices corresponding to the selected DoFs. Therefore, this
+     * vector is used the a map from local to global DoF indices.
+     * @param support_points A vector that stores the corresponding location of
+     * the DoFs in real space coordinates. Before calling this function, this
+     * vector should has the same size as the number of selected local DoFs,
+     * which is also equal to the size of @p map_from_local_to_full_dof_indices.
+     * Previous content of this object is deleted in this function.
+     */
     template <int dim, int spacedim>
     void
-    map_dofs_to_support_points(const Mapping<dim, spacedim> &   mapping,
+    map_dofs_to_support_points(const Mapping<dim, spacedim>    &mapping,
                                const DoFHandler<dim, spacedim> &dof_handler,
                                const std::vector<types::global_dof_index>
                                  &map_from_local_to_full_dof_indices,
@@ -289,7 +312,7 @@ namespace HierBEM
     template <typename DoFHandlerType, typename Number = double>
     void
     map_dofs_to_max_cell_size(const DoFHandlerType &dof_handler,
-                              std::vector<Number> & dof_max_cell_size)
+                              std::vector<Number>  &dof_max_cell_size)
     {
       const unsigned int n_dofs = dof_handler.n_dofs();
       AssertDimension(n_dofs, dof_max_cell_size.size());
@@ -355,7 +378,7 @@ namespace HierBEM
     template <typename DoFHandlerType, typename Number = double>
     void
     map_dofs_to_min_cell_size(const DoFHandlerType &dof_handler,
-                              std::vector<Number> & dof_min_cell_size)
+                              std::vector<Number>  &dof_min_cell_size)
     {
       const unsigned int n_dofs = dof_handler.n_dofs();
       AssertDimension(n_dofs, dof_min_cell_size.size());
@@ -411,9 +434,9 @@ namespace HierBEM
     template <int spacedim>
     void
     write_gnuplot_dof_support_point_info(
-      std::ostream &                                            out,
+      std::ostream                                             &out,
       const std::map<types::global_dof_index, Point<spacedim>> &support_points,
-      const std::vector<bool> &                                 selected_dofs,
+      const std::vector<bool>                                  &selected_dofs,
       const bool has_label = true)
     {
       AssertDimension(support_points.size(), selected_dofs.size());
@@ -447,7 +470,7 @@ namespace HierBEM
     template <typename Number>
     void
     extend_selected_dof_values_to_full_dofs(
-      Vector<Number> &      all_dof_values,
+      Vector<Number>       &all_dof_values,
       const Vector<Number> &selected_dof_values,
       const std::vector<types::global_dof_index>
         &map_from_local_to_full_dof_indices)
