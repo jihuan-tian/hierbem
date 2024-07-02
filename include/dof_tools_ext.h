@@ -193,7 +193,7 @@ namespace HierBEM
      * a list of global DoF indices corresponding to the DoFs held in the
      * @p dof_handler, while the element indices of this vector play the role
      * of local DoF indices corresponding to the selected DoFs. Therefore, this
-     * vector is used the a map from local to global DoF indices.
+     * vector is used as a map from local to global DoF indices.
      * @param support_points A vector that stores the corresponding location of
      * the DoFs in real space coordinates. Before calling this function, this
      * vector should has the same size as the number of selected local DoFs,
@@ -229,10 +229,12 @@ namespace HierBEM
      * Calculate the average cell sizes associated with those DoFs handled by
      * the given DoF handler object.
      *
-     * The value doubled is used as an estimate for the diameter of the support
-     * set of each DoF.
+     * \mynote{The doubled cell size will be used as an estimate for the
+     * diameter of the support set of each DoF.}
      *
-     * @param dof_average_cell_size The returned list of average cell sizes. The
+     * @param dof_handler DoF handler object.
+     * @param dof_average_cell_size The returned list of average cell sizes
+     * which corresponds to the DoFs held within the DoF handler object. The
      * memory for this vector should be preallocated and initialized to zero
      * before calling this function.
      */
@@ -278,6 +280,28 @@ namespace HierBEM
     }
 
 
+    /**
+     * Calculate the average cell sizes associated with a subset of DoFs
+     * selected from all those DoFs held within the DoF handler.
+     *
+     * \mynote{The doubled cell size will be used as an estimate for the
+     * diameter of the support set of each DoF.}
+     *
+     * @pre
+     * @post
+     * @tparam dim
+     * @tparam spacedim
+     * @tparam Number
+     * @param dof_handler DoF handler object.
+     * @param map_from_local_to_full_dof_indices This is a vector which stores
+     * a list of global DoF indices corresponding to the DoFs held in the
+     * @p dof_handler, while the element indices of this vector play the role
+     * of local DoF indices corresponding to the selected DoFs. Therefore, this
+     * vector is used as a map from local to global DoF indices.
+     * @param dof_average_cell_size The returned list of average cell sizes
+     * which corresponds to the selected DoFs. The memory for this vector should
+     * be preallocated before calling this function.
+     */
     template <int dim, int spacedim, typename Number = double>
     void
     map_dofs_to_average_cell_size(const DoFHandler<dim, spacedim> &dof_handler,
