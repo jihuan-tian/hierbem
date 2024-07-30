@@ -22,6 +22,24 @@ namespace HierBEM
 {
   using namespace dealii;
 
+  /**
+   * Write triangulation object into an MSH file. Material id, elementary tag
+   * and subdomain id are all saved. Therefore, there are 3 tags in an element
+   * data record.
+   *
+   * \mynote{Because deal.ii cell data has no member variable reserved for the
+   * elementary tag, i.e. tag for the geometric entity that a cell belongs to,
+   * we substitute material id for this field. Otherwise, there will be only one
+   * geometric entity recognized by Gmsh and material ids or physical tags
+   * cannot be property displayed.}
+   *
+   * @pre
+   * @post
+   * @tparam dim
+   * @tparam spacedim
+   * @param tria
+   * @param out
+   */
   template <int dim, int spacedim>
   void
   write_msh_correct(const Triangulation<dim, spacedim> &tria, std::ostream &out)
@@ -132,13 +150,10 @@ namespace HierBEM
     const unsigned int number_of_tags = 3;
     for (cell = tria.begin_active(); cell != endc; ++cell)
       {
-        /**
-         * @internal At the moment, there is no elementary numbering for the
-         * entities, so I simply set it to zero.
-         */
         out << cell->active_cell_index() + 1 << ' ' << elm_type << ' '
             << number_of_tags << ' '
-            << static_cast<unsigned int>(cell->material_id()) << ' ' << 0 << ' '
+            << static_cast<unsigned int>(cell->material_id()) << ' '
+            << static_cast<unsigned int>(cell->material_id()) << ' '
             << static_cast<unsigned int>(cell->subdomain_id()) << ' ';
 
         // Vertex numbering follows UCD conventions.
