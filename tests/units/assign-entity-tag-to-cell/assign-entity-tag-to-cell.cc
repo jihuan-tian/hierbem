@@ -7,11 +7,7 @@
  * @date 2024-07-28
  */
 
-#include <fstream>
-#include <iostream>
-
 #include "electric_field/ddm_efield.h"
-#include "grid_out_ext.h"
 #include "hbem_test_config.h"
 
 using namespace HierBEM;

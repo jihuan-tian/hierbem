@@ -28,12 +28,12 @@
 #include <vector>
 
 #include "config.h"
+#include "gmsh_manipulation.h"
 #include "grid_out_ext.h"
 
 namespace HierBEM
 {
   using namespace dealii;
-  using EntityTag = int;
 
   enum SubdomainType
   {
@@ -43,19 +43,58 @@ namespace HierBEM
     FloatingConductor
   };
 
+
   class SubdomainTopology
   {
   public:
     SubdomainTopology() = default;
-    SubdomainTopology(const std::string &cad_model);
 
     void
-    generate_topology(const std::string &cad_model);
+    generate_topology(const std::string &cad_file,
+                      const std::string &mesh_file);
 
   private:
     std::map<EntityTag, std::vector<EntityTag>>   subdomain_to_face;
     std::map<EntityTag, std::array<EntityTag, 2>> face_to_subdomain;
   };
+
+
+  void
+  SubdomainTopology::generate_topology(const std::string &cad_file,
+                                       const std::string &mesh_file)
+  {
+    gmsh::initialize();
+    gmsh::option::setNumber("General.Verbosity", 0);
+    gmsh::open(cad_file);
+    gmsh::merge(mesh_file);
+    gmsh::model::occ::synchronize();
+
+    // At the moment, we only support 3D model.
+    AssertDimension(gmsh::model::getDimension(), 3);
+
+    // Get all 3D volume entities.
+    gmsh::vectorpair volume_entities;
+    gmsh::model::occ::getEntities(volume_entities, 3);
+
+    // The boundary entities of each 3D volume entity.
+    std::vector<gmsh::vectorpair> boundary_entities(volume_entities.size());
+    std::vector<EntityTag>        oriented_surface_tags;
+    for (const auto &volume : volume_entities)
+      {
+        GmshManip::get_oriented_volume_boundaries(volume.second,
+                                                  oriented_surface_tags,
+                                                  1e-5);
+        for (const auto surface_tag : oriented_surface_tags)
+          {
+            std::cout << surface_tag << " ";
+          }
+        std::cout << std::endl;
+      }
+
+    gmsh::clear();
+    gmsh::finalize();
+  }
+
 
   class EfieldSubdomain;
 
@@ -117,7 +156,20 @@ namespace HierBEM
     void
     read_skeleton_mesh(const std::string &mesh_file);
 
+    /**
+     * Read the CAD file and build the association relationship between volumes
+     * and surfaces.
+     *
+     * @pre
+     * @post
+     * @param cad_file
+     */
+    void
+    read_subdomain_topology(const std::string &cad_file,
+                            const std::string &mesh_file);
+
   private:
+    SubdomainTopology            subdomain_topology;
     DomainDescription            domain;
     Triangulation<dim, spacedim> tria;
   };
@@ -378,6 +430,15 @@ namespace HierBEM
     write_msh_correct<dim, spacedim>(tria, out);
     out.close();
 #endif
+  }
+
+  template <int dim, int spacedim>
+  void
+  DDMEfield<dim, spacedim>::read_subdomain_topology(
+    const std::string &cad_file,
+    const std::string &mesh_file)
+  {
+    subdomain_topology.generate_topology(cad_file, mesh_file);
   }
 } // namespace HierBEM
 
