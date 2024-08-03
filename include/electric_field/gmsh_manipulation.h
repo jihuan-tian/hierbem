@@ -10,6 +10,8 @@
 
 #include <gmsh.h>
 
+#include <array>
+#include <map>
 #include <vector>
 
 namespace HierBEM
@@ -81,7 +83,8 @@ namespace HierBEM
                                       const double    eps = 1e-5);
 
     /**
-     * Compute \f$x = x + \alpha y\f$.
+     * Compute \f$x = x + \alpha y\f$, where both \f$x\f$ and \f$y\f$ are
+     * @p std::vector.
      *
      * @pre
      * @post
@@ -94,11 +97,29 @@ namespace HierBEM
                const std::vector<double> &y,
                double                     alpha);
 
+    /**
+     * Get a signed tag list for the surfaces constituting the boundary of a
+     * volume. A positive tag represents surface normal vector points outward,
+     * while a negative tag represents an inward normal vector.
+     *
+     * @pre
+     * @post
+     * @param volume_tag
+     * @param oriented_surface_tags
+     * @param eps
+     */
     static void
     get_oriented_volume_boundaries(
       const EntityTag         volume_tag,
       std::vector<EntityTag> &oriented_surface_tags,
       const double            eps = 1e-5);
+
+    static void
+    get_oriented_volume_boundaries(
+      const EntityTag                                volume_tag,
+      std::vector<EntityTag>                        &oriented_surface_tags,
+      std::map<EntityTag, std::array<EntityTag, 2>> &face_to_subdomain,
+      const double                                   eps = 1e-5);
   };
 } // namespace HierBEM
 

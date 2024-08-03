@@ -43,7 +43,7 @@ namespace HierBEM
     gmsh::model::mesh::getElements(
       element_types, element_tags, node_tags, 2, surface_tag);
 
-    // We only have one type of elements.
+    // Ensure that we only have one type of elements.
     AssertDimension(element_types.size(), 1);
 
     // Get barycenters of all cells on the surface.
@@ -107,19 +107,83 @@ namespace HierBEM
     std::vector<EntityTag> &oriented_surface_tags,
     const double            eps)
   {
-    gmsh::vectorpair volume_tag_pair(1);
-    volume_tag_pair[0].first  = 3;
-    volume_tag_pair[0].second = volume_tag;
+    gmsh::vectorpair volume_dimtag(1);
+    volume_dimtag[0].first  = 3;
+    volume_dimtag[0].second = volume_tag;
 
-    gmsh::vectorpair surface_tag_pairs;
-    gmsh::model::getBoundary(volume_tag_pair, surface_tag_pairs, false, false);
+    gmsh::vectorpair surface_dimtag_list;
+    gmsh::model::getBoundary(volume_dimtag, surface_dimtag_list, false, false);
 
     oriented_surface_tags.clear();
-    for (const auto &surface_dim_tag : surface_tag_pairs)
+    for (const auto &surface_dimtag : surface_dimtag_list)
       {
         oriented_surface_tags.push_back(
-          surface_dim_tag.second * get_surface_intrinsic_orientation(
-                                     surface_dim_tag.second, volume_tag, eps));
+          surface_dimtag.second * get_surface_intrinsic_orientation(
+                                    surface_dimtag.second, volume_tag, eps));
+      }
+  }
+
+
+  void
+  GmshManip::get_oriented_volume_boundaries(
+    const EntityTag                                volume_tag,
+    std::vector<EntityTag>                        &oriented_surface_tags,
+    std::map<EntityTag, std::array<EntityTag, 2>> &face_to_subdomain,
+    const double                                   eps)
+  {
+    gmsh::vectorpair volume_dimtag(1);
+    volume_dimtag[0].first  = 3;
+    volume_dimtag[0].second = volume_tag;
+
+    gmsh::vectorpair surface_dimtag_list;
+    gmsh::model::getBoundary(volume_dimtag, surface_dimtag_list, false, false);
+
+    oriented_surface_tags.clear();
+    for (const auto &surface_dimtag : surface_dimtag_list)
+      {
+        int surface_orientation;
+
+        // Here we first check if this surface has been met before.
+        typename std::map<EntityTag, std::array<EntityTag, 2>>::iterator pos =
+          face_to_subdomain.find(surface_dimtag.second);
+        if (pos != face_to_subdomain.end())
+          {
+            if (pos->second[0] != 0 && pos->second[1] == 0)
+              {
+                surface_orientation = -1;
+                pos->second[1]      = volume_tag;
+              }
+            else if (pos->second[0] == 0 && pos->second[1] != 0)
+              {
+                surface_orientation = 1;
+                pos->second[0]      = volume_tag;
+              }
+            else
+              {
+                // This case cannot happen.
+                Assert(false, ExcInternalError());
+              }
+          }
+        else
+          {
+            surface_orientation =
+              get_surface_intrinsic_orientation(surface_dimtag.second,
+                                                volume_tag,
+                                                eps);
+
+            // Insert a new record in @p face_to_subdomain map.
+            if (surface_orientation == 1)
+              {
+                face_to_subdomain[surface_dimtag.second] = {{volume_tag, 0}};
+              }
+            else
+              {
+                face_to_subdomain[surface_dimtag.second] = {{0, volume_tag}};
+              }
+          }
+
+        oriented_surface_tags.push_back(surface_dimtag.second *
+                                        surface_orientation);
       }
   }
 } // namespace HierBEM

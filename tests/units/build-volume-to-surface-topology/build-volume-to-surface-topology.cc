@@ -23,6 +23,7 @@ main(int argc, const char *argv[])
                                  "sphere-immersed-in-two-boxes.brep",
                                  HBEM_TEST_MODEL_DIR
                                  "sphere-immersed-in-two-boxes.msh");
+  efield.get_subdomain_topology().print(std::cout);
 
   return 0;
 }

@@ -21,6 +21,7 @@
 
 #include <gmsh.h>
 
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -51,49 +52,16 @@ namespace HierBEM
 
     void
     generate_topology(const std::string &cad_file,
-                      const std::string &mesh_file);
+                      const std::string &mesh_file,
+                      const double       eps_for_orientation_detection = 1e-5);
+
+    void
+    print(std::ostream &out) const;
 
   private:
     std::map<EntityTag, std::vector<EntityTag>>   subdomain_to_face;
     std::map<EntityTag, std::array<EntityTag, 2>> face_to_subdomain;
   };
-
-
-  void
-  SubdomainTopology::generate_topology(const std::string &cad_file,
-                                       const std::string &mesh_file)
-  {
-    gmsh::initialize();
-    gmsh::option::setNumber("General.Verbosity", 0);
-    gmsh::open(cad_file);
-    gmsh::merge(mesh_file);
-    gmsh::model::occ::synchronize();
-
-    // At the moment, we only support 3D model.
-    AssertDimension(gmsh::model::getDimension(), 3);
-
-    // Get all 3D volume entities.
-    gmsh::vectorpair volume_entities;
-    gmsh::model::occ::getEntities(volume_entities, 3);
-
-    // The boundary entities of each 3D volume entity.
-    std::vector<gmsh::vectorpair> boundary_entities(volume_entities.size());
-    std::vector<EntityTag>        oriented_surface_tags;
-    for (const auto &volume : volume_entities)
-      {
-        GmshManip::get_oriented_volume_boundaries(volume.second,
-                                                  oriented_surface_tags,
-                                                  1e-5);
-        for (const auto surface_tag : oriented_surface_tags)
-          {
-            std::cout << surface_tag << " ";
-          }
-        std::cout << std::endl;
-      }
-
-    gmsh::clear();
-    gmsh::finalize();
-  }
 
 
   class EfieldSubdomain;
@@ -167,6 +135,18 @@ namespace HierBEM
     void
     read_subdomain_topology(const std::string &cad_file,
                             const std::string &mesh_file);
+
+    const SubdomainTopology &
+    get_subdomain_topology() const
+    {
+      return subdomain_topology;
+    }
+
+    SubdomainTopology &
+    get_subdomain_topology()
+    {
+      return subdomain_topology;
+    }
 
   private:
     SubdomainTopology            subdomain_topology;

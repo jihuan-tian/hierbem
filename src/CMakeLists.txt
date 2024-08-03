@@ -8,8 +8,15 @@ include(macro_hbem_std_compile_flags)
 hbem_std_compile_flags()
 
 add_library(
-  generic_tools debug_tools.cu aca_plus.cu generic_functors.cc
-                sauter_quadrature.cu regex_tools.cc hmatrix_support.cc gmsh_manipulation.cc)
+  generic_tools
+  debug_tools.cu
+  aca_plus.cu
+  generic_functors.cc
+  sauter_quadrature.cu
+  regex_tools.cc
+  hmatrix_support.cc
+  electric_field/gmsh_manipulation.cc
+  electric_field/ddm_efield.cc)
 # Because my library generic_tools has included deal.ii header files, dependent
 # include paths and library paths need to be imported by calling this macro
 # DEAL_II_SETUP_TARGET.
