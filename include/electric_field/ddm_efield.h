@@ -106,9 +106,16 @@ namespace HierBEM
 
     Assert(gmsh::model::getDimension() >= dim + 1, ExcInternalError());
 
-    // Get all 3D volume entities.
+    // Get all volume entities by first trying the OCC kernel. If the number of
+    // returned entities is zero, try Gmsh's own CAD kernel.
     gmsh::vectorpair volume_dimtag_list;
     gmsh::model::occ::getEntities(volume_dimtag_list, dim + 1);
+    if (volume_dimtag_list.size() == 0)
+      {
+        gmsh::model::getEntities(volume_dimtag_list, dim + 1);
+      }
+
+    Assert(volume_dimtag_list.size() > 0, ExcInternalError());
 
     // The boundary entities of each 3D volume entity.
     std::vector<EntityTag> oriented_surface_tags;

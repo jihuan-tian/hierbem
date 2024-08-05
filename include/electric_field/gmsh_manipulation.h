@@ -168,7 +168,7 @@ namespace HierBEM
   template <int dim, int spacedim>
   void
   GmshManip<dim, spacedim>::get_normal(
-    const EntityTag            surface_tag,
+    const EntityTag            entity_tag,
     const std::vector<double> &parametric_coord,
     std::vector<double>       &normal)
   {
@@ -181,7 +181,7 @@ namespace HierBEM
             // Compute the tangent vector on the curve.
             std::vector<double> tangent;
             gmsh::model::getDerivative(dim,
-                                       surface_tag,
+                                       entity_tag,
                                        parametric_coord,
                                        tangent);
 
@@ -201,7 +201,7 @@ namespace HierBEM
             break;
           }
           case 2: {
-            gmsh::model::getNormal(surface_tag, parametric_coord, normal);
+            gmsh::model::getNormal(entity_tag, parametric_coord, normal);
             break;
           }
           default: {
