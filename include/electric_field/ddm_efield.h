@@ -9,6 +9,8 @@
 #define INCLUDE_ELECTRIC_FIELD_DDM_EFIELD_H_
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/function_parser.h>
 #include <deal.II/base/geometry_info.h>
 #include <deal.II/base/patterns.h>
 #include <deal.II/base/point.h>
@@ -45,6 +47,7 @@ namespace HierBEM
   };
 
 
+  template <int dim, int spacedim>
   class SubdomainTopology
   {
   public:
@@ -58,59 +61,287 @@ namespace HierBEM
     void
     print(std::ostream &out) const;
 
+    const std::map<EntityTag, std::array<EntityTag, 2>> &
+    get_face_to_subdomain() const
+    {
+      return face_to_subdomain;
+    }
+
+    const std::map<EntityTag, std::vector<EntityTag>> &
+    get_subdomain_to_face() const
+    {
+      return subdomain_to_face;
+    }
+
+    std::map<EntityTag, std::array<EntityTag, 2>> &
+    get_face_to_subdomain()
+    {
+      return face_to_subdomain;
+    }
+
+    std::map<EntityTag, std::vector<EntityTag>> &
+    get_subdomain_to_face()
+    {
+      return subdomain_to_face;
+    }
+
   private:
     std::map<EntityTag, std::vector<EntityTag>>   subdomain_to_face;
     std::map<EntityTag, std::array<EntityTag, 2>> face_to_subdomain;
   };
 
 
+  template <int dim, int spacedim>
+  void
+  SubdomainTopology<dim, spacedim>::generate_topology(
+    const std::string &cad_file,
+    const std::string &mesh_file,
+    const double       eps_for_orientation_detection)
+  {
+    gmsh::initialize();
+    gmsh::option::setNumber("General.Verbosity", 0);
+    gmsh::open(cad_file);
+    gmsh::merge(mesh_file);
+    gmsh::model::occ::synchronize();
+
+    Assert(gmsh::model::getDimension() >= dim + 1, ExcInternalError());
+
+    // Get all 3D volume entities.
+    gmsh::vectorpair volume_dimtag_list;
+    gmsh::model::occ::getEntities(volume_dimtag_list, dim + 1);
+
+    // The boundary entities of each 3D volume entity.
+    std::vector<EntityTag> oriented_surface_tags;
+    for (const auto &volume_dimtag : volume_dimtag_list)
+      {
+        GmshManip<dim, spacedim>::get_oriented_volume_boundaries(
+          volume_dimtag.second,
+          oriented_surface_tags,
+          face_to_subdomain,
+          eps_for_orientation_detection);
+
+        subdomain_to_face[volume_dimtag.second] = oriented_surface_tags;
+      }
+
+    gmsh::clear();
+    gmsh::finalize();
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  SubdomainTopology<dim, spacedim>::print(std::ostream &out) const
+  {
+    out << "=== subdomain-to-face ===\n";
+
+    for (const auto &record : subdomain_to_face)
+      {
+        out << record.first << ":";
+        for (const auto face_tag : record.second)
+          {
+            out << " " << face_tag;
+          }
+        out << "\n";
+      }
+
+    out << "=== face-to-subdomain ===\n";
+    for (const auto &record : face_to_subdomain)
+      {
+        out << record.first << ": " << record.second[0] << " "
+            << record.second[1] << "\n";
+      }
+
+    out << std::endl;
+  }
+
+  template <int spacedim>
   class EfieldSubdomain;
 
-  class SubdomainFace
+  template <int spacedim>
+  class EfieldSurface
   {
   public:
-    SubdomainFace() = default;
+    EfieldSurface(const EntityTag             entity_tag,
+                  EfieldSubdomain<spacedim>  *neighbor_subdomain,
+                  const bool                  is_normal_outward,
+                  const bool                  is_dirichlet_boundary,
+                  Function<spacedim, double> *dirichlet_voltage);
+
+    EfieldSurface(const EfieldSurface &surface) = default;
+
+    EfieldSurface &
+    operator=(const EfieldSurface &surface) = default;
 
   private:
-    EntityTag        entity_tag;
-    EfieldSubdomain *neighbor_subdomain;
-    bool             is_normal_outward;
+    EntityTag                   entity_tag;
+    EfieldSubdomain<spacedim>  *neighbor_subdomain;
+    bool                        is_normal_outward;
+    bool                        is_dirichlet_boundary;
+    Function<spacedim, double> *dirichlet_voltage;
   };
+
+
+  template <int spacedim>
+  EfieldSurface<spacedim>::EfieldSurface(
+    const EntityTag             entity_tag,
+    EfieldSubdomain<spacedim>  *neighbor_subdomain,
+    const bool                  is_normal_outward,
+    const bool                  is_dirichlet_boundary,
+    Function<spacedim, double> *dirichlet_voltage)
+    : entity_tag(entity_tag)
+    , neighbor_subdomain(neighbor_subdomain)
+    , is_normal_outward(is_normal_outward)
+    , is_dirichlet_boundary(is_dirichlet_boundary)
+    , dirichlet_voltage(dirichlet_voltage)
+  {}
+
 
   /**
    * A subdomain in electric field problem
    */
+  template <int spacedim>
   class EfieldSubdomain
   {
   public:
     EfieldSubdomain() = default;
 
+    EfieldSubdomain(const EntityTag     entity_tag,
+                    const SubdomainType type,
+                    const double        permittivity,
+                    const double        voltage);
+
+    EfieldSubdomain(const EfieldSubdomain &subdomain) = default;
+
+    EfieldSubdomain &
+    operator=(const EfieldSubdomain &subdomain) = default;
+
+    const std::vector<EfieldSurface<spacedim>> &
+    get_surfaces_touching_dielectric() const
+    {
+      return surfaces_touching_dielectric;
+    }
+
+    const std::vector<EfieldSurface<spacedim>> &
+    get_surfaces_touching_floating_conductor() const
+    {
+      return surfaces_touching_floating_conductor;
+    }
+
+    const std::vector<EfieldSurface<spacedim>> &
+    get_surfaces_touching_voltage_conductor() const
+    {
+      return surfaces_touching_voltage_conductor;
+    }
+
+    std::vector<EfieldSurface<spacedim>> &
+    get_surfaces_touching_dielectric()
+    {
+      return surfaces_touching_dielectric;
+    }
+
+    std::vector<EfieldSurface<spacedim>> &
+    get_surfaces_touching_floating_conductor()
+    {
+      return surfaces_touching_floating_conductor;
+    }
+
+    std::vector<EfieldSurface<spacedim>> &
+    get_surfaces_touching_voltage_conductor()
+    {
+      return surfaces_touching_voltage_conductor;
+    }
+
   private:
-    EntityTag                    entity_tag;
-    SubdomainType                type;
-    double                       permittivity;
-    double                       voltage;
-    std::vector<SubdomainFace *> faces_touching_dielectric;
-    std::vector<SubdomainFace *> faces_touching_voltage_conductor;
-    std::vector<SubdomainFace *> faces_touching_floating_conductor;
+    EntityTag                            entity_tag;
+    SubdomainType                        type;
+    double                               permittivity;
+    double                               voltage;
+    std::vector<EfieldSurface<spacedim>> surfaces_touching_dielectric;
+    std::vector<EfieldSurface<spacedim>> surfaces_touching_voltage_conductor;
+    std::vector<EfieldSurface<spacedim>> surfaces_touching_floating_conductor;
   };
 
-  class DomainDescription
+
+  template <int spacedim>
+  EfieldSubdomain<spacedim>::EfieldSubdomain(const EntityTag     entity_tag,
+                                             const SubdomainType type,
+                                             const double        permittivity,
+                                             const double        voltage)
+    : entity_tag(entity_tag)
+    , type(type)
+    , permittivity(permittivity)
+    , voltage(voltage)
+  {}
+
+
+  template <int spacedim>
+  class EfieldSubdomainDescription
   {
   public:
-    DomainDescription() = default;
+    EfieldSubdomainDescription() = default;
+
+    const std::map<EntityTag, EfieldSubdomain<spacedim>> &
+    get_subdomains() const
+    {
+      return subdomains;
+    }
+
+    const std::vector<EfieldSubdomain<spacedim> *> &
+    get_dielectric_subdomains() const
+    {
+      return dielectric_subdomains;
+    }
+
+    const std::vector<EfieldSubdomain<spacedim> *> &
+    get_floating_conductor_subdomains() const
+    {
+      return floating_conductor_subdomains;
+    }
+
+    const std::vector<EfieldSubdomain<spacedim> *> &
+    get_voltage_conductor_subdomains() const
+    {
+      return voltage_conductor_subdomains;
+    }
+
+    std::vector<EfieldSubdomain<spacedim> *> &
+    get_dielectric_subdomains()
+    {
+      return dielectric_subdomains;
+    }
+
+    std::vector<EfieldSubdomain<spacedim> *> &
+    get_floating_conductor_subdomains()
+    {
+      return floating_conductor_subdomains;
+    }
+
+    std::vector<EfieldSubdomain<spacedim> *> &
+    get_voltage_conductor_subdomains()
+    {
+      return voltage_conductor_subdomains;
+    }
+
+    std::map<EntityTag, EfieldSubdomain<spacedim>> &
+    get_subdomains()
+    {
+      return subdomains;
+    }
 
   private:
-    std::vector<EfieldSubdomain> dielectric_subdomains;
-    std::vector<EfieldSubdomain> voltage_conductor_subdomains;
-    std::vector<EfieldSubdomain> floating_conductor_subdomains;
+    std::map<EntityTag, EfieldSubdomain<spacedim>> subdomains;
+    std::vector<EfieldSubdomain<spacedim> *>       dielectric_subdomains;
+    std::vector<EfieldSubdomain<spacedim> *>       voltage_conductor_subdomains;
+    std::vector<EfieldSubdomain<spacedim> *> floating_conductor_subdomains;
   };
 
-  template <int dim, int spacedim = dim>
+  template <int dim, int spacedim>
   class DDMEfield
   {
   public:
     DDMEfield() = default;
+
+    ~DDMEfield();
 
     /**
      * Read mesh by assigning @p entity_tag as @p material_id for each cell.
@@ -136,22 +367,57 @@ namespace HierBEM
     read_subdomain_topology(const std::string &cad_file,
                             const std::string &mesh_file);
 
-    const SubdomainTopology &
+    /**
+     * Manually initialize problem parameters.
+     *
+     * @pre
+     * @post
+     */
+    void
+    initialize_parameters();
+
+    void
+    create_efield_subdomains_and_surface();
+
+    const SubdomainTopology<dim, spacedim> &
     get_subdomain_topology() const
     {
       return subdomain_topology;
     }
 
-    SubdomainTopology &
+    SubdomainTopology<dim, spacedim> &
     get_subdomain_topology()
     {
       return subdomain_topology;
     }
 
   private:
-    SubdomainTopology            subdomain_topology;
-    DomainDescription            domain;
-    Triangulation<dim, spacedim> tria;
+    SubdomainTopology<dim, spacedim>     subdomain_topology;
+    EfieldSubdomainDescription<spacedim> domain;
+    Triangulation<dim, spacedim>         tria;
+
+    /**
+     * Map volume entity tag to subdomain type.
+     */
+    std::map<EntityTag, SubdomainType> subdomain_types;
+    /**
+     * Map volume entity tag to permittivity.
+     */
+    std::map<EntityTag, double> permittivities;
+    /**
+     * Map volume entity tag to voltages of conductors.
+     */
+    std::map<EntityTag, double> conductor_voltages;
+    /**
+     * Map surface entity tag to Dirichlet boundary condition.
+     */
+    std::map<EntityTag, Function<spacedim, double> *>
+      dirichlet_boundary_conditions;
+    /**
+     * Map surface entity tag to manifold id. At the moment, the material for
+     * each surface is the same as the entity tag in Gmsh.
+     */
+    std::map<EntityTag, types::manifold_id> manifold_description;
   };
 
 
@@ -188,6 +454,17 @@ namespace HierBEM
     // vertices except in 1d
     Assert(dim != 1, ExcInternalError());
   }
+
+
+  template <int dim, int spacedim>
+  DDMEfield<dim, spacedim>::~DDMEfield()
+  {
+    for (auto &d : dirichlet_boundary_conditions)
+      {
+        delete d.second;
+      }
+  }
+
 
   template <int dim, int spacedim>
   void
@@ -419,6 +696,115 @@ namespace HierBEM
     const std::string &mesh_file)
   {
     subdomain_topology.generate_topology(cad_file, mesh_file);
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  DDMEfield<dim, spacedim>::initialize_parameters()
+  {
+    subdomain_types[1] = SubdomainType::VoltageConductor;
+    subdomain_types[2] = SubdomainType::Dielectric;
+    subdomain_types[3] = SubdomainType::Dielectric;
+
+    permittivities[0] = 1;
+    permittivities[2] = 2;
+    permittivities[3] = 4;
+
+    conductor_voltages[1] = 10;
+
+    dirichlet_boundary_conditions[11] =
+      new Functions::ConstantFunction<spacedim, double>(0);
+
+    // Spherical manifold
+    manifold_description[1] = 1;
+    manifold_description[2] = 1;
+    // Flat manifold
+    for (unsigned int i = 3; i <= 13; i++)
+      {
+        manifold_description[i] = 0;
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  DDMEfield<dim, spacedim>::create_efield_subdomains_and_surface()
+  {
+    // Create the default surrounding space subdomain and add it as the first
+    // dielectric subdomain in the domain description.
+    domain.get_subdomains()[0] = EfieldSubdomain<spacedim>(
+      0, SubdomainType::SurroundingSpace, permittivities[0], 0);
+    domain.get_dielectric_subdomains().push_back(&domain.get_subdomains()[0]);
+
+    // Create each subdomain.
+    for (const auto &record : subdomain_topology.get_subdomain_to_face())
+      {
+        const EntityTag     entity_tag = record.first;
+        const SubdomainType type       = subdomain_types[record.first];
+        const double        permittivity =
+          (type == SubdomainType::Dielectric) ? permittivities[entity_tag] : 0;
+        const double voltage = (type == SubdomainType::VoltageConductor) ?
+                                 conductor_voltages[entity_tag] :
+                                 0;
+
+        domain.get_subdomains()[entity_tag] =
+          EfieldSubdomain<spacedim>(entity_tag, type, permittivity, voltage);
+
+        switch (type)
+          {
+            case (SubdomainType::Dielectric):
+              domain.get_dielectric_subdomains().push_back(
+                &domain.get_subdomains()[entity_tag]);
+              break;
+            case (SubdomainType::VoltageConductor):
+              domain.get_voltage_conductor_subdomains().push_back(
+                &domain.get_subdomains()[entity_tag]);
+              break;
+            case (SubdomainType::FloatingConductor):
+              domain.get_floating_conductor_subdomains().push_back(
+                &domain.get_subdomains()[entity_tag]);
+              break;
+            default:
+              Assert(false, ExcInternalError());
+              break;
+          }
+      }
+
+    // Create each surface.
+    for (const auto &record : subdomain_topology.get_face_to_subdomain())
+      {
+        // Determine if the current surface is assigned a Dirichlet boundary
+        // condition.
+        typename std::map<EntityTag, double>::iterator pos;
+        bool                                           is_dirichlet_surface;
+        Function<spacedim, double>                    *dirichlet_voltage;
+        if (dirichlet_boundary_conditions.find(record.first) !=
+            dirichlet_boundary_conditions.end())
+          {
+            is_dirichlet_surface = true;
+            dirichlet_voltage    = pos->second;
+          }
+        else
+          {
+            is_dirichlet_surface = false;
+            dirichlet_voltage    = nullptr;
+          }
+
+        // Get the two subdomains sharing the current surface.
+        EfieldSubdomain<spacedim> *surface_normal_from_subdomain =
+          domain.get_subdomains()[record.second[0]];
+        EfieldSubdomain<spacedim> *surface_normal_to_subdomain =
+          domain.get_subdomains()[record.second[1]];
+
+        // Create a surface object for the "from" subdomain.
+        if (is_dirichlet_surface)
+          {}
+        else
+          {}
+
+        // Create a surface object for the "to" subdomain.
+      }
   }
 } // namespace HierBEM
 
