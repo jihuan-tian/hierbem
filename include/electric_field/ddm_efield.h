@@ -62,32 +62,32 @@ namespace HierBEM
     print(std::ostream &out) const;
 
     const std::map<EntityTag, std::array<EntityTag, 2>> &
-    get_face_to_subdomain() const
+    get_surface_to_subdomain() const
     {
-      return face_to_subdomain;
+      return surface_to_subdomain;
     }
 
     const std::map<EntityTag, std::vector<EntityTag>> &
-    get_subdomain_to_face() const
+    get_subdomain_to_surface() const
     {
-      return subdomain_to_face;
+      return subdomain_to_surface;
     }
 
     std::map<EntityTag, std::array<EntityTag, 2>> &
-    get_face_to_subdomain()
+    get_surface_to_subdomain()
     {
-      return face_to_subdomain;
+      return surface_to_subdomain;
     }
 
     std::map<EntityTag, std::vector<EntityTag>> &
-    get_subdomain_to_face()
+    get_subdomain_to_surface()
     {
-      return subdomain_to_face;
+      return subdomain_to_surface;
     }
 
   private:
-    std::map<EntityTag, std::vector<EntityTag>>   subdomain_to_face;
-    std::map<EntityTag, std::array<EntityTag, 2>> face_to_subdomain;
+    std::map<EntityTag, std::vector<EntityTag>>   subdomain_to_surface;
+    std::map<EntityTag, std::array<EntityTag, 2>> surface_to_subdomain;
   };
 
 
@@ -117,17 +117,17 @@ namespace HierBEM
 
     Assert(volume_dimtag_list.size() > 0, ExcInternalError());
 
-    // The boundary entities of each 3D volume entity.
+    // The boundary entities of each volume entity.
     std::vector<EntityTag> oriented_surface_tags;
     for (const auto &volume_dimtag : volume_dimtag_list)
       {
         GmshManip<dim, spacedim>::get_oriented_volume_boundaries(
           volume_dimtag.second,
           oriented_surface_tags,
-          face_to_subdomain,
+          surface_to_subdomain,
           eps_for_orientation_detection);
 
-        subdomain_to_face[volume_dimtag.second] = oriented_surface_tags;
+        subdomain_to_surface[volume_dimtag.second] = oriented_surface_tags;
       }
 
     gmsh::clear();
@@ -141,7 +141,7 @@ namespace HierBEM
   {
     out << "=== subdomain-to-face ===\n";
 
-    for (const auto &record : subdomain_to_face)
+    for (const auto &record : subdomain_to_surface)
       {
         out << record.first << ":";
         for (const auto face_tag : record.second)
@@ -152,7 +152,7 @@ namespace HierBEM
       }
 
     out << "=== face-to-subdomain ===\n";
-    for (const auto &record : face_to_subdomain)
+    for (const auto &record : surface_to_subdomain)
       {
         out << record.first << ": " << record.second[0] << " "
             << record.second[1] << "\n";
@@ -169,7 +169,8 @@ namespace HierBEM
   {
   public:
     EfieldSurface(const EntityTag             entity_tag,
-                  EfieldSubdomain<spacedim>  *neighbor_subdomain,
+                  EfieldSurface<spacedim>    *neighbor_surface,
+                  EfieldSubdomain<spacedim>  *parent_subdomain,
                   const bool                  is_normal_outward,
                   const bool                  is_dirichlet_boundary,
                   Function<spacedim, double> *dirichlet_voltage);
@@ -179,9 +180,82 @@ namespace HierBEM
     EfieldSurface &
     operator=(const EfieldSurface &surface) = default;
 
+    Function<spacedim, double> *
+    get_dirichlet_voltage()
+    {
+      return dirichlet_voltage;
+    }
+
+    void
+    set_dirichlet_voltage(Function<spacedim, double> *dirichletVoltage)
+    {
+      dirichlet_voltage = dirichletVoltage;
+    }
+
+    EntityTag
+    get_entity_tag() const
+    {
+      return entity_tag;
+    }
+
+    void
+    set_entity_tag(const EntityTag entityTag)
+    {
+      entity_tag = entityTag;
+    }
+
+    bool
+    get_is_dirichlet_boundary() const
+    {
+      return is_dirichlet_boundary;
+    }
+
+    void
+    set_is_dirichlet_boundary(const bool isDirichletBoundary)
+    {
+      is_dirichlet_boundary = isDirichletBoundary;
+    }
+
+    bool
+    get_is_normal_outward() const
+    {
+      return is_normal_outward;
+    }
+
+    void
+    set_is_normal_outward(const bool isNormalOutward)
+    {
+      is_normal_outward = isNormalOutward;
+    }
+
+    EfieldSurface<spacedim> *
+    get_neighbor_surface()
+    {
+      return neighbor_surface;
+    }
+
+    void
+    set_neighbor_surface(EfieldSurface<spacedim> *neighborSurface)
+    {
+      neighbor_surface = neighborSurface;
+    }
+
+    EfieldSubdomain<spacedim> *
+    get_parent_subdomain()
+    {
+      return parent_subdomain;
+    }
+
+    void
+    set_parent_subdomain(EfieldSubdomain<spacedim> *parentSubdomain)
+    {
+      parent_subdomain = parentSubdomain;
+    }
+
   private:
     EntityTag                   entity_tag;
-    EfieldSubdomain<spacedim>  *neighbor_subdomain;
+    EfieldSurface<spacedim>    *neighbor_surface;
+    EfieldSubdomain<spacedim>  *parent_subdomain;
     bool                        is_normal_outward;
     bool                        is_dirichlet_boundary;
     Function<spacedim, double> *dirichlet_voltage;
@@ -191,12 +265,14 @@ namespace HierBEM
   template <int spacedim>
   EfieldSurface<spacedim>::EfieldSurface(
     const EntityTag             entity_tag,
-    EfieldSubdomain<spacedim>  *neighbor_subdomain,
+    EfieldSurface<spacedim>    *neighbor_surface,
+    EfieldSubdomain<spacedim>  *parent_subdomain,
     const bool                  is_normal_outward,
     const bool                  is_dirichlet_boundary,
     Function<spacedim, double> *dirichlet_voltage)
     : entity_tag(entity_tag)
-    , neighbor_subdomain(neighbor_subdomain)
+    , neighbor_surface(neighbor_surface)
+    , parent_subdomain(parent_subdomain)
     , is_normal_outward(is_normal_outward)
     , is_dirichlet_boundary(is_dirichlet_boundary)
     , dirichlet_voltage(dirichlet_voltage)
@@ -256,6 +332,30 @@ namespace HierBEM
     get_surfaces_touching_voltage_conductor()
     {
       return surfaces_touching_voltage_conductor;
+    }
+
+    EntityTag
+    get_entity_tag() const
+    {
+      return entity_tag;
+    }
+
+    double
+    get_permittivity() const
+    {
+      return permittivity;
+    }
+
+    SubdomainType
+    get_type() const
+    {
+      return type;
+    }
+
+    double
+    get_voltage() const
+    {
+      return voltage;
     }
 
   private:
@@ -375,7 +475,7 @@ namespace HierBEM
                             const std::string &mesh_file);
 
     /**
-     * Manually initialize problem parameters.
+     * Manually initialize problem parameters for testing purpose.
      *
      * @pre
      * @post
@@ -384,7 +484,7 @@ namespace HierBEM
     initialize_parameters();
 
     void
-    create_efield_subdomains_and_surface();
+    create_efield_subdomains_and_surfaces();
 
     const SubdomainTopology<dim, spacedim> &
     get_subdomain_topology() const
@@ -710,6 +810,7 @@ namespace HierBEM
   void
   DDMEfield<dim, spacedim>::initialize_parameters()
   {
+    subdomain_types[0] = SubdomainType::SurroundingSpace;
     subdomain_types[1] = SubdomainType::VoltageConductor;
     subdomain_types[2] = SubdomainType::Dielectric;
     subdomain_types[3] = SubdomainType::Dielectric;
@@ -736,16 +837,16 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
-  DDMEfield<dim, spacedim>::create_efield_subdomains_and_surface()
+  DDMEfield<dim, spacedim>::create_efield_subdomains_and_surfaces()
   {
-    // Create the default surrounding space subdomain and add it as the first
-    // dielectric subdomain in the domain description.
+    // Create the default surrounding space subdomain (e.g. air domain) and add
+    // it as the first dielectric subdomain in the domain description object.
     domain.get_subdomains()[0] = EfieldSubdomain<spacedim>(
       0, SubdomainType::SurroundingSpace, permittivities[0], 0);
     domain.get_dielectric_subdomains().push_back(&domain.get_subdomains()[0]);
 
     // Create each subdomain.
-    for (const auto &record : subdomain_topology.get_subdomain_to_face())
+    for (const auto &record : subdomain_topology.get_subdomain_to_surface())
       {
         const EntityTag     entity_tag = record.first;
         const SubdomainType type       = subdomain_types[record.first];
@@ -758,6 +859,8 @@ namespace HierBEM
         domain.get_subdomains()[entity_tag] =
           EfieldSubdomain<spacedim>(entity_tag, type, permittivity, voltage);
 
+        // Add the subdomain to corresponding list in the domain description
+        // object.
         switch (type)
           {
             case (SubdomainType::Dielectric):
@@ -778,16 +881,18 @@ namespace HierBEM
           }
       }
 
-    // Create each surface.
-    for (const auto &record : subdomain_topology.get_face_to_subdomain())
+    // Create each surface. For a same geometric surface, there are actually two
+    // @p EfieldSurface objects are created and associated.
+    for (const auto &record : subdomain_topology.get_surface_to_subdomain())
       {
         // Determine if the current surface is assigned a Dirichlet boundary
         // condition.
-        typename std::map<EntityTag, double>::iterator pos;
-        bool                                           is_dirichlet_surface;
-        Function<spacedim, double>                    *dirichlet_voltage;
-        if (dirichlet_boundary_conditions.find(record.first) !=
-            dirichlet_boundary_conditions.end())
+        typename std::map<EntityTag, Function<spacedim, double> *>::iterator
+             pos = dirichlet_boundary_conditions.find(record.first);
+        bool is_dirichlet_surface;
+        Function<spacedim, double> *dirichlet_voltage;
+
+        if (pos != dirichlet_boundary_conditions.end())
           {
             is_dirichlet_surface = true;
             dirichlet_voltage    = pos->second;
@@ -799,18 +904,130 @@ namespace HierBEM
           }
 
         // Get the two subdomains sharing the current surface.
-        EfieldSubdomain<spacedim> *surface_normal_from_subdomain =
+        EfieldSubdomain<spacedim> &subdomain_surface_normal_point_from =
           domain.get_subdomains()[record.second[0]];
-        EfieldSubdomain<spacedim> *surface_normal_to_subdomain =
+        EfieldSubdomain<spacedim> &subdomain_surface_normal_point_to =
           domain.get_subdomains()[record.second[1]];
 
+        EfieldSurface<spacedim> *surface_of_from_subdomain;
+        EfieldSurface<spacedim> *surface_of_to_subdomain;
+
         // Create a surface object for the "from" subdomain.
-        if (is_dirichlet_surface)
-          {}
-        else
-          {}
+        // Here we check its neighboring subdomain type and add the surface to
+        // corresponding list in the current subdomain.
+        switch (subdomain_surface_normal_point_to.get_type())
+          {
+            case SubdomainType::SurroundingSpace:
+              case SubdomainType::Dielectric: {
+                subdomain_surface_normal_point_from
+                  .get_surfaces_touching_dielectric()
+                  .emplace_back(record.first,
+                                nullptr, // Temporarily, the neighbor surface is
+                                         // not connected.
+                                &subdomain_surface_normal_point_from,
+                                true,
+                                is_dirichlet_surface,
+                                dirichlet_voltage);
+                surface_of_from_subdomain =
+                  &subdomain_surface_normal_point_from
+                     .get_surfaces_touching_dielectric()
+                     .back();
+                break;
+              }
+              case SubdomainType::VoltageConductor: {
+                subdomain_surface_normal_point_from
+                  .get_surfaces_touching_voltage_conductor()
+                  .emplace_back(record.first,
+                                nullptr, // Temporarily, the neighbor surface is
+                                         // not connected.
+                                &subdomain_surface_normal_point_from,
+                                true,
+                                is_dirichlet_surface,
+                                dirichlet_voltage);
+                surface_of_from_subdomain =
+                  &subdomain_surface_normal_point_from
+                     .get_surfaces_touching_voltage_conductor()
+                     .back();
+                break;
+              }
+              case SubdomainType::FloatingConductor: {
+                subdomain_surface_normal_point_from
+                  .get_surfaces_touching_floating_conductor()
+                  .emplace_back(record.first,
+                                nullptr, // Temporarily, the neighbor surface is
+                                         // not connected.
+                                &subdomain_surface_normal_point_from,
+                                true,
+                                is_dirichlet_surface,
+                                dirichlet_voltage);
+                surface_of_from_subdomain =
+                  &subdomain_surface_normal_point_from
+                     .get_surfaces_touching_floating_conductor()
+                     .back();
+                break;
+              }
+          }
 
         // Create a surface object for the "to" subdomain.
+        // Here we check its neighboring subdomain type and add the surface to
+        // corresponding list in the current subdomain.
+        switch (subdomain_surface_normal_point_from.get_type())
+          {
+            case SubdomainType::SurroundingSpace:
+              case SubdomainType::Dielectric: {
+                subdomain_surface_normal_point_to
+                  .get_surfaces_touching_dielectric()
+                  .emplace_back(record.first,
+                                nullptr, // Temporarily, the neighbor surface is
+                                         // not connected.
+                                &subdomain_surface_normal_point_to,
+                                false,
+                                is_dirichlet_surface,
+                                dirichlet_voltage);
+                surface_of_to_subdomain = &subdomain_surface_normal_point_to
+                                             .get_surfaces_touching_dielectric()
+                                             .back();
+                break;
+              }
+              case SubdomainType::VoltageConductor: {
+                subdomain_surface_normal_point_to
+                  .get_surfaces_touching_voltage_conductor()
+                  .emplace_back(record.first,
+                                nullptr, // Temporarily, the neighbor surface is
+                                         // not connected.
+                                &subdomain_surface_normal_point_to,
+                                false,
+                                is_dirichlet_surface,
+                                dirichlet_voltage);
+                surface_of_to_subdomain =
+                  &subdomain_surface_normal_point_to
+                     .get_surfaces_touching_voltage_conductor()
+                     .back();
+                break;
+              }
+              case SubdomainType::FloatingConductor: {
+                subdomain_surface_normal_point_to
+                  .get_surfaces_touching_floating_conductor()
+                  .emplace_back(record.first,
+                                nullptr, // Temporarily, the neighbor surface is
+                                         // not connected.
+                                &subdomain_surface_normal_point_to,
+                                false,
+                                is_dirichlet_surface,
+                                dirichlet_voltage);
+                surface_of_to_subdomain =
+                  &subdomain_surface_normal_point_to
+                     .get_surfaces_touching_floating_conductor()
+                     .back();
+                break;
+              }
+          }
+
+        // Connect neighboring surfaces.
+        surface_of_from_subdomain->set_neighbor_surface(
+          surface_of_to_subdomain);
+        surface_of_to_subdomain->set_neighbor_surface(
+          surface_of_from_subdomain);
       }
   }
 } // namespace HierBEM
