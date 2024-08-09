@@ -20,7 +20,7 @@
 #include <fstream>
 
 #include "debug_tools.h"
-#include "mapping_q_generic_ext.h"
+#include "mapping/mapping_q_generic_ext.h"
 
 using namespace dealii;
 

@@ -16,10 +16,25 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/types.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/fe/fe.h>
+#include <deal.II/fe/fe_data.h>
+#include <deal.II/fe/fe_dgq.h>
+#include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_tools.h>
+#include <deal.II/fe/fe_values.h>
+
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/manifold_lib.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_description.h>
+
+#include <deal.II/lac/vector.h>
+
+#include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/vector_tools_interpolate.templates.h>
 
 #include <gmsh.h>
 
@@ -30,9 +45,14 @@
 #include <utility>
 #include <vector>
 
+#include "aca_plus.hcu"
 #include "config.h"
+#include "ddm_efield_global_preconditioner.h"
+#include "ddm_efield_matrix.h"
 #include "gmsh_manipulation.h"
 #include "grid_out_ext.h"
+#include "mapping/mapping_info.h"
+#include "subdomain_steklov_poincare_hmatrix.h"
 
 namespace HierBEM
 {
@@ -446,7 +466,7 @@ namespace HierBEM
   class DDMEfield
   {
   public:
-    DDMEfield() = default;
+    DDMEfield();
 
     ~DDMEfield();
 
@@ -484,7 +504,32 @@ namespace HierBEM
     initialize_parameters();
 
     void
+    initialize_manifolds_and_mappings();
+
+    /**
+     * Interpolate Dirichlet boundary conditions on dielectric surfaces or
+     * interfaces.
+     *
+     * @pre
+     * @post
+     */
+    void
+    interpolate_surface_dirichlet_bc();
+
+    void
     create_efield_subdomains_and_surfaces();
+
+    void
+    setup_system();
+
+    void
+    assemble_system();
+
+    void
+    solve();
+
+    void
+    output_results();
 
     const SubdomainTopology<dim, spacedim> &
     get_subdomain_topology() const
@@ -502,6 +547,51 @@ namespace HierBEM
     SubdomainTopology<dim, spacedim>     subdomain_topology;
     EfieldSubdomainDescription<spacedim> domain;
     Triangulation<dim, spacedim>         tria;
+    /**
+     * This @p std::map associates mapping orders and mapping objects.
+     */
+    std::map<unsigned int, MappingInfo<dim, spacedim> *> mappings;
+
+    /**
+     * Dirichlet space on the whole skeleton.
+     */
+    DoFHandler<dim, spacedim> dof_handler_for_dirichlet_space;
+    /**
+     * Neumann space on the whole skeleton.
+     */
+    DoFHandler<dim, spacedim> dof_handler_for_neumann_space;
+
+    /**
+     * Finite element order for the Dirichlet space.
+     */
+    unsigned int fe_order_for_dirichlet_space;
+
+    /**
+     * Finite element order for the Neumann space.
+     */
+    unsigned int fe_order_for_neumann_space;
+
+    /**
+     * Finite element \f$H^{\frac{1}{2}+s}\f$ for the Dirichlet space. At
+     * present, it is implemented as a continuous Lagrange space.
+     */
+    FE_Q<dim, spacedim> fe_for_dirichlet_space;
+    /**
+     * Finite element \f$H^{-\frac{1}{2}+s}\f$ for the Neumann space. At
+     * present, it is implemented as a discontinuous Lagrange space.
+     */
+    FE_DGQ<dim, spacedim> fe_for_neumann_space;
+
+    DDMEfieldMatrix<spacedim, double>               system_matrix;
+    DDMEfieldGlobalPreconditioner<spacedim, double> system_preconditioner;
+    Vector<double>                                  rhs_for_transmission_eqn;
+    Vector<double> rhs_for_charge_neutrality_eqn;
+
+    /**
+     * Dirichlet boundary condition data on all DoFs in the associated DoF
+     * handler.
+     */
+    Vector<double> dirichlet_bc;
 
     /**
      * Map volume entity tag to subdomain type.
@@ -525,6 +615,14 @@ namespace HierBEM
      * each surface is the same as the entity tag in Gmsh.
      */
     std::map<EntityTag, types::manifold_id> manifold_description;
+    /**
+     * Map @p manifold_id to the pointer of a Manifold object.
+     */
+    std::map<types::manifold_id, Manifold<dim, spacedim> *> manifolds;
+    /**
+     * Map @p manifold_id to mapping order.
+     */
+    std::map<types::manifold_id, unsigned int> manifold_id_to_mapping_order;
   };
 
 
@@ -564,11 +662,34 @@ namespace HierBEM
 
 
   template <int dim, int spacedim>
+  DDMEfield<dim, spacedim>::DDMEfield()
+    : fe_order_for_dirichlet_space(1)
+    , fe_order_for_neumann_space(0)
+    , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
+    , fe_for_neumann_space(fe_order_for_neumann_space)
+  {}
+
+
+  template <int dim, int spacedim>
   DDMEfield<dim, spacedim>::~DDMEfield()
   {
+    // Release function objects defining Dirichlet boundary conditions on
+    // dielectric surfaces or interfaces.
     for (auto &d : dirichlet_boundary_conditions)
       {
         delete d.second;
+      }
+
+    // Release mapping information objects.
+    for (auto &m : mappings)
+      {
+        delete m.second;
+      }
+
+    // Release manifold objects.
+    for (auto &m : manifolds)
+      {
+        delete m.second;
       }
   }
 
@@ -786,14 +907,6 @@ namespace HierBEM
 
     gmsh::clear();
     gmsh::finalize();
-
-#if ENABLE_DEBUG == 1
-    // Write out the mesh to check if elementary tags have been assigned to
-    // material ids.
-    std::ofstream out("output.msh");
-    write_msh_correct<dim, spacedim>(tria, out);
-    out.close();
-#endif
   }
 
   template <int dim, int spacedim>
@@ -819,18 +932,114 @@ namespace HierBEM
     permittivities[2] = 2;
     permittivities[3] = 4;
 
+    // Assign Dirichlet boundary condition on dielectric boundary or interface.
     conductor_voltages[1] = 10;
 
-    dirichlet_boundary_conditions[11] =
-      new Functions::ConstantFunction<spacedim, double>(0);
+    std::string                   symbolic_variables = "x,y,z";
+    std::map<std::string, double> symbolic_constants;
+    symbolic_constants["pi"] = numbers::PI;
+    symbolic_constants["e"]  = numbers::E;
+
+    dirichlet_boundary_conditions[11] = new FunctionParser<spacedim>(1);
+    std::string expr                  = "sin(x) * cos(z)";
+    static_cast<FunctionParser<spacedim> *>(dirichlet_boundary_conditions[11])
+      ->initialize(symbolic_variables, expr, symbolic_constants);
+
+    dirichlet_boundary_conditions[6] = new FunctionParser<spacedim>(1);
+    expr                             = "cos(x) * sin(z)";
+    static_cast<FunctionParser<spacedim> *>(dirichlet_boundary_conditions[6])
+      ->initialize(symbolic_variables, expr, symbolic_constants);
 
     // Spherical manifold
     manifold_description[1] = 1;
     manifold_description[2] = 1;
+
     // Flat manifold
     for (unsigned int i = 3; i <= 13; i++)
       {
         manifold_description[i] = 0;
+      }
+
+    // We use the first order mapping for the flat manifold and the second order
+    // mapping for the spherical manifold.
+    manifold_id_to_mapping_order[0] = 1;
+    manifold_id_to_mapping_order[1] = 2;
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  DDMEfield<dim, spacedim>::initialize_manifolds_and_mappings()
+  {
+    // Assign manifold ids to all cells in the triangulation. Because there are
+    // no physical groups defined, the manifold ids cannot be read from the MSH
+    // file and have to be initialized here.
+    for (auto &cell : tria.active_cell_iterators())
+      {
+        cell->set_all_manifold_ids(manifold_description[cell->material_id()]);
+      }
+
+    // Create and associate manifold objects.
+    for (const auto &desc : manifold_description)
+      {
+        switch (desc.second)
+          {
+              case 1: {
+                typename decltype(manifolds)::iterator pos =
+                  manifolds.find(desc.second);
+
+                if (pos == manifolds.end())
+                  {
+                    // Define a 2D spherical manifold centered at the origin, if
+                    // it has not been defined before.
+                    manifolds[desc.second] =
+                      new SphericalManifold<dim, spacedim>(
+                        Point<spacedim>(0., 0., 0.));
+                    tria.set_manifold(desc.second, *manifolds[desc.second]);
+                  }
+
+                break;
+              }
+          }
+      }
+
+    // Create mapping objects.
+    for (const auto &record : manifold_id_to_mapping_order)
+      {
+        typename decltype(mappings)::iterator pos =
+          mappings.find(record.second);
+
+        if (pos == mappings.end())
+          {
+            // Create the mapping object with the specified order, if it has not
+            // been created before.
+            mappings[record.second] =
+              new MappingInfo<dim, spacedim>(record.second);
+          }
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  DDMEfield<dim, spacedim>::interpolate_surface_dirichlet_bc()
+  {
+    dirichlet_bc.reinit(dof_handler_for_dirichlet_space.n_dofs());
+
+    // Because each surface may be assigned a different mapping object, here we
+    // interpolate the Dirichlet boundary condition vector surface by surface.
+    for (const auto &bc : dirichlet_boundary_conditions)
+      {
+        std::map<types::material_id, const Function<spacedim, double> *>
+          single_pair_map;
+        single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
+
+        VectorTools::interpolate_based_on_material_id(
+          mappings[manifold_id_to_mapping_order[manifold_description[bc.first]]]
+            ->get_mapping(),
+          dof_handler_for_dirichlet_space,
+          single_pair_map,
+          dirichlet_bc);
       }
   }
 
@@ -1029,6 +1238,51 @@ namespace HierBEM
         surface_of_to_subdomain->set_neighbor_surface(
           surface_of_from_subdomain);
       }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  DDMEfield<dim, spacedim>::setup_system()
+  {
+    // Create subdomain and surface objects.
+    create_efield_subdomains_and_surfaces();
+
+    initialize_manifolds_and_mappings();
+
+    //#if ENABLE_DEBUG == 1
+    //    // Refine the mesh to see if the assigned spherical manifold works.
+    //    tria.refine_global(1);
+    //    // Write out the mesh to check if elementary tags have been assigned
+    //    to
+    //    // material ids.
+    //    std::ofstream out("output.msh");
+    //    write_msh_correct<dim, spacedim>(tria, out);
+    //    out.close();
+    //#endif
+
+    // Initialize DoF handlers.
+    dof_handler_for_dirichlet_space.reinit(tria);
+    dof_handler_for_dirichlet_space.distribute_dofs(fe_for_dirichlet_space);
+    dof_handler_for_neumann_space.reinit(tria);
+    dof_handler_for_neumann_space.distribute_dofs(fe_for_neumann_space);
+
+    interpolate_surface_dirichlet_bc();
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  DDMEfield<dim, spacedim>::output_results()
+  {
+    // Write the Dirichlet boundary condition.
+    std::ofstream          vtk_output("out.vtk");
+    DataOut<dim, spacedim> data_out;
+    data_out.add_data_vector(dof_handler_for_dirichlet_space,
+                             dirichlet_bc,
+                             "dirichlet_bc");
+    data_out.build_patches();
+    data_out.write_vtk(vtk_output);
   }
 } // namespace HierBEM
 

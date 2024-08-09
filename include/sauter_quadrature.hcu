@@ -41,7 +41,7 @@
 #include "cu_qgauss.hcu"
 #include "debug_tools.hcu"
 #include "hmatrix.h"
-#include "mapping_q_generic_ext.h"
+#include "mapping/mapping_q_generic_ext.h"
 #include "sauter_quadrature_tools.h"
 
 namespace HierBEM
@@ -6076,8 +6076,8 @@ namespace HierBEM
     {
       const std::thread::id current_thread_id = std::this_thread::get_id();
       deallog << "Consumer thread " << current_thread_id << " for "
-                << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
-                << " starts..." << std::endl;
+              << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
+              << " starts..." << std::endl;
 #if ENABLE_NVTX == 1
       std::string nvtx_thread_name(std::string("consumer thread for ") +
                                    std::string(cell_neighboring_type_name(
@@ -6110,8 +6110,8 @@ namespace HierBEM
 
 
       deallog << "Consumer thread " << current_thread_id << " for "
-                << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
-                << " exits..." << std::endl;
+              << cell_neighboring_type_name(ring_buffer.cell_neighboring_type)
+              << " exits..." << std::endl;
     }
 
     /**

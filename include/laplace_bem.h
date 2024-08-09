@@ -65,7 +65,7 @@
 #include "hmatrix_symm.h"
 #include "hmatrix_symm_preconditioner.h"
 #include "laplace_kernels.hcu"
-#include "mapping_q_generic_ext.h"
+#include "mapping/mapping_q_generic_ext.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
 #include "triangulation_tools.h"

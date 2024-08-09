@@ -42,7 +42,7 @@
 #include "cu_table.hcu"
 #include "generic_functors.h"
 #include "lapack_full_matrix_ext.h"
-#include "mapping_q_generic_ext.h"
+#include "mapping/mapping_q_generic_ext.h"
 
 namespace HierBEM
 {

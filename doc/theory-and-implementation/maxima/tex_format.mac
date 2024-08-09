@@ -63,4 +63,11 @@ GenDisplayTex(expr) :=
         printf(true, WrapDisplayTex(cleaned_tex_str))
        )$
 
+PrintEquationList(equations) :=
+block(
+  for eq in equations do (
+    print(eq)
+    )
+  )$
+
 ttyoff : false$
