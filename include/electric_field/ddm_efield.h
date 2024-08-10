@@ -42,6 +42,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -49,6 +50,7 @@
 #include "config.h"
 #include "ddm_efield_global_preconditioner.h"
 #include "ddm_efield_matrix.h"
+#include "dof_tools_ext.h"
 #include "gmsh_manipulation.h"
 #include "grid_out_ext.h"
 #include "mapping/mapping_info.h"
@@ -518,6 +520,14 @@ namespace HierBEM
 
     void
     create_efield_subdomains_and_surfaces();
+
+    /**
+     * Initialize \hmats for each dielectric subdomain.
+     * @pre
+     * @post
+     */
+    void
+    initialize_subdomain_hmatrices();
 
     void
     setup_system();
@@ -1243,6 +1253,170 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
+  DDMEfield<dim, spacedim>::initialize_subdomain_hmatrices()
+  {
+    auto &subdomain_hmatrices = system_matrix.get_subdomain_hmatrices();
+    // TODO 2024-08-10 At the moment, the memory should be reserved for this
+    // vector to prevent std::vector copying or moving data, because this class
+    // has no copy or move-copy constructor defined yet.
+    subdomain_hmatrices.reserve(domain.get_dielectric_subdomains().size());
+
+    // Iterate over each dielectric subdomain.
+    std::set<types::material_id> material_ids;
+    for (const auto subdomain : domain.get_dielectric_subdomains())
+      {
+        // Create an empty Steklov_poincare \hmat for the current subdomain.
+        subdomain_hmatrices.emplace_back();
+
+        // Generate selectors for Dirichlet space.
+        std::vector<bool> dof_selectors_for_dirichlet_space;
+        dof_selectors_for_dirichlet_space.resize(
+          dof_handler_for_dirichlet_space.n_dofs());
+
+        material_ids.clear();
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_dielectric())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_floating_conductor())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_voltage_conductor())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+
+        DoFToolsExt::extract_material_domain_dofs(
+          dof_handler_for_dirichlet_space,
+          material_ids,
+          dof_selectors_for_dirichlet_space);
+
+        // Generate selectors for Neumann space.
+        std::vector<bool> dof_selectors_for_neumann_space;
+        dof_selectors_for_neumann_space.resize(
+          dof_handler_for_neumann_space.n_dofs());
+
+        material_ids.clear();
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_dielectric())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_floating_conductor())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_voltage_conductor())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+
+        DoFToolsExt::extract_material_domain_dofs(
+          dof_handler_for_neumann_space,
+          material_ids,
+          dof_selectors_for_neumann_space);
+
+        subdomain_hmatrices.back().build_local_to_global_dof_maps(
+          dof_handler_for_dirichlet_space,
+          dof_handler_for_neumann_space,
+          dof_selectors_for_dirichlet_space,
+          dof_selectors_for_neumann_space);
+
+        // Get the number of effective DoF number for each DoF handler.
+        const unsigned int n_dofs_for_local_dirichlet_space =
+          subdomain_hmatrices.back()
+            .get_subdomain_to_skeleton_dirichlet_dof_index_map()
+            .size();
+        const unsigned int n_dofs_for_local_neumann_space =
+          subdomain_hmatrices.back()
+            .get_subdomain_to_skeleton_neumann_dof_index_map()
+            .size();
+
+        std::cout << "=== DoF information on subdomain "
+                  << subdomain->get_entity_tag() << "===" << std::endl;
+        std::cout << "Number of DoFs in local Dirichlet space: "
+                  << n_dofs_for_local_dirichlet_space << "\n";
+        std::cout << "Number of DoFs in local Neumann space: "
+                  << n_dofs_for_local_neumann_space << std::endl;
+      }
+
+    // Generate selectors for Dirichlet space on non-Dirichlet boundary.
+    std::vector<bool>
+      negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary;
+    negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary.resize(
+      dof_handler_for_dirichlet_space.n_dofs());
+
+    material_ids.clear();
+    for (const auto subdomain : domain.get_voltage_conductor_subdomains())
+      {
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_dielectric())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+      }
+
+    for (const auto subdomain : domain.get_floating_conductor_subdomains())
+      {
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_dielectric())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+      }
+
+    for (const auto subdomain : domain.get_dielectric_subdomains())
+      {
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_dielectric())
+          {
+            if (surface.get_is_dirichlet_boundary())
+              {
+                material_ids.insert(
+                  static_cast<types::material_id>(surface.get_entity_tag()));
+              }
+          }
+      }
+
+    DoFToolsExt::extract_material_domain_dofs(
+      dof_handler_for_dirichlet_space,
+      material_ids,
+      negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
+
+    system_matrix
+      .build_local_to_global_dirichlet_dof_map_on_nondirichlet_boundary(
+        dof_handler_for_dirichlet_space,
+        negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
+
+    std::cout
+      << "Number of DoFs in local Dirichlet space restricted to non-Dirichlet boundary: "
+      << system_matrix
+           .get_nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map()
+           .size()
+      << std::endl;
+  }
+
+
+  template <int dim, int spacedim>
+  void
   DDMEfield<dim, spacedim>::setup_system()
   {
     // Create subdomain and surface objects.
@@ -1254,8 +1428,7 @@ namespace HierBEM
     //    // Refine the mesh to see if the assigned spherical manifold works.
     //    tria.refine_global(1);
     //    // Write out the mesh to check if elementary tags have been assigned
-    //    to
-    //    // material ids.
+    //    // to material ids.
     //    std::ofstream out("output.msh");
     //    write_msh_correct<dim, spacedim>(tria, out);
     //    out.close();
@@ -1267,7 +1440,10 @@ namespace HierBEM
     dof_handler_for_neumann_space.reinit(tria);
     dof_handler_for_neumann_space.distribute_dofs(fe_for_neumann_space);
 
+    // Apply Dirichlet boundary conditions on dielectric surfaces.
     interpolate_surface_dirichlet_bc();
+
+    initialize_subdomain_hmatrices();
   }
 
 
@@ -1281,6 +1457,20 @@ namespace HierBEM
     data_out.add_data_vector(dof_handler_for_dirichlet_space,
                              dirichlet_bc,
                              "dirichlet_bc");
+
+    Vector<double> dofs_on_nondirichlet_boundary;
+    dofs_on_nondirichlet_boundary.reinit(
+      dof_handler_for_dirichlet_space.n_dofs());
+    for (auto index :
+         system_matrix
+           .get_nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map())
+      {
+        dofs_on_nondirichlet_boundary[index] = 1.0;
+      }
+    data_out.add_data_vector(dof_handler_for_dirichlet_space,
+                             dofs_on_nondirichlet_boundary,
+                             "nondirichlet");
+
     data_out.build_patches();
     data_out.write_vtk(vtk_output);
   }

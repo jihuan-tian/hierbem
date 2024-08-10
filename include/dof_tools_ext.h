@@ -80,19 +80,25 @@ namespace HierBEM
      * @param dof_handler
      * @param material_id_collection
      * @param selected_dofs
+     * @param reset_selectors_to_false If preset all selectors to false at the
+     * beginning of this function.
      */
     template <int dim, int spacedim>
     void
     extract_material_domain_dofs(
       const DoFHandler<dim, spacedim>    &dof_handler,
       const std::set<types::material_id> &material_ids,
-      std::vector<bool>                  &selected_dofs)
+      std::vector<bool>                  &selected_dofs,
+      const bool                          reset_selectors_to_false = true)
     {
       Assert(selected_dofs.size() == dof_handler.n_dofs(),
              ExcDimensionMismatch(selected_dofs.size(), dof_handler.n_dofs()));
 
-      // preset all values by false
-      std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), false);
+      if (reset_selectors_to_false)
+        {
+          // preset all values by false
+          std::fill_n(selected_dofs.begin(), dof_handler.n_dofs(), false);
+        }
 
       // Global DoF indices for the current cell.
       std::vector<types::global_dof_index> cell_dof_indices;
