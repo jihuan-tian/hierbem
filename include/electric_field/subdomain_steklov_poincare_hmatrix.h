@@ -30,7 +30,7 @@ namespace HierBEM
   public:
     template <int dim>
     void
-    build_local_to_global_dof_maps(
+    build_local_to_global_dof_maps_and_inverses(
       const DoFHandler<dim, spacedim> &dof_handler_for_dirichlet_space,
       const DoFHandler<dim, spacedim> &dof_handler_for_neumann_space,
       const std::vector<bool>         &dof_selectors_for_dirichlet_space,
@@ -200,6 +200,30 @@ namespace HierBEM
       return V_preconditioner;
     }
 
+    const std::vector<int> &
+    get_skeleton_to_subdomain_dirichlet_dof_index_map() const
+    {
+      return skeleton_to_subdomain_dirichlet_dof_index_map;
+    }
+
+    const std::vector<int> &
+    get_skeleton_to_subdomain_neumann_dof_index_map() const
+    {
+      return skeleton_to_subdomain_neumann_dof_index_map;
+    }
+
+    std::vector<int> &
+    get_skeleton_to_subdomain_dirichlet_dof_index_map()
+    {
+      return skeleton_to_subdomain_dirichlet_dof_index_map;
+    }
+
+    std::vector<int> &
+    get_skeleton_to_subdomain_neumann_dof_index_map()
+    {
+      return skeleton_to_subdomain_neumann_dof_index_map;
+    }
+
   private:
     HMatrixSymm<spacedim, Number>               D;
     HMatrix<spacedim, Number>                   K_with_mass_matrix;
@@ -209,7 +233,9 @@ namespace HierBEM
     std::vector<types::global_dof_index>
       subdomain_to_skeleton_dirichlet_dof_index_map;
     std::vector<types::global_dof_index>
-      subdomain_to_skeleton_neumann_dof_index_map;
+                     subdomain_to_skeleton_neumann_dof_index_map;
+    std::vector<int> skeleton_to_subdomain_dirichlet_dof_index_map;
+    std::vector<int> skeleton_to_subdomain_neumann_dof_index_map;
 
     ClusterTree<spacedim, Number>      ct_for_subdomain_dirichlet_space;
     ClusterTree<spacedim, Number>      ct_for_subdomain_neumann_space;
@@ -223,7 +249,7 @@ namespace HierBEM
   template <int dim>
   void
   SubdomainSteklovPoincareHMatrix<spacedim, Number>::
-    build_local_to_global_dof_maps(
+    build_local_to_global_dof_maps_and_inverses(
       const DoFHandler<dim, spacedim> &dof_handler_for_dirichlet_space,
       const DoFHandler<dim, spacedim> &dof_handler_for_neumann_space,
       const std::vector<bool>         &dof_selectors_for_dirichlet_space,
@@ -232,22 +258,42 @@ namespace HierBEM
     // Build the local-to-global DoF map for Dirichlet space.
     subdomain_to_skeleton_dirichlet_dof_index_map.reserve(
       dof_handler_for_dirichlet_space.n_dofs());
+    skeleton_to_subdomain_dirichlet_dof_index_map.resize(
+      dof_handler_for_dirichlet_space.n_dofs());
+    std::fill_n(skeleton_to_subdomain_dirichlet_dof_index_map.begin(),
+                skeleton_to_subdomain_dirichlet_dof_index_map.size(),
+                -1);
+
     for (types::global_dof_index i = 0;
          i < dof_handler_for_dirichlet_space.n_dofs();
          i++)
       {
         if (dof_selectors_for_dirichlet_space[i])
-          subdomain_to_skeleton_dirichlet_dof_index_map.push_back(i);
+          {
+            subdomain_to_skeleton_dirichlet_dof_index_map.push_back(i);
+            skeleton_to_subdomain_dirichlet_dof_index_map[i] =
+              subdomain_to_skeleton_dirichlet_dof_index_map.size() - 1;
+          }
       }
 
     subdomain_to_skeleton_neumann_dof_index_map.reserve(
       dof_handler_for_neumann_space.n_dofs());
+    skeleton_to_subdomain_neumann_dof_index_map.resize(
+      dof_handler_for_neumann_space.n_dofs());
+    std::fill_n(skeleton_to_subdomain_neumann_dof_index_map.begin(),
+                skeleton_to_subdomain_neumann_dof_index_map.size(),
+                -1);
+
     for (types::global_dof_index i = 0;
          i < dof_handler_for_neumann_space.n_dofs();
          i++)
       {
         if (dof_selectors_for_neumann_space[i])
-          subdomain_to_skeleton_neumann_dof_index_map.push_back(i);
+          {
+            subdomain_to_skeleton_neumann_dof_index_map.push_back(i);
+            skeleton_to_subdomain_neumann_dof_index_map[i] =
+              subdomain_to_skeleton_neumann_dof_index_map.size() - 1;
+          }
       }
   }
 } // namespace HierBEM

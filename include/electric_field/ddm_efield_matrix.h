@@ -44,7 +44,7 @@ namespace HierBEM
 
     template <int dim>
     void
-    build_local_to_global_dirichlet_dof_map_on_nondirichlet_boundary(
+    build_local_to_global_dirichlet_dof_map_and_inverse_on_nondirichlet_boundary(
       const DoFHandler<dim, spacedim> &dof_handler_for_dirichlet_space,
       const std::vector<bool>
         &negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
@@ -98,11 +98,24 @@ namespace HierBEM
       return nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map;
     }
 
+    const std::vector<int> &
+    get_skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map() const
+    {
+      return skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map;
+    }
+
+    std::vector<int> &
+    get_skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map()
+    {
+      return skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map;
+    }
+
   private:
     std::vector<SubdomainSteklovPoincareHMatrix<spacedim, Number>>
       subdomain_hmatrices;
     std::vector<types::global_dof_index>
-      nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map;
+                     nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map;
+    std::vector<int> skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map;
     std::vector<SubdomainHMatrixForTransmissionEqn<spacedim, Number>>
       hmatrices_for_transmission_eqn;
     std::vector<SubdomainHMatrixForChargeNeutralityEqn<spacedim, Number>>
@@ -114,21 +127,33 @@ namespace HierBEM
   template <int dim>
   void
   DDMEfieldMatrix<spacedim, Number>::
-    build_local_to_global_dirichlet_dof_map_on_nondirichlet_boundary(
+    build_local_to_global_dirichlet_dof_map_and_inverse_on_nondirichlet_boundary(
       const DoFHandler<dim, spacedim> &dof_handler_for_dirichlet_space,
       const std::vector<bool>
         &negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary)
   {
     nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map.reserve(
       dof_handler_for_dirichlet_space.n_dofs());
+    skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map.resize(
+      dof_handler_for_dirichlet_space.n_dofs());
+    std::fill_n(
+      skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map.begin(),
+      skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map.size(),
+      -1);
+
     for (types::global_dof_index i = 0;
          i < dof_handler_for_dirichlet_space.n_dofs();
          i++)
       {
         if (!negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary
               [i])
-          nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map.push_back(
-            i);
+          {
+            nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map.push_back(
+              i);
+            skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map[i] =
+              nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map.size() -
+              1;
+          }
       }
   }
 } // namespace HierBEM

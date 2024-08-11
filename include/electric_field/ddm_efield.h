@@ -1332,7 +1332,7 @@ namespace HierBEM
           material_ids,
           dof_selectors_for_neumann_space);
 
-        subdomain_hmatrices.back().build_local_to_global_dof_maps(
+        subdomain_hmatrices.back().build_local_to_global_dof_maps_and_inverses(
           dof_handler_for_dirichlet_space,
           dof_handler_for_neumann_space,
           dof_selectors_for_dirichlet_space,
@@ -1402,7 +1402,7 @@ namespace HierBEM
       negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
 
     system_matrix
-      .build_local_to_global_dirichlet_dof_map_on_nondirichlet_boundary(
+      .build_local_to_global_dirichlet_dof_map_and_inverse_on_nondirichlet_boundary(
         dof_handler_for_dirichlet_space,
         negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
 
