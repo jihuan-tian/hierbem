@@ -348,6 +348,7 @@ namespace HierBEM
             else
               {
                 // This case cannot happen.
+                surface_orientation = 0;
                 Assert(false, ExcInternalError());
               }
           }

@@ -624,9 +624,6 @@ namespace HierBEM
    * @param ky_mapping
    * @param kx_mapping_data
    * @param ky_mapping_data
-   * @param map_from_test_space_mesh_to_volume_mesh
-   * @param map_from_trial_space_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param sauter_quad_rule
    * @param target_full_matrix
    */
@@ -646,15 +643,8 @@ namespace HierBEM
     MappingQGenericExt<dim, spacedim> &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_test_space_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_trial_space_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const SauterQuadratureRule<dim>      &sauter_quad_rule,
-    MatrixType                           &target_full_matrix)
+    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
+    MatrixType                                            &target_full_matrix)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -739,13 +729,6 @@ namespace HierBEM
               const typename DoFHandler<dim, spacedim>::active_cell_iterator &,
               const MappingQGenericExt<dim, spacedim> &,
               const MappingQGenericExt<dim, spacedim> &,
-              const std::map<
-                typename Triangulation<dim, spacedim>::cell_iterator,
-                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-              const std::map<
-                typename Triangulation<dim, spacedim>::cell_iterator,
-                typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-              const BEMTools::DetectCellNeighboringTypeMethod,
               const BEMValues<dim, spacedim, RangeNumberType> &,
               PairCellWiseScratchData<dim, spacedim, RangeNumberType> &,
               PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &,
@@ -756,9 +739,6 @@ namespace HierBEM
             std::placeholders::_1,
             std::cref(kx_mapping),
             std::cref(ky_mapping),
-            std::cref(map_from_test_space_mesh_to_volume_mesh),
-            std::cref(map_from_trial_space_mesh_to_volume_mesh),
-            method_for_cell_neighboring_type,
             std::cref(bem_values),
             std::placeholders::_2,
             std::placeholders::_3,
@@ -797,9 +777,6 @@ namespace HierBEM
    * @param ky_mapping
    * @param kx_mapping_data
    * @param ky_mapping_data
-   * @param map_from_test_space_mesh_to_volume_mesh
-   * @param map_from_trial_space_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param sauter_quad_rule
    * @param target_full_matrix
    */
@@ -819,15 +796,8 @@ namespace HierBEM
     MappingQGenericExt<dim, spacedim> &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_test_space_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_trial_space_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const SauterQuadratureRule<dim>      &sauter_quad_rule,
-    MatrixType                           &target_full_matrix)
+    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
+    MatrixType                                            &target_full_matrix)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -897,20 +867,16 @@ namespace HierBEM
         for (const auto &f :
              dof_handler_for_trial_space.active_cell_iterators())
           {
-            sauter_quadrature_on_one_pair_of_cells(
-              kernel,
-              factor,
-              e,
-              f,
-              kx_mapping,
-              ky_mapping,
-              map_from_test_space_mesh_to_volume_mesh,
-              map_from_trial_space_mesh_to_volume_mesh,
-              method_for_cell_neighboring_type,
-              bem_values,
-              scratch_data,
-              per_task_data,
-              true);
+            sauter_quadrature_on_one_pair_of_cells(kernel,
+                                                   factor,
+                                                   e,
+                                                   f,
+                                                   kx_mapping,
+                                                   ky_mapping,
+                                                   bem_values,
+                                                   scratch_data,
+                                                   per_task_data,
+                                                   true);
 
             copy_pair_of_cells_local_to_global_for_bem_full_matrix(
               per_task_data, target_full_matrix);
@@ -1367,7 +1333,7 @@ namespace HierBEM
     /**
      * Iterate over each target point.
      */
-    const unsigned int      n_target_points = target_point_list.size();
+    const unsigned int n_target_points = target_point_list.size();
 
     for (unsigned int i = 0; i < n_target_points; i++)
       {

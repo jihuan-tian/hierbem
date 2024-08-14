@@ -35,8 +35,8 @@ struct CmdOpts
   RefineType   refine_type;
   unsigned int min_refines;
   unsigned int max_refines;
-  double boundary_rtol;
-  bool export_mesh;
+  double       boundary_rtol;
+  bool         export_mesh;
 };
 
 CmdOpts
@@ -80,10 +80,10 @@ parse_cmdline(int argc, char *argv[])
       std::exit(EXIT_FAILURE);
     }
 
-  opts.min_refines = vm["min-refines"].as<unsigned int>();
-  opts.max_refines = vm["max-refines"].as<unsigned int>();
+  opts.min_refines   = vm["min-refines"].as<unsigned int>();
+  opts.max_refines   = vm["max-refines"].as<unsigned int>();
   opts.boundary_rtol = vm["boundary-rtol"].as<double>();
-  opts.export_mesh = vm["export-mesh"].as<bool>();
+  opts.export_mesh   = vm["export-mesh"].as<bool>();
 
   return opts;
 }
@@ -284,13 +284,16 @@ main(int argc, char *argv[])
         }
       else
         {
-          refine_boundary_mesh_for_two_spheres(tria, inter_distance, radius, opts.boundary_rtol);
+          refine_boundary_mesh_for_two_spheres(tria,
+                                               inter_distance,
+                                               radius,
+                                               opts.boundary_rtol);
         }
 
-      if(opts.export_mesh)
+      if (opts.export_mesh)
         {
           auto filename = std::string("two-spheres-refine-") +
-                            std::to_string(i + 1) + std::string(".vtk");
+                          std::to_string(i + 1) + std::string(".vtk");
           export_mesh_to_vtk(tria, filename);
         }
 
@@ -387,9 +390,6 @@ main(int argc, char *argv[])
         ky_mapping,
         *kx_mapping_data,
         *ky_mapping_data,
-        map_from_surface_mesh_to_volume_mesh,
-        map_from_surface_mesh_to_volume_mesh,
-        HierBEM::BEMTools::DetectCellNeighboringTypeMethod::SameTriangulations,
         true);
       timer.stop();
       print_wall_time(std::cout, timer, "assemble H-matrix V");

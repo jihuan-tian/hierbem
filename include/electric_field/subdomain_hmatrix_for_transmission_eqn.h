@@ -16,6 +16,15 @@ namespace HierBEM
   class SubdomainHMatrixForTransmissionEqn
   {
   public:
+    SubdomainHMatrixForTransmissionEqn() = default;
+
+    SubdomainHMatrixForTransmissionEqn(
+      SubdomainSteklovPoincareHMatrix<spacedim, Number> *S,
+      std::vector<types::global_dof_index>
+        *nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map,
+      std::vector<int>
+        *skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map);
+
     /**
      * Calculate \hmatrix/vector multiplication as \f$y = y + M \cdot x\f$.
      *
@@ -38,7 +47,26 @@ namespace HierBEM
 
   private:
     SubdomainSteklovPoincareHMatrix<spacedim, Number> *S;
+    std::vector<types::global_dof_index>
+                     *nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map;
+    std::vector<int> *skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map;
   };
+
+
+  template <int spacedim, typename Number>
+  SubdomainHMatrixForTransmissionEqn<spacedim, Number>::
+    SubdomainHMatrixForTransmissionEqn(
+      SubdomainSteklovPoincareHMatrix<spacedim, Number> *S,
+      std::vector<types::global_dof_index>
+        *nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map,
+      std::vector<int>
+        *skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map)
+    : S(S)
+    , nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map(
+        nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map)
+    , skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map(
+        skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map)
+  {}
 } // namespace HierBEM
 
 

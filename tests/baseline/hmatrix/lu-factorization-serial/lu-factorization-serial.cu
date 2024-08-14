@@ -252,9 +252,6 @@ main()
         ky_mapping,
         *kx_mapping_data,
         *ky_mapping_data,
-        map_from_surface_mesh_to_volume_mesh,
-        map_from_surface_mesh_to_volume_mesh,
-        HierBEM::BEMTools::DetectCellNeighboringTypeMethod::SameTriangulations,
         false);
       timer.stop();
       print_wall_time(std::cout, timer, "assemble H-matrix V");

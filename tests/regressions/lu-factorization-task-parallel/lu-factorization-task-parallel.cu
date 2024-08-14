@@ -232,29 +232,25 @@ main(int argc, char *argv[])
 
   // Assemble the H-matrix using ACA.
   Timer timer;
-  fill_hmatrix_with_aca_plus_smp(
-    MultithreadInfo::n_threads(),
-    V,
-    ACAConfig(max_rank, epsilon, eta),
-    single_layer_kernel,
-    1.0,
-    dof_to_cell_topo,
-    dof_to_cell_topo,
-    SauterQuadratureRule<dim>(5, 4, 4, 3),
-    dof_handler,
-    dof_handler,
-    nullptr,
-    nullptr,
-    ct.get_internal_to_external_dof_numbering(),
-    ct.get_internal_to_external_dof_numbering(),
-    kx_mapping,
-    ky_mapping,
-    *kx_mapping_data,
-    *ky_mapping_data,
-    map_from_surface_mesh_to_volume_mesh,
-    map_from_surface_mesh_to_volume_mesh,
-    HierBEM::BEMTools::DetectCellNeighboringTypeMethod::SameTriangulations,
-    false);
+  fill_hmatrix_with_aca_plus_smp(MultithreadInfo::n_threads(),
+                                 V,
+                                 ACAConfig(max_rank, epsilon, eta),
+                                 single_layer_kernel,
+                                 1.0,
+                                 dof_to_cell_topo,
+                                 dof_to_cell_topo,
+                                 SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                 dof_handler,
+                                 dof_handler,
+                                 nullptr,
+                                 nullptr,
+                                 ct.get_internal_to_external_dof_numbering(),
+                                 ct.get_internal_to_external_dof_numbering(),
+                                 kx_mapping,
+                                 ky_mapping,
+                                 *kx_mapping_data,
+                                 *ky_mapping_data,
+                                 false);
   timer.stop();
   print_wall_time(std::cout, timer, "assemble H-matrix V");
 

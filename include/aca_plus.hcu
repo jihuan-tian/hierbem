@@ -176,21 +176,21 @@ namespace HierBEM
               ky_dof_i2e_numbering[column_dof_indices[j]]);
 
         row_vector(j) =
-          sauter_quadrature_on_one_pair_of_dofs(kernel,
-                                                kernel_factor,
-                                                i_global_dof_index,
-                                                j_global_dof_index,
-                                                kx_dof_to_cell_topo,
-                                                ky_dof_to_cell_topo,
-                                                bem_values,
-                                                bem_values_gpu,
-                                                kx_dof_handler,
-                                                ky_dof_handler,
-                                                kx_mapping,
-                                                ky_mapping,
-                                                scratch_data,
-                                                scratch_data_gpu,
-                                                copy_data);
+          sauter_quadrature_on_one_pair_of_far_field_dofs(kernel,
+                                                          kernel_factor,
+                                                          i_global_dof_index,
+                                                          j_global_dof_index,
+                                                          kx_dof_to_cell_topo,
+                                                          ky_dof_to_cell_topo,
+                                                          bem_values,
+                                                          bem_values_gpu,
+                                                          kx_dof_handler,
+                                                          ky_dof_handler,
+                                                          kx_mapping,
+                                                          ky_mapping,
+                                                          scratch_data,
+                                                          scratch_data_gpu,
+                                                          copy_data);
       }
   }
 
@@ -220,9 +220,6 @@ namespace HierBEM
    * @param ky_dof_i2e_numbering
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    */
@@ -286,21 +283,21 @@ namespace HierBEM
               ky_dof_i2e_numbering[column_dof_indices[j]]);
 
         row_vector(j) =
-          sauter_quadrature_on_one_pair_of_dofs(kernel,
-                                                kernel_factor,
-                                                i_global_dof_index,
-                                                j_global_dof_index,
-                                                kx_dof_to_cell_topo,
-                                                ky_dof_to_cell_topo,
-                                                bem_values,
-                                                bem_values_gpu,
-                                                kx_dof_handler,
-                                                ky_dof_handler,
-                                                kx_mapping,
-                                                ky_mapping,
-                                                scratch_data,
-                                                scratch_data_gpu,
-                                                copy_data);
+          sauter_quadrature_on_one_pair_of_far_field_dofs(kernel,
+                                                          kernel_factor,
+                                                          i_global_dof_index,
+                                                          j_global_dof_index,
+                                                          kx_dof_to_cell_topo,
+                                                          ky_dof_to_cell_topo,
+                                                          bem_values,
+                                                          bem_values_gpu,
+                                                          kx_dof_handler,
+                                                          ky_dof_handler,
+                                                          kx_mapping,
+                                                          ky_mapping,
+                                                          scratch_data,
+                                                          scratch_data_gpu,
+                                                          copy_data);
 
         row_vector(j) += stabilization_factor * mass_vmult_weq(row_dof_index) *
                          mass_vmult_weq(column_dof_indices[j]);
@@ -491,9 +488,6 @@ namespace HierBEM
    * @param ky_dof_i2e_numbering
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    */
@@ -553,19 +547,19 @@ namespace HierBEM
               kx_dof_i2e_numbering[row_dof_indices[i]]);
 
         col_vector(i) =
-          sauter_quadrature_on_one_pair_of_dofs(kernel,
-                                                kernel_factor,
-                                                i_global_dof_index,
-                                                j_global_dof_index,
-                                                kx_dof_to_cell_topo,
-                                                ky_dof_to_cell_topo,
-                                                bem_values,
-                                                bem_values_gpu,
-                                                kx_mapping,
-                                                ky_mapping,
-                                                scratch_data,
-                                                scratch_data_gpu,
-                                                copy_data);
+          sauter_quadrature_on_one_pair_of_far_field_dofs(kernel,
+                                                          kernel_factor,
+                                                          i_global_dof_index,
+                                                          j_global_dof_index,
+                                                          kx_dof_to_cell_topo,
+                                                          ky_dof_to_cell_topo,
+                                                          bem_values,
+                                                          bem_values_gpu,
+                                                          kx_mapping,
+                                                          ky_mapping,
+                                                          scratch_data,
+                                                          scratch_data_gpu,
+                                                          copy_data);
       }
   }
 
@@ -594,9 +588,6 @@ namespace HierBEM
    * @param ky_dof_i2e_numbering
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    */
@@ -657,18 +648,18 @@ namespace HierBEM
               kx_dof_i2e_numbering[row_dof_indices[i]]);
 
         col_vector(i) =
-          sauter_quadrature_on_one_pair_of_dofs(kernel,
-                                                kernel_factor,
-                                                i_global_dof_index,
-                                                j_global_dof_index,
-                                                kx_dof_to_cell_topo,
-                                                ky_dof_to_cell_topo,
-                                                bem_values_gpu,
-                                                kx_mapping,
-                                                ky_mapping,
-                                                scratch_data,
-                                                scratch_data_gpu,
-                                                copy_data);
+          sauter_quadrature_on_one_pair_of_far_field_dofs(kernel,
+                                                          kernel_factor,
+                                                          i_global_dof_index,
+                                                          j_global_dof_index,
+                                                          kx_dof_to_cell_topo,
+                                                          ky_dof_to_cell_topo,
+                                                          bem_values_gpu,
+                                                          kx_mapping,
+                                                          ky_mapping,
+                                                          scratch_data,
+                                                          scratch_data_gpu,
+                                                          copy_data);
 
         col_vector(i) += stabilization_factor *
                          mass_vmult_weq(row_dof_indices[i]) *
@@ -1027,9 +1018,6 @@ namespace HierBEM
    * @param ky_dof_i2e_numbering
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    * @return
@@ -1719,9 +1707,6 @@ namespace HierBEM
    * @param ky_dof_i2e_numbering
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    * @return
@@ -2245,9 +2230,6 @@ namespace HierBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    */
@@ -2895,9 +2877,6 @@ namespace HierBEM
    * @param ky_dof_i2e_numbering
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    */
@@ -5402,9 +5381,6 @@ namespace HierBEM
    * @param ky_map_from_local_to_full_dof_indices
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    * @param enable_build_symmetric_hmat
@@ -5435,13 +5411,6 @@ namespace HierBEM
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -5535,9 +5504,6 @@ namespace HierBEM
                                     bem_values_gpu,
                                     kx_mapping,
                                     ky_mapping,
-                                    map_from_kx_boundary_mesh_to_volume_mesh,
-                                    map_from_ky_boundary_mesh_to_volume_mesh,
-                                    method_for_cell_neighboring_type,
                                     scratch_data,
                                     scratch_data_gpu,
                                     copy_data);
@@ -5594,9 +5560,6 @@ namespace HierBEM
                                     bem_values_gpu,
                                     kx_mapping,
                                     ky_mapping,
-                                    map_from_kx_boundary_mesh_to_volume_mesh,
-                                    map_from_ky_boundary_mesh_to_volume_mesh,
-                                    method_for_cell_neighboring_type,
                                     scratch_data,
                                     scratch_data_gpu,
                                     copy_data);
@@ -5647,9 +5610,6 @@ namespace HierBEM
                             bem_values_gpu,
                             kx_mapping,
                             ky_mapping,
-                            map_from_kx_boundary_mesh_to_volume_mesh,
-                            map_from_ky_boundary_mesh_to_volume_mesh,
-                            method_for_cell_neighboring_type,
                             scratch_data,
                             scratch_data_gpu,
                             copy_data);
@@ -5815,9 +5775,6 @@ namespace HierBEM
    * @param ky_dof_i2e_numbering
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param scratch_data
    * @param copy_data
    * @param enable_build_symmetric_hmat
@@ -5850,13 +5807,6 @@ namespace HierBEM
     const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
     const MappingQGenericExt<dim, spacedim>    &kx_mapping,
     const MappingQGenericExt<dim, spacedim>    &ky_mapping,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -5942,9 +5892,6 @@ namespace HierBEM
                                     bem_values_gpu,
                                     kx_mapping,
                                     ky_mapping,
-                                    map_from_kx_boundary_mesh_to_volume_mesh,
-                                    map_from_ky_boundary_mesh_to_volume_mesh,
-                                    method_for_cell_neighboring_type,
                                     scratch_data,
                                     scratch_data_gpu,
                                     copy_data);
@@ -6008,9 +5955,6 @@ namespace HierBEM
                                     bem_values_gpu,
                                     kx_mapping,
                                     ky_mapping,
-                                    map_from_kx_boundary_mesh_to_volume_mesh,
-                                    map_from_ky_boundary_mesh_to_volume_mesh,
-                                    method_for_cell_neighboring_type,
                                     scratch_data,
                                     scratch_data_gpu,
                                     copy_data);
@@ -6068,9 +6012,6 @@ namespace HierBEM
                             bem_values_gpu,
                             kx_mapping,
                             ky_mapping,
-                            map_from_kx_boundary_mesh_to_volume_mesh,
-                            map_from_ky_boundary_mesh_to_volume_mesh,
-                            method_for_cell_neighboring_type,
                             scratch_data,
                             scratch_data_gpu,
                             copy_data);
@@ -6220,9 +6161,6 @@ namespace HierBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param mass_matrix_scratch_data
    * @param scratch_data
    * @param copy_data
@@ -6251,17 +6189,10 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const MappingQGenericExt<dim, spacedim>         &kx_mapping,
+    const MappingQGenericExt<dim, spacedim>         &ky_mapping,
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
@@ -6349,9 +6280,6 @@ namespace HierBEM
                                     bem_values_gpu,
                                     kx_mapping,
                                     ky_mapping,
-                                    map_from_kx_boundary_mesh_to_volume_mesh,
-                                    map_from_ky_boundary_mesh_to_volume_mesh,
-                                    method_for_cell_neighboring_type,
                                     mass_matrix_scratch_data,
                                     scratch_data,
                                     scratch_data_gpu,
@@ -6409,9 +6337,6 @@ namespace HierBEM
                                     bem_values_gpu,
                                     kx_mapping,
                                     ky_mapping,
-                                    map_from_kx_boundary_mesh_to_volume_mesh,
-                                    map_from_ky_boundary_mesh_to_volume_mesh,
-                                    method_for_cell_neighboring_type,
                                     mass_matrix_scratch_data,
                                     scratch_data,
                                     scratch_data_gpu,
@@ -6460,9 +6385,6 @@ namespace HierBEM
                             bem_values_gpu,
                             kx_mapping,
                             ky_mapping,
-                            map_from_kx_boundary_mesh_to_volume_mesh,
-                            map_from_ky_boundary_mesh_to_volume_mesh,
-                            method_for_cell_neighboring_type,
                             mass_matrix_scratch_data,
                             scratch_data,
                             scratch_data_gpu,
@@ -6871,9 +6793,6 @@ namespace HierBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param enable_build_symmetric_hmat Flag indicating whether symmetric
    * \hmatrix will be built when the kernel function is symmetric.
    */
@@ -6982,9 +6901,6 @@ namespace HierBEM
    * @param ky_dof_i2e_numbering
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param enable_build_symmetric_hmat
    */
   template <int dim,
@@ -7233,9 +7149,6 @@ namespace HierBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param enable_build_symmetric_hmat Flag indicating whether symmetric
    * \hmatrix will be built when the kernel function is symmetric.
    */
@@ -7265,14 +7178,7 @@ namespace HierBEM
     const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
+    const bool enable_build_symmetric_hmat = false)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -7351,9 +7257,6 @@ namespace HierBEM
           ky_dof_i2e_numbering,
           kx_mapping,
           ky_mapping,
-          map_from_kx_boundary_mesh_to_volume_mesh,
-          map_from_ky_boundary_mesh_to_volume_mesh,
-          method_for_cell_neighboring_type,
           scratch_data,
           scratch_data_gpu,
           copy_data,
@@ -7429,14 +7332,7 @@ namespace HierBEM
     const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
+    const bool enable_build_symmetric_hmat = false)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -7517,9 +7413,6 @@ namespace HierBEM
           ky_dof_i2e_numbering,
           kx_mapping,
           ky_mapping,
-          map_from_kx_boundary_mesh_to_volume_mesh,
-          map_from_ky_boundary_mesh_to_volume_mesh,
-          method_for_cell_neighboring_type,
           scratch_data,
           scratch_data_gpu,
           copy_data,
@@ -7582,14 +7475,7 @@ namespace HierBEM
     const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
+    const bool enable_build_symmetric_hmat = false)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -7679,9 +7565,6 @@ namespace HierBEM
           ky_dof_i2e_numbering,
           kx_mapping,
           ky_mapping,
-          map_from_kx_boundary_mesh_to_volume_mesh,
-          map_from_ky_boundary_mesh_to_volume_mesh,
-          method_for_cell_neighboring_type,
           mass_matrix_scratch_data,
           scratch_data,
           scratch_data_gpu,
@@ -7733,9 +7616,6 @@ namespace HierBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param enable_build_symmetric_hmat
    */
   template <int dim,
@@ -7765,14 +7645,7 @@ namespace HierBEM
     const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
+    const bool enable_build_symmetric_hmat = false)
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca");
 #if ENABLE_NVTX == 1
@@ -7919,13 +7792,6 @@ namespace HierBEM
             const std::vector<types::global_dof_index> &,
             const MappingQGenericExt<dim, spacedim> &,
             const MappingQGenericExt<dim, spacedim> &,
-            const std::map<
-              typename Triangulation<dim, spacedim>::cell_iterator,
-              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-            const std::map<
-              typename Triangulation<dim, spacedim>::cell_iterator,
-              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-            const DetectCellNeighboringTypeMethod,
             const bool,
             const bool)>(
             HierBEM::CUDAWrappers::
@@ -7950,9 +7816,6 @@ namespace HierBEM
           std::cref(ky_dof_i2e_numbering),
           std::cref(kx_mapping),
           std::cref(ky_mapping),
-          std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-          std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-          method_for_cell_neighboring_type,
           kernel.is_symmetric(),
           enable_build_symmetric_hmat);
       }
@@ -8150,8 +8013,7 @@ namespace HierBEM
          * passed into the working function by non-const reference.
          *
          * For other variables to be captured like @p bem_values,
-         * @p kx/ky_dof_handler, * @p kx/ky_mapping and
-         * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+         * @p kx/ky_dof_handler and @p kx/ky_mapping, since they will be not
          * modified at all, they are captured by @p std::bind via const reference
          * and then passed to the working function by const reference.}
          */
@@ -8249,9 +8111,6 @@ namespace HierBEM
    * @param ky_mapping
    * @param kx_mapping_data
    * @param ky_mapping_data
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param enable_build_symmetric_hmat
    */
   template <int dim,
@@ -8283,14 +8142,7 @@ namespace HierBEM
     const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
+    const bool enable_build_symmetric_hmat = false)
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca with regularization");
 #if ENABLE_NVTX == 1
@@ -8439,13 +8291,6 @@ namespace HierBEM
             const std::vector<types::global_dof_index> &,
             const MappingQGenericExt<dim, spacedim> &,
             const MappingQGenericExt<dim, spacedim> &,
-            const std::map<
-              typename Triangulation<dim, spacedim>::cell_iterator,
-              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-            const std::map<
-              typename Triangulation<dim, spacedim>::cell_iterator,
-              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-            const DetectCellNeighboringTypeMethod,
             const bool,
             const bool)>(
             HierBEM::CUDAWrappers::
@@ -8470,9 +8315,6 @@ namespace HierBEM
           std::cref(ky_dof_i2e_numbering),
           std::cref(kx_mapping),
           std::cref(ky_mapping),
-          std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-          std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-          method_for_cell_neighboring_type,
           kernel.is_symmetric(),
           enable_build_symmetric_hmat);
       }
@@ -8701,8 +8543,7 @@ namespace HierBEM
          * passed into the working function by non-const reference.
          *
          * For other variables to be captured like @p bem_values,
-         * @p kx/ky_dof_handler, * @p kx/ky_mapping and
-         * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+         * @p kx/ky_dof_handler and @p kx/ky_mapping, since they will be not
          * modified at all, they are captured by @p std::bind via const reference
          * and then passed to the working function by const reference.}
          */
@@ -8800,9 +8641,6 @@ namespace HierBEM
    * @param ky_dof_handler
    * @param kx_mapping
    * @param ky_mapping
-   * @param map_from_kx_boundary_mesh_to_volume_mesh
-   * @param map_from_ky_boundary_mesh_to_volume_mesh
-   * @param method_for_cell_neighboring_type
    * @param enable_build_symmetric_hmat
    */
   template <int dim,
@@ -8834,14 +8672,7 @@ namespace HierBEM
     const MappingQGenericExt<dim, spacedim>               &ky_mapping,
     typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
     typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_kx_boundary_mesh_to_volume_mesh,
-    const std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-                   typename Triangulation<dim + 1, spacedim>::face_iterator>
-      &map_from_ky_boundary_mesh_to_volume_mesh,
-    const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-    const bool                            enable_build_symmetric_hmat = false)
+    const bool enable_build_symmetric_hmat = false)
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca with mass matrix");
 #if ENABLE_NVTX == 1
@@ -8992,13 +8823,6 @@ namespace HierBEM
             const std::vector<types::global_dof_index> &,
             const MappingQGenericExt<dim, spacedim> &,
             const MappingQGenericExt<dim, spacedim> &,
-            const std::map<
-              typename Triangulation<dim, spacedim>::cell_iterator,
-              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-            const std::map<
-              typename Triangulation<dim, spacedim>::cell_iterator,
-              typename Triangulation<dim + 1, spacedim>::face_iterator> &,
-            const DetectCellNeighboringTypeMethod,
             const bool,
             const bool)>(
             HierBEM::CUDAWrappers::
@@ -9025,9 +8849,6 @@ namespace HierBEM
           std::cref(ky_dof_i2e_numbering),
           std::cref(kx_mapping),
           std::cref(ky_mapping),
-          std::cref(map_from_kx_boundary_mesh_to_volume_mesh),
-          std::cref(map_from_ky_boundary_mesh_to_volume_mesh),
-          method_for_cell_neighboring_type,
           kernel.is_symmetric(),
           enable_build_symmetric_hmat);
       }
@@ -9225,8 +9046,7 @@ namespace HierBEM
          * passed into the working function by non-const reference.
          *
          * For other variables to be captured like @p bem_values,
-         * @p kx/ky_dof_handler, * @p kx/ky_mapping and
-         * @p map_from_kx/ky_bvoundary_mesh_to_volume_mesh, since they will be not
+         * @p kx/ky_dof_handler and @p kx/ky_mapping, since they will be not
          * modified at all, they are captured by @p std::bind via const reference
          * and then passed to the working function by const reference.}
          */

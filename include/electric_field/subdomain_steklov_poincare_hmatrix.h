@@ -224,6 +224,66 @@ namespace HierBEM
       return skeleton_to_subdomain_neumann_dof_index_map;
     }
 
+    const std::vector<types::global_dof_index> *
+    get_dof_e2i_numbering_for_subdomain_dirichlet_space() const
+    {
+      return dof_e2i_numbering_for_subdomain_dirichlet_space;
+    }
+
+    void
+    set_dof_e2i_numbering_for_subdomain_dirichlet_space(
+      const std::vector<types::global_dof_index>
+        *dofE2iNumberingForSubdomainDirichletSpace)
+    {
+      dof_e2i_numbering_for_subdomain_dirichlet_space =
+        dofE2iNumberingForSubdomainDirichletSpace;
+    }
+
+    const std::vector<types::global_dof_index> *
+    get_dof_e2i_numbering_for_subdomain_neumann_space() const
+    {
+      return dof_e2i_numbering_for_subdomain_neumann_space;
+    }
+
+    void
+    set_dof_e2i_numbering_for_subdomain_neumann_space(
+      const std::vector<types::global_dof_index>
+        *dofE2iNumberingForSubdomainNeumannSpace)
+    {
+      dof_e2i_numbering_for_subdomain_neumann_space =
+        dofE2iNumberingForSubdomainNeumannSpace;
+    }
+
+    const std::vector<types::global_dof_index> *
+    get_dof_i2e_numbering_for_subdomain_dirichlet_space() const
+    {
+      return dof_i2e_numbering_for_subdomain_dirichlet_space;
+    }
+
+    void
+    set_dof_i2e_numbering_for_subdomain_dirichlet_space(
+      const std::vector<types::global_dof_index>
+        *dofI2eNumberingForSubdomainDirichletSpace)
+    {
+      dof_i2e_numbering_for_subdomain_dirichlet_space =
+        dofI2eNumberingForSubdomainDirichletSpace;
+    }
+
+    const std::vector<types::global_dof_index> *
+    get_dof_i2e_numbering_for_subdomain_neumann_space() const
+    {
+      return dof_i2e_numbering_for_subdomain_neumann_space;
+    }
+
+    void
+    set_dof_i2e_numbering_for_subdomain_neumann_space(
+      const std::vector<types::global_dof_index>
+        *dofI2eNumberingForSubdomainNeumannSpace)
+    {
+      dof_i2e_numbering_for_subdomain_neumann_space =
+        dofI2eNumberingForSubdomainNeumannSpace;
+    }
+
   private:
     HMatrixSymm<spacedim, Number>               D;
     HMatrix<spacedim, Number>                   K_with_mass_matrix;
@@ -237,8 +297,16 @@ namespace HierBEM
     std::vector<int> skeleton_to_subdomain_dirichlet_dof_index_map;
     std::vector<int> skeleton_to_subdomain_neumann_dof_index_map;
 
-    ClusterTree<spacedim, Number>      ct_for_subdomain_dirichlet_space;
-    ClusterTree<spacedim, Number>      ct_for_subdomain_neumann_space;
+    ClusterTree<spacedim, Number> ct_for_subdomain_dirichlet_space;
+    ClusterTree<spacedim, Number> ct_for_subdomain_neumann_space;
+    const std::vector<types::global_dof_index>
+      *dof_e2i_numbering_for_subdomain_dirichlet_space;
+    const std::vector<types::global_dof_index>
+      *dof_i2e_numbering_for_subdomain_dirichlet_space;
+    const std::vector<types::global_dof_index>
+      *dof_e2i_numbering_for_subdomain_neumann_space;
+    const std::vector<types::global_dof_index>
+      *dof_i2e_numbering_for_subdomain_neumann_space;
     BlockClusterTree<spacedim, Number> bct_for_bilinear_form_D;
     BlockClusterTree<spacedim, Number> bct_for_bilinear_form_K;
     BlockClusterTree<spacedim, Number> bct_for_bilinear_form_V;

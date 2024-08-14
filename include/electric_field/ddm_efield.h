@@ -51,9 +51,12 @@
 #include "ddm_efield_global_preconditioner.h"
 #include "ddm_efield_matrix.h"
 #include "dof_tools_ext.h"
+#include "generic_functors.h"
 #include "gmsh_manipulation.h"
 #include "grid_out_ext.h"
+#include "laplace_kernels.hcu"
 #include "mapping/mapping_info.h"
+#include "sauter_quadrature.hcu"
 #include "subdomain_steklov_poincare_hmatrix.h"
 
 namespace HierBEM
@@ -468,7 +471,24 @@ namespace HierBEM
   class DDMEfield
   {
   public:
+    /**
+     * Maximum mapping order.
+     */
+    inline static const unsigned int max_mapping_order = 3;
+
     DDMEfield();
+
+    DDMEfield(const unsigned int fe_order_for_dirichlet_space,
+              const unsigned int fe_order_for_neumann_space,
+              const unsigned int n_min_for_ct,
+              const unsigned int n_min_for_bct,
+              const double       eta,
+              const unsigned int max_hmat_rank,
+              const double       aca_relative_error,
+              const double       eta_for_preconditioner,
+              const unsigned int max_hmat_rank_for_preconditioner,
+              const double       aca_relative_error_for_preconditioner,
+              const unsigned int thread_num);
 
     ~DDMEfield();
 
@@ -530,10 +550,16 @@ namespace HierBEM
     initialize_subdomain_hmatrices();
 
     void
+    generate_cell_iterators();
+
+    void
     setup_system();
 
     void
     assemble_system();
+
+    void
+    assemble_preconditioner();
 
     void
     solve();
@@ -558,9 +584,25 @@ namespace HierBEM
     EfieldSubdomainDescription<spacedim> domain;
     Triangulation<dim, spacedim>         tria;
     /**
-     * This @p std::map associates mapping orders and mapping objects.
+     * A list of mapping objects from 1st to 3rd order.
      */
-    std::map<unsigned int, MappingInfo<dim, spacedim> *> mappings;
+    std::vector<MappingInfo<dim, spacedim> *> mappings;
+
+    /**
+     * Kernel function for the single layer potential.
+     */
+    HierBEM::CUDAWrappers::LaplaceKernel::SingleLayerKernel<3>
+      single_layer_kernel;
+    /**
+     * Kernel function for the double layer potential.
+     */
+    HierBEM::CUDAWrappers::LaplaceKernel::DoubleLayerKernel<3>
+      double_layer_kernel;
+    /**
+     * Kernel function for the hyper-singular potential.
+     */
+    HierBEM::CUDAWrappers::LaplaceKernel::HyperSingularKernelRegular<3>
+      hyper_singular_kernel;
 
     /**
      * Dirichlet space on the whole skeleton.
@@ -570,6 +612,8 @@ namespace HierBEM
      * Neumann space on the whole skeleton.
      */
     DoFHandler<dim, spacedim> dof_handler_for_neumann_space;
+
+    std::string project_name;
 
     /**
      * Finite element order for the Dirichlet space.
@@ -591,6 +635,58 @@ namespace HierBEM
      * present, it is implemented as a discontinuous Lagrange space.
      */
     FE_DGQ<dim, spacedim> fe_for_neumann_space;
+
+    std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+      cell_iterators_for_dirichlet_space;
+    std::vector<typename DoFHandler<dim, spacedim>::cell_iterator>
+      cell_iterators_for_neumann_space;
+
+    /**
+     * DoF-to-cell topologies for various DoF handlers, which are used for
+     * matrix assembly on a pair of DoFs.
+     */
+    DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_dirichlet_space;
+    DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space;
+
+    /**
+     * Minimum cluster size. At present, assume all \bcts share this same
+     * parameter.
+     */
+    unsigned int n_min_for_ct;
+    /**
+     * Minimum block cluster size. At present, assume all \bcts share this
+     * same parameter.
+     */
+    unsigned int n_min_for_bct;
+    /**
+     * Admissibility constant. At present, assume all \bcts share this same
+     * parameter.
+     */
+    double eta;
+    /**
+     * Maximum rank of the \hmatrices to be built. At present, assume all
+     * \hmatrices share this same parameter.
+     */
+    unsigned int max_hmat_rank;
+    /**
+     * Relative approximation error used in ACA+. At present, assume all
+     * \hmatrices share this same parameter.
+     */
+    double aca_relative_error;
+    /**
+     * Admissibility constant for the preconditioner.
+     */
+    double eta_for_preconditioner;
+    /**
+     * Maximum rank of the \hmatrices to be built for the preconditioner.
+     */
+    unsigned int max_hmat_rank_for_preconditioner;
+    /**
+     * Relative approximation error used in ACA+ for the preconditioner.
+     */
+    double aca_relative_error_for_preconditioner;
+
+    unsigned int thread_num;
 
     DDMEfieldMatrix<spacedim, double>               system_matrix;
     DDMEfieldGlobalPreconditioner<spacedim, double> system_preconditioner;
@@ -673,10 +769,51 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   DDMEfield<dim, spacedim>::DDMEfield()
-    : fe_order_for_dirichlet_space(1)
+    : project_name("default")
+    , fe_order_for_dirichlet_space(1)
     , fe_order_for_neumann_space(0)
     , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
     , fe_for_neumann_space(fe_order_for_neumann_space)
+    , n_min_for_ct(0)
+    , n_min_for_bct(0)
+    , eta(0)
+    , max_hmat_rank(0)
+    , aca_relative_error(0)
+    , eta_for_preconditioner(0)
+    , max_hmat_rank_for_preconditioner(0)
+    , aca_relative_error_for_preconditioner(0)
+    , thread_num(0)
+  {}
+
+
+  template <int dim, int spacedim>
+  DDMEfield<dim, spacedim>::DDMEfield(
+    const unsigned int fe_order_for_dirichlet_space,
+    const unsigned int fe_order_for_neumann_space,
+    const unsigned int n_min_for_ct,
+    const unsigned int n_min_for_bct,
+    const double       eta,
+    const unsigned int max_hmat_rank,
+    const double       aca_relative_error,
+    const double       eta_for_preconditioner,
+    const unsigned int max_hmat_rank_for_preconditioner,
+    const double       aca_relative_error_for_preconditioner,
+    const unsigned int thread_num)
+    : project_name("default")
+    , fe_order_for_dirichlet_space(fe_order_for_dirichlet_space)
+    , fe_order_for_neumann_space(fe_order_for_neumann_space)
+    , fe_for_dirichlet_space(fe_order_for_dirichlet_space)
+    , fe_for_neumann_space(fe_order_for_neumann_space)
+    , n_min_for_ct(n_min_for_ct)
+    , n_min_for_bct(n_min_for_bct)
+    , eta(eta)
+    , max_hmat_rank(max_hmat_rank)
+    , aca_relative_error(aca_relative_error)
+    , eta_for_preconditioner(eta_for_preconditioner)
+    , max_hmat_rank_for_preconditioner(max_hmat_rank_for_preconditioner)
+    , aca_relative_error_for_preconditioner(
+        aca_relative_error_for_preconditioner)
+    , thread_num(thread_num)
   {}
 
 
@@ -690,16 +827,16 @@ namespace HierBEM
         delete d.second;
       }
 
-    // Release mapping information objects.
-    for (auto &m : mappings)
-      {
-        delete m.second;
-      }
-
     // Release manifold objects.
     for (auto &m : manifolds)
       {
         delete m.second;
+      }
+
+    // Release mapping objects.
+    for (auto m : mappings)
+      {
+        delete m;
       }
   }
 
@@ -1013,19 +1150,11 @@ namespace HierBEM
           }
       }
 
-    // Create mapping objects.
-    for (const auto &record : manifold_id_to_mapping_order)
+    // Initialize MappingInfo objects from 1st to 3rd order.
+    mappings.reserve(max_mapping_order);
+    for (unsigned int i = 1; i <= max_mapping_order; i++)
       {
-        typename decltype(mappings)::iterator pos =
-          mappings.find(record.second);
-
-        if (pos == mappings.end())
-          {
-            // Create the mapping object with the specified order, if it has not
-            // been created before.
-            mappings[record.second] =
-              new MappingInfo<dim, spacedim>(record.second);
-          }
+        mappings.push_back(new MappingInfo<dim, spacedim>(i));
       }
   }
 
@@ -1045,8 +1174,9 @@ namespace HierBEM
         single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
 
         VectorTools::interpolate_based_on_material_id(
-          mappings[manifold_id_to_mapping_order[manifold_description[bc.first]]]
-            ->get_mapping(),
+          mappings
+            [manifold_id_to_mapping_order[manifold_description[bc.first]] - 1]
+              ->get_mapping(),
           dof_handler_for_dirichlet_space,
           single_pair_map,
           dirichlet_bc);
@@ -1185,6 +1315,10 @@ namespace HierBEM
                      .back();
                 break;
               }
+              default: {
+                surface_of_from_subdomain = nullptr;
+                Assert(false, ExcInternalError());
+              }
           }
 
         // Create a surface object for the "to" subdomain.
@@ -1240,6 +1374,10 @@ namespace HierBEM
                      .back();
                 break;
               }
+              default: {
+                surface_of_to_subdomain = nullptr;
+                Assert(false, ExcInternalError());
+              }
           }
 
         // Connect neighboring surfaces.
@@ -1261,8 +1399,83 @@ namespace HierBEM
     // has no copy or move-copy constructor defined yet.
     subdomain_hmatrices.reserve(domain.get_dielectric_subdomains().size());
 
-    // Iterate over each dielectric subdomain.
+    const unsigned int n_dofs_for_dirichlet_space =
+      dof_handler_for_dirichlet_space.n_dofs();
+    const unsigned int n_dofs_for_neumann_space =
+      dof_handler_for_neumann_space.n_dofs();
+
+    // Generate selectors for Dirichlet space on non-Dirichlet boundary.
+    std::vector<bool>
+      negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary;
+    negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary.resize(
+      dof_handler_for_dirichlet_space.n_dofs());
+
     std::set<types::material_id> material_ids;
+    for (const auto subdomain : domain.get_voltage_conductor_subdomains())
+      {
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_dielectric())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+      }
+
+    for (const auto subdomain : domain.get_floating_conductor_subdomains())
+      {
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_dielectric())
+          {
+            material_ids.insert(
+              static_cast<types::material_id>(surface.get_entity_tag()));
+          }
+      }
+
+    for (const auto subdomain : domain.get_dielectric_subdomains())
+      {
+        for (const auto &surface :
+             subdomain->get_surfaces_touching_dielectric())
+          {
+            if (surface.get_is_dirichlet_boundary())
+              {
+                material_ids.insert(
+                  static_cast<types::material_id>(surface.get_entity_tag()));
+              }
+          }
+      }
+
+    DoFToolsExt::extract_material_domain_dofs(
+      dof_handler_for_dirichlet_space,
+      material_ids,
+      negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
+
+    system_matrix
+      .build_local_to_global_dirichlet_dof_map_and_inverse_on_nondirichlet_boundary(
+        dof_handler_for_dirichlet_space,
+        negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
+
+    std::cout
+      << "Number of DoFs in local Dirichlet space restricted to non-Dirichlet boundary: "
+      << system_matrix
+           .get_nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map()
+           .size()
+      << std::endl;
+
+    /**
+     * Build the DoF-to-cell topology.
+     *
+     * \mynote{Access of this topology for the Dirichlet space
+     * requires the map from local to full DoF indices.}
+     */
+    generate_cell_iterators();
+    build_dof_to_cell_topology(dof_to_cell_topo_for_dirichlet_space,
+                               cell_iterators_for_dirichlet_space,
+                               dof_handler_for_dirichlet_space);
+    build_dof_to_cell_topology(dof_to_cell_topo_for_neumann_space,
+                               cell_iterators_for_neumann_space,
+                               dof_handler_for_neumann_space);
+
+    // Iterate over each dielectric subdomain.
     for (const auto subdomain : domain.get_dielectric_subdomains())
       {
         // Create an empty Steklov_poincare \hmat for the current subdomain.
@@ -1332,7 +1545,10 @@ namespace HierBEM
           material_ids,
           dof_selectors_for_neumann_space);
 
-        subdomain_hmatrices.back().build_local_to_global_dof_maps_and_inverses(
+        SubdomainSteklovPoincareHMatrix<spacedim, double>
+          &steklov_poincare_hmat = subdomain_hmatrices.back();
+
+        steklov_poincare_hmat.build_local_to_global_dof_maps_and_inverses(
           dof_handler_for_dirichlet_space,
           dof_handler_for_neumann_space,
           dof_selectors_for_dirichlet_space,
@@ -1354,64 +1570,189 @@ namespace HierBEM
                   << n_dofs_for_local_dirichlet_space << "\n";
         std::cout << "Number of DoFs in local Neumann space: "
                   << n_dofs_for_local_neumann_space << std::endl;
+
+        std::vector<types::global_dof_index>
+          dof_indices_for_local_dirichlet_space(
+            n_dofs_for_local_dirichlet_space);
+        std::vector<types::global_dof_index>
+          dof_indices_for_local_neumann_space(n_dofs_for_local_neumann_space);
+
+        gen_linear_indices<vector_uta, types::global_dof_index>(
+          dof_indices_for_local_dirichlet_space);
+        gen_linear_indices<vector_uta, types::global_dof_index>(
+          dof_indices_for_local_neumann_space);
+
+        std::vector<Point<spacedim>> support_points_for_local_dirichlet_space(
+          n_dofs_for_local_dirichlet_space);
+        std::vector<Point<spacedim>> support_points_for_local_neumann_space(
+          n_dofs_for_local_neumann_space);
+
+        // N.B. Because the support points are only used for cluster tree
+        // partition, there is no need to use the actually mapping object
+        // associated with each surface. Only the first order mapping is enough.
+        DoFToolsExt::map_dofs_to_support_points(
+          mappings[0]->get_mapping(),
+          dof_handler_for_dirichlet_space,
+          steklov_poincare_hmat
+            .get_subdomain_to_skeleton_dirichlet_dof_index_map(),
+          support_points_for_local_dirichlet_space);
+
+        DoFToolsExt::map_dofs_to_support_points(
+          mappings[0]->get_mapping(),
+          dof_handler_for_neumann_space,
+          steklov_poincare_hmat
+            .get_subdomain_to_skeleton_neumann_dof_index_map(),
+          support_points_for_local_neumann_space);
+
+        // Compute average mesh cell size at each support point.
+        std::vector<double> cell_sizes_for_local_dirichlet_space(
+          n_dofs_for_local_dirichlet_space);
+        std::vector<double> cell_sizes_for_local_neumann_space(
+          n_dofs_for_local_neumann_space);
+
+        cell_sizes_for_local_dirichlet_space.assign(
+          n_dofs_for_local_dirichlet_space, 0);
+        cell_sizes_for_local_neumann_space.assign(
+          n_dofs_for_local_neumann_space, 0);
+
+        DoFToolsExt::map_dofs_to_average_cell_size(
+          dof_handler_for_dirichlet_space,
+          steklov_poincare_hmat
+            .get_subdomain_to_skeleton_dirichlet_dof_index_map(),
+          cell_sizes_for_local_dirichlet_space);
+
+        DoFToolsExt::map_dofs_to_average_cell_size(
+          dof_handler_for_neumann_space,
+          steklov_poincare_hmat
+            .get_subdomain_to_skeleton_neumann_dof_index_map(),
+          cell_sizes_for_local_neumann_space);
+
+        // Initialize cluster trees.
+        steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space() =
+          ClusterTree<spacedim>(dof_indices_for_local_dirichlet_space,
+                                support_points_for_local_dirichlet_space,
+                                cell_sizes_for_local_dirichlet_space,
+                                n_min_for_ct);
+        steklov_poincare_hmat.get_ct_for_subdomain_neumann_space() =
+          ClusterTree<spacedim>(dof_indices_for_local_neumann_space,
+                                support_points_for_local_neumann_space,
+                                cell_sizes_for_local_neumann_space,
+                                n_min_for_ct);
+
+        steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space().partition(
+          support_points_for_local_dirichlet_space,
+          cell_sizes_for_local_dirichlet_space);
+        steklov_poincare_hmat.get_ct_for_subdomain_neumann_space().partition(
+          support_points_for_local_neumann_space,
+          cell_sizes_for_local_neumann_space);
+
+        steklov_poincare_hmat
+          .set_dof_e2i_numbering_for_subdomain_dirichlet_space(
+            &(steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space()
+                .get_external_to_internal_dof_numbering()));
+        steklov_poincare_hmat
+          .set_dof_i2e_numbering_for_subdomain_dirichlet_space(
+            &(steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space()
+                .get_internal_to_external_dof_numbering()));
+        steklov_poincare_hmat.set_dof_e2i_numbering_for_subdomain_neumann_space(
+          &(steklov_poincare_hmat.get_ct_for_subdomain_neumann_space()
+              .get_external_to_internal_dof_numbering()));
+        steklov_poincare_hmat.set_dof_i2e_numbering_for_subdomain_neumann_space(
+          &(steklov_poincare_hmat.get_ct_for_subdomain_neumann_space()
+              .get_internal_to_external_dof_numbering()));
+
+        // Initialize block cluster trees.
+        steklov_poincare_hmat.get_bct_for_bilinear_form_D() =
+          BlockClusterTree<spacedim>(
+            steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space(),
+            steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space(),
+            eta,
+            n_min_for_bct);
+
+        steklov_poincare_hmat.get_bct_for_bilinear_form_K() =
+          BlockClusterTree<spacedim>(
+            steklov_poincare_hmat.get_ct_for_subdomain_neumann_space(),
+            steklov_poincare_hmat.get_ct_for_subdomain_dirichlet_space(),
+            eta,
+            n_min_for_bct);
+
+        steklov_poincare_hmat.get_bct_for_bilinear_form_V() =
+          BlockClusterTree<spacedim>(
+            steklov_poincare_hmat.get_ct_for_subdomain_neumann_space(),
+            steklov_poincare_hmat.get_ct_for_subdomain_neumann_space(),
+            eta,
+            n_min_for_bct);
+
+        steklov_poincare_hmat.get_bct_for_bilinear_form_D().partition(
+          *steklov_poincare_hmat
+             .get_dof_i2e_numbering_for_subdomain_dirichlet_space(),
+          support_points_for_local_dirichlet_space,
+          cell_sizes_for_local_dirichlet_space);
+
+        steklov_poincare_hmat.get_bct_for_bilinear_form_K().partition(
+          *steklov_poincare_hmat
+             .get_dof_i2e_numbering_for_subdomain_neumann_space(),
+          *steklov_poincare_hmat
+             .get_dof_i2e_numbering_for_subdomain_dirichlet_space(),
+          support_points_for_local_neumann_space,
+          support_points_for_local_dirichlet_space,
+          cell_sizes_for_local_neumann_space,
+          cell_sizes_for_local_dirichlet_space);
+
+        steklov_poincare_hmat.get_bct_for_bilinear_form_V().partition(
+          *steklov_poincare_hmat
+             .get_dof_i2e_numbering_for_subdomain_neumann_space(),
+          support_points_for_local_neumann_space,
+          cell_sizes_for_local_neumann_space);
+
+        // Initialize subdomain local \hmatrices.
+        steklov_poincare_hmat.get_D() = HMatrixSymm<spacedim>(
+          steklov_poincare_hmat.get_bct_for_bilinear_form_D(), max_hmat_rank);
+        steklov_poincare_hmat.get_K_with_mass_matrix() =
+          HMatrix<spacedim>(steklov_poincare_hmat.get_bct_for_bilinear_form_K(),
+                            max_hmat_rank,
+                            HMatrixSupport::Property::general,
+                            HMatrixSupport::BlockType::diagonal_block);
+        steklov_poincare_hmat.get_V() = HMatrixSymm<spacedim>(
+          steklov_poincare_hmat.get_bct_for_bilinear_form_V(), max_hmat_rank);
+
+        // Create the two wrapper classes for transmission equation and charge
+        // neutrality equation.
+        system_matrix.get_hmatrices_for_transmission_eqn().emplace_back(
+          &steklov_poincare_hmat,
+          &system_matrix
+             .get_nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map(),
+          &system_matrix
+             .get_skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map());
+        system_matrix.get_hmatrices_for_charge_neutrality_eqn().emplace_back(
+          &steklov_poincare_hmat,
+          &system_matrix
+             .get_nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map(),
+          &system_matrix
+             .get_skeleton_to_nondirichlet_boundary_dirichlet_dof_index_map());
       }
+  }
 
-    // Generate selectors for Dirichlet space on non-Dirichlet boundary.
-    std::vector<bool>
-      negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary;
-    negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary.resize(
-      dof_handler_for_dirichlet_space.n_dofs());
 
-    material_ids.clear();
-    for (const auto subdomain : domain.get_voltage_conductor_subdomains())
+  template <int dim, int spacedim>
+  void
+  DDMEfield<dim, spacedim>::generate_cell_iterators()
+  {
+    cell_iterators_for_dirichlet_space.reserve(
+      dof_handler_for_dirichlet_space.get_triangulation().n_active_cells());
+    for (const auto &cell :
+         dof_handler_for_dirichlet_space.active_cell_iterators())
       {
-        for (const auto &surface :
-             subdomain->get_surfaces_touching_dielectric())
-          {
-            material_ids.insert(
-              static_cast<types::material_id>(surface.get_entity_tag()));
-          }
+        cell_iterators_for_dirichlet_space.push_back(cell);
       }
 
-    for (const auto subdomain : domain.get_floating_conductor_subdomains())
+    cell_iterators_for_neumann_space.reserve(
+      dof_handler_for_neumann_space.get_triangulation().n_active_cells());
+    for (const auto &cell :
+         dof_handler_for_neumann_space.active_cell_iterators())
       {
-        for (const auto &surface :
-             subdomain->get_surfaces_touching_dielectric())
-          {
-            material_ids.insert(
-              static_cast<types::material_id>(surface.get_entity_tag()));
-          }
+        cell_iterators_for_neumann_space.push_back(cell);
       }
-
-    for (const auto subdomain : domain.get_dielectric_subdomains())
-      {
-        for (const auto &surface :
-             subdomain->get_surfaces_touching_dielectric())
-          {
-            if (surface.get_is_dirichlet_boundary())
-              {
-                material_ids.insert(
-                  static_cast<types::material_id>(surface.get_entity_tag()));
-              }
-          }
-      }
-
-    DoFToolsExt::extract_material_domain_dofs(
-      dof_handler_for_dirichlet_space,
-      material_ids,
-      negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
-
-    system_matrix
-      .build_local_to_global_dirichlet_dof_map_and_inverse_on_nondirichlet_boundary(
-        dof_handler_for_dirichlet_space,
-        negated_dof_selectors_for_dirichlet_space_on_nondirichlet_boundary);
-
-    std::cout
-      << "Number of DoFs in local Dirichlet space restricted to non-Dirichlet boundary: "
-      << system_matrix
-           .get_nondirichlet_boundary_to_skeleton_dirichlet_dof_index_map()
-           .size()
-      << std::endl;
   }
 
 
@@ -1449,10 +1790,30 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
+  DDMEfield<dim, spacedim>::assemble_system()
+  {
+    LogStream::Prefix prefix_string("assemble_system");
+    Timer             timer;
+    MultithreadInfo::set_thread_limit(thread_num);
+
+    /**
+     * Define the @p ACAConfig object.
+     */
+    ACAConfig aca_config(max_hmat_rank, aca_relative_error, eta);
+
+    for (auto &steklov_poincare_hmat : system_matrix.get_subdomain_hmatrices())
+      {}
+  }
+
+
+  template <int dim, int spacedim>
+  void
   DDMEfield<dim, spacedim>::output_results()
   {
+    std::cout << "=== Output results ===" << std::endl;
+
     // Write the Dirichlet boundary condition.
-    std::ofstream          vtk_output("out.vtk");
+    std::ofstream          vtk_output(project_name + std::string(".vtk"));
     DataOut<dim, spacedim> data_out;
     data_out.add_data_vector(dof_handler_for_dirichlet_space,
                              dirichlet_bc,
@@ -1473,6 +1834,7 @@ namespace HierBEM
 
     data_out.build_patches();
     data_out.write_vtk(vtk_output);
+    vtk_output.close();
   }
 } // namespace HierBEM
 

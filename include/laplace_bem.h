@@ -129,15 +129,8 @@ namespace HierBEM
       MappingQGenericExt<dim1, spacedim1> &ky_mapping,
       typename MappingQGeneric<dim1, spacedim1>::InternalData &kx_mapping_data,
       typename MappingQGeneric<dim1, spacedim1>::InternalData &ky_mapping_data,
-      const std::map<typename Triangulation<dim1, spacedim1>::cell_iterator,
-                     typename Triangulation<dim1 + 1, spacedim1>::face_iterator>
-        &map_from_test_space_mesh_to_volume_mesh,
-      const std::map<typename Triangulation<dim1, spacedim1>::cell_iterator,
-                     typename Triangulation<dim1 + 1, spacedim1>::face_iterator>
-        &map_from_trial_space_mesh_to_volume_mesh,
-      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-      const SauterQuadratureRule<dim1>     &sauter_quad_rule,
-      MatrixType                           &target_full_matrix);
+      const SauterQuadratureRule<dim1>                        &sauter_quad_rule,
+      MatrixType &target_full_matrix);
 
 
     template <int dim1,
@@ -155,15 +148,8 @@ namespace HierBEM
       MappingQGenericExt<dim1, spacedim1> &ky_mapping,
       typename MappingQGeneric<dim1, spacedim1>::InternalData &kx_mapping_data,
       typename MappingQGeneric<dim1, spacedim1>::InternalData &ky_mapping_data,
-      const std::map<typename Triangulation<dim1, spacedim1>::cell_iterator,
-                     typename Triangulation<dim1 + 1, spacedim1>::face_iterator>
-        &map_from_test_space_mesh_to_volume_mesh,
-      const std::map<typename Triangulation<dim1, spacedim1>::cell_iterator,
-                     typename Triangulation<dim1 + 1, spacedim1>::face_iterator>
-        &map_from_trial_space_mesh_to_volume_mesh,
-      const DetectCellNeighboringTypeMethod method_for_cell_neighboring_type,
-      const SauterQuadratureRule<dim1>     &sauter_quad_rule,
-      MatrixType                           &target_full_matrix);
+      const SauterQuadratureRule<dim1>                        &sauter_quad_rule,
+      MatrixType &target_full_matrix);
 
 
     /**
@@ -425,14 +411,6 @@ namespace HierBEM
      * Triangulation for the surface mesh.
      */
     Triangulation<dim, spacedim> surface_triangulation;
-
-    /**
-     * Map from cell iterators in the surface mesh to the face iterators in the
-     * original volume mesh.
-     */
-    std::map<typename Triangulation<dim, spacedim>::cell_iterator,
-             typename Triangulation<dim + 1, spacedim>::face_iterator>
-      map_from_surface_mesh_to_volume_mesh;
 
     /**
      * A set of boundary indices for the Dirichlet domain.
@@ -784,7 +762,7 @@ namespace HierBEM
     Vector<double> dirichlet_bc;
     /**
      * Dirichlet boundary condition data on those selected DoFs in the
-     * associated DoF handler. When in the \hamt version, they are in the
+     * associated DoF handler. When in the \hmat version, they are in the
      * external DoF numbering.
      */
     Vector<double> dirichlet_bc_on_selected_dofs;
@@ -1050,8 +1028,6 @@ namespace HierBEM
     dof_handler_for_dirichlet_space.clear();
     dof_handler_for_neumann_space.clear();
 
-    map_from_surface_mesh_to_volume_mesh.clear();
-
     boundary_ids_for_dirichlet_domain.clear();
     boundary_ids_for_neumann_domain.clear();
 
@@ -1097,9 +1073,8 @@ namespace HierBEM
         print_mesh_info(std::cout, volume_triangulation);
       }
 
-    map_from_surface_mesh_to_volume_mesh =
-      GridGenerator::extract_boundary_mesh(volume_triangulation,
-                                           surface_triangulation);
+    GridGenerator::extract_boundary_mesh(volume_triangulation,
+                                         surface_triangulation);
 
     if (debug)
       {
@@ -1145,9 +1120,8 @@ namespace HierBEM
   {
     surface_triangulation = std::move(tria);
 
-    map_from_surface_mesh_to_volume_mesh =
-      GridGenerator::extract_boundary_mesh(volume_triangulation,
-                                           surface_triangulation);
+    GridGenerator::extract_boundary_mesh(volume_triangulation,
+                                         surface_triangulation);
 
     if (debug)
       {
@@ -2722,30 +2696,21 @@ namespace HierBEM
                   ky_mapping_for_dirichlet_domain,
                   *kx_mapping_data_for_dirichlet_domain,
                   *ky_mapping_data_for_dirichlet_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   SauterQuadratureRule<dim>(5, 4, 4, 3),
                   K2_matrix_with_mass_matrix);
               }
             else
               {
-                assemble_bem_full_matrix(
-                  double_layer_kernel,
-                  1.0,
-                  dof_handler_for_neumann_space,
-                  dof_handler_for_dirichlet_space,
-                  kx_mapping_for_dirichlet_domain,
-                  ky_mapping_for_dirichlet_domain,
-                  *kx_mapping_data_for_dirichlet_domain,
-                  *ky_mapping_data_for_dirichlet_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
-                  SauterQuadratureRule<dim>(5, 4, 4, 3),
-                  K2_matrix_with_mass_matrix);
+                assemble_bem_full_matrix(double_layer_kernel,
+                                         1.0,
+                                         dof_handler_for_neumann_space,
+                                         dof_handler_for_dirichlet_space,
+                                         kx_mapping_for_dirichlet_domain,
+                                         ky_mapping_for_dirichlet_domain,
+                                         *kx_mapping_data_for_dirichlet_domain,
+                                         *ky_mapping_data_for_dirichlet_domain,
+                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                         K2_matrix_with_mass_matrix);
               }
             timer.stop();
             print_wall_time(deallog, timer, "assemble K");
@@ -2767,30 +2732,21 @@ namespace HierBEM
                   ky_mapping_for_dirichlet_domain,
                   *kx_mapping_data_for_dirichlet_domain,
                   *ky_mapping_data_for_dirichlet_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   SauterQuadratureRule<dim>(5, 4, 4, 3),
                   V1_matrix);
               }
             else
               {
-                assemble_bem_full_matrix(
-                  single_layer_kernel,
-                  1.0,
-                  dof_handler_for_neumann_space,
-                  dof_handler_for_neumann_space,
-                  kx_mapping_for_dirichlet_domain,
-                  ky_mapping_for_dirichlet_domain,
-                  *kx_mapping_data_for_dirichlet_domain,
-                  *ky_mapping_data_for_dirichlet_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
-                  SauterQuadratureRule<dim>(5, 4, 4, 3),
-                  V1_matrix);
+                assemble_bem_full_matrix(single_layer_kernel,
+                                         1.0,
+                                         dof_handler_for_neumann_space,
+                                         dof_handler_for_neumann_space,
+                                         kx_mapping_for_dirichlet_domain,
+                                         ky_mapping_for_dirichlet_domain,
+                                         *kx_mapping_data_for_dirichlet_domain,
+                                         *ky_mapping_data_for_dirichlet_domain,
+                                         SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                         V1_matrix);
               }
             timer.stop();
             print_wall_time(deallog, timer, "assemble V");
@@ -2839,21 +2795,16 @@ namespace HierBEM
              * scaled FEM mass matrix.
              */
             std::cout << "=== Assemble ADLP matrix ===" << std::endl;
-            assemble_bem_full_matrix(
-              adjoint_double_layer_kernel,
-              -1.0,
-              dof_handler_for_dirichlet_space,
-              dof_handler_for_neumann_space,
-              kx_mapping_for_neumann_domain,
-              ky_mapping_for_neumann_domain,
-              *kx_mapping_data_for_neumann_domain,
-              *ky_mapping_data_for_neumann_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
-              SauterQuadratureRule<dim>(5, 4, 4, 3),
-              K_prime2_matrix_with_mass_matrix);
+            assemble_bem_full_matrix(adjoint_double_layer_kernel,
+                                     -1.0,
+                                     dof_handler_for_dirichlet_space,
+                                     dof_handler_for_neumann_space,
+                                     kx_mapping_for_neumann_domain,
+                                     ky_mapping_for_neumann_domain,
+                                     *kx_mapping_data_for_neumann_domain,
+                                     *ky_mapping_data_for_neumann_domain,
+                                     SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                     K_prime2_matrix_with_mass_matrix);
 
             /**
              * Assemble the matrix for the hyper singular operator, where the
@@ -2861,21 +2812,16 @@ namespace HierBEM
              */
             std::cout << "=== Assemble D matrix ===" << std::endl;
 
-            assemble_bem_full_matrix(
-              hyper_singular_kernel,
-              1.0,
-              dof_handler_for_dirichlet_space,
-              dof_handler_for_dirichlet_space,
-              kx_mapping_for_neumann_domain,
-              ky_mapping_for_neumann_domain,
-              *kx_mapping_data_for_neumann_domain,
-              *ky_mapping_data_for_neumann_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
-              SauterQuadratureRule<dim>(5, 4, 4, 3),
-              D1_matrix);
+            assemble_bem_full_matrix(hyper_singular_kernel,
+                                     1.0,
+                                     dof_handler_for_dirichlet_space,
+                                     dof_handler_for_dirichlet_space,
+                                     kx_mapping_for_neumann_domain,
+                                     ky_mapping_for_neumann_domain,
+                                     *kx_mapping_data_for_neumann_domain,
+                                     *ky_mapping_data_for_neumann_domain,
+                                     SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                     D1_matrix);
 
             /**
              * Calculate the RHS vector.
@@ -2983,10 +2929,6 @@ namespace HierBEM
                   ky_mapping_for_dirichlet_domain,
                   *kx_mapping_data_for_dirichlet_domain,
                   *ky_mapping_data_for_dirichlet_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   false);
 
                 timer.stop();
@@ -3022,10 +2964,6 @@ namespace HierBEM
                   ky_mapping_for_dirichlet_domain,
                   *kx_mapping_data_for_dirichlet_domain,
                   *ky_mapping_data_for_dirichlet_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   false);
 
                 timer.stop();
@@ -3102,10 +3040,6 @@ namespace HierBEM
                 ky_mapping_for_dirichlet_domain,
                 *kx_mapping_data_for_dirichlet_domain,
                 *ky_mapping_data_for_dirichlet_domain,
-                map_from_surface_mesh_to_volume_mesh,
-                map_from_surface_mesh_to_volume_mesh,
-                HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                  SameTriangulations,
                 true);
 
               timer.stop();
@@ -3161,10 +3095,6 @@ namespace HierBEM
                   ky_mapping_for_neumann_domain,
                   *kx_mapping_data_for_neumann_domain,
                   *ky_mapping_data_for_neumann_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   false);
 
                 timer.stop();
@@ -3195,10 +3125,6 @@ namespace HierBEM
                   ky_mapping_for_neumann_domain,
                   *kx_mapping_data_for_neumann_domain,
                   *ky_mapping_data_for_neumann_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   false);
 
                 timer.stop();
@@ -3312,10 +3238,6 @@ namespace HierBEM
               ky_mapping_for_neumann_domain,
               *kx_mapping_data_for_neumann_domain,
               *ky_mapping_data_for_neumann_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
               true);
 
             timer.stop();
@@ -3376,10 +3298,6 @@ namespace HierBEM
                   ky_mapping_for_dirichlet_domain,
                   *kx_mapping_data_for_dirichlet_domain,
                   *ky_mapping_data_for_dirichlet_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   false);
 
                 timer.stop();
@@ -3410,10 +3328,6 @@ namespace HierBEM
                   ky_mapping_for_neumann_domain,
                   *kx_mapping_data_for_neumann_domain,
                   *ky_mapping_data_for_neumann_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   false);
 
                 timer.stop();
@@ -3444,10 +3358,6 @@ namespace HierBEM
                   ky_mapping_for_dirichlet_domain,
                   *kx_mapping_data_for_dirichlet_domain,
                   *ky_mapping_data_for_dirichlet_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   false);
 
                 timer.stop();
@@ -3478,10 +3388,6 @@ namespace HierBEM
                   ky_mapping_for_neumann_domain,
                   *kx_mapping_data_for_neumann_domain,
                   *ky_mapping_data_for_neumann_domain,
-                  map_from_surface_mesh_to_volume_mesh,
-                  map_from_surface_mesh_to_volume_mesh,
-                  HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                    SameTriangulations,
                   false);
 
                 timer.stop();
@@ -3518,10 +3424,6 @@ namespace HierBEM
               ky_mapping_for_neumann_domain,
               *kx_mapping_data_for_dirichlet_domain,
               *ky_mapping_data_for_neumann_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
               false);
 
             timer.stop();
@@ -3554,10 +3456,6 @@ namespace HierBEM
               ky_mapping_for_dirichlet_domain,
               *kx_mapping_data_for_neumann_domain,
               *ky_mapping_data_for_dirichlet_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
               false);
 
             timer.stop();
@@ -3696,10 +3594,6 @@ namespace HierBEM
               ky_mapping_for_dirichlet_domain,
               *kx_mapping_data_for_dirichlet_domain,
               *ky_mapping_data_for_dirichlet_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
               true);
 
             timer.stop();
@@ -3732,10 +3626,6 @@ namespace HierBEM
               ky_mapping_for_neumann_domain,
               *kx_mapping_data_for_dirichlet_domain,
               *ky_mapping_data_for_neumann_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
               false);
 
             timer.stop();
@@ -3768,10 +3658,6 @@ namespace HierBEM
               ky_mapping_for_neumann_domain,
               *kx_mapping_data_for_neumann_domain,
               *ky_mapping_data_for_neumann_domain,
-              map_from_surface_mesh_to_volume_mesh,
-              map_from_surface_mesh_to_volume_mesh,
-              HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-                SameTriangulations,
               true);
 
             timer.stop();
@@ -4782,21 +4668,16 @@ namespace HierBEM
         std::cout << "=== Assemble V for solving the natural density === "
                   << std::endl;
 
-        assemble_bem_full_matrix(
-          single_layer_kernel,
-          1.0,
-          dof_handler_for_neumann_space,
-          dof_handler_for_neumann_space,
-          kx_mapping_for_neumann_domain,
-          ky_mapping_for_neumann_domain,
-          *kx_mapping_data_for_neumann_domain,
-          *ky_mapping_data_for_neumann_domain,
-          map_from_surface_mesh_to_volume_mesh,
-          map_from_surface_mesh_to_volume_mesh,
-          HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-            SameTriangulations,
-          SauterQuadratureRule<dim>(5, 4, 4, 3),
-          V1_matrix);
+        assemble_bem_full_matrix(single_layer_kernel,
+                                 1.0,
+                                 dof_handler_for_neumann_space,
+                                 dof_handler_for_neumann_space,
+                                 kx_mapping_for_neumann_domain,
+                                 ky_mapping_for_neumann_domain,
+                                 *kx_mapping_data_for_neumann_domain,
+                                 *ky_mapping_data_for_neumann_domain,
+                                 SauterQuadratureRule<dim>(5, 4, 4, 3),
+                                 V1_matrix);
       }
     else
       {
@@ -4827,10 +4708,6 @@ namespace HierBEM
           ky_mapping_for_neumann_domain,
           *kx_mapping_data_for_neumann_domain,
           *ky_mapping_data_for_neumann_domain,
-          map_from_surface_mesh_to_volume_mesh,
-          map_from_surface_mesh_to_volume_mesh,
-          HierBEM::BEMTools::DetectCellNeighboringTypeMethod::
-            SameTriangulations,
           true);
 
         add_memory_consumption_row("V1 H-matrix", V1_hmat, "After assembly");

@@ -386,9 +386,6 @@ main(int argc, char *argv[])
         ky_mapping,
         *kx_mapping_data,
         *ky_mapping_data,
-        map_from_surface_mesh_to_volume_mesh,
-        map_from_surface_mesh_to_volume_mesh,
-        HierBEM::BEMTools::DetectCellNeighboringTypeMethod::SameTriangulations,
         true);
 
       // Generate a random vector as @p x.

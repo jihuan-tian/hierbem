@@ -1,5 +1,5 @@
 /**
- * @file create-efield-subdomains.cc
+ * @file create-efield-subdomains.cu
  * @brief
  *
  * @ingroup testers
