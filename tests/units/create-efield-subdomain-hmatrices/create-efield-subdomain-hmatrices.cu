@@ -13,6 +13,7 @@
 
 #include "debug_tools.hcu"
 #include "electric_field/ddm_efield.h"
+#include "grid_in_ext.h"
 #include "grid_out_ext.h"
 #include "hbem_test_config.h"
 
@@ -62,8 +63,8 @@ TEST_CASE("Create subdomain H-hmatrices", "[ddm_efield]")
                                  "sphere-immersed-in-two-boxes.brep",
                                  HBEM_TEST_MODEL_DIR
                                  "sphere-immersed-in-two-boxes.msh");
-  efield.read_skeleton_mesh(HBEM_TEST_MODEL_DIR
-                            "sphere-immersed-in-two-boxes.msh");
+  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "sphere-immersed-in-two-boxes.msh",
+                     efield.get_triangulation());
   // At the moment, we manually assign problem parameters.
   efield.initialize_parameters();
   efield.setup_system();

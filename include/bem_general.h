@@ -20,6 +20,7 @@
 
 #include "bem_kernels.hcu"
 #include "bem_values.h"
+#include "mapping/mapping_info.h"
 #include "sauter_quadrature.hcu"
 
 namespace HierBEM
@@ -632,19 +633,20 @@ namespace HierBEM
             template <int, typename>
             typename KernelFunctionType,
             typename RangeNumberType,
+            typename SurfaceNormalDetector,
             typename MatrixType>
   void
   assemble_bem_full_matrix(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                factor,
-    const DoFHandler<dim, spacedim>   &dof_handler_for_test_space,
-    const DoFHandler<dim, spacedim>   &dof_handler_for_trial_space,
-    MappingQGenericExt<dim, spacedim> &kx_mapping,
-    MappingQGenericExt<dim, spacedim> &ky_mapping,
-    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
-    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
-    MatrixType                                            &target_full_matrix)
+    const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+    const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                    &material_id_to_mapping_index,
+    const SurfaceNormalDetector     &normal_detector,
+    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    MatrixType                      &target_full_matrix)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -673,8 +675,7 @@ namespace HierBEM
     BEMValues<dim, spacedim, RangeNumberType> bem_values(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
-      kx_mapping_data,
-      ky_mapping_data,
+      mappings,
       sauter_quad_rule.quad_rule_for_same_panel,
       sauter_quad_rule.quad_rule_for_common_edge,
       sauter_quad_rule.quad_rule_for_common_vertex,
@@ -692,8 +693,7 @@ namespace HierBEM
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
-      kx_mapping,
-      ky_mapping,
+      mappings,
       bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
       dof_handler_for_test_space.get_fe(),
@@ -705,9 +705,14 @@ namespace HierBEM
          * Calculate Kx related data so that they won't be redundantly
          * calculated within @p sauter_quadrature_on_one_pair_of_cells.
          */
-        kx_mapping.compute_mapping_support_points(e);
+        const unsigned int kx_mapping_index =
+          material_id_to_mapping_index[e->material_id()];
+        MappingInfo<dim, spacedim> &kx_mapping_info =
+          *mappings[kx_mapping_index];
+
+        kx_mapping_info.get_mapping().compute_mapping_support_points(e);
         scratch_data.kx_mapping_support_points_in_default_order =
-          kx_mapping.get_support_points();
+          kx_mapping_info.get_mapping().get_support_points();
         e->get_dof_indices(
           scratch_data.kx_local_dof_indices_in_default_dof_order);
 
@@ -727,19 +732,24 @@ namespace HierBEM
               const RangeNumberType,
               const typename DoFHandler<dim, spacedim>::active_cell_iterator &,
               const typename DoFHandler<dim, spacedim>::active_cell_iterator &,
-              const MappingQGenericExt<dim, spacedim> &,
-              const MappingQGenericExt<dim, spacedim> &,
+              const std::vector<MappingInfo<dim, spacedim> *> &,
+              const std::map<types::material_id, unsigned int> &,
+              const MappingInfo<dim, spacedim> &,
               const BEMValues<dim, spacedim, RangeNumberType> &,
+              const SurfaceNormalDetector &,
               PairCellWiseScratchData<dim, spacedim, RangeNumberType> &,
               PairCellWisePerTaskData<dim, spacedim, RangeNumberType> &,
-              const bool)>(sauter_quadrature_on_one_pair_of_cells),
+              const bool)>(
+              sauter_quadrature_on_one_pair_of_cells_parallel_over_ky),
             std::cref(kernel),
             factor,
             std::cref(e),
             std::placeholders::_1,
-            std::cref(kx_mapping),
-            std::cref(ky_mapping),
+            mappings,
+            material_id_to_mapping_index,
+            kx_mapping_info,
             std::cref(bem_values),
+            normal_detector,
             std::placeholders::_2,
             std::placeholders::_3,
             true),
@@ -773,10 +783,7 @@ namespace HierBEM
    * @param factor
    * @param dof_handler_for_test_space
    * @param dof_handler_for_trial_space
-   * @param kx_mapping
-   * @param ky_mapping
-   * @param kx_mapping_data
-   * @param ky_mapping_data
+   * @param mappings
    * @param sauter_quad_rule
    * @param target_full_matrix
    */
@@ -785,19 +792,20 @@ namespace HierBEM
             template <int, typename>
             typename KernelFunctionType,
             typename RangeNumberType,
+            typename SurfaceNormalDetector,
             typename MatrixType>
   void
   assemble_bem_full_matrix_serial(
     const KernelFunctionType<spacedim, RangeNumberType> &kernel,
     const RangeNumberType                                factor,
-    const DoFHandler<dim, spacedim>   &dof_handler_for_test_space,
-    const DoFHandler<dim, spacedim>   &dof_handler_for_trial_space,
-    MappingQGenericExt<dim, spacedim> &kx_mapping,
-    MappingQGenericExt<dim, spacedim> &ky_mapping,
-    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
-    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const SauterQuadratureRule<dim>                       &sauter_quad_rule,
-    MatrixType                                            &target_full_matrix)
+    const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+    const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                    &material_id_to_mapping_index,
+    const SurfaceNormalDetector     &normal_detector,
+    const SauterQuadratureRule<dim> &sauter_quad_rule,
+    MatrixType                      &target_full_matrix)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -826,8 +834,7 @@ namespace HierBEM
     BEMValues<dim, spacedim, RangeNumberType> bem_values(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
-      kx_mapping_data,
-      ky_mapping_data,
+      mappings,
       sauter_quad_rule.quad_rule_for_same_panel,
       sauter_quad_rule.quad_rule_for_common_edge,
       sauter_quad_rule.quad_rule_for_common_vertex,
@@ -845,8 +852,7 @@ namespace HierBEM
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
       dof_handler_for_test_space.get_fe(),
       dof_handler_for_trial_space.get_fe(),
-      kx_mapping,
-      ky_mapping,
+      mappings,
       bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> per_task_data(
       dof_handler_for_test_space.get_fe(),
@@ -858,22 +864,33 @@ namespace HierBEM
          * Calculate Kx related data so that they won't be redundantly
          * calculated within @p sauter_quadrature_on_one_pair_of_cells.
          */
-        kx_mapping.compute_mapping_support_points(e);
+        const unsigned int kx_mapping_index =
+          material_id_to_mapping_index[e->material_id()];
+        MappingInfo<dim, spacedim> &kx_mapping_info =
+          *mappings[kx_mapping_index];
+
+        kx_mapping_info.get_mapping().compute_mapping_support_points(e);
         scratch_data.kx_mapping_support_points_in_default_order =
-          kx_mapping.get_support_points();
+          kx_mapping_info.get_mapping().get_support_points();
         e->get_dof_indices(
           scratch_data.kx_local_dof_indices_in_default_dof_order);
 
         for (const auto &f :
              dof_handler_for_trial_space.active_cell_iterators())
           {
+            const unsigned int ky_mapping_index =
+              material_id_to_mapping_index[f->material_id()];
+            MappingInfo<dim, spacedim> &ky_mapping_info =
+              *mappings[ky_mapping_index];
+
             sauter_quadrature_on_one_pair_of_cells(kernel,
                                                    factor,
                                                    e,
                                                    f,
-                                                   kx_mapping,
-                                                   ky_mapping,
+                                                   kx_mapping_info,
+                                                   ky_mapping_info,
                                                    bem_values,
+                                                   normal_detector,
                                                    scratch_data,
                                                    per_task_data,
                                                    true);

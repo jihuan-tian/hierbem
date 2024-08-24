@@ -65,9 +65,10 @@
 #include "hmatrix_symm.h"
 #include "hmatrix_symm_preconditioner.h"
 #include "laplace_kernels.hcu"
-#include "mapping/mapping_q_generic_ext.h"
+#include "mapping/mapping_info.h"
 #include "quadrature.templates.h"
 #include "read_octave_data.h"
+#include "subdomain_topology.h"
 #include "triangulation_tools.h"
 
 namespace HierBEM
@@ -78,6 +79,68 @@ namespace HierBEM
   class LaplaceBEM
   {
   public:
+    /**
+     * A class for detecting if a surface normal vector points into a volume.
+     *
+     * If so, the surface normal vector computed for a cell should be negated,
+     * because we assume an outward normal vector adopted for the problem
+     * domain, whether we're solving an interior BEM problem or exterior
+     * problem.
+     */
+    class SurfaceNormalDetector
+    {
+    public:
+      SurfaceNormalDetector() = delete;
+
+      SurfaceNormalDetector(
+        SubdomainTopology<dim, spacedim> &subdomain_topology)
+        : subdomain_topology(subdomain_topology)
+      {}
+
+      /**
+       * Given a material id of a cell, this function checks if its normal
+       * vector points into a corresponding domain by checking the
+       * surface-to-subdomain relationship.
+       *
+       * \mynote{In the Laplace solver, a domain (with a non-zero subdomain tag)
+       * must be fully in contact with the surrounding space (whose subdomain
+       * tag is zero). This still holds if there are several subdomains in the
+       * model, because they are all well separated from each other. This leads
+       * to the fact the in a record in the surface-to-subdomain relationship,
+       * there should be only one non-zero value. We use this fact to check the
+       * direction of the surface normal vector.}
+       *
+       * @pre
+       * @post
+       * @param m
+       * @return
+       */
+      bool
+      is_normal_vector_inward(const types::material_id m)
+      {
+        if (subdomain_topology.get_surface_to_subdomain(m)[0] > 0)
+          {
+            Assert(subdomain_topology.get_surface_to_subdomain(m)[1] == 0,
+                   ExcInternalError());
+            return false;
+          }
+        else
+          {
+            Assert(subdomain_topology.get_surface_to_subdomain(m)[1] > 0,
+                   ExcInternalError());
+            return true;
+          }
+      }
+
+    private:
+      SubdomainTopology<dim, spacedim> &subdomain_topology;
+    };
+
+    /**
+     * Maximum mapping order.
+     */
+    inline static const unsigned int max_mapping_order = 3;
+
     /**
      * Enum for various types of Laplace problem
      */
@@ -119,18 +182,20 @@ namespace HierBEM
               template <int, typename>
               typename KernelFunctionType,
               typename RangeNumberType,
+              typename SurfaceNormalDetector,
               typename MatrixType>
     friend void
     assemble_bem_full_matrix(
       const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-      const DoFHandler<dim1, spacedim1>   &dof_handler_for_test_space,
-      const DoFHandler<dim1, spacedim1>   &dof_handler_for_trial_space,
-      MappingQGenericExt<dim1, spacedim1> &kx_mapping,
-      MappingQGenericExt<dim1, spacedim1> &ky_mapping,
-      typename MappingQGeneric<dim1, spacedim1>::InternalData &kx_mapping_data,
-      typename MappingQGeneric<dim1, spacedim1>::InternalData &ky_mapping_data,
-      const SauterQuadratureRule<dim1>                        &sauter_quad_rule,
-      MatrixType &target_full_matrix);
+      const RangeNumberType                                factor,
+      const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+      const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const std::map<types::material_id, unsigned int>
+                                      &material_id_to_mapping_index,
+      const SurfaceNormalDetector     &normal_detector,
+      const SauterQuadratureRule<dim> &sauter_quad_rule,
+      MatrixType                      &target_full_matrix);
 
 
     template <int dim1,
@@ -138,18 +203,20 @@ namespace HierBEM
               template <int, typename>
               typename KernelFunctionType,
               typename RangeNumberType,
+              typename SurfaceNormalDetector,
               typename MatrixType>
     friend void
     assemble_bem_full_matrix_serial(
       const KernelFunctionType<spacedim, RangeNumberType> &kernel,
-      const DoFHandler<dim1, spacedim1>   &dof_handler_for_test_space,
-      const DoFHandler<dim1, spacedim1>   &dof_handler_for_trial_space,
-      MappingQGenericExt<dim1, spacedim1> &kx_mapping,
-      MappingQGenericExt<dim1, spacedim1> &ky_mapping,
-      typename MappingQGeneric<dim1, spacedim1>::InternalData &kx_mapping_data,
-      typename MappingQGeneric<dim1, spacedim1>::InternalData &ky_mapping_data,
-      const SauterQuadratureRule<dim1>                        &sauter_quad_rule,
-      MatrixType &target_full_matrix);
+      const RangeNumberType                                factor,
+      const DoFHandler<dim, spacedim> &dof_handler_for_test_space,
+      const DoFHandler<dim, spacedim> &dof_handler_for_trial_space,
+      const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+      const std::map<types::material_id, unsigned int>
+                                      &material_id_to_mapping_order,
+      const SurfaceNormalDetector     &normal_detector,
+      const SauterQuadratureRule<dim> &sauter_quad_rule,
+      MatrixType                      &target_full_matrix);
 
 
     /**
@@ -216,35 +283,16 @@ namespace HierBEM
     ~LaplaceBEM();
 
     /**
-     * Read the volume mesh from a file.
-     */
-    void
-    read_volume_mesh(const std::string &mesh_file, const bool debug = false);
-
-    /**
-     * Assign an external volume triangulation into the class.
-     */
-    void
-    assign_volume_triangulation(Triangulation<spacedim> &&tria,
-                                const bool                debug = false);
-
-    /**
-     * Assign an external surface triangulation into the class. Then the surface
-     * triangulation will be extracted from the volume mesh. Therefore, this
-     * function should be called after @p assign_volume_triangulation.
+     * Extract the surface mesh from the given volume mesh.
      *
      * Before calling this function, the association between surface manifold
      * objects and manifold ids should be configured, if there is any.
      */
     void
-    assign_surface_triangulation(Triangulation<dim, spacedim> &&tria,
-                                 const bool                     debug = false);
-
-    void
-    set_dirichlet_boundary_ids(std::initializer_list<types::boundary_id> ilist);
-
-    void
-    set_neumann_boundary_ids(std::initializer_list<types::boundary_id> ilist);
+    extract_surface_triangulation(
+      const Triangulation<dim + 1, spacedim> &volume_triangulation,
+      Triangulation<dim, spacedim>          &&surf_tria,
+      const bool                              debug = false);
 
     /**
      * Prepare for matrix assembly, which includes:
@@ -255,20 +303,67 @@ namespace HierBEM
     setup_system();
 
     /**
-     * Assign Dirichlet boundary condition function object.
+     * Assign Dirichlet boundary condition function object to all or a specific
+     * surface.
      *
-     * @param functor_ptr
+     * @param f
+     * @param surface_tag Surface entity tag. When it is -1, assign this
+     * function to all surfaces in the model.
      */
     void
-    assign_dirichlet_bc(Function<spacedim> &functor);
+    assign_dirichlet_bc(Function<spacedim> &f,
+                        const EntityTag     surface_tag = -1);
 
     /**
-     * Assign Neumann boundary condition function object.
+     * Assign Dirichlet boundary condition function object to a set of surfaces.
      *
-     * @param functor_ptr
+     * @pre
+     * @post
+     * @param f
+     * @param surface_tags
      */
     void
-    assign_neumann_bc(Function<spacedim> &functor);
+    assign_dirichlet_bc(Function<spacedim>           &f,
+                        const std::vector<EntityTag> &surface_tags);
+
+    /**
+     * Assign Neumann boundary condition function object to all or a specific
+     * surface.
+     *
+     * @param f
+     * @param surface_tag Surface entity tag. When it is -1, assign this
+     * function to all surfaces in the model.
+     */
+    void
+    assign_neumann_bc(Function<spacedim> &f, const EntityTag surface_tag = -1);
+
+    /**
+     * Assign Neumann boundary condition function object to a set of surfaces.
+     *
+     * @param f
+     * @param surface_tags
+     */
+    void
+    assign_neumann_bc(Function<spacedim>           &f,
+                      const std::vector<EntityTag> &surface_tags);
+
+    void
+    initialize_manifolds();
+
+    void
+    initialize_mappings();
+
+    /**
+     * Interpolate Dirichlet boundary conditions.
+     */
+    void
+    interpolate_dirichlet_bc();
+
+    /**
+     * Interpolate Neumann boundary conditions.
+     */
+    void
+    interpolate_neumann_bc();
 
     /**
      * Assemble full matrix system, which is only for verification purpose.
@@ -338,15 +433,57 @@ namespace HierBEM
     void
     print_memory_consumption_table(std::ostream &out) const;
 
+    const SubdomainTopology<dim, spacedim> &
+    get_subdomain_topology() const
+    {
+      return subdomain_topology;
+    }
+
+    SubdomainTopology<dim, spacedim> &
+    get_subdomain_topology()
+    {
+      return subdomain_topology;
+    }
+
+    const std::map<EntityTag, types::manifold_id> &
+    get_manifold_description() const
+    {
+      return manifold_description;
+    }
+
+    std::map<EntityTag, types::manifold_id> &
+    get_manifold_description()
+    {
+      return manifold_description;
+    }
+
+    const std::map<types::manifold_id, unsigned int> &
+    get_manifold_id_to_mapping_order() const
+    {
+      return manifold_id_to_mapping_order;
+    }
+
+    std::map<types::manifold_id, unsigned int> &
+    get_manifold_id_to_mapping_order()
+    {
+      return manifold_id_to_mapping_order;
+    }
+
+    const std::map<types::manifold_id, Manifold<dim, spacedim> *> &
+    get_manifolds() const
+    {
+      return manifolds;
+    }
+
+    std::map<types::manifold_id, Manifold<dim, spacedim> *> &
+    get_manifolds()
+    {
+      return manifolds;
+    }
+
   private:
     void
     generate_cell_iterators();
-
-    /**
-     * Initialize the mapping data object.
-     */
-    void
-    initialize_mapping_data();
 
     /**
      * Solve the equation \f$Vw_{\rm eq}=1\f$ for the natural density \f$w_{\rm
@@ -403,24 +540,40 @@ namespace HierBEM
     unsigned int thread_num;
 
     /**
-     * Triangulation for the volume mesh.
-     */
-    Triangulation<dim + 1, spacedim> volume_triangulation;
-
-    /*
      * Triangulation for the surface mesh.
      */
-    Triangulation<dim, spacedim> surface_triangulation;
+    Triangulation<dim, spacedim> tria;
 
     /**
-     * A set of boundary indices for the Dirichlet domain.
+     * A list of mapping objects from 1st to 3rd order.
      */
-    std::set<types::boundary_id> boundary_ids_for_dirichlet_domain;
+    std::vector<MappingInfo<dim, spacedim> *> mappings;
 
     /**
-     * A set of boundary indices for the Neumann domain.
+     * Map surface entity tag to manifold id. At the moment, the material for
+     * each surface is the same as the entity tag in Gmsh.
      */
-    std::set<types::boundary_id> boundary_ids_for_neumann_domain;
+    std::map<EntityTag, types::manifold_id> manifold_description;
+
+    /**
+     * Map @p manifold_id to the pointer of a Manifold object.
+     */
+    std::map<types::manifold_id, Manifold<dim, spacedim> *> manifolds;
+
+    /**
+     * Map @p manifold_id to mapping order.
+     */
+    std::map<types::manifold_id, unsigned int> manifold_id_to_mapping_order;
+
+    /**
+     * Map @p material_id to mapping index.
+     */
+    std::map<types::material_id, unsigned int> material_id_to_mapping_index;
+
+    /**
+     * Surface-to-volume and volume-to-surface relationship.
+     */
+    SubdomainTopology<dim, spacedim> subdomain_topology;
 
     /**
      * Finite element \f$H^{\frac{1}{2}+s}\f$ for the Dirichlet space. At
@@ -510,43 +663,6 @@ namespace HierBEM
      */
     DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_dirichlet_space;
     DofToCellTopology<dim, spacedim> dof_to_cell_topo_for_neumann_space;
-
-    /**
-     * Polynomial order for describing the geometric mapping for the Dirichlet
-     * domain, i.e. the transformation from the unit cell to a real cell.
-     */
-    unsigned int mapping_order_for_dirichlet_domain;
-    /**
-     * Polynomial order for describing the geometric mapping for the Neumann
-     * domain, i.e. the transformation from the unit cell to a real cell.
-     */
-    unsigned int mapping_order_for_neumann_domain;
-    /**
-     * Geometric mapping object for the Dirichlet domain.
-     */
-    MappingQGenericExt<dim, spacedim> kx_mapping_for_dirichlet_domain;
-    MappingQGenericExt<dim, spacedim> ky_mapping_for_dirichlet_domain;
-    /**
-     * Geometric mapping object for the Neumann domain.
-     */
-    MappingQGenericExt<dim, spacedim> kx_mapping_for_neumann_domain;
-    MappingQGenericExt<dim, spacedim> ky_mapping_for_neumann_domain;
-    /**
-     * Pointer to the internal data held by the @p Mapping object for the
-     * Dirichlet domain.
-     */
-    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
-      kx_mapping_data_for_dirichlet_domain;
-    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
-      ky_mapping_data_for_dirichlet_domain;
-    /**
-     * Pointer to the internal data held by the @p Mapping object for the
-     * Neumann domain.
-     */
-    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
-      kx_mapping_data_for_neumann_domain;
-    std::unique_ptr<typename MappingQGeneric<dim, spacedim>::InternalData>
-      ky_mapping_data_for_neumann_domain;
 
     /**
      * Kernel function for the single layer potential.
@@ -727,9 +843,10 @@ namespace HierBEM
     double aca_relative_error_for_preconditioner;
 
     /**
-     * Pointer to the Neumann boundary condition function object.
+     * Map surface entity tag to Neumann boundary condition.
      */
-    Function<spacedim, double> *neumann_bc_functor_ptr;
+    std::map<EntityTag, Function<spacedim, double> *>
+      neumann_boundary_conditions;
 
     /**
      * Neumann boundary condition data on all DoFs in the associated DoF
@@ -751,9 +868,10 @@ namespace HierBEM
     double alpha_for_neumann;
 
     /**
-     * Pointer to the Dirichlet boundary condition function object.
+     * Map surface entity tag to Dirichlet boundary condition.
      */
-    Function<spacedim, double> *dirichlet_bc_functor_ptr;
+    std::map<EntityTag, Function<spacedim, double> *>
+      dirichlet_boundary_conditions;
 
     /**
      * Dirichlet boundary condition data on all DoFs in the associated DoF
@@ -897,9 +1015,7 @@ namespace HierBEM
     , eta_for_preconditioner(0)
     , max_hmat_rank_for_preconditioner(0)
     , aca_relative_error_for_preconditioner(0)
-    , neumann_bc_functor_ptr(nullptr)
     , alpha_for_neumann(1.0)
-    , dirichlet_bc_functor_ptr(nullptr)
   {
     initialize_memory_consumption_table_headers();
   }
@@ -950,9 +1066,7 @@ namespace HierBEM
     , eta_for_preconditioner(0)
     , max_hmat_rank_for_preconditioner(0)
     , aca_relative_error_for_preconditioner(0)
-    , neumann_bc_functor_ptr(nullptr)
     , alpha_for_neumann(1.0)
-    , dirichlet_bc_functor_ptr(nullptr)
   {
     initialize_memory_consumption_table_headers();
     initialize_mapping_data();
@@ -1013,9 +1127,7 @@ namespace HierBEM
     , max_hmat_rank_for_preconditioner(max_hmat_rank_for_preconditioner)
     , aca_relative_error_for_preconditioner(
         aca_relative_error_for_preconditioner)
-    , neumann_bc_functor_ptr(nullptr)
     , alpha_for_neumann(1.0)
-    , dirichlet_bc_functor_ptr(nullptr)
   {
     initialize_memory_consumption_table_headers();
     initialize_mapping_data();
@@ -1028,16 +1140,10 @@ namespace HierBEM
     dof_handler_for_dirichlet_space.clear();
     dof_handler_for_neumann_space.clear();
 
-    boundary_ids_for_dirichlet_domain.clear();
-    boundary_ids_for_neumann_domain.clear();
-
     local_to_full_dirichlet_dof_indices_on_dirichlet_domain.clear();
     local_to_full_dirichlet_dof_indices_on_neumann_domain.clear();
     local_to_full_neumann_dof_indices_on_dirichlet_domain.clear();
     local_to_full_dirichlet_dof_indices_on_neumann_domain.clear();
-
-    neumann_bc_functor_ptr   = nullptr;
-    dirichlet_bc_functor_ptr = nullptr;
 
     dof_e2i_numbering_for_dirichlet_space_on_dirichlet_domain = nullptr;
     dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain = nullptr;
@@ -1047,107 +1153,39 @@ namespace HierBEM
     dof_i2e_numbering_for_neumann_space_on_dirichlet_domain   = nullptr;
     dof_e2i_numbering_for_neumann_space_on_neumann_domain     = nullptr;
     dof_i2e_numbering_for_neumann_space_on_neumann_domain     = nullptr;
+
+    // Release manifold objects.
+    for (auto &m : manifolds)
+      {
+        delete m.second;
+      }
+
+    // Release mapping objects.
+    for (auto m : mappings)
+      {
+        delete m;
+      }
   }
 
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::read_volume_mesh(const std::string &mesh_file,
-                                              const bool         debug)
+  LaplaceBEM<dim, spacedim>::extract_surface_triangulation(
+    const Triangulation<dim + 1, spacedim> &volume_triangulation,
+    Triangulation<dim, spacedim>          &&surf_tria,
+    const bool                              debug)
   {
-    /**
-     * The template parameters @p dim and @p spacedim of the @p LaplaceBEM
-     * class are used to describe the surface mesh, and here the volume mesh is
-     * to be read, therefore, the dimensions for @p GridIn is
-     * <code>(dim+1,spacedim)</code>.
-     */
-    GridIn<dim + 1, spacedim> grid_in;
-    grid_in.attach_triangulation(volume_triangulation);
-    std::fstream in(mesh_file);
-    grid_in.read_msh(in);
-    in.close();
+    tria = std::move(surf_tria);
 
-    if (debug)
-      {
-        std::cout << "=== Volume mesh information ===" << std::endl;
-        print_mesh_info(std::cout, volume_triangulation);
-      }
-
-    GridGenerator::extract_boundary_mesh(volume_triangulation,
-                                         surface_triangulation);
+    GridGenerator::extract_boundary_mesh(volume_triangulation, tria);
 
     if (debug)
       {
         std::cout << "=== Surface mesh information ===" << std::endl;
-        print_mesh_info(std::cout, surface_triangulation);
-
-        /**
-         * @internal Save the surface mesh file.
-         */
-        std::ofstream surface_mesh_file(
-          mesh_file.substr(0, mesh_file.find_last_of('.')) + "-surface.msh");
-        write_msh_correct(surface_triangulation, surface_mesh_file);
+        print_mesh_info(std::cout, tria);
       }
 
-    add_memory_consumption_row("Volume mesh", volume_triangulation);
-    add_memory_consumption_row("Surface mesh", surface_triangulation);
-  }
-
-
-  template <int dim, int spacedim>
-  void
-  LaplaceBEM<dim, spacedim>::assign_volume_triangulation(
-    Triangulation<spacedim> &&tria,
-    const bool                debug)
-  {
-    volume_triangulation = std::move(tria);
-
-    if (debug)
-      {
-        std::cout << "=== Volume mesh information ===" << std::endl;
-        print_mesh_info(std::cout, volume_triangulation);
-      }
-
-    add_memory_consumption_row("Volume mesh", volume_triangulation);
-  }
-
-
-  template <int dim, int spacedim>
-  void
-  LaplaceBEM<dim, spacedim>::assign_surface_triangulation(
-    Triangulation<dim, spacedim> &&tria,
-    const bool                     debug)
-  {
-    surface_triangulation = std::move(tria);
-
-    GridGenerator::extract_boundary_mesh(volume_triangulation,
-                                         surface_triangulation);
-
-    if (debug)
-      {
-        std::cout << "=== Surface mesh information ===" << std::endl;
-        print_mesh_info(std::cout, surface_triangulation);
-      }
-
-    add_memory_consumption_row("Surface mesh", surface_triangulation);
-  }
-
-
-  template <int dim, int spacedim>
-  void
-  LaplaceBEM<dim, spacedim>::set_dirichlet_boundary_ids(
-    std::initializer_list<types::boundary_id> ilist)
-  {
-    boundary_ids_for_dirichlet_domain = ilist;
-  }
-
-
-  template <int dim, int spacedim>
-  void
-  LaplaceBEM<dim, spacedim>::set_neumann_boundary_ids(
-    std::initializer_list<types::boundary_id> ilist)
-  {
-    boundary_ids_for_neumann_domain = ilist;
+    add_memory_consumption_row("Surface mesh", tria);
   }
 
 
@@ -1185,13 +1223,15 @@ namespace HierBEM
     Timer timer;
     timer.stop();
 
+    initialize_mappings();
+
     switch (problem_type)
       {
           case DirichletBCProblem: {
-            dof_handler_for_dirichlet_space.reinit(surface_triangulation);
+            dof_handler_for_dirichlet_space.reinit(tria);
             dof_handler_for_dirichlet_space.distribute_dofs(
               fe_for_dirichlet_space);
-            dof_handler_for_neumann_space.reinit(surface_triangulation);
+            dof_handler_for_neumann_space.reinit(tria);
             dof_handler_for_neumann_space.distribute_dofs(fe_for_neumann_space);
 
             const unsigned int n_dofs_for_dirichlet_space =
@@ -1564,16 +1604,10 @@ namespace HierBEM
 
             /**
              * Interpolate the Dirichlet boundary data.
-             *
-             * TODO When there are multiple Dirichlet subdomains assigned
-             * different boundary values, they should be handled separately.
              */
             timer.start();
 
-            dirichlet_bc.reinit(n_dofs_for_dirichlet_space);
-            VectorTools::interpolate(dof_handler_for_dirichlet_space,
-                                     *dirichlet_bc_functor_ptr,
-                                     dirichlet_bc);
+            interpolate_dirichlet_bc();
 
             if (use_hmat)
               {
@@ -1609,10 +1643,10 @@ namespace HierBEM
             break;
           }
           case NeumannBCProblem: {
-            dof_handler_for_dirichlet_space.reinit(surface_triangulation);
+            dof_handler_for_dirichlet_space.reinit(tria);
             dof_handler_for_dirichlet_space.distribute_dofs(
               fe_for_dirichlet_space);
-            dof_handler_for_neumann_space.reinit(surface_triangulation);
+            dof_handler_for_neumann_space.reinit(tria);
             dof_handler_for_neumann_space.distribute_dofs(fe_for_neumann_space);
 
             const unsigned int n_dofs_for_dirichlet_space =
@@ -1872,16 +1906,10 @@ namespace HierBEM
 
             /**
              * Interpolate the Neumann boundary data.
-             *
-             * TODO When there are multiple Neumann subdomains assigned
-             * different boundary values, they should be handled separately.
              */
             timer.start();
 
-            neumann_bc.reinit(n_dofs_for_neumann_space);
-            VectorTools::interpolate(dof_handler_for_neumann_space,
-                                     *neumann_bc_functor_ptr,
-                                     neumann_bc);
+            interpolate_neumann_bc();
 
             if (use_hmat)
               {
@@ -1933,10 +1961,10 @@ namespace HierBEM
             Assert(use_hmat, ExcInternalError());
 
             // Initialize DoF handlers.
-            dof_handler_for_dirichlet_space.reinit(surface_triangulation);
+            dof_handler_for_dirichlet_space.reinit(tria);
             dof_handler_for_dirichlet_space.distribute_dofs(
               fe_for_dirichlet_space);
-            dof_handler_for_neumann_space.reinit(surface_triangulation);
+            dof_handler_for_neumann_space.reinit(tria);
             dof_handler_for_neumann_space.distribute_dofs(fe_for_neumann_space);
 
             // Generate DoF selectors for the Dirichlet space on the extended
@@ -2443,29 +2471,7 @@ namespace HierBEM
              */
             timer.start();
 
-            /**
-             * TODO At the moment, there is only one functor defining the
-             * boundary condition. In the future, there will be a functor for
-             * each material id involved in the subdomain.
-             *
-             * N.B. The boundary ids in the volume mesh will be come material
-             * ids in the surface mesh.
-             */
-            std::map<types::material_id, const Function<spacedim, double> *>
-              dirichlet_bc_function_map;
-            for (auto boundary_id : boundary_ids_for_dirichlet_domain)
-              {
-                dirichlet_bc_function_map.insert(
-                  {static_cast<types::material_id>(boundary_id),
-                   dirichlet_bc_functor_ptr});
-              }
-
-            dirichlet_bc.reinit(dof_handler_for_dirichlet_space.n_dofs());
-            VectorTools::interpolate_based_on_material_id(
-              kx_mapping_for_dirichlet_domain,
-              dof_handler_for_dirichlet_space,
-              dirichlet_bc_function_map,
-              dirichlet_bc);
+            interpolate_dirichlet_bc();
 
             /**
              * Extract the Dirichlet boundary data on the selected DoFs.
@@ -2492,28 +2498,9 @@ namespace HierBEM
               dirichlet_bc_internal_dof_numbering);
 
             /**
-             * TODO At the moment, there is only one functor defining the
-             * boundary condition. In the future, there will be a functor for
-             * each material id involved in the subdomain.
-             *
-             * N.B. The boundary ids in the volume mesh will be come material
-             * ids in the surface mesh.
+             * Interpolate Neumann boundary condition.
              */
-            std::map<types::material_id, const Function<spacedim, double> *>
-              neumann_bc_function_map;
-            for (auto boundary_id : boundary_ids_for_neumann_domain)
-              {
-                neumann_bc_function_map.insert(
-                  {static_cast<types::material_id>(boundary_id),
-                   neumann_bc_functor_ptr});
-              }
-
-            neumann_bc.reinit(dof_handler_for_neumann_space.n_dofs());
-            VectorTools::interpolate_based_on_material_id(
-              kx_mapping_for_neumann_domain,
-              dof_handler_for_neumann_space,
-              neumann_bc_function_map,
-              neumann_bc);
+            interpolate_neumann_bc();
 
             /**
              * Extract the Neumann boundary data on the selected DoFs.
@@ -2589,17 +2576,153 @@ namespace HierBEM
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::assign_dirichlet_bc(Function<spacedim> &functor)
+  LaplaceBEM<dim, spacedim>::assign_dirichlet_bc(Function<spacedim> &f,
+                                                 const EntityTag surface_tag)
   {
-    dirichlet_bc_functor_ptr = &functor;
+    if (surface_tag == -1)
+      {
+        for (const auto &record : subdomain_topology.get_surface_to_subdomain())
+          {
+            dirichlet_boundary_conditions[record.first] = &f;
+          }
+      }
+    else
+      {
+        dirichlet_boundary_conditions[surface_tag] = &f;
+      }
   }
 
 
   template <int dim, int spacedim>
   void
-  LaplaceBEM<dim, spacedim>::assign_neumann_bc(Function<spacedim> &functor)
+  LaplaceBEM<dim, spacedim>::assign_dirichlet_bc(
+    Function<spacedim>           &f,
+    const std::vector<EntityTag> &surface_tags)
   {
-    neumann_bc_functor_ptr = &functor;
+    for (const auto t : surface_tags)
+      {
+        dirichlet_boundary_conditions[t] = &f;
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::assign_neumann_bc(Function<spacedim> &f,
+                                               const EntityTag     surface_tag)
+  {
+    if (surface_tag == -1)
+      {
+        for (const auto &record : subdomain_topology.get_surface_to_subdomain())
+          {
+            neumann_boundary_conditions[record.first] = &f;
+          }
+      }
+    else
+      {
+        neumann_boundary_conditions[surface_tag] = &f;
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::assign_neumann_bc(
+    Function<spacedim>           &f,
+    const std::vector<EntityTag> &surface_tags)
+  {
+    for (const auto t : surface_tags)
+      {
+        neumann_boundary_conditions[t] = &f;
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::initialize_manifolds()
+  {
+    // Assign manifold ids to all cells in the triangulation.
+    for (auto &cell : tria.active_cell_iterators())
+      {
+        cell->set_all_manifold_ids(manifold_description[cell->material_id()]);
+      }
+
+    // Associate manifold objects with manifold ids in the triangulation.
+    for (const auto &m : manifolds)
+      {
+        tria.set_manifold(m.first, *m.second);
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::initialize_mappings()
+  {
+    // Create different orders of mapping.
+    mappings.reserve(max_mapping_order);
+    for (unsigned int i = 1; i <= max_mapping_order; i++)
+      {
+        mappings.push_back(new MappingInfo<dim, spacedim>(i));
+      }
+
+    // Construct the map from material ids to mapping indices.
+    for (const auto &m : manifold_description)
+      {
+        material_id_to_mapping_index[m.first] =
+          manifold_id_to_mapping_order[m.second];
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::interpolate_dirichlet_bc()
+  {
+    dirichlet_bc.reinit(dof_handler_for_dirichlet_space.n_dofs());
+
+    // Because each surface may be assigned a different mapping object, here we
+    // interpolate the Dirichlet boundary condition vector surface by surface.
+    for (const auto &bc : dirichlet_boundary_conditions)
+      {
+        std::map<types::material_id, const Function<spacedim, double> *>
+          single_pair_map;
+        single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
+
+        VectorTools::interpolate_based_on_material_id(
+          mappings
+            [manifold_id_to_mapping_order[manifold_description[bc.first]] - 1]
+              ->get_mapping(),
+          dof_handler_for_dirichlet_space,
+          single_pair_map,
+          dirichlet_bc);
+      }
+  }
+
+
+  template <int dim, int spacedim>
+  void
+  LaplaceBEM<dim, spacedim>::interpolate_neumann_bc()
+  {
+    neumann_bc.reinit(dof_handler_for_neumann_space.n_dofs());
+
+    // Because each surface may be assigned a different mapping object, here we
+    // interpolate the Neumann boundary condition vector surface by surface.
+    for (const auto &bc : neumann_boundary_conditions)
+      {
+        std::map<types::material_id, const Function<spacedim, double> *>
+          single_pair_map;
+        single_pair_map[static_cast<types::material_id>(bc.first)] = bc.second;
+
+        VectorTools::interpolate_based_on_material_id(
+          mappings
+            [manifold_id_to_mapping_order[manifold_description[bc.first]] - 1]
+              ->get_mapping(),
+          dof_handler_for_neumann_space,
+          single_pair_map,
+          neumann_bc);
+      }
   }
 
 
@@ -2692,10 +2815,9 @@ namespace HierBEM
                   1.0,
                   dof_handler_for_neumann_space,
                   dof_handler_for_dirichlet_space,
-                  kx_mapping_for_dirichlet_domain,
-                  ky_mapping_for_dirichlet_domain,
-                  *kx_mapping_data_for_dirichlet_domain,
-                  *ky_mapping_data_for_dirichlet_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   SauterQuadratureRule<dim>(5, 4, 4, 3),
                   K2_matrix_with_mass_matrix);
               }
@@ -2705,10 +2827,10 @@ namespace HierBEM
                                          1.0,
                                          dof_handler_for_neumann_space,
                                          dof_handler_for_dirichlet_space,
-                                         kx_mapping_for_dirichlet_domain,
-                                         ky_mapping_for_dirichlet_domain,
-                                         *kx_mapping_data_for_dirichlet_domain,
-                                         *ky_mapping_data_for_dirichlet_domain,
+                                         mappings,
+                                         material_id_to_mapping_index,
+                                         SurfaceNormalDetector(
+                                           subdomain_topology),
                                          SauterQuadratureRule<dim>(5, 4, 4, 3),
                                          K2_matrix_with_mass_matrix);
               }
@@ -2728,10 +2850,9 @@ namespace HierBEM
                   1.0,
                   dof_handler_for_neumann_space,
                   dof_handler_for_neumann_space,
-                  kx_mapping_for_dirichlet_domain,
-                  ky_mapping_for_dirichlet_domain,
-                  *kx_mapping_data_for_dirichlet_domain,
-                  *ky_mapping_data_for_dirichlet_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   SauterQuadratureRule<dim>(5, 4, 4, 3),
                   V1_matrix);
               }
@@ -2741,10 +2862,10 @@ namespace HierBEM
                                          1.0,
                                          dof_handler_for_neumann_space,
                                          dof_handler_for_neumann_space,
-                                         kx_mapping_for_dirichlet_domain,
-                                         ky_mapping_for_dirichlet_domain,
-                                         *kx_mapping_data_for_dirichlet_domain,
-                                         *ky_mapping_data_for_dirichlet_domain,
+                                         mappings,
+                                         material_id_to_mapping_index,
+                                         SurfaceNormalDetector(
+                                           subdomain_topology),
                                          SauterQuadratureRule<dim>(5, 4, 4, 3),
                                          V1_matrix);
               }
@@ -2799,10 +2920,9 @@ namespace HierBEM
                                      -1.0,
                                      dof_handler_for_dirichlet_space,
                                      dof_handler_for_neumann_space,
-                                     kx_mapping_for_neumann_domain,
-                                     ky_mapping_for_neumann_domain,
-                                     *kx_mapping_data_for_neumann_domain,
-                                     *ky_mapping_data_for_neumann_domain,
+                                     mappings,
+                                     material_id_to_mapping_index,
+                                     SurfaceNormalDetector(subdomain_topology),
                                      SauterQuadratureRule<dim>(5, 4, 4, 3),
                                      K_prime2_matrix_with_mass_matrix);
 
@@ -2816,10 +2936,9 @@ namespace HierBEM
                                      1.0,
                                      dof_handler_for_dirichlet_space,
                                      dof_handler_for_dirichlet_space,
-                                     kx_mapping_for_neumann_domain,
-                                     ky_mapping_for_neumann_domain,
-                                     *kx_mapping_data_for_neumann_domain,
-                                     *ky_mapping_data_for_neumann_domain,
+                                     mappings,
+                                     material_id_to_mapping_index,
+                                     SurfaceNormalDetector(subdomain_topology),
                                      SauterQuadratureRule<dim>(5, 4, 4, 3),
                                      D1_matrix);
 
@@ -2925,10 +3044,9 @@ namespace HierBEM
                   nullptr,
                   *dof_i2e_numbering_for_neumann_space_on_dirichlet_domain,
                   *dof_i2e_numbering_for_dirichlet_space_on_dirichlet_domain,
-                  kx_mapping_for_dirichlet_domain,
-                  ky_mapping_for_dirichlet_domain,
-                  *kx_mapping_data_for_dirichlet_domain,
-                  *ky_mapping_data_for_dirichlet_domain,
+                  mappings,
+                  material_id_to_mapping_index,
+                  SurfaceNormalDetector(subdomain_topology),
                   false);
 
                 timer.stop();
@@ -4540,78 +4658,6 @@ namespace HierBEM
 
 
   template <int dim, int spacedim>
-  void
-  LaplaceBEM<dim, spacedim>::initialize_mapping_data()
-  {
-    /**
-     * Initialize the @p InternalData objects in the mapping objects for the
-     * Dirichlet domain.
-     */
-    if (problem_type == DirichletBCProblem || problem_type == MixedBCProblem)
-      {
-        /**
-         * Create the internal data object in the parent @p Mapping object.
-         *
-         * N.B. A dummy quadrature object is passed to the @p get_data function. The
-         * @p UpdateFlags is set to @p update_default (it means no update),
-         * which at the moment disables any memory allocation, because this
-         * operation will be manually taken care of later on.
-         */
-        std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-          kx_mapping_database_for_dirichlet_domain =
-            kx_mapping_for_dirichlet_domain.get_data(update_default,
-                                                     QGauss<dim>(1));
-
-        /**
-         * Downcast the smart pointer of @p Mapping<dim, spacedim>::InternalDataBase to
-         * @p MappingQGeneric<dim,spacedim>::InternalData by first unwrapping
-         * the original smart pointer via @p static_cast then wrapping it again.
-         */
-        kx_mapping_data_for_dirichlet_domain = std::unique_ptr<
-          typename MappingQGeneric<dim, spacedim>::InternalData>(
-          static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
-            kx_mapping_database_for_dirichlet_domain.release()));
-
-        std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-          ky_mapping_database_for_dirichlet_domain =
-            ky_mapping_for_dirichlet_domain.get_data(update_default,
-                                                     QGauss<dim>(1));
-
-        ky_mapping_data_for_dirichlet_domain = std::unique_ptr<
-          typename MappingQGeneric<dim, spacedim>::InternalData>(
-          static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
-            ky_mapping_database_for_dirichlet_domain.release()));
-      }
-
-    /**
-     * Initialize the @p InternalData objects in the mapping objects for the
-     * Neumann domain.
-     */
-    if (problem_type == NeumannBCProblem || problem_type == MixedBCProblem)
-      {
-        std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-          kx_mapping_database_for_neumann_domain =
-            kx_mapping_for_neumann_domain.get_data(update_default,
-                                                   QGauss<dim>(1));
-
-        kx_mapping_data_for_neumann_domain = std::unique_ptr<
-          typename MappingQGeneric<dim, spacedim>::InternalData>(
-          static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
-            kx_mapping_database_for_neumann_domain.release()));
-
-        std::unique_ptr<typename Mapping<dim, spacedim>::InternalDataBase>
-          ky_mapping_database_for_neumann_domain =
-            ky_mapping_for_neumann_domain.get_data(update_default,
-                                                   QGauss<dim>(1));
-
-        ky_mapping_data_for_neumann_domain = std::unique_ptr<
-          typename MappingQGeneric<dim, spacedim>::InternalData>(
-          static_cast<typename MappingQGeneric<dim, spacedim>::InternalData *>(
-            ky_mapping_database_for_neumann_domain.release()));
-      }
-  }
-
-  template <int dim, int spacedim>
   inline bool
   LaplaceBEM<dim, spacedim>::is_cpu_serial() const
   {
@@ -4672,10 +4718,9 @@ namespace HierBEM
                                  1.0,
                                  dof_handler_for_neumann_space,
                                  dof_handler_for_neumann_space,
-                                 kx_mapping_for_neumann_domain,
-                                 ky_mapping_for_neumann_domain,
-                                 *kx_mapping_data_for_neumann_domain,
-                                 *ky_mapping_data_for_neumann_domain,
+                                 mappings,
+                                 material_id_to_mapping_index,
+                                 SurfaceNormalDetector(subdomain_topology),
                                  SauterQuadratureRule<dim>(5, 4, 4, 3),
                                  V1_matrix);
       }

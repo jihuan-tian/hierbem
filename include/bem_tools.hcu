@@ -102,6 +102,8 @@ namespace HierBEM
      * Permute a vector by using the given permutation indices to access its
      * elements.
      *
+     * The returned vector has the same size as the input vector.
+     *
      * @param input_vector
      * @param permutation_indices
      * @return Permuted vector
@@ -112,8 +114,7 @@ namespace HierBEM
                    const std::vector<unsigned int> &permutation_indices)
     {
       const unsigned int N = input_vector.size();
-      Assert(N == permutation_indices.size(),
-             ExcDimensionMismatch(N, permutation_indices.size()));
+      AssertDimension(N, permutation_indices.size());
 
       std::vector<T> permuted_vector(N);
 
@@ -127,45 +128,28 @@ namespace HierBEM
 
 
     /**
-     * Permute a vector by using the given permutation indices to access its
-     * elements. The result vector is returned as argument.
+     * @brief Permute a vector by using the given permutation indices to access its
+     * elements.
      *
+     * @tparam VectorType
+     * @tparam IndexType
      * @param input_vector
      * @param permutation_indices
-     * @param permuted_vector Permuted vector, the memory of which should be
-     * pre-allocated.
+     * @param permuted_vector Result vector, whose memory should be allocated
+     * before calling this function. Its size should be >= the size of the input
+     * vector.
      */
-    template <typename T>
+    template <typename VectorType, typename IndexType>
     void
-    permute_vector(const std::vector<T>            &input_vector,
-                   const std::vector<unsigned int> &permutation_indices,
-                   std::vector<T>                  &permuted_vector)
+    permute_vector(const VectorType             &input_vector,
+                   const std::vector<IndexType> &permutation_indices,
+                   VectorType                   &permuted_vector)
     {
-      const unsigned int N = input_vector.size();
-      Assert(N == permutation_indices.size(),
-             ExcDimensionMismatch(N, permutation_indices.size()));
-      Assert(N == permuted_vector.size(),
-             ExcDimensionMismatch(N, permuted_vector.size()));
-
-      for (unsigned int i = 0; i < N; i++)
-        {
-          permuted_vector[i] = input_vector[permutation_indices[i]];
-        }
-    }
-
-
-    template <typename VectorType>
-    void
-    permute_vector(
-      const VectorType                           &input_vector,
-      const std::vector<types::global_dof_index> &permutation_indices,
-      VectorType                                 &permuted_vector)
-    {
-      const types::global_dof_index N = input_vector.size();
+      const IndexType N = input_vector.size();
       AssertDimension(N, permutation_indices.size());
-      AssertDimension(N, permuted_vector.size());
+      Assert(N <= permuted_vector.size(), ExcInternalError());
 
-      for (types::global_dof_index i = 0; i < N; i++)
+      for (IndexType i = 0; i < N; i++)
         {
           permuted_vector[i] = input_vector[permutation_indices[i]];
         }
@@ -617,6 +601,46 @@ namespace HierBEM
 
 
     /**
+     * Collect two coordinate components from the list of points in 3D space.
+     * Only the first @p effective_point_num will be used.
+     *
+     * \mynote{This function is useful in constructing the surface metric tensor
+     * or surface normal vector.}
+     *
+     * @param points A list of points in 3D space
+     * @param effective_point_num Number of points to be used.
+     * @param first_component Index for the first coordinate component to be
+     * collected
+     * @param second_component Index for the second coordinate component to be
+     * collected
+     * @return A matrix storing the two coordinate components for all points. It
+     * has a dimension @p 2*points.size().
+     */
+    template <int spacedim>
+    LAPACKFullMatrixExt<double>
+    collect_two_components_from_point3(
+      const std::vector<Point<spacedim>> &points,
+      const unsigned int                  effective_point_num,
+      const unsigned int                  first_component,
+      const unsigned int                  second_component)
+    {
+      Assert(first_component < spacedim, ExcInternalError());
+      Assert(second_component < spacedim, ExcInternalError());
+      Assert(effective_point_num <= points.size(), ExcInternalError());
+
+      LAPACKFullMatrixExt<double> two_component_coords(2, effective_point_num);
+
+      for (unsigned int i = 0; i < effective_point_num; i++)
+        {
+          two_component_coords(0, i) = points[i](first_component);
+          two_component_coords(1, i) = points[i](second_component);
+        }
+
+      return two_component_coords;
+    }
+
+
+    /**
      * Collect coordinate components from the list of points in
      * \f$\mathbb{R}^d\f$. The obtained coordinate matrix has this format:
      * \f[
@@ -646,6 +670,35 @@ namespace HierBEM
       LAPACKFullMatrixExt<double> point_coords(spacedim, points.size());
 
       for (unsigned int i = 0; i < points.size(); i++)
+        {
+          for (unsigned int j = 0; j < spacedim; j++)
+            {
+              point_coords(j, i) = points[i](j);
+            }
+        }
+
+      return point_coords;
+    }
+
+
+    /**
+     * This overloaded function only use the first @p point_num number of points.
+     *
+     * @pre
+     * @post
+     * @tparam spacedim
+     * @param points
+     * @param point_num
+     * @return
+     */
+    template <int spacedim>
+    LAPACKFullMatrixExt<double>
+    collect_components_from_points(const std::vector<Point<spacedim>> &points,
+                                   const unsigned int point_num)
+    {
+      LAPACKFullMatrixExt<double> point_coords(spacedim, point_num);
+
+      for (unsigned int i = 0; i < point_num; i++)
         {
           for (unsigned int j = 0; j < spacedim; j++)
             {
@@ -2981,6 +3034,7 @@ namespace HierBEM
      * @param quad_no Quadrature point index
      * @param shape_grad_matrix_table The data table storing the gradient values
      * of the shape functions. Refer to @p BEMValues::kx_shape_grad_matrix_table_for_same_panel.
+     * @param mapping_index Index to the mapping object for the current cell.
      * @param support_points_in_real_cell A list of support points in the real
      * cell in the lexicographic order.
      * @param normal_vector
@@ -2993,7 +3047,9 @@ namespace HierBEM
     surface_jacobian_det_and_normal_vector(
       const unsigned int                           k3_index,
       const unsigned int                           quad_no,
-      const Table<2, LAPACKFullMatrixExt<double>> &shape_grad_matrix_table,
+      const Table<3, LAPACKFullMatrixExt<double>> &shape_grad_matrix_table,
+      const unsigned int                           mapping_index,
+      const unsigned int                           mapping_n_shape_functions,
       const std::vector<Point<spacedim>>          &support_points_in_real_cell,
       Tensor<1, spacedim>                         &normal_vector,
       const bool is_normal_vector_negated = false)
@@ -3003,12 +3059,12 @@ namespace HierBEM
 
       /**
        * Extract the shape function's gradient matrix under the specified
-       * \f$k_3\f$ index and quadrature point. Its first dimension is the shape
-       * function index and its second dimension is coordinate component index
-       * in the unit cell.
+       * mapping index, \f$k_3\f$ index and quadrature point index. The first
+       * dimension of the gradient matrix is the shape function index and the
+       * second dimension is coordinate component index in the unit cell.
        */
       const LAPACKFullMatrixExt<double> &shape_grad_matrix_at_quad_point =
-        shape_grad_matrix_table(k3_index, quad_no);
+        shape_grad_matrix_table(mapping_index, k3_index, quad_no);
 
       double                      surface_jacobian_det = 0.0;
       LAPACKFullMatrixExt<double> jacobian_matrix_2x2(2, 2);
@@ -3017,6 +3073,7 @@ namespace HierBEM
         {
           LAPACKFullMatrixExt<double> support_point_components =
             collect_two_components_from_point3(support_points_in_real_cell,
+                                               mapping_n_shape_functions,
                                                i,
                                                (i + 1) % spacedim);
           support_point_components.mmult(jacobian_matrix_2x2,
@@ -3076,7 +3133,9 @@ namespace HierBEM
     surface_covariant_transformation(
       const unsigned int                           k3_index,
       const unsigned int                           quad_no,
-      const Table<2, LAPACKFullMatrixExt<Number>> &shape_grad_matrix_table,
+      const Table<3, LAPACKFullMatrixExt<Number>> &shape_grad_matrix_table,
+      const unsigned int                           mapping_index,
+      const unsigned int                           mapping_n_shape_functions,
       const std::vector<Point<spacedim, Number>>  &support_points_in_real_cell)
     {
       // Currently, only @p spacedim=3 is supported.
@@ -3088,10 +3147,11 @@ namespace HierBEM
        * calculating the Jacobian matrix.
        */
       const LAPACKFullMatrixExt<Number> &shape_grad_matrix_at_quad_point =
-        shape_grad_matrix_table(k3_index, quad_no);
+        shape_grad_matrix_table(mapping_index, k3_index, quad_no);
 
       LAPACKFullMatrixExt<Number> support_point_components =
-        collect_components_from_points(support_points_in_real_cell);
+        collect_components_from_points(support_points_in_real_cell,
+                                       mapping_n_shape_functions);
 
       const unsigned int          dim = shape_grad_matrix_at_quad_point.n();
       LAPACKFullMatrixExt<Number> jacobian_matrix(spacedim, dim);
@@ -3206,7 +3266,7 @@ namespace HierBEM
 
 
       /**
-       * Calculate the surface Jacobian determinant and the normal vector at the
+       * @brief Calculate the surface Jacobian determinant and the normal vector at the
        * quadrature point specified by its index. This version runs on the
        * GPU device.
        *
@@ -3215,13 +3275,16 @@ namespace HierBEM
        * normal vector \f$n_y\f$ has the opposite direction of the real one,
        * which should be negated in the subsequent calculation.}
        *
-       * @tparam dim
-       * @tparam spacedim
        * @tparam RangeNumberType
+       * @tparam spacedim
        * @param k3_index
        * @param quad_no
-       * @param shape_grad_matrix_table
-       * @param support_points_permuted
+       * @param mapping_shape_grad_matrix_table
+       * @param mapping_index
+       * @param mapping_n_shape_functions
+       * @param mapping_support_points_in_real_cell_xy_components
+       * @param mapping_support_points_in_real_cell_yz_components
+       * @param mapping_support_points_in_real_cell_zx_components
        * @param normal_vector
        * @param is_normal_vector_negated
        * @return
@@ -3231,17 +3294,16 @@ namespace HierBEM
       surface_jacobian_det_and_normal_vector(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
-          &shape_grad_matrix_table,
-        const HierBEM::CUDAWrappers::CUDATable<1,
-                                               Point<spacedim, RangeNumberType>>
-          &support_points_in_real_cell,
+        const HierBEM::CUDAWrappers::CUDATable<5, RangeNumberType>
+                          &mapping_shape_grad_matrix_table,
+        const unsigned int mapping_index,
+        const unsigned int mapping_n_shape_functions,
         const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
-          &support_points_in_real_cell_xy_components,
+          &mapping_support_points_in_real_cell_xy_components,
         const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
-          &support_points_in_real_cell_yz_components,
+          &mapping_support_points_in_real_cell_yz_components,
         const HierBEM::CUDAWrappers::CUDATable<1, Point<2, RangeNumberType>>
-          &support_points_in_real_cell_zx_components,
+          &mapping_support_points_in_real_cell_zx_components,
         Tensor<1, spacedim, RangeNumberType> &normal_vector,
         const bool                            is_normal_vector_negated = false)
       {
@@ -3258,22 +3320,16 @@ namespace HierBEM
          * is coordinate component index in the unit cell.
          */
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
-          shape_grad_matrix_at_quad_point(
-            const_cast<RangeNumberType *>(
-              &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
-            shape_grad_matrix_table.size(3),
-            shape_grad_matrix_table.size(2));
+          mapping_shape_grad_matrix_at_quad_point(
+            const_cast<RangeNumberType *>(&mapping_shape_grad_matrix_table(
+              mapping_index, k3_index, quad_no, 0, 0)),
+            mapping_n_shape_functions,
+            mapping_shape_grad_matrix_table.size(3));
 
-        /**
-         * @internal The number of support points should be equal to the number
-         * of shape functions.
-         */
-        assert(support_points_in_real_cell.size(0) ==
-               shape_grad_matrix_at_quad_point.m());
         /**
          * @internal The number of columns of the gradient matrix should be 2.
          */
-        assert(shape_grad_matrix_at_quad_point.n() == 2);
+        assert(mapping_shape_grad_matrix_at_quad_point.n() == 2);
 
         RangeNumberType jacobian_matrix_2x2_data[4];
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
@@ -3284,34 +3340,36 @@ namespace HierBEM
 
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           two_component_coords(
-            (RangeNumberType *)(support_points_in_real_cell_xy_components
-                                  .data()),
+            (RangeNumberType
+               *)(mapping_support_points_in_real_cell_xy_components.data()),
             2,
-            support_points_in_real_cell.size(0));
+            mapping_n_shape_functions);
         two_component_coords.mmult(jacobian_matrix_2x2,
-                                   shape_grad_matrix_at_quad_point);
+                                   mapping_shape_grad_matrix_at_quad_point);
         surface_jacobian_det_components[0] =
           jacobian_matrix_2x2.determinant2x2();
         surface_jacobian_det += surface_jacobian_det_components[0] *
                                 surface_jacobian_det_components[0];
 
         two_component_coords.reinit(
-          (RangeNumberType *)(support_points_in_real_cell_yz_components.data()),
+          (RangeNumberType *)(mapping_support_points_in_real_cell_yz_components
+                                .data()),
           2,
-          support_points_in_real_cell.size(0));
+          mapping_n_shape_functions);
         two_component_coords.mmult(jacobian_matrix_2x2,
-                                   shape_grad_matrix_at_quad_point);
+                                   mapping_shape_grad_matrix_at_quad_point);
         surface_jacobian_det_components[1] =
           jacobian_matrix_2x2.determinant2x2();
         surface_jacobian_det += surface_jacobian_det_components[1] *
                                 surface_jacobian_det_components[1];
 
         two_component_coords.reinit(
-          (RangeNumberType *)(support_points_in_real_cell_zx_components.data()),
+          (RangeNumberType *)(mapping_support_points_in_real_cell_zx_components
+                                .data()),
           2,
-          support_points_in_real_cell.size(0));
+          mapping_n_shape_functions);
         two_component_coords.mmult(jacobian_matrix_2x2,
-                                   shape_grad_matrix_at_quad_point);
+                                   mapping_shape_grad_matrix_at_quad_point);
         surface_jacobian_det_components[2] =
           jacobian_matrix_2x2.determinant2x2();
         surface_jacobian_det += surface_jacobian_det_components[2] *
@@ -3354,8 +3412,8 @@ namespace HierBEM
        * @tparam RangeNumberType
        * @param k3_index
        * @param quad_no
-       * @param shape_grad_matrix_table
-       * @param support_points_in_real_cell Starting address of the list of support points in the real cell
+       * @param mapping_shape_grad_matrix_table
+       * @param mapping_support_points_in_real_cell Starting address of the list of support points in the real cell
        * @param normal_vector
        * @param covariant_matrix
        * @param is_normal_vector_negated
@@ -3367,9 +3425,11 @@ namespace HierBEM
       surface_jacobian_det_normal_vector_and_covariant(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
-                                             &shape_grad_matrix_table,
-        Point<spacedim, RangeNumberType>     *support_points_in_real_cell,
+        const HierBEM::CUDAWrappers::CUDATable<5, RangeNumberType>
+                                         &mapping_shape_grad_matrix_table,
+        const unsigned int                mapping_index,
+        const unsigned int                mapping_n_shape_functions,
+        Point<spacedim, RangeNumberType> *mapping_support_points_in_real_cell,
         Tensor<1, spacedim, RangeNumberType> &normal_vector,
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
                   &covariant_matrix,
@@ -3389,28 +3449,28 @@ namespace HierBEM
          * is coordinate component index in the unit cell.
          */
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
-          shape_grad_matrix_at_quad_point(
-            const_cast<RangeNumberType *>(
-              &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
-            shape_grad_matrix_table.size(3),
-            shape_grad_matrix_table.size(2));
+          mapping_shape_grad_matrix_at_quad_point(
+            const_cast<RangeNumberType *>(&mapping_shape_grad_matrix_table(
+              mapping_index, k3_index, quad_no, 0, 0)),
+            mapping_n_shape_functions,
+            mapping_shape_grad_matrix_table.size(3));
         /**
          * @internal The number of columns of the gradient matrix should be 2.
          */
-        assert(shape_grad_matrix_at_quad_point.n() == 2);
+        assert(mapping_shape_grad_matrix_at_quad_point.n() == 2);
 
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
-          support_point_coordinate_matrix(
-            (RangeNumberType *)(support_points_in_real_cell),
+          mapping_support_point_coordinate_matrix(
+            (RangeNumberType *)(mapping_support_points_in_real_cell),
             spacedim,
-            shape_grad_matrix_at_quad_point.m());
+            mapping_shape_grad_matrix_at_quad_point.m());
 
         RangeNumberType jacobian_matrix_data[spacedim * 2];
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
           jacobian_matrix_data, spacedim, 2);
 
-        support_point_coordinate_matrix.mmult(jacobian_matrix,
-                                              shape_grad_matrix_at_quad_point);
+        mapping_support_point_coordinate_matrix.mmult(
+          jacobian_matrix, mapping_shape_grad_matrix_at_quad_point);
         /**
          * @internal Compute the Gramian matrix.
          */
@@ -3487,8 +3547,8 @@ namespace HierBEM
        * @tparam RangeNumberType
        * @param k3_index
        * @param quad_no
-       * @param shape_grad_matrix_table
-       * @param support_points_in_real_cell
+       * @param mapping_shape_grad_matrix_table
+       * @param mapping_support_points_in_real_cell
        * @param support_points_all_components
        * @param jacobian_matrix_data
        * @param metric_tensor_data
@@ -3500,11 +3560,13 @@ namespace HierBEM
       surface_covariant_transformation(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
-          &shape_grad_matrix_table,
+        const HierBEM::CUDAWrappers::CUDATable<5, RangeNumberType>
+                          &mapping_shape_grad_matrix_table,
+        const unsigned int mapping_index,
+        const unsigned int mapping_n_shape_functions,
         const HierBEM::CUDAWrappers::CUDATable<1,
                                                Point<spacedim, RangeNumberType>>
-          &support_points_in_real_cell,
+          &mapping_support_points_in_real_cell,
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> &covariant)
       {
         /**
@@ -3518,34 +3580,28 @@ namespace HierBEM
          * used for calculating the Jacobian matrix.
          */
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
-          shape_grad_matrix_at_quad_point(
-            const_cast<RangeNumberType *>(
-              &shape_grad_matrix_table(k3_index, quad_no, 0, 0)),
-            shape_grad_matrix_table.size(3),
-            shape_grad_matrix_table.size(2));
+          mapping_shape_grad_matrix_at_quad_point(
+            const_cast<RangeNumberType *>(&mapping_shape_grad_matrix_table(
+              mapping_index, k3_index, quad_no, 0, 0)),
+            mapping_n_shape_functions,
+            mapping_shape_grad_matrix_table.size(3));
 
-        /**
-         * @internal The number of support points should be equal to the number
-         * of shape functions.
-         */
-        assert(support_points_in_real_cell.size(0) ==
-               shape_grad_matrix_at_quad_point.m());
         /**
          * @internal The number of columns of the gradient matrix should be 2.
          */
-        assert(shape_grad_matrix_at_quad_point.n() == 2);
+        assert(mapping_shape_grad_matrix_at_quad_point.n() == 2);
 
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType>
           all_component_coords(
-            (RangeNumberType *)(support_points_in_real_cell.data()),
+            (RangeNumberType *)(mapping_support_points_in_real_cell.data()),
             spacedim,
-            support_points_in_real_cell.size(0));
+            mapping_n_shape_functions);
 
-        RangeNumberType jacobian_matrix_data[6];
+        RangeNumberType jacobian_matrix_data[spacedim * 2];
         HierBEM::CUDAWrappers::CUDAFullMatrix<RangeNumberType> jacobian_matrix(
           jacobian_matrix_data, spacedim, 2);
         all_component_coords.mmult(jacobian_matrix,
-                                   shape_grad_matrix_at_quad_point);
+                                   mapping_shape_grad_matrix_at_quad_point);
 
         // Gramian tensor
         RangeNumberType                                        G_data[4];
@@ -3566,69 +3622,32 @@ namespace HierBEM
 
 
       /**
-       * Coordinate transformation of the specified quadrature point in the unit
-       * cell to the real cell based on a list of support points in the real
-       * cell. This version runs on the GPU device.
+       * @brief Coordinate transformation of the specified quadrature point in the unit
+       * cell to the real cell based on a list of mapping support points in the
+       * real cell. This version runs on the GPU device.
        *
-       * @tparam spacedim
-       * @tparam RangeNumberType
        * @param k3_index
        * @param quad_no
-       * @param shape_value_table
-       * @param support_points_in_real_cell
-       * @param real_coords
+       * @param mapping_shape_value_table
+       * @param mapping_index
+       * @param mapping_n_shape_functions
+       * @param mapping_support_points_in_real_cell
+       * @param quad_point_in_real_cell
+       * @return
        */
-      template <int spacedim, typename RangeNumberType = double>
-      __device__ void
-      transform_unit_to_permuted_real_cell(
-        const unsigned int k3_index,
-        const unsigned int quad_no,
-        const HierBEM::CUDAWrappers::CUDATable<3, RangeNumberType>
-          &shape_value_table,
-        const HierBEM::CUDAWrappers::CUDATable<1,
-                                               Point<spacedim, RangeNumberType>>
-                                         &support_points_in_real_cell,
-        Point<spacedim, RangeNumberType> &real_coords)
-      {
-        const unsigned int shape_num = shape_value_table.size(0);
-
-        // Reset all coordinate components to zero.
-        Point<spacedim, RangeNumberType> local_real_coords;
-
-#pragma unroll
-        for (unsigned int i = 0; i < spacedim; i++)
-          {
-            local_real_coords(i) = 0.;
-          }
-
-        /**
-         * Linear combination of support point coordinates and evaluation of
-         * shape functions at the specified area coordinates.
-         */
-        for (unsigned int i = 0; i < shape_num; i++)
-          {
-            local_real_coords =
-              local_real_coords + shape_value_table(i, k3_index, quad_no) *
-                                    support_points_in_real_cell(i);
-          }
-
-        real_coords = local_real_coords;
-      }
-
-
       template <int spacedim, typename RangeNumberType = double>
       __device__ void
       transform_quad_point_from_unit_to_permuted_real_cell(
         const unsigned int k3_index,
         const unsigned int quad_no,
-        const HierBEM::CUDAWrappers::CUDATable<3, RangeNumberType>
-          &mapping_shape_value_table,
+        const HierBEM::CUDAWrappers::CUDATable<4, RangeNumberType>
+                          &mapping_shape_value_table,
+        const unsigned int mapping_index,
+        const unsigned int mapping_n_shape_functions,
         const Point<spacedim, RangeNumberType>
                                          *mapping_support_points_in_real_cell,
         Point<spacedim, RangeNumberType> &quad_point_in_real_cell)
       {
-        const unsigned int shape_num = mapping_shape_value_table.size(0);
-
         // Reset all coordinate components to zero.
         Point<spacedim, RangeNumberType> local_quad_point_in_real_cell;
 
@@ -3640,117 +3659,64 @@ namespace HierBEM
 
         /**
          * Linear combination of support point coordinates and evaluation of
-         * shape functions at the specified area coordinates.
+         * mapping shape functions at the specified area coordinates.
          */
-        for (unsigned int i = 0; i < shape_num; i++)
+        for (unsigned int i = 0; i < mapping_n_shape_functions; i++)
           {
             local_quad_point_in_real_cell =
               local_quad_point_in_real_cell +
-              mapping_shape_value_table(i, k3_index, quad_no) *
-                *(mapping_support_points_in_real_cell + i);
+              mapping_shape_value_table(mapping_index, i, k3_index, quad_no) *
+                (*(mapping_support_points_in_real_cell + i));
           }
 
         quad_point_in_real_cell = local_quad_point_in_real_cell;
       }
     } // namespace CUDAWrappers
 
-    /**
-     * Coordinate transformation from the unit cell to the real cell based on a
-     * list of support points in the real cell.
-     *
-     * @param fe
-     * @param support_points_in_real_cell A list of permuted support points in
-     * the real cell in the lexicographic order
-     * @param area_coords Area coordinates in the unit cell, which has the
-     * manifold dimension @p dim.
-     * @return Point coordinates in the real cell, which has the spatial
-     * dimension @p spacedim.
-     */
-    template <int dim, int spacedim>
-    Point<spacedim>
-    transform_unit_to_permuted_real_cell(
-      const FiniteElement<dim, spacedim> &fe,
-      const std::vector<Point<spacedim>> &support_points_in_real_cell,
-      const Point<dim>                   &area_coords)
-    {
-      const unsigned int dofs_per_cell = fe.dofs_per_cell;
-
-      /**
-       * Since iso-parametric finite element is assumed, we check the equality
-       * between the number of DoFs and the number of support points.
-       *
-       * \mynote{DoFs are related to the basis functions for spanning the
-       * solution function space, while support points are related to the shape
-       * functions for representing the geometry.}
-       */
-      Assert(dofs_per_cell == support_points_in_real_cell.size(),
-             ExcDimensionMismatch(dofs_per_cell,
-                                  support_points_in_real_cell.size()));
-
-      Point<spacedim> real_coords;
-      Vector<double>  shape_values_vector(
-        shape_values_in_lexicographic_order(fe, area_coords));
-
-      /**
-       * Linear combination of support point coordinates and evaluation of shape
-       * functions at the specified area coordinates.
-       */
-      for (unsigned int i = 0; i < dofs_per_cell; i++)
-        {
-          real_coords = real_coords +
-                        shape_values_vector(i) * support_points_in_real_cell[i];
-        }
-
-      return real_coords;
-    }
-
 
     /**
      * Coordinate transformation of the specified quadrature point in the unit
      * cell to the real cell based on a list of support points in the real cell.
+     * This version runs on the host.
      *
      * @param k3_index
      * @param quad_no Quadrature point index
      * @param shape_value_table Data table for the shape function values. Refer
-     * to @p BEMValues::kx_shape_value_table_for_same_panel.
-     * @param support_points_in_real_cell A list of support points in the real
+     * to BEMValues::kx_shape_value_table_for_same_panel.
+     * @param mapping_support_points_in_real_cell A list of support points in the real
      * cell in the lexicographic order.
      * @return Point coordinates in the real cell, which has the spatial
      * dimension @p spacedim.
      */
-    template <int spacedim>
+    template <int spacedim, typename RangeNumberType = double>
     Point<spacedim>
-    transform_unit_to_permuted_real_cell(
+    transform_quad_point_from_unit_to_permuted_real_cell(
       const unsigned int                  k3_index,
       const unsigned int                  quad_no,
-      const Table<3, double>             &shape_value_table,
-      const std::vector<Point<spacedim>> &support_points_in_real_cell)
+      const Table<4, RangeNumberType>    &shape_value_table,
+      const unsigned int                  mapping_index,
+      const unsigned int                  mapping_n_shape_functions,
+      const std::vector<Point<spacedim>> &mapping_support_points_in_real_cell)
     {
-      /**
-       * Since iso-parametric finite element is assumed, we check the equality
-       * between the number of DoFs and the number of support points. The latter
-       * is equal to the size of the first dimension of the data table.
-       *
-       * \mynote{DoFs are related to the basis functions for spanning the
-       * solution function space, while support points are related to the shape
-       * functions for representing the geometry.}
-       */
-      const unsigned int dofs_per_cell = shape_value_table.size(0);
-
-      Assert(dofs_per_cell == support_points_in_real_cell.size(),
-             ExcDimensionMismatch(dofs_per_cell,
-                                  support_points_in_real_cell.size()));
+      // @p mapping_n_shape_functions is the number of shape functions in the
+      // actual mapping object, while the vector @p mapping_support_points_in_real_cell
+      // is preallocated with memory for holding the shape functions in the
+      // highest order mapping object. Therefore, we make this assertion.
+      Assert(mapping_n_shape_functions <=
+               mapping_support_points_in_real_cell.size(),
+             ExcInternalError());
 
       Point<spacedim> real_coords;
 
       /**
-       * Linear combination of support point coordinates and evaluation of shape
-       * functions at the specified area coordinates.
+       * Linear combination of support point coordinates and evaluation of
+       * mapping shape functions at the specified area coordinates.
        */
-      for (unsigned int i = 0; i < dofs_per_cell; i++)
+      for (unsigned int i = 0; i < mapping_n_shape_functions; i++)
         {
-          real_coords = real_coords + shape_value_table(i, k3_index, quad_no) *
-                                        support_points_in_real_cell[i];
+          real_coords = real_coords +
+                        shape_value_table(mapping_index, i, k3_index, quad_no) *
+                          mapping_support_points_in_real_cell[i];
         }
 
       return real_coords;

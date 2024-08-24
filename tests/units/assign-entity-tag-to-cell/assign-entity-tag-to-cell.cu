@@ -8,6 +8,7 @@
  */
 
 #include "electric_field/ddm_efield.h"
+#include "grid_in_ext.h"
 #include "hbem_test_config.h"
 
 using namespace HierBEM;
@@ -19,8 +20,8 @@ main(int argc, const char *argv[])
   (void)argv;
 
   DDMEfield<2, 3> efield;
-  efield.read_skeleton_mesh(HBEM_TEST_MODEL_DIR
-                            "sphere-immersed-in-two-boxes.msh");
+  read_skeleton_mesh(HBEM_TEST_MODEL_DIR "sphere-immersed-in-two-boxes.msh",
+                     efield.get_triangulation());
 
   return 0;
 }

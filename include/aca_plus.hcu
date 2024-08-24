@@ -41,6 +41,7 @@
 #include "hmatrix.h"
 #include "lapack_full_matrix_ext.h"
 #include "linalg.h"
+#include "mapping/mapping_info.h"
 #include "sauter_quadrature.hcu"
 #include "unary_template_arg_containers.h"
 
@@ -122,7 +123,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   assemble_kernel_row(
     Vector<RangeNumberType>                             &row_vector,
@@ -135,8 +137,7 @@ namespace HierBEM
       &kx_dof_to_cell_topo,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                                    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+      &ky_dof_to_cell_topo,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -145,10 +146,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -175,22 +178,22 @@ namespace HierBEM
             ky_map_from_local_to_full_dof_indices->at(
               ky_dof_i2e_numbering[column_dof_indices[j]]);
 
-        row_vector(j) =
-          sauter_quadrature_on_one_pair_of_far_field_dofs(kernel,
-                                                          kernel_factor,
-                                                          i_global_dof_index,
-                                                          j_global_dof_index,
-                                                          kx_dof_to_cell_topo,
-                                                          ky_dof_to_cell_topo,
-                                                          bem_values,
-                                                          bem_values_gpu,
-                                                          kx_dof_handler,
-                                                          ky_dof_handler,
-                                                          kx_mapping,
-                                                          ky_mapping,
-                                                          scratch_data,
-                                                          scratch_data_gpu,
-                                                          copy_data);
+        row_vector(j) = sauter_quadrature_on_one_pair_of_far_field_dofs(
+          kernel,
+          kernel_factor,
+          i_global_dof_index,
+          j_global_dof_index,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values_gpu,
+          kx_dof_handler,
+          ky_dof_handler,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
+          scratch_data,
+          scratch_data_gpu,
+          copy_data);
       }
   }
 
@@ -227,7 +230,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   assemble_kernel_row(
     Vector<RangeNumberType>                             &row_vector,
@@ -242,8 +246,7 @@ namespace HierBEM
       &kx_dof_to_cell_topo,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                                    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+      &ky_dof_to_cell_topo,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -252,10 +255,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -282,22 +287,22 @@ namespace HierBEM
             ky_map_from_local_to_full_dof_indices->at(
               ky_dof_i2e_numbering[column_dof_indices[j]]);
 
-        row_vector(j) =
-          sauter_quadrature_on_one_pair_of_far_field_dofs(kernel,
-                                                          kernel_factor,
-                                                          i_global_dof_index,
-                                                          j_global_dof_index,
-                                                          kx_dof_to_cell_topo,
-                                                          ky_dof_to_cell_topo,
-                                                          bem_values,
-                                                          bem_values_gpu,
-                                                          kx_dof_handler,
-                                                          ky_dof_handler,
-                                                          kx_mapping,
-                                                          ky_mapping,
-                                                          scratch_data,
-                                                          scratch_data_gpu,
-                                                          copy_data);
+        row_vector(j) = sauter_quadrature_on_one_pair_of_far_field_dofs(
+          kernel,
+          kernel_factor,
+          i_global_dof_index,
+          j_global_dof_index,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values_gpu,
+          kx_dof_handler,
+          ky_dof_handler,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
+          scratch_data,
+          scratch_data_gpu,
+          copy_data);
 
         row_vector(j) += stabilization_factor * mass_vmult_weq(row_dof_index) *
                          mass_vmult_weq(column_dof_indices[j]);
@@ -495,7 +500,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   assemble_kernel_column(
     Vector<RangeNumberType>                             &col_vector,
@@ -508,18 +514,19 @@ namespace HierBEM
       &kx_dof_to_cell_topo,
     const std::vector<
       std::vector<const typename DoFHandler<dim, spacedim>::cell_iterator *>>
-                                                    &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType> &bem_values,
+      &ky_dof_to_cell_topo,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
       &bem_values_gpu,
     const std::vector<types::global_dof_index>
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -546,20 +553,20 @@ namespace HierBEM
             kx_map_from_local_to_full_dof_indices->at(
               kx_dof_i2e_numbering[row_dof_indices[i]]);
 
-        col_vector(i) =
-          sauter_quadrature_on_one_pair_of_far_field_dofs(kernel,
-                                                          kernel_factor,
-                                                          i_global_dof_index,
-                                                          j_global_dof_index,
-                                                          kx_dof_to_cell_topo,
-                                                          ky_dof_to_cell_topo,
-                                                          bem_values,
-                                                          bem_values_gpu,
-                                                          kx_mapping,
-                                                          ky_mapping,
-                                                          scratch_data,
-                                                          scratch_data_gpu,
-                                                          copy_data);
+        col_vector(i) = sauter_quadrature_on_one_pair_of_far_field_dofs(
+          kernel,
+          kernel_factor,
+          i_global_dof_index,
+          j_global_dof_index,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values_gpu,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
+          scratch_data,
+          scratch_data_gpu,
+          copy_data);
       }
   }
 
@@ -595,7 +602,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   assemble_kernel_column(
     Vector<RangeNumberType>                             &col_vector,
@@ -617,10 +625,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -647,19 +657,20 @@ namespace HierBEM
             kx_map_from_local_to_full_dof_indices->at(
               kx_dof_i2e_numbering[row_dof_indices[i]]);
 
-        col_vector(i) =
-          sauter_quadrature_on_one_pair_of_far_field_dofs(kernel,
-                                                          kernel_factor,
-                                                          i_global_dof_index,
-                                                          j_global_dof_index,
-                                                          kx_dof_to_cell_topo,
-                                                          ky_dof_to_cell_topo,
-                                                          bem_values_gpu,
-                                                          kx_mapping,
-                                                          ky_mapping,
-                                                          scratch_data,
-                                                          scratch_data_gpu,
-                                                          copy_data);
+        col_vector(i) = sauter_quadrature_on_one_pair_of_far_field_dofs(
+          kernel,
+          kernel_factor,
+          i_global_dof_index,
+          j_global_dof_index,
+          kx_dof_to_cell_topo,
+          ky_dof_to_cell_topo,
+          bem_values_gpu,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
+          scratch_data,
+          scratch_data_gpu,
+          copy_data);
 
         col_vector(i) += stabilization_factor *
                          mass_vmult_weq(row_dof_indices[i]) *
@@ -861,7 +872,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   size_type
   random_select_ref_row(
     Vector<RangeNumberType>                             &row_vector,
@@ -884,10 +896,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -936,8 +950,9 @@ namespace HierBEM
                                 ky_map_from_local_to_full_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 scratch_data,
                                 scratch_data_gpu,
                                 copy_data);
@@ -1026,7 +1041,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   size_type
   random_select_ref_row(
     Vector<RangeNumberType>                             &row_vector,
@@ -1051,10 +1067,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -1105,8 +1123,9 @@ namespace HierBEM
                                 ky_map_from_local_to_full_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 scratch_data,
                                 scratch_data_gpu,
                                 copy_data);
@@ -1549,7 +1568,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   size_type
   random_select_ref_column(
     Vector<RangeNumberType>                             &col_vector,
@@ -1572,10 +1592,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -1624,8 +1646,9 @@ namespace HierBEM
                                    ky_map_from_local_to_full_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
-                                   kx_mapping,
-                                   ky_mapping,
+                                   mappings,
+                                   material_id_to_mapping_index,
+                                   normal_detector,
                                    scratch_data,
                                    scratch_data_gpu,
                                    copy_data);
@@ -1715,7 +1738,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   size_type
   random_select_ref_column(
     Vector<RangeNumberType>                             &col_vector,
@@ -1740,10 +1764,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -1794,8 +1820,9 @@ namespace HierBEM
                                    ky_map_from_local_to_full_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
-                                   kx_mapping,
-                                   ky_mapping,
+                                   mappings,
+                                   material_id_to_mapping_index,
+                                   normal_detector,
                                    scratch_data,
                                    scratch_data_gpu,
                                    copy_data);
@@ -2237,7 +2264,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   aca_plus_parallel_sauter_quad_for_vector_entry(
     RkMatrix<RangeNumberType>                           &rkmat,
@@ -2254,10 +2282,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -2336,8 +2366,9 @@ namespace HierBEM
                                         ky_map_from_local_to_full_dof_indices,
                                         kx_dof_i2e_numbering,
                                         ky_dof_i2e_numbering,
-                                        kx_mapping,
-                                        ky_mapping,
+                                        mappings,
+                                        material_id_to_mapping_index,
+                                        normal_detector,
                                         scratch_data,
                                         scratch_data_gpu,
                                         copy_data);
@@ -2366,8 +2397,9 @@ namespace HierBEM
                                ky_map_from_local_to_full_dof_indices,
                                kx_dof_i2e_numbering,
                                ky_dof_i2e_numbering,
-                               kx_mapping,
-                               ky_mapping,
+                               mappings,
+                               material_id_to_mapping_index,
+                               normal_detector,
                                scratch_data,
                                scratch_data_gpu,
                                copy_data);
@@ -2477,8 +2509,9 @@ namespace HierBEM
                                 ky_map_from_local_to_full_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 scratch_data,
                                 scratch_data_gpu,
                                 copy_data);
@@ -2535,8 +2568,9 @@ namespace HierBEM
                                    ky_map_from_local_to_full_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
-                                   kx_mapping,
-                                   ky_mapping,
+                                   mappings,
+                                   material_id_to_mapping_index,
+                                   normal_detector,
                                    scratch_data,
                                    scratch_data_gpu,
                                    copy_data);
@@ -2574,8 +2608,9 @@ namespace HierBEM
                                    ky_map_from_local_to_full_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
-                                   kx_mapping,
-                                   ky_mapping,
+                                   mappings,
+                                   material_id_to_mapping_index,
+                                   normal_detector,
                                    scratch_data,
                                    scratch_data_gpu,
                                    copy_data);
@@ -2618,8 +2653,9 @@ namespace HierBEM
                                 ky_map_from_local_to_full_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 scratch_data,
                                 scratch_data_gpu,
                                 copy_data);
@@ -2681,8 +2717,9 @@ namespace HierBEM
                                       ky_map_from_local_to_full_dof_indices,
                                       kx_dof_i2e_numbering,
                                       ky_dof_i2e_numbering,
-                                      kx_mapping,
-                                      ky_mapping,
+                                      mappings,
+                                      material_id_to_mapping_index,
+                                      normal_detector,
                                       scratch_data,
                                       scratch_data_gpu,
                                       copy_data);
@@ -2756,8 +2793,9 @@ namespace HierBEM
                                          ky_map_from_local_to_full_dof_indices,
                                          kx_dof_i2e_numbering,
                                          ky_dof_i2e_numbering,
-                                         kx_mapping,
-                                         ky_mapping,
+                                         mappings,
+                                         material_id_to_mapping_index,
+                                         normal_detector,
                                          scratch_data,
                                          scratch_data_gpu,
                                          copy_data);
@@ -2884,7 +2922,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   aca_plus_parallel_sauter_quad_for_vector_entry(
     RkMatrix<RangeNumberType>                           &rkmat,
@@ -2903,10 +2942,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -2987,8 +3028,9 @@ namespace HierBEM
                                         ky_map_from_local_to_full_dof_indices,
                                         kx_dof_i2e_numbering,
                                         ky_dof_i2e_numbering,
-                                        kx_mapping,
-                                        ky_mapping,
+                                        mappings,
+                                        material_id_to_mapping_index,
+                                        normal_detector,
                                         scratch_data,
                                         scratch_data_gpu,
                                         copy_data);
@@ -3019,8 +3061,9 @@ namespace HierBEM
                                ky_map_from_local_to_full_dof_indices,
                                kx_dof_i2e_numbering,
                                ky_dof_i2e_numbering,
-                               kx_mapping,
-                               ky_mapping,
+                               mappings,
+                               material_id_to_mapping_index,
+                               normal_detector,
                                scratch_data,
                                scratch_data_gpu,
                                copy_data);
@@ -3132,8 +3175,9 @@ namespace HierBEM
                                 ky_map_from_local_to_full_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 scratch_data,
                                 scratch_data_gpu,
                                 copy_data);
@@ -3192,8 +3236,9 @@ namespace HierBEM
                                    ky_map_from_local_to_full_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
-                                   kx_mapping,
-                                   ky_mapping,
+                                   mappings,
+                                   material_id_to_mapping_index,
+                                   normal_detector,
                                    scratch_data,
                                    scratch_data_gpu,
                                    copy_data);
@@ -3233,8 +3278,9 @@ namespace HierBEM
                                    ky_map_from_local_to_full_dof_indices,
                                    kx_dof_i2e_numbering,
                                    ky_dof_i2e_numbering,
-                                   kx_mapping,
-                                   ky_mapping,
+                                   mappings,
+                                   material_id_to_mapping_index,
+                                   normal_detector,
                                    scratch_data,
                                    scratch_data_gpu,
                                    copy_data);
@@ -3279,8 +3325,9 @@ namespace HierBEM
                                 ky_map_from_local_to_full_dof_indices,
                                 kx_dof_i2e_numbering,
                                 ky_dof_i2e_numbering,
-                                kx_mapping,
-                                ky_mapping,
+                                mappings,
+                                material_id_to_mapping_index,
+                                normal_detector,
                                 scratch_data,
                                 scratch_data_gpu,
                                 copy_data);
@@ -3344,8 +3391,9 @@ namespace HierBEM
                                       ky_map_from_local_to_full_dof_indices,
                                       kx_dof_i2e_numbering,
                                       ky_dof_i2e_numbering,
-                                      kx_mapping,
-                                      ky_mapping,
+                                      mappings,
+                                      material_id_to_mapping_index,
+                                      normal_detector,
                                       scratch_data,
                                       scratch_data_gpu,
                                       copy_data);
@@ -3421,8 +3469,9 @@ namespace HierBEM
                                          ky_map_from_local_to_full_dof_indices,
                                          kx_dof_i2e_numbering,
                                          ky_dof_i2e_numbering,
-                                         kx_mapping,
-                                         ky_mapping,
+                                         mappings,
+                                         material_id_to_mapping_index,
+                                         normal_detector,
                                          scratch_data,
                                          scratch_data_gpu,
                                          copy_data);
@@ -5353,7 +5402,7 @@ namespace HierBEM
 
 
   /**
-   * Fill a single leaf node of the \hmatrix using ACA+. If the matrix type is
+   * @brief Fill a single leaf node of the \hmatrix using ACA+. If the matrix type is
    * @p RkMatrixType, the memory for the full or rank-k matrix in the leaf node
    * has been allocated.
    *
@@ -5368,20 +5417,28 @@ namespace HierBEM
    * adopted. GPU parallelization with 2D thread grid is distributed over each
    * quadrature point in the X direction and each k3 term in the Y direction.}
    *
+   * @tparam RangeNumberType
+   * @tparam SurfaceNormalDetector
+   * @tparam dim
+   * @tparam spacedim
    * @param leaf_mat
    * @param aca_config
    * @param kernel
    * @param kernel_factor
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
-   * @param bem_values
+   * @param bem_values_gpu
    * @param kx_dof_handler
    * @param ky_dof_handler
    * @param kx_map_from_local_to_full_dof_indices
    * @param ky_map_from_local_to_full_dof_indices
-   * @param kx_mapping
-   * @param ky_mapping
+   * @param kx_dof_i2e_numbering
+   * @param ky_dof_i2e_numbering
+   * @param mappings
+   * @param material_id_to_mapping_index
+   * @param normal_detector
    * @param scratch_data
+   * @param scratch_data_gpu
    * @param copy_data
    * @param enable_build_symmetric_hmat
    */
@@ -5389,7 +5446,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
     HMatrix<spacedim, RangeNumberType>                  *leaf_mat,
@@ -5398,7 +5456,6 @@ namespace HierBEM
     const RangeNumberType                                kernel_factor,
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -5407,10 +5464,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -5500,10 +5559,10 @@ namespace HierBEM
                                     j_global_dof_index,
                                     kx_dof_to_cell_topo.topology,
                                     ky_dof_to_cell_topo.topology,
-                                    bem_values,
                                     bem_values_gpu,
-                                    kx_mapping,
-                                    ky_mapping,
+                                    mappings,
+                                    material_id_to_mapping_index,
+                                    normal_detector,
                                     scratch_data,
                                     scratch_data_gpu,
                                     copy_data);
@@ -5556,10 +5615,10 @@ namespace HierBEM
                                     j_global_dof_index,
                                     kx_dof_to_cell_topo.topology,
                                     ky_dof_to_cell_topo.topology,
-                                    bem_values,
                                     bem_values_gpu,
-                                    kx_mapping,
-                                    ky_mapping,
+                                    mappings,
+                                    material_id_to_mapping_index,
+                                    normal_detector,
                                     scratch_data,
                                     scratch_data_gpu,
                                     copy_data);
@@ -5606,10 +5665,10 @@ namespace HierBEM
                             j_global_dof_index,
                             kx_dof_to_cell_topo.topology,
                             ky_dof_to_cell_topo.topology,
-                            bem_values,
                             bem_values_gpu,
-                            kx_mapping,
-                            ky_mapping,
+                            mappings,
+                            material_id_to_mapping_index,
+                            normal_detector,
                             scratch_data,
                             scratch_data_gpu,
                             copy_data);
@@ -5653,8 +5712,9 @@ namespace HierBEM
                           ky_map_from_local_to_full_dof_indices,
                           kx_dof_i2e_numbering,
                           ky_dof_i2e_numbering,
-                          kx_mapping,
-                          ky_mapping,
+                          mappings,
+                          material_id_to_mapping_index,
+                          normal_detector,
                           scratch_data,
                           scratch_data_gpu,
                           copy_data);
@@ -5706,8 +5766,9 @@ namespace HierBEM
                   ky_map_from_local_to_full_dof_indices,
                   kx_dof_i2e_numbering,
                   ky_dof_i2e_numbering,
-                  kx_mapping,
-                  ky_mapping,
+                  mappings,
+                  material_id_to_mapping_index,
+                  normal_detector,
                   scratch_data,
                   scratch_data_gpu,
                   copy_data);
@@ -5723,7 +5784,7 @@ namespace HierBEM
 
 
   /**
-   * Fill a single leaf node of the \hmatrix using ACA+. If the matrix type is
+   * @brief Fill a single leaf node of the \hmatrix using ACA+. If the matrix type is
    * @p RkMatrixType, the memory for the full or rank-k matrix in the leaf node
    * has been allocated.
    *
@@ -5753,6 +5814,10 @@ namespace HierBEM
    *   @p mass_vmult_weq passed to this function is just the vector
    *   \f$M [\omega_{\rm eq}]\f$.}
    *
+   * @tparam RangeNumberType
+   * @tparam SurfaceNormalDetector
+   * @tparam dim
+   * @tparam spacedim
    * @param leaf_mat
    * @param aca_config
    * @param kernel
@@ -5768,14 +5833,18 @@ namespace HierBEM
    * @param stabilization_factor
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
-   * @param bem_values
+   * @param bem_values_gpu
    * @param kx_dof_handler
    * @param ky_dof_handler
+   * @param kx_map_from_local_to_full_dof_indices
+   * @param ky_map_from_local_to_full_dof_indices
    * @param kx_dof_i2e_numbering
    * @param ky_dof_i2e_numbering
-   * @param kx_mapping
-   * @param ky_mapping
+   * @param mappings
+   * @param material_id_to_mapping_index
+   * @param normal_detector
    * @param scratch_data
+   * @param scratch_data_gpu
    * @param copy_data
    * @param enable_build_symmetric_hmat
    */
@@ -5783,7 +5852,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
     HMatrix<spacedim, RangeNumberType>                  *leaf_mat,
@@ -5794,7 +5864,6 @@ namespace HierBEM
     const RangeNumberType                                stabilization_factor,
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -5803,10 +5872,12 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index> &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index> &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>    &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>    &ky_mapping,
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
       CUDAPairCellWiseScratchData<dim, spacedim, RangeNumberType>
@@ -5890,8 +5961,9 @@ namespace HierBEM
                                     kx_dof_to_cell_topo.topology,
                                     ky_dof_to_cell_topo.topology,
                                     bem_values_gpu,
-                                    kx_mapping,
-                                    ky_mapping,
+                                    mappings,
+                                    material_id_to_mapping_index,
+                                    normal_detector,
                                     scratch_data,
                                     scratch_data_gpu,
                                     copy_data);
@@ -5953,8 +6025,9 @@ namespace HierBEM
                                     kx_dof_to_cell_topo.topology,
                                     ky_dof_to_cell_topo.topology,
                                     bem_values_gpu,
-                                    kx_mapping,
-                                    ky_mapping,
+                                    mappings,
+                                    material_id_to_mapping_index,
+                                    normal_detector,
                                     scratch_data,
                                     scratch_data_gpu,
                                     copy_data);
@@ -6010,8 +6083,9 @@ namespace HierBEM
                             kx_dof_to_cell_topo.topology,
                             ky_dof_to_cell_topo.topology,
                             bem_values_gpu,
-                            kx_mapping,
-                            ky_mapping,
+                            mappings,
+                            material_id_to_mapping_index,
+                            normal_detector,
                             scratch_data,
                             scratch_data_gpu,
                             copy_data);
@@ -6065,8 +6139,9 @@ namespace HierBEM
                           ky_map_from_local_to_full_dof_indices,
                           kx_dof_i2e_numbering,
                           ky_dof_i2e_numbering,
-                          kx_mapping,
-                          ky_mapping,
+                          mappings,
+                          material_id_to_mapping_index,
+                          normal_detector,
                           scratch_data,
                           scratch_data_gpu,
                           copy_data);
@@ -6112,8 +6187,9 @@ namespace HierBEM
                   ky_map_from_local_to_full_dof_indices,
                   kx_dof_i2e_numbering,
                   ky_dof_i2e_numbering,
-                  kx_mapping,
-                  ky_mapping,
+                  mappings,
+                  material_id_to_mapping_index,
+                  normal_detector,
                   scratch_data,
                   scratch_data_gpu,
                   copy_data);
@@ -6129,7 +6205,7 @@ namespace HierBEM
 
 
   /**
-   * Fill a single leaf node of the \hmatrix using ACA+.
+   * @brief Fill a single leaf node of the \hmatrix using ACA+.
    *
    * In the mean time, the FEM mass matrix multiplied by a factor will be
    * added to the near field matrix block.
@@ -6148,6 +6224,10 @@ namespace HierBEM
    * adopted. GPU parallelization with 2D thread grid is distributed over each
    * quadrature point in the X direction and each k3 term in the Y direction.}
    *
+   * @tparam RangeNumberType
+   * @tparam SurfaceNormalDetector
+   * @tparam dim
+   * @tparam spacedim
    * @param leaf_mat
    * @param aca_config
    * @param kernel
@@ -6155,14 +6235,19 @@ namespace HierBEM
    * @param mass_matrix_factor
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
-   * @param bem_values
-   * @param mass_matrix_quadrature_formula
+   * @param bem_values_gpu
    * @param kx_dof_handler
    * @param ky_dof_handler
-   * @param kx_mapping
-   * @param ky_mapping
+   * @param kx_map_from_local_to_full_dof_indices
+   * @param ky_map_from_local_to_full_dof_indices
+   * @param kx_dof_i2e_numbering
+   * @param ky_dof_i2e_numbering
+   * @param mappings
+   * @param material_id_to_mapping_index
+   * @param normal_detector
    * @param mass_matrix_scratch_data
    * @param scratch_data
+   * @param scratch_data_gpu
    * @param copy_data
    * @param enable_build_symmetric_hmat
    */
@@ -6170,7 +6255,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   fill_hmatrix_leaf_node_with_aca_plus(
     HMatrix<spacedim, RangeNumberType>                  *leaf_mat,
@@ -6180,7 +6266,6 @@ namespace HierBEM
     const RangeNumberType                                mass_matrix_factor,
     const DofToCellTopology<dim, spacedim>              &kx_dof_to_cell_topo,
     const DofToCellTopology<dim, spacedim>              &ky_dof_to_cell_topo,
-    const BEMValues<dim, spacedim, RangeNumberType>     &bem_values,
     const HierBEM::CUDAWrappers::CUDABEMValues<dim, spacedim, RangeNumberType>
                                     &bem_values_gpu,
     const DoFHandler<dim, spacedim> &kx_dof_handler,
@@ -6191,8 +6276,10 @@ namespace HierBEM
       *ky_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
     const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>         &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>         &ky_mapping,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
     CellWiseScratchDataForMassMatrix<dim, spacedim> &mass_matrix_scratch_data,
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> &scratch_data,
     HierBEM::CUDAWrappers::
@@ -6278,8 +6365,9 @@ namespace HierBEM
                                     kx_dof_to_cell_topo.topology,
                                     ky_dof_to_cell_topo.topology,
                                     bem_values_gpu,
-                                    kx_mapping,
-                                    ky_mapping,
+                                    mappings,
+                                    material_id_to_mapping_index,
+                                    normal_detector,
                                     mass_matrix_scratch_data,
                                     scratch_data,
                                     scratch_data_gpu,
@@ -6335,8 +6423,9 @@ namespace HierBEM
                                     kx_dof_to_cell_topo.topology,
                                     ky_dof_to_cell_topo.topology,
                                     bem_values_gpu,
-                                    kx_mapping,
-                                    ky_mapping,
+                                    mappings,
+                                    material_id_to_mapping_index,
+                                    normal_detector,
                                     mass_matrix_scratch_data,
                                     scratch_data,
                                     scratch_data_gpu,
@@ -6383,8 +6472,9 @@ namespace HierBEM
                             kx_dof_to_cell_topo.topology,
                             ky_dof_to_cell_topo.topology,
                             bem_values_gpu,
-                            kx_mapping,
-                            ky_mapping,
+                            mappings,
+                            material_id_to_mapping_index,
+                            normal_detector,
                             mass_matrix_scratch_data,
                             scratch_data,
                             scratch_data_gpu,
@@ -6421,8 +6511,9 @@ namespace HierBEM
                           ky_map_from_local_to_full_dof_indices,
                           kx_dof_i2e_numbering,
                           ky_dof_i2e_numbering,
-                          kx_mapping,
-                          ky_mapping,
+                          mappings,
+                          material_id_to_mapping_index,
+                          normal_detector,
                           scratch_data,
                           scratch_data_gpu,
                           copy_data);
@@ -6466,8 +6557,9 @@ namespace HierBEM
                   ky_map_from_local_to_full_dof_indices,
                   kx_dof_i2e_numbering,
                   ky_dof_i2e_numbering,
-                  kx_mapping,
-                  ky_mapping,
+                  mappings,
+                  material_id_to_mapping_index,
+                  normal_detector,
                   scratch_data,
                   scratch_data_gpu,
                   copy_data);
@@ -7126,7 +7218,7 @@ namespace HierBEM
 
 
   /**
-   * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
+   * @brief Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
    * structure of the \hmatrix has been built with respect to a block cluster
    * tree and the memory for the matrices in the leaf set has been allocated.
    *
@@ -7138,25 +7230,34 @@ namespace HierBEM
    * \mynote{This version processes each \hmatnode in the leaf set
    * one-by-one without partitioning the leaf set using TBB.}
    *
+   * @tparam RangeNumberType
+   * @tparam SurfaceNormalDetector
+   * @tparam dim
+   * @tparam spacedim
    * @param hmat
    * @param aca_config
    * @param kernel
-   * @param factor
+   * @param kernel_factor
    * @param kx_dof_to_cell_topo
    * @param ky_dof_to_cell_topo
-   * @param bem_values
+   * @param sauter_quad_rule
    * @param kx_dof_handler
    * @param ky_dof_handler
-   * @param kx_mapping
-   * @param ky_mapping
-   * @param enable_build_symmetric_hmat Flag indicating whether symmetric
-   * \hmatrix will be built when the kernel function is symmetric.
+   * @param kx_map_from_local_to_full_dof_indices
+   * @param ky_map_from_local_to_full_dof_indices
+   * @param kx_dof_i2e_numbering
+   * @param ky_dof_i2e_numbering
+   * @param mappings
+   * @param material_id_to_mapping_index
+   * @param normal_detector
+   * @param enable_build_symmetric_hmat
    */
   template <int dim,
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   fill_hmatrix_with_aca_plus_serial(
     HMatrix<spacedim, RangeNumberType>                  &hmat,
@@ -7172,13 +7273,13 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
-    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
-    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const bool enable_build_symmetric_hmat = false)
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
+    const bool                   enable_build_symmetric_hmat = false)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -7200,8 +7301,7 @@ namespace HierBEM
     BEMValues<dim, spacedim, RangeNumberType> bem_values(
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
-      kx_mapping_data,
-      ky_mapping_data,
+      mappings,
       sauter_quad_rule.quad_rule_for_same_panel,
       sauter_quad_rule.quad_rule_for_common_edge,
       sauter_quad_rule.quad_rule_for_common_vertex,
@@ -7222,11 +7322,7 @@ namespace HierBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
-      kx_dof_handler.get_fe(),
-      ky_dof_handler.get_fe(),
-      kx_mapping,
-      ky_mapping,
-      bem_values);
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings, bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
@@ -7247,7 +7343,6 @@ namespace HierBEM
           kernel_factor,
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
-          bem_values,
           bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
@@ -7255,8 +7350,9 @@ namespace HierBEM
           ky_map_from_local_to_full_dof_indices,
           kx_dof_i2e_numbering,
           ky_dof_i2e_numbering,
-          kx_mapping,
-          ky_mapping,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
           scratch_data,
           scratch_data_gpu,
           copy_data,
@@ -7277,7 +7373,7 @@ namespace HierBEM
 
 
   /**
-   * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
+   * @brief Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
    * structure of the \hmatrix has been built with respect to a block cluster
    * tree and the memory for the matrices in the leaf set has been allocated.
    *
@@ -7303,12 +7399,37 @@ namespace HierBEM
    * representation. The argument
    *   @p mass_vmult_weq passed to this function is just the vector
    *   \f$M [\omega_{\rm eq}]\f$.}
+   *
+   * @tparam RangeNumberType
+   * @tparam SurfaceNormalDetector
+   * @tparam dim
+   * @tparam spacedim
+   * @param hmat
+   * @param aca_config
+   * @param kernel
+   * @param kernel_factor
+   * @param mass_vmult_weq
+   * @param stabilization_factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
+   * @param sauter_quad_rule
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_map_from_local_to_full_dof_indices
+   * @param ky_map_from_local_to_full_dof_indices
+   * @param kx_dof_i2e_numbering
+   * @param ky_dof_i2e_numbering
+   * @param mappings
+   * @param material_id_to_mapping_index
+   * @param normal_detector
+   * @param enable_build_symmetric_hmat
    */
   template <int dim,
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   fill_hmatrix_with_aca_plus_serial(
     HMatrix<spacedim, RangeNumberType>                  &hmat,
@@ -7326,13 +7447,13 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
-    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
-    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const bool enable_build_symmetric_hmat = false)
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
+    const bool                   enable_build_symmetric_hmat = false)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -7354,8 +7475,7 @@ namespace HierBEM
     BEMValues<dim, spacedim, RangeNumberType> bem_values(
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
-      kx_mapping_data,
-      ky_mapping_data,
+      mappings,
       sauter_quad_rule.quad_rule_for_same_panel,
       sauter_quad_rule.quad_rule_for_common_edge,
       sauter_quad_rule.quad_rule_for_common_vertex,
@@ -7376,11 +7496,7 @@ namespace HierBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
-      kx_dof_handler.get_fe(),
-      ky_dof_handler.get_fe(),
-      kx_mapping,
-      ky_mapping,
-      bem_values);
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings, bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
@@ -7403,7 +7519,6 @@ namespace HierBEM
           stabilization_factor,
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
-          bem_values,
           bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
@@ -7411,8 +7526,9 @@ namespace HierBEM
           ky_map_from_local_to_full_dof_indices,
           kx_dof_i2e_numbering,
           ky_dof_i2e_numbering,
-          kx_mapping,
-          ky_mapping,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
           scratch_data,
           scratch_data_gpu,
           copy_data,
@@ -7433,7 +7549,7 @@ namespace HierBEM
 
 
   /**
-   * Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
+   * @brief Fill the leaf set of the \hmatrix using ACA+, where the hierarchical
    * structure of the \hmatrix has been built with respect to a block cluster
    * tree and the memory for the matrices in the leaf set has been allocated.
    *
@@ -7446,12 +7562,37 @@ namespace HierBEM
    * one-by-one without partitioning the leaf set using TBB.
    * 2. The mass matrix scaled with a factor is appended to the near field leaf
    * node.}
+   *
+   * @tparam RangeNumberType
+   * @tparam SurfaceNormalDetector
+   * @tparam dim
+   * @tparam spacedim
+   * @param hmat
+   * @param aca_config
+   * @param kernel
+   * @param kernel_factor
+   * @param mass_matrix_factor
+   * @param kx_dof_to_cell_topo
+   * @param ky_dof_to_cell_topo
+   * @param sauter_quad_rule
+   * @param mass_matrix_quadrature_formula
+   * @param kx_dof_handler
+   * @param ky_dof_handler
+   * @param kx_map_from_local_to_full_dof_indices
+   * @param ky_map_from_local_to_full_dof_indices
+   * @param kx_dof_i2e_numbering
+   * @param ky_dof_i2e_numbering
+   * @param mappings
+   * @param material_id_to_mapping_index
+   * @param normal_detector
+   * @param enable_build_symmetric_hmat
    */
   template <int dim,
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   fill_hmatrix_with_aca_plus_serial(
     HMatrix<spacedim, RangeNumberType>                  &hmat,
@@ -7469,13 +7610,13 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
-    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
-    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const bool enable_build_symmetric_hmat = false)
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
+    const bool                   enable_build_symmetric_hmat = false)
   {
     /**
      * Precalculate data tables for shape values at quadrature points.
@@ -7497,8 +7638,7 @@ namespace HierBEM
     BEMValues<dim, spacedim, RangeNumberType> bem_values(
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
-      kx_mapping_data,
-      ky_mapping_data,
+      mappings,
       sauter_quad_rule.quad_rule_for_same_panel,
       sauter_quad_rule.quad_rule_for_common_edge,
       sauter_quad_rule.quad_rule_for_common_vertex,
@@ -7529,11 +7669,7 @@ namespace HierBEM
      * each current working thread should have its own copy of these data.
      */
     PairCellWiseScratchData<dim, spacedim, RangeNumberType> scratch_data(
-      kx_dof_handler.get_fe(),
-      ky_dof_handler.get_fe(),
-      kx_mapping,
-      ky_mapping,
-      bem_values);
+      kx_dof_handler.get_fe(), ky_dof_handler.get_fe(), mappings, bem_values);
     PairCellWisePerTaskData<dim, spacedim, RangeNumberType> copy_data(
       kx_dof_handler.get_fe(), ky_dof_handler.get_fe());
 
@@ -7555,7 +7691,6 @@ namespace HierBEM
           mass_matrix_factor,
           kx_dof_to_cell_topo,
           ky_dof_to_cell_topo,
-          bem_values,
           bem_values_gpu,
           kx_dof_handler,
           ky_dof_handler,
@@ -7563,8 +7698,9 @@ namespace HierBEM
           ky_map_from_local_to_full_dof_indices,
           kx_dof_i2e_numbering,
           ky_dof_i2e_numbering,
-          kx_mapping,
-          ky_mapping,
+          mappings,
+          material_id_to_mapping_index,
+          normal_detector,
           mass_matrix_scratch_data,
           scratch_data,
           scratch_data_gpu,
@@ -7622,7 +7758,8 @@ namespace HierBEM
             int spacedim,
             template <int, typename>
             typename KernelFunctionType,
-            typename RangeNumberType = double>
+            typename RangeNumberType,
+            typename SurfaceNormalDetector>
   void
   fill_hmatrix_with_aca_plus_smp(
     const unsigned int                                   thread_num,
@@ -7639,13 +7776,13 @@ namespace HierBEM
       *kx_map_from_local_to_full_dof_indices,
     const std::vector<types::global_dof_index>
       *ky_map_from_local_to_full_dof_indices,
-    const std::vector<types::global_dof_index>            &kx_dof_i2e_numbering,
-    const std::vector<types::global_dof_index>            &ky_dof_i2e_numbering,
-    const MappingQGenericExt<dim, spacedim>               &kx_mapping,
-    const MappingQGenericExt<dim, spacedim>               &ky_mapping,
-    typename MappingQGeneric<dim, spacedim>::InternalData &kx_mapping_data,
-    typename MappingQGeneric<dim, spacedim>::InternalData &ky_mapping_data,
-    const bool enable_build_symmetric_hmat = false)
+    const std::vector<types::global_dof_index>      &kx_dof_i2e_numbering,
+    const std::vector<types::global_dof_index>      &ky_dof_i2e_numbering,
+    const std::vector<MappingInfo<dim, spacedim> *> &mappings,
+    const std::map<types::material_id, unsigned int>
+                                &material_id_to_mapping_index,
+    const SurfaceNormalDetector &normal_detector,
+    const bool                   enable_build_symmetric_hmat = false)
   {
     LogStream::Prefix prefix_string("build_hmatrix_aca");
 #if ENABLE_NVTX == 1
@@ -7673,8 +7810,7 @@ namespace HierBEM
     BEMValues<dim, spacedim, RangeNumberType> bem_values(
       kx_dof_handler.get_fe(),
       ky_dof_handler.get_fe(),
-      kx_mapping_data,
-      ky_mapping_data,
+      mappings,
       sauter_quad_rule.quad_rule_for_same_panel,
       sauter_quad_rule.quad_rule_for_common_edge,
       sauter_quad_rule.quad_rule_for_common_vertex,
